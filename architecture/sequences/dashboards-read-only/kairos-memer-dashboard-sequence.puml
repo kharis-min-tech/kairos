@@ -1,0 +1,17 @@
+@startuml kairos-member-dashboard-sequence
+title Member Dashboard Load
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open Dashboard
+MemberApp -> API: GET /dashboard/member
+API -> DB: SELECT attendance summary,\ngiving summary, upcoming events,\njoined departments
+DB --> API: Member dashboard data
+API --> MemberApp: 200 OK {attendance, giving, events, departments}
+
+MemberApp --> Member: Render cards & sections
+
+@enduml

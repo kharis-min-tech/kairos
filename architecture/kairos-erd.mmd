@@ -1,0 +1,297 @@
+erDiagram
+
+  USER {
+    uuid id PK
+    string email
+    string password_hash
+    boolean mfa_enabled
+    string user_type  "Admin/Pastor/Member"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  ROLE {
+    uuid id PK
+    string name
+  }
+
+  USER_ROLE {
+    uuid id PK
+    uuid user_id FK
+    uuid role_id FK
+  }
+
+  BRANCH {
+    uuid id PK
+    string name
+    string location
+    boolean active
+  }
+
+  MEMBER {
+    uuid id PK
+    uuid user_id FK
+    uuid branch_id FK
+    string first_name
+    string last_name
+    string phone
+    date   dob
+    string gender
+    boolean active
+    timestamptz created_at
+  }
+
+  DEPARTMENT {
+    uuid id PK
+    uuid branch_id FK
+    string name
+    uuid leader_member_id FK
+    boolean active
+  }
+
+  DEPARTMENT_MEMBER {
+    uuid id PK
+    uuid department_id FK
+    uuid member_id FK
+    date joined_at
+    date left_at
+  }
+
+  DEPARTMENT_ATTENDANCE {
+    uuid id PK
+    uuid department_id FK
+    uuid member_id FK
+    date date
+    boolean present
+  }
+
+  KGROUP {
+    uuid id PK
+    uuid branch_id FK
+    string name
+    uuid leader_member_id FK
+  }
+
+  KGROUP_MEMBER {
+    uuid id PK
+    uuid kgroup_id FK
+    uuid member_id FK
+  }
+
+  KGROUP_MEETING {
+    uuid id PK
+    uuid kgroup_id FK
+    timestamptz starts_at
+    string topic
+  }
+
+  KGROUP_ATTENDANCE {
+    uuid id PK
+    uuid meeting_id FK
+    uuid member_id FK
+    boolean present
+  }
+
+  OUTREACH_PROGRAM {
+    uuid id PK
+    uuid branch_id FK
+    string name
+    timestamptz start_date
+    timestamptz end_date
+    string location
+  }
+
+  SOUL {
+    uuid id PK
+    uuid outreach_program_id FK
+    string full_name
+    string contact_info
+    string status   "New/FollowingUp/Member"
+  }
+
+  FOLLOW_UP {
+    uuid id PK
+    uuid soul_id FK
+    uuid assigned_to_member_id FK
+    string status   "Pending/Completed"
+    string notes
+    timestamptz created_at
+    timestamptz completed_at
+  }
+
+  EVENT {
+    uuid id PK
+    uuid branch_id FK
+    string name
+    timestamptz starts_at
+    timestamptz ends_at
+    string venue
+    boolean is_paid
+  }
+
+  EVENT_REGISTRATION {
+    uuid id PK
+    uuid event_id FK
+    uuid member_id FK
+    string status    "Registered/Cancelled"
+    string qr_token
+  }
+
+  EVENT_ATTENDANCE {
+    uuid id PK
+    uuid event_id FK
+    uuid member_id FK
+    timestamptz checked_in_at
+  }
+
+  PAYMENT {
+    uuid id PK
+    uuid member_id FK
+    uuid branch_id FK
+    int amount_cents
+    string currency
+    string type   "Tithe/Offering/Donation"
+    timestamptz paid_at
+  }
+
+  PLEDGE {
+    uuid id PK
+    uuid member_id FK
+    uuid branch_id FK
+    int target_amount_cents
+    int fulfilled_amount_cents
+    string status   "Active/Completed"
+  }
+
+  PLEDGE_PAYMENT {
+    uuid id PK
+    uuid pledge_id FK
+    uuid payment_id FK
+  }
+
+  FORM {
+    uuid id PK
+    string name
+    string type   "NewBeliever/BabyDedication/etc"
+  }
+
+  FORM_FIELD {
+    uuid id PK
+    uuid form_id FK
+    string label
+    string field_type
+    boolean required
+  }
+
+  FORM_SUBMISSION {
+    uuid id PK
+    uuid form_id FK
+    uuid submitted_by_user_id FK
+    timestamptz created_at
+  }
+
+  FORM_ANSWER {
+    uuid id PK
+    uuid submission_id FK
+    uuid field_id FK
+    string value
+  }
+
+  ANNOUNCEMENT {
+    uuid id PK
+    uuid branch_id FK
+    string title
+    string body
+    timestamptz published_at
+  }
+
+  NOTIFICATION {
+    uuid id PK
+    uuid user_id FK
+    string type
+    string message
+    boolean read
+    timestamptz created_at
+  }
+
+  MESSAGE_THREAD {
+    uuid id PK
+    string subject
+  }
+
+  MESSAGE {
+    uuid id PK
+    uuid thread_id FK
+    uuid sender_user_id FK
+    uuid recipient_user_id FK
+    string body
+    timestamptz sent_at
+  }
+
+  AUDIT_LOG {
+    uuid id PK
+    uuid user_id FK
+    string action
+    string entity_type
+    uuid entity_id
+    timestamptz created_at
+  }
+
+  ACCESS_LOG {
+    uuid id PK
+    uuid user_id FK
+    string ip
+    string action
+    timestamptz created_at
+  }
+
+  %% Relationships
+  USER ||--o{ USER_ROLE : has
+  ROLE ||--o{ USER_ROLE : used_by
+
+  USER ||--o| MEMBER : may_have
+  BRANCH ||--o{ MEMBER : has
+  BRANCH ||--o{ DEPARTMENT : has
+  BRANCH ||--o{ KGROUP : has
+  BRANCH ||--o{ EVENT : hosts
+  BRANCH ||--o{ PAYMENT : receives
+  BRANCH ||--o{ PLEDGE : tracks
+  BRANCH ||--o{ ANNOUNCEMENT : publishes
+
+  MEMBER ||--o{ DEPARTMENT_MEMBER : joins
+  DEPARTMENT ||--o{ DEPARTMENT_MEMBER : contains
+  DEPARTMENT ||--o{ DEPARTMENT_ATTENDANCE : logs
+  MEMBER ||--o{ DEPARTMENT_ATTENDANCE : recorded_in
+
+  KGROUP ||--o{ KGROUP_MEMBER : includes
+  MEMBER ||--o{ KGROUP_MEMBER : part_of
+  KGROUP ||--o{ KGROUP_MEETING : schedules
+  KGROUP_MEETING ||--o{ KGROUP_ATTENDANCE : logs
+  MEMBER ||--o{ KGROUP_ATTENDANCE : attends
+
+  OUTREACH_PROGRAM ||--o{ SOUL : yields
+  SOUL ||--o{ FOLLOW_UP : has
+
+  EVENT ||--o{ EVENT_REGISTRATION : has
+  MEMBER ||--o{ EVENT_REGISTRATION : registers
+  EVENT ||--o{ EVENT_ATTENDANCE : logs
+  MEMBER ||--o{ EVENT_ATTENDANCE : attends
+
+  MEMBER ||--o{ PAYMENT : makes
+  MEMBER ||--o{ PLEDGE : pledges
+  PLEDGE ||--o{ PLEDGE_PAYMENT : fulfilled_by
+  PAYMENT ||--o{ PLEDGE_PAYMENT : allocated_to
+
+  FORM ||--o{ FORM_FIELD : defines
+  FORM ||--o{ FORM_SUBMISSION : receives
+  FORM_SUBMISSION ||--o{ FORM_ANSWER : contains
+  USER ||--o{ FORM_SUBMISSION : submits
+
+  USER ||--o{ NOTIFICATION : receives
+  MESSAGE_THREAD ||--o{ MESSAGE : contains
+  USER ||--o{ MESSAGE : sends
+  USER ||--o{ MESSAGE : receives
+
+  USER ||--o{ AUDIT_LOG : creates
+  USER ||--o{ ACCESS_LOG : produces
+

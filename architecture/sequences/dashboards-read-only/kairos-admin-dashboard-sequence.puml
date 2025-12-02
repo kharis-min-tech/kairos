@@ -1,0 +1,21 @@
+@startuml kairos-admin-dashboard-sequence
+title Admin Dashboard Load
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+participant "BI" as BI
+
+Admin -> WebAdmin: Open Admin Dashboard
+WebAdmin -> API: GET /dashboard/admin/summary
+API -> DB: Query KPIs\n(total members, attendance %, pending follow-ups,\npledges, recent activities)
+DB --> API: KPI data
+API --> WebAdmin: 200 OK {kpis, widgets}
+
+WebAdmin -> BI: Load embedded report (token)
+BI --> WebAdmin: BI iframe/visuals
+
+WebAdmin --> Admin: Render dashboard (cards, charts, BI embed)
+
+@enduml

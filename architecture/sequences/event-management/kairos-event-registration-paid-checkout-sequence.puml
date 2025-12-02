@@ -1,0 +1,28 @@
+@startuml kairos-event-registration-paid-checkout-sequence
+title Event Registration and Checkout (Paid Event)
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+participant "Payment Gateway" as Pay
+
+Member -> MemberApp: Click "Register" on Event
+MemberApp -> API: POST /events/{eventId}/registrations
+API -> DB: INSERT EventRegistration (status="PendingPayment")
+DB --> API: registrationId
+API --> MemberApp: 201 Created {registrationId}
+
+Member -> MemberApp: See checkout page\nEnter payment details
+MemberApp -> Pay: Create payment session
+Pay --> MemberApp: Payment form
+Member -> Pay: Submit payment
+Pay --> MemberApp: Payment success callback
+MemberApp -> API: POST /events/{eventId}/payments/confirm {registrationId, gatewayRef}
+API -> DB: UPDATE EventRegistration (status="Registered")
+DB --> API: OK
+API --> MemberApp: 200 OK
+
+MemberApp --> Member: Show registration success + QR code
+
+@enduml

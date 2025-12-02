@@ -1,0 +1,23 @@
+@startuml kairos-view-event-details-sequence
+title View Events Calendar and Event Detail
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open Events Calendar
+MemberApp -> API: GET /events?from=...&to=...
+API -> DB: SELECT events in range
+DB --> API: Events list
+API --> MemberApp: 200 OK {events}
+
+Member -> MemberApp: Click an event
+MemberApp -> API: GET /events/{eventId}
+API -> DB: SELECT event + registration status
+DB --> API: detail
+API --> MemberApp: 200 OK {eventDetail}
+
+MemberApp --> Member: Show Event Detail page
+
+@enduml

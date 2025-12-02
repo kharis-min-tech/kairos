@@ -1,0 +1,37 @@
+@startuml kairos-member-registration-onboarding-sequence
+title Member Registration and Onboarding
+
+actor "Prospective Member" as Prospect
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+participant "Auth Provider" as Auth
+
+Prospect -> MemberApp: Open Registration Page
+MemberApp -> API: GET /branches
+API -> DB: SELECT branches
+DB --> API: Branch list
+API --> MemberApp: Branch list
+
+Prospect -> MemberApp: Fill registration form\nSubmit
+MemberApp -> API: POST /members/register {details}
+API -> DB: INSERT Member, User (pending)
+DB --> API: {memberId, userId}
+API -> Auth: Create auth user (email/password)
+Auth --> API: OK
+API --> MemberApp: 201 Created {memberId}
+
+' First login
+Prospect -> MemberApp: Enter credentials
+MemberApp -> API: POST /auth/login
+API -> Auth: Validate
+Auth --> API: OK + roles=[Member]
+API -> DB: SELECT Member summary
+DB --> API: Member profile
+API --> MemberApp: 200 OK {jwt, profile}
+
+MemberApp --> Prospect: Show Onboarding Tutorial\n(skippable)
+Prospect -> MemberApp: Skip / Finish
+MemberApp --> Prospect: Redirect to Member Dashboard
+
+@enduml

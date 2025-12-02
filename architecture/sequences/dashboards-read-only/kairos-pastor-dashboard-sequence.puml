@@ -1,0 +1,17 @@
+@startuml kairos-pastor-dashboard-sequence
+title Pastor / Branch Leader Dashboard Load
+
+actor Pastor
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Pastor -> WebAdmin: Open Dashboard
+WebAdmin -> API: GET /dashboard/branch
+API -> DB: Query branch metrics\n(branchMembers, attendance, outreach results,\nmissing lists)
+DB --> API: Branch summary
+API --> WebAdmin: 200 OK {branchSummary}
+
+WebAdmin --> Pastor: Render branch dashboard
+
+@enduml

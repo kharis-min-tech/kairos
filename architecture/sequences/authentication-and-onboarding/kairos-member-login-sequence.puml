@@ -1,0 +1,20 @@
+@startuml kairos-member-login-sequence
+title Member Login (no MFA)
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "Auth Provider" as Auth
+participant "DB" as DB
+
+Member -> MemberApp: Enter email/password\nClick "Login"
+MemberApp -> API: POST /auth/login {email, password}
+API -> Auth: Validate credentials
+Auth --> API: Success + userId + roles=[Member]
+API -> DB: SELECT Member by userId
+DB --> API: Member record
+API --> MemberApp: 200 OK {jwt, memberSummary}
+
+MemberApp --> Member: Redirect to Member Dashboard
+
+@enduml

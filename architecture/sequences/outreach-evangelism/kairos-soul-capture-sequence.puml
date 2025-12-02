@@ -1,0 +1,33 @@
+@startuml kairos-soul-capture-sequence
+title Soul Capture and Follow-up
+
+actor "Outreach Worker" as Worker
+participant "Web Admin / Outreach UI" as UI
+participant "Kairos API" as API
+participant "DB" as DB
+
+Worker -> UI: Open Soul Capture Form
+UI -> API: GET /outreach/{id}
+API -> DB: SELECT outreach program
+DB --> API: Program details
+API --> UI: Program details
+
+Worker -> UI: Enter soul details\nSubmit form
+UI -> API: POST /outreach/{id}/souls
+API -> DB: Insert Soul\n(name, contact, outreach_program_id,\n status="New")
+DB --> API: New soulId
+API --> UI: 201 Created
+
+' Later: follow-up assignment
+UI -> API: POST /souls/{soulId}/followups
+API -> DB: Insert FollowUp\n(assigned_to, status="Pending")
+DB --> API: FollowUpId
+API --> UI: 201 Created
+
+' Follow-up completion
+UI -> API: PATCH /followups/{followUpId}\n{status="Completed", notes, nextStep}
+API -> DB: Update FollowUp
+DB --> API: OK
+API --> UI: 200 OK
+
+@enduml

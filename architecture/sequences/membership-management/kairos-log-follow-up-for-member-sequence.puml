@@ -1,0 +1,18 @@
+@startuml kairos-log-follow-up-for-member-sequence
+title Record Follow-Up Log for Member
+
+actor "Follow-Up Worker" as Worker
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Worker -> WebAdmin: Open Member Detail\nGo to Follow-Up Log
+Worker -> WebAdmin: Add new follow-up entry\n(notes, type, date)
+WebAdmin -> API: POST /members/{id}/followups {entry}
+API -> DB: INSERT FollowUp\n(member_id, created_by, type, notes, date)
+DB --> API: New followupId
+API --> WebAdmin: 201 Created
+
+WebAdmin --> Worker: Append follow-up to log list
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml kairos-department-service-attendance-tracker-sequence
+title Department Service Attendance Tracker
+
+actor "Department Leader" as Leader
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Leader -> WebAdmin: Open Department Attendance page
+WebAdmin -> API: GET /departments/{id}/attendance?date=...
+API -> DB: SELECT recent attendance, members list
+DB --> API: Data
+API --> WebAdmin: 200 OK
+
+Leader -> WebAdmin: Mark each member present/absent\nClick "Save"
+WebAdmin -> API: POST /departments/{id}/attendance {entries}
+API -> DB: UPSERT DepartmentAttendance records
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+WebAdmin --> Leader: Show saved confirmation
+
+@enduml

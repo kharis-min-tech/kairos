@@ -1,0 +1,26 @@
+@startuml kairos-admin-login-sequence
+title Admin Login with MFA
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "Auth Provider" as Auth
+participant "DB" as DB
+
+Admin -> WebAdmin: Enter email/password\nClick "Login"
+WebAdmin -> API: POST /auth/login
+API -> Auth: Validate credentials
+Auth --> API: Success + userId + roles=[Admin]
+API -> DB: SELECT user + MFA settings
+DB --> API: user(mfa_enabled=true)
+API --> WebAdmin: 200 OK {requireMfa=true}
+
+Admin -> WebAdmin: Enter MFA code
+WebAdmin -> API: POST /auth/mfa/verify {userId, code}
+API -> Auth: Verify code
+Auth --> API: OK
+API --> WebAdmin: 200 OK {jwt, role=Admin}
+
+WebAdmin --> Admin: Redirect to Admin Dashboard
+
+@enduml

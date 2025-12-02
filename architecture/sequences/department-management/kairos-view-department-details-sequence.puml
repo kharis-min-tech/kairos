@@ -1,0 +1,23 @@
+@startuml kairos-view-department-details-sequence
+title View Departments and Department Detail
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Departments Overview
+WebAdmin -> API: GET /departments?branchId=...
+API -> DB: SELECT departments
+DB --> API: Departments list
+API --> WebAdmin: 200 OK {departments}
+
+Admin -> WebAdmin: Click a department
+WebAdmin -> API: GET /departments/{id}
+API -> DB: SELECT department + members + leader + attendance summary
+DB --> API: Department detail
+API --> WebAdmin: 200 OK {detail}
+
+WebAdmin --> Admin: Render Department Detail
+
+@enduml

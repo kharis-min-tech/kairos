@@ -1,0 +1,19 @@
+@startuml kairos-activate-deactivate-member-sequence
+title Deactivate or Reactivate Member
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Click "Deactivate" on Member
+WebAdmin -> Admin: Show confirmation modal
+Admin -> WebAdmin: Confirm
+WebAdmin -> API: PATCH /members/{id}/status {active:false}
+API -> DB: UPDATE Member SET active=false
+DB --> API: OK
+API --> WebAdmin: 200 OK
+WebAdmin --> Admin: Update UI (status=Inactive)
+
+' Reactivate is symmetric
+@enduml

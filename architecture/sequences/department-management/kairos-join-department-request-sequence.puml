@@ -1,0 +1,23 @@
+@startuml kairos-join-department-request-sequence
+title Member Join Department Request
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open "Departments" on dashboard
+MemberApp -> API: GET /departments/available?branchId=...
+API -> DB: SELECT departments open for joining
+DB --> API: List
+API --> MemberApp: 200 OK {departments}
+
+Member -> MemberApp: Choose department\nSubmit join form
+MemberApp -> API: POST /departments/{id}/join
+API -> DB: INSERT DepartmentMember\n(status="Pending" or "Active")
+DB --> API: OK
+API --> MemberApp: 201 Created
+
+MemberApp --> Member: Show confirmation ("Your request has been sent")
+
+@enduml

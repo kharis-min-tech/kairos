@@ -1,0 +1,34 @@
+@startuml kairos-event-registration-qr-check-in-sequence
+title Event Registration and QR Check-in
+
+actor Member
+participant "Member App" as App
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> App: View Events Calendar
+App -> API: GET /events?upcoming=true
+API -> DB: SELECT events
+DB --> API: Event list
+API --> App: Event list
+
+Member -> App: Open Event Detail\nClick "Register"
+App -> API: POST /events/{eventId}/registrations
+API -> DB: Insert EventRegistration\n(memberId, eventId, status="Registered")
+DB --> API: RegistrationId
+API --> App: 201 Created + QR token
+
+App -> Member: Show registration success\n& QR code
+
+' At event date
+Member -> App: Open QR code\nor scan from kiosk
+App -> API: POST /events/checkin {eventId, qrToken, memberId}
+API -> DB: Validate registration + token
+DB --> API: OK
+API -> DB: Insert EventAttendance\n(memberId, eventId, checked_in_at)
+DB --> API: Saved
+API --> App: 200 OK (checkedIn=true)
+
+App --> Member: Show "Checked in" confirmation
+
+@enduml

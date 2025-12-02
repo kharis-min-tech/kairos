@@ -1,0 +1,295 @@
+@startuml kairos-domain
+skinparam classAttributeIconSize 0
+
+class User {
+  +uuid id
+  +string email
+  +string passwordHash
+  +bool mfaEnabled
+  +UserType type  ' Admin, Pastor, Member
+  +datetime createdAt
+  +datetime updatedAt
+}
+
+class Role {
+  +uuid id
+  +string name
+}
+
+class UserRole {
+  +uuid id
+}
+
+class Branch {
+  +uuid id
+  +string name
+  +string location
+  +bool active
+}
+
+class Member {
+  +uuid id
+  +uuid userId
+  +uuid branchId
+  +string firstName
+  +string lastName
+  +string phone
+  +date dateOfBirth
+  +string gender
+  +bool active
+  +datetime createdAt
+}
+
+class Department {
+  +uuid id
+  +uuid branchId
+  +string name
+  +uuid leaderMemberId
+  +bool active
+}
+
+class DepartmentMember {
+  +uuid id
+  +uuid departmentId
+  +uuid memberId
+  +date joinedAt
+  +date leftAt
+}
+
+class DepartmentAttendance {
+  +uuid id
+  +uuid departmentId
+  +uuid memberId
+  +date date
+  +bool present
+}
+
+class KGroup {
+  +uuid id
+  +uuid branchId
+  +string name
+  +uuid leaderMemberId
+}
+
+class KGroupMember {
+  +uuid id
+  +uuid kGroupId
+  +uuid memberId
+}
+
+class KGroupMeeting {
+  +uuid id
+  +uuid kGroupId
+  +datetime startsAt
+  +string topic
+}
+
+class KGroupAttendance {
+  +uuid id
+  +uuid meetingId
+  +uuid memberId
+  +bool present
+}
+
+class OutreachProgram {
+  +uuid id
+  +uuid branchId
+  +string name
+  +datetime startDate
+  +datetime endDate
+  +string location
+}
+
+class Soul {
+  +uuid id
+  +uuid outreachProgramId
+  +string fullName
+  +string contactInfo
+  +SoulStatus status  ' New, In Follow-up, Member
+}
+
+class FollowUp {
+  +uuid id
+  +uuid soulId
+  +uuid assignedToMemberId
+  +FollowUpStatus status
+  +string notes
+  +datetime createdAt
+  +datetime completedAt
+}
+
+class Event {
+  +uuid id
+  +uuid branchId
+  +string name
+  +datetime startsAt
+  +datetime endsAt
+  +string venue
+  +bool isPaid
+}
+
+class EventRegistration {
+  +uuid id
+  +uuid eventId
+  +uuid memberId
+  +string status  ' Registered, Cancelled
+  +string qrToken
+}
+
+class EventAttendance {
+  +uuid id
+  +uuid eventId
+  +uuid memberId
+  +datetime checkedInAt
+}
+
+class Payment {
+  +uuid id
+  +uuid memberId
+  +uuid branchId
+  +int amountCents
+  +string currency
+  +string type   ' Tithe, Offering, Donation
+  +datetime paidAt
+}
+
+class Pledge {
+  +uuid id
+  +uuid memberId
+  +uuid branchId
+  +int targetAmountCents
+  +int fulfilledAmountCents
+  +string status  ' Active, Completed
+}
+
+class PledgePayment {
+  +uuid id
+  +uuid pledgeId
+  +uuid paymentId
+}
+
+class Form {
+  +uuid id
+  +string name
+  +string type  ' NewBeliever, BabyDedication, etc
+}
+
+class FormField {
+  +uuid id
+  +uuid formId
+  +string label
+  +string fieldType
+  +bool required
+}
+
+class FormSubmission {
+  +uuid id
+  +uuid formId
+  +uuid submittedByUserId
+  +datetime createdAt
+}
+
+class FormAnswer {
+  +uuid id
+  +uuid submissionId
+  +uuid fieldId
+  +string value
+}
+
+class Announcement {
+  +uuid id
+  +uuid branchId
+  +string title
+  +string body
+  +datetime publishedAt
+}
+
+class Notification {
+  +uuid id
+  +uuid userId
+  +string type
+  +string message
+  +bool read
+  +datetime createdAt
+}
+
+class MessageThread {
+  +uuid id
+  +string subject
+}
+
+class Message {
+  +uuid id
+  +uuid threadId
+  +uuid senderUserId
+  +uuid recipientUserId
+  +string body
+  +datetime sentAt
+}
+
+class AuditLog {
+  +uuid id
+  +uuid userId
+  +string action
+  +string entityType
+  +uuid entityId
+  +datetime createdAt
+}
+
+class AccessLog {
+  +uuid id
+  +uuid userId
+  +string ip
+  +string action
+  +datetime createdAt
+}
+
+' Relationships
+User "1" -- "0..*" UserRole
+Role "1" -- "0..*" UserRole
+User "1" -- "0..1" Member
+Branch "1" -- "0..*" Member
+Branch "1" -- "0..*" Department
+Branch "1" -- "0..*" KGroup
+Branch "1" -- "0..*" Event
+Branch "1" -- "0..*" Payment
+Branch "1" -- "0..*" Pledge
+Member "1" -- "0..*" DepartmentMember
+Department "1" -- "0..*" DepartmentMember
+Department "1" -- "0..*" DepartmentAttendance
+Member "1" -- "0..*" DepartmentAttendance
+KGroup "1" -- "0..*" KGroupMember
+Member "1" -- "0..*" KGroupMember
+KGroup "1" -- "0..*" KGroupMeeting
+KGroupMeeting "1" -- "0..*" KGroupAttendance
+Member "1" -- "0..*" KGroupAttendance
+
+OutreachProgram "1" -- "0..*" Soul
+Soul "1" -- "0..*" FollowUp
+
+Event "1" -- "0..*" EventRegistration
+Member "1" -- "0..*" EventRegistration
+Event "1" -- "0..*" EventAttendance
+Member "1" -- "0..*" EventAttendance
+
+Member "1" -- "0..*" Payment
+Member "1" -- "0..*" Pledge
+Pledge "1" -- "0..*" PledgePayment
+Payment "1" -- "0..*" PledgePayment
+
+Form "1" -- "0..*" FormField
+Form "1" -- "0..*" FormSubmission
+FormSubmission "1" -- "0..*" FormAnswer
+FormField "1" -- "0..*" FormAnswer
+
+Branch "1" -- "0..*" Announcement
+User "1" -- "0..*" Notification
+
+MessageThread "1" -- "0..*" Message
+User "1" -- "0..*" Message : sent
+User "1" -- "0..*" Message : received
+
+User "1" -- "0..*" AuditLog
+User "1" -- "0..*" AccessLog
+
+@enduml

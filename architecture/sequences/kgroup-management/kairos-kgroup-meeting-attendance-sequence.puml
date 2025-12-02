@@ -1,0 +1,21 @@
+@startuml kairos-kgroup-meeting-attendance-sequence
+title K-Group Meeting Attendance Tracker
+
+actor "K-Group Leader" as Leader
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Leader -> WebAdmin: Schedule / open K-Group Meeting
+WebAdmin -> API: POST /kgroups/{id}/meetings or GET existing
+API -> DB: INSERT or SELECT meeting
+DB --> API: meetingId
+API --> WebAdmin: 200/201
+
+Leader -> WebAdmin: Mark members present/absent\nClick "Save"
+WebAdmin -> API: POST /kgroups/meetings/{meetingId}/attendance {entries}
+API -> DB: UPSERT KGroupAttendance
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+@enduml

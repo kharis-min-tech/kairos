@@ -1,0 +1,24 @@
+@startuml kairos-add-edit-member-details-sequence
+title Add or Edit Member
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open "Add Member" form
+Admin -> WebAdmin: Fill form\nClick "Save"
+WebAdmin -> API: POST /members {data}
+API -> DB: INSERT Member + (optional) User
+DB --> API: New memberId
+API --> WebAdmin: 201 Created {memberId}
+
+Admin -> WebAdmin: Edit existing member\nClick "Save"
+WebAdmin -> API: PUT /members/{memberId} {changes}
+API -> DB: UPDATE Member
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+WebAdmin --> Admin: Show success notification
+
+@enduml

@@ -1,0 +1,61 @@
+@startuml kairos-components
+skinparam componentStyle rectangle
+
+component "Web Admin\n(Next.js)" as WebAdmin
+component "Member App\n(Web/Mobile)" as MemberApp
+
+component "Kairos API\n(NestJS/FastAPI)" as API
+
+package "API Modules" {
+  [Members Module] as ModMembers
+  [Departments Module] as ModDepartments
+  [K-Groups Module] as ModKGroups
+  [Outreach & Souls Module] as ModOutreach
+  [Events Module] as ModEvents
+  [Finance Module] as ModFinance
+  [Forms & Reporting Module] as ModForms
+  [Notifications & Messaging Module] as ModComms
+  [Security & RBAC Module] as ModSecurity
+  [Settings Module] as ModSettings
+}
+
+database "Postgres / RDS" as DB
+component "Auth Provider\n(Cognito/Auth0/etc.)" as Auth
+component "Email/SMS Service\n(SES/SNS/Twilio)" as Messaging
+component "Power BI / BI Embed" as BI
+
+' Frontends → API
+WebAdmin --> API
+MemberApp --> API
+
+' API Modules → DB
+API --> ModMembers
+API --> ModDepartments
+API --> ModKGroups
+API --> ModOutreach
+API --> ModEvents
+API --> ModFinance
+API --> ModForms
+API --> ModComms
+API --> ModSecurity
+API --> ModSettings
+
+ModMembers --> DB
+ModDepartments --> DB
+ModKGroups --> DB
+ModOutreach --> DB
+ModEvents --> DB
+ModFinance --> DB
+ModForms --> DB
+ModComms --> DB
+ModSecurity --> DB
+ModSettings --> DB
+
+' Cross-cutting external services
+API --> Auth
+API --> Messaging
+WebAdmin --> BI : embed dashboards
+ModSecurity --> Auth
+ModComms --> Messaging
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml kairos-usecases
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Admin" as Admin
+actor "Pastor / Branch Leader" as Pastor
+actor "Member" as Member
+
+rectangle "Kairos" {
+
+  (Authenticate & Onboard) as UC_Auth
+  (Manage Members) as UC_Members
+  (Manage Departments) as UC_Depts
+  (Manage K-Groups) as UC_KGroups
+  (Manage Outreach & Souls) as UC_Outreach
+  (Manage Events & Check-in) as UC_Events
+  (Manage Giving & Pledges) as UC_Finance
+  (Submit Forms) as UC_Forms
+  (View Reports & Dashboards) as UC_Reports
+  (Send Announcements & Messages) as UC_Comms
+  (Manage Security & RBAC) as UC_Security
+  (Configure Branch & App Settings) as UC_Settings
+
+  ' Admin capabilities
+  Admin --> UC_Auth
+  Admin --> UC_Members
+  Admin --> UC_Depts
+  Admin --> UC_KGroups
+  Admin --> UC_Outreach
+  Admin --> UC_Events
+  Admin --> UC_Finance
+  Admin --> UC_Forms
+  Admin --> UC_Reports
+  Admin --> UC_Comms
+  Admin --> UC_Security
+  Admin --> UC_Settings
+
+  ' Pastor capabilities
+  Pastor --> UC_Auth
+  Pastor --> UC_Members
+  Pastor --> UC_Depts
+  Pastor --> UC_KGroups
+  Pastor --> UC_Outreach
+  Pastor --> UC_Events
+  Pastor --> UC_Forms
+  Pastor --> UC_Reports
+  Pastor --> UC_Comms
+
+  ' Member capabilities
+  Member --> UC_Auth
+  Member --> UC_Forms
+  Member --> UC_Comms
+  Member --> UC_Events
+  Member --> UC_Finance
+  Member --> UC_Depts
+  Member --> UC_KGroups
+
+  ' Optional: detail for Authenticate & Onboard
+  usecase "Login / Logout\nForgot / Reset Password\nMFA (Admins)\nOnboarding Tutorial" as UC_AuthDetails
+  UC_Auth .down.> UC_AuthDetails : <<includes>>
+}
+
+@enduml

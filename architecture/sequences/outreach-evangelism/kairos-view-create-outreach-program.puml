@@ -1,0 +1,22 @@
+@startuml kairos-view-create-outreach-program
+title View and Create Outreach Program
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Outreach Program List
+WebAdmin -> API: GET /outreach-programs?branchId=...
+API -> DB: SELECT programs
+DB --> API: List
+API --> WebAdmin: 200 OK {programs}
+
+Admin -> WebAdmin: Click "Create Outreach"
+Admin -> WebAdmin: Fill form\nClick "Save"
+WebAdmin -> API: POST /outreach-programs {data}
+API -> DB: INSERT OutreachProgram
+DB --> API: New id
+API --> WebAdmin: 201 Created
+
+@enduml

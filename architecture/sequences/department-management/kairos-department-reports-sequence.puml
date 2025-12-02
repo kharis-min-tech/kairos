@@ -1,0 +1,17 @@
+@startuml kairos-department-reports-sequence
+title View Department Reports
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Department Reports
+WebAdmin -> API: GET /departments/{id}/reports
+API -> DB: Aggregate attendance %, active members,\nmissing lists, follow-up reminders
+DB --> API: Aggregated metrics
+API --> WebAdmin: 200 OK {metrics}
+
+WebAdmin --> Admin: Render charts and tables
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml kairos-view-member-details-sequence
+title View Members Directory and Member Detail
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Members List
+WebAdmin -> API: GET /members?filters...
+API -> DB: SELECT members with filters
+DB --> API: Members list
+API --> WebAdmin: 200 OK {members}
+
+Admin -> WebAdmin: Click a member row
+WebAdmin -> API: GET /members/{memberId}
+API -> DB: SELECT member + attendance + followups + giving summary
+DB --> API: Member detail
+API --> WebAdmin: 200 OK {memberDetail}
+
+WebAdmin --> Admin: Show Member Detail page
+
+@enduml

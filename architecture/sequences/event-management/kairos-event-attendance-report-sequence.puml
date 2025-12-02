@@ -1,0 +1,17 @@
+@startuml kairos-event-attendance-report-sequence
+title Event Attendance Report
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Event Attendance Report
+WebAdmin -> API: GET /events/{eventId}/attendance/report
+API -> DB: Aggregate attendance by branch/department
+DB --> API: Aggregated data
+API --> WebAdmin: 200 OK {report}
+
+WebAdmin --> Admin: Render charts and tables
+
+@enduml
