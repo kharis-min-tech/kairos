@@ -1,0 +1,23 @@
+@startuml kairos-member-views-notification-centre
+title Member Views Notifications Centre
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open Notifications Centre
+MemberApp -> API: GET /notifications
+API -> DB: SELECT notifications WHERE user_id = member
+DB --> API: rows
+API --> MemberApp: 200 OK {notifications}
+
+MemberApp --> Member: Render notification list
+
+Member -> MemberApp: Tap notification
+MemberApp -> API: PATCH /notifications/{id}/read
+API -> DB: UPDATE notification SET read=true
+DB --> API: OK
+API --> MemberApp: 200 OK
+
+@enduml

@@ -1,0 +1,18 @@
+@startuml kairos-record-new-payment-sequence
+title Record New Payment (Manual)
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open "Record Payment" form
+Admin -> WebAdmin: Enter details (member, branch, amount, type)\nClick "Save"
+WebAdmin -> API: POST /finance/payments {data}
+API -> DB: INSERT Payment
+DB --> API: paymentId
+API --> WebAdmin: 201 Created
+
+WebAdmin --> Admin: Show "Payment recorded" confirmation
+
+@enduml

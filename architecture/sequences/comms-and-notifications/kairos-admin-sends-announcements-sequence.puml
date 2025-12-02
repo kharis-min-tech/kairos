@@ -1,0 +1,27 @@
+@startuml kairos-admin-sends-announcements-sequence
+title Admin Sends Announcement
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+participant "Messaging" as Messaging
+
+Admin -> WebAdmin: Open Announcements Page\nClick "New Announcement"
+Admin -> WebAdmin: Compose title/body\nSelect target (branch/departments)\nClick "Publish"
+WebAdmin -> API: POST /announcements {title, body, targets}
+API -> DB: INSERT Announcement
+DB --> API: announcementId
+
+API -> DB: SELECT affected users
+DB --> API: user list
+API -> DB: INSERT Notifications for each user
+DB --> API: OK
+
+API -> Messaging: Send emails/push where applicable
+Messaging --> API: Accepted
+API --> WebAdmin: 201 Created
+
+WebAdmin --> Admin: Show "Announcement sent"
+
+@enduml

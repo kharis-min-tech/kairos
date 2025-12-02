@@ -1,0 +1,23 @@
+@startuml kairos-admin-views-form-submissions-sequence
+title Admin Views Form Submissions
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Form Submissions List
+WebAdmin -> API: GET /forms/{id}/submissions?filters...
+API -> DB: SELECT submissions + maybe summary
+DB --> API: rows
+API --> WebAdmin: 200 OK {submissions}
+
+Admin -> WebAdmin: Click a submission
+WebAdmin -> API: GET /forms/submissions/{submissionId}
+API -> DB: SELECT submission + answers
+DB --> API: detail
+API --> WebAdmin: 200 OK {detail}
+
+WebAdmin --> Admin: Show full submission
+
+@enduml

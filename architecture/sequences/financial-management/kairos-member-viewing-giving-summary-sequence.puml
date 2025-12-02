@@ -1,0 +1,17 @@
+@startuml kairos-member-viewing-giving-summary-sequence
+title Member Viewing Giving Summary
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open "My Giving"
+MemberApp -> API: GET /finance/my-giving
+API -> DB: SELECT payments and pledges for member
+DB --> API: rows
+API --> MemberApp: 200 OK {payments, pledges}
+
+MemberApp --> Member: Show list + summary + HMRC report options
+
+@enduml

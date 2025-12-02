@@ -1,0 +1,23 @@
+@startuml kairos-access-logs-and-audit-logs-sequence
+title View Access Logs and Audit Logs
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Access Logs
+WebAdmin -> API: GET /security/access-logs?filters
+API -> DB: SELECT AccessLog rows
+DB --> API: rows
+API --> WebAdmin: 200 OK {logs}
+
+Admin -> WebAdmin: Open Audit Log Page
+WebAdmin -> API: GET /security/audit-logs?filters
+API -> DB: SELECT AuditLog rows
+DB --> API: rows
+API --> WebAdmin: 200 OK {auditLogs}
+
+WebAdmin --> Admin: Render logs tables
+
+@enduml

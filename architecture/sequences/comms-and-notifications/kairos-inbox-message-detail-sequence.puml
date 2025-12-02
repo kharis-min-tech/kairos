@@ -1,0 +1,27 @@
+@startuml kairos-inbox-message-detail-sequence
+title View Inbox and Message Detail
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open Inbox
+MemberApp -> API: GET /messages/threads
+API -> DB: SELECT MessageThreads for user
+DB --> API: threads
+API --> MemberApp: 200 OK {threads}
+
+Member -> MemberApp: Open a thread
+MemberApp -> API: GET /messages/threads/{id}
+API -> DB: SELECT Messages in thread
+DB --> API: messages
+API --> MemberApp: 200 OK {messages}
+
+Member -> MemberApp: Type reply\nClick "Send"
+MemberApp -> API: POST /messages/threads/{id}/messages {body}
+API -> DB: INSERT Message
+DB --> API: OK
+API --> MemberApp: 201 Created
+
+@enduml

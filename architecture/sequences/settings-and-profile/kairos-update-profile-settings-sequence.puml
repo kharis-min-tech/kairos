@@ -1,0 +1,23 @@
+@startuml kairos-update-profile-settings-sequence
+title Update Profile Settings
+
+actor User
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+User -> MemberApp: Open Profile Settings
+MemberApp -> API: GET /profile
+API -> DB: SELECT user + member info
+DB --> API: profile
+API --> MemberApp: 200 OK
+
+User -> MemberApp: Edit details\nClick "Save"
+MemberApp -> API: PUT /profile {changes}
+API -> DB: UPDATE User/Member
+DB --> API: OK
+API --> MemberApp: 200 OK
+
+MemberApp --> User: Show "Profile updated"
+
+@enduml

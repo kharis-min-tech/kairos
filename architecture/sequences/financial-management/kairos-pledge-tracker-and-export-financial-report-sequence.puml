@@ -1,0 +1,24 @@
+@startuml kairos-pledge-tracker-and-export-financial-report-sequence
+title View Pledge Tracker and Export Financial Report
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Pledge Tracker
+WebAdmin -> API: GET /finance/pledges?branchId=...
+API -> DB: SELECT pledges + fulfilled amounts
+DB --> API: data
+API --> WebAdmin: 200 OK {pledges}
+WebAdmin --> Admin: Render pledge progress
+
+Admin -> WebAdmin: Click "Export Report"
+WebAdmin -> API: GET /finance/reports/export?format=CSV
+API -> DB: Aggregate financial data
+DB --> API: rows
+API --> WebAdmin: 200 OK (file stream)
+
+WebAdmin --> Admin: Trigger file download
+
+@enduml

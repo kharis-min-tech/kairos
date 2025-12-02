@@ -1,0 +1,21 @@
+@startuml kairos-branch-settings-admin-sequence
+title Update Branch Settings (Admin)
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Branch Settings
+WebAdmin -> API: GET /branches
+API -> DB: SELECT branches
+DB --> API: list
+API --> WebAdmin: 200 OK
+
+Admin -> WebAdmin: Edit branch details\nClick "Save"
+WebAdmin -> API: PUT /branches/{id} {changes}
+API -> DB: UPDATE Branch
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+@enduml

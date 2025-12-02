@@ -1,0 +1,34 @@
+@startuml kairos-app-settings-user-role-assignment-sequence
+title Update App Settings and Assign User Roles
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open App Settings
+WebAdmin -> API: GET /settings/app
+API -> DB: SELECT app_settings
+DB --> API: settings
+API --> WebAdmin: 200 OK
+
+Admin -> WebAdmin: Change theme/notification defaults\nClick "Save"
+WebAdmin -> API: PUT /settings/app {changes}
+API -> DB: UPDATE app_settings
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+' User role assignment
+Admin -> WebAdmin: Open User Role Assignment
+WebAdmin -> API: GET /users?withRoles=true
+API -> DB: SELECT users + roles
+DB --> API: list
+API --> WebAdmin: 200 OK
+
+Admin -> WebAdmin: Change a user's role\nClick "Save"
+WebAdmin -> API: POST /security/user-roles {userId, roles}
+API -> DB: INSERT/DELETE UserRole rows
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+@enduml

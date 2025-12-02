@@ -1,0 +1,29 @@
+@startuml kairos-view-forms-library-and-submit-sequence
+title View Forms Library and Submit Form
+
+actor Member
+participant "Member App" as MemberApp
+participant "Kairos API" as API
+participant "DB" as DB
+
+Member -> MemberApp: Open Forms Library
+MemberApp -> API: GET /forms
+API -> DB: SELECT forms
+DB --> API: List
+API --> MemberApp: 200 OK {forms}
+
+Member -> MemberApp: Select a form (e.g., New Believer)
+MemberApp -> API: GET /forms/{id}/fields
+API -> DB: SELECT fields
+DB --> API: fields
+API --> MemberApp: 200 OK
+
+Member -> MemberApp: Fill form (smart/conditional)\nClick "Submit"
+MemberApp -> API: POST /forms/{id}/submissions {answers}
+API -> DB: INSERT FormSubmission + FormAnswers
+DB --> API: OK
+API --> MemberApp: 201 Created
+
+MemberApp --> Member: Show success confirmation
+
+@enduml

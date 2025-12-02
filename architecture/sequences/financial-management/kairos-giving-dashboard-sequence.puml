@@ -1,0 +1,17 @@
+@startuml kairos-giving-dashboard-sequence
+title View Giving Dashboard (Admin)
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Giving Dashboard
+WebAdmin -> API: GET /finance/dashboard?branchId=...
+API -> DB: Aggregate payments by type, branch,\npledges, fulfilment
+DB --> API: Aggregated data
+API --> WebAdmin: 200 OK {givingSummary}
+
+WebAdmin --> Admin: Render totals, charts, pledge progress
+
+@enduml

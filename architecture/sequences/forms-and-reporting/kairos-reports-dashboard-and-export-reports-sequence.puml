@@ -1,0 +1,26 @@
+@startuml kairos-reports-dashboard-and-export-reports-sequence
+title View Reports Dashboard and Export
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+participant "BI" as BI
+
+Admin -> WebAdmin: Open Reports Dashboard
+WebAdmin -> API: GET /reports/summary
+API -> DB: Aggregate attendance, membership growth,\nevangelism, giving
+DB --> API: metrics
+API --> WebAdmin: 200 OK {metrics}
+
+WebAdmin -> BI: Load embedded Power BI report
+BI --> WebAdmin: report visuals
+
+Admin -> WebAdmin: Click "Export Summary"
+WebAdmin -> API: GET /reports/export?type=summary&format=PDF
+API -> DB: Re-run summary query
+DB --> API: data
+API --> WebAdmin: Generated file
+WebAdmin --> Admin: Download file
+
+@enduml

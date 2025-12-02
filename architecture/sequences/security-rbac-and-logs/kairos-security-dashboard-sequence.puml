@@ -1,0 +1,17 @@
+@startuml kairos-security-dashboard-sequence
+title View Security Dashboard
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open Security Dashboard
+WebAdmin -> API: GET /security/dashboard
+API -> DB: Aggregate recent access logs, failed logins,\nrole distribution
+DB --> API: metrics
+API --> WebAdmin: 200 OK {securitySummary}
+
+WebAdmin --> Admin: Render cards and tables
+
+@enduml

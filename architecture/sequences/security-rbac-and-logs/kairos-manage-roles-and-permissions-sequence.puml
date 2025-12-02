@@ -1,0 +1,23 @@
+@startuml kairos-manage-roles-and-permissions-sequence
+title Manage Roles and Permissions
+
+actor Admin
+participant "Web Admin" as WebAdmin
+participant "Kairos API" as API
+participant "DB" as DB
+
+Admin -> WebAdmin: Open User Roles & Permissions page
+WebAdmin -> API: GET /security/roles
+API -> DB: SELECT roles + permissions
+DB --> API: roles
+API --> WebAdmin: 200 OK
+
+Admin -> WebAdmin: Update permissions for role\nClick "Save"
+WebAdmin -> API: PUT /security/roles/{roleId} {permissions}
+API -> DB: UPDATE RolePermissions
+DB --> API: OK
+API --> WebAdmin: 200 OK
+
+WebAdmin --> Admin: Show "Permissions updated"
+
+@enduml
