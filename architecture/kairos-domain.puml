@@ -64,27 +64,27 @@ class DepartmentAttendance {
   +bool present
 }
 
-class KGroup {
+class Fellowship {
   +uuid id
   +uuid branchId
   +string name
   +uuid leaderMemberId
 }
 
-class KGroupMember {
+class FellowshipMember {
   +uuid id
-  +uuid kGroupId
+  +uuid fellowshipId
   +uuid memberId
 }
 
-class KGroupMeeting {
+class FellowshipMeeting {
   +uuid id
-  +uuid kGroupId
+  +uuid fellowshipId
   +datetime startsAt
   +string topic
 }
 
-class KGroupAttendance {
+class FellowshipAttendance {
   +uuid id
   +uuid meetingId
   +uuid memberId
@@ -250,7 +250,7 @@ Role "1" -- "0..*" UserRole
 User "1" -- "0..1" Member
 Branch "1" -- "0..*" Member
 Branch "1" -- "0..*" Department
-Branch "1" -- "0..*" KGroup
+Branch "1" -- "0..*" Fellowship
 Branch "1" -- "0..*" Event
 Branch "1" -- "0..*" Payment
 Branch "1" -- "0..*" Pledge
@@ -258,11 +258,11 @@ Member "1" -- "0..*" DepartmentMember
 Department "1" -- "0..*" DepartmentMember
 Department "1" -- "0..*" DepartmentAttendance
 Member "1" -- "0..*" DepartmentAttendance
-KGroup "1" -- "0..*" KGroupMember
-Member "1" -- "0..*" KGroupMember
-KGroup "1" -- "0..*" KGroupMeeting
-KGroupMeeting "1" -- "0..*" KGroupAttendance
-Member "1" -- "0..*" KGroupAttendance
+Fellowship "1" -- "0..*" FellowshipMember
+Member "1" -- "0..*" FellowshipMember
+Fellowship "1" -- "0..*" FellowshipMeeting
+FellowshipMeeting "1" -- "0..*" FellowshipAttendance
+Member "1" -- "0..*" FellowshipAttendance
 
 OutreachProgram "1" -- "0..*" Soul
 Soul "1" -- "0..*" FollowUp

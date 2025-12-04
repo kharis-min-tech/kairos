@@ -1,21 +1,21 @@
-@startuml kairos-create-edit-kgroup-details-sequence
-title Create or Edit K-Group
+@startuml kairos-create-edit-fellowship-details-sequence
+title Create or Edit Fellowship
 
 actor Admin
 participant "Web Admin" as WebAdmin
 participant "Kairos API" as API
 participant "DB" as DB
 
-Admin -> WebAdmin: Open "Add K-Group" form
+Admin -> WebAdmin: Open "Add Fellowship" form
 Admin -> WebAdmin: Fill data\nClick "Save"
-WebAdmin -> API: POST /kgroups {data}
-API -> DB: INSERT KGroup
+WebAdmin -> API: POST /fellowships {data}
+API -> DB: INSERT Fellowship
 DB --> API: New id
 API --> WebAdmin: 201 Created
 
-Admin -> WebAdmin: Edit K-Group\nClick "Save"
-WebAdmin -> API: PUT /kgroups/{id} {changes}
-API -> DB: UPDATE KGroup
+Admin -> WebAdmin: Edit Fellowship\nClick "Save"
+WebAdmin -> API: PUT /fellowships/{id} {changes}
+API -> DB: UPDATE Fellowship
 DB --> API: OK
 API --> WebAdmin: 200 OK
 

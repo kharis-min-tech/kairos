@@ -1,23 +1,23 @@
-@startuml kairos-view-kgroup-details-sequence
-title View K-Group List and Detail
+@startuml kairos-view-fellowship-details-sequence
+title View Fellowship List and Detail
 
 actor Pastor
 participant "Web Admin" as WebAdmin
 participant "Kairos API" as API
 participant "DB" as DB
 
-Pastor -> WebAdmin: Open K-Groups list
-WebAdmin -> API: GET /kgroups?branchId=...
-API -> DB: SELECT k-groups
+Pastor -> WebAdmin: Open Fellowships list
+WebAdmin -> API: GET /fellowships?branchId=...
+API -> DB: SELECT fellowships
 DB --> API: List
-API --> WebAdmin: 200 OK {kgroups}
+API --> WebAdmin: 200 OK {fellowships}
 
-Pastor -> WebAdmin: Click a K-Group
-WebAdmin -> API: GET /kgroups/{id}
-API -> DB: SELECT k-group + members + meetings + notes
+Pastor -> WebAdmin: Click a Fellowship
+WebAdmin -> API: GET /fellowships/{id}
+API -> DB: SELECT fellowship + members + meetings + notes
 DB --> API: Detail
 API --> WebAdmin: 200 OK {detail}
 
-WebAdmin --> Pastor: Show K-Group Detail
+WebAdmin --> Pastor: Show Fellowship Detail
 
 @enduml

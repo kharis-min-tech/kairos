@@ -1,7 +1,7 @@
-@startuml kairos-kgroup-broadcast-message-sequence
-title Broadcast Message to K-Group Members
+@startuml kairos-fellowship-broadcast-message-sequence
+title Broadcast Message to Fellowship Members
 
-actor "K-Group Leader" as Leader
+actor "Fellowship Leader" as Leader
 participant "Web Admin" as WebAdmin
 participant "Kairos API" as API
 participant "DB" as DB
@@ -9,7 +9,7 @@ participant "Messaging" as Messaging
 
 Leader -> WebAdmin: Open Broadcast Message Modal
 Leader -> WebAdmin: Compose message\nSelect all or subset members\nClick "Send"
-WebAdmin -> API: POST /kgroups/{id}/broadcast {message, recipients}
+WebAdmin -> API: POST /fellowships/{id}/broadcast {message, recipients}
 API -> DB: SELECT Members' contact info
 DB --> API: emails/phones
 API -> Messaging: Send emails/SMS

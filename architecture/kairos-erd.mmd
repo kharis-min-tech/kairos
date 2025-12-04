@@ -65,27 +65,27 @@ erDiagram
     boolean present
   }
 
-  KGROUP {
+  FELLOWSHIP {
     uuid id PK
     uuid branch_id FK
     string name
     uuid leader_member_id FK
   }
 
-  KGROUP_MEMBER {
+  FELLOWSHIP_MEMBER {
     uuid id PK
-    uuid kgroup_id FK
+    uuid fellowship_id FK
     uuid member_id FK
   }
 
-  KGROUP_MEETING {
+  FELLOWSHIP_MEETING {
     uuid id PK
-    uuid kgroup_id FK
+    uuid fellowship_id FK
     timestamptz starts_at
     string topic
   }
 
-  KGROUP_ATTENDANCE {
+  FELLOWSHIP_ATTENDANCE {
     uuid id PK
     uuid meeting_id FK
     uuid member_id FK
@@ -252,7 +252,7 @@ erDiagram
   USER ||--o| MEMBER : may_have
   BRANCH ||--o{ MEMBER : has
   BRANCH ||--o{ DEPARTMENT : has
-  BRANCH ||--o{ KGROUP : has
+  BRANCH ||--o{ FELLOWSHIP : has
   BRANCH ||--o{ EVENT : hosts
   BRANCH ||--o{ PAYMENT : receives
   BRANCH ||--o{ PLEDGE : tracks
@@ -263,11 +263,11 @@ erDiagram
   DEPARTMENT ||--o{ DEPARTMENT_ATTENDANCE : logs
   MEMBER ||--o{ DEPARTMENT_ATTENDANCE : recorded_in
 
-  KGROUP ||--o{ KGROUP_MEMBER : includes
-  MEMBER ||--o{ KGROUP_MEMBER : part_of
-  KGROUP ||--o{ KGROUP_MEETING : schedules
-  KGROUP_MEETING ||--o{ KGROUP_ATTENDANCE : logs
-  MEMBER ||--o{ KGROUP_ATTENDANCE : attends
+  FELLOWSHIP ||--o{ FELLOWSHIP_MEMBER : includes
+  MEMBER ||--o{ FELLOWSHIP_MEMBER : part_of
+  FELLOWSHIP ||--o{ FELLOWSHIP_MEETING : schedules
+  FELLOWSHIP_MEETING ||--o{ FELLOWSHIP_ATTENDANCE : logs
+  MEMBER ||--o{ FELLOWSHIP_ATTENDANCE : attends
 
   OUTREACH_PROGRAM ||--o{ SOUL : yields
   SOUL ||--o{ FOLLOW_UP : has

@@ -9,7 +9,7 @@ component "Kairos API\n(NestJS/FastAPI)" as API
 package "API Modules" {
   [Members Module] as ModMembers
   [Departments Module] as ModDepartments
-  [K-Groups Module] as ModKGroups
+  [Fellowships Module] as ModFellowships
   [Outreach & Souls Module] as ModOutreach
   [Events Module] as ModEvents
   [Finance Module] as ModFinance
@@ -31,7 +31,7 @@ MemberApp --> API
 ' API Modules → DB
 API --> ModMembers
 API --> ModDepartments
-API --> ModKGroups
+API --> ModFellowships
 API --> ModOutreach
 API --> ModEvents
 API --> ModFinance
@@ -42,7 +42,7 @@ API --> ModSettings
 
 ModMembers --> DB
 ModDepartments --> DB
-ModKGroups --> DB
+ModFellowships --> DB
 ModOutreach --> DB
 ModEvents --> DB
 ModFinance --> DB

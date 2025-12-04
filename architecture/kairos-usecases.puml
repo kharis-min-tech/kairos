@@ -11,7 +11,7 @@ rectangle "Kairos" {
   (Authenticate & Onboard) as UC_Auth
   (Manage Members) as UC_Members
   (Manage Departments) as UC_Depts
-  (Manage K-Groups) as UC_KGroups
+  (Manage Fellowships) as UC_Fellowships
   (Manage Outreach & Souls) as UC_Outreach
   (Manage Events & Check-in) as UC_Events
   (Manage Giving & Pledges) as UC_Finance
@@ -25,7 +25,7 @@ rectangle "Kairos" {
   Admin --> UC_Auth
   Admin --> UC_Members
   Admin --> UC_Depts
-  Admin --> UC_KGroups
+  Admin --> UC_Fellowships
   Admin --> UC_Outreach
   Admin --> UC_Events
   Admin --> UC_Finance
@@ -39,7 +39,7 @@ rectangle "Kairos" {
   Pastor --> UC_Auth
   Pastor --> UC_Members
   Pastor --> UC_Depts
-  Pastor --> UC_KGroups
+  Pastor --> UC_Fellowships
   Pastor --> UC_Outreach
   Pastor --> UC_Events
   Pastor --> UC_Forms
@@ -53,7 +53,7 @@ rectangle "Kairos" {
   Member --> UC_Events
   Member --> UC_Finance
   Member --> UC_Depts
-  Member --> UC_KGroups
+  Member --> UC_Fellowships
 
   ' Optional: detail for Authenticate & Onboard
   usecase "Login / Logout\nForgot / Reset Password\nMFA (Admins)\nOnboarding Tutorial" as UC_AuthDetails
