@@ -6,9 +6,16 @@ class User {
   +string email
   +string passwordHash
   +bool mfaEnabled
-  +UserType type  ' Admin, Pastor, Member
+  +UserType type  ' select from enum
   +datetime createdAt
   +datetime updatedAt
+}
+
+enum UserType {
+  "Admin"
+  "Pastor"
+  "Member"
+  "Worker"
 }
 
 class Role {
@@ -20,10 +27,16 @@ class UserRole {
   +uuid id
 }
 
+enum BranchRegion {
+  KHARIS_CHURCH_UK : "Kharis Church UK"
+  KHARIS_PHASE_2_UK : "Kharis Phase 2 UK"
+  KHARIS_CHURCH_AFRICA : "Kharis Church Africa"
+}
+
 class Branch {
   +uuid id
   +string name
-  +string location
+  +BranchRegion branchType ' select from enum
   +bool active
 }
 
@@ -34,6 +47,14 @@ class Member {
   +string firstName
   +string lastName
   +string phone
+  +string address
+  +bool completedMembership
+  +bool completedNewBelievers
+  +bool completedSpiritualMaturity
+  +bool waterBaptism
+  +bool holySpiritBaptism
+  +bool visited
+  +datetime lastVisited
   +date dateOfBirth
   +string gender
   +bool active
@@ -67,6 +88,7 @@ class DepartmentAttendance {
 class Fellowship {
   +uuid id
   +uuid branchId
+  +FellowshipType type  ' KGroup, Express, KOC, New Breed etc
   +string name
   +uuid leaderMemberId
 }
@@ -116,6 +138,29 @@ class FollowUp {
   +string notes
   +datetime createdAt
   +datetime completedAt
+}
+
+class Service {
+  +uuid id
+  +uuid branchId
+  +ServiceType type  ' Sunday, Midweek, Special, etc
+  +datetime startsAt
+  +datetime endsAt
+  +string venue
+}
+
+enum ServiceType {
+  SUNDAY_SERVICE: "Sunday Service"
+  MIDWEEK_SERVICE: "Midweek Service"
+  SPECIAL_SERVICE: "Special Service"
+}
+
+class ServiceAttendance {
+  +uuid id
+  +uuid serviceId
+  +uuid memberId
+  +bool present
+  +datetime checkedInAt
 }
 
 class Event {
@@ -254,6 +299,7 @@ Branch "1" -- "0..*" Fellowship
 Branch "1" -- "0..*" Event
 Branch "1" -- "0..*" Payment
 Branch "1" -- "0..*" Pledge
+Branch "1" -- "0..*" Service
 Member "1" -- "0..*" DepartmentMember
 Department "1" -- "0..*" DepartmentMember
 Department "1" -- "0..*" DepartmentAttendance
@@ -266,6 +312,9 @@ Member "1" -- "0..*" FellowshipAttendance
 
 OutreachProgram "1" -- "0..*" Soul
 Soul "1" -- "0..*" FollowUp
+
+Service "1" -- "0..*" ServiceAttendance
+Member "1" -- "0..*" ServiceAttendance
 
 Event "1" -- "0..*" EventRegistration
 Member "1" -- "0..*" EventRegistration
