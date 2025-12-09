@@ -5,7 +5,7 @@ erDiagram
     string email
     string password_hash
     boolean mfa_enabled
-    string user_type  "Admin/Pastor/Member"
+    string user_type  "Admin/Pastor/Member/Worker"
     timestamptz created_at
     timestamptz updated_at
   }
@@ -24,7 +24,7 @@ erDiagram
   BRANCH {
     uuid id PK
     string name
-    string location
+    string branch_type  "KHARIS_CHURCH_UK/KHARIS_PHASE_2_UK/KHARIS_CHURCH_AFRICA"
     boolean active
   }
 
@@ -35,6 +35,14 @@ erDiagram
     string first_name
     string last_name
     string phone
+    string address
+    boolean completed_membership
+    boolean completed_new_believers
+    boolean completed_spiritual_maturity
+    boolean water_baptism
+    boolean holy_spirit_baptism
+    boolean visited
+    timestamptz last_visited
     date   dob
     string gender
     boolean active
@@ -68,6 +76,7 @@ erDiagram
   FELLOWSHIP {
     uuid id PK
     uuid branch_id FK
+    string fellowship_type  "KGroup/Express/KOC/NewBreed/etc"
     string name
     uuid leader_member_id FK
   }
@@ -117,6 +126,23 @@ erDiagram
     string notes
     timestamptz created_at
     timestamptz completed_at
+  }
+
+  SERVICE {
+    uuid id PK
+    uuid branch_id FK
+    string service_type  "SUNDAY_SERVICE/MIDWEEK_SERVICE/SPECIAL_SERVICE"
+    timestamptz starts_at
+    timestamptz ends_at
+    string venue
+  }
+
+  SERVICE_ATTENDANCE {
+    uuid id PK
+    uuid service_id FK
+    uuid member_id FK
+    boolean present
+    timestamptz checked_in_at
   }
 
   EVENT {
@@ -254,6 +280,7 @@ erDiagram
   BRANCH ||--o{ DEPARTMENT : has
   BRANCH ||--o{ FELLOWSHIP : has
   BRANCH ||--o{ EVENT : hosts
+  BRANCH ||--o{ SERVICE : hosts
   BRANCH ||--o{ PAYMENT : receives
   BRANCH ||--o{ PLEDGE : tracks
   BRANCH ||--o{ ANNOUNCEMENT : publishes
@@ -271,6 +298,9 @@ erDiagram
 
   OUTREACH_PROGRAM ||--o{ SOUL : yields
   SOUL ||--o{ FOLLOW_UP : has
+
+  SERVICE ||--o{ SERVICE_ATTENDANCE : logs
+  MEMBER ||--o{ SERVICE_ATTENDANCE : attends
 
   EVENT ||--o{ EVENT_REGISTRATION : has
   MEMBER ||--o{ EVENT_REGISTRATION : registers
