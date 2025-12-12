@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+.next
+out
+
+# NX
+.nx
+
+# Testing
+coverage
+.nyc_output
+
+# Generated files
+*.generated.*
+prisma/migrations
+
+# Documentation (preserve formatting)
+*.md
+CHANGELOG.md
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode
+.idea
