@@ -1,0 +1,145 @@
+name: PR Management
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  pr-labeler:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auto-label PR based on files changed
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+      - name: Add size label
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/xs'
+          xs_max_size: 10
+          s_label: 'size/s'
+          s_max_size: 100
+          m_label: 'size/m'
+          m_max_size: 500
+          l_label: 'size/l'
+          l_max_size: 1000
+          xl_label: 'size/xl'
+
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            web-admin
+            member-app
+            api
+            shared
+            ui
+            types
+            utils
+            deps
+          requireScope: false
+
+  pr-checks:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for breaking changes
+        run: |
+          echo "Checking for potential breaking changes..."
+
+          # Check if package.json has major version changes
+          if git diff --name-only origin/main...HEAD | grep -q "package.json"; then
+            echo "⚠️ package.json modified - review for breaking changes"
+          fi
+
+          # Check if schema.prisma has changes
+          if git diff --name-only origin/main...HEAD | grep -q "schema.prisma"; then
+            echo "⚠️ Database schema modified - ensure migrations are included"
+          fi
+
+          # Check if shared types have changes
+          if git diff --name-only origin/main...HEAD | grep -q "libs/shared/types"; then
+            echo "⚠️ Shared types modified - may affect multiple applications"
+          fi
+
+  auto-merge:
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Auto-approve dependabot PRs
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for dependabot PRs
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  issue-management:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Add to project board
+        if: github.event.action == 'opened'
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/orgs/kairos-church/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-assign bug issues
+        if: contains(github.event.issue.labels.*.name, 'bug')
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --add-assignee "kairos-team"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

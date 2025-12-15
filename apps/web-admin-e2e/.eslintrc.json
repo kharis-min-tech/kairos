@@ -1,0 +1,20 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["src/**/*.ts"],
+      "extends": ["plugin:playwright/recommended"],
+      "parserOptions": {
+        "project": ["apps/web-admin-e2e/tsconfig.json"]
+      },
+      "rules": {
+        "@typescript-eslint/await-thenable": "error"
+      }
+    }
+  ]
+}

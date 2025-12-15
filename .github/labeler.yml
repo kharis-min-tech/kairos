@@ -1,0 +1,85 @@
+# Configuration for the labeler action
+# https://github.com/actions/labeler
+
+# Web Admin Application
+'app:web-admin':
+  - 'apps/web-admin/**/*'
+
+# Member App Application
+'app:member-app':
+  - 'apps/member-app/**/*'
+
+# API Application
+'app:api':
+  - 'apps/api/**/*'
+
+# Shared Libraries
+'lib:shared':
+  - 'libs/shared/**/*'
+
+'lib:types':
+  - 'libs/shared/types/**/*'
+
+'lib:utils':
+  - 'libs/shared/utils/**/*'
+
+'lib:ui':
+  - 'libs/shared/ui/**/*'
+
+# Infrastructure and Configuration
+'infrastructure':
+  - '.github/**/*'
+  - 'docker-compose.yml'
+  - 'Dockerfile*'
+  - 'nx.json'
+  - 'package.json'
+  - 'tsconfig*.json'
+
+# Database
+'database':
+  - '**/prisma/**/*'
+  - '**/*.prisma'
+  - '**/migrations/**/*'
+
+# Documentation
+'documentation':
+  - '*.md'
+  - 'docs/**/*'
+  - 'architecture/**/*'
+
+# Testing
+'testing':
+  - '**/*.spec.ts'
+  - '**/*.test.ts'
+  - '**/*.e2e-spec.ts'
+  - 'jest.config.*'
+  - 'playwright.config.*'
+  - '**/test-setup.ts'
+
+# Dependencies
+'dependencies':
+  - 'package.json'
+  - 'package-lock.json'
+  - 'yarn.lock'
+
+# Configuration
+'config':
+  - '.eslintrc*'
+  - '.prettierrc*'
+  - 'tailwind.config.*'
+  - 'next.config.*'
+  - 'nest-cli.json'
+  - 'tsconfig*.json'
+
+# CI/CD
+'ci/cd':
+  - '.github/workflows/**/*'
+  - '.github/dependabot.yml'
+
+# Security
+'security':
+  - '**/auth/**/*'
+  - '**/security/**/*'
+  - '**/guards/**/*'
+  - '**/*guard*'
+  - '**/*auth*'

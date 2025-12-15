@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full test suite
+        run: |
+          npx nx run-many --target=lint --all --parallel=3
+          npx nx run-many --target=test --all --parallel=3 --coverage --watchAll=false
+          npx nx run-many --target=build --all --parallel=3
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Generate changelog from git commits
+          echo "## Changes" > CHANGELOG.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> CHANGELOG.md
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
+          draft: false
+          prerelease: false
+
+      - name: Build and push release images
+        env:
+          REGISTRY: ghcr.io
+          IMAGE_NAME: ${{ github.repository }}
+        run: |
+          echo "Building release images for tag: ${{ github.ref_name }}"
+
+          # Login to registry
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+
+          # Build and push images for each app
+          for app in web-admin member-app api; do
+            echo "Building $app..."
+            npx nx build $app --configuration=production
+            
+            # Build Docker image with release tag
+            docker build -f apps/$app/Dockerfile -t $REGISTRY/$IMAGE_NAME/$app:${{ github.ref_name }} .
+            docker push $REGISTRY/$IMAGE_NAME/$app:${{ github.ref_name }}
+            
+            # Also tag as stable
+            docker tag $REGISTRY/$IMAGE_NAME/$app:${{ github.ref_name }} $REGISTRY/$IMAGE_NAME/$app:stable
+            docker push $REGISTRY/$IMAGE_NAME/$app:stable
+          done

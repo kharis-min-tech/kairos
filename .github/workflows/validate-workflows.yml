@@ -1,0 +1,67 @@
+name: Validate Workflows
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  push:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate workflow syntax
+        run: |
+          echo "Validating GitHub Actions workflow syntax..."
+
+          # Check if all workflow files are valid YAML
+          for file in .github/workflows/*.yml; do
+            echo "Validating $file..."
+            
+            # Basic YAML syntax check using Python
+            python3 -c "
+            import yaml
+            import sys
+            
+            try:
+                with open('$file', 'r') as f:
+                    yaml.safe_load(f)
+                print('✅ $file is valid YAML')
+            except yaml.YAMLError as e:
+                print('❌ $file has YAML syntax error:', e)
+                sys.exit(1)
+            except Exception as e:
+                print('❌ Error reading $file:', e)
+                sys.exit(1)
+            "
+          done
+
+          echo "All workflow files validated successfully!"
+
+      - name: Check required workflow files
+        run: |
+          echo "Checking for required workflow files..."
+
+          required_files=(
+            ".github/workflows/ci.yml"
+            ".github/workflows/cd.yml"
+            ".github/workflows/security.yml"
+            ".github/dependabot.yml"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ $file is missing"
+              exit 1
+            fi
+          done
+
+          echo "All required workflow files are present!"

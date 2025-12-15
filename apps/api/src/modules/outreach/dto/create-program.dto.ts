@@ -1,9 +1,9 @@
 export class CreateProgramDto {
-  readonly name: string;
-  readonly description?: string;
-  readonly startDate: Date;
-  readonly endDate?: Date;
-  readonly location?: string;
-  readonly branchId: string;
-  readonly coordinatorId?: string;
+  name!: string;
+  description?: string;
+  startDate!: Date;
+  endDate?: Date;
+  location?: string;
+  branchId!: string;
+  coordinatorId?: string;
 }

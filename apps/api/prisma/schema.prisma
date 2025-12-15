@@ -1,0 +1,629 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core Authentication & Authorization
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  userType    UserType
+  mfaEnabled  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  member    Member?
+  userRoles UserRole[]
+  auditLogs AuditLog[]
+  accessLogs AccessLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions Json     // Store permissions as JSON array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// Church Structure
+model Branch {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  members      Member[]
+  departments  Department[]
+  fellowships  Fellowship[]
+  events       Event[]
+  outreachPrograms OutreachProgram[]
+
+  @@map("branches")
+}
+
+model Member {
+  id            String     @id @default(cuid())
+  userId        String?    @unique
+  branchId      String
+  firstName     String
+  lastName      String
+  phone         String?
+  email         String?
+  address       String?
+  dateOfBirth   DateTime?
+  gender        Gender?
+  maritalStatus MaritalStatus?
+  occupation    String?
+  joinDate      DateTime   @default(now())
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relationships
+  user         User?      @relation(fields: [userId], references: [id])
+  branch       Branch     @relation(fields: [branchId], references: [id])
+  departmentMembers DepartmentMember[]
+  fellowshipMembers FellowshipMember[]
+  eventRegistrations EventRegistration[]
+  eventAttendance   EventAttendance[]
+  payments         Payment[]
+  pledges          Pledge[]
+  souls            Soul[]
+  followUps        FollowUp[]
+
+  @@map("members")
+}
+
+// Departments
+model Department {
+  id          String   @id @default(cuid())
+  branchId    String
+  name        String
+  description String?
+  leaderId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  members     DepartmentMember[]
+  attendance  DepartmentAttendance[]
+
+  @@map("departments")
+}
+
+model DepartmentMember {
+  id           String   @id @default(cuid())
+  departmentId String
+  memberId     String
+  role         String?
+  joinDate     DateTime @default(now())
+  isActive     Boolean  @default(true)
+
+  // Relationships
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  member     Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, memberId])
+  @@map("department_members")
+}
+
+model DepartmentAttendance {
+  id           String   @id @default(cuid())
+  departmentId String
+  memberId     String
+  date         DateTime
+  present      Boolean  @default(false)
+  notes        String?
+
+  // Relationships
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, memberId, date])
+  @@map("department_attendance")
+}
+
+// Fellowships (K-Groups)
+model Fellowship {
+  id          String   @id @default(cuid())
+  branchId    String
+  name        String
+  description String?
+  leaderId    String?
+  meetingDay  String?
+  meetingTime String?
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  members     FellowshipMember[]
+  meetings    FellowshipMeeting[]
+
+  @@map("fellowships")
+}
+
+model FellowshipMember {
+  id           String   @id @default(cuid())
+  fellowshipId String
+  memberId     String
+  role         String?
+  joinDate     DateTime @default(now())
+  isActive     Boolean  @default(true)
+
+  // Relationships
+  fellowship Fellowship @relation(fields: [fellowshipId], references: [id], onDelete: Cascade)
+  member     Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([fellowshipId, memberId])
+  @@map("fellowship_members")
+}
+
+model FellowshipMeeting {
+  id           String   @id @default(cuid())
+  fellowshipId String
+  date         DateTime
+  topic        String?
+  notes        String?
+  attendance   FellowshipAttendance[]
+
+  // Relationships
+  fellowship Fellowship @relation(fields: [fellowshipId], references: [id], onDelete: Cascade)
+
+  @@map("fellowship_meetings")
+}
+
+model FellowshipAttendance {
+  id        String  @id @default(cuid())
+  meetingId String
+  memberId  String
+  present   Boolean @default(false)
+  notes     String?
+
+  // Relationships
+  meeting FellowshipMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, memberId])
+  @@map("fellowship_attendance")
+}
+
+// Events
+model Event {
+  id          String    @id @default(cuid())
+  branchId    String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  capacity    Int?
+  fee         Decimal?  @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  branch        Branch              @relation(fields: [branchId], references: [id])
+  registrations EventRegistration[]
+  attendance    EventAttendance[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id           String   @id @default(cuid())
+  eventId      String
+  memberId     String
+  registeredAt DateTime @default(now())
+  paymentStatus PaymentStatus @default(PENDING)
+  notes        String?
+
+  // Relationships
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, memberId])
+  @@map("event_registrations")
+}
+
+model EventAttendance {
+  id       String  @id @default(cuid())
+  eventId  String
+  memberId String
+  date     DateTime
+  present  Boolean @default(false)
+  notes    String?
+
+  // Relationships
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, memberId, date])
+  @@map("event_attendance")
+}
+
+// Finance
+model Payment {
+  id          String      @id @default(cuid())
+  memberId    String
+  amount      Decimal     @db.Decimal(10, 2)
+  paymentType PaymentType
+  method      PaymentMethod
+  reference   String?
+  description String?
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relationships
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@map("payments")
+}
+
+model Pledge {
+  id          String   @id @default(cuid())
+  memberId    String
+  amount      Decimal  @db.Decimal(10, 2)
+  purpose     String
+  startDate   DateTime
+  endDate     DateTime?
+  frequency   PledgeFrequency
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  member   Member          @relation(fields: [memberId], references: [id])
+  payments PledgePayment[]
+
+  @@map("pledges")
+}
+
+model PledgePayment {
+  id        String   @id @default(cuid())
+  pledgeId  String
+  amount    Decimal  @db.Decimal(10, 2)
+  date      DateTime @default(now())
+  notes     String?
+
+  // Relationships
+  pledge Pledge @relation(fields: [pledgeId], references: [id], onDelete: Cascade)
+
+  @@map("pledge_payments")
+}
+
+// Outreach & Evangelism
+model OutreachProgram {
+  id          String   @id @default(cuid())
+  branchId    String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branch Branch @relation(fields: [branchId], references: [id])
+  souls  Soul[]
+
+  @@map("outreach_programs")
+}
+
+model Soul {
+  id        String     @id @default(cuid())
+  programId String
+  memberId  String     // Member who brought the soul
+  firstName String
+  lastName  String
+  phone     String?
+  email     String?
+  address   String?
+  status    SoulStatus @default(CONTACTED)
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relationships
+  program   OutreachProgram @relation(fields: [programId], references: [id])
+  member    Member          @relation(fields: [memberId], references: [id])
+  followUps FollowUp[]
+
+  @@map("souls")
+}
+
+model FollowUp {
+  id       String         @id @default(cuid())
+  soulId   String
+  memberId String         // Member doing the follow-up
+  type     FollowUpType
+  date     DateTime
+  notes    String?
+  outcome  FollowUpOutcome?
+
+  // Relationships
+  soul   Soul   @relation(fields: [soulId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@map("follow_ups")
+}
+
+// Forms System
+model Form {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  fields      FormField[]
+  submissions FormSubmission[]
+
+  @@map("forms")
+}
+
+model FormField {
+  id          String    @id @default(cuid())
+  formId      String
+  name        String
+  label       String
+  type        FieldType
+  required    Boolean   @default(false)
+  options     Json?     // For select, radio, checkbox fields
+  validation  Json?     // Validation rules
+  order       Int
+  createdAt   DateTime  @default(now())
+
+  // Relationships
+  form    Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  answers FormAnswer[]
+
+  @@map("form_fields")
+}
+
+model FormSubmission {
+  id          String   @id @default(cuid())
+  formId      String
+  submitterId String?  // Optional - for anonymous forms
+  submittedAt DateTime @default(now())
+
+  // Relationships
+  form    Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  answers FormAnswer[]
+
+  @@map("form_submissions")
+}
+
+model FormAnswer {
+  id           String @id @default(cuid())
+  submissionId String
+  fieldId      String
+  value        String
+
+  // Relationships
+  submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  field      FormField      @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, fieldId])
+  @@map("form_answers")
+}
+
+// Communications
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  authorId    String
+  targetAudience Json  // Array of user types or specific groups
+  isActive    Boolean  @default(true)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+model MessageThread {
+  id          String   @id @default(cuid())
+  subject     String
+  participants Json    // Array of user IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  messages Message[]
+
+  @@map("message_threads")
+}
+
+model Message {
+  id       String @id @default(cuid())
+  threadId String
+  senderId String
+  content  String
+  sentAt   DateTime @default(now())
+
+  // Relationships
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Audit & Security
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String
+  details   Json?
+  timestamp DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model AccessLog {
+  id        String   @id @default(cuid())
+  userId    String
+  ipAddress String
+  userAgent String?
+  action    String
+  timestamp DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("access_logs")
+}
+
+// Enums
+enum UserType {
+  ADMIN
+  PASTOR
+  MEMBER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum PaymentType {
+  TITHE
+  OFFERING
+  PLEDGE
+  EVENT_FEE
+  DONATION
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  MOBILE_MONEY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PledgeFrequency {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum SoulStatus {
+  CONTACTED
+  INTERESTED
+  VISITING
+  CONVERTED
+  BAPTIZED
+  INACTIVE
+}
+
+enum FollowUpType {
+  PHONE_CALL
+  HOME_VISIT
+  TEXT_MESSAGE
+  EMAIL
+  CHURCH_VISIT
+}
+
+enum FollowUpOutcome {
+  SUCCESSFUL
+  NO_RESPONSE
+  NOT_INTERESTED
+  NEEDS_FOLLOW_UP
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  NUMBER
+  DATE
+  SELECT
+  RADIO
+  CHECKBOX
+  TEXTAREA
+  FILE
+}
+
+enum NotificationType {
+  ANNOUNCEMENT
+  EVENT_REMINDER
+  PAYMENT_REMINDER
+  FOLLOW_UP_REMINDER
+  SYSTEM_ALERT
+}

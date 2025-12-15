@@ -1,4 +1,23 @@
 // Core entity interfaces for the Kairos Church Management System
+import {
+  UserType,
+  Gender,
+  MaritalStatus,
+  SoulStatus,
+  FollowUpType,
+  EventType,
+  PaymentType,
+  PaymentMethod,
+  PaymentStatus,
+  RecurringFrequency,
+  PledgeType,
+  PledgeStatus,
+  FormFieldType,
+  AnnouncementPriority,
+  NotificationType,
+  MessageType,
+  AccessAction,
+} from './enums';
 
 export interface User {
   id: string;

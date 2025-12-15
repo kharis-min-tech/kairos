@@ -7,19 +7,39 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
-      "cache": true
+      "cache": true,
+      "outputs": ["{options.outputPath}"]
     },
     "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "cache": true
+      "cache": true,
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "lint": {
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-      "cache": true
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintrc.js"
+      ],
+      "cache": true,
+      "outputs": ["{options.outputFile}"]
     },
     "e2e": {
       "inputs": ["default", "^production"],
-      "cache": true
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/dist/.playwright",
+        "{workspaceRoot}/test-results"
+      ]
+    },
+    "serve": {
+      "cache": false
+    },
+    "export": {
+      "dependsOn": ["build"],
+      "inputs": ["production", "^production"],
+      "cache": true,
+      "outputs": ["{options.outputPath}"]
     }
   },
   "namedInputs": {
@@ -31,9 +51,20 @@
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s"
+      "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/coverage/**/*"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [
+      "{workspaceRoot}/.github/workflows/ci.yml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/.eslintrc.json",
+      "{workspaceRoot}/.prettierrc",
+      "{workspaceRoot}/tailwind.config.js"
+    ]
   },
   "generators": {
     "@nx/react": {
@@ -62,12 +93,23 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "parallel": 3
+        "cacheableOperations": ["build", "lint", "test", "e2e", "export"],
+        "parallel": 4,
+        "maxParallel": 8,
+        "runtimeCacheInputs": ["node -v", "npm -v"],
+        "useDaemonProcess": true
       }
     }
   },
-  "parallel": 3,
+  "parallel": 4,
+  "maxParallel": 8,
   "cacheDirectory": ".nx/cache",
-  "defaultProject": "web-admin"
+  "defaultProject": "web-admin",
+  "cli": {
+    "analytics": false
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  }
 }

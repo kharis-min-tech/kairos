@@ -1,169 +1,384 @@
-# Web Admin Application
+# Kairos Web Admin
 
-This is the administrative web interface for the Kairos Church Management System, built with Next.js 14 and the App Router.
+The administrative web interface for the Kairos Church Management System. This Next.js application provides comprehensive tools for church staff, pastors, and administrators to manage all aspects of church operations.
 
-## Features
+## 🎯 Purpose
 
-- **Dashboard**: Overview of key metrics and recent activity
-- **Members Management**: Manage church members and their profiles
-- **Departments**: Organize ministry departments and leadership
-- **Fellowships**: Manage K-Groups and small group meetings
-- **Events**: Create and manage church events and registrations
-- **Finance**: Track giving, pledges, and financial reports
-- **Forms**: Dynamic form builder and submission management
-- **Reports**: Generate comprehensive analytics and reports
-- **Security**: Role-based access control and permissions
-- **Settings**: Configure application and branch settings
+The Web Admin application serves as the primary administrative interface for:
+- Church staff and administrators
+- Pastors and ministry leaders
+- Department heads and coordinators
+- Financial administrators
 
-## Technology Stack
+## ✨ Key Features
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **Fonts**: Inter (body), Poppins (headings)
-- **Port**: 4200 (development)
+### Dashboard & Analytics
+- Real-time church statistics and KPIs
+- Member growth and engagement metrics
+- Financial summaries and trends
+- Upcoming events and deadlines
 
-## Getting Started
+### Member Management
+- Complete member directory with profiles
+- Member registration and onboarding
+- Contact information and communication preferences
+- Member status tracking and lifecycle management
+
+### Department Management
+- Department creation and configuration
+- Member assignment to departments
+- Department-specific reporting and analytics
+- Service attendance tracking
+
+### Fellowship Management (K-Groups)
+- Small group creation and management
+- Meeting scheduling and attendance tracking
+- Group member management
+- Fellowship reporting and analytics
+
+### Event Management
+- Event creation and configuration
+- Registration management and check-in
+- Attendance tracking and reporting
+- Event-specific communication
+
+### Financial Management
+- Payment recording and tracking
+- Pledge management and monitoring
+- Financial reporting and analytics
+- Giving statements and receipts
+
+### Forms Management
+- Dynamic form creation and configuration
+- Form submission management and review
+- Response analytics and reporting
+- Form template library
+
+### Communications
+- Announcement creation and distribution
+- Targeted messaging to specific groups
+- Communication history and tracking
+- Notification management
+
+### Security & Administration
+- User role and permission management
+- Access control and security settings
+- Audit logs and access tracking
+- System configuration and settings
+
+## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js 18.x or higher
+- Access to the Kairos API backend
+- Valid admin credentials
 
-- Node.js 18+ 
-- npm or yarn
+### Development Setup
 
-### Development
+1. **Navigate to the web-admin directory**
+   ```bash
+   cd apps/web-admin
+   ```
 
-```bash
-# Start the development server
-nx serve web-admin
+2. **Install dependencies** (from root)
+   ```bash
+   cd ../..
+   npm install
+   ```
 
-# Or using npm
-npm run dev
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Update `.env.local` with your configuration:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:3333
+   NEXT_PUBLIC_APP_NAME=Kairos Web Admin
+   NEXT_PUBLIC_APP_VERSION=1.0.0
+   ```
 
-# Build for production
-nx build web-admin
+4. **Start the development server**
+   ```bash
+   # From root directory
+   nx serve web-admin
+   
+   # Or with specific configuration
+   nx serve web-admin --configuration=development
+   ```
 
-# Run tests
-nx test web-admin
+5. **Access the application**
+   - Open [http://localhost:4200](http://localhost:4200) in your browser
+   - Login with admin credentials
 
-# Lint code
-nx lint web-admin
-```
-
-The application will be available at `http://localhost:4200`.
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 apps/web-admin/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (auth)/            # Authentication routes
-│   │   │   └── login/
+│   │   │   ├── login/         # Login page
+│   │   │   └── layout.tsx     # Auth layout
 │   │   ├── (dashboard)/       # Protected dashboard routes
-│   │   │   ├── dashboard/
-│   │   │   ├── members/
-│   │   │   ├── departments/
-│   │   │   ├── fellowships/
-│   │   │   ├── events/
-│   │   │   ├── finance/
-│   │   │   ├── forms/
-│   │   │   ├── reports/
-│   │   │   ├── security/
-│   │   │   └── settings/
+│   │   │   ├── dashboard/     # Main dashboard
+│   │   │   ├── members/       # Member management
+│   │   │   ├── departments/   # Department management
+│   │   │   ├── fellowships/   # Fellowship management
+│   │   │   ├── events/        # Event management
+│   │   │   ├── finance/       # Financial management
+│   │   │   ├── forms/         # Forms management
+│   │   │   ├── reports/       # Reporting and analytics
+│   │   │   ├── security/      # Security and RBAC
+│   │   │   ├── settings/      # System settings
+│   │   │   └── layout.tsx     # Dashboard layout
 │   │   ├── globals.css        # Global styles
 │   │   ├── layout.tsx         # Root layout
 │   │   └── page.tsx           # Home page
-│   └── components/            # Shared components
-│       ├── Header.tsx
-│       └── Sidebar.tsx
-├── public/                    # Static assets
-├── .env.example              # Environment variables template
-├── next.config.js            # Next.js configuration
-├── tailwind.config.js        # Tailwind CSS configuration
-├── tsconfig.json             # TypeScript configuration
-└── README.md                 # This file
+│   ├── components/            # App-specific components
+│   │   ├── Header.tsx         # Navigation header
+│   │   ├── Sidebar.tsx        # Navigation sidebar
+│   │   └── [feature]/         # Feature-specific components
+│   ├── lib/                   # App-specific utilities
+│   │   ├── api.ts            # API client configuration
+│   │   ├── auth.ts           # Authentication utilities
+│   │   └── utils.ts          # General utilities
+│   └── styles/               # Additional styles
+├── public/                   # Static assets
+│   ├── favicon.ico
+│   └── images/
+├── .env.example             # Environment variables template
+├── .eslintrc.json          # ESLint configuration
+├── jest.config.ts          # Jest testing configuration
+├── next.config.js          # Next.js configuration
+├── postcss.config.js       # PostCSS configuration
+├── project.json            # NX project configuration
+├── tailwind.config.js      # Tailwind CSS configuration
+└── tsconfig.json           # TypeScript configuration
 ```
 
-## Environment Variables
+## 🎨 UI Components
 
-Copy `.env.example` to `.env.local` and configure:
+The Web Admin application uses the shared UI component library (`@kairos/ui`) which provides:
 
-```bash
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:3333
-
-# Authentication
-NEXTAUTH_SECRET=your-secret-key-here
-NEXTAUTH_URL=http://localhost:4200
-
-# Database (if needed for direct access)
-DATABASE_URL=postgresql://user:password@localhost:5432/kairos
-```
-
-## Design System
-
-The application uses a custom design system inspired by Kharis Church branding:
-
-### Colors
-- **Primary**: Blue tones (#0ea5e9 to #0c4a6e)
-- **Accent**: Gold/yellow tones (#eab308 to #713f12)
-- **Neutral**: Grayscale for text and backgrounds
-
-### Typography
-- **Body**: Inter font family
-- **Headings**: Poppins font family
-
-### Components
-- Consistent spacing and sizing
-- Accessible color contrasts
+### Design System
+- Consistent color palette inspired by Kairos Church branding
+- Typography scale and font families
+- Spacing and layout utilities
 - Responsive design patterns
 
-## Authentication
+### Core Components
+- **Forms**: Input, Select, Checkbox, Radio, TextArea
+- **Navigation**: Button, Link, Breadcrumb, Pagination
+- **Layout**: Card, Modal, Dialog, Drawer, Tabs
+- **Data Display**: Table, DataGrid, Badge, Avatar
+- **Feedback**: Alert, Toast, Loading, Progress
 
-The application includes authentication routes:
-- `/login` - User login page
-- Protected routes require authentication
+### Usage Example
+```tsx
+import { Button, Card, Input, Modal } from '@kairos/ui';
 
-## Navigation
-
-The sidebar navigation includes:
-- Dashboard overview
-- All major functional modules
-- Visual icons for easy identification
-- Active state highlighting
-
-## Development Guidelines
-
-1. **File Organization**: Use the established folder structure
-2. **Styling**: Use Tailwind CSS classes, follow the design system
-3. **Components**: Create reusable components in `/src/components`
-4. **Types**: Import shared types from `@kairos/shared-types`
-5. **API Calls**: Use environment variables for API endpoints
-
-## Integration
-
-This application integrates with:
-- **API Backend**: NestJS API at `NEXT_PUBLIC_API_URL`
-- **Shared Libraries**: 
-  - `@kairos/shared-types` for TypeScript interfaces
-  - `@kairos/shared-utils` for utility functions
-  - `@kairos/ui` for shared UI components
-
-## Deployment
-
-The application can be deployed as a static site or with server-side rendering:
-
-```bash
-# Build for production
-nx build web-admin
-
-# The built files will be in dist/apps/web-admin
+export function MemberForm() {
+  return (
+    <Card>
+      <form>
+        <Input label="Full Name" required />
+        <Input label="Email" type="email" required />
+        <Button type="submit">Save Member</Button>
+      </form>
+    </Card>
+  );
+}
 ```
 
-## Contributing
+## 🔐 Authentication & Authorization
 
-1. Follow the established code style and patterns
+### Authentication Flow
+1. User navigates to protected route
+2. Redirected to `/login` if not authenticated
+3. Login with email/password
+4. JWT token stored securely
+5. Redirected to intended destination
+
+### Role-Based Access Control
+- **Super Admin**: Full system access
+- **Admin**: Church-wide administrative access
+- **Pastor**: Ministry and member management
+- **Department Head**: Department-specific access
+- **Staff**: Limited operational access
+
+### Protected Routes
+All routes under `(dashboard)` require authentication and appropriate permissions.
+
+## 📱 Responsive Design
+
+The Web Admin interface is fully responsive and optimized for:
+- **Desktop**: Primary interface (1200px+)
+- **Tablet**: Adapted layout (768px - 1199px)
+- **Mobile**: Simplified interface (< 768px)
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+# Run web-admin tests
+nx test web-admin
+
+# Run tests in watch mode
+nx test web-admin --watch
+
+# Run tests with coverage
+nx test web-admin --coverage
+```
+
+### End-to-End Tests
+```bash
+# Run E2E tests
+nx e2e web-admin-e2e
+
+# Run E2E tests in headed mode
+nx e2e web-admin-e2e --headed
+```
+
+### Test Structure
+```
+apps/web-admin/src/
+├── components/
+│   └── __tests__/          # Component tests
+├── lib/
+│   └── __tests__/          # Utility tests
+└── app/
+    └── __tests__/          # Page tests
+```
+
+## 🚀 Building & Deployment
+
+### Development Build
+```bash
+nx build web-admin
+```
+
+### Production Build
+```bash
+nx build web-admin --configuration=production
+```
+
+### Docker Build
+```bash
+# Build Docker image
+docker build -f apps/web-admin/Dockerfile -t kairos-web-admin .
+
+# Run container
+docker run -p 4200:3000 kairos-web-admin
+```
+
+### Environment Configurations
+
+#### Development
+- Source maps enabled
+- Hot reloading
+- Detailed error messages
+- Development API endpoints
+
+#### Production
+- Optimized bundles
+- Minified assets
+- Error boundaries
+- Production API endpoints
+- Performance monitoring
+
+## 🔧 Configuration
+
+### Next.js Configuration (`next.config.js`)
+```javascript
+const { composePlugins, withNx } = require('@nx/next');
+
+const nextConfig = {
+  nx: {
+    svgr: false,
+  },
+  experimental: {
+    appDir: true,
+  },
+  images: {
+    domains: ['localhost'],
+  },
+};
+
+const plugins = [withNx];
+
+module.exports = composePlugins(...plugins)(nextConfig);
+```
+
+### Tailwind Configuration
+Custom configuration extending the shared design system with admin-specific utilities.
+
+## 📊 Performance
+
+### Optimization Features
+- **Code Splitting**: Automatic route-based splitting
+- **Image Optimization**: Next.js Image component
+- **Bundle Analysis**: Webpack bundle analyzer
+- **Caching**: Aggressive caching strategies
+- **Lazy Loading**: Component and route lazy loading
+
+### Performance Monitoring
+- Lighthouse CI integration
+- Core Web Vitals tracking
+- Performance budgets
+- Bundle size monitoring
+
+## 🐛 Debugging
+
+### Development Tools
+- React Developer Tools
+- Next.js debugging
+- Network request inspection
+- State management debugging
+
+### Logging
+- Client-side error logging
+- API request/response logging
+- User action tracking
+- Performance metrics
+
+## 🔗 API Integration
+
+### API Client Configuration
+```typescript
+// lib/api.ts
+import { ApiClient } from '@kairos/shared-utils';
+
+export const api = new ApiClient({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  timeout: 10000,
+});
+```
+
+### Data Fetching Patterns
+- Server Components for initial data
+- Client Components for interactive data
+- SWR for client-side caching
+- Optimistic updates for better UX
+
+## 📚 Additional Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Kairos API Documentation](../api/README.md)
+- [Shared UI Components](../../libs/shared/ui/README.md)
+
+## 🤝 Contributing
+
+When contributing to the Web Admin application:
+
+1. Follow the established folder structure
 2. Use TypeScript for all new code
-3. Write tests for new functionality
-4. Follow the component and routing conventions
-5. Update documentation as needed
+3. Write tests for new components and utilities
+4. Follow the design system guidelines
+5. Ensure responsive design compatibility
+6. Test across different user roles
+
+## 📄 License
+
+This project is part of the Kairos Church Management System and is licensed under the MIT License.

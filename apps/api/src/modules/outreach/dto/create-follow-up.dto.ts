@@ -1,7 +1,7 @@
 export class CreateFollowUpDto {
-  readonly type: string;
-  readonly notes: string;
-  readonly scheduledDate?: Date;
-  readonly completedDate?: Date;
-  readonly assignedTo: string;
+  type!: string;
+  notes!: string;
+  scheduledDate?: Date;
+  completedDate?: Date;
+  assignedTo!: string;
 }

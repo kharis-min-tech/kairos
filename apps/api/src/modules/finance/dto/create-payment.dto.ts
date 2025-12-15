@@ -1,9 +1,9 @@
 export class CreatePaymentDto {
-  readonly amount: number;
-  readonly paymentType: string;
-  readonly paymentMethod: string;
-  readonly memberId: string;
-  readonly branchId: string;
-  readonly description?: string;
-  readonly reference?: string;
+  amount!: number;
+  paymentType!: string;
+  paymentMethod!: string;
+  memberId!: string;
+  branchId!: string;
+  description?: string;
+  reference?: string;
 }

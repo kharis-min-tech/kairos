@@ -12,6 +12,11 @@
         "main": "libs/shared/utils/src/index.ts",
         "tsConfig": "libs/shared/utils/tsconfig.lib.json",
         "assets": ["libs/shared/utils/*.md"]
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/shared/utils/tsconfig.lib.json"
+        }
       }
     },
     "lint": {

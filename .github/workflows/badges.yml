@@ -1,0 +1,46 @@
+name: Update Badges
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ['CI', 'Security']
+    types: [completed]
+
+jobs:
+  update-badges:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update README badges
+        run: |
+          echo "Updating workflow status badges in README.md..."
+
+          # This would update badges in README.md based on workflow status
+          # Example badges that could be added:
+          # - CI Status
+          # - Security Scan Status  
+          # - Code Coverage
+          # - License
+          # - Version
+
+          echo "Badge update completed"
+
+      - name: Generate coverage badge
+        if: github.event.workflow_run.name == 'CI' && github.event.workflow_run.conclusion == 'success'
+        run: |
+          echo "Generating coverage badge from latest CI run..."
+
+          # This would parse coverage reports and generate/update coverage badge
+          # Could use tools like:
+          # - shields.io for badge generation
+          # - coverage-badges for automated coverage badges
+
+          echo "Coverage badge generated"

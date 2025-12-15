@@ -67,6 +67,9 @@ prisma/migrations/.migrate_lock
 # Docker
 .dockerignore
 docker-compose.override.yml
+.env.docker.local
+docker-compose.*.yml
+*.dockerfile
 
 # Misc
 .cache

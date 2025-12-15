@@ -11,7 +11,12 @@
         "outputPath": "dist/libs/shared/ui",
         "main": "libs/shared/ui/src/index.ts",
         "tsConfig": "libs/shared/ui/tsconfig.lib.json",
-        "assets": ["libs/shared/ui/*.md"]
+        "assets": ["libs/shared/ui/*.md", "libs/shared/ui/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/shared/ui/tsconfig.lib.json"
+        }
       }
     },
     "lint": {

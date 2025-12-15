@@ -1,223 +1,365 @@
 # Kairos Church Management System
 
-Kharis Project Kairos - A comprehensive church management system built with NX monorepo architecture.
+A comprehensive church management system built with modern web technologies, designed to streamline church operations, member management, and ministry coordination.
 
-## Project Structure
+## 🏗️ Architecture Overview
 
-This is an NX monorepo containing:
+Kairos is built as an NX monorepo containing multiple applications and shared libraries:
 
-- **apps/**: Frontend and backend applications
-  - `web-admin`: Next.js admin application
-  - `member-app`: Next.js member application
-  - `api`: NestJS backend API
+- **Frontend Applications**: Web Admin (Next.js) and Member App (Next.js)
+- **Backend API**: NestJS application with domain-driven module structure
+- **Shared Libraries**: TypeScript types, utilities, and UI components
+- **Infrastructure**: PostgreSQL database, Prisma ORM, GitHub Actions CI/CD
 
-- **libs/**: Shared libraries
-  - `shared/types`: TypeScript interfaces and types
-  - `shared/utils`: Utility functions
-  - `shared/ui`: Design system and UI components
+```
+kairos/
+├── apps/
+│   ├── web-admin/          # Next.js admin application
+│   ├── member-app/         # Next.js member application
+│   ├── api/                # NestJS backend API
+│   ├── web-admin-e2e/      # E2E tests for web-admin
+│   └── member-app-e2e/     # E2E tests for member-app
+├── libs/
+│   └── shared/
+│       ├── types/          # Shared TypeScript interfaces
+│       ├── utils/          # Shared utility functions
+│       └── ui/             # Design system & UI components
+├── architecture/           # Architecture diagrams and documentation
+├── .github/               # GitHub Actions workflows
+└── docs/                  # Additional documentation
+```
 
-## Prerequisites
+## 🚀 Quick Start
 
-- Node.js 20.x or higher
-- npm 10.x or higher
-- PostgreSQL 15.x or higher
+### Prerequisites
 
-## Getting Started
+- **Node.js**: Version 18.x or higher
+- **npm**: Version 8.x or higher (comes with Node.js)
+- **PostgreSQL**: Version 15.x or higher
+- **Git**: Latest version
 
 ### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd kairos
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   # Copy environment templates
+   cp apps/api/.env.example apps/api/.env
+   cp apps/web-admin/.env.example apps/web-admin/.env.local
+   cp apps/member-app/.env.example apps/member-app/.env.local
+   ```
+
+4. **Configure database**
+   ```bash
+   # Update DATABASE_URL in apps/api/.env
+   # Example: DATABASE_URL="postgresql://username:password@localhost:5432/kairos"
+   ```
+
+5. **Initialize database**
+   ```bash
+   cd apps/api
+   npx prisma migrate dev --name init
+   npx prisma generate
+   cd ../..
+   ```
+
+6. **Start development servers**
+   ```bash
+   # Start all applications
+   npm run start:all
+   
+   # Or start individually
+   nx serve web-admin    # http://localhost:4200
+   nx serve member-app   # http://localhost:4201
+   nx serve api          # http://localhost:3333
+   ```
+
+## 🛠️ Development Commands
+
+### Serving Applications
+
 ```bash
-npm install
-```
+# Start all applications
+npm run start:all
 
-### Development
+# Start individual applications
+nx serve web-admin          # Admin interface (port 4200)
+nx serve member-app         # Member interface (port 4201)
+nx serve api               # Backend API (port 3333)
 
-Run applications in development mode:
-
-```bash
-# Web Admin (port 4200)
-nx serve web-admin
-
-# Member App (port 4201)
-nx serve member-app
-
-# API (port 3333)
-nx serve api
-```
-
-### Building
-
-Build applications for production:
-
-```bash
-# Build all applications
-nx run-many --target=build --all
-
-# Build specific application
-nx build web-admin
-nx build member-app
-nx build api
+# Start with specific configuration
+nx serve web-admin --configuration=development
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-nx run-many --target=test --all
+npm test
 
-# Run tests for affected projects
-nx affected:test
+# Run tests for specific project
+nx test web-admin
+nx test member-app
+nx test api
+nx test shared-utils
 
-# Run specific project tests
-nx test <project-name>
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run affected tests only
+npm run affected:test
+
+# Run end-to-end tests
+npm run e2e
+nx e2e web-admin-e2e
+nx e2e member-app-e2e
 ```
 
-### Linting
+### Building
 
 ```bash
-# Lint all projects
-nx run-many --target=lint --all
+# Build all applications
+npm run build
 
-# Lint affected projects
-nx affected:lint
+# Build all applications and libraries
+npm run build:all
 
-# Lint specific project
-nx lint <project-name>
+# Build for production (optimized)
+npm run build:all:prod
+
+# Build specific application
+nx build web-admin
+nx build member-app
+nx build api
+
+# Build with optimization
+npm run build:optimize
+npm run build:optimize:prod
+
+# Build affected projects only
+npm run affected:build
+npm run affected:build:prod
+
+# Build specific groups
+npm run build:apps      # Applications only
+npm run build:libs      # Libraries only
 ```
 
-### Code Formatting
+For detailed build optimization information, see [Build Optimization Guide](docs/BUILD_OPTIMIZATION.md).
 
-```bash
-# Format all files
-nx format:write
+### Linting and Formatting
 
-# Check formatting
-nx format:check
-
-# Format with Prettier
-npm run format
-```
-
-## Code Quality
-
-This project uses several tools to maintain code quality and consistency:
-
-### ESLint
-
-ESLint is configured with TypeScript, React, and NX plugins to enforce code quality standards.
-
-**Configuration**: `.eslintrc.json`
-
-**Key Rules**:
-- TypeScript strict type checking
-- React hooks rules enforcement
-- Accessibility (a11y) checks for React components
-- NX module boundary enforcement
-- Unused variable detection
-
-**Commands**:
 ```bash
 # Lint all projects
 npm run lint
 
-# Lint and auto-fix issues
+# Lint specific project
+nx lint web-admin
+
+# Fix linting issues
 npm run lint:fix
 
-# Lint affected projects only
-nx affected:lint
-```
-
-### Prettier
-
-Prettier ensures consistent code formatting across the entire codebase.
-
-**Configuration**: `.prettierrc`
-
-**Settings**:
-- Single quotes for strings
-- 2-space indentation
-- 80 character line width
-- Semicolons required
-- Trailing commas (ES5)
-- LF line endings
-
-**Commands**:
-```bash
-# Format all files
+# Format code
 npm run format
 
-# Check formatting without changes
+# Check formatting
 npm run format:check
+
+# Lint affected projects only
+npm run affected:lint
 ```
 
-### Husky & Git Hooks
+### Database Operations
 
-Husky is configured to run pre-commit hooks that automatically lint and format staged files.
-
-**Configuration**: `.husky/pre-commit`, `.lintstagedrc.json`
-
-**Pre-commit Hook**:
-- Runs ESLint with auto-fix on staged TypeScript/JavaScript files
-- Runs Prettier on staged files
-- Prevents commits if linting fails
-
-**Setup**:
 ```bash
-# Install Husky hooks (runs automatically after npm install)
-npm run prepare
+# Generate Prisma client
+cd apps/api && npx prisma generate
+
+# Create and apply migration
+cd apps/api && npx prisma migrate dev --name migration_name
+
+# Reset database
+cd apps/api && npx prisma migrate reset
+
+# View database in Prisma Studio
+cd apps/api && npx prisma studio
+
+# Seed database
+cd apps/api && npx prisma db seed
 ```
 
-### EditorConfig
+### Docker Operations
 
-EditorConfig ensures consistent coding styles across different editors and IDEs.
+```bash
+# Set up Docker environment
+npm run docker:setup
 
-**Configuration**: `.editorconfig`
+# Build Docker images
+npm run docker:build
 
-**Settings**:
-- UTF-8 charset
-- 2-space indentation
-- LF line endings
-- Trim trailing whitespace
-- Insert final newline
+# Start services
+npm run docker:start
 
-### Lint-Staged
+# Stop services
+npm run docker:stop
 
-Lint-staged runs linters on staged files only, making pre-commit hooks fast and efficient.
+# View logs
+npm run docker:logs
 
-**Configuration**: `.lintstagedrc.json`
+# Check status
+npm run docker:status
 
-**Staged File Processing**:
-- TypeScript/JavaScript files: ESLint + Prettier
-- JSON/Markdown/YAML files: Prettier only
+# Run database migrations in Docker
+npm run docker:migrate
 
-## NX Commands
+# Clean up Docker resources
+npm run docker:clean
+```
 
-- `nx graph` - View project dependency graph
-- `nx affected:apps` - Show affected applications
-- `nx affected:libs` - Show affected libraries
-- `nx affected:build` - Build affected projects
-- `nx affected:test` - Test affected projects
+## 📁 Project Structure
 
-## Architecture
+### Applications (`apps/`)
 
-For detailed architecture documentation, see:
-- [ERD Diagram](./architecture/kairos-erd.mmd)
-- [Domain Model](./architecture/kairos-domain.puml)
-- [Use Cases](./architecture/kairos-usecases.puml)
-- [Sequence Diagrams](./architecture/sequences/)
+- **`web-admin/`**: Administrative web interface for church staff
+  - Built with Next.js 14 (App Router)
+  - Tailwind CSS for styling
+  - Authentication and role-based access
+  - Comprehensive admin features
 
-## Module Boundaries
+- **`member-app/`**: Member-facing web application
+  - Built with Next.js 14 (App Router)
+  - Member dashboard and self-service features
+  - Event registration and giving
 
-The workspace enforces strict module boundaries:
-- Applications can depend on feature, ui, util, and data-access libraries
-- Feature libraries can depend on ui, util, and data-access libraries
-- UI libraries can only depend on util libraries
-- Util libraries have no dependencies
+- **`api/`**: Backend REST API
+  - Built with NestJS
+  - Modular architecture by domain
+  - Prisma ORM for database access
+  - JWT authentication
 
-## Contributing
+### Libraries (`libs/shared/`)
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+- **`types/`**: Shared TypeScript interfaces and types
+- **`utils/`**: Common utility functions (date, validation, currency)
+- **`ui/`**: Design system and reusable React components
 
-## License
+### Key Configuration Files
 
-MIT
+- **`nx.json`**: NX workspace configuration
+- **`package.json`**: Dependencies and scripts
+- **`tsconfig.base.json`**: TypeScript configuration with path aliases
+- **`jest.config.ts`**: Jest testing configuration
+- **`.eslintrc.json`**: ESLint configuration
+- **`.prettierrc`**: Prettier formatting rules
+
+## 🏛️ Architecture Documentation
+
+Detailed architecture documentation is available in the `architecture/` directory:
+
+- **[Entity Relationship Diagram](architecture/kairos-erd.mmd)**: Database schema and relationships
+- **[Domain Model](architecture/kairos-domain.puml)**: Business domain structure
+- **[Component Diagram](architecture/kairos-components.puml)**: System components and interactions
+- **[Use Cases](architecture/kairos-usecases.puml)**: System use cases and actors
+- **[Sequence Diagrams](architecture/sequences/)**: Detailed interaction flows
+
+### Key Architectural Principles
+
+1. **Modular Design**: Each domain (Members, Events, Finance, etc.) is isolated
+2. **Shared Libraries**: Common code is extracted into reusable libraries
+3. **Type Safety**: Full TypeScript coverage with strict type checking
+4. **Testing**: Comprehensive unit, integration, and E2E testing
+5. **CI/CD**: Automated testing and deployment pipelines
+
+## 🔧 Technology Stack
+
+### Frontend
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React hooks and context
+- **Testing**: Jest, React Testing Library, Playwright
+
+### Backend
+- **Framework**: NestJS
+- **Language**: TypeScript
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Authentication**: JWT
+- **Testing**: Jest, Supertest
+
+### Development Tools
+- **Monorepo**: NX
+- **Linting**: ESLint
+- **Formatting**: Prettier
+- **Git Hooks**: Husky
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker
+
+## 🚀 Deployment
+
+### Development Environment
+```bash
+# Start all services locally
+npm run start:all
+```
+
+### Docker Environment
+```bash
+# Start with Docker Compose
+npm run docker:setup
+npm run docker:build
+npm run docker:start
+```
+
+### Production Deployment
+- Applications are containerized using Docker
+- CI/CD pipelines handle automated deployment
+- See `.github/workflows/` for deployment configurations
+
+## 🤝 Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+### Development Workflow
+
+1. Create a feature branch from `main`
+2. Make your changes following our coding standards
+3. Write tests for new functionality
+4. Ensure all tests pass and code is properly formatted
+5. Submit a pull request with a clear description
+
+## 📚 Additional Resources
+
+- **[API Documentation](apps/api/README.md)**: Backend API details
+- **[Web Admin Documentation](apps/web-admin/README.md)**: Admin interface guide
+- **[Member App Documentation](apps/member-app/README.md)**: Member application guide
+- **[Docker Setup](docs/DOCKER.md)**: Docker development environment
+- **[Testing Guide](TESTING.md)**: Testing strategies and best practices
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Contact the development team
+- Check the documentation in the `docs/` directory
+
+---
+
+**Built with ❤️ for Kairos Church**

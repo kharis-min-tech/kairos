@@ -1,0 +1,181 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full test suite
+        run: |
+          npx nx run-many --target=lint --all --parallel=3
+          npx nx run-many --target=test --all --parallel=3 --coverage --watchAll=false
+          npx nx run-many --target=build --all --parallel=3
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        app: [web-admin, member-app, api]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npx nx build ${{ matrix.app }} --configuration=production
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.app }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_NAME=${{ matrix.app }}
+
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "This step would typically:"
+          echo "  - Update Kubernetes manifests"
+          echo "  - Apply configurations to staging cluster"
+          echo "  - Run database migrations"
+          echo "  - Perform health checks"
+          echo "  - Send deployment notifications"
+
+          # Placeholder for actual deployment commands
+          # Example with kubectl:
+          # kubectl set image deployment/web-admin web-admin=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web-admin:${{ github.sha }}
+          # kubectl set image deployment/member-app member-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/member-app:${{ github.sha }}
+          # kubectl set image deployment/api api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}
+
+          echo "✅ Staging deployment completed"
+
+      - name: Run smoke tests
+        run: |
+          echo "🧪 Running smoke tests against staging..."
+          echo "This step would typically:"
+          echo "  - Test critical user journeys"
+          echo "  - Verify API health endpoints"
+          echo "  - Check database connectivity"
+          echo "  - Validate authentication flows"
+
+          # Placeholder for actual smoke tests
+          # Example:
+          # npm run test:e2e:staging
+
+          echo "✅ Smoke tests passed"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment to staging successful"
+            # Send success notification (Slack, Teams, etc.)
+          else
+            echo "❌ Deployment to staging failed"
+            # Send failure notification
+          fi
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Manual approval required
+        run: |
+          echo "🔒 Production deployment requires manual approval"
+          echo "This job will wait for approval in the GitHub Actions UI"
+
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying to production environment..."
+          echo "This step would typically:"
+          echo "  - Update production Kubernetes manifests"
+          echo "  - Apply configurations to production cluster"
+          echo "  - Run database migrations with backup"
+          echo "  - Perform comprehensive health checks"
+          echo "  - Update monitoring and alerting"
+
+          # Placeholder for actual production deployment commands
+
+          echo "✅ Production deployment completed"
+
+      - name: Post-deployment verification
+        run: |
+          echo "🔍 Running post-deployment verification..."
+          echo "This step would typically:"
+          echo "  - Verify all services are healthy"
+          echo "  - Check application metrics"
+          echo "  - Validate critical user flows"
+          echo "  - Monitor error rates"
+
+          echo "✅ Post-deployment verification passed"

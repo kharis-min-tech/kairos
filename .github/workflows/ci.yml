@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Run linting
+        run: npx nx affected:lint --parallel=3
+
+      - name: Run tests with coverage
+        run: npx nx affected:test --parallel=3 --coverage --watchAll=false
+
+      - name: Run builds
+        run: npx nx affected:build --parallel=3
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./coverage
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && matrix.node-version == '20.x'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Find coverage files
+            let coverageComment = '## Test Coverage Report\n\n';
+
+            try {
+              // Look for coverage summary files
+              const coverageDir = './coverage';
+              if (fs.existsSync(coverageDir)) {
+                coverageComment += 'Coverage reports generated successfully\n';
+                coverageComment += 'Check the "Checks" tab for detailed coverage information.\n';
+              } else {
+                coverageComment += 'No coverage reports found\n';
+              }
+            } catch (error) {
+              coverageComment += 'Error reading coverage reports\n';
+            }
+
+            coverageComment += '\n---\n';
+            coverageComment += `**Workflow**: ${context.workflow}\n`;
+            coverageComment += `**Run ID**: ${context.runId}\n`;
+            coverageComment += `**View Details**: [GitHub Actions](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: coverageComment
+            });

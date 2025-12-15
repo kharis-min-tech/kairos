@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: kairos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kairos}
+      POSTGRES_USER: ${POSTGRES_USER:-kairos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kairos123}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/api/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - kairos-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-kairos} -d ${POSTGRES_DB:-kairos}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS API Application
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: kairos-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3333
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kairos}:${POSTGRES_PASSWORD:-kairos123}@postgres:5432/${POSTGRES_DB:-kairos}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4200,http://localhost:4201}
+    ports:
+      - '${API_PORT:-3333}:3333'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kairos-network
+    volumes:
+      - ./apps/api/prisma:/app/apps/api/prisma
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3333/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js Web Admin Application
+  web-admin:
+    build:
+      context: .
+      dockerfile: apps/web-admin/Dockerfile
+    container_name: kairos-web-admin
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 4200
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3333}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Kairos Admin}
+      NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.0}
+    ports:
+      - '${WEB_ADMIN_PORT:-4200}:4200'
+    depends_on:
+      - api
+    networks:
+      - kairos-network
+
+  # Next.js Member Application
+  member-app:
+    build:
+      context: .
+      dockerfile: apps/member-app/Dockerfile
+    container_name: kairos-member-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 4201
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3333}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Kairos Member}
+      NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.0}
+    ports:
+      - '${MEMBER_APP_PORT:-4201}:4201'
+    depends_on:
+      - api
+    networks:
+      - kairos-network
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: kairos-redis
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - kairos-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  kairos-network:
+    driver: bridge
