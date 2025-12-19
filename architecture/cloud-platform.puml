@@ -1,0 +1,337 @@
+@startuml kairos-cloud-platform-data-api
+!define AWSPuml aws-icons/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSSimplified.puml
+!include AWSPuml/General/Users.puml
+!include AWSPuml/NetworkingContentDelivery/CloudFront.puml
+!include AWSPuml/NetworkingContentDelivery/APIGateway.puml
+!include AWSPuml/Storage/SimpleStorageService.puml
+!include AWSPuml/Compute/Lambda.puml
+!include AWSPuml/Database/Aurora.puml
+!include AWSPuml/SecurityIdentityCompliance/Cognito.puml
+!include AWSPuml/ApplicationIntegration/SimpleNotificationService.puml
+!include AWSPuml/BusinessApplications/SimpleEmailService.puml
+!include AWSPuml/ManagementGovernance/CloudWatch.puml
+
+title Kairos - Serverless on AWS (eu-west-2)\nMulti-domain Lambdas + Drizzle + Aurora Serverless v2 via RDS Data API
+
+' Actors
+Users(adminUsers, "Admins/Pastors", "Browsers")
+Users(memberUsers, "Members", "Web/Mobile")
+
+rectangle "AWS Cloud (eu-west-2)" as awsCloud {
+
+  ' ---- Edge & Frontend (no VPC) ----
+  CloudFront(cf, "CloudFront", "CDN + TLS")
+  SimpleStorageService(s3Static, "S3 Static Assets", "Next.js builds")
+
+  ' Public API
+  APIGateway(apigw, "API Gateway", "HTTP API\n/api/core, /api/events, /api/finance, /api/outreach")
+
+  ' Identity & Messaging
+  Cognito(cognito, "Cognito User Pool", "Auth + MFA\n(Admin/Pastor/Member)")
+  SimpleNotificationService(sns, "SNS Topics", "Notifications,\nasync events")
+  SimpleEmailService(ses, "SES", "SES Email\n(resets, announcements)")
+  CloudWatch(cw, "CloudWatch", "Logs & Metrics")
+
+  ' ---- Multi-domain Lambdas (not attached to VPC) ----
+  Lambda(coreLambda, "Core API Lambda", "Auth, Members, Branches,\nDepartments, K-Groups\nDrizzle + RDS Data API")
+  Lambda(eventsLambda, "Events API Lambda", "Events, Registrations,\nQR Check-in, Attendance\nDrizzle + RDS Data API")
+  Lambda(financeLambda, "Finance API Lambda", "Giving, Pledges,\nFinancial reports\nDrizzle + RDS Data API")
+  Lambda(outreachLambda, "Outreach API Lambda", "Outreach Programs,\nSouls, Follow-ups\nDrizzle + RDS Data API")
+  Lambda(jobsLambda, "Jobs Lambda", "Scheduled tasks,\nExports, async jobs\nDrizzle + RDS Data API")
+
+  ' ---- Database (in its own managed VPC) ----
+  rectangle "Aurora VPC (managed by RDS)" as auroraVpc {
+    Aurora(db, "Aurora PostgreSQL", "Serverless v2 (multi-AZ)\nAccessed via RDS Data API (HTTPS)")
+  }
+
+  ' Optional data exports bucket for reporting/BI
+  SimpleStorageService(s3Data, "S3 Data Exports", "Reporting snapshots,\nBI-friendly data")
+}
+
+' ================= Relationships =================
+
+' Users -> Frontend
+adminUsers --> cf : HTTPS\n(app.kharis.org)
+memberUsers --> cf : HTTPS\n(members.kharis.org)
+
+cf --> s3Static : Static assets\nNext.js pages
+cf --> apigw : /api/*
+
+' API Gateway -> domain Lambdas
+apigw --> coreLambda       : /api/core/*
+apigw --> eventsLambda     : /api/events/*
+apigw --> financeLambda    : /api/finance/*
+apigw --> outreachLambda   : /api/outreach/*
+
+' Lambdas -> Aurora via RDS Data API (HTTPS)
+coreLambda --> db       : SQL via RDS Data API\n(HTTPS using AWS SDK)
+eventsLambda --> db     : SQL via RDS Data API
+financeLambda --> db    : SQL via RDS Data API
+outreachLambda --> db   : SQL via RDS Data API
+jobsLambda --> db       : SQL via RDS Data API\n(reporting/exports)
+
+' Data exports
+jobsLambda --> s3Data : Write exports\n(CSV/JSON snapshots)
+
+' Auth with Cognito
+adminUsers --> cognito : Login + MFA\n(Admin/Pastor)
+memberUsers --> cognito : Login/Sign-up\n(Member)
+
+coreLambda --> cognito       : Verify JWT / claims
+eventsLambda --> cognito     : Verify JWT / claims
+financeLambda --> cognito    : Verify JWT / claims
+outreachLambda --> cognito   : Verify JWT / claims
+
+' Notifications & email
+coreLambda --> sns        : Publish\n(member events,\nnotifications)
+eventsLambda --> sns      : Publish\n(event-related notifications)
+outreachLambda --> sns    : Publish\n(follow-up tasks)
+financeLambda --> sns     : Publish\n(giving/pledge events)
+jobsLambda --> sns        : Enqueue bulk jobs
+
+coreLambda --> ses        : Send email\n(resets, onboarding)
+outreachLambda --> ses    : Send email\n(follow-ups, welcome)
+financeLambda --> ses     : Send email\n(giving statements,\npledge reminders)
+jobsLambda --> ses        : Bulk / scheduled emails
+
+' Observability
+coreLambda --> cw
+eventsLambda --> cw
+financeLambda --> cw
+outreachLambda --> cw
+jobsLambda --> cw
+apigw --> cw : Access logs
+
+@enduml
+
+' V2 - via data api not proxy no vpc
+
+@startuml kairos-aws-platform-no-vpc
+!define AWSPuml aws-icons/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSSimplified.puml
+!include AWSPuml/General/Users.puml
+!include AWSPuml/NetworkingContentDelivery/CloudFront.puml
+!include AWSPuml/NetworkingContentDelivery/APIGateway.puml
+!include AWSPuml/Storage/SimpleStorageService.puml
+!include AWSPuml/Compute/Lambda.puml
+!include AWSPuml/Database/Aurora.puml
+!include AWSPuml/Database/RDSProxyInstance.puml
+!include AWSPuml/SecurityIdentityCompliance/Cognito.puml
+!include AWSPuml/ApplicationIntegration/SimpleNotificationService.puml
+!include AWSPuml/BusinessApplications/SimpleEmailService.puml
+!include AWSPuml/ManagementGovernance/CloudWatch.puml
+
+title Kairos - Serverless on AWS (eu-west-2)\nMulti-domain Lambda + Aurora Serverless v2
+
+' Actors
+Users(adminUsers, "Admins/Pastors", "Browsers")
+Users(memberUsers, "Members", "Web/Mobile")
+
+' Edge & Frontend
+CloudFront(cf, "CloudFront", "CDN + TLS")
+SimpleStorageService(s3Static, "S3 Static Assets", "Next.js builds")
+
+' API Gateway
+APIGateway(apigw, "API Gateway", "HTTP API\n/api/core, /api/events, /api/finance, /api/outreach")
+
+' API & Compute - per domain Lambdas
+Lambda(coreLambda, "Core API Lambda", "Auth, Members, Branches,\nDepartments, K-Groups")
+Lambda(eventsLambda, "Events API Lambda", "Events, Registrations,\nQR Check-in, Attendance")
+Lambda(financeLambda, "Finance API Lambda", "Giving, Pledges,\nFinancial reports")
+Lambda(outreachLambda, "Outreach API Lambda", "Outreach Programs,\nSouls, Follow-ups")
+Lambda(jobsLambda, "Jobs Lambda", "Scheduled tasks,\nExports, async jobs")
+
+' Database layer
+RDSProxyInstance(rdsProxy, "RDS Proxy", "Connection pooling")
+Aurora(db, "Aurora PostgreSQL", "Serverless v2 (multi-AZ)")
+
+' Data exports for reporting / BI
+SimpleStorageService(s3Data, "S3 Data Exports", "Reporting snapshots,\nBI-friendly data")
+
+' Identity & Messaging
+Cognito(cognito, "Cognito User Pool", "Auth + MFA\n(Admin/Pastor/Member)")
+SimpleNotificationService(sns, "SNS Topics", "Notifications,\nasync events")
+SimpleEmailService(ses, "SES", "Email\n(resets, announcements)")
+
+' Observability
+CloudWatch(cw, "CloudWatch", "Logs & Metrics")
+
+' Relationships
+
+' Users -> Frontend
+adminUsers --> cf : HTTPS\n(app.kharis.org)
+memberUsers --> cf : HTTPS\n(members.kharis.org)
+
+cf --> s3Static : Static assets\nNext.js pages
+cf --> apigw : /api/*
+
+' API Gateway routes to domain Lambdas
+apigw --> coreLambda   : /api/core/*
+apigw --> eventsLambda : /api/events/*
+apigw --> financeLambda: /api/finance/*
+apigw --> outreachLambda: /api/outreach/*
+
+' Domain Lambdas -> DB via RDS Proxy -> Aurora
+coreLambda --> rdsProxy   : SQL queries
+eventsLambda --> rdsProxy : SQL queries
+financeLambda --> rdsProxy: SQL queries
+outreachLambda --> rdsProxy: SQL queries
+jobsLambda --> rdsProxy   : Reporting/exports
+
+rdsProxy --> db : Pooled DB connections
+
+' Data exports to S3 for BI/reporting
+jobsLambda --> s3Data : Write exports\n(CSV/JSON snapshots)
+
+' Auth flows
+adminUsers --> cognito : Login + MFA\n(Admin/Pastor)
+memberUsers --> cognito : Login/Sign-up\n(Member)
+coreLambda --> cognito   : Verify JWT / claims
+eventsLambda --> cognito : Verify JWT / claims
+financeLambda --> cognito: Verify JWT / claims
+outreachLambda --> cognito: Verify JWT / claims
+
+' Notifications & email (mostly core/finance/outreach)
+coreLambda --> sns      : Publish\n(member events,\nnotifications)
+eventsLambda --> sns    : Publish\n(event-related notifications)
+outreachLambda --> sns  : Publish\n(follow-up tasks)
+financeLambda --> sns   : Publish\n(giving/pledge events)
+coreLambda --> ses      : Send email\n(resets, onboarding)
+outreachLambda --> ses  : Send email\n(follow-ups, welcome)
+financeLambda --> ses   : Send email\n(giving statements,\npledge reminders)
+
+' Jobs Lambda may also use SNS/SES if needed
+jobsLambda --> sns
+jobsLambda --> ses
+
+' Observability
+coreLambda --> cw
+eventsLambda --> cw
+financeLambda --> cw
+outreachLambda --> cw
+jobsLambda --> cw
+apigw --> cw : Access logs
+
+@enduml
+
+' V3 with proxy and vpc
+@startuml kairos-cloud-platform-vpc
+!define AWSPuml aws-icons/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSSimplified.puml
+!include AWSPuml/General/Users.puml
+!include AWSPuml/NetworkingContentDelivery/CloudFront.puml
+!include AWSPuml/NetworkingContentDelivery/APIGateway.puml
+!include AWSPuml/Storage/SimpleStorageService.puml
+!include AWSPuml/Compute/Lambda.puml
+!include AWSPuml/Database/Aurora.puml
+!include AWSPuml/Database/RDSProxyInstance.puml
+!include AWSPuml/SecurityIdentityCompliance/Cognito.puml
+!include AWSPuml/ApplicationIntegration/SimpleNotificationService.puml
+!include AWSPuml/BusinessApplications/SimpleEmailService.puml
+!include AWSPuml/ManagementGovernance/CloudWatch.puml
+
+title Kairos - Serverless on AWS (eu-west-2)\nMulti-domain Lambdas + Aurora Serverless v2 in VPC
+
+' Actors
+Users(adminUsers, "Admins/Pastors", "Browsers")
+Users(memberUsers, "Members", "Web/Mobile")
+
+' ===================== AWS Cloud =====================
+rectangle "AWS Cloud (eu-west-2)" as awsCloud {
+
+  ' -------- Edge & Frontend (no VPC) --------
+  CloudFront(cf, "CloudFront", "CDN + TLS")
+  SimpleStorageService(s3Static, "S3 Static Assets", "Next.js builds")
+
+  ' Public-facing API (no VPC)
+  APIGateway(apigw, "API Gateway", "HTTP API\n/api/core, /api/events, /api/finance, /api/outreach")
+
+  ' Identity & Messaging (regional services, outside VPC)
+  Cognito(cognito, "Cognito User Pool", "Auth + MFA\n(Admin/Pastor/Member)")
+  SimpleNotificationService(sns, "SNS Topics", "Notifications,\nasync events")
+  SimpleEmailService(ses, "SES", "SES Email\n(resets, announcements)")
+  CloudWatch(cw, "CloudWatch", "Logs & Metrics")
+
+  ' -------- VPC & Subnets --------
+  rectangle "KCMS VPC (10.0.0.0/16)" as vpc {
+
+    rectangle "Private Subnets (eu-west-2a/b)" as privateSubnets {
+
+      ' API & Compute - per domain Lambdas (inside VPC)
+      Lambda(coreLambda, "Core API Lambda", "Auth, Members, Branches,\nDepartments, K-Groups")
+      Lambda(eventsLambda, "Events API Lambda", "Events, Registrations,\nQR Check-in, Attendance")
+      Lambda(financeLambda, "Finance API Lambda", "Giving, Pledges,\nFinancial reports")
+      Lambda(outreachLambda, "Outreach API Lambda", "Outreach Programs,\nSouls, Follow-ups")
+      Lambda(jobsLambda, "Jobs Lambda", "Scheduled tasks,\nExports, async jobs")
+
+      ' Database layer (inside VPC, private subnets)
+      RDSProxyInstance(rdsProxy, "RDS Proxy", "Connection pooling\nfor Aurora")
+      Aurora(db, "Aurora PostgreSQL", "Serverless v2 (multi-AZ)")
+
+      ' Optional data exports bucket for reporting/BI
+      SimpleStorageService(s3Data, "S3 Data Exports", "Reporting snapshots,\nBI-friendly data")
+    }
+  }
+}
+
+' ===================== Relationships =====================
+
+' Users -> Frontend
+adminUsers --> cf : HTTPS\n(app.kharis.org)
+memberUsers --> cf : HTTPS\n(members.kharis.org)
+
+cf --> s3Static : Static assets\nNext.js pages
+cf --> apigw : /api/*
+
+' API Gateway routes to domain Lambdas (in VPC)
+apigw --> coreLambda       : /api/core/*
+apigw --> eventsLambda     : /api/events/*
+apigw --> financeLambda    : /api/finance/*
+apigw --> outreachLambda   : /api/outreach/*
+
+' Domain Lambdas -> DB via RDS Proxy -> Aurora
+coreLambda --> rdsProxy       : SQL queries
+eventsLambda --> rdsProxy     : SQL queries
+financeLambda --> rdsProxy    : SQL queries
+outreachLambda --> rdsProxy   : SQL queries
+jobsLambda --> rdsProxy       : Reporting/exports
+
+rdsProxy --> db : Pooled DB connections
+
+' Data exports to S3 for BI/reporting
+jobsLambda --> s3Data : Write exports\n(CSV/JSON snapshots)
+
+' Auth flows (Cognito is outside VPC)
+adminUsers --> cognito : Login + MFA\n(Admin/Pastor)
+memberUsers --> cognito : Login/Sign-up\n(Member)
+
+coreLambda --> cognito       : Verify JWT / claims
+eventsLambda --> cognito     : Verify JWT / claims
+financeLambda --> cognito    : Verify JWT / claims
+outreachLambda --> cognito   : Verify JWT / claims
+
+' Notifications & email
+coreLambda --> sns        : Publish\n(member events,\nnotifications)
+eventsLambda --> sns      : Publish\n(event-related notifications)
+outreachLambda --> sns    : Publish\n(follow-up tasks)
+financeLambda --> sns     : Publish\n(giving/pledge events)
+jobsLambda --> sns        : Enqueue bulk jobs
+
+coreLambda --> ses        : Send email\n(resets, onboarding)
+outreachLambda --> ses    : Send email\n(follow-ups, welcome)
+financeLambda --> ses     : Send email\n(giving statements,\npledge reminders)
+jobsLambda --> ses        : Bulk / scheduled emails
+
+' Observability
+coreLambda --> cw
+eventsLambda --> cw
+financeLambda --> cw
+outreachLambda --> cw
+jobsLambda --> cw
+apigw --> cw : Access logs
+
+@enduml
