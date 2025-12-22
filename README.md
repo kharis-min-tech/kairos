@@ -2,6 +2,32 @@
 
 A comprehensive church management system built with modern web technologies, designed to streamline church operations, member management, and ministry coordination.
 
+## 🚀 Task Management System
+
+Kairos includes a powerful task management system to organize development work:
+
+```bash
+# Open interactive task dashboard
+npm run task:dashboard
+
+# List all available tasks
+npm run task:list
+
+# Start working on a specific task
+npm run task:start <task_number>
+
+# View task progress
+npm run task:progress <task_number>
+```
+
+**Current Tasks:**
+- ✅ **Task 17**: Member Management (Completed)
+- 🔄 **Task 18**: Department Management (Ready to start)
+
+📋 **[View Task Dashboard](task-dashboard.html)** | 📚 **[Task Management Guide](TASK_MANAGEMENT.md)**
+
+---
+
 ## 🏗️ Architecture Overview
 
 Kairos is built as an NX monorepo containing multiple applications and shared libraries:

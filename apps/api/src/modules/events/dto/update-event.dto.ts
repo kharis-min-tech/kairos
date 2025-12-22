@@ -1,10 +1,48 @@
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsNumber,
+  IsBoolean,
+  IsUUID,
+  IsPositive,
+} from 'class-validator';
+
 export class UpdateEventDto {
-  readonly title?: string;
+  @IsOptional()
+  @IsString()
+  readonly name?: string;
+
+  @IsOptional()
+  @IsString()
   readonly description?: string;
-  readonly startDate?: Date;
-  readonly endDate?: Date;
+
+  @IsOptional()
+  @IsDateString()
+  readonly startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  readonly endDate?: string;
+
+  @IsOptional()
+  @IsString()
   readonly location?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
   readonly capacity?: number;
-  readonly registrationRequired?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  readonly fee?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  readonly isActive?: boolean;
+
+  @IsOptional()
+  @IsUUID()
   readonly branchId?: string;
 }

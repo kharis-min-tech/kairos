@@ -12,7 +12,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo Committing changes...
-git commit -m "feat: Complete Task 16 - Final validation and testing suite with all applications running - API:3333 WebAdmin:4200 MemberApp:4201"
+git commit -m "feat: Complete API backend with demo services - Members, Departments, Events fully functional with CRUD operations, filtering, pagination, and statistics. API running on localhost:3333"
 if %ERRORLEVEL% NEQ 0 (
     echo Error committing changes
     pause
@@ -28,5 +28,5 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo Successfully pushed all changes!
-echo Task 16 completion pushed to remote repository
+echo API backend with demo services pushed to remote repository
 pause

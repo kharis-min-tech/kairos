@@ -72,7 +72,12 @@
     "docker:status": "docker-compose --env-file .env.docker.local ps",
     "docker:migrate": "docker-compose --env-file .env.docker.local exec api npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma",
     "docker:seed": "docker-compose --env-file .env.docker.local exec api npx prisma db seed --schema=apps/api/prisma/schema.prisma",
-    "docker:clean": "docker system prune -f"
+    "docker:clean": "docker system prune -f",
+    "task:list": "node scripts/task-runner.js list",
+    "task:start": "node scripts/task-runner.js start",
+    "task:progress": "node scripts/task-runner.js progress",
+    "task:summary": "node scripts/task-runner.js summary",
+    "task:dashboard": "node scripts/open-dashboard.js"
   },
   "private": true,
   "dependencies": {

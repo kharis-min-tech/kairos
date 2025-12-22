@@ -1,21 +1,46 @@
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsDateString,
+  IsIn,
+} from 'class-validator';
+
 export class CreateMemberDto {
+  @IsString()
   branchId!: string;
+
+  @IsString()
   firstName!: string;
+
+  @IsString()
   lastName!: string;
-  middleName?: string;
-  dateOfBirth?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
-  maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+
+  @IsOptional()
+  @IsString()
   phone?: string;
+
+  @IsOptional()
+  @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsString()
   address?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  membershipDate?: string;
-  baptismDate?: string;
-  soulStatus!: 'SAVED' | 'UNSAVED' | 'BACKSLIDDEN';
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsIn(['MALE', 'FEMALE'])
+  gender?: 'MALE' | 'FEMALE';
+
+  @IsOptional()
+  @IsIn(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'])
+  maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+
+  @IsOptional()
+  @IsString()
+  occupation?: string;
 }
