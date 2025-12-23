@@ -1,4 +1,4 @@
-# Church Administration System - Database Schema Design Documentation
+# Church Administration System - Database Design Documentation
 
 ## Entity Relationship Diagram (ERD) Overview
 
@@ -51,6 +51,7 @@ This document describes the database schema for a Church Administration System d
 | branch_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
 | branch_name | VARCHAR(150) | NOT NULL | Name of the branch |
 | region_id | INTEGER | NOT NULL, FK → regions | Associated region |
+| branch_type | VARCHAR(50) | NOT NULL, DEFAULT 'Main' | Type of branch |
 | address | TEXT | | Physical address |
 | city | VARCHAR(100) | | City name |
 | postal_code | VARCHAR(20) | | Postal/ZIP code |
@@ -64,6 +65,10 @@ This document describes the database schema for a Church Administration System d
 **Foreign Keys:**
 
 - `region_id` → `regions.region_id` (ON DELETE RESTRICT)
+
+**Check Constraints:**
+
+- `branch_type` IN ('Main', 'Satellite', 'Cell', 'Campus', 'Online')
 
 **Unique Constraints:**
 
@@ -186,10 +191,11 @@ This document describes the database schema for a Church Administration System d
 ---
 
 ### 6. MEMBER_ROLES
-**Purpose:** Store member role assignments (many-to-many relationship)
+**Purpose:** Store member role assignments (many-to-many relationship with history)
 
 | Column Name | Data Type | Constraints | Description |
 |-------------|-----------|-------------|-------------|
+| member_role_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
 | member_id | INTEGER | NOT NULL, FK → members | Member reference |
 | role_id | INTEGER | NOT NULL, FK → roles | Role reference |
 | branch_id | INTEGER | NOT NULL, FK → branches | Branch reference |
@@ -200,7 +206,7 @@ This document describes the database schema for a Church Administration System d
 | created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
 | updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
 
-**Primary Key:** `(member_id, role_id, branch_id)`
+**Primary Key:** `member_role_id`
 
 **Foreign Keys:**
 
@@ -212,9 +218,13 @@ This document describes the database schema for a Church Administration System d
 
 - `end_date >= assigned_date`
 
+**Unique Constraints:**
+
+- `(member_id, role_id, branch_id, assigned_date)` - Prevents duplicate assignments on same date
+
 **Indexes:**
 
-- Primary Key on `(member_id, role_id, branch_id)`
+- Primary Key on `member_role_id`
 - Index on `member_id`
 - Index on `role_id`
 - Index on `branch_id`
@@ -264,10 +274,11 @@ This document describes the database schema for a Church Administration System d
 
 ### 8. FELLOWSHIP_MEMBERS
 
-**Purpose:** Store member assignments to fellowships (many-to-many relationship)
+**Purpose:** Store member assignments to fellowships (many-to-many relationship with history)
 
 | Column Name | Data Type | Constraints | Description |
 |-------------|-----------|-------------|-------------|
+| fellowship_member_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
 | fellowship_id | INTEGER | NOT NULL, FK → fellowships | Fellowship reference |
 | member_id | INTEGER | NOT NULL, FK → members | Member reference |
 | join_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Join date |
@@ -277,7 +288,7 @@ This document describes the database schema for a Church Administration System d
 | created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
 | updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
 
-**Primary Key:** `(fellowship_id, member_id)`
+**Primary Key:** `fellowship_member_id`
 
 **Foreign Keys:**
 
@@ -287,8 +298,11 @@ This document describes the database schema for a Church Administration System d
 **Check Constraints:**
 - `leave_date >= join_date`
 
+**Unique Constraints:**
+- `(fellowship_id, member_id, join_date)` - Prevents duplicate joins on same date
+
 **Indexes:**
-- Primary Key on `(fellowship_id, member_id)`
+- Primary Key on `fellowship_member_id`
 - Index on `fellowship_id`
 - Index on `member_id`
 - Index on `is_active`
@@ -595,10 +609,11 @@ This document describes the database schema for a Church Administration System d
 
 ### 17. DEPARTMENT_MEMBERS
 
-**Purpose:** Store member assignments to departments (many-to-many relationship)
+**Purpose:** Store member assignments to departments (many-to-many relationship with history)
 
 | Column Name | Data Type | Constraints | Description |
 |-------------|-----------|-------------|-------------|
+| department_member_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
 | branch_department_id | INTEGER | NOT NULL, FK → branch_departments | Department instance |
 | member_id | INTEGER | NOT NULL, FK → members | Member |
 | join_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Date member joined dept |
@@ -607,7 +622,7 @@ This document describes the database schema for a Church Administration System d
 | created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
 | updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
 
-**Primary Key:** `(branch_department_id, member_id)`
+**Primary Key:** `department_member_id`
 
 **Foreign Keys:**
 
@@ -617,8 +632,11 @@ This document describes the database schema for a Church Administration System d
 **Check Constraints:**
 - `leave_date >= join_date`
 
+**Unique Constraints:**
+- `(branch_department_id, member_id, join_date)` - Prevents duplicate joins on same date
+
 **Indexes:**
-- Primary Key on `(branch_department_id, member_id)`
+- Primary Key on `department_member_id`
 - Index on `branch_department_id`
 - Index on `member_id`
 - Index on `is_active`
@@ -772,6 +790,135 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
+### 22. DONATIONS
+
+**Purpose:** Store member donation/giving records with purpose tracking
+
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| donation_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
+| member_id | INTEGER | NOT NULL, FK → members | Donating member |
+| branch_id | INTEGER | NOT NULL, FK → branches | Branch receiving donation |
+| donation_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Date of donation |
+| amount | DECIMAL(12,2) | NOT NULL, CHECK > 0 | Donation amount |
+| currency | VARCHAR(3) | DEFAULT 'USD' | Currency code |
+| donation_purpose | VARCHAR(30) | NOT NULL, CHECK | Purpose category |
+| description | TEXT | | Required when purpose is 'Other' |
+| payment_method | VARCHAR(30) | CHECK | Payment method used |
+| reference_number | VARCHAR(100) | | Transaction reference |
+| is_anonymous | BOOLEAN | DEFAULT FALSE | Hide donor identity |
+| notes | TEXT | | Additional notes |
+| recorded_by | INTEGER | FK → members | Staff who recorded |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
+| updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
+
+**Foreign Keys:**
+
+- `member_id` → `members.member_id` (ON DELETE RESTRICT)
+- `branch_id` → `branches.branch_id` (ON DELETE RESTRICT)
+- `recorded_by` → `members.member_id` (ON DELETE SET NULL)
+
+**Check Constraints:**
+
+- `amount > 0`
+- `donation_purpose` IN ('Offering', 'Building Fund', 'Other')
+- `payment_method` IN ('Cash', 'Check', 'Bank Transfer', 'Mobile Money', 'Card', 'Online', 'Other')
+- When `donation_purpose = 'Other'`, `description` must be NOT NULL and non-empty
+
+**Indexes:**
+
+- Primary Key on `donation_id`
+- Index on `member_id`
+- Index on `branch_id`
+- Index on `donation_date`
+- Index on `donation_purpose`
+
+---
+
+### 23. NOTIFICATIONS
+
+**Purpose:** Store notifications and announcements broadcast to members
+
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| notification_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
+| title | VARCHAR(200) | NOT NULL | Notification title |
+| message | TEXT | NOT NULL | Full message content |
+| notification_type | VARCHAR(30) | NOT NULL, CHECK | Type of notification |
+| priority | VARCHAR(20) | DEFAULT 'Normal', CHECK | Priority level |
+| target_scope | VARCHAR(30) | NOT NULL, CHECK | Audience scope |
+| target_branch_id | INTEGER | FK → branches | Target branch (if scope=Branch) |
+| target_region_id | INTEGER | FK → regions | Target region (if scope=Region) |
+| target_department_id | INTEGER | FK → departments | Target department (if scope=Department) |
+| target_fellowship_id | INTEGER | FK → fellowships | Target fellowship (if scope=Fellowship) |
+| target_role_id | INTEGER | FK → roles | Target role holders (if scope=Role) |
+| target_leadership_role | VARCHAR(50) | CHECK | Target leadership position (if scope=Leadership) |
+| sent_by | INTEGER | NOT NULL, FK → members | Sender member |
+| sent_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | When sent |
+| scheduled_for | TIMESTAMP | | Future delivery time |
+| expires_at | TIMESTAMP | | Expiration time |
+| is_active | BOOLEAN | DEFAULT TRUE | Active status |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
+| updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
+
+**Foreign Keys:**
+
+- `sent_by` → `members.member_id` (ON DELETE RESTRICT)
+- `target_branch_id` → `branches.branch_id` (ON DELETE CASCADE)
+- `target_region_id` → `regions.region_id` (ON DELETE CASCADE)
+- `target_department_id` → `departments.department_id` (ON DELETE CASCADE)
+- `target_fellowship_id` → `fellowships.fellowship_id` (ON DELETE CASCADE)
+- `target_role_id` → `roles.role_id` (ON DELETE CASCADE)
+
+**Check Constraints:**
+
+- `notification_type` IN ('Announcement', 'Reminder', 'Alert', 'Event', 'General')
+- `priority` IN ('Low', 'Normal', 'High', 'Urgent')
+- `target_scope` IN ('All', 'Branch', 'Region', 'Department', 'Fellowship', 'Role', 'Leadership')
+- `target_leadership_role` IN ('Main Pastor', 'Elder') when provided
+- Target consistency: scope must match the corresponding target field
+
+**Indexes:**
+
+- Primary Key on `notification_id`
+- Index on `sent_by`
+- Index on `sent_at`
+- Index on `target_scope`
+- Index on each target_*_id column and target_leadership_role
+- Index on `is_active`
+
+---
+
+### 24. NOTIFICATION_RECIPIENTS
+
+**Purpose:** Track notification delivery and read status per member
+
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| notification_id | INTEGER | NOT NULL, FK → notifications | Notification reference |
+| member_id | INTEGER | NOT NULL, FK → members | Recipient member |
+| is_read | BOOLEAN | DEFAULT FALSE | Read status |
+| read_at | TIMESTAMP | | When read |
+| is_dismissed | BOOLEAN | DEFAULT FALSE | Dismissed status |
+| dismissed_at | TIMESTAMP | | When dismissed |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
+
+**Primary Key:** `(notification_id, member_id)`
+
+**Foreign Keys:**
+
+- `notification_id` → `notifications.notification_id` (ON DELETE CASCADE)
+- `member_id` → `members.member_id` (ON DELETE CASCADE)
+
+**Indexes:**
+
+- Primary Key on `(notification_id, member_id)`
+- Index on `notification_id`
+- Index on `member_id`
+- Index on `is_read`
+
+---
+
 ## Entity Relationships
 
 ### Relationship Diagram (Text Format)
@@ -825,6 +972,17 @@ DEPARTMENT_MEETINGS (1) ──────< (N) MEETING_ATTENDANCE
 
 SERVICES (1) ──────< (N) SERVICE_ATTENDANCE
          (1) ──────> (0..1) MEMBERS [preacher_id]
+
+MEMBERS (1) ──────< (N) DONATIONS
+BRANCHES (1) ──────< (N) DONATIONS
+
+NOTIFICATIONS (1) ──────< (N) NOTIFICATION_RECIPIENTS
+              (1) ──────> (1) MEMBERS [sent_by]
+              (1) ──────> (0..1) BRANCHES [target_branch_id]
+              (1) ──────> (0..1) REGIONS [target_region_id]
+              (1) ──────> (0..1) DEPARTMENTS [target_department_id]
+              (1) ──────> (0..1) FELLOWSHIPS [target_fellowship_id]
+              (1) ──────> (0..1) ROLES [target_role_id]
 ```
 
 ### Relationship Details
@@ -846,6 +1004,9 @@ SERVICES (1) ──────< (N) SERVICE_ATTENDANCE
 13. **BRANCH_DEPARTMENTS → DEPARTMENT_MEETINGS**: Each department instance can hold many meetings
 14. **DEPARTMENT_MEETINGS → MEETING_ATTENDANCE**: Each meeting can have many attendance records
 15. **SERVICES → SERVICE_ATTENDANCE**: Each service can have many attendance records
+16. **MEMBERS → DONATIONS**: One member can make many donations
+17. **BRANCHES → DONATIONS**: One branch can receive many donations
+18. **NOTIFICATIONS → NOTIFICATION_RECIPIENTS**: One notification can have many recipients
 
 #### Many-to-Many Relationships:
 
@@ -853,6 +1014,7 @@ SERVICES (1) ──────< (N) SERVICE_ATTENDANCE
 2. **MEMBERS ↔ FELLOWSHIPS**: Implemented via FELLOWSHIP_MEMBERS junction table
 3. **MEMBERS ↔ OUTREACH_PROGRAMS**: Implemented via OUTREACH_PARTICIPANTS junction table
 4. **MEMBERS ↔ BRANCH_DEPARTMENTS**: Implemented via DEPARTMENT_MEMBERS junction table
+5. **NOTIFICATIONS ↔ MEMBERS**: Implemented via NOTIFICATION_RECIPIENTS junction table
 
 #### Self-Referential Relationships:
 
@@ -955,6 +1117,32 @@ LEFT JOIN meeting_attendance ma ON dm.meeting_id = ma.meeting_id
 WHERE dm.branch_department_id = 1
 GROUP BY dm.meeting_id, dm.meeting_date
 ORDER BY dm.meeting_date DESC;
+
+-- Get member donation history
+SELECT d.donation_date, d.amount, d.currency, d.donation_purpose, d.description
+FROM donations d
+WHERE d.member_id = 1
+ORDER BY d.donation_date DESC;
+
+-- Get total donations by purpose for a branch
+SELECT donation_purpose, SUM(amount) as total, COUNT(*) as count
+FROM donations
+WHERE branch_id = 1 AND donation_date BETWEEN '2025-01-01' AND '2025-12-31'
+GROUP BY donation_purpose;
+
+-- Get notifications for a specific member (based on their associations)
+SELECT n.* FROM notifications n
+WHERE n.is_active = TRUE AND (
+    n.target_scope = 'All' OR
+    (n.target_scope = 'Branch' AND n.target_branch_id = (SELECT home_branch_id FROM members WHERE member_id = 1)) OR
+    (n.target_scope = 'Role' AND n.target_role_id IN (SELECT role_id FROM member_roles WHERE member_id = 1 AND is_active = TRUE))
+)
+ORDER BY n.sent_at DESC;
+
+-- Get unread notification count for a member
+SELECT COUNT(*) as unread_count
+FROM notification_recipients nr
+WHERE nr.member_id = 1 AND nr.is_read = FALSE;
 ```
 
 ---
@@ -978,6 +1166,6 @@ ORDER BY dm.meeting_date DESC;
    - NOT NULL constraints enforce required data
 
 5. **Future Enhancements**:
-   - Could add tables for: Events, Donations, Prayer Requests, etc.
+   - Could add tables for: Events, Prayer Requests, etc.
    - Consider adding soft delete functionality (deleted_at column)
    - May need additional tables for member roles/permissions

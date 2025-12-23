@@ -49,6 +49,7 @@ CREATE TABLE branches (
     branch_id SERIAL PRIMARY KEY,
     branch_name VARCHAR(150) NOT NULL,
     region_id INTEGER NOT NULL,
+    branch_type VARCHAR(50) NOT NULL DEFAULT 'Main',
     address TEXT,
     city VARCHAR(100),
     postal_code VARCHAR(20),
@@ -64,7 +65,10 @@ CREATE TABLE branches (
         FOREIGN KEY (region_id)
         REFERENCES regions(region_id)
         ON DELETE RESTRICT,
-    
+
+    -- Check Constraints
+    CONSTRAINT chk_branches_type CHECK (branch_type IN ('Main', 'Satellite', 'Cell', 'Campus', 'Online')),
+
     -- Unique Constraints
     CONSTRAINT uq_branches_name_region UNIQUE (branch_name, region_id),
     CONSTRAINT uq_branches_email UNIQUE (email),
@@ -221,6 +225,7 @@ COMMENT ON TABLE roles IS 'Store church role definitions (e.g., Choir Member, Us
 -- Purpose: Store member role assignments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
 CREATE TABLE member_roles (
+    member_role_id SERIAL PRIMARY KEY,
     member_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
     branch_id INTEGER NOT NULL,
@@ -230,9 +235,6 @@ CREATE TABLE member_roles (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Primary Key
-    PRIMARY KEY (member_id, role_id, branch_id),
     
     -- Foreign Keys
     CONSTRAINT fk_member_roles_member
@@ -249,7 +251,10 @@ CREATE TABLE member_roles (
         ON DELETE CASCADE,
     
     -- Check Constraints
-    CONSTRAINT chk_member_roles_dates CHECK (end_date IS NULL OR end_date >= assigned_date)
+    CONSTRAINT chk_member_roles_dates CHECK (end_date IS NULL OR end_date >= assigned_date),
+    
+    -- Unique Constraints (prevent duplicate active assignments)
+    CONSTRAINT uq_member_roles_assignment UNIQUE (member_id, role_id, branch_id, assigned_date)
 );
 
 -- Trigger for updated_at
@@ -321,6 +326,7 @@ COMMENT ON TABLE fellowships IS 'Store fellowship group information';
 -- Purpose: Store member assignments to fellowships (many-to-many relationship)
 -- ----------------------------------------------------------------------------
 CREATE TABLE fellowship_members (
+    fellowship_member_id SERIAL PRIMARY KEY,
     fellowship_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     join_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -329,9 +335,6 @@ CREATE TABLE fellowship_members (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Primary Key
-    PRIMARY KEY (fellowship_id, member_id),
     
     -- Foreign Keys
     CONSTRAINT fk_fellowship_members_fellowship
@@ -344,7 +347,10 @@ CREATE TABLE fellowship_members (
         ON DELETE CASCADE,
     
     -- Check Constraints
-    CONSTRAINT chk_fellowship_members_dates CHECK (leave_date IS NULL OR leave_date >= join_date)
+    CONSTRAINT chk_fellowship_members_dates CHECK (leave_date IS NULL OR leave_date >= join_date),
+    
+    -- Unique Constraints (prevent duplicate active assignments)
+    CONSTRAINT uq_fellowship_members_assignment UNIQUE (fellowship_id, member_id, join_date)
 );
 
 -- Trigger for updated_at
@@ -731,6 +737,7 @@ COMMENT ON TABLE branch_departments IS 'Link departments to specific branches wi
 -- Purpose: Store member assignments to departments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
 CREATE TABLE department_members (
+    department_member_id SERIAL PRIMARY KEY,
     branch_department_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     join_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -738,9 +745,6 @@ CREATE TABLE department_members (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Primary Key
-    PRIMARY KEY (branch_department_id, member_id),
     
     -- Foreign Keys
     CONSTRAINT fk_department_members_branch_department
@@ -753,7 +757,10 @@ CREATE TABLE department_members (
         ON DELETE CASCADE,
     
     -- Check Constraints
-    CONSTRAINT chk_department_members_dates CHECK (leave_date IS NULL OR leave_date >= join_date)
+    CONSTRAINT chk_department_members_dates CHECK (leave_date IS NULL OR leave_date >= join_date),
+    
+    -- Unique Constraints (prevent duplicate active assignments)
+    CONSTRAINT uq_department_members_assignment UNIQUE (branch_department_id, member_id, join_date)
 );
 
 -- Trigger for updated_at
@@ -947,6 +954,413 @@ CREATE INDEX idx_service_attendance_member_id ON service_attendance(member_id);
 CREATE INDEX idx_service_attendance_status ON service_attendance(attendance_status);
 
 COMMENT ON TABLE service_attendance IS 'Store attendance records for services';
+
+-- ----------------------------------------------------------------------------
+-- 22. DONATIONS
+-- Purpose: Store member donation/giving records
+-- ----------------------------------------------------------------------------
+CREATE TABLE donations (
+    donation_id SERIAL PRIMARY KEY,
+    member_id INTEGER NOT NULL,
+    branch_id INTEGER NOT NULL,
+    donation_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    amount DECIMAL(12, 2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    donation_purpose VARCHAR(30) NOT NULL,
+    description TEXT,
+    payment_method VARCHAR(30),
+    reference_number VARCHAR(100),
+    is_anonymous BOOLEAN DEFAULT FALSE,
+    notes TEXT,
+    recorded_by INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    CONSTRAINT fk_donations_member
+        FOREIGN KEY (member_id)
+        REFERENCES members(member_id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_donations_branch
+        FOREIGN KEY (branch_id)
+        REFERENCES branches(branch_id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_donations_recorded_by
+        FOREIGN KEY (recorded_by)
+        REFERENCES members(member_id)
+        ON DELETE SET NULL,
+    
+    -- Check Constraints
+    CONSTRAINT chk_donations_amount CHECK (amount > 0),
+    CONSTRAINT chk_donations_purpose CHECK (donation_purpose IN ('Offering', 'Building Fund', 'Other')),
+    CONSTRAINT chk_donations_payment_method CHECK (payment_method IS NULL OR payment_method IN ('Cash', 'Check', 'Bank Transfer', 'Mobile Money', 'Card', 'Online', 'Other')),
+    CONSTRAINT chk_donations_description CHECK (
+        (donation_purpose != 'Other') OR 
+        (donation_purpose = 'Other' AND description IS NOT NULL AND description != '')
+    )
+);
+
+-- Trigger for updated_at
+CREATE TRIGGER donations_updated_at
+    BEFORE UPDATE ON donations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes
+CREATE INDEX idx_donations_member_id ON donations(member_id);
+CREATE INDEX idx_donations_branch_id ON donations(branch_id);
+CREATE INDEX idx_donations_donation_date ON donations(donation_date);
+CREATE INDEX idx_donations_purpose ON donations(donation_purpose);
+
+COMMENT ON TABLE donations IS 'Store member donation/giving records with purpose tracking';
+
+-- ----------------------------------------------------------------------------
+-- 23. NOTIFICATIONS
+-- Purpose: Store notifications and announcements broadcast to members
+-- ----------------------------------------------------------------------------
+CREATE TABLE notifications (
+    notification_id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    notification_type VARCHAR(30) NOT NULL,
+    priority VARCHAR(20) DEFAULT 'Normal',
+    
+    -- Target audience (nullable - determines scope)
+    target_scope VARCHAR(30) NOT NULL,
+    target_branch_id INTEGER,
+    target_region_id INTEGER,
+    target_department_id INTEGER,
+    target_fellowship_id INTEGER,
+    target_role_id INTEGER,
+    target_leadership_role VARCHAR(50),
+    
+    -- Sender info
+    sent_by INTEGER NOT NULL,
+    sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Scheduling
+    scheduled_for TIMESTAMP,
+    expires_at TIMESTAMP,
+    
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    CONSTRAINT fk_notifications_sent_by
+        FOREIGN KEY (sent_by)
+        REFERENCES members(member_id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_notifications_branch
+        FOREIGN KEY (target_branch_id)
+        REFERENCES branches(branch_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_region
+        FOREIGN KEY (target_region_id)
+        REFERENCES regions(region_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_department
+        FOREIGN KEY (target_department_id)
+        REFERENCES departments(department_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_fellowship
+        FOREIGN KEY (target_fellowship_id)
+        REFERENCES fellowships(fellowship_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_role
+        FOREIGN KEY (target_role_id)
+        REFERENCES roles(role_id)
+        ON DELETE CASCADE,
+    
+    -- Check Constraints
+    CONSTRAINT chk_notifications_type CHECK (notification_type IN ('Announcement', 'Reminder', 'Alert', 'Event', 'General')),
+    CONSTRAINT chk_notifications_priority CHECK (priority IN ('Low', 'Normal', 'High', 'Urgent')),
+    CONSTRAINT chk_notifications_scope CHECK (target_scope IN ('All', 'Branch', 'Region', 'Department', 'Fellowship', 'Role', 'Leadership')),
+    CONSTRAINT chk_notifications_leadership_role CHECK (target_leadership_role IS NULL OR target_leadership_role IN ('Main Pastor', 'Elder')),
+    CONSTRAINT chk_notifications_target_consistency CHECK (
+        (target_scope = 'All' AND target_branch_id IS NULL AND target_region_id IS NULL AND target_department_id IS NULL AND target_fellowship_id IS NULL AND target_role_id IS NULL AND target_leadership_role IS NULL) OR
+        (target_scope = 'Branch' AND target_branch_id IS NOT NULL) OR
+        (target_scope = 'Region' AND target_region_id IS NOT NULL) OR
+        (target_scope = 'Department' AND target_department_id IS NOT NULL) OR
+        (target_scope = 'Fellowship' AND target_fellowship_id IS NOT NULL) OR
+        (target_scope = 'Role' AND target_role_id IS NOT NULL) OR
+        (target_scope = 'Leadership' AND target_leadership_role IS NOT NULL)
+    )
+);
+
+-- Trigger for updated_at
+CREATE TRIGGER notifications_updated_at
+    BEFORE UPDATE ON notifications
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes
+CREATE INDEX idx_notifications_sent_by ON notifications(sent_by);
+CREATE INDEX idx_notifications_sent_at ON notifications(sent_at);
+CREATE INDEX idx_notifications_target_scope ON notifications(target_scope);
+CREATE INDEX idx_notifications_target_branch_id ON notifications(target_branch_id);
+CREATE INDEX idx_notifications_target_region_id ON notifications(target_region_id);
+CREATE INDEX idx_notifications_target_department_id ON notifications(target_department_id);
+CREATE INDEX idx_notifications_target_fellowship_id ON notifications(target_fellowship_id);
+CREATE INDEX idx_notifications_target_role_id ON notifications(target_role_id);
+CREATE INDEX idx_notifications_target_leadership_role ON notifications(target_leadership_role);
+CREATE INDEX idx_notifications_is_active ON notifications(is_active);
+
+COMMENT ON TABLE notifications IS 'Store notifications and announcements broadcast to members with targeting options';
+
+-- ----------------------------------------------------------------------------
+-- 24. NOTIFICATION_RECIPIENTS
+-- Purpose: Track which members received and read notifications
+-- ----------------------------------------------------------------------------
+CREATE TABLE notification_recipients (
+    notification_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP,
+    is_dismissed BOOLEAN DEFAULT FALSE,
+    dismissed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Primary Key
+    PRIMARY KEY (notification_id, member_id),
+    
+    -- Foreign Keys
+    CONSTRAINT fk_notification_recipients_notification
+        FOREIGN KEY (notification_id)
+        REFERENCES notifications(notification_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notification_recipients_member
+        FOREIGN KEY (member_id)
+        REFERENCES members(member_id)
+        ON DELETE CASCADE
+);
+
+-- Indexes
+CREATE INDEX idx_notification_recipients_notification_id ON notification_recipients(notification_id);
+CREATE INDEX idx_notification_recipients_member_id ON notification_recipients(member_id);
+CREATE INDEX idx_notification_recipients_is_read ON notification_recipients(is_read);
+
+COMMENT ON TABLE notification_recipients IS 'Track notification delivery and read status per member';
+
+-- ----------------------------------------------------------------------------
+-- 25. EVENTS
+-- Purpose: Store church-wide and branch events
+-- ----------------------------------------------------------------------------
+CREATE TABLE events (
+    event_id SERIAL PRIMARY KEY,
+    event_title VARCHAR(200) NOT NULL,
+    event_theme VARCHAR(300),
+    description TEXT,
+    event_type VARCHAR(50) NOT NULL,
+    
+    -- Scheduling
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    
+    -- Location
+    venue VARCHAR(300),
+    address TEXT,
+    city VARCHAR(100),
+    is_virtual BOOLEAN DEFAULT FALSE,
+    virtual_link VARCHAR(500),
+    
+    -- Scope (NULL = church-wide, otherwise branch-specific)
+    branch_id INTEGER,
+    region_id INTEGER,
+    
+    -- Registration settings
+    requires_registration BOOLEAN DEFAULT FALSE,
+    registration_deadline DATE,
+    max_attendees INTEGER,
+    
+    -- Organizer info
+    coordinator_id INTEGER,
+    
+    -- Status
+    status VARCHAR(30) NOT NULL DEFAULT 'Draft',
+    is_active BOOLEAN DEFAULT TRUE,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    CONSTRAINT fk_events_branch
+        FOREIGN KEY (branch_id)
+        REFERENCES branches(branch_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_events_region
+        FOREIGN KEY (region_id)
+        REFERENCES regions(region_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_events_coordinator
+        FOREIGN KEY (coordinator_id)
+        REFERENCES members(member_id)
+        ON DELETE SET NULL,
+    
+    -- Check Constraints
+    CONSTRAINT chk_events_dates CHECK (end_date >= start_date),
+    CONSTRAINT chk_events_times CHECK (
+        start_date != end_date OR 
+        end_time IS NULL OR 
+        start_time IS NULL OR 
+        end_time >= start_time
+    ),
+    CONSTRAINT chk_events_type CHECK (event_type IN ('Conference', 'Retreat', 'Seminar', 'Workshop', 'Concert', 'Outreach', 'Celebration', 'Meeting', 'Other')),
+    CONSTRAINT chk_events_status CHECK (status IN ('Draft', 'Published', 'Ongoing', 'Completed', 'Cancelled', 'Postponed')),
+    CONSTRAINT chk_events_registration_deadline CHECK (registration_deadline IS NULL OR registration_deadline <= start_date),
+    CONSTRAINT chk_events_max_attendees CHECK (max_attendees IS NULL OR max_attendees > 0),
+    CONSTRAINT chk_events_scope CHECK (
+        (branch_id IS NULL AND region_id IS NULL) OR  -- Church-wide
+        (branch_id IS NOT NULL AND region_id IS NULL) OR  -- Branch-specific
+        (branch_id IS NULL AND region_id IS NOT NULL)  -- Region-specific
+    )
+);
+
+-- Trigger for updated_at
+CREATE TRIGGER events_updated_at
+    BEFORE UPDATE ON events
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes
+CREATE INDEX idx_events_branch_id ON events(branch_id);
+CREATE INDEX idx_events_region_id ON events(region_id);
+CREATE INDEX idx_events_coordinator_id ON events(coordinator_id);
+CREATE INDEX idx_events_start_date ON events(start_date);
+CREATE INDEX idx_events_end_date ON events(end_date);
+CREATE INDEX idx_events_status ON events(status);
+CREATE INDEX idx_events_event_type ON events(event_type);
+CREATE INDEX idx_events_is_active ON events(is_active);
+CREATE INDEX idx_events_requires_registration ON events(requires_registration);
+
+COMMENT ON TABLE events IS 'Store church-wide and branch events with scheduling and registration settings';
+
+-- ----------------------------------------------------------------------------
+-- 26. EVENT_ORGANIZERS
+-- Purpose: Store organizing team members for events
+-- ----------------------------------------------------------------------------
+CREATE TABLE event_organizers (
+    event_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    organizer_role VARCHAR(100),
+    assigned_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Primary Key
+    PRIMARY KEY (event_id, member_id),
+    
+    -- Foreign Keys
+    CONSTRAINT fk_event_organizers_event
+        FOREIGN KEY (event_id)
+        REFERENCES events(event_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_event_organizers_member
+        FOREIGN KEY (member_id)
+        REFERENCES members(member_id)
+        ON DELETE CASCADE
+);
+
+-- Indexes
+CREATE INDEX idx_event_organizers_event_id ON event_organizers(event_id);
+CREATE INDEX idx_event_organizers_member_id ON event_organizers(member_id);
+
+COMMENT ON TABLE event_organizers IS 'Store organizing team members for events';
+
+-- ----------------------------------------------------------------------------
+-- 27. EVENT_NOTES
+-- Purpose: Store messages and notes logged by event organizers
+-- ----------------------------------------------------------------------------
+CREATE TABLE event_notes (
+    note_id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
+    note_title VARCHAR(200),
+    note_content TEXT NOT NULL,
+    note_type VARCHAR(30) DEFAULT 'General',
+    is_pinned BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    CONSTRAINT fk_event_notes_event
+        FOREIGN KEY (event_id)
+        REFERENCES events(event_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_event_notes_author
+        FOREIGN KEY (author_id)
+        REFERENCES members(member_id)
+        ON DELETE CASCADE,
+    
+    -- Check Constraints
+    CONSTRAINT chk_event_notes_type CHECK (note_type IN ('General', 'Task', 'Decision', 'Issue', 'Update', 'Reminder'))
+);
+
+-- Trigger for updated_at
+CREATE TRIGGER event_notes_updated_at
+    BEFORE UPDATE ON event_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes
+CREATE INDEX idx_event_notes_event_id ON event_notes(event_id);
+CREATE INDEX idx_event_notes_author_id ON event_notes(author_id);
+CREATE INDEX idx_event_notes_note_type ON event_notes(note_type);
+CREATE INDEX idx_event_notes_is_pinned ON event_notes(is_pinned);
+CREATE INDEX idx_event_notes_created_at ON event_notes(created_at);
+
+COMMENT ON TABLE event_notes IS 'Store messages and notes logged by event organizers for collaboration';
+
+-- ----------------------------------------------------------------------------
+-- 28. EVENT_REGISTRATIONS
+-- Purpose: Store member registrations for events requiring sign-up
+-- ----------------------------------------------------------------------------
+CREATE TABLE event_registrations (
+    registration_id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    registration_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    registration_status VARCHAR(30) NOT NULL DEFAULT 'Registered',
+    guest_count INTEGER DEFAULT 0,
+    notes TEXT,
+    attended BOOLEAN,
+    check_in_time TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    CONSTRAINT fk_event_registrations_event
+        FOREIGN KEY (event_id)
+        REFERENCES events(event_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_event_registrations_member
+        FOREIGN KEY (member_id)
+        REFERENCES members(member_id)
+        ON DELETE CASCADE,
+    
+    -- Check Constraints
+    CONSTRAINT chk_event_registrations_status CHECK (registration_status IN ('Registered', 'Waitlisted', 'Confirmed', 'Cancelled', 'No-Show')),
+    CONSTRAINT chk_event_registrations_guest_count CHECK (guest_count >= 0),
+    
+    -- Unique Constraints (one registration per member per event)
+    CONSTRAINT uq_event_registrations UNIQUE (event_id, member_id)
+);
+
+-- Trigger for updated_at
+CREATE TRIGGER event_registrations_updated_at
+    BEFORE UPDATE ON event_registrations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes
+CREATE INDEX idx_event_registrations_event_id ON event_registrations(event_id);
+CREATE INDEX idx_event_registrations_member_id ON event_registrations(member_id);
+CREATE INDEX idx_event_registrations_status ON event_registrations(registration_status);
+CREATE INDEX idx_event_registrations_registration_date ON event_registrations(registration_date);
+
+COMMENT ON TABLE event_registrations IS 'Store member registrations for events requiring sign-up with attendance tracking';
 
 -- ============================================================================
 -- END OF SCHEMA
