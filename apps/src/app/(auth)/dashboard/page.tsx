@@ -1,24 +1,119 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useCognitoAuth } from "../../../hooks/use-cognito-auth";
 
 export default function DashboardPage() {
+  const { getUserInfo, signOutRedirect } = useCognitoAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const userInfo = getUserInfo();
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Overview of your church management
+          Welcome back, {userInfo?.email || 'User'}
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* User Status Card */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-medium text-blue-900">Email Status</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              {userInfo?.emailVerified ? '✅ Verified' : '❌ Not Verified'}
+            </p>
+            <p className="text-xs text-blue-600 mt-1">{userInfo?.email}</p>
+          </div>
+          
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h3 className="font-medium text-green-900">Security</h3>
+            <p className="text-sm text-green-700 mt-1">
+              MFA: {userInfo?.mfaEnabled ? '✅ Enabled' : '⚠️ Disabled'}
+            </p>
+            {userInfo?.phone && (
+              <p className="text-xs text-green-600 mt-1">
+                Phone: {userInfo?.phoneVerified ? '✅ Verified' : '❌ Not Verified'}
+              </p>
+            )}
+          </div>
+          
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <h3 className="font-medium text-purple-900">Quick Actions</h3>
+            <div className="mt-2 space-y-1">
+              <Link 
+                href="/auth/profile"
+                className="block text-sm text-purple-700 hover:underline"
+              >
+                View Profile
+              </Link>
+              {!userInfo?.mfaEnabled && (
+                <Link 
+                  href="/auth/mfa-setup"
+                  className="block text-sm text-purple-700 hover:underline"
+                >
+                  Set Up MFA
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Security Recommendations */}
+      {(!userInfo?.emailVerified || !userInfo?.mfaEnabled) && (
+        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
+          <h3 className="font-medium text-orange-900 mb-2">🔒 Security Recommendations</h3>
+          <ul className="text-sm text-orange-800 space-y-1">
+            {!userInfo?.emailVerified && (
+              <li>• Please verify your email address for account recovery</li>
+            )}
+            {!userInfo?.mfaEnabled && (
+              <li>• Enable multi-factor authentication for better security</li>
+            )}
+          </ul>
+          <div className="mt-3 space-x-3">
+            {!userInfo?.mfaEnabled && (
+              <Link 
+                href="/auth/mfa-setup"
+                className="inline-flex items-center px-3 py-2 border border-orange-300 shadow-sm text-sm leading-4 font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50"
+              >
+                Set Up MFA
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Church Management Features */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Members</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">1,284</p>
-              <p className="mt-1 text-xs text-green-600">+12 this week</p>
+              <p className="text-sm font-medium text-gray-600">Church Management</p>
+              <p className="mt-2 text-lg font-semibold text-gray-900">Coming Soon</p>
+              <p className="mt-1 text-xs text-gray-500">Member management</p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
               <svg
@@ -41,9 +136,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Upcoming Events</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">6</p>
-              <p className="mt-1 text-xs text-gray-500">Next 30 days</p>
+              <p className="text-sm font-medium text-gray-600">Events</p>
+              <p className="mt-2 text-lg font-semibold text-gray-900">Coming Soon</p>
+              <p className="mt-1 text-xs text-gray-500">Event scheduling</p>
             </div>
             <div className="rounded-full bg-purple-100 p-3">
               <svg
@@ -66,9 +161,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Giving</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">£4,930</p>
-              <p className="mt-1 text-xs text-green-600">+8% from last month</p>
+              <p className="text-sm font-medium text-gray-600">Giving</p>
+              <p className="mt-2 text-lg font-semibold text-gray-900">Coming Soon</p>
+              <p className="mt-1 text-xs text-gray-500">Donation tracking</p>
             </div>
             <div className="rounded-full bg-green-100 p-3">
               <svg
@@ -91,9 +186,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Groups</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">24</p>
-              <p className="mt-1 text-xs text-gray-500">This month</p>
+              <p className="text-sm font-medium text-gray-600">Reports</p>
+              <p className="mt-2 text-lg font-semibold text-gray-900">Coming Soon</p>
+              <p className="mt-1 text-xs text-gray-500">Analytics & insights</p>
             </div>
             <div className="rounded-full bg-orange-100 p-3">
               <svg
@@ -106,7 +201,7 @@ export default function DashboardPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
             </div>
@@ -114,15 +209,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Getting Started */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Getting Started</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Link
-            href="/events"
+            href="/auth/profile"
             className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
           >
-            <div className="rounded-lg bg-black p-2">
+            <div className="rounded-lg bg-blue-600 p-2">
               <svg
                 className="h-5 w-5 text-white"
                 fill="none"
@@ -133,21 +228,48 @@ export default function DashboardPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 4v16m8-8H4"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Create Event</p>
-              <p className="text-xs text-gray-500">Schedule a new event</p>
+              <p className="font-medium text-gray-900">View Profile</p>
+              <p className="text-xs text-gray-500">Manage your account</p>
             </div>
           </Link>
+
+          {!userInfo?.mfaEnabled && (
+            <Link
+              href="/auth/mfa-setup"
+              className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="rounded-lg bg-orange-600 p-2">
+                <svg
+                  className="h-5 w-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Set Up MFA</p>
+                <p className="text-xs text-gray-500">Secure your account</p>
+              </div>
+            </Link>
+          )}
 
           <Link
-            href="/members"
+            href="/auth/change-password"
             className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
           >
-            <div className="rounded-lg bg-black p-2">
+            <div className="rounded-lg bg-gray-600 p-2">
               <svg
                 className="h-5 w-5 text-white"
                 fill="none"
@@ -158,125 +280,15 @@ export default function DashboardPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
                 />
               </svg>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Add Member</p>
-              <p className="text-xs text-gray-500">Register a new member</p>
+              <p className="font-medium text-gray-900">Change Password</p>
+              <p className="text-xs text-gray-500">Update your password</p>
             </div>
           </Link>
-
-          <Link
-            href="/giving"
-            className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="rounded-lg bg-black p-2">
-              <svg
-                className="h-5 w-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">View Reports</p>
-              <p className="text-xs text-gray-500">Giving analytics</p>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Members */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Members</h2>
-            <Link
-              href="/members"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {[
-              { name: "John Smith", email: "john@example.com", date: "2 days ago" },
-              { name: "Sarah Johnson", email: "sarah@example.com", date: "3 days ago" },
-              { name: "Michael Brown", email: "michael@example.com", date: "5 days ago" },
-            ].map((member, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-600">
-                    {member.name.split(" ").map(n => n[0]).join("")}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {member.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">{member.email}</p>
-                </div>
-                <p className="text-xs text-gray-500">{member.date}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
-            <Link
-              href="/events"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {[
-              { title: "Sunday Service", date: "Jan 15, 2024", time: "10:00 AM", attendees: 120 },
-              { title: "Bible Study", date: "Jan 17, 2024", time: "7:00 PM", attendees: 45 },
-              { title: "Youth Group", date: "Jan 19, 2024", time: "6:00 PM", attendees: 30 },
-            ].map((event, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="rounded-lg bg-purple-100 p-2">
-                  <svg
-                    className="h-5 w-5 text-purple-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                  <p className="text-xs text-gray-500">
-                    {event.date} • {event.time}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {event.attendees} attendees
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

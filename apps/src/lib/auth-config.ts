@@ -1,7 +1,7 @@
 export const cognitoAuthConfig = {
   authority: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
   client_id: "7mqmc57sb18ideegj293pk81ib",
-  redirect_uri: "http://localhost:3001/dashboard", // Redirect to dashboard after auth
+  redirect_uri: "http://localhost:3001/dashboard", // Redirect to dashboard after auth (uses (auth) route group)
   response_type: "code",
   scope: "openid email phone", // Using only standard scopes
   // Enhanced configuration for complete auth flow
