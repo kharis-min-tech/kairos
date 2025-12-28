@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut, getCurrentUser } from "../../lib/auth";
 import { useEffect, useState } from "react";
-
+import { useCognitoAuth } from "../../hooks/use-cognito-auth";
+import { AuthGuard } from "../../components/auth-guard";
 
 export default function AuthLayout({
   children,
@@ -12,14 +12,13 @@ export default function AuthLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+  const { getUserInfo, signOutRedirect, isAuthenticated, isLoading } = useCognitoAuth();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Get current user on mount
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
+    setIsClient(true);
   }, []);
- 
+
   const navItems = [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Members", href: "/members" },
@@ -28,64 +27,72 @@ export default function AuthLayout({
     { label: "Settings", href: "/settings" },
   ];
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/login");
+  const handleSignOut = () => {
+    signOutRedirect();
   };
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Top bar */}
-      <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-        <div className="font-semibold">Kairos Admin</div>
-
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-          <span>{user?.email || "Signed in"}</span>
-          <button
-            className="rounded-xl border border-gray-300 px-3 py-1.5 hover:bg-gray-50 transition-colors"
-            onClick={handleSignOut}
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      {/* Body */}
-      <div className="mx-auto grid max-w-6xl grid-cols-12 gap-6 px-6 py-6">
-        {/* Sidebar */}
-        <aside className="col-span-12 md:col-span-3">
-          <div className="rounded-2xl border border-gray-200 p-4">
-            <div className="mb-3 text-xs font-semibold tracking-wider text-gray-500">
-              NAVIGATION
-            </div>
-
-            <nav className="space-y-1">
-  {navItems.map((item) => {
-    const isActive = pathname === item.href;
-
+  if (!isClient) {
     return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`block rounded-lg px-3 py-2 text-sm transition ${
-          isActive
-            ? "bg-black text-white"
-            : "text-gray-700 hover:bg-gray-100"
-        }`}
-      >
-        {item.label}
-      </Link>
-    );
-  })}
-</nav>
-
-          </div>
-        </aside>
-
-        {/* Page content */}
-        <main className="col-span-12 md:col-span-9">{children}</main>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">Loading...</div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <AuthGuard>
+      <div className="min-h-screen bg-white">
+        {/* Top bar */}
+        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div className="font-semibold">Kairos Admin</div>
+
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <span>{getUserInfo()?.email || "Signed in"}</span>
+            <button
+              className="rounded-xl border border-gray-300 px-3 py-1.5 hover:bg-gray-50 transition-colors"
+              onClick={handleSignOut}
+            >
+              Sign out
+            </button>
+          </div>
+        </header>
+
+        {/* Body */}
+        <div className="mx-auto grid max-w-6xl grid-cols-12 gap-6 px-6 py-6">
+          {/* Sidebar */}
+          <aside className="col-span-12 md:col-span-3">
+            <div className="rounded-2xl border border-gray-200 p-4">
+              <div className="mb-3 text-xs font-semibold tracking-wider text-gray-500">
+                NAVIGATION
+              </div>
+
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`block rounded-lg px-3 py-2 text-sm transition ${
+                        isActive
+                          ? "bg-black text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Page content */}
+          <main className="col-span-12 md:col-span-9">{children}</main>
+        </div>
+      </div>
+    </AuthGuard>
   );
 }
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCognitoAuth } from "../../../hooks/use-cognito-auth";
 
 export default function DashboardPage() {
-  const { getUserInfo, signOutRedirect } = useCognitoAuth();
+  const { getUserInfo } = useCognitoAuth();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Security Recommendations */}
-      {(!userInfo?.emailVerified || !userInfo?.mfaEnabled) && (
+      {userInfo && (!userInfo?.emailVerified || !userInfo?.mfaEnabled) && (
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
           <h3 className="font-medium text-orange-900 mb-2">🔒 Security Recommendations</h3>
           <ul className="text-sm text-orange-800 space-y-1">
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {!userInfo?.mfaEnabled && (
+          {userInfo && !userInfo?.mfaEnabled && (
             <Link
               href="/auth/mfa-setup"
               className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
