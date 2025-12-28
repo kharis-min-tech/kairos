@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut, getCurrentUser } from "../../lib/auth";
+import { useEffect, useState } from "react";
 
 
 export default function AuthLayout({
@@ -8,10 +10,17 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+
+  useEffect(() => {
+    // Get current user on mount
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+  }, []);
  
-const navItems = [
+  const navItems = [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Members", href: "/members" },
     { label: "Events", href: "/events" },
@@ -19,8 +28,10 @@ const navItems = [
     { label: "Settings", href: "/settings" },
   ];
 
-
-
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -29,10 +40,10 @@ const navItems = [
         <div className="font-semibold">Kairos Admin</div>
 
         <div className="flex items-center gap-3 text-sm text-gray-600">
-          <span>Signed in</span>
+          <span>{user?.email || "Signed in"}</span>
           <button
-            className="rounded-xl border border-gray-300 px-3 py-1.5 hover:bg-gray-50"
-            onClick={() => alert("Sign out (UI only). Backend later.")}
+            className="rounded-xl border border-gray-300 px-3 py-1.5 hover:bg-gray-50 transition-colors"
+            onClick={handleSignOut}
           >
             Sign out
           </button>

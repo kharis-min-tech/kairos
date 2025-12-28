@@ -7,8 +7,10 @@
   "dependencies": {
     "empty": "0.10.1",
     "next": "~16.0.1",
+    "oidc-client-ts": "^3.4.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-oidc-context": "^3.3.0"
   },
   "devDependencies": {
     "@nx/devkit": "22.2.1",

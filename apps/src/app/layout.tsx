@@ -1,4 +1,5 @@
 import './global.css';
+import { CognitoAuthProvider } from '../components/auth-provider';
 
 export const metadata = {
   title: 'Welcome to apps',
@@ -12,7 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <CognitoAuthProvider>
+          {children}
+        </CognitoAuthProvider>
+      </body>
     </html>
   );
 }
