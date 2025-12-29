@@ -6,37 +6,57 @@ import {
   Delete,
   Param,
   Body,
+  Query,
+  ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
+import { QueryMemberDto } from './dto/query-member.dto';
 
 @Controller('members')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
   @Get()
-  findAll() {
-    return this.membersService.findAll();
+  async findAll(@Query(ValidationPipe) query: QueryMemberDto) {
+    return this.membersService.findAll(query);
+  }
+
+  @Get('stats')
+  async getStats(@Query('branchId') branchId?: string) {
+    return this.membersService.getStats(branchId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.membersService.findOne(id);
   }
 
   @Post()
-  create(@Body() createMemberDto: CreateMemberDto) {
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body(ValidationPipe) createMemberDto: CreateMemberDto) {
     return this.membersService.create(createMemberDto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
+  async update(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateMemberDto: UpdateMemberDto
+  ) {
     return this.membersService.update(id, updateMemberDto);
   }
 
+  @Put(':id/restore')
+  async restore(@Param('id') id: string) {
+    return this.membersService.restore(id);
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string) {
     return this.membersService.remove(id);
   }
 }

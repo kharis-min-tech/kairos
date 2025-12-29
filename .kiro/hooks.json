@@ -1,0 +1,114 @@
+{
+  "hooks": [
+    {
+      "id": "task-list",
+      "name": "📋 List All Tasks",
+      "description": "Show all available tasks with their current status",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:list"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "task-start-17",
+      "name": "🚀 Start Task 17 (Members)",
+      "description": "Start working on Task 17 - Member Management Implementation",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:start 17"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "task-progress-17",
+      "name": "📊 Task 17 Progress",
+      "description": "View progress for Task 17 - Member Management",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:progress 17"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "task-summary-17",
+      "name": "✅ Task 17 Summary",
+      "description": "View completion summary for Task 17",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:summary 17"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "task-start-18",
+      "name": "🚀 Start Task 18 (Departments)",
+      "description": "Start working on Task 18 - Department Management Implementation",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:start 18"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "task-progress-18",
+      "name": "📊 Task 18 Progress",
+      "description": "View progress for Task 18 - Department Management",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run task:progress 18"
+      },
+      "category": "Tasks"
+    },
+    {
+      "id": "test-members",
+      "name": "🧪 Test Members Module",
+      "description": "Run tests for the members module",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npx nx test api --testPathPattern=members"
+      },
+      "category": "Testing"
+    },
+    {
+      "id": "test-all",
+      "name": "🧪 Run All Tests",
+      "description": "Run all tests in the project",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm test"
+      },
+      "category": "Testing"
+    },
+    {
+      "id": "build-api",
+      "name": "🏗️ Build API",
+      "description": "Build the API application",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run build:api"
+      },
+      "category": "Build"
+    },
+    {
+      "id": "build-all",
+      "name": "🏗️ Build All",
+      "description": "Build all applications",
+      "trigger": "manual",
+      "action": {
+        "type": "command",
+        "command": "npm run build:all"
+      },
+      "category": "Build"
+    }
+  ]
+}

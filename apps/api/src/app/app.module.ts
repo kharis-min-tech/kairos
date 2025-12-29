@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+// import { PrismaModule } from '../prisma/prisma.module';
 import { MembersModule } from '../modules/members/members.module';
 import { DepartmentsModule } from '../modules/departments/departments.module';
 import { FellowshipsModule } from '../modules/fellowships/fellowships.module';
@@ -15,6 +16,7 @@ import { OutreachModule } from '../modules/outreach/outreach.module';
 
 @Module({
   imports: [
+    // PrismaModule, // Commented out for demo
     MembersModule,
     DepartmentsModule,
     FellowshipsModule,

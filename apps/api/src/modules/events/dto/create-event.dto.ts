@@ -1,10 +1,45 @@
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsNumber,
+  IsBoolean,
+  IsUUID,
+  IsPositive,
+} from 'class-validator';
+
 export class CreateEventDto {
-  title!: string;
+  @IsString()
+  name!: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
-  startDate!: Date;
-  endDate?: Date;
+
+  @IsDateString()
+  startDate!: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsString()
   location?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
   capacity?: number;
-  registrationRequired?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  fee?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsUUID()
   branchId!: string;
 }
