@@ -1,0 +1,213 @@
+<div id="broadcast-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
+  <!-- Modal Container -->
+  <div class="bg-white w-full max-w-md rounded-t-2xl transform transition-transform">
+    <!-- Modal Header -->
+    <div id="modal-header" class="flex items-center justify-between p-4 border-b border-neutral-200">
+      <h2 class="text-lg text-neutral-900 flex items-center">
+        <i class="fa-solid fa-broadcast-tower mr-2 text-neutral-700"></i>
+        Broadcast Message
+      </h2>
+      <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100">
+        <i class="fa-solid fa-times text-neutral-600"></i>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div id="modal-content" class="p-4 space-y-6 max-h-[80vh] overflow-y-auto">
+      <!-- Recipient Selection -->
+      <div id="recipient-section" class="space-y-3">
+        <label class="text-sm text-neutral-700 block">Send To</label>
+        <div class="space-y-2">
+          <!-- All Members Option -->
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="recipients" value="all" class="w-4 h-4 text-neutral-600">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-users text-neutral-600"></i>
+                <span class="text-sm text-neutral-800">All Members</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">Send to entire congregation (1,247 members)</p>
+            </div>
+          </label>
+
+          <!-- Department Selection -->
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="recipients" value="department" class="w-4 h-4 text-neutral-600">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-building text-neutral-600"></i>
+                <span class="text-sm text-neutral-800">Specific Departments</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">Select departments to target</p>
+            </div>
+          </label>
+
+          <!-- House Groups Selection -->
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="recipients" value="housegroups" class="w-4 h-4 text-neutral-600">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-home text-neutral-600"></i>
+                <span class="text-sm text-neutral-800">House Groups</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">Send to specific house groups</p>
+            </div>
+          </label>
+
+          <!-- Custom List -->
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="recipients" value="custom" class="w-4 h-4 text-neutral-600">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-list text-neutral-600"></i>
+                <span class="text-sm text-neutral-800">Custom List</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">Select individual members</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Department Filter (Hidden by default) -->
+      <div id="department-filter" class="space-y-3 hidden">
+        <label class="text-sm text-neutral-700 block">Select Departments</label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Youth Ministry</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Worship Team</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Ushering</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Children</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Media Team</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-xs text-neutral-700">Outreach</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Message Type -->
+      <div id="message-type-section" class="space-y-3">
+        <label class="text-sm text-neutral-700 block">Message Type</label>
+        <select class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+          <option>General Announcement</option>
+          <option>Event Reminder</option>
+          <option>Prayer Request</option>
+          <option>Emergency Alert</option>
+          <option>Service Update</option>
+          <option>Ministry Update</option>
+        </select>
+      </div>
+
+      <!-- Subject Line -->
+      <div id="subject-section" class="space-y-2">
+        <label class="text-sm text-neutral-700 block">Subject</label>
+        <input type="text" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="Enter message subject">
+      </div>
+
+      <!-- Message Content -->
+      <div id="message-section" class="space-y-2">
+        <label class="text-sm text-neutral-700 block">Message</label>
+        <textarea rows="4" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="Type your message here..."></textarea>
+        <div class="flex justify-between text-xs text-neutral-500">
+          <span>0/500 characters</span>
+          <div class="flex items-center space-x-2">
+            <button class="hover:text-neutral-700">
+              <i class="fa-solid fa-bold"></i>
+            </button>
+            <button class="hover:text-neutral-700">
+              <i class="fa-solid fa-italic"></i>
+            </button>
+            <button class="hover:text-neutral-700">
+              <i class="fa-solid fa-link"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Options -->
+      <div id="delivery-section" class="space-y-3">
+        <label class="text-sm text-neutral-700 block">Delivery Options</label>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" class="w-4 h-4" checked>
+            <span class="text-sm text-neutral-700">In-app notification</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-sm text-neutral-700">Email notification</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-sm text-neutral-700">SMS notification</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Schedule Option -->
+      <div id="schedule-section" class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-sm text-neutral-700">Schedule for Later</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neutral-600"></div>
+          </label>
+        </div>
+        <div class="hidden space-y-2">
+          <input type="datetime-local" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div id="preview-section" class="bg-neutral-50 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-neutral-600">Preview</span>
+          <i class="fa-solid fa-eye text-neutral-400"></i>
+        </div>
+        <div class="bg-white rounded border p-3 space-y-1">
+          <div class="text-xs text-neutral-800">Subject will appear here</div>
+          <div class="text-xs text-neutral-600">Message preview will show here...</div>
+          <div class="flex justify-between text-xs text-neutral-400 mt-2">
+            <span>From: Kharis Church</span>
+            <span>Now</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div id="modal-footer" class="p-4 border-t border-neutral-200 space-y-3">
+      <!-- Recipient Count -->
+      <div class="bg-neutral-50 rounded-lg p-3 text-center">
+        <div class="flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-paper-plane text-neutral-600"></i>
+          <span class="text-sm text-neutral-700">Ready to send to <strong>1,247 members</strong></span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-3">
+        <button class="flex-1 px-4 py-3 border border-neutral-300 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50">
+          Save Draft
+        </button>
+        <button class="flex-1 px-4 py-3 bg-neutral-900 text-white rounded-lg text-sm hover:bg-neutral-800 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Send Now</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

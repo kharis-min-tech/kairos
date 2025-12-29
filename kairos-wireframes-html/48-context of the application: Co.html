@@ -1,0 +1,251 @@
+<div id="mobile-audit-log" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-neutral-600"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-clipboard-list text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">Audit Log</span>
+        </div>
+      </div>
+      <button class="p-2">
+        <i class="fa-solid fa-filter text-neutral-600"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div id="filter-section" class="bg-neutral-50 px-4 py-3 border-b border-neutral-200">
+    <div class="flex items-center space-x-3 overflow-x-auto">
+      <button class="bg-neutral-900 text-white px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        All Actions
+      </button>
+      <button class="bg-white border border-neutral-300 text-neutral-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Edits
+      </button>
+      <button class="bg-white border border-neutral-300 text-neutral-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Deletions
+      </button>
+      <button class="bg-white border border-neutral-300 text-neutral-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Logins
+      </button>
+      <button class="bg-white border border-neutral-300 text-neutral-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Exports
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Date Filter -->
+  <div id="search-section" class="px-4 py-4 bg-white border-b border-neutral-200">
+    <div class="space-y-3">
+      <div class="relative">
+        <input type="text" class="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg text-sm" placeholder="Search by user or action...">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+      </div>
+      <div class="flex items-center space-x-2">
+        <div class="flex-1 relative">
+          <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm">
+        </div>
+        <span class="text-neutral-500 text-sm">to</span>
+        <div class="flex-1 relative">
+          <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="flex-1">
+    <!-- Summary Stats -->
+    <div id="stats-section" class="px-4 py-4 bg-neutral-50">
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white rounded-lg p-3 text-center">
+          <div class="text-lg text-neutral-900">247</div>
+          <div class="text-xs text-neutral-600">Today</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 text-center">
+          <div class="text-lg text-neutral-900">1,432</div>
+          <div class="text-xs text-neutral-600">This Week</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 text-center">
+          <div class="text-lg text-neutral-900">5,891</div>
+          <div class="text-xs text-neutral-600">This Month</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Log Entries -->
+    <div id="log-entries" class="px-4 py-2">
+      <!-- Entry 1 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-trash text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">Member Record Deleted</span>
+              <span class="text-xs text-neutral-500">2 min ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">Sarah Johnson's member profile was permanently deleted</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <div class="flex items-center space-x-1">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=admin1" alt="User" class="w-4 h-4 rounded-full">
+                <span>Admin Smith</span>
+              </div>
+              <span>ID: MEM-2025-0847</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 2 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-edit text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">Department Updated</span>
+              <span class="text-xs text-neutral-500">15 min ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">Youth Ministry department details modified</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <div class="flex items-center space-x-1">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=pastor2" alt="User" class="w-4 h-4 rounded-full">
+                <span>Pastor Williams</span>
+              </div>
+              <span>DEPT-YM-001</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 3 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-sign-in-alt text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">System Login</span>
+              <span class="text-xs text-neutral-500">32 min ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">User logged in from mobile device</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <div class="flex items-center space-x-1">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=member3" alt="User" class="w-4 h-4 rounded-full">
+                <span>Mark Davis</span>
+              </div>
+              <span>192.168.1.45</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 4 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-download text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">Report Exported</span>
+              <span class="text-xs text-neutral-500">1 hr ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">Member attendance report downloaded (PDF)</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <div class="flex items-center space-x-1">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=admin2" alt="User" class="w-4 h-4 rounded-full">
+                <span>Admin Johnson</span>
+              </div>
+              <span>RPT-ATT-2025-01</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 5 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-plus text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">New Member Added</span>
+              <span class="text-xs text-neutral-500">2 hrs ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">Jennifer Brown registered as new member</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <div class="flex items-center space-x-1">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=pastor1" alt="User" class="w-4 h-4 rounded-full">
+                <span>Pastor Miller</span>
+              </div>
+              <span>MEM-2025-0848</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 6 -->
+      <div class="bg-white border border-neutral-200 rounded-lg mb-3 p-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-exclamation-triangle text-neutral-600 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-neutral-900">Failed Login Attempt</span>
+              <span class="text-xs text-neutral-500">3 hrs ago</span>
+            </div>
+            <p class="text-sm text-neutral-600 mb-2">Multiple failed login attempts detected</p>
+            <div class="flex items-center space-x-4 text-xs text-neutral-500">
+              <span>Unknown User</span>
+              <span>192.168.1.102</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="text-center py-4">
+        <button class="bg-neutral-100 text-neutral-700 px-6 py-2 rounded-lg text-sm hover:bg-neutral-200">
+          Load More Entries
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Dashboard</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-calendar text-lg mb-1"></i>
+        <span class="text-xs">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-900">
+        <i class="fa-solid fa-clipboard-list text-lg mb-1"></i>
+        <span class="text-xs">Audit</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-cog text-lg mb-1"></i>
+        <span class="text-xs">Settings</span>
+      </button>
+    </div>
+  </nav>
+</div>

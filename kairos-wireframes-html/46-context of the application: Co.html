@@ -1,0 +1,335 @@
+<div id="mobile-user-roles" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 -ml-2 text-neutral-600">
+          <i class="fa-solid fa-arrow-left text-lg"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">KCMS</span>
+        </div>
+      </div>
+      <button class="p-2 text-neutral-600">
+        <i class="fa-solid fa-ellipsis-vertical text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Page Title Section -->
+  <div id="page-title-section" class="px-4 py-4 bg-neutral-50 border-b border-neutral-200">
+    <h1 class="text-xl text-neutral-900 mb-1 flex items-center">
+      <i class="fa-solid fa-users-gear mr-3 text-neutral-700"></i>
+      User Roles & Permissions
+    </h1>
+    <p class="text-sm text-neutral-600">Manage role-based access control</p>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-4">
+    <!-- Quick Stats -->
+    <div id="stats-section" class="grid grid-cols-3 gap-3 mb-6">
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">3</div>
+        <div class="text-xs text-neutral-600">Roles</div>
+      </div>
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">247</div>
+        <div class="text-xs text-neutral-600">Users</div>
+      </div>
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">12</div>
+        <div class="text-xs text-neutral-600">Pending</div>
+      </div>
+    </div>
+
+    <!-- Role Management Cards -->
+    <div id="roles-section" class="space-y-4 mb-6">
+      <h2 class="text-lg text-neutral-900 mb-3">Role Management</h2>
+      
+      <!-- Admin Role Card -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user-shield text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Admin</h3>
+              <p class="text-xs text-neutral-600">5 users</p>
+            </div>
+          </div>
+          <button class="text-neutral-600">
+            <i class="fa-solid fa-chevron-right text-sm"></i>
+          </button>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Full system access</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>User management</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Financial reports</span>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-neutral-100">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Last updated</span>
+            <span class="text-neutral-800">2 days ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pastor Role Card -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-700 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-cross text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Pastor</h3>
+              <p class="text-xs text-neutral-600">18 users</p>
+            </div>
+          </div>
+          <button class="text-neutral-600">
+            <i class="fa-solid fa-chevron-right text-sm"></i>
+          </button>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Branch oversight</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>House group management</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Attendance tracking</span>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-neutral-100">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Last updated</span>
+            <span class="text-neutral-800">1 week ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Member Role Card -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-500 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Member</h3>
+              <p class="text-xs text-neutral-600">224 users</p>
+            </div>
+          </div>
+          <button class="text-neutral-600">
+            <i class="fa-solid fa-chevron-right text-sm"></i>
+          </button>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Personal dashboard</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Event registration</span>
+          </div>
+          <div class="flex items-center text-neutral-600">
+            <i class="fa-solid fa-check text-neutral-600 w-4 mr-2"></i>
+            <span>Profile updates</span>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-neutral-100">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Last updated</span>
+            <span class="text-neutral-800">3 days ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approvals Section -->
+    <div id="pending-section" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">Pending Approvals</h2>
+        <span class="bg-neutral-900 text-white text-xs px-2 py-1 rounded-full">12</span>
+      </div>
+      
+      <div class="space-y-3">
+        <!-- Pending User 1 -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=123" alt="User Avatar" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <h3 class="text-sm text-neutral-900">Sarah Johnson</h3>
+              <p class="text-xs text-neutral-600">Requested Member access</p>
+              <p class="text-xs text-neutral-500">2 hours ago</p>
+            </div>
+            <div class="flex space-x-2">
+              <button class="w-8 h-8 bg-neutral-600 text-white rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-check text-xs"></i>
+              </button>
+              <button class="w-8 h-8 bg-neutral-200 text-neutral-600 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-times text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending User 2 -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="User Avatar" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <h3 class="text-sm text-neutral-900">Michael Chen</h3>
+              <p class="text-xs text-neutral-600">Requested Pastor access</p>
+              <p class="text-xs text-neutral-500">5 hours ago</p>
+            </div>
+            <div class="flex space-x-2">
+              <button class="w-8 h-8 bg-neutral-600 text-white rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-check text-xs"></i>
+              </button>
+              <button class="w-8 h-8 bg-neutral-200 text-neutral-600 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-times text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- View All Button -->
+        <button class="w-full py-3 text-sm text-neutral-600 border border-neutral-300 rounded-lg bg-white hover:bg-neutral-50">
+          View All Pending (12)
+        </button>
+      </div>
+    </div>
+
+    <!-- Permission Matrix Section -->
+    <div id="permissions-section" class="mb-6">
+      <h2 class="text-lg text-neutral-900 mb-3">Permission Matrix</h2>
+      <div class="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+        <div class="p-3 border-b border-neutral-200 bg-neutral-50">
+          <div class="grid grid-cols-4 gap-2 text-xs text-neutral-600">
+            <div>Permission</div>
+            <div class="text-center">Admin</div>
+            <div class="text-center">Pastor</div>
+            <div class="text-center">Member</div>
+          </div>
+        </div>
+        <div class="divide-y divide-neutral-200">
+          <div class="p-3 grid grid-cols-4 gap-2 text-xs">
+            <div class="text-neutral-800">User Management</div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-times text-neutral-300"></i></div>
+            <div class="text-center"><i class="fa-solid fa-times text-neutral-300"></i></div>
+          </div>
+          <div class="p-3 grid grid-cols-4 gap-2 text-xs">
+            <div class="text-neutral-800">Financial Reports</div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-times text-neutral-300"></i></div>
+            <div class="text-center"><i class="fa-solid fa-times text-neutral-300"></i></div>
+          </div>
+          <div class="p-3 grid grid-cols-4 gap-2 text-xs">
+            <div class="text-neutral-800">Attendance</div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-times text-neutral-300"></i></div>
+          </div>
+          <div class="p-3 grid grid-cols-4 gap-2 text-xs">
+            <div class="text-neutral-800">Events</div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+            <div class="text-center"><i class="fa-solid fa-check text-neutral-600"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="actions-section" class="space-y-3">
+      <h2 class="text-lg text-neutral-900 mb-3">Quick Actions</h2>
+      
+      <button class="w-full flex items-center justify-between p-4 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-user-plus text-neutral-600"></i>
+          </div>
+          <div class="text-left">
+            <div class="text-sm text-neutral-900">Create New Role</div>
+            <div class="text-xs text-neutral-600">Define custom permissions</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-neutral-400"></i>
+      </button>
+
+      <button class="w-full flex items-center justify-between p-4 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-users text-neutral-600"></i>
+          </div>
+          <div class="text-left">
+            <div class="text-sm text-neutral-900">Bulk User Management</div>
+            <div class="text-xs text-neutral-600">Import or assign roles</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-neutral-400"></i>
+      </button>
+
+      <button class="w-full flex items-center justify-between p-4 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-history text-neutral-600"></i>
+          </div>
+          <div class="text-left">
+            <div class="text-sm text-neutral-900">Audit Log</div>
+            <div class="text-xs text-neutral-600">View permission changes</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-neutral-400"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex items-center justify-around">
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-house text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400">Home</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-users text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400">Members</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-users-gear text-neutral-900 text-lg"></i>
+        <span class="text-xs text-neutral-900">Roles</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-chart-bar text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400">Reports</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-gear text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400">Settings</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Footer Spacer -->
+  <div id="footer-spacer" class="h-20"></div>
+</div>

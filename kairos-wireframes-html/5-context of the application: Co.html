@@ -1,0 +1,252 @@
+<div id="mobile-onboarding" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <button class="text-sm text-neutral-600 hover:text-neutral-800">
+        Skip
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress Indicator -->
+  <div id="progress-section" class="px-4 py-4 bg-neutral-50">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs text-neutral-600">Step 1 of 4</span>
+      <span class="text-xs text-neutral-600">25%</span>
+    </div>
+    <div class="w-full bg-neutral-200 rounded-full h-2">
+      <div class="bg-neutral-800 h-2 rounded-full w-1/4"></div>
+    </div>
+  </div>
+
+  <!-- Main Onboarding Content -->
+  <main id="main-content" class="px-4 py-8 h-[600px] flex flex-col">
+    <!-- Welcome Step -->
+    <div id="welcome-step" class="text-center flex-1 flex flex-col justify-center">
+      <div class="w-24 h-24 mx-auto mb-6 bg-neutral-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-hands-praying text-neutral-800 text-3xl"></i>
+      </div>
+      
+      <h1 class="text-2xl text-neutral-900 mb-4">Welcome to KCMS</h1>
+      <p class="text-neutral-600 mb-6 leading-relaxed">
+        Your digital home for church community, spiritual growth, and meaningful connections. Let's get you started on your journey.
+      </p>
+
+      <!-- Key Features Preview -->
+      <div id="features-preview" class="space-y-4 mb-8">
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-users text-white text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-sm text-neutral-800">Connect with Community</h3>
+            <p class="text-xs text-neutral-600">Join departments and house groups</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-calendar text-white text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-sm text-neutral-800">Stay Updated</h3>
+            <p class="text-xs text-neutral-600">Events, services, and announcements</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-heart text-white text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-sm text-neutral-800">Track Your Journey</h3>
+            <p class="text-xs text-neutral-600">Giving, attendance, and growth</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div id="navigation-buttons" class="space-y-3">
+      <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+        Get Started
+      </button>
+      <button class="w-full border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors">
+        I'll explore later
+      </button>
+    </div>
+  </main>
+
+  <!-- Step 2: Dashboard Overview (Hidden by default) -->
+  <div id="dashboard-step" class="hidden px-4 py-8 h-[600px] flex flex-col">
+    <div class="text-center flex-1 flex flex-col justify-center">
+      <div class="w-24 h-24 mx-auto mb-6 bg-neutral-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-chart-line text-neutral-800 text-3xl"></i>
+      </div>
+      
+      <h2 class="text-2xl text-neutral-900 mb-4">Your Dashboard</h2>
+      <p class="text-neutral-600 mb-6 leading-relaxed">
+        Everything you need at a glance. View your activities, upcoming events, and stay connected with your church family.
+      </p>
+
+      <!-- Dashboard Features -->
+      <div id="dashboard-features" class="bg-neutral-50 rounded-lg p-4 mb-8">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="text-center">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <i class="fa-solid fa-bell text-neutral-600"></i>
+            </div>
+            <p class="text-xs text-neutral-700">Notifications</p>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <i class="fa-solid fa-calendar-check text-neutral-600"></i>
+            </div>
+            <p class="text-xs text-neutral-700">Events</p>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <i class="fa-solid fa-donate text-neutral-600"></i>
+            </div>
+            <p class="text-xs text-neutral-700">Giving</p>
+          </div>
+          <div class="text-center">
+            <div class="w-12 h-12 bg-neutral-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <i class="fa-solid fa-user-circle text-neutral-600"></i>
+            </div>
+            <p class="text-xs text-neutral-700">Profile</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex space-x-3">
+      <button class="flex-1 border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50">
+        Back
+      </button>
+      <button class="flex-1 bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Profile Setup -->
+  <div id="profile-step" class="hidden px-4 py-8 h-[600px] flex flex-col">
+    <div class="text-center flex-1 flex flex-col justify-center">
+      <div class="w-24 h-24 mx-auto mb-6 bg-neutral-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-user-edit text-neutral-800 text-3xl"></i>
+      </div>
+      
+      <h2 class="text-2xl text-neutral-900 mb-4">Complete Your Profile</h2>
+      <p class="text-neutral-600 mb-6 leading-relaxed">
+        Help us personalize your experience by completing your church profile and preferences.
+      </p>
+
+      <!-- Profile Form Preview -->
+      <div id="profile-form-preview" class="space-y-4 mb-8">
+        <div class="bg-neutral-50 rounded-lg p-4">
+          <div class="space-y-3">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-id-card text-neutral-600"></i>
+              <span class="text-sm text-neutral-700">Personal Information</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-map-marker-alt text-neutral-600"></i>
+              <span class="text-sm text-neutral-700">Address & Contact</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-users text-neutral-600"></i>
+              <span class="text-sm text-neutral-700">Department Preferences</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-cog text-neutral-600"></i>
+              <span class="text-sm text-neutral-700">Notification Settings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex space-x-3">
+      <button class="flex-1 border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50">
+        Back
+      </button>
+      <button class="flex-1 bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 4: Ready to Go -->
+  <div id="ready-step" class="hidden px-4 py-8 h-[600px] flex flex-col">
+    <div class="text-center flex-1 flex flex-col justify-center">
+      <div class="w-24 h-24 mx-auto mb-6 bg-neutral-800 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-check text-white text-3xl"></i>
+      </div>
+      
+      <h2 class="text-2xl text-neutral-900 mb-4">You're All Set!</h2>
+      <p class="text-neutral-600 mb-6 leading-relaxed">
+        Welcome to the Kharis Church family. Your spiritual journey with us starts now. God bless you!
+      </p>
+
+      <!-- Quick Actions -->
+      <div id="quick-actions" class="space-y-3 mb-8">
+        <div class="bg-neutral-50 rounded-lg p-4">
+          <h3 class="text-sm text-neutral-800 mb-3">Quick Actions to Get Started:</h3>
+          <div class="space-y-2 text-left">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-neutral-400 rounded-full"></div>
+              <span class="text-xs text-neutral-600">Join a department or house group</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-neutral-400 rounded-full"></div>
+              <span class="text-xs text-neutral-600">Check upcoming church events</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-neutral-400 rounded-full"></div>
+              <span class="text-xs text-neutral-600">Update your profile information</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-neutral-400 rounded-full"></div>
+              <span class="text-xs text-neutral-600">Explore giving and tithing options</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+        Enter Dashboard
+      </button>
+      <button class="w-full border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors">
+        Take the Tour Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Dots -->
+  <div id="dots-navigation" class="px-4 py-4">
+    <div class="flex justify-center space-x-2">
+      <div class="w-2 h-2 bg-neutral-800 rounded-full"></div>
+      <div class="w-2 h-2 bg-neutral-300 rounded-full"></div>
+      <div class="w-2 h-2 bg-neutral-300 rounded-full"></div>
+      <div class="w-2 h-2 bg-neutral-300 rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-4 border-t border-neutral-200 bg-white">
+    <div class="text-center">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs mt-2">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Help</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

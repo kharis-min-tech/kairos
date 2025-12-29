@@ -1,0 +1,305 @@
+<div id="mobile-attendance-report" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-chart-bar text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">Attendance Report</span>
+        </div>
+      </div>
+      <button class="p-2 hover:bg-neutral-100 rounded-lg">
+        <i class="fa-solid fa-download text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-4">
+    <!-- Report Header Section -->
+    <div id="report-header" class="mb-6">
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <h1 class="text-xl text-neutral-900 mb-2">Event Attendance Breakdown</h1>
+        <p class="text-sm text-neutral-600 mb-4">Sunday Service - January 12, 2025</p>
+        
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="text-center">
+            <div class="text-2xl text-neutral-900 mb-1">247</div>
+            <div class="text-xs text-neutral-600">Total Present</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl text-neutral-900 mb-1">89%</div>
+            <div class="text-xs text-neutral-600">Attendance Rate</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl text-neutral-900 mb-1">31</div>
+            <div class="text-xs text-neutral-600">Absent</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div id="filter-section" class="mb-6">
+      <div class="flex space-x-2 mb-4">
+        <button class="px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm">
+          By Branch
+        </button>
+        <button class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg text-sm">
+          By Department
+        </button>
+      </div>
+      
+      <!-- Date Range Selector -->
+      <div class="flex items-center space-x-2 text-sm">
+        <i class="fa-regular fa-calendar text-neutral-500"></i>
+        <select class="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-neutral-700">
+          <option>This Week</option>
+          <option>This Month</option>
+          <option>Last 3 Months</option>
+          <option>Custom Range</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Branch Breakdown -->
+    <div id="branch-breakdown" class="space-y-4 mb-6">
+      <h2 class="text-lg text-neutral-900 flex items-center">
+        <i class="fa-solid fa-map-marker-alt mr-2 text-neutral-600"></i>
+        Branch Attendance
+      </h2>
+
+      <!-- Main Campus -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-church text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Main Campus</h3>
+              <p class="text-xs text-neutral-600">Ikeja, Lagos</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg text-neutral-900">142</div>
+            <div class="text-xs text-neutral-600">92% present</div>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-neutral-200 rounded-full h-2 mb-2">
+          <div class="bg-neutral-800 h-2 rounded-full" style="width: 92%"></div>
+        </div>
+        
+        <!-- Department Breakdown -->
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Adults</span>
+            <span class="text-neutral-900">98</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Youth</span>
+            <span class="text-neutral-900">32</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Children</span>
+            <span class="text-neutral-900">12</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Visitors</span>
+            <span class="text-neutral-900">8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Victoria Island Branch -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-700 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-building text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Victoria Island</h3>
+              <p class="text-xs text-neutral-600">VI, Lagos</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg text-neutral-900">67</div>
+            <div class="text-xs text-neutral-600">85% present</div>
+          </div>
+        </div>
+        
+        <div class="w-full bg-neutral-200 rounded-full h-2 mb-2">
+          <div class="bg-neutral-700 h-2 rounded-full" style="width: 85%"></div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Adults</span>
+            <span class="text-neutral-900">45</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Youth</span>
+            <span class="text-neutral-900">18</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Children</span>
+            <span class="text-neutral-900">4</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Visitors</span>
+            <span class="text-neutral-900">3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lekki Branch -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-600 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-home text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Lekki Branch</h3>
+              <p class="text-xs text-neutral-600">Lekki, Lagos</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg text-neutral-900">38</div>
+            <div class="text-xs text-neutral-600">79% present</div>
+          </div>
+        </div>
+        
+        <div class="w-full bg-neutral-200 rounded-full h-2 mb-2">
+          <div class="bg-neutral-600 h-2 rounded-full" style="width: 79%"></div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Adults</span>
+            <span class="text-neutral-900">28</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Youth</span>
+            <span class="text-neutral-900">7</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Children</span>
+            <span class="text-neutral-900">3</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-600">Visitors</span>
+            <span class="text-neutral-900">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trends Section -->
+    <div id="trends-section" class="mb-6">
+      <h2 class="text-lg text-neutral-900 mb-4 flex items-center">
+        <i class="fa-solid fa-chart-line mr-2 text-neutral-600"></i>
+        Attendance Trends
+      </h2>
+      
+      <!-- Chart Placeholder -->
+      <div class="bg-neutral-100 rounded-lg p-6 text-center">
+        <i class="fa-solid fa-chart-bar text-4xl text-neutral-400 mb-4"></i>
+        <p class="text-sm text-neutral-600">Weekly Attendance Chart</p>
+        <p class="text-xs text-neutral-500 mt-2">Shows 4-week trend comparison</p>
+      </div>
+    </div>
+
+    <!-- Notable Insights -->
+    <div id="insights-section" class="mb-6">
+      <h2 class="text-lg text-neutral-900 mb-4 flex items-center">
+        <i class="fa-solid fa-lightbulb mr-2 text-neutral-600"></i>
+        Key Insights
+      </h2>
+      
+      <div class="space-y-3">
+        <div class="bg-neutral-50 rounded-lg p-4 border-l-4 border-neutral-800">
+          <div class="flex items-start space-x-3">
+            <i class="fa-solid fa-arrow-up text-neutral-600 mt-1"></i>
+            <div>
+              <h3 class="text-sm text-neutral-900 mb-1">Attendance Up 12%</h3>
+              <p class="text-xs text-neutral-600">Compared to last month's average</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-neutral-50 rounded-lg p-4 border-l-4 border-neutral-600">
+          <div class="flex items-start space-x-3">
+            <i class="fa-solid fa-users text-neutral-600 mt-1"></i>
+            <div>
+              <h3 class="text-sm text-neutral-900 mb-1">Youth Engagement Strong</h3>
+              <p class="text-xs text-neutral-600">95% attendance rate across all branches</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-neutral-50 rounded-lg p-4 border-l-4 border-neutral-500">
+          <div class="flex items-start space-x-3">
+            <i class="fa-solid fa-clock text-neutral-600 mt-1"></i>
+            <div>
+              <h3 class="text-sm text-neutral-900 mb-1">Peak Time: 10:30 AM</h3>
+              <p class="text-xs text-neutral-600">Highest check-in activity period</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons" class="space-y-3 mb-8">
+      <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-file-export"></i>
+        <span>Export Full Report</span>
+      </button>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <button class="bg-neutral-100 text-neutral-700 py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-share-alt"></i>
+          <span>Share</span>
+        </button>
+        <button class="bg-neutral-100 text-neutral-700 py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-print"></i>
+          <span>Print</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <footer id="footer" class="bg-white border-t border-neutral-200 px-4 py-3">
+    <div class="flex justify-around items-center">
+      <button class="flex flex-col items-center space-y-1 text-neutral-500">
+        <i class="fa-solid fa-home text-lg"></i>
+        <span class="text-xs">Dashboard</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 text-neutral-500">
+        <i class="fa-solid fa-users text-lg"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 text-neutral-900">
+        <i class="fa-solid fa-chart-bar text-lg"></i>
+        <span class="text-xs">Reports</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 text-neutral-500">
+        <i class="fa-solid fa-calendar text-lg"></i>
+        <span class="text-xs">Events</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 text-neutral-500">
+        <i class="fa-solid fa-cog text-lg"></i>
+        <span class="text-xs">Settings</span>
+      </button>
+    </div>
+  </footer>
+</div>

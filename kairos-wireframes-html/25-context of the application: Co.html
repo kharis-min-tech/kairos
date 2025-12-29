@@ -1,0 +1,266 @@
+<div id="mobile-kgroup-detail" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3 sticky top-0 z-10">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 -ml-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div>
+          <h1 class="text-lg text-neutral-900">Victory Group</h1>
+          <p class="text-xs text-neutral-500">K-Group Details</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-ellipsis-vertical text-neutral-600"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="pb-20">
+    <!-- Group Info Card -->
+    <div id="group-info-section" class="px-4 py-4 bg-neutral-50 border-b border-neutral-200">
+      <div class="flex items-start space-x-3">
+        <div class="w-16 h-16 bg-neutral-700 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-users text-white text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-lg text-neutral-900">Victory Group</h2>
+          <div class="space-y-1 text-sm text-neutral-600">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-user-tie w-4"></i>
+              <span>Pastor John Smith</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-users w-4"></i>
+              <span>12 Members</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-calendar w-4"></i>
+              <span>Wednesdays 7:00 PM</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-location-dot w-4"></i>
+              <span>Community Hall A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div id="stats-section" class="px-4 py-4">
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+          <div class="text-xl text-neutral-900 mb-1">85%</div>
+          <div class="text-xs text-neutral-600">Avg Attendance</div>
+        </div>
+        <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+          <div class="text-xl text-neutral-900 mb-1">4</div>
+          <div class="text-xs text-neutral-600">This Month</div>
+        </div>
+        <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+          <div class="text-xl text-neutral-900 mb-1">3</div>
+          <div class="text-xs text-neutral-600">New Members</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div id="tabs-section" class="px-4 mb-4">
+      <div class="flex bg-neutral-100 rounded-lg p-1">
+        <button class="flex-1 py-2 px-3 text-sm bg-white text-neutral-900 rounded-md shadow-sm">Members</button>
+        <button class="flex-1 py-2 px-3 text-sm text-neutral-600">Schedule</button>
+        <button class="flex-1 py-2 px-3 text-sm text-neutral-600">Notes</button>
+        <button class="flex-1 py-2 px-3 text-sm text-neutral-600">Reports</button>
+      </div>
+    </div>
+
+    <!-- Members List -->
+    <div id="members-section" class="px-4 space-y-3">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg text-neutral-900">Group Members</h3>
+        <button class="text-sm text-neutral-700 hover:text-neutral-900 flex items-center space-x-1">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add</span>
+        </button>
+      </div>
+
+      <!-- Member Cards -->
+      <div class="space-y-2">
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=123" alt="Pastor" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <h4 class="text-sm text-neutral-900">Pastor John Smith</h4>
+                <span class="text-xs bg-neutral-800 text-white px-2 py-1 rounded">Leader</span>
+              </div>
+              <p class="text-xs text-neutral-600">john.smith@kharischurch.org</p>
+            </div>
+            <div class="text-right">
+              <div class="w-2 h-2 bg-neutral-500 rounded-full mb-1"></div>
+              <p class="text-xs text-neutral-500">100%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="Member" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <h4 class="text-sm text-neutral-900">Sarah Johnson</h4>
+              <p class="text-xs text-neutral-600">sarah.j@email.com</p>
+            </div>
+            <div class="text-right">
+              <div class="w-2 h-2 bg-neutral-500 rounded-full mb-1"></div>
+              <p class="text-xs text-neutral-500">95%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=789" alt="Member" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <h4 class="text-sm text-neutral-900">Michael Brown</h4>
+              <p class="text-xs text-neutral-600">m.brown@email.com</p>
+            </div>
+            <div class="text-right">
+              <div class="w-2 h-2 bg-neutral-500 rounded-full mb-1"></div>
+              <p class="text-xs text-neutral-500">75%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=321" alt="Member" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <h4 class="text-sm text-neutral-900">Emily Davis</h4>
+              <p class="text-xs text-neutral-600">emily.d@email.com</p>
+            </div>
+            <div class="text-right">
+              <div class="w-2 h-2 bg-neutral-500 rounded-full mb-1"></div>
+              <p class="text-xs text-neutral-500">90%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=654" alt="Member" class="w-10 h-10 rounded-full">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <h4 class="text-sm text-neutral-900">David Wilson</h4>
+                <span class="text-xs bg-neutral-100 text-neutral-700 px-2 py-1 rounded">New</span>
+              </div>
+              <p class="text-xs text-neutral-600">d.wilson@email.com</p>
+            </div>
+            <div class="text-right">
+              <div class="w-2 h-2 bg-neutral-500 rounded-full mb-1"></div>
+              <p class="text-xs text-neutral-500">50%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div id="activities-section" class="px-4 mt-6">
+      <h3 class="text-lg text-neutral-900 mb-3">Recent Activities</h3>
+      <div class="space-y-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-check text-neutral-600 text-xs"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">Meeting completed</p>
+              <p class="text-xs text-neutral-600">10 members attended • Jan 15, 2025</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user-plus text-neutral-600 text-xs"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">New member added</p>
+              <p class="text-xs text-neutral-600">David Wilson joined the group • Jan 12, 2025</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-calendar text-neutral-600 text-xs"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">Schedule updated</p>
+              <p class="text-xs text-neutral-600">Meeting time changed to 7:00 PM • Jan 10, 2025</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Meeting -->
+    <div id="upcoming-section" class="px-4 mt-6">
+      <h3 class="text-lg text-neutral-900 mb-3">Next Meeting</h3>
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h4 class="text-sm text-neutral-900">Wednesday Night Fellowship</h4>
+            <p class="text-xs text-neutral-600">Jan 22, 2025 • 7:00 PM</p>
+          </div>
+          <button class="bg-neutral-900 text-white px-3 py-1 rounded text-xs">
+            Mark Attendance
+          </button>
+        </div>
+        <div class="flex items-center space-x-4 text-xs text-neutral-600">
+          <div class="flex items-center space-x-1">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Community Hall A</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <i class="fa-solid fa-users"></i>
+            <span>12 expected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-house text-neutral-400 mb-1"></i>
+        <span class="text-xs text-neutral-400">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-users text-neutral-900 mb-1"></i>
+        <span class="text-xs text-neutral-900">Groups</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-calendar text-neutral-400 mb-1"></i>
+        <span class="text-xs text-neutral-400">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-chart-bar text-neutral-400 mb-1"></i>
+        <span class="text-xs text-neutral-400">Reports</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-user text-neutral-400 mb-1"></i>
+        <span class="text-xs text-neutral-400">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>

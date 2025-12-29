@@ -1,0 +1,278 @@
+<div id="mobile-announcements" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 -ml-2">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-bullhorn text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">Announcements</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-2">
+          <i class="fa-solid fa-search text-neutral-700"></i>
+        </button>
+        <button class="p-2">
+          <i class="fa-solid fa-plus text-neutral-700"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Tabs -->
+  <div id="filter-tabs" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex space-x-1">
+      <button class="px-4 py-2 bg-neutral-900 text-white text-sm rounded-full">All</button>
+      <button class="px-4 py-2 bg-neutral-100 text-neutral-700 text-sm rounded-full">General</button>
+      <button class="px-4 py-2 bg-neutral-100 text-neutral-700 text-sm rounded-full">Events</button>
+      <button class="px-4 py-2 bg-neutral-100 text-neutral-700 text-sm rounded-full">Urgent</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-4 space-y-4">
+    
+    <!-- Create Announcement Card (Admin Only) -->
+    <div id="create-announcement" class="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-plus text-white text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-sm text-neutral-800">Create Announcement</h3>
+            <p class="text-xs text-neutral-600">Broadcast message to members</p>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-neutral-400"></i>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div id="stats-section" class="grid grid-cols-3 gap-3">
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900">24</div>
+        <div class="text-xs text-neutral-600">Total</div>
+      </div>
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900">3</div>
+        <div class="text-xs text-neutral-600">This Week</div>
+      </div>
+      <div class="bg-white border border-neutral-200 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900">1</div>
+        <div class="text-xs text-neutral-600">Urgent</div>
+      </div>
+    </div>
+
+    <!-- Announcements List -->
+    <div id="announcements-list" class="space-y-3">
+      
+      <!-- Urgent Announcement -->
+      <div class="bg-white border-l-4 border-l-neutral-900 border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-neutral-900 text-white text-xs px-2 py-1 rounded-full">URGENT</span>
+            <span class="text-xs text-neutral-500">2 hours ago</span>
+          </div>
+          <button class="p-1">
+            <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+          </button>
+        </div>
+        
+        <h3 class="text-sm text-neutral-900 mb-2">Emergency Prayer Meeting Tonight</h3>
+        <p class="text-xs text-neutral-600 mb-3">All members are invited to join us for an emergency prayer session at 7:00 PM in the main sanctuary. We will be praying for...</p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-eye text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">156 views</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-users text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">All Members</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=12345" alt="Admin" class="w-6 h-6 rounded-full">
+            <span class="text-xs text-neutral-500">Pastor John</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regular Announcement -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-neutral-100 text-neutral-700 text-xs px-2 py-1 rounded-full">EVENT</span>
+            <span class="text-xs text-neutral-500">1 day ago</span>
+          </div>
+          <button class="p-1">
+            <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+          </button>
+        </div>
+        
+        <h3 class="text-sm text-neutral-900 mb-2">Youth Conference 2025 Registration Open</h3>
+        <p class="text-xs text-neutral-600 mb-3">Registration is now open for our annual Youth Conference happening March 15-17, 2025. Early bird pricing available until...</p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-eye text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">89 views</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-users text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">Youth Department</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=67890" alt="Admin" class="w-6 h-6 rounded-full">
+            <span class="text-xs text-neutral-500">Sarah M.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- General Announcement -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-neutral-100 text-neutral-700 text-xs px-2 py-1 rounded-full">GENERAL</span>
+            <span class="text-xs text-neutral-500">3 days ago</span>
+          </div>
+          <button class="p-1">
+            <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+          </button>
+        </div>
+        
+        <h3 class="text-sm text-neutral-900 mb-2">New Sunday Service Schedule</h3>
+        <p class="text-xs text-neutral-600 mb-3">Starting February 1st, we will be adjusting our Sunday service times. First service will begin at 8:00 AM and second service at 10:30 AM...</p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-eye text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">234 views</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-users text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">All Members</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=11111" alt="Admin" class="w-6 h-6 rounded-full">
+            <span class="text-xs text-neutral-500">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Department Announcement -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-neutral-100 text-neutral-700 text-xs px-2 py-1 rounded-full">DEPARTMENT</span>
+            <span class="text-xs text-neutral-500">5 days ago</span>
+          </div>
+          <button class="p-1">
+            <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+          </button>
+        </div>
+        
+        <h3 class="text-sm text-neutral-900 mb-2">Children's Ministry Volunteer Training</h3>
+        <p class="text-xs text-neutral-600 mb-3">Mandatory training session for all Children's Ministry volunteers scheduled for Saturday, February 10th at 2:00 PM in Room B...</p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-eye text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">45 views</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-users text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">Children's Ministry</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=22222" alt="Admin" class="w-6 h-6 rounded-full">
+            <span class="text-xs text-neutral-500">Mary K.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Announcement -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-neutral-100 text-neutral-700 text-xs px-2 py-1 rounded-full">EVENT</span>
+            <span class="text-xs text-neutral-500">1 week ago</span>
+          </div>
+          <button class="p-1">
+            <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+          </button>
+        </div>
+        
+        <h3 class="text-sm text-neutral-900 mb-2">Valentine's Day Couples Dinner</h3>
+        <p class="text-xs text-neutral-600 mb-3">Join us for a special Valentine's Day dinner for married couples on February 14th at 6:00 PM. Registration required by February 10th...</p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-eye text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">67 views</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fa-solid fa-users text-neutral-400 text-xs"></i>
+              <span class="text-xs text-neutral-500">Marriage Ministry</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=33333" alt="Admin" class="w-6 h-6 rounded-full">
+            <span class="text-xs text-neutral-500">David L.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Load More Button -->
+    <div id="load-more" class="text-center py-4">
+      <button class="text-sm text-neutral-600 border border-neutral-300 px-6 py-2 rounded-lg hover:bg-neutral-50">
+        Load More Announcements
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around items-center">
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-home text-neutral-400"></i>
+        <span class="text-xs text-neutral-500">Home</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-users text-neutral-400"></i>
+        <span class="text-xs text-neutral-500">Members</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-bullhorn text-neutral-900"></i>
+        <span class="text-xs text-neutral-900">Announcements</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-calendar text-neutral-400"></i>
+        <span class="text-xs text-neutral-500">Events</span>
+      </button>
+      <button class="flex flex-col items-center space-y-1 p-2">
+        <i class="fa-solid fa-user text-neutral-400"></i>
+        <span class="text-xs text-neutral-500">Profile</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Spacing for fixed bottom nav -->
+  <div class="h-20"></div>
+
+</div>

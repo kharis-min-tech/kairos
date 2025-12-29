@@ -1,0 +1,303 @@
+<div id="mobile-branch-settings" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-xl text-neutral-800"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-code-branch text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">Branch Settings</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-1">
+          <i class="fa-solid fa-ellipsis-vertical text-xl text-neutral-600"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Branch Selection -->
+    <div id="branch-selector" class="mb-6">
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-building text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm text-neutral-900">Main Branch</h3>
+              <p class="text-xs text-neutral-600">Lagos, Nigeria</p>
+            </div>
+          </div>
+          <button class="px-3 py-1 border border-neutral-300 rounded-md text-xs text-neutral-700">
+            Switch
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch Details Form -->
+    <div id="branch-form" class="space-y-6">
+      <div class="space-y-4">
+        <h2 class="text-lg text-neutral-900 flex items-center">
+          <i class="fa-solid fa-info-circle mr-2 text-neutral-600"></i>
+          Branch Information
+        </h2>
+
+        <!-- Branch Name -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Branch Name *</label>
+          <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="Main Branch" placeholder="Enter branch name">
+        </div>
+
+        <!-- Branch Code -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Branch Code *</label>
+          <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="KCMS-MAIN" placeholder="Enter branch code">
+        </div>
+
+        <!-- Address -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Address *</label>
+          <textarea class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 h-20 resize-none" placeholder="Enter full address">123 Church Street, Victoria Island, Lagos, Nigeria</textarea>
+        </div>
+
+        <!-- City and State -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">City *</label>
+            <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="Lagos" placeholder="City">
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">State *</label>
+            <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="Lagos" placeholder="State">
+          </div>
+        </div>
+
+        <!-- Country and Postal Code -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Country *</label>
+            <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500">
+              <option>Nigeria</option>
+              <option>Ghana</option>
+              <option>Kenya</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Postal Code</label>
+            <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="101001" placeholder="Postal code">
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="space-y-4 pt-6 border-t border-neutral-200">
+        <h2 class="text-lg text-neutral-900 flex items-center">
+          <i class="fa-solid fa-phone mr-2 text-neutral-600"></i>
+          Contact Information
+        </h2>
+
+        <!-- Phone Number -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Phone Number *</label>
+          <input type="tel" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="+234 901 234 5678" placeholder="Enter phone number">
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Email Address *</label>
+          <input type="email" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="main@kharischurch.org" placeholder="Enter email address">
+        </div>
+
+        <!-- Website -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Website</label>
+          <input type="url" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="https://kharischurch.org" placeholder="Enter website URL">
+        </div>
+      </div>
+
+      <!-- Branch Settings -->
+      <div class="space-y-4 pt-6 border-t border-neutral-200">
+        <h2 class="text-lg text-neutral-900 flex items-center">
+          <i class="fa-solid fa-cog mr-2 text-neutral-600"></i>
+          Branch Settings
+        </h2>
+
+        <!-- Capacity -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Seating Capacity</label>
+          <input type="number" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" value="500" placeholder="Enter capacity">
+        </div>
+
+        <!-- Service Times -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Service Times</label>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-calendar-day text-neutral-600"></i>
+                <div>
+                  <p class="text-sm text-neutral-900">Sunday Service</p>
+                  <p class="text-xs text-neutral-600">9:00 AM - 11:30 AM</p>
+                </div>
+              </div>
+              <button class="text-xs text-neutral-600">
+                <i class="fa-solid fa-edit"></i>
+              </button>
+            </div>
+            <div class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-calendar-day text-neutral-600"></i>
+                <div>
+                  <p class="text-sm text-neutral-900">Wednesday Service</p>
+                  <p class="text-xs text-neutral-600">6:00 PM - 8:00 PM</p>
+                </div>
+              </div>
+              <button class="text-xs text-neutral-600">
+                <i class="fa-solid fa-edit"></i>
+              </button>
+            </div>
+            <button class="w-full p-3 border border-dashed border-neutral-300 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50">
+              <i class="fa-solid fa-plus mr-2"></i>
+              Add Service Time
+            </button>
+          </div>
+        </div>
+
+        <!-- Branch Status -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Branch Status</label>
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="status" class="w-4 h-4 border border-neutral-300" checked>
+              <span class="text-sm text-neutral-700">Active</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="status" class="w-4 h-4 border border-neutral-300">
+              <span class="text-sm text-neutral-700">Inactive</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leadership Assignment -->
+      <div class="space-y-4 pt-6 border-t border-neutral-200">
+        <h2 class="text-lg text-neutral-900 flex items-center">
+          <i class="fa-solid fa-users mr-2 text-neutral-600"></i>
+          Leadership Assignment
+        </h2>
+
+        <!-- Branch Pastor -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Branch Pastor</label>
+          <div class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=12345" alt="Pastor" class="w-8 h-8 rounded-full">
+              <div>
+                <p class="text-sm text-neutral-900">Pastor John Adebayo</p>
+                <p class="text-xs text-neutral-600">john.adebayo@kharischurch.org</p>
+              </div>
+            </div>
+            <button class="text-xs text-neutral-600">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Assistant Pastor -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Assistant Pastor</label>
+          <button class="w-full p-3 border border-dashed border-neutral-300 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50">
+            <i class="fa-solid fa-plus mr-2"></i>
+            Assign Assistant Pastor
+          </button>
+        </div>
+
+        <!-- Branch Administrator -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Branch Administrator</label>
+          <div class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=54321" alt="Admin" class="w-8 h-8 rounded-full">
+              <div>
+                <p class="text-sm text-neutral-900">Sarah Okafor</p>
+                <p class="text-xs text-neutral-600">sarah.okafor@kharischurch.org</p>
+              </div>
+            </div>
+            <button class="text-xs text-neutral-600">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="action-buttons" class="space-y-3 pt-6 border-t border-neutral-200">
+        <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+          <i class="fa-solid fa-save mr-2"></i>
+          Save Changes
+        </button>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <button class="px-4 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50">
+            <i class="fa-solid fa-eye mr-2"></i>
+            Preview
+          </button>
+          <button class="px-4 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50">
+            <i class="fa-solid fa-copy mr-2"></i>
+            Duplicate
+          </button>
+        </div>
+
+        <button class="w-full px-4 py-2 border border-neutral-300 text-neutral-600 rounded-lg text-sm hover:bg-neutral-50">
+          <i class="fa-solid fa-trash mr-2"></i>
+          Delete Branch
+        </button>
+      </div>
+
+      <!-- Branch Statistics -->
+      <div id="branch-stats" class="bg-neutral-50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm text-neutral-800 flex items-center">
+          <i class="fa-solid fa-chart-bar mr-2"></i>
+          Branch Statistics
+        </h3>
+        <div class="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <p class="text-lg text-neutral-900">245</p>
+            <p class="text-xs text-neutral-600">Total Members</p>
+          </div>
+          <div>
+            <p class="text-lg text-neutral-900">12</p>
+            <p class="text-xs text-neutral-600">House Groups</p>
+          </div>
+          <div>
+            <p class="text-lg text-neutral-900">8</p>
+            <p class="text-xs text-neutral-600">Departments</p>
+          </div>
+          <div>
+            <p class="text-lg text-neutral-900">85%</p>
+            <p class="text-xs text-neutral-600">Avg Attendance</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

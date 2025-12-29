@@ -1,0 +1,148 @@
+<div id="mobile-forgot-password" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <button class="flex items-center space-x-2 text-neutral-600">
+        <i class="fa-solid fa-arrow-left text-lg"></i>
+        <span class="text-sm">Back to Login</span>
+      </button>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-8">
+    <!-- Logo and Title Section -->
+    <div id="title-section" class="text-center mb-8">
+      <div class="w-20 h-20 mx-auto mb-4 bg-neutral-800 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-key text-white text-2xl"></i>
+      </div>
+      <h1 class="text-2xl text-neutral-900 mb-2">Reset Password</h1>
+      <p class="text-neutral-600 text-sm leading-relaxed">Enter your email address and we'll send you a link to reset your password</p>
+    </div>
+
+    <!-- Password Reset Form -->
+    <div id="reset-form-section" class="space-y-6">
+      <form class="space-y-4">
+        <!-- Email Input -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Email Address</label>
+          <div class="relative">
+            <input type="email" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Enter your registered email">
+            <i class="fa-regular fa-envelope absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+          </div>
+          <p class="text-xs text-neutral-500">We'll send reset instructions to this email</p>
+        </div>
+
+        <!-- Send Reset Link Button -->
+        <button type="submit" class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+          Send Reset Link
+        </button>
+      </form>
+
+      <!-- Security Notice -->
+      <div id="security-notice" class="bg-neutral-50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm text-neutral-800 flex items-center">
+          <i class="fa-solid fa-shield-halved mr-2 text-neutral-600"></i>
+          Security Information
+        </h3>
+        <div class="space-y-2 text-xs text-neutral-600">
+          <p>• Reset link will expire in 24 hours</p>
+          <p>• Check your spam folder if you don't see the email</p>
+          <p>• Only registered church members can reset passwords</p>
+          <p>• Contact admin if you don't receive the email</p>
+        </div>
+      </div>
+
+      <!-- Alternative Options -->
+      <div id="alternative-options" class="space-y-4">
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-neutral-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-neutral-500">Having trouble?</span>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <button class="w-full flex items-center justify-center px-4 py-3 border border-neutral-300 rounded-lg text-sm text-neutral-700 bg-white hover:bg-neutral-50">
+            <i class="fa-solid fa-phone mr-2 text-neutral-600"></i>
+            Contact Church Admin
+          </button>
+          <button class="w-full flex items-center justify-center px-4 py-3 border border-neutral-300 rounded-lg text-sm text-neutral-700 bg-white hover:bg-neutral-50">
+            <i class="fa-solid fa-envelope mr-2 text-neutral-600"></i>
+            Email Support
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remember Login -->
+    <div id="remember-section" class="text-center mt-8 pt-6 border-t border-neutral-200">
+      <p class="text-sm text-neutral-600">
+        Remembered your password? 
+        <a href="#" class="text-neutral-800 hover:underline">Back to Login</a>
+      </p>
+    </div>
+
+    <!-- FAQ Section -->
+    <div id="faq-section" class="mt-8 bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+        <i class="fa-solid fa-question-circle mr-2"></i>
+        Frequently Asked Questions
+      </h3>
+      <div class="space-y-3">
+        <div class="space-y-1">
+          <h4 class="text-xs text-neutral-700">What if I don't receive the reset email?</h4>
+          <p class="text-xs text-neutral-600">Check your spam folder first. If still not found, contact your church administrator.</p>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-xs text-neutral-700">Can I reset my password multiple times?</h4>
+          <p class="text-xs text-neutral-600">Yes, but only the most recent reset link will work. Previous links become invalid.</p>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-xs text-neutral-700">I'm a new member without an account</h4>
+          <p class="text-xs text-neutral-600">Contact your church administrator to request account creation and initial access.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div id="contact-info" class="mt-6 bg-white border border-neutral-200 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+        <i class="fa-solid fa-headset mr-2"></i>
+        Need Immediate Help?
+      </h3>
+      <div class="space-y-2 text-xs text-neutral-600">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-envelope w-4"></i>
+          <span>support@kharischurch.org</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-phone w-4"></i>
+          <span>Church Office: Available during service hours</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-clock w-4"></i>
+          <span>Response time: Within 24 hours</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

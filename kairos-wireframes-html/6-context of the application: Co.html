@@ -1,0 +1,259 @@
+<div id="admin-dashboard-mobile" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button class="p-2 text-neutral-600">
+          <i class="fa-solid fa-bell text-lg"></i>
+        </button>
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=1247" alt="Admin Avatar" class="w-8 h-8 rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Welcome Section -->
+    <div id="welcome-section" class="mb-6">
+      <h1 class="text-xl text-neutral-900 mb-1">Good morning, Admin</h1>
+      <p class="text-sm text-neutral-600">Here's what's happening at Kharis Church today</p>
+    </div>
+
+    <!-- Key KPIs Grid -->
+    <div id="kpi-section" class="grid grid-cols-2 gap-4 mb-6">
+      <!-- Total Members -->
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-users text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">+12 this month</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">2,847</div>
+        <div class="text-xs text-neutral-600">Total Members</div>
+      </div>
+
+      <!-- Attendance Rate -->
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-chart-line text-neutral-600"></i>
+          <span class="text-xs text-neutral-600">+5%</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">78%</div>
+        <div class="text-xs text-neutral-600">Attendance Rate</div>
+      </div>
+
+      <!-- Pending Follow-ups -->
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-clock text-neutral-600"></i>
+          <span class="text-xs text-neutral-600">Urgent</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">23</div>
+        <div class="text-xs text-neutral-600">Pending Follow-ups</div>
+      </div>
+
+      <!-- Total Pledges -->
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-dollar-sign text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">This month</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">$45.2K</div>
+        <div class="text-xs text-neutral-600">Total Pledges</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions-section" class="mb-6">
+      <h2 class="text-lg text-neutral-900 mb-3">Quick Actions</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <button class="flex items-center justify-center p-4 border border-neutral-300 rounded-lg bg-white">
+          <div class="text-center">
+            <i class="fa-solid fa-user-plus text-2xl text-neutral-600 mb-2"></i>
+            <div class="text-sm text-neutral-800">Add Member</div>
+          </div>
+        </button>
+        <button class="flex items-center justify-center p-4 border border-neutral-300 rounded-lg bg-white">
+          <div class="text-center">
+            <i class="fa-solid fa-calendar-plus text-2xl text-neutral-600 mb-2"></i>
+            <div class="text-sm text-neutral-800">Create Event</div>
+          </div>
+        </button>
+        <button class="flex items-center justify-center p-4 border border-neutral-300 rounded-lg bg-white">
+          <div class="text-center">
+            <i class="fa-solid fa-file-export text-2xl text-neutral-600 mb-2"></i>
+            <div class="text-sm text-neutral-800">Export Data</div>
+          </div>
+        </button>
+        <button class="flex items-center justify-center p-4 border border-neutral-300 rounded-lg bg-white">
+          <div class="text-center">
+            <i class="fa-solid fa-envelope text-2xl text-neutral-600 mb-2"></i>
+            <div class="text-sm text-neutral-800">Send Message</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div id="recent-activities-section" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">Recent Activities</h2>
+        <button class="text-sm text-neutral-600">View All</button>
+      </div>
+      <div class="space-y-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=3421" alt="Member Avatar" class="w-8 h-8 rounded-full">
+            <div class="flex-1">
+              <div class="text-sm text-neutral-900">Sarah Johnson joined Youth Ministry</div>
+              <div class="text-xs text-neutral-500">2 hours ago</div>
+            </div>
+            <i class="fa-solid fa-user-plus text-neutral-600 text-sm"></i>
+          </div>
+        </div>
+        
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=7892" alt="Pastor Avatar" class="w-8 h-8 rounded-full">
+            <div class="flex-1">
+              <div class="text-sm text-neutral-900">Pastor Mike updated attendance for Sunday Service</div>
+              <div class="text-xs text-neutral-500">4 hours ago</div>
+            </div>
+            <i class="fa-solid fa-check-circle text-neutral-600 text-sm"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=5643" alt="Member Avatar" class="w-8 h-8 rounded-full">
+            <div class="flex-1">
+              <div class="text-sm text-neutral-900">David Chen made a pledge of $500</div>
+              <div class="text-xs text-neutral-500">6 hours ago</div>
+            </div>
+            <i class="fa-solid fa-dollar-sign text-neutral-600 text-sm"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-neutral-300 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-calendar text-neutral-600 text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <div class="text-sm text-neutral-900">Bible Study event scheduled for tomorrow</div>
+              <div class="text-xs text-neutral-500">8 hours ago</div>
+            </div>
+            <i class="fa-solid fa-calendar-check text-neutral-600 text-sm"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department Overview -->
+    <div id="department-overview-section" class="mb-6">
+      <h2 class="text-lg text-neutral-900 mb-3">Department Overview</h2>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-music text-neutral-600"></i>
+            <div>
+              <div class="text-sm text-neutral-900">Worship Team</div>
+              <div class="text-xs text-neutral-500">24 members</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">92%</div>
+            <div class="text-xs text-neutral-500">Active</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-child text-neutral-600"></i>
+            <div>
+              <div class="text-sm text-neutral-900">Youth Ministry</div>
+              <div class="text-xs text-neutral-500">156 members</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">87%</div>
+            <div class="text-xs text-neutral-500">Active</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-hands-helping text-neutral-600"></i>
+            <div>
+              <div class="text-sm text-neutral-900">Outreach Team</div>
+              <div class="text-xs text-neutral-500">32 members</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">95%</div>
+            <div class="text-xs text-neutral-500">Active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div id="upcoming-events-section" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">Upcoming Events</h2>
+        <button class="text-sm text-neutral-600">View Calendar</button>
+      </div>
+      <div class="space-y-3">
+        <div class="p-3 bg-white border border-neutral-200 rounded-lg">
+          <div class="flex justify-between items-start mb-2">
+            <div class="text-sm text-neutral-900">Sunday Service</div>
+            <span class="text-xs bg-neutral-100 text-neutral-800 px-2 py-1 rounded">Tomorrow</span>
+          </div>
+          <div class="text-xs text-neutral-500 mb-2">9:00 AM - Main Sanctuary</div>
+          <div class="text-xs text-neutral-600">Expected: 450 attendees</div>
+        </div>
+
+        <div class="p-3 bg-white border border-neutral-200 rounded-lg">
+          <div class="flex justify-between items-start mb-2">
+            <div class="text-sm text-neutral-900">Youth Bible Study</div>
+            <span class="text-xs bg-neutral-100 text-neutral-800 px-2 py-1 rounded">Wed 7PM</span>
+          </div>
+          <div class="text-xs text-neutral-500 mb-2">7:00 PM - Youth Hall</div>
+          <div class="text-xs text-neutral-600">Expected: 45 attendees</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2 text-neutral-900">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Dashboard</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-calendar text-lg mb-1"></i>
+        <span class="text-xs">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-chart-bar text-lg mb-1"></i>
+        <span class="text-xs">Reports</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-cog text-lg mb-1"></i>
+        <span class="text-xs">Settings</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Bottom spacing for fixed nav -->
+  <div class="h-20"></div>
+</div>

@@ -1,0 +1,239 @@
+<div id="mobile-qr-checkin" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <button class="p-2 -ml-2">
+        <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+      </button>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-qrcode text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">Event Check-In</span>
+      </div>
+      <button class="p-2 -mr-2">
+        <i class="fa-solid fa-ellipsis-vertical text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Event Info Section -->
+    <div id="event-info" class="bg-neutral-50 rounded-lg p-4 mb-6">
+      <div class="flex items-start space-x-3">
+        <div class="w-12 h-12 bg-neutral-800 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-calendar-days text-white"></i>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-lg text-neutral-900 mb-1">Sunday Service</h2>
+          <div class="space-y-1 text-sm text-neutral-600">
+            <div class="flex items-center">
+              <i class="fa-solid fa-clock w-4 mr-2"></i>
+              <span>January 12, 2025 • 9:00 AM</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa-solid fa-location-dot w-4 mr-2"></i>
+              <span>Main Sanctuary</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa-solid fa-users w-4 mr-2"></i>
+              <span>247 attendees checked in</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Scanner Section -->
+    <div id="qr-scanner-section" class="mb-6">
+      <h3 class="text-lg text-neutral-900 mb-4 flex items-center">
+        <i class="fa-solid fa-qrcode mr-2"></i>
+        Scan QR Code
+      </h3>
+      
+      <!-- Camera View -->
+      <div class="relative bg-black rounded-lg overflow-hidden mb-4" style="aspect-ratio: 4/3;">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-48 h-48 border-2 border-white rounded-lg relative">
+            <div class="absolute top-0 left-0 w-6 h-6 border-l-4 border-t-4 border-white"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 border-r-4 border-t-4 border-white"></div>
+            <div class="absolute bottom-0 left-0 w-6 h-6 border-l-4 border-b-4 border-white"></div>
+            <div class="absolute bottom-0 right-0 w-6 h-6 border-r-4 border-b-4 border-white"></div>
+          </div>
+        </div>
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded-full">
+          Position QR code within frame
+        </div>
+      </div>
+
+      <!-- Scanner Controls -->
+      <div class="flex justify-center space-x-4">
+        <button class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-flashlight text-neutral-700"></i>
+        </button>
+        <button class="w-16 h-16 bg-neutral-900 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-camera text-white text-xl"></i>
+        </button>
+        <button class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-camera-rotate text-neutral-700"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Check-in Section -->
+    <div id="manual-checkin" class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg text-neutral-900">Manual Check-in</h3>
+        <button class="text-sm text-neutral-600 flex items-center">
+          <i class="fa-solid fa-chevron-down mr-1"></i>
+          Show Options
+        </button>
+      </div>
+
+      <!-- Search Member -->
+      <div class="space-y-4">
+        <div class="relative">
+          <input type="text" class="w-full px-4 py-3 pl-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="Search member by name or phone">
+          <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+        </div>
+
+        <!-- Quick Member List -->
+        <div class="space-y-2">
+          <div class="flex items-center p-3 border border-neutral-200 rounded-lg">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=123" alt="Member" class="w-10 h-10 rounded-full mr-3">
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">Sarah Johnson</p>
+              <p class="text-xs text-neutral-600">Youth Department</p>
+            </div>
+            <button class="px-3 py-1 bg-neutral-900 text-white text-xs rounded-full">
+              Check In
+            </button>
+          </div>
+
+          <div class="flex items-center p-3 border border-neutral-200 rounded-lg">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="Member" class="w-10 h-10 rounded-full mr-3">
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">Michael Chen</p>
+              <p class="text-xs text-neutral-600">Worship Team</p>
+            </div>
+            <button class="px-3 py-1 bg-neutral-900 text-white text-xs rounded-full">
+              Check In
+            </button>
+          </div>
+
+          <div class="flex items-center p-3 border border-neutral-200 rounded-lg">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=789" alt="Member" class="w-10 h-10 rounded-full mr-3">
+            <div class="flex-1">
+              <p class="text-sm text-neutral-900">Emily Davis</p>
+              <p class="text-xs text-neutral-600">Children's Ministry</p>
+            </div>
+            <button class="px-3 py-1 bg-neutral-600 text-white text-xs rounded-full">
+              <i class="fa-solid fa-check mr-1"></i>
+              Checked In
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Check-ins -->
+    <div id="recent-checkins" class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg text-neutral-900">Recent Check-ins</h3>
+        <span class="text-sm text-neutral-600">Last 10 minutes</span>
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex items-center p-2 bg-neutral-50 border border-neutral-200 rounded-lg">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=111" alt="Member" class="w-8 h-8 rounded-full mr-3">
+          <div class="flex-1">
+            <p class="text-sm text-neutral-900">David Wilson</p>
+            <p class="text-xs text-neutral-600">Just checked in via QR</p>
+          </div>
+          <span class="text-xs text-neutral-500">2 min ago</span>
+        </div>
+
+        <div class="flex items-center p-2 bg-neutral-50 border border-neutral-200 rounded-lg">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=222" alt="Member" class="w-8 h-8 rounded-full mr-3">
+          <div class="flex-1">
+            <p class="text-sm text-neutral-900">Lisa Martinez</p>
+            <p class="text-xs text-neutral-600">Checked in manually</p>
+          </div>
+          <span class="text-xs text-neutral-500">5 min ago</span>
+        </div>
+
+        <div class="flex items-center p-2 bg-neutral-50 border border-neutral-200 rounded-lg">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=333" alt="Member" class="w-8 h-8 rounded-full mr-3">
+          <div class="flex-1">
+            <p class="text-sm text-neutral-900">Robert Taylor</p>
+            <p class="text-xs text-neutral-600">Checked in via QR</p>
+          </div>
+          <span class="text-xs text-neutral-500">8 min ago</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest Check-in -->
+    <div id="guest-checkin" class="mb-6">
+      <h3 class="text-lg text-neutral-900 mb-4">Guest Check-in</h3>
+      <button class="w-full p-4 border-2 border-dashed border-neutral-300 rounded-lg text-center hover:border-neutral-400 hover:bg-neutral-50">
+        <i class="fa-solid fa-user-plus text-2xl text-neutral-400 mb-2"></i>
+        <p class="text-sm text-neutral-600">Add New Guest</p>
+      </button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="grid grid-cols-2 gap-3 mb-6">
+      <button class="p-4 bg-neutral-100 rounded-lg text-center">
+        <i class="fa-solid fa-list-check text-neutral-700 text-xl mb-2"></i>
+        <p class="text-sm text-neutral-700">View All Attendees</p>
+      </button>
+      <button class="p-4 bg-neutral-100 rounded-lg text-center">
+        <i class="fa-solid fa-download text-neutral-700 text-xl mb-2"></i>
+        <p class="text-sm text-neutral-700">Export Report</p>
+      </button>
+    </div>
+
+    <!-- Statistics Summary -->
+    <div id="stats-summary" class="bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-3">Today's Summary</h3>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-2xl text-neutral-900 mb-1">247</p>
+          <p class="text-xs text-neutral-600">Total Check-ins</p>
+        </div>
+        <div>
+          <p class="text-2xl text-neutral-900 mb-1">23</p>
+          <p class="text-xs text-neutral-600">First Time Visitors</p>
+        </div>
+        <div>
+          <p class="text-2xl text-neutral-900 mb-1">89%</p>
+          <p class="text-xs text-neutral-600">Attendance Rate</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around items-center">
+      <button class="p-2 text-neutral-400">
+        <i class="fa-solid fa-house text-xl"></i>
+      </button>
+      <button class="p-2 text-neutral-400">
+        <i class="fa-solid fa-calendar text-xl"></i>
+      </button>
+      <button class="p-2 text-neutral-900">
+        <i class="fa-solid fa-qrcode text-xl"></i>
+      </button>
+      <button class="p-2 text-neutral-400">
+        <i class="fa-solid fa-chart-bar text-xl"></i>
+      </button>
+      <button class="p-2 text-neutral-400">
+        <i class="fa-solid fa-user text-xl"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Spacer for bottom nav -->
+  <div class="h-16"></div>
+</div>

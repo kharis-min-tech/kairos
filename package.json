@@ -2,7 +2,13 @@
   "name": "@kairos/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "nx dev apps --port 3001",
+    "build": "nx build apps",
+    "start": "nx start apps",
+    "lint": "nx lint apps",
+    "test": "nx test apps"
+  },
   "private": true,
   "dependencies": {
     "empty": "0.10.1",

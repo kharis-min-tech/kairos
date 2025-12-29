@@ -1,0 +1,430 @@
+<div id="mobile-departments" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-xl text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">KCMS</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-2">
+          <i class="fa-solid fa-search text-neutral-600"></i>
+        </button>
+        <button class="p-2">
+          <i class="fa-solid fa-bell text-neutral-600"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Branch Selection Bar -->
+  <div id="branch-selector" class="bg-neutral-50 border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-map-marker-alt text-neutral-600"></i>
+        <span class="text-sm text-neutral-700">Branch:</span>
+        <select class="bg-transparent text-sm text-neutral-800 focus:outline-none">
+          <option>Main Campus</option>
+          <option>North Branch</option>
+          <option>South Branch</option>
+          <option>East Branch</option>
+        </select>
+      </div>
+      <button class="text-xs text-neutral-600 px-2 py-1 border border-neutral-300 rounded">
+        <i class="fa-solid fa-filter mr-1"></i>
+        Filter
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Page Title -->
+    <div id="page-header" class="mb-6">
+      <h1 class="text-2xl text-neutral-900 mb-2">Departments</h1>
+      <p class="text-neutral-600 text-sm">Manage church departments and ministries</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div id="stats-section" class="grid grid-cols-3 gap-3 mb-6">
+      <div class="bg-neutral-50 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">12</div>
+        <div class="text-xs text-neutral-600">Active Depts</div>
+      </div>
+      <div class="bg-neutral-50 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">247</div>
+        <div class="text-xs text-neutral-600">Total Members</div>
+      </div>
+      <div class="bg-neutral-50 rounded-lg p-3 text-center">
+        <div class="text-lg text-neutral-900 mb-1">8</div>
+        <div class="text-xs text-neutral-600">Leaders</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="flex space-x-3 mb-6">
+      <button class="flex-1 bg-neutral-900 text-white py-2 px-3 rounded-lg text-sm flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>New Dept</span>
+      </button>
+      <button class="flex-1 border border-neutral-300 text-neutral-700 py-2 px-3 rounded-lg text-sm flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-users"></i>
+        <span>Assign Members</span>
+      </button>
+    </div>
+
+    <!-- Departments List -->
+    <div id="departments-list" class="space-y-4">
+      <!-- Ministry Departments -->
+      <div class="space-y-3">
+        <h3 class="text-sm text-neutral-700 flex items-center">
+          <i class="fa-solid fa-cross mr-2"></i>
+          Ministry Departments
+        </h3>
+
+        <!-- Worship Department -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-music text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Worship & Music</h4>
+                <p class="text-xs text-neutral-600">Led by Pastor John</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">32</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">4</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Children's Ministry -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-child text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Children's Ministry</h4>
+                <p class="text-xs text-neutral-600">Led by Sister Mary</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">45</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">6</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Youth Ministry -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-graduation-cap text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Youth Ministry</h4>
+                <p class="text-xs text-neutral-600">Led by Pastor Mike</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">28</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">3</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Departments -->
+      <div class="space-y-3 mt-6">
+        <h3 class="text-sm text-neutral-700 flex items-center">
+          <i class="fa-solid fa-hands-helping mr-2"></i>
+          Service Departments
+        </h3>
+
+        <!-- Media & Tech -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-video text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Media & Technology</h4>
+                <p class="text-xs text-neutral-600">Led by Brother James</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">15</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">2</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ushering -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-door-open text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Ushering Ministry</h4>
+                <p class="text-xs text-neutral-600">Led by Sister Grace</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">22</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">3</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-shield-alt text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Security Team</h4>
+                <p class="text-xs text-neutral-600">Led by Brother Paul</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">12</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">2</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Special Ministries -->
+      <div class="space-y-3 mt-6">
+        <h3 class="text-sm text-neutral-700 flex items-center">
+          <i class="fa-solid fa-star mr-2"></i>
+          Special Ministries
+        </h3>
+
+        <!-- Outreach -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-hands text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Outreach Ministry</h4>
+                <p class="text-xs text-neutral-600">Led by Pastor David</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">18</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">2</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prayer Ministry -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-praying-hands text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-900 text-sm">Prayer Ministry</h4>
+                <p class="text-xs text-neutral-600">Led by Sister Ruth</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-900">25</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-900">3</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Active</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inactive Department -->
+        <div class="bg-white border border-neutral-200 rounded-lg p-4 opacity-75">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-neutral-400 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-heart text-white text-sm"></i>
+              </div>
+              <div>
+                <h4 class="text-neutral-700 text-sm">Marriage Ministry</h4>
+                <p class="text-xs text-neutral-500">Temporarily Inactive</p>
+              </div>
+            </div>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-vertical text-neutral-400"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center">
+              <div class="text-neutral-600">0</div>
+              <div class="text-neutral-500">Members</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">0</div>
+              <div class="text-neutral-500">Leaders</div>
+            </div>
+            <div class="text-center">
+              <div class="text-neutral-600">Inactive</div>
+              <div class="text-neutral-500">Status</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Department Button -->
+    <div id="add-department" class="mt-8">
+      <button class="w-full border-2 border-dashed border-neutral-300 rounded-lg py-6 text-center text-neutral-500 hover:border-neutral-400 hover:text-neutral-600">
+        <i class="fa-solid fa-plus text-xl mb-2 block"></i>
+        <span class="text-sm">Add New Department</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-900">
+        <i class="fa-solid fa-sitemap text-lg mb-1"></i>
+        <span class="text-xs">Departments</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-calendar text-lg mb-1"></i>
+        <span class="text-xs">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-400">
+        <i class="fa-solid fa-user text-lg mb-1"></i>
+        <span class="text-xs">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>

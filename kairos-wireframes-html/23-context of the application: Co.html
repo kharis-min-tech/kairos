@@ -1,0 +1,278 @@
+<div id="mobile-followup-dashboard" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button class="p-2 -ml-2 rounded-lg hover:bg-neutral-100">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-2 rounded-lg hover:bg-neutral-100">
+          <i class="fa-solid fa-bell text-neutral-700"></i>
+        </button>
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="Profile" class="w-8 h-8 rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Page Header -->
+    <div id="page-header" class="mb-6">
+      <h1 class="text-2xl text-neutral-900 mb-2">Follow-Up Tracker</h1>
+      <p class="text-neutral-600 text-sm">Track and manage outreach follow-ups and assignments</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div id="stats-section" class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-clock text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">PENDING</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">12</div>
+        <div class="text-xs text-neutral-600">Due this week</div>
+      </div>
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <i class="fa-solid fa-check-circle text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">COMPLETED</span>
+        </div>
+        <div class="text-2xl text-neutral-900 mb-1">28</div>
+        <div class="text-xs text-neutral-600">This month</div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div id="filter-tabs" class="flex bg-neutral-100 rounded-lg p-1 mb-6">
+      <button class="flex-1 py-2 px-3 text-sm bg-white text-neutral-900 rounded-md shadow-sm">All</button>
+      <button class="flex-1 py-2 px-3 text-sm text-neutral-600">Pending</button>
+      <button class="flex-1 py-2 px-3 text-sm text-neutral-600">Overdue</button>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div id="search-filter" class="flex items-center space-x-3 mb-6">
+      <div class="flex-1 relative">
+        <input type="text" placeholder="Search follow-ups..." class="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg text-sm">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+      </div>
+      <button class="p-3 border border-neutral-300 rounded-lg">
+        <i class="fa-solid fa-filter text-neutral-600"></i>
+      </button>
+    </div>
+
+    <!-- Follow-up List -->
+    <div id="followup-list" class="space-y-4">
+      <!-- Follow-up Item 1 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=789" alt="Contact" class="w-10 h-10 rounded-full">
+            <div>
+              <h3 class="text-neutral-900">Sarah Johnson</h3>
+              <p class="text-xs text-neutral-500">New Visitor</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs">Pending</span>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-v text-neutral-400"></i>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+            <span>Assigned to: Pastor Mike</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-calendar w-4 mr-2"></i>
+            <span>Due: Jan 15, 2025</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-tag w-4 mr-2"></i>
+            <span>First-time visitor follow-up</span>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button class="flex-1 py-2 px-3 bg-neutral-900 text-white rounded-lg text-sm">
+            <i class="fa-solid fa-phone mr-1"></i>
+            Call
+          </button>
+          <button class="flex-1 py-2 px-3 border border-neutral-300 rounded-lg text-sm text-neutral-700">
+            <i class="fa-solid fa-envelope mr-1"></i>
+            Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Follow-up Item 2 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=123" alt="Contact" class="w-10 h-10 rounded-full">
+            <div>
+              <h3 class="text-neutral-900">David Chen</h3>
+              <p class="text-xs text-neutral-500">Prayer Request</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs">Overdue</span>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-v text-neutral-400"></i>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+            <span>Assigned to: Pastor Lisa</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-calendar w-4 mr-2"></i>
+            <span>Due: Jan 10, 2025</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-praying-hands w-4 mr-2"></i>
+            <span>Prayer support follow-up</span>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button class="flex-1 py-2 px-3 bg-neutral-900 text-white rounded-lg text-sm">
+            <i class="fa-solid fa-phone mr-1"></i>
+            Call
+          </button>
+          <button class="flex-1 py-2 px-3 border border-neutral-300 rounded-lg text-sm text-neutral-700">
+            <i class="fa-solid fa-envelope mr-1"></i>
+            Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Follow-up Item 3 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=567" alt="Contact" class="w-10 h-10 rounded-full">
+            <div>
+              <h3 class="text-neutral-900">Maria Rodriguez</h3>
+              <p class="text-xs text-neutral-500">Membership Interest</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs">Completed</span>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-v text-neutral-400"></i>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+            <span>Assigned to: Pastor John</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-calendar w-4 mr-2"></i>
+            <span>Completed: Jan 12, 2025</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-users w-4 mr-2"></i>
+            <span>Membership orientation</span>
+          </div>
+        </div>
+        <div class="bg-neutral-50 rounded-lg p-3">
+          <p class="text-xs text-neutral-600">
+            <i class="fa-solid fa-check-circle text-neutral-600 mr-1"></i>
+            Successfully completed membership orientation. Scheduled for baptism class.
+          </p>
+        </div>
+      </div>
+
+      <!-- Follow-up Item 4 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=890" alt="Contact" class="w-10 h-10 rounded-full">
+            <div>
+              <h3 class="text-neutral-900">James Wilson</h3>
+              <p class="text-xs text-neutral-500">Outreach Contact</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs">In Progress</span>
+            <button class="p-1">
+              <i class="fa-solid fa-ellipsis-v text-neutral-400"></i>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+            <span>Assigned to: Pastor Sarah</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-calendar w-4 mr-2"></i>
+            <span>Due: Jan 18, 2025</span>
+          </div>
+          <div class="flex items-center text-sm text-neutral-600">
+            <i class="fa-solid fa-heart w-4 mr-2"></i>
+            <span>Street outreach follow-up</span>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button class="flex-1 py-2 px-3 bg-neutral-900 text-white rounded-lg text-sm">
+            <i class="fa-solid fa-phone mr-1"></i>
+            Call
+          </button>
+          <button class="flex-1 py-2 px-3 border border-neutral-300 rounded-lg text-sm text-neutral-700">
+            <i class="fa-solid fa-envelope mr-1"></i>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More Button -->
+    <div id="load-more" class="mt-6 text-center">
+      <button class="px-6 py-3 border border-neutral-300 rounded-lg text-neutral-700 text-sm">
+        Load More Follow-ups
+      </button>
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <div id="fab" class="fixed bottom-6 right-4">
+    <button class="w-14 h-14 bg-neutral-900 text-white rounded-full shadow-lg flex items-center justify-center">
+      <i class="fa-solid fa-plus text-xl"></i>
+    </button>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <a href="#" class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Dashboard</span>
+      </a>
+      <a href="#" class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </a>
+      <a href="#" class="flex flex-col items-center py-2 text-neutral-900">
+        <i class="fa-solid fa-clipboard-list text-lg mb-1"></i>
+        <span class="text-xs">Follow-ups</span>
+      </a>
+      <a href="#" class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-calendar text-lg mb-1"></i>
+        <span class="text-xs">Events</span>
+      </a>
+      <a href="#" class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-chart-bar text-lg mb-1"></i>
+        <span class="text-xs">Reports</span>
+      </a>
+    </div>
+  </nav>
+</div>

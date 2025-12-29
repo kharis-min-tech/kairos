@@ -1,0 +1,323 @@
+<div id="mobile-kgroups-list" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-xl text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-home text-lg text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">K-Groups</span>
+        </div>
+      </div>
+      <button class="p-1">
+        <i class="fa-solid fa-plus text-xl text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Section -->
+  <div id="filter-section" class="bg-neutral-50 border-b border-neutral-200 px-4 py-4">
+    <div class="space-y-3">
+      <!-- Branch Filter -->
+      <div class="space-y-2">
+        <label class="text-sm text-neutral-700 block">Filter by Branch</label>
+        <div class="relative">
+          <select class="w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500">
+            <option>All Branches</option>
+            <option>Main Campus</option>
+            <option>North Branch</option>
+            <option>South Branch</option>
+            <option>East Branch</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+        </div>
+      </div>
+
+      <!-- Pastor Filter -->
+      <div class="space-y-2">
+        <label class="text-sm text-neutral-700 block">Filter by Pastor</label>
+        <div class="relative">
+          <select class="w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500">
+            <option>All Pastors</option>
+            <option>Pastor John Smith</option>
+            <option>Pastor Mary Johnson</option>
+            <option>Pastor David Wilson</option>
+            <option>Pastor Sarah Brown</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative">
+        <input type="text" class="w-full px-4 py-2 pl-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="Search K-Groups...">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div id="stats-section" class="px-4 py-4 bg-white border-b border-neutral-200">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="text-center">
+        <div class="text-2xl text-neutral-900 mb-1">24</div>
+        <div class="text-xs text-neutral-600">Total Groups</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl text-neutral-900 mb-1">312</div>
+        <div class="text-xs text-neutral-600">Total Members</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl text-neutral-900 mb-1">18</div>
+        <div class="text-xs text-neutral-600">Active This Week</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-4 pb-20">
+    <!-- K-Groups List -->
+    <div id="kgroups-list" class="space-y-4">
+      
+      <!-- K-Group Card 1 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=4521" alt="Pastor Avatar" class="w-12 h-12 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base text-neutral-900 truncate">Victory K-Group</h3>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+                <i class="fa-solid fa-circle text-neutral-500 mr-1" style="font-size: 6px;"></i>
+                Active
+              </span>
+            </div>
+            <div class="space-y-1 text-sm text-neutral-600">
+              <div class="flex items-center">
+                <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+                <span>Pastor John Smith</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-map-marker-alt w-4 mr-2"></i>
+                <span>Main Campus</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-users w-4 mr-2"></i>
+                <span>15 Members</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-calendar w-4 mr-2"></i>
+                <span>Wednesdays 7:00 PM</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-neutral-100">
+              <div class="text-xs text-neutral-500">Last meeting: Jan 15, 2025</div>
+              <button class="text-neutral-700 p-1">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- K-Group Card 2 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=7891" alt="Pastor Avatar" class="w-12 h-12 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base text-neutral-900 truncate">Faith Builders K-Group</h3>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+                <i class="fa-solid fa-circle text-neutral-500 mr-1" style="font-size: 6px;"></i>
+                Active
+              </span>
+            </div>
+            <div class="space-y-1 text-sm text-neutral-600">
+              <div class="flex items-center">
+                <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+                <span>Pastor Mary Johnson</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-map-marker-alt w-4 mr-2"></i>
+                <span>North Branch</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-users w-4 mr-2"></i>
+                <span>12 Members</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-calendar w-4 mr-2"></i>
+                <span>Thursdays 6:30 PM</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-neutral-100">
+              <div class="text-xs text-neutral-500">Last meeting: Jan 16, 2025</div>
+              <button class="text-neutral-700 p-1">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- K-Group Card 3 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=3456" alt="Pastor Avatar" class="w-12 h-12 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base text-neutral-900 truncate">Grace Fellowship</h3>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+                <i class="fa-solid fa-circle text-neutral-500 mr-1" style="font-size: 6px;"></i>
+                Inactive
+              </span>
+            </div>
+            <div class="space-y-1 text-sm text-neutral-600">
+              <div class="flex items-center">
+                <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+                <span>Pastor David Wilson</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-map-marker-alt w-4 mr-2"></i>
+                <span>South Branch</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-users w-4 mr-2"></i>
+                <span>8 Members</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-calendar w-4 mr-2"></i>
+                <span>Fridays 7:00 PM</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-neutral-100">
+              <div class="text-xs text-neutral-500">Last meeting: Dec 20, 2024</div>
+              <button class="text-neutral-700 p-1">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- K-Group Card 4 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=9876" alt="Pastor Avatar" class="w-12 h-12 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base text-neutral-900 truncate">Hope Circle</h3>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+                <i class="fa-solid fa-circle text-neutral-500 mr-1" style="font-size: 6px;"></i>
+                Active
+              </span>
+            </div>
+            <div class="space-y-1 text-sm text-neutral-600">
+              <div class="flex items-center">
+                <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+                <span>Pastor Sarah Brown</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-map-marker-alt w-4 mr-2"></i>
+                <span>East Branch</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-users w-4 mr-2"></i>
+                <span>20 Members</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-calendar w-4 mr-2"></i>
+                <span>Tuesdays 6:00 PM</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-neutral-100">
+              <div class="text-xs text-neutral-500">Last meeting: Jan 14, 2025</div>
+              <button class="text-neutral-700 p-1">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- K-Group Card 5 -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=1234" alt="Pastor Avatar" class="w-12 h-12 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base text-neutral-900 truncate">Covenant Family</h3>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+                <i class="fa-solid fa-circle text-neutral-500 mr-1" style="font-size: 6px;"></i>
+                Active
+              </span>
+            </div>
+            <div class="space-y-1 text-sm text-neutral-600">
+              <div class="flex items-center">
+                <i class="fa-solid fa-user-tie w-4 mr-2"></i>
+                <span>Pastor John Smith</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-map-marker-alt w-4 mr-2"></i>
+                <span>Main Campus</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-users w-4 mr-2"></i>
+                <span>18 Members</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa-solid fa-calendar w-4 mr-2"></i>
+                <span>Saturdays 10:00 AM</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-neutral-100">
+              <div class="text-xs text-neutral-500">Last meeting: Jan 11, 2025</div>
+              <button class="text-neutral-700 p-1">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Load More Button -->
+    <div id="load-more-section" class="mt-6 text-center">
+      <button class="w-full bg-neutral-100 text-neutral-700 py-3 px-4 rounded-lg border border-neutral-200 hover:bg-neutral-200 transition-colors">
+        <i class="fa-solid fa-plus mr-2"></i>
+        Load More K-Groups
+      </button>
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <div id="fab" class="fixed bottom-20 right-4">
+    <button class="w-14 h-14 bg-neutral-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-neutral-800 transition-colors">
+      <i class="fa-solid fa-filter text-lg"></i>
+    </button>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200">
+    <div class="grid grid-cols-4 py-2">
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-900">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">K-Groups</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2 text-neutral-500">
+        <i class="fa-solid fa-chart-bar text-lg mb-1"></i>
+        <span class="text-xs">Reports</span>
+      </button>
+    </div>
+  </div>
+</div>

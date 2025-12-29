@@ -1,0 +1,244 @@
+<div id="mobile-followup-log" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-clipboard-list text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">Follow Up Log</span>
+        </div>
+      </div>
+      <button class="p-2">
+        <i class="fa-solid fa-plus text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Section -->
+  <div id="filter-section" class="px-4 py-3 bg-neutral-50 border-b border-neutral-200">
+    <div class="flex space-x-2 overflow-x-auto">
+      <button class="px-3 py-1 bg-neutral-900 text-white text-sm rounded-full whitespace-nowrap">All</button>
+      <button class="px-3 py-1 bg-white border border-neutral-300 text-neutral-700 text-sm rounded-full whitespace-nowrap">Calls</button>
+      <button class="px-3 py-1 bg-white border border-neutral-300 text-neutral-700 text-sm rounded-full whitespace-nowrap">Visits</button>
+      <button class="px-3 py-1 bg-white border border-neutral-300 text-neutral-700 text-sm rounded-full whitespace-nowrap">Actions</button>
+      <button class="px-3 py-1 bg-white border border-neutral-300 text-neutral-700 text-sm rounded-full whitespace-nowrap">Pending</button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div id="search-section" class="px-4 py-3">
+    <div class="relative">
+      <input type="text" class="w-full px-4 py-2 pl-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="Search members, notes...">
+      <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+    </div>
+  </div>
+
+  <!-- Follow Up Entries -->
+  <main id="main-content" class="px-4 pb-20">
+    
+    <!-- Entry 1 - Recent Call -->
+    <div id="entry-1" class="bg-white border border-neutral-200 rounded-lg p-4 mb-3">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-phone text-white text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm text-neutral-900">Phone Call</h3>
+            <span class="text-xs text-neutral-500">2 hours ago</span>
+          </div>
+          <div class="flex items-center space-x-2 mb-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=12345" alt="Member" class="w-6 h-6 rounded-full">
+            <span class="text-sm text-neutral-700">Sarah Johnson</span>
+            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-xs rounded-full">Completed</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-2">Discussed prayer request for family situation. Offered pastoral counseling session next week.</p>
+          <div class="flex items-center space-x-4 text-xs text-neutral-500">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-clock"></i>
+              <span>15 min</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-user"></i>
+              <span>Pastor Mike</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry 2 - Home Visit -->
+    <div id="entry-2" class="bg-white border border-neutral-200 rounded-lg p-4 mb-3">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 bg-neutral-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-home text-white text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm text-neutral-900">Home Visit</h3>
+            <span class="text-xs text-neutral-500">Yesterday</span>
+          </div>
+          <div class="flex items-center space-x-2 mb-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=67890" alt="Member" class="w-6 h-6 rounded-full">
+            <span class="text-sm text-neutral-700">David & Mary Wilson</span>
+            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-xs rounded-full">Follow-up needed</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-2">Visited new members at home. Welcomed them to the church family and discussed involvement opportunities.</p>
+          <div class="flex items-center space-x-4 text-xs text-neutral-500 mb-2">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-clock"></i>
+              <span>45 min</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-user"></i>
+              <span>Elder Jane</span>
+            </span>
+          </div>
+          <div class="bg-neutral-50 border border-neutral-200 rounded p-2">
+            <p class="text-xs text-neutral-800">Next Action: Schedule department introduction meeting</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry 3 - Follow-up Action -->
+    <div id="entry-3" class="bg-white border border-neutral-200 rounded-lg p-4 mb-3">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 bg-neutral-700 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-tasks text-white text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm text-neutral-900">Follow-up Action</h3>
+            <span class="text-xs text-neutral-500">3 days ago</span>
+          </div>
+          <div class="flex items-center space-x-2 mb-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=54321" alt="Member" class="w-6 h-6 rounded-full">
+            <span class="text-sm text-neutral-700">Michael Brown</span>
+            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-xs rounded-full">In Progress</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-2">Connecting member with youth ministry leadership role. Arranging meeting with youth pastor.</p>
+          <div class="flex items-center space-x-4 text-xs text-neutral-500">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-calendar"></i>
+              <span>Due: Jan 15</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-user"></i>
+              <span>Admin Lisa</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry 4 - Prayer Request Follow-up -->
+    <div id="entry-4" class="bg-white border border-neutral-200 rounded-lg p-4 mb-3">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-praying-hands text-white text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm text-neutral-900">Prayer Follow-up</h3>
+            <span class="text-xs text-neutral-500">1 week ago</span>
+          </div>
+          <div class="flex items-center space-x-2 mb-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=98765" alt="Member" class="w-6 h-6 rounded-full">
+            <span class="text-sm text-neutral-700">Jennifer Davis</span>
+            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-xs rounded-full">Completed</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-2">Checked on healing progress after surgery. Member reports good recovery and grateful for church prayers.</p>
+          <div class="flex items-center space-x-4 text-xs text-neutral-500">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-phone"></i>
+              <span>Phone call</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-user"></i>
+              <span>Pastor Mike</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry 5 - New Member Contact -->
+    <div id="entry-5" class="bg-white border border-neutral-200 rounded-lg p-4 mb-3">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 bg-neutral-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-user-plus text-white text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm text-neutral-900">New Member Contact</h3>
+            <span class="text-xs text-neutral-500">2 weeks ago</span>
+          </div>
+          <div class="flex items-center space-x-2 mb-2">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=13579" alt="Member" class="w-6 h-6 rounded-full">
+            <span class="text-sm text-neutral-700">Robert Martinez</span>
+            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-xs rounded-full">Overdue</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-2">Initial contact with visitor from last Sunday service. Need to schedule welcome meeting.</p>
+          <div class="flex items-center space-x-4 text-xs text-neutral-500 mb-2">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-calendar-times"></i>
+              <span>Overdue: 5 days</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-user"></i>
+              <span>Unassigned</span>
+            </span>
+          </div>
+          <div class="bg-neutral-50 border border-neutral-200 rounded p-2">
+            <p class="text-xs text-neutral-800">Action Required: Assign to pastoral team member</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div id="load-more" class="text-center py-4">
+      <button class="px-4 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 bg-white hover:bg-neutral-50">
+        Load More Entries
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Floating Action Button -->
+  <div id="fab" class="fixed bottom-20 right-4">
+    <button class="w-14 h-14 bg-neutral-900 text-white rounded-full shadow-lg flex items-center justify-center">
+      <i class="fa-solid fa-plus text-xl"></i>
+    </button>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-home text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-users text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-clipboard-list text-neutral-900 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-900">Follow-up</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-calendar text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-user text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>

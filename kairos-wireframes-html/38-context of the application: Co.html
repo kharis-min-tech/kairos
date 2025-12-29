@@ -1,0 +1,300 @@
+<div id="mobile-pledge-tracker" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 -ml-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-600"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">KCMS</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-bell text-neutral-600"></i>
+        </button>
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="Profile" class="w-8 h-8 rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6 space-y-6">
+    
+    <!-- Page Title -->
+    <div id="page-title" class="space-y-2">
+      <h1 class="text-2xl text-neutral-900">Pledge Tracker</h1>
+      <p class="text-sm text-neutral-600">Monitor your commitments and progress</p>
+    </div>
+
+    <!-- Overview Cards -->
+    <div id="overview-section" class="grid grid-cols-2 gap-4">
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <i class="fa-solid fa-hand-holding-heart text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">Total Pledged</span>
+        </div>
+        <div class="text-xl text-neutral-900">$2,400</div>
+        <div class="text-xs text-neutral-600">5 active pledges</div>
+      </div>
+      
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <i class="fa-solid fa-check-circle text-neutral-600"></i>
+          <span class="text-xs text-neutral-500">Fulfilled</span>
+        </div>
+        <div class="text-xl text-neutral-900">$1,680</div>
+        <div class="text-xs text-neutral-600">70% complete</div>
+      </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div id="progress-overview" class="bg-neutral-50 rounded-lg p-4 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm text-neutral-800">Overall Progress</h3>
+        <span class="text-sm text-neutral-600">70%</span>
+      </div>
+      <div class="w-full bg-neutral-200 rounded-full h-3">
+        <div class="bg-neutral-800 h-3 rounded-full" style="width: 70%"></div>
+      </div>
+      <div class="flex justify-between text-xs text-neutral-600">
+        <span>$1,680 fulfilled</span>
+        <span>$720 remaining</span>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div id="filter-tabs" class="flex bg-neutral-100 rounded-lg p-1">
+      <button class="flex-1 bg-white text-neutral-800 py-2 px-3 rounded-md text-sm">Active</button>
+      <button class="flex-1 text-neutral-600 py-2 px-3 text-sm">Completed</button>
+      <button class="flex-1 text-neutral-600 py-2 px-3 text-sm">All</button>
+    </div>
+
+    <!-- Pledge List -->
+    <div id="pledge-list" class="space-y-4">
+      
+      <!-- Building Fund Pledge -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-building text-white text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-sm text-neutral-900">Building Fund</h4>
+              <p class="text-xs text-neutral-600">Monthly • Started Jan 2025</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">$100/month</div>
+            <div class="text-xs text-neutral-600">$1,200 total</div>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Progress</span>
+            <span class="text-neutral-800">8/12 months</span>
+          </div>
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="bg-neutral-800 h-2 rounded-full" style="width: 67%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-neutral-600">
+            <span>$800 paid</span>
+            <span>$400 remaining</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
+          <div class="text-xs text-neutral-600">Next: $100 due Feb 15</div>
+          <button class="text-xs text-neutral-800 bg-neutral-100 px-3 py-1 rounded-full">View Details</button>
+        </div>
+      </div>
+
+      <!-- Missions Pledge -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-globe text-white text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-sm text-neutral-900">Missions Support</h4>
+              <p class="text-xs text-neutral-600">One-time • Made Dec 2024</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">$500</div>
+            <div class="text-xs text-neutral-600">Complete</div>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="bg-neutral-600 h-2 rounded-full" style="width: 100%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-neutral-600">
+            <span>$500 paid</span>
+            <span class="text-neutral-600">Fulfilled</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
+          <div class="text-xs text-neutral-600 flex items-center">
+            <i class="fa-solid fa-check-circle mr-1"></i>
+            Completed Dec 20, 2024
+          </div>
+          <button class="text-xs text-neutral-800 bg-neutral-100 px-3 py-1 rounded-full">Receipt</button>
+        </div>
+      </div>
+
+      <!-- Youth Ministry Pledge -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-users text-white text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-sm text-neutral-900">Youth Ministry</h4>
+              <p class="text-xs text-neutral-600">Weekly • Started Jan 2025</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">$25/week</div>
+            <div class="text-xs text-neutral-600">$1,300 annual</div>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Progress</span>
+            <span class="text-neutral-800">4/52 weeks</span>
+          </div>
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="bg-neutral-800 h-2 rounded-full" style="width: 8%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-neutral-600">
+            <span>$100 paid</span>
+            <span>$1,200 remaining</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
+          <div class="text-xs text-neutral-600">Next: $25 due Feb 2</div>
+          <button class="text-xs text-neutral-800 bg-neutral-100 px-3 py-1 rounded-full">Make Payment</button>
+        </div>
+      </div>
+
+      <!-- Special Events Pledge -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-calendar text-white text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-sm text-neutral-900">Easter Conference</h4>
+              <p class="text-xs text-neutral-600">Event • Due March 2025</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-neutral-900">$200</div>
+            <div class="text-xs text-neutral-600">Pending</div>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-neutral-600">Progress</span>
+            <span class="text-neutral-800">0/1 payment</span>
+          </div>
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="bg-neutral-400 h-2 rounded-full" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-neutral-600">
+            <span>$0 paid</span>
+            <span>$200 remaining</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
+          <div class="text-xs text-neutral-600">Due: March 15, 2025</div>
+          <button class="text-xs text-white bg-neutral-800 px-3 py-1 rounded-full">Pay Now</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="bg-neutral-50 rounded-lg p-4 space-y-3">
+      <h3 class="text-sm text-neutral-800 flex items-center">
+        <i class="fa-solid fa-bolt mr-2"></i>
+        Quick Actions
+      </h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button class="bg-white border border-neutral-200 rounded-lg p-3 text-left hover:bg-neutral-50">
+          <i class="fa-solid fa-plus text-neutral-600 mb-2"></i>
+          <div class="text-sm text-neutral-800">New Pledge</div>
+          <div class="text-xs text-neutral-600">Make commitment</div>
+        </button>
+        <button class="bg-white border border-neutral-200 rounded-lg p-3 text-left hover:bg-neutral-50">
+          <i class="fa-solid fa-credit-card text-neutral-600 mb-2"></i>
+          <div class="text-sm text-neutral-800">Make Payment</div>
+          <div class="text-xs text-neutral-600">Pay existing pledge</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div id="summary-stats" class="bg-white border border-neutral-200 rounded-lg p-4 space-y-4">
+      <h3 class="text-sm text-neutral-800 flex items-center">
+        <i class="fa-solid fa-chart-line mr-2"></i>
+        Giving Summary
+      </h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-lg text-neutral-900">$1,680</div>
+          <div class="text-xs text-neutral-600">This Year</div>
+        </div>
+        <div class="text-center">
+          <div class="text-lg text-neutral-900">$140</div>
+          <div class="text-xs text-neutral-600">This Month</div>
+        </div>
+        <div class="text-center">
+          <div class="text-lg text-neutral-900">5</div>
+          <div class="text-xs text-neutral-600">Active Pledges</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around items-center">
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-home text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-hand-holding-heart text-neutral-800 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-800">Pledges</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-calendar text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3">
+        <i class="fa-solid fa-user text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Profile</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Footer Spacer -->
+  <div class="h-20"></div>
+
+</div>

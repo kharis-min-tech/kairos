@@ -1,0 +1,289 @@
+<div id="mobile-export-reports" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">KCMS</span>
+        </div>
+      </div>
+      <button class="p-2 hover:bg-neutral-100 rounded-lg">
+        <i class="fa-solid fa-user-circle text-xl text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Page Title -->
+    <div id="page-title" class="mb-6">
+      <h1 class="text-2xl text-neutral-900 mb-2">Export Reports</h1>
+      <p class="text-neutral-600">Generate and download summary reports</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div id="quick-stats" class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-2xl text-neutral-900">1,247</p>
+            <p class="text-sm text-neutral-600">Total Members</p>
+          </div>
+          <i class="fa-solid fa-users text-neutral-400 text-xl"></i>
+        </div>
+      </div>
+      <div class="bg-neutral-50 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-2xl text-neutral-900">89%</p>
+            <p class="text-sm text-neutral-600">Attendance</p>
+          </div>
+          <i class="fa-solid fa-chart-line text-neutral-400 text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Categories -->
+    <div id="report-categories" class="space-y-4 mb-6">
+      <h2 class="text-lg text-neutral-900 mb-4">Select Report Type</h2>
+
+      <!-- Membership Reports -->
+      <div class="bg-white border border-neutral-200 rounded-lg">
+        <div class="p-4 border-b border-neutral-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-users text-neutral-600"></i>
+              <h3 class="text-neutral-900">Membership Reports</h3>
+            </div>
+            <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Active Members List</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">New Members (2025)</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Department Breakdown</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Age Demographics</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Attendance Reports -->
+      <div class="bg-white border border-neutral-200 rounded-lg">
+        <div class="p-4 border-b border-neutral-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-calendar-check text-neutral-600"></i>
+              <h3 class="text-neutral-900">Attendance Reports</h3>
+            </div>
+            <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Weekly Attendance</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Monthly Summary</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Branch Comparison</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Financial Reports -->
+      <div class="bg-white border border-neutral-200 rounded-lg">
+        <div class="p-4 border-b border-neutral-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-chart-pie text-neutral-600"></i>
+              <h3 class="text-neutral-900">Financial Reports</h3>
+            </div>
+            <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Tithe Summary</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Offering Reports</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Pledge Tracking</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Outreach Reports -->
+      <div class="bg-white border border-neutral-200 rounded-lg">
+        <div class="p-4 border-b border-neutral-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-heart text-neutral-600"></i>
+              <h3 class="text-neutral-900">Outreach Reports</h3>
+            </div>
+            <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Souls Won Report</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Follow-up Status</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-neutral-700">Conversion Rates</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Range Selection -->
+    <div id="date-range" class="bg-neutral-50 rounded-lg p-4 mb-6">
+      <h3 class="text-neutral-900 mb-3 flex items-center">
+        <i class="fa-solid fa-calendar-alt mr-2"></i>
+        Date Range
+      </h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm text-neutral-700 block mb-1">From</label>
+          <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-neutral-700 block mb-1">To</label>
+          <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm">
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button class="px-3 py-1 bg-white border border-neutral-300 rounded-lg text-sm text-neutral-700">Last 7 days</button>
+        <button class="px-3 py-1 bg-white border border-neutral-300 rounded-lg text-sm text-neutral-700">Last 30 days</button>
+        <button class="px-3 py-1 bg-white border border-neutral-300 rounded-lg text-sm text-neutral-700">This Year</button>
+      </div>
+    </div>
+
+    <!-- Export Options -->
+    <div id="export-options" class="bg-white border border-neutral-200 rounded-lg p-4 mb-6">
+      <h3 class="text-neutral-900 mb-3 flex items-center">
+        <i class="fa-solid fa-download mr-2"></i>
+        Export Format
+      </h3>
+      <div class="space-y-3">
+        <label class="flex items-center space-x-3">
+          <input type="radio" name="format" class="w-4 h-4 border border-neutral-300 rounded-full" checked>
+          <span class="text-neutral-700">PDF Document</span>
+        </label>
+        <label class="flex items-center space-x-3">
+          <input type="radio" name="format" class="w-4 h-4 border border-neutral-300 rounded-full">
+          <span class="text-neutral-700">Excel Spreadsheet</span>
+        </label>
+        <label class="flex items-center space-x-3">
+          <input type="radio" name="format" class="w-4 h-4 border border-neutral-300 rounded-full">
+          <span class="text-neutral-700">CSV File</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Recent Exports -->
+    <div id="recent-exports" class="mb-6">
+      <h3 class="text-lg text-neutral-900 mb-3">Recent Exports</h3>
+      <div class="space-y-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-file-pdf text-neutral-400"></i>
+              <div>
+                <p class="text-neutral-900 text-sm">Monthly Attendance Report</p>
+                <p class="text-neutral-500 text-xs">Generated Jan 15, 2025</p>
+              </div>
+            </div>
+            <button class="p-2 hover:bg-neutral-100 rounded-lg">
+              <i class="fa-solid fa-download text-neutral-600"></i>
+            </button>
+          </div>
+        </div>
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-file-excel text-neutral-400"></i>
+              <div>
+                <p class="text-neutral-900 text-sm">Member Directory</p>
+                <p class="text-neutral-500 text-xs">Generated Jan 12, 2025</p>
+              </div>
+            </div>
+            <button class="p-2 hover:bg-neutral-100 rounded-lg">
+              <i class="fa-solid fa-download text-neutral-600"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons" class="space-y-3">
+      <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-download"></i>
+        <span>Generate & Download Report</span>
+      </button>
+      <button class="w-full bg-white border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-print"></i>
+        <span>Print Preview</span>
+      </button>
+      <button class="w-full bg-white border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-envelope"></i>
+        <span>Email Report</span>
+      </button>
+    </div>
+
+    <!-- Help Section -->
+    <div id="help-section" class="mt-8 bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-2 flex items-center">
+        <i class="fa-solid fa-info-circle mr-2"></i>
+        Export Guidelines
+      </h3>
+      <div class="space-y-2 text-xs text-neutral-600">
+        <p>• Large reports may take several minutes to generate</p>
+        <p>• PDF format recommended for sharing with leadership</p>
+        <p>• Excel format best for data analysis</p>
+        <p>• Reports are automatically saved for 30 days</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

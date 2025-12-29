@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "react-oidc-context";
 import { cognitoDomain } from "../../lib/auth-config";
-import { AuthDebug } from "../../components/auth-debug";
+import { useCognitoAuth } from "../../hooks/use-cognito-auth";
 
 export default function SignupPage() {
   const auth = useAuth();
+  const { signOutLocal } = useCognitoAuth();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -38,7 +39,6 @@ export default function SignupPage() {
       <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="text-center">Loading authentication...</div>
-          <AuthDebug />
         </div>
       </main>
     );
@@ -52,8 +52,6 @@ export default function SignupPage() {
             <h2 className="text-lg font-semibold mb-2">Authentication Error</h2>
             <p className="text-sm">{auth.error.message}</p>
           </div>
-          
-          <AuthDebug />
           
           <div className="mt-4 text-center">
             <button 
@@ -85,7 +83,7 @@ export default function SignupPage() {
                 Go to Home
               </Link>
               <button
-                onClick={() => auth.removeUser()}
+                onClick={() => signOutLocal()}
                 className="w-full rounded-xl bg-gray-600 px-4 py-3 text-white font-medium hover:bg-gray-700"
               >
                 Sign Out
@@ -102,39 +100,37 @@ export default function SignupPage() {
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold mb-1">Create Account</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Sign up with Amazon Cognito to get started
+          Sign up to get started with KCMS
         </p>
-
-        <AuthDebug />
 
         <div className="space-y-4 mt-6">
           <button
             onClick={redirectToSignUp}
-            className="w-full rounded-xl bg-green-600 px-4 py-3 text-white font-medium hover:bg-green-700 active:bg-green-800 transition-colors"
+            className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-white font-medium hover:bg-neutral-800 transition-colors"
           >
-            Sign Up with Amazon Cognito
+            Sign Up
           </button>
 
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-neutral-500">
             Or use the sign-in flow (includes sign-up option)
           </div>
 
           <button
             onClick={() => auth.signinRedirect()}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-white font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors"
+            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-neutral-700 font-medium hover:bg-neutral-50 transition-colors"
           >
             Go to Sign In (with Sign Up option)
           </button>
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-neutral-500 mb-4">
             By signing up, you agree to our Terms of Service and Privacy Policy
           </p>
           
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-neutral-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-neutral-800 hover:underline font-medium">
               Sign in
             </Link>
           </p>

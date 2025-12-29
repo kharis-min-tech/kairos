@@ -1,0 +1,234 @@
+<div id="mobile-registration" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button class="p-2 -ml-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-lg text-neutral-600"></i>
+        </button>
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <div class="text-sm text-neutral-600">Step 1 of 3</div>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div id="progress-section" class="px-4 py-2 bg-neutral-50">
+    <div class="flex items-center justify-center space-x-2">
+      <div class="w-8 h-2 bg-neutral-800 rounded-full"></div>
+      <div class="w-8 h-2 bg-neutral-300 rounded-full"></div>
+      <div class="w-8 h-2 bg-neutral-300 rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- Main Registration Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Welcome Section -->
+    <div id="welcome-section" class="text-center mb-6">
+      <div class="w-16 h-16 mx-auto mb-3 bg-neutral-800 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-user-plus text-white text-xl"></i>
+      </div>
+      <h1 class="text-xl text-neutral-900 mb-2">Join Kharis Church</h1>
+      <p class="text-sm text-neutral-600">Create your member account to get started</p>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="registration-form-section" class="space-y-6">
+      <form class="space-y-4">
+        <!-- Personal Information Section -->
+        <div id="personal-info" class="space-y-4">
+          <div class="flex items-center space-x-2 mb-3">
+            <i class="fa-solid fa-user text-neutral-600"></i>
+            <h2 class="text-lg text-neutral-800">Personal Information</h2>
+          </div>
+
+          <!-- Full Name -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-sm text-neutral-700 block">First Name</label>
+              <input type="text" class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="John">
+            </div>
+            <div class="space-y-1">
+              <label class="text-sm text-neutral-700 block">Last Name</label>
+              <input type="text" class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="Doe">
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Email Address</label>
+            <div class="relative">
+              <input type="email" class="w-full px-3 py-2.5 pr-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="john.doe@email.com">
+              <i class="fa-regular fa-envelope absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            </div>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Phone Number</label>
+            <div class="relative">
+              <input type="tel" class="w-full px-3 py-2.5 pr-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="+1 (555) 123-4567">
+              <i class="fa-solid fa-phone absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            </div>
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Date of Birth</label>
+            <div class="relative">
+              <input type="date" class="w-full px-3 py-2.5 pr-10 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm">
+              <i class="fa-regular fa-calendar absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Gender</label>
+            <select class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm bg-white">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Address -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Address</label>
+            <textarea class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm resize-none" rows="2" placeholder="Street address, City, State, ZIP"></textarea>
+          </div>
+        </div>
+
+        <!-- Branch Information Section -->
+        <div id="branch-info" class="space-y-4 pt-4 border-t border-neutral-200">
+          <div class="flex items-center space-x-2 mb-3">
+            <i class="fa-solid fa-map-marker-alt text-neutral-600"></i>
+            <h2 class="text-lg text-neutral-800">Branch Information</h2>
+          </div>
+
+          <!-- Preferred Branch -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Preferred Branch</label>
+            <select class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm bg-white">
+              <option value="">Select Branch</option>
+              <option value="main">Main Campus - Downtown</option>
+              <option value="north">North Campus - Riverside</option>
+              <option value="south">South Campus - Hillside</option>
+              <option value="east">East Campus - Garden District</option>
+            </select>
+          </div>
+
+          <!-- House Group Interest -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">House Group Interest</label>
+            <select class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm bg-white">
+              <option value="">Select Interest Level</option>
+              <option value="very-interested">Very Interested</option>
+              <option value="somewhat-interested">Somewhat Interested</option>
+              <option value="not-interested">Not Interested Now</option>
+              <option value="need-info">Need More Information</option>
+            </select>
+          </div>
+
+          <!-- How did you hear about us -->
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">How did you hear about us?</label>
+            <select class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm bg-white">
+              <option value="">Select Option</option>
+              <option value="friend">Friend/Family Referral</option>
+              <option value="social-media">Social Media</option>
+              <option value="website">Church Website</option>
+              <option value="event">Church Event</option>
+              <option value="online-search">Online Search</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div id="emergency-contact" class="space-y-4 pt-4 border-t border-neutral-200">
+          <div class="flex items-center space-x-2 mb-3">
+            <i class="fa-solid fa-phone text-neutral-600"></i>
+            <h2 class="text-lg text-neutral-800">Emergency Contact</h2>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-sm text-neutral-700 block">Contact Name</label>
+              <input type="text" class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="Full Name">
+            </div>
+            <div class="space-y-1">
+              <label class="text-sm text-neutral-700 block">Relationship</label>
+              <input type="text" class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="Spouse, Parent">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-sm text-neutral-700 block">Contact Phone</label>
+            <input type="tel" class="w-full px-3 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent text-sm" placeholder="+1 (555) 123-4567">
+          </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div id="terms-section" class="pt-4">
+          <label class="flex items-start space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded mt-1 flex-shrink-0">
+            <span class="text-sm text-neutral-600">
+              I agree to the 
+              <a href="#" class="text-neutral-800 underline">Terms of Service</a> 
+              and 
+              <a href="#" class="text-neutral-800 underline">Privacy Policy</a>
+            </span>
+          </label>
+        </div>
+
+        <!-- Newsletter Subscription -->
+        <div id="newsletter-section">
+          <label class="flex items-start space-x-3">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded mt-1 flex-shrink-0" checked>
+            <span class="text-sm text-neutral-600">
+              Subscribe to church newsletters and event updates
+            </span>
+          </label>
+        </div>
+      </form>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons" class="mt-8 space-y-3">
+      <button type="submit" class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+        Continue to Next Step
+      </button>
+      <button type="button" class="w-full border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors">
+        Save as Draft
+      </button>
+    </div>
+
+    <!-- Help Section -->
+    <div id="help-section" class="mt-6 bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-2 flex items-center">
+        <i class="fa-solid fa-info-circle mr-2"></i>
+        Registration Process
+      </h3>
+      <div class="space-y-1 text-xs text-neutral-600">
+        <p>• Step 1: Personal & Branch Information</p>
+        <p>• Step 2: Account Setup & Security</p>
+        <p>• Step 3: Department Preferences & Review</p>
+        <p class="pt-1 text-neutral-500">All registrations require admin approval</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

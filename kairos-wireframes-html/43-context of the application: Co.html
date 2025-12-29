@@ -1,0 +1,294 @@
+<div id="mobile-reports-dashboard" class="bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3 sticky top-0 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button class="p-2 rounded-lg bg-neutral-50">
+          <i class="fa-solid fa-bell text-neutral-600"></i>
+        </button>
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=789" alt="User" class="w-8 h-8 rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav id="nav-tabs" class="bg-white border-b border-neutral-200 px-4">
+    <div class="flex space-x-6 overflow-x-auto scrollbar-hide">
+      <button class="py-3 px-1 border-b-2 border-neutral-900 text-sm text-neutral-900 whitespace-nowrap">
+        Overview
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500 whitespace-nowrap">
+        Attendance
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500 whitespace-nowrap">
+        Membership
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500 whitespace-nowrap">
+        Giving
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500 whitespace-nowrap">
+        Outreach
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6 space-y-6">
+    <!-- Date Filter -->
+    <div id="date-filter" class="flex items-center justify-between">
+      <h1 class="text-xl text-neutral-900">Reports Dashboard</h1>
+      <div class="flex items-center space-x-2">
+        <button class="px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-700 flex items-center space-x-1">
+          <i class="fa-solid fa-calendar text-neutral-500"></i>
+          <span>This Month</span>
+          <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div id="metrics-grid" class="grid grid-cols-2 gap-4">
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-users text-white text-sm"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-neutral-500">vs last month</p>
+            <p class="text-xs text-neutral-600">+12%</p>
+          </div>
+        </div>
+        <h3 class="text-2xl text-neutral-900 mb-1">1,247</h3>
+        <p class="text-sm text-neutral-600">Total Members</p>
+      </div>
+
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-chart-line text-white text-sm"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-neutral-500">vs last month</p>
+            <p class="text-xs text-neutral-600">+8%</p>
+          </div>
+        </div>
+        <h3 class="text-2xl text-neutral-900 mb-1">892</h3>
+        <p class="text-sm text-neutral-600">Avg Attendance</p>
+      </div>
+
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-dollar-sign text-white text-sm"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-neutral-500">vs last month</p>
+            <p class="text-xs text-neutral-600">+15%</p>
+          </div>
+        </div>
+        <h3 class="text-2xl text-neutral-900 mb-1">$24,580</h3>
+        <p class="text-sm text-neutral-600">Monthly Giving</p>
+      </div>
+
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-heart text-white text-sm"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-neutral-500">vs last month</p>
+            <p class="text-xs text-neutral-600">+23%</p>
+          </div>
+        </div>
+        <h3 class="text-2xl text-neutral-900 mb-1">67</h3>
+        <p class="text-sm text-neutral-600">Souls Won</p>
+      </div>
+    </div>
+
+    <!-- Chart Widgets -->
+    <div id="chart-widgets" class="space-y-4">
+      <!-- Attendance Trends -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg text-neutral-900">Attendance Trends</h3>
+          <button class="p-2 hover:bg-neutral-50 rounded-lg">
+            <i class="fa-solid fa-expand text-neutral-500"></i>
+          </button>
+        </div>
+        <div class="h-48 bg-neutral-100 rounded-lg flex items-center justify-center">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-neutral-300 rounded-lg mx-auto mb-3 flex items-center justify-center">
+              <i class="fa-solid fa-chart-line text-neutral-600 text-xl"></i>
+            </div>
+            <p class="text-sm text-neutral-600">Power BI Widget</p>
+            <p class="text-xs text-neutral-500">Interactive Chart Embedded Here</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Membership Growth -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg text-neutral-900">Membership Growth</h3>
+          <button class="p-2 hover:bg-neutral-50 rounded-lg">
+            <i class="fa-solid fa-expand text-neutral-500"></i>
+          </button>
+        </div>
+        <div class="h-48 bg-neutral-100 rounded-lg flex items-center justify-center">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-neutral-300 rounded-lg mx-auto mb-3 flex items-center justify-center">
+              <i class="fa-solid fa-chart-bar text-neutral-600 text-xl"></i>
+            </div>
+            <p class="text-sm text-neutral-600">Power BI Widget</p>
+            <p class="text-xs text-neutral-500">Growth Analytics Dashboard</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Giving Analysis -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg text-neutral-900">Giving Analysis</h3>
+          <button class="p-2 hover:bg-neutral-50 rounded-lg">
+            <i class="fa-solid fa-expand text-neutral-500"></i>
+          </button>
+        </div>
+        <div class="h-48 bg-neutral-100 rounded-lg flex items-center justify-center">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-neutral-300 rounded-lg mx-auto mb-3 flex items-center justify-center">
+              <i class="fa-solid fa-chart-pie text-neutral-600 text-xl"></i>
+            </div>
+            <p class="text-sm text-neutral-600">Power BI Widget</p>
+            <p class="text-xs text-neutral-500">Financial Reports & Trends</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department Performance -->
+    <div id="department-performance" class="bg-white border border-neutral-200 rounded-lg p-4">
+      <h3 class="text-lg text-neutral-900 mb-4">Department Performance</h3>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between py-3 border-b border-neutral-100">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-music text-white text-xs"></i>
+            </div>
+            <div>
+              <p class="text-sm text-neutral-900">Worship Team</p>
+              <p class="text-xs text-neutral-500">45 members</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-neutral-900">92%</p>
+            <p class="text-xs text-neutral-600">Active</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-3 border-b border-neutral-100">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-child text-white text-xs"></i>
+            </div>
+            <div>
+              <p class="text-sm text-neutral-900">Children Ministry</p>
+              <p class="text-xs text-neutral-500">128 members</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-neutral-900">87%</p>
+            <p class="text-xs text-neutral-600">Active</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-3 border-b border-neutral-100">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-graduation-cap text-white text-xs"></i>
+            </div>
+            <div>
+              <p class="text-sm text-neutral-900">Youth Ministry</p>
+              <p class="text-xs text-neutral-500">89 members</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-neutral-900">94%</p>
+            <p class="text-xs text-neutral-600">Active</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-handshake text-white text-xs"></i>
+            </div>
+            <div>
+              <p class="text-sm text-neutral-900">Outreach Team</p>
+              <p class="text-xs text-neutral-500">34 members</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-neutral-900">89%</p>
+            <p class="text-xs text-neutral-600">Active</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="bg-white border border-neutral-200 rounded-lg p-4">
+      <h3 class="text-lg text-neutral-900 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button class="p-4 border border-neutral-200 rounded-lg text-center hover:bg-neutral-50">
+          <i class="fa-solid fa-download text-neutral-600 text-xl mb-2"></i>
+          <p class="text-sm text-neutral-900">Export Reports</p>
+        </button>
+        <button class="p-4 border border-neutral-200 rounded-lg text-center hover:bg-neutral-50">
+          <i class="fa-solid fa-calendar-plus text-neutral-600 text-xl mb-2"></i>
+          <p class="text-sm text-neutral-900">Schedule Report</p>
+        </button>
+        <button class="p-4 border border-neutral-200 rounded-lg text-center hover:bg-neutral-50">
+          <i class="fa-solid fa-share text-neutral-600 text-xl mb-2"></i>
+          <p class="text-sm text-neutral-900">Share Dashboard</p>
+        </button>
+        <button class="p-4 border border-neutral-200 rounded-lg text-center hover:bg-neutral-50">
+          <i class="fa-solid fa-cog text-neutral-600 text-xl mb-2"></i>
+          <p class="text-sm text-neutral-900">Customize</p>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2 px-3 text-neutral-500">
+        <i class="fa-solid fa-home text-lg mb-1"></i>
+        <span class="text-xs">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3 text-neutral-900">
+        <i class="fa-solid fa-chart-bar text-lg mb-1"></i>
+        <span class="text-xs">Reports</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3 text-neutral-500">
+        <i class="fa-solid fa-users text-lg mb-1"></i>
+        <span class="text-xs">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3 text-neutral-500">
+        <i class="fa-solid fa-calendar text-lg mb-1"></i>
+        <span class="text-xs">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2 px-3 text-neutral-500">
+        <i class="fa-solid fa-ellipsis text-lg mb-1"></i>
+        <span class="text-xs">More</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Spacer for bottom navigation -->
+  <div class="h-20"></div>
+</div>

@@ -1,0 +1,226 @@
+<div id="member-status-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <!-- Modal Container -->
+  <div class="bg-white rounded-lg w-full max-w-md mx-auto">
+    <!-- Modal Header -->
+    <header id="modal-header" class="flex items-center justify-between p-4 border-b border-neutral-200">
+      <h2 class="text-lg text-neutral-900">Member Status</h2>
+      <button class="p-2 hover:bg-neutral-100 rounded-lg">
+        <i class="fa-solid fa-times text-neutral-600"></i>
+      </button>
+    </header>
+
+    <!-- Modal Content -->
+    <main id="modal-content" class="p-4 space-y-6">
+      <!-- Member Info -->
+      <div id="member-info" class="flex items-center space-x-3 p-3 bg-neutral-50 rounded-lg">
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=12345" alt="Member Avatar" class="w-12 h-12 rounded-full">
+        <div class="flex-1">
+          <h3 class="text-neutral-900">Sarah Johnson</h3>
+          <p class="text-sm text-neutral-600">sarah.johnson@email.com</p>
+          <div class="flex items-center mt-1">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+              <i class="fa-solid fa-circle text-neutral-600 text-xs mr-1"></i>
+              Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Status Details -->
+      <div id="status-details" class="space-y-3">
+        <h4 class="text-sm text-neutral-800">Current Status Details</h4>
+        <div class="bg-neutral-50 rounded-lg p-3 space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-neutral-600">Member Since:</span>
+            <span class="text-neutral-900">January 15, 2023</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-neutral-600">Last Active:</span>
+            <span class="text-neutral-900">Today, 2:30 PM</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-neutral-600">Department:</span>
+            <span class="text-neutral-900">Youth Ministry</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-neutral-600">House Group:</span>
+            <span class="text-neutral-900">Victory House</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Change Section -->
+      <div id="status-change" class="space-y-4">
+        <h4 class="text-sm text-neutral-800">Change Member Status</h4>
+        
+        <!-- Status Options -->
+        <div class="space-y-3">
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer">
+            <input type="radio" name="status" value="active" checked class="w-4 h-4">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-circle text-neutral-600 text-xs"></i>
+                <span class="text-neutral-900">Keep Active</span>
+              </div>
+              <p class="text-xs text-neutral-600 mt-1">Member can access all features and participate in activities</p>
+            </div>
+          </label>
+
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer">
+            <input type="radio" name="status" value="inactive" class="w-4 h-4">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-circle text-neutral-400 text-xs"></i>
+                <span class="text-neutral-900">Set Inactive</span>
+              </div>
+              <p class="text-xs text-neutral-600 mt-1">Temporarily suspend access while preserving member data</p>
+            </div>
+          </label>
+
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer">
+            <input type="radio" name="status" value="suspended" class="w-4 h-4">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-circle text-neutral-600 text-xs"></i>
+                <span class="text-neutral-900">Suspend</span>
+              </div>
+              <p class="text-xs text-neutral-600 mt-1">Block access due to disciplinary or administrative reasons</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Reason Input -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Reason for Change (Optional)</label>
+          <textarea class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" rows="3" placeholder="Provide additional context for this status change..."></textarea>
+        </div>
+
+        <!-- Notification Options -->
+        <div class="space-y-3">
+          <h5 class="text-sm text-neutral-800">Notification Options</h5>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" checked class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-sm text-neutral-700">Send email notification to member</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-sm text-neutral-700">Notify department leader</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+            <span class="text-sm text-neutral-700">Notify house group leader</span>
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal Actions -->
+    <footer id="modal-footer" class="flex space-x-3 p-4 border-t border-neutral-200">
+      <button class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors">
+        Cancel
+      </button>
+      <button class="flex-1 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors">
+        Update Status
+      </button>
+    </footer>
+  </div>
+</div>
+
+<!-- Background Page (Dimmed) -->
+<div id="background-page" class="min-h-[100vh] bg-white opacity-50">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-600"></i>
+        </button>
+        <span class="text-lg text-neutral-800">Member Management</span>
+      </div>
+      <button class="p-2 hover:bg-neutral-100 rounded-lg">
+        <i class="fa-solid fa-ellipsis-vertical text-neutral-600"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-4">
+    <!-- Search and Filter -->
+    <div id="search-section" class="mb-4">
+      <div class="relative">
+        <input type="text" class="w-full px-4 py-2 pl-10 border border-neutral-300 rounded-lg" placeholder="Search members...">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+      </div>
+    </div>
+
+    <!-- Member List -->
+    <div id="member-list" class="space-y-3">
+      <!-- Active Member -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-3">
+        <div class="flex items-center space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=12345" alt="Sarah Johnson" class="w-10 h-10 rounded-full">
+          <div class="flex-1">
+            <h3 class="text-neutral-900 text-sm">Sarah Johnson</h3>
+            <p class="text-xs text-neutral-600">Youth Ministry</p>
+          </div>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+            <i class="fa-solid fa-circle text-neutral-600 text-xs mr-1"></i>
+            Active
+          </span>
+        </div>
+      </div>
+
+      <!-- Inactive Member -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-3">
+        <div class="flex items-center space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=67890" alt="John Smith" class="w-10 h-10 rounded-full">
+          <div class="flex-1">
+            <h3 class="text-neutral-900 text-sm">John Smith</h3>
+            <p class="text-xs text-neutral-600">Men's Ministry</p>
+          </div>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-600">
+            <i class="fa-solid fa-circle text-neutral-400 text-xs mr-1"></i>
+            Inactive
+          </span>
+        </div>
+      </div>
+
+      <!-- Suspended Member -->
+      <div class="bg-white border border-neutral-200 rounded-lg p-3">
+        <div class="flex items-center space-x-3">
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=54321" alt="Mary Wilson" class="w-10 h-10 rounded-full">
+          <div class="flex-1">
+            <h3 class="text-neutral-900 text-sm">Mary Wilson</h3>
+            <p class="text-xs text-neutral-600">Women's Ministry</p>
+          </div>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-800">
+            <i class="fa-solid fa-circle text-neutral-600 text-xs mr-1"></i>
+            Suspended
+          </span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <footer id="footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-home text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400 mt-1">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-users text-neutral-900 text-lg"></i>
+        <span class="text-xs text-neutral-900 mt-1">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-calendar text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400 mt-1">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-chart-bar text-neutral-400 text-lg"></i>
+        <span class="text-xs text-neutral-400 mt-1">Reports</span>
+      </button>
+    </div>
+  </footer>
+</div>

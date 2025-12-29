@@ -1,0 +1,305 @@
+<div id="mobile-outreach-form" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button class="p-2 -ml-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <button class="p-2 hover:bg-neutral-100 rounded-lg">
+        <i class="fa-solid fa-ellipsis-vertical text-neutral-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Form Header -->
+  <div id="form-header" class="px-4 py-4 bg-neutral-50 border-b border-neutral-200">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+        <i class="fa-solid fa-heart text-white text-sm"></i>
+      </div>
+      <div>
+        <h1 class="text-lg text-neutral-900">Create Outreach Program</h1>
+        <p class="text-sm text-neutral-600">Add new outreach initiative</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Form Content -->
+  <main id="main-content" class="px-4 py-6 space-y-6">
+    
+    <!-- Program Details Section -->
+    <div id="program-details" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-info-circle mr-2 text-neutral-600"></i>
+        Program Details
+      </h2>
+      
+      <div class="space-y-4">
+        <!-- Program Name -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Program Name *</label>
+          <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Enter program name">
+        </div>
+
+        <!-- Program Type -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Program Type *</label>
+          <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            <option value="">Select program type</option>
+            <option value="evangelism">Evangelism</option>
+            <option value="community-service">Community Service</option>
+            <option value="youth-outreach">Youth Outreach</option>
+            <option value="prison-ministry">Prison Ministry</option>
+            <option value="hospital-visits">Hospital Visits</option>
+            <option value="feeding-program">Feeding Program</option>
+          </select>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Description</label>
+          <textarea rows="3" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent resize-none" placeholder="Brief description of the outreach program"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Section -->
+    <div id="schedule-section" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-calendar mr-2 text-neutral-600"></i>
+        Schedule & Duration
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Start Date -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Start Date *</label>
+          <input type="date" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+        </div>
+
+        <!-- End Date -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">End Date</label>
+          <input type="date" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+        </div>
+      </div>
+
+      <!-- Frequency -->
+      <div class="space-y-2">
+        <label class="text-sm text-neutral-700 block">Frequency</label>
+        <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+          <option value="">Select frequency</option>
+          <option value="one-time">One-time Event</option>
+          <option value="weekly">Weekly</option>
+          <option value="bi-weekly">Bi-weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+        </select>
+      </div>
+
+      <!-- Time -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Start Time</label>
+          <input type="time" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">End Time</label>
+          <input type="time" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Section -->
+    <div id="location-section" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-location-dot mr-2 text-neutral-600"></i>
+        Location Details
+      </h2>
+
+      <div class="space-y-4">
+        <!-- Location Name -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Location Name *</label>
+          <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="e.g., Central Park, Community Center">
+        </div>
+
+        <!-- Address -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Address</label>
+          <textarea rows="2" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent resize-none" placeholder="Full address of the outreach location"></textarea>
+        </div>
+
+        <!-- Branch Assignment -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Assigned Branch</label>
+          <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            <option value="">Select branch</option>
+            <option value="main-branch">Main Branch</option>
+            <option value="north-branch">North Branch</option>
+            <option value="south-branch">South Branch</option>
+            <option value="east-branch">East Branch</option>
+            <option value="west-branch">West Branch</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team & Resources -->
+    <div id="team-resources" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-users mr-2 text-neutral-600"></i>
+        Team & Resources
+      </h2>
+
+      <div class="space-y-4">
+        <!-- Team Leader -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Team Leader *</label>
+          <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            <option value="">Select team leader</option>
+            <option value="pastor-john">Pastor John Smith</option>
+            <option value="elder-mary">Elder Mary Johnson</option>
+            <option value="deacon-david">Deacon David Wilson</option>
+          </select>
+        </div>
+
+        <!-- Expected Volunteers -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Expected Volunteers</label>
+          <input type="number" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Number of volunteers needed">
+        </div>
+
+        <!-- Budget -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Estimated Budget</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
+            <input type="number" class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals & Metrics -->
+    <div id="goals-metrics" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-target mr-2 text-neutral-600"></i>
+        Goals & Metrics
+      </h2>
+
+      <div class="space-y-4">
+        <!-- Target Souls -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Target Souls to Reach</label>
+          <input type="number" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Expected number of people to reach">
+        </div>
+
+        <!-- Success Metrics -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Success Metrics</label>
+          <div class="space-y-2">
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">Souls Won</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">Follow-up Contacts</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">New Member Conversions</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">Community Impact</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Notes -->
+    <div id="additional-notes" class="space-y-4">
+      <h2 class="text-base text-neutral-900 flex items-center">
+        <i class="fa-solid fa-note-sticky mr-2 text-neutral-600"></i>
+        Additional Information
+      </h2>
+
+      <div class="space-y-4">
+        <!-- Special Requirements -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Special Requirements</label>
+          <textarea rows="2" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent resize-none" placeholder="Any special requirements or considerations"></textarea>
+        </div>
+
+        <!-- Materials Needed -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Materials/Resources Needed</label>
+          <textarea rows="2" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent resize-none" placeholder="List materials and resources required"></textarea>
+        </div>
+
+        <!-- Status -->
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Initial Status</label>
+          <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            <option value="planning">Planning</option>
+            <option value="approved">Approved</option>
+            <option value="active">Active</option>
+            <option value="on-hold">On Hold</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons" class="space-y-3 pt-4">
+      <button type="submit" class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors">
+        <i class="fa-solid fa-plus mr-2"></i>
+        Create Outreach Program
+      </button>
+      
+      <button type="button" class="w-full bg-white text-neutral-700 py-3 px-4 rounded-lg border border-neutral-300 hover:bg-neutral-50 transition-colors">
+        <i class="fa-solid fa-save mr-2"></i>
+        Save as Draft
+      </button>
+      
+      <button type="button" class="w-full bg-white text-neutral-500 py-3 px-4 rounded-lg border border-neutral-300 hover:bg-neutral-50 transition-colors">
+        <i class="fa-solid fa-times mr-2"></i>
+        Cancel
+      </button>
+    </div>
+
+    <!-- Help Section -->
+    <div id="help-section" class="mt-6 bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-2 flex items-center">
+        <i class="fa-solid fa-lightbulb mr-2"></i>
+        Tips for Creating Outreach Programs
+      </h3>
+      <div class="space-y-1 text-xs text-neutral-600">
+        <p>• Define clear objectives and success metrics</p>
+        <p>• Ensure adequate volunteer recruitment</p>
+        <p>• Plan follow-up strategies for contacts made</p>
+        <p>• Coordinate with branch leadership for approval</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

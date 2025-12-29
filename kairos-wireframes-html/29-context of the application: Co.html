@@ -1,0 +1,332 @@
+<div id="mobile-calendar" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-2xl text-neutral-800"></i>
+        <span class="text-lg text-neutral-800">KCMS</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-bell text-xl text-neutral-600"></i>
+        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=789" alt="Profile" class="w-8 h-8 rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div id="nav-tabs" class="bg-white border-b border-neutral-200 px-4">
+    <div class="flex space-x-6">
+      <button class="py-3 px-1 border-b-2 border-neutral-800 text-sm text-neutral-800">
+        <i class="fa-solid fa-calendar mr-2"></i>Events
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500">
+        <i class="fa-solid fa-users mr-2"></i>Members
+      </button>
+      <button class="py-3 px-1 border-b-2 border-transparent text-sm text-neutral-500">
+        <i class="fa-solid fa-chart-bar mr-2"></i>Reports
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendar Controls -->
+  <div id="calendar-controls" class="bg-neutral-50 px-4 py-3 border-b border-neutral-200">
+    <div class="flex items-center justify-between mb-3">
+      <h1 class="text-xl text-neutral-900">Events Calendar</h1>
+      <button class="bg-neutral-900 text-white px-3 py-1.5 rounded-lg text-sm">
+        <i class="fa-solid fa-plus mr-1"></i>Add Event
+      </button>
+    </div>
+    
+    <!-- View Toggle and Month Navigation -->
+    <div class="flex items-center justify-between">
+      <div class="flex bg-white rounded-lg border border-neutral-300">
+        <button class="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded-l-lg">Monthly</button>
+        <button class="px-3 py-1.5 text-sm text-neutral-600 rounded-r-lg">Weekly</button>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-chevron-left text-neutral-600"></i>
+        </button>
+        <span class="text-sm text-neutral-800 min-w-[80px] text-center">March 2025</span>
+        <button class="p-1">
+          <i class="fa-solid fa-chevron-right text-neutral-600"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Options -->
+  <div id="filter-section" class="px-4 py-3 bg-white border-b border-neutral-200">
+    <div class="flex space-x-2 overflow-x-auto pb-1">
+      <button class="flex-shrink-0 px-3 py-1.5 bg-neutral-900 text-white rounded-full text-xs">
+        All Events
+      </button>
+      <button class="flex-shrink-0 px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-xs border">
+        <i class="fa-solid fa-cross mr-1"></i>Worship
+      </button>
+      <button class="flex-shrink-0 px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-xs border">
+        <i class="fa-solid fa-hands-praying mr-1"></i>Prayer
+      </button>
+      <button class="flex-shrink-0 px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-xs border">
+        <i class="fa-solid fa-users mr-1"></i>Fellowship
+      </button>
+      <button class="flex-shrink-0 px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-xs border">
+        <i class="fa-solid fa-heart mr-1"></i>Outreach
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Calendar Content -->
+  <main id="main-content" class="px-4 py-4 pb-20">
+    
+    <!-- Today's Events Section -->
+    <div id="today-events" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">Today - March 15</h2>
+        <span class="text-sm text-neutral-600">3 events</span>
+      </div>
+      
+      <!-- Event Card -->
+      <div class="space-y-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-cross text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="text-sm text-neutral-900 truncate">Sunday Morning Service</h3>
+                <span class="text-xs text-neutral-500">9:00 AM</span>
+              </div>
+              <p class="text-xs text-neutral-600 mb-2">Main Sanctuary • Pastor John Williams</p>
+              <div class="flex items-center space-x-4 text-xs text-neutral-500">
+                <span><i class="fa-solid fa-users mr-1"></i>245 registered</span>
+                <span><i class="fa-solid fa-clock mr-1"></i>2h duration</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 flex space-x-2">
+            <button class="flex-1 bg-neutral-900 text-white py-2 px-3 rounded-lg text-xs">
+              Check Attendance
+            </button>
+            <button class="px-3 py-2 border border-neutral-300 rounded-lg text-xs text-neutral-700">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+          <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 bg-neutral-700 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-hands-praying text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="text-sm text-neutral-900 truncate">Evening Prayer Meeting</h3>
+                <span class="text-xs text-neutral-500">6:00 PM</span>
+              </div>
+              <p class="text-xs text-neutral-600 mb-2">Prayer Hall • Elder Sarah Miller</p>
+              <div class="flex items-center space-x-4 text-xs text-neutral-500">
+                <span><i class="fa-solid fa-users mr-1"></i>78 registered</span>
+                <span><i class="fa-solid fa-clock mr-1"></i>1.5h duration</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 flex space-x-2">
+            <button class="flex-1 bg-neutral-900 text-white py-2 px-3 rounded-lg text-xs">
+              Check Attendance
+            </button>
+            <button class="px-3 py-2 border border-neutral-300 rounded-lg text-xs text-neutral-700">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Events Section -->
+    <div id="upcoming-events" class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">This Week</h2>
+        <span class="text-sm text-neutral-600">8 events</span>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Monday -->
+        <div class="bg-neutral-50 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm text-neutral-800">Monday, March 16</h3>
+            <span class="text-xs text-neutral-500">2 events</span>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="bg-white rounded-lg p-3 border border-neutral-200">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <div class="w-8 h-8 bg-neutral-600 rounded flex items-center justify-center">
+                    <i class="fa-solid fa-users text-white text-xs"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-neutral-900">Youth Fellowship</p>
+                    <p class="text-xs text-neutral-600">7:00 PM • Youth Hall</p>
+                  </div>
+                </div>
+                <span class="text-xs text-neutral-500">32 reg.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tuesday -->
+        <div class="bg-neutral-50 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm text-neutral-800">Tuesday, March 17</h3>
+            <span class="text-xs text-neutral-500">1 event</span>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="bg-white rounded-lg p-3 border border-neutral-200">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <div class="w-8 h-8 bg-neutral-600 rounded flex items-center justify-center">
+                    <i class="fa-solid fa-book text-white text-xs"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-neutral-900">Bible Study</p>
+                    <p class="text-xs text-neutral-600">7:30 PM • Conference Room</p>
+                  </div>
+                </div>
+                <span class="text-xs text-neutral-500">45 reg.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wednesday -->
+        <div class="bg-neutral-50 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm text-neutral-800">Wednesday, March 18</h3>
+            <span class="text-xs text-neutral-500">3 events</span>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="bg-white rounded-lg p-3 border border-neutral-200">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <div class="w-8 h-8 bg-neutral-600 rounded flex items-center justify-center">
+                    <i class="fa-solid fa-cross text-white text-xs"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-neutral-900">Midweek Service</p>
+                    <p class="text-xs text-neutral-600">7:00 PM • Main Sanctuary</p>
+                  </div>
+                </div>
+                <span class="text-xs text-neutral-500">156 reg.</span>
+              </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3 border border-neutral-200">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <div class="w-8 h-8 bg-neutral-600 rounded flex items-center justify-center">
+                    <i class="fa-solid fa-baby text-white text-xs"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-neutral-900">Children's Ministry</p>
+                    <p class="text-xs text-neutral-600">7:00 PM • Kids Zone</p>
+                  </div>
+                </div>
+                <span class="text-xs text-neutral-500">28 reg.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Past Events Section -->
+    <div id="past-events">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg text-neutral-900">Recent Events</h2>
+        <button class="text-sm text-neutral-600">View All</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="bg-white border border-neutral-200 rounded-lg p-4 opacity-75">
+          <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 bg-neutral-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-heart text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="text-sm text-neutral-700">Community Outreach</h3>
+                <span class="text-xs text-neutral-500">Mar 12</span>
+              </div>
+              <p class="text-xs text-neutral-600 mb-2">Downtown Area • Pastor Michael</p>
+              <div class="flex items-center space-x-4 text-xs text-neutral-500">
+                <span><i class="fa-solid fa-users mr-1"></i>89 attended</span>
+                <span><i class="fa-solid fa-check-circle mr-1 text-neutral-600"></i>Completed</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="w-full bg-neutral-100 text-neutral-600 py-2 px-3 rounded-lg text-xs">
+              View Report
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border border-neutral-200 rounded-lg p-4 opacity-75">
+          <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 bg-neutral-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-music text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="text-sm text-neutral-700">Worship Night</h3>
+                <span class="text-xs text-neutral-500">Mar 10</span>
+              </div>
+              <p class="text-xs text-neutral-600 mb-2">Main Sanctuary • Worship Team</p>
+              <div class="flex items-center space-x-4 text-xs text-neutral-500">
+                <span><i class="fa-solid fa-users mr-1"></i>312 attended</span>
+                <span><i class="fa-solid fa-check-circle mr-1 text-neutral-600"></i>Completed</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="w-full bg-neutral-100 text-neutral-600 py-2 px-3 rounded-lg text-xs">
+              View Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-2">
+    <div class="flex justify-around">
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-home text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Home</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-calendar text-neutral-900 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-900">Events</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-users text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Members</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-chart-bar text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Reports</span>
+      </button>
+      <button class="flex flex-col items-center py-2">
+        <i class="fa-solid fa-user text-neutral-400 text-lg mb-1"></i>
+        <span class="text-xs text-neutral-400">Profile</span>
+      </button>
+    </div>
+  </div>
+</div>

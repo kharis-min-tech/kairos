@@ -1,0 +1,190 @@
+<div id="export-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <!-- Modal Header -->
+    <header id="modal-header" class="flex items-center justify-between p-4 border-b border-neutral-200">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-download text-neutral-800"></i>
+        <h2 class="text-lg text-neutral-900">Export Report</h2>
+      </div>
+      <button class="p-1 hover:bg-neutral-100 rounded">
+        <i class="fa-solid fa-times text-neutral-600"></i>
+      </button>
+    </header>
+
+    <!-- Modal Content -->
+    <main id="modal-content" class="p-4">
+      <!-- Report Type Selection -->
+      <div id="report-type-section" class="mb-6">
+        <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+          <i class="fa-solid fa-chart-bar mr-2 text-neutral-600"></i>
+          Select Report Type
+        </h3>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="reportType" value="giving" class="w-4 h-4" checked>
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-hand-holding-heart text-neutral-600"></i>
+              <span class="text-sm text-neutral-800">Giving Records</span>
+            </div>
+          </label>
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="reportType" value="pledge" class="w-4 h-4">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-handshake text-neutral-600"></i>
+              <span class="text-sm text-neutral-800">Pledge Commitments</span>
+            </div>
+          </label>
+          <label class="flex items-center space-x-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="reportType" value="combined" class="w-4 h-4">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-chart-pie text-neutral-600"></i>
+              <span class="text-sm text-neutral-800">Combined Report</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Date Range -->
+      <div id="date-range-section" class="mb-6">
+        <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+          <i class="fa-solid fa-calendar-alt mr-2 text-neutral-600"></i>
+          Date Range
+        </h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs text-neutral-600">From</label>
+            <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500" value="2025-01-01">
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-neutral-600">To</label>
+            <input type="date" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500" value="2025-12-31">
+          </div>
+        </div>
+        
+        <!-- Quick Date Presets -->
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="px-3 py-1 text-xs bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200">This Month</button>
+          <button class="px-3 py-1 text-xs bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200">This Quarter</button>
+          <button class="px-3 py-1 text-xs bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200">This Year</button>
+        </div>
+      </div>
+
+      <!-- Export Format -->
+      <div id="format-section" class="mb-6">
+        <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+          <i class="fa-solid fa-file-export mr-2 text-neutral-600"></i>
+          Export Format
+        </h3>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex flex-col items-center p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="format" value="csv" class="mb-2" checked>
+            <i class="fa-solid fa-file-csv text-2xl text-neutral-600 mb-1"></i>
+            <span class="text-xs text-neutral-800">CSV</span>
+          </label>
+          <label class="flex flex-col items-center p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="format" value="excel" class="mb-2">
+            <i class="fa-solid fa-file-excel text-2xl text-neutral-600 mb-1"></i>
+            <span class="text-xs text-neutral-800">Excel</span>
+          </label>
+          <label class="flex flex-col items-center p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50">
+            <input type="radio" name="format" value="pdf" class="mb-2">
+            <i class="fa-solid fa-file-pdf text-2xl text-neutral-600 mb-1"></i>
+            <span class="text-xs text-neutral-800">PDF</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div id="filters-section" class="mb-6">
+        <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+          <i class="fa-solid fa-filter mr-2 text-neutral-600"></i>
+          Filters (Optional)
+        </h3>
+        
+        <!-- Member Filter -->
+        <div class="mb-4">
+          <label class="text-xs text-neutral-600 block mb-1">Members</label>
+          <select class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+            <option>All Members</option>
+            <option>Active Members Only</option>
+            <option>Leadership Team</option>
+            <option>House Group Leaders</option>
+          </select>
+        </div>
+
+        <!-- Department Filter -->
+        <div class="mb-4">
+          <label class="text-xs text-neutral-600 block mb-1">Department</label>
+          <select class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+            <option>All Departments</option>
+            <option>Youth Ministry</option>
+            <option>Children's Ministry</option>
+            <option>Worship Team</option>
+            <option>Outreach</option>
+          </select>
+        </div>
+
+        <!-- Amount Range -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs text-neutral-600">Min Amount</label>
+            <input type="number" placeholder="0" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-neutral-600">Max Amount</label>
+            <input type="number" placeholder="No limit" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- Include Options -->
+      <div id="include-options-section" class="mb-6">
+        <h3 class="text-sm text-neutral-800 mb-3 flex items-center">
+          <i class="fa-solid fa-list-check mr-2 text-neutral-600"></i>
+          Include in Report
+        </h3>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4" checked>
+            <span class="text-sm text-neutral-700">Member Details</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4" checked>
+            <span class="text-sm text-neutral-700">Payment Method</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-sm text-neutral-700">Notes & Comments</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="w-4 h-4">
+            <span class="text-sm text-neutral-700">Tax Information</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Preview Info -->
+      <div id="preview-info" class="mb-6 bg-neutral-50 rounded-lg p-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-neutral-600">Estimated Records:</span>
+          <span class="text-neutral-800">247</span>
+        </div>
+        <div class="flex items-center justify-between text-sm mt-1">
+          <span class="text-neutral-600">File Size:</span>
+          <span class="text-neutral-800">~45 KB</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal Footer -->
+    <footer id="modal-footer" class="flex space-x-3 p-4 border-t border-neutral-200">
+      <button class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 text-sm">
+        Cancel
+      </button>
+      <button class="flex-1 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 text-sm flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-download"></i>
+        <span>Export</span>
+      </button>
+    </footer>
+  </div>
+</div>

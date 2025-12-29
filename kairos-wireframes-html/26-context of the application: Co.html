@@ -1,0 +1,258 @@
+<div id="mobile-kgroup-form" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-1">
+          <i class="fa-solid fa-arrow-left text-xl text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-users text-lg text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">K-Group</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+        <span class="text-sm text-neutral-600">KCMS</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Page Title -->
+    <div id="page-title-section" class="mb-6">
+      <h1 class="text-2xl text-neutral-900 mb-2">Add K-Group</h1>
+      <p class="text-neutral-600 text-sm">Create a new K-Group to build community and foster spiritual growth</p>
+    </div>
+
+    <!-- Form Container -->
+    <div id="form-container" class="space-y-6">
+      <form class="space-y-6">
+        <!-- Basic Information Section -->
+        <div id="basic-info-section" class="bg-neutral-50 rounded-lg p-4 space-y-4">
+          <h2 class="text-lg text-neutral-800 flex items-center">
+            <i class="fa-solid fa-info-circle mr-2 text-neutral-600"></i>
+            Basic Information
+          </h2>
+
+          <!-- Group Name -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Group Name *</label>
+            <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Enter group name">
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Description</label>
+            <textarea rows="3" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent resize-none" placeholder="Brief description of the group purpose"></textarea>
+          </div>
+
+          <!-- Category -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Category *</label>
+            <div class="relative">
+              <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent appearance-none bg-white">
+                <option value="">Select category</option>
+                <option value="bible-study">Bible Study</option>
+                <option value="prayer">Prayer Group</option>
+                <option value="youth">Youth Ministry</option>
+                <option value="women">Women's Ministry</option>
+                <option value="men">Men's Ministry</option>
+                <option value="discipleship">Discipleship</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leadership Section -->
+        <div id="leadership-section" class="bg-neutral-50 rounded-lg p-4 space-y-4">
+          <h2 class="text-lg text-neutral-800 flex items-center">
+            <i class="fa-solid fa-user-tie mr-2 text-neutral-600"></i>
+            Leadership
+          </h2>
+
+          <!-- Group Leader -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Group Leader *</label>
+            <div class="relative">
+              <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent appearance-none bg-white">
+                <option value="">Select leader</option>
+                <option value="john-doe">John Doe</option>
+                <option value="jane-smith">Jane Smith</option>
+                <option value="michael-johnson">Michael Johnson</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- Assistant Leader -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Assistant Leader</label>
+            <div class="relative">
+              <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent appearance-none bg-white">
+                <option value="">Select assistant (optional)</option>
+                <option value="sarah-wilson">Sarah Wilson</option>
+                <option value="david-brown">David Brown</option>
+                <option value="lisa-davis">Lisa Davis</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meeting Details Section -->
+        <div id="meeting-details-section" class="bg-neutral-50 rounded-lg p-4 space-y-4">
+          <h2 class="text-lg text-neutral-800 flex items-center">
+            <i class="fa-solid fa-calendar mr-2 text-neutral-600"></i>
+            Meeting Details
+          </h2>
+
+          <!-- Meeting Day -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Meeting Day *</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="sunday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Sunday</span>
+              </label>
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="monday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Monday</span>
+              </label>
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="tuesday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Tuesday</span>
+              </label>
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="wednesday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Wednesday</span>
+              </label>
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="thursday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Thursday</span>
+              </label>
+              <label class="flex items-center space-x-2 p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-100">
+                <input type="radio" name="meeting-day" value="friday" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Friday</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Meeting Time -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm text-neutral-700 block">Start Time *</label>
+              <input type="time" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm text-neutral-700 block">End Time *</label>
+              <input type="time" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent">
+            </div>
+          </div>
+
+          <!-- Meeting Location -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Meeting Location *</label>
+            <div class="relative">
+              <input type="text" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Enter meeting location">
+              <i class="fa-solid fa-location-dot absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group Settings Section -->
+        <div id="group-settings-section" class="bg-neutral-50 rounded-lg p-4 space-y-4">
+          <h2 class="text-lg text-neutral-800 flex items-center">
+            <i class="fa-solid fa-cog mr-2 text-neutral-600"></i>
+            Group Settings
+          </h2>
+
+          <!-- Maximum Members -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Maximum Members</label>
+            <input type="number" class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent" placeholder="Enter max capacity (optional)" min="1">
+          </div>
+
+          <!-- Status -->
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Status *</label>
+            <div class="space-y-2">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" name="status" value="active" class="w-4 h-4" checked>
+                <span class="text-sm text-neutral-700">Active - Open for new members</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" name="status" value="closed" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Closed - No new members</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" name="status" value="inactive" class="w-4 h-4">
+                <span class="text-sm text-neutral-700">Inactive - Not meeting</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Additional Options -->
+          <div class="space-y-3">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">Allow members to invite others</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded">
+              <span class="text-sm text-neutral-700">Send meeting reminders</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded" checked>
+              <span class="text-sm text-neutral-700">Track attendance</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div id="form-actions" class="space-y-3 pt-4">
+          <button type="submit" class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors flex items-center justify-center">
+            <i class="fa-solid fa-plus mr-2"></i>
+            Create K-Group
+          </button>
+          
+          <button type="button" class="w-full bg-white border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors">
+            Save as Draft
+          </button>
+          
+          <button type="button" class="w-full text-neutral-600 py-2 text-sm hover:text-neutral-800">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Help Section -->
+    <div id="help-section" class="mt-8 bg-neutral-50 rounded-lg p-4">
+      <h3 class="text-sm text-neutral-800 mb-2 flex items-center">
+        <i class="fa-solid fa-question-circle mr-2"></i>
+        K-Group Guidelines
+      </h3>
+      <div class="space-y-2 text-xs text-neutral-600">
+        <p>• K-Groups should ideally have 8-12 members for optimal interaction</p>
+        <p>• Leaders must be approved church members with leadership training</p>
+        <p>• Regular attendance tracking helps monitor group health</p>
+        <p>• Contact admin for assistance with group management</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white mt-8">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

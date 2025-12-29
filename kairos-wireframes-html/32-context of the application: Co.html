@@ -1,0 +1,249 @@
+<div id="mobile-checkout" class="min-h-[100vh] bg-white">
+  <!-- Header -->
+  <header id="header" class="bg-white border-b border-neutral-200 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="p-2 hover:bg-neutral-100 rounded-lg">
+          <i class="fa-solid fa-arrow-left text-neutral-700"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-church text-xl text-neutral-800"></i>
+          <span class="text-lg text-neutral-800">KCMS</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-lock text-neutral-600 text-sm"></i>
+        <span class="text-xs text-neutral-600">Secure</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress Indicator -->
+  <div id="progress-section" class="bg-neutral-50 px-4 py-3">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs text-neutral-600">Step 2 of 3</span>
+      <span class="text-xs text-neutral-600">Payment</span>
+    </div>
+    <div class="w-full bg-neutral-200 rounded-full h-1">
+      <div class="bg-neutral-800 h-1 rounded-full w-2/3"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="px-4 py-6">
+    <!-- Event Summary Card -->
+    <div id="event-summary" class="bg-white border border-neutral-200 rounded-lg p-4 mb-6">
+      <div class="flex items-start space-x-3">
+        <div class="w-16 h-16 bg-neutral-300 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-calendar-days text-neutral-600 text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-lg text-neutral-900 mb-1">Revival Conference 2025</h3>
+          <div class="space-y-1 text-sm text-neutral-600">
+            <div class="flex items-center">
+              <i class="fa-solid fa-calendar mr-2 text-xs"></i>
+              <span>March 15-17, 2025</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa-solid fa-clock mr-2 text-xs"></i>
+              <span>6:00 PM - 10:00 PM</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa-solid fa-location-dot mr-2 text-xs"></i>
+              <span>Main Sanctuary</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Details -->
+    <div id="registration-details" class="bg-neutral-50 rounded-lg p-4 mb-6">
+      <h4 class="text-sm text-neutral-800 mb-3 flex items-center">
+        <i class="fa-solid fa-user mr-2"></i>
+        Registration Details
+      </h4>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Registrant:</span>
+          <span class="text-neutral-900">John Doe</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Member ID:</span>
+          <span class="text-neutral-900">#KC-2025-001</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Department:</span>
+          <span class="text-neutral-900">Youth Ministry</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Ticket Type:</span>
+          <span class="text-neutral-900">General Admission</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div id="payment-summary" class="bg-white border border-neutral-200 rounded-lg p-4 mb-6">
+      <h4 class="text-sm text-neutral-800 mb-4 flex items-center">
+        <i class="fa-solid fa-receipt mr-2"></i>
+        Payment Summary
+      </h4>
+      <div class="space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-neutral-600">Event Registration</span>
+          <span class="text-neutral-900">$25.00</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-neutral-600">Processing Fee</span>
+          <span class="text-neutral-900">$1.50</span>
+        </div>
+        <div class="border-t border-neutral-200 pt-3">
+          <div class="flex justify-between">
+            <span class="text-neutral-900">Total</span>
+            <span class="text-neutral-900 text-lg">$26.50</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div id="payment-methods" class="mb-6">
+      <h4 class="text-sm text-neutral-800 mb-4 flex items-center">
+        <i class="fa-solid fa-credit-card mr-2"></i>
+        Payment Method
+      </h4>
+      
+      <!-- Payment Options -->
+      <div class="space-y-3 mb-4">
+        <label class="flex items-center p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-50">
+          <input type="radio" name="payment" value="card" class="mr-3" checked>
+          <i class="fa-solid fa-credit-card mr-3 text-neutral-600"></i>
+          <span class="text-sm text-neutral-700">Credit/Debit Card</span>
+        </label>
+        
+        <label class="flex items-center p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-50">
+          <input type="radio" name="payment" value="paypal" class="mr-3">
+          <i class="fa-brands fa-paypal mr-3 text-neutral-600"></i>
+          <span class="text-sm text-neutral-700">PayPal</span>
+        </label>
+        
+        <label class="flex items-center p-3 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-50">
+          <input type="radio" name="payment" value="bank" class="mr-3">
+          <i class="fa-solid fa-building-columns mr-3 text-neutral-600"></i>
+          <span class="text-sm text-neutral-700">Bank Transfer</span>
+        </label>
+      </div>
+
+      <!-- Card Details Form -->
+      <div id="card-form" class="space-y-4">
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Cardholder Name</label>
+          <input type="text" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="John Doe">
+        </div>
+        
+        <div class="space-y-2">
+          <label class="text-sm text-neutral-700 block">Card Number</label>
+          <div class="relative">
+            <input type="text" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="1234 5678 9012 3456">
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
+              <i class="fa-brands fa-cc-visa text-neutral-400"></i>
+              <i class="fa-brands fa-cc-mastercard text-neutral-400"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">Expiry Date</label>
+            <input type="text" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="MM/YY">
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm text-neutral-700 block">CVV</label>
+            <input type="text" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500" placeholder="123">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing Address -->
+    <div id="billing-address" class="mb-6">
+      <h4 class="text-sm text-neutral-800 mb-4 flex items-center">
+        <i class="fa-solid fa-map-location-dot mr-2"></i>
+        Billing Address
+      </h4>
+      <div class="space-y-3">
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded" checked>
+          <span class="text-sm text-neutral-600">Use church address on file</span>
+        </label>
+        
+        <div class="bg-neutral-50 rounded-lg p-3">
+          <div class="text-sm text-neutral-700">
+            <div>Kharis Church</div>
+            <div>123 Faith Street</div>
+            <div>Springfield, IL 62701</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms and Security -->
+    <div id="terms-security" class="mb-6 space-y-4">
+      <label class="flex items-start space-x-2">
+        <input type="checkbox" class="w-4 h-4 border border-neutral-300 rounded mt-0.5">
+        <span class="text-xs text-neutral-600">
+          I agree to the <a href="#" class="text-neutral-800 underline">Terms of Service</a> and 
+          <a href="#" class="text-neutral-800 underline">Privacy Policy</a>
+        </span>
+      </label>
+      
+      <div class="bg-neutral-50 rounded-lg p-3">
+        <div class="flex items-start space-x-2">
+          <i class="fa-solid fa-shield-halved text-neutral-600 mt-0.5"></i>
+          <div class="text-xs text-neutral-600">
+            <p class="mb-1">Secure Payment</p>
+            <p>Your payment information is encrypted and processed securely through our certified payment processor.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons" class="space-y-3">
+      <button class="w-full bg-neutral-900 text-white py-3 px-4 rounded-lg hover:bg-neutral-800 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-lock mr-2"></i>
+        Complete Payment - $26.50
+      </button>
+      
+      <button class="w-full border border-neutral-300 text-neutral-700 py-3 px-4 rounded-lg hover:bg-neutral-50 transition-colors">
+        Save for Later
+      </button>
+    </div>
+
+    <!-- Support Info -->
+    <div id="support-info" class="mt-6 bg-neutral-50 rounded-lg p-4">
+      <h4 class="text-sm text-neutral-800 mb-2 flex items-center">
+        <i class="fa-solid fa-headset mr-2"></i>
+        Need Help?
+      </h4>
+      <div class="space-y-2 text-xs text-neutral-600">
+        <p>• Payment issues: finance@kharischurch.org</p>
+        <p>• Event questions: events@kharischurch.org</p>
+        <p>• Technical support: (555) 123-4567</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="px-4 py-6 border-t border-neutral-200 bg-white">
+    <div class="text-center space-y-2">
+      <p class="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+      <div class="flex justify-center space-x-4 text-xs">
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Privacy</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Terms</a>
+        <a href="#" class="text-neutral-500 hover:text-neutral-700">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

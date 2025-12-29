@@ -4,7 +4,7 @@ import { useAuth } from "react-oidc-context";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { cognitoDomain } from "../../lib/auth-config";
-import { AuthDebug } from "../../components/auth-debug";
+import { useCognitoAuth } from "apps/src/hooks/use-cognito-auth";
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -14,10 +14,10 @@ export default function LoginPage() {
     setIsClient(true);
   }, []);
 
+  const { signOutComplete, signOutLocal } = useCognitoAuth();
+
   const signOutRedirect = () => {
-    const clientId = "7mqmc57sb18ideegj293pk81ib";
-    const logoutUri = "http://localhost:3001"; // Updated for local development
-    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
+    signOutComplete();
   };
 
   // Don't render auth-dependent content on server
@@ -36,7 +36,6 @@ export default function LoginPage() {
       <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="text-center">Loading authentication...</div>
-          <AuthDebug />
         </div>
       </main>
     );
@@ -51,18 +50,16 @@ export default function LoginPage() {
             <p className="text-sm">{auth.error.message}</p>
           </div>
           
-          <AuthDebug />
-          
           <div className="mt-4 text-center">
             <button 
               onClick={() => window.location.reload()} 
-              className="mr-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="mr-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
             >
               Try Again
             </button>
             <button 
               onClick={() => auth.signinRedirect()} 
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
             >
               Sign In Again
             </button>
@@ -79,51 +76,25 @@ export default function LoginPage() {
           <h1 className="text-2xl font-semibold mb-6">Welcome!</h1>
           
           <div className="space-y-4">
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h3 className="font-medium text-green-800">User Information</h3>
-              <p className="text-sm text-green-700 mt-1">
+            <div className="p-4 bg-neutral-50 rounded-lg">
+              <h3 className="font-medium text-neutral-800">User Information</h3>
+              <p className="text-sm text-neutral-700 mt-1">
                 Hello: {auth.user?.profile.email}
               </p>
             </div>
 
-            <AuthDebug />
-
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-800 mb-2">Tokens (for debugging)</h3>
-              <div className="space-y-2 text-xs font-mono">
-                <div>
-                  <strong>ID Token:</strong>
-                  <div className="break-all bg-white p-2 rounded border mt-1">
-                    {auth.user?.id_token}
-                  </div>
-                </div>
-                <div>
-                  <strong>Access Token:</strong>
-                  <div className="break-all bg-white p-2 rounded border mt-1">
-                    {auth.user?.access_token}
-                  </div>
-                </div>
-                <div>
-                  <strong>Refresh Token:</strong>
-                  <div className="break-all bg-white p-2 rounded border mt-1">
-                    {auth.user?.refresh_token}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="flex gap-4">
               <button 
-                onClick={() => auth.removeUser()}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => signOutLocal()}
+                className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
               >
                 Sign out (Local)
               </button>
               <button 
-                onClick={() => signOutRedirect()}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                onClick={() => signOutComplete()}
+                className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
               >
-                Sign out (Cognito)
+                Sign out (Complete)
               </button>
             </div>
           </div>
@@ -134,33 +105,31 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-      <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold mb-1">Sign in with Cognito</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Click the button below to authenticate with Amazon Cognito
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h1 className="text-2xl font-semibold mb-1">Sign in to KCMS</h1>
+        <p className="text-sm text-neutral-600 mb-6">
+          Access your church management account
         </p>
-
-        <AuthDebug />
 
         <div className="space-y-4 mt-6">
           <button
             onClick={() => auth.signinRedirect()}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-white font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors"
+            className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-white font-medium hover:bg-neutral-800 transition-colors"
           >
-            Sign in with Amazon Cognito
+            Sign In
           </button>
 
           <button
-            onClick={() => signOutRedirect()}
-            className="w-full rounded-xl bg-gray-600 px-4 py-3 text-white font-medium hover:bg-gray-700 active:bg-gray-800 transition-colors"
+            onClick={() => signOutComplete()}
+            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-neutral-700 font-medium hover:bg-neutral-50 transition-colors"
           >
             Sign out (if already signed in)
           </button>
         </div>
 
-        <p className="mt-6 text-xs text-gray-500 text-center">
+        <p className="mt-6 text-xs text-neutral-500 text-center">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className="text-neutral-800 hover:underline font-medium">
             Sign up
           </Link>
         </p>
