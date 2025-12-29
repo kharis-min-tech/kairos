@@ -72,6 +72,24 @@
       "options": {
         "jestConfig": "apps/api/jest.config.ts"
       }
+    },
+    "openapi:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node apps/api/src/scripts/generate-openapi-spec.ts",
+        "cwd": "{workspaceRoot}"
+      },
+      "outputs": [
+        "apps/api/openapi/openapi.json",
+        "apps/api/openapi/openapi.yaml"
+      ]
+    },
+    "openapi:validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node apps/api/src/scripts/validate-openapi-spec.ts",
+        "cwd": "{workspaceRoot}"
+      }
     }
   },
   "tags": ["type:app", "scope:api"]
