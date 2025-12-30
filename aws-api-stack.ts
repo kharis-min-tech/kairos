@@ -226,6 +226,27 @@ export class KairosApiStack extends cdk.Stack {
       layers: [sharedLayer],
     });
 
+    // Documentation Lambda Functions
+    const swaggerDocsLambda = new lambda.Function(this, 'SwaggerDocsFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda-functions/docs/swagger-ui'),
+      environment: {
+        API_GATEWAY_URL: api.url,
+      },
+      layers: [sharedLayer],
+    });
+
+    const openApiJsonLambda = new lambda.Function(this, 'OpenApiJsonFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda-functions/docs/openapi-json'),
+      environment: {
+        API_GATEWAY_URL: api.url,
+      },
+      layers: [sharedLayer],
+    });
+
     // Grant DynamoDB permissions
     membersTable.grantReadWriteData(getMembersLambda);
     membersTable.grantReadWriteData(createMemberLambda);
@@ -279,6 +300,13 @@ export class KairosApiStack extends cdk.Stack {
     eventResource.addMethod('GET', new apigateway.LambdaIntegration(getEventLambda));
     eventResource.addMethod('PUT', new apigateway.LambdaIntegration(updateEventLambda));
     eventResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteEventLambda));
+
+    // Documentation Routes
+    const docsResource = api.root.addResource('docs');
+    docsResource.addMethod('GET', new apigateway.LambdaIntegration(swaggerDocsLambda));
+
+    const openApiResource = api.root.addResource('openapi.json');
+    openApiResource.addMethod('GET', new apigateway.LambdaIntegration(openApiJsonLambda));
 
     // Outputs
     new cdk.CfnOutput(this, 'ApiGatewayUrl', {

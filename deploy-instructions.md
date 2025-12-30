@@ -32,8 +32,10 @@ KairosApiStack.ApiGatewayUrl = https://xxxxxxxxxx.execute-api.us-east-1.amazonaw
 
 Replace `https://your-api-gateway-url` with your actual API Gateway URL:
 
-### Health Check
+### Health Check & Documentation
 - `GET https://your-api-gateway-url/` - API Health Check
+- `GET https://your-api-gateway-url/docs` - **🎁 BONUS: Interactive Swagger UI Documentation**
+- `GET https://your-api-gateway-url/openapi.json` - OpenAPI JSON specification
 
 ### Members API (5 endpoints)
 - `GET https://your-api-gateway-url/members` - Get all members
@@ -99,8 +101,8 @@ npm run destroy
 
 ## 📊 AWS Resources Created
 - **3 DynamoDB Tables**: Members, Departments, Events
-- **13 Lambda Functions**: Complete CRUD operations
+- **15 Lambda Functions**: Complete CRUD operations + Documentation
 - **1 API Gateway**: RESTful API endpoints
 - **IAM Roles**: Secure permissions for Lambda functions
 
-**Total: 15 API endpoints ready for production! 🎉**
+**Total: 17 API endpoints including interactive Swagger docs! 🎉**
