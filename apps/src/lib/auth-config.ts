@@ -11,6 +11,11 @@ export const cognitoAuthConfig = {
   // Additional settings for better logout handling
   revokeAccessTokenOnSignout: true,
   includeIdTokenInSilentRenew: false,
+  // Callback handling - stay on the redirect_uri after successful auth
+  onSigninCallback: () => {
+    // Remove query parameters but stay on current page
+    window.history.replaceState({}, document.title, window.location.pathname);
+  },
   // Metadata for better OIDC compliance
   metadata: {
     issuer: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
