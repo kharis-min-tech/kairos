@@ -13,7 +13,7 @@ export function useCognitoAuth() {
       
       // Then redirect to Cognito logout to clear server-side session
       const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent("http://localhost:3001");
+      const logoutUri = encodeURIComponent(window.location.origin);
       
       // Use the proper Cognito logout URL
       const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
@@ -26,7 +26,7 @@ export function useCognitoAuth() {
       console.error("Error during sign out:", error);
       // Fallback: force redirect to logout even if local cleanup fails
       const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent("http://localhost:3001");
+      const logoutUri = encodeURIComponent(window.location.origin);
       window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
     }
   };
@@ -55,7 +55,7 @@ export function useCognitoAuth() {
       
       // Then redirect to Cognito logout
       const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent("http://localhost:3001");
+      const logoutUri = encodeURIComponent(window.location.origin);
       
       const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
       
@@ -84,7 +84,7 @@ export function useCognitoAuth() {
     // Cognito doesn't have a direct MFA setup URL, so we redirect to the user settings
     // where users can manage their MFA settings
     const clientId = "7mqmc57sb18ideegj293pk81ib";
-    const redirectUri = encodeURIComponent("http://localhost:3001/profile");
+    const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
     
     // Redirect to Cognito hosted UI with a prompt to manage account settings
     // This will allow users to set up MFA through Cognito's interface
