@@ -1,95 +1,220 @@
-# Kairos
+# KCMS - Kharis Church Management System
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A modern, cloud-native church management system built with Next.js and AWS.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Features
 
-Run `npx nx graph` to visually explore what got created. Now, let's get you up to speed!
+- 🔐 **Secure Authentication**: AWS Cognito with OAuth 2.0/OIDC
+- 👥 **User Management**: Sign up, sign in, password reset, MFA
+- 📱 **Responsive Design**: Mobile-first wireframe-based UI
+- ☁️ **Cloud Infrastructure**: AWS CDK for Infrastructure as Code
+- 🚀 **Global CDN**: CloudFront for fast content delivery
+- 🔒 **Security First**: Auto-confirmation, advanced security features
 
-## Run tasks
+## Quick Start
 
-To run tasks with Nx use:
+### Development
 
-```sh
-npx nx <target> <project-name>
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-For example:
+Open http://localhost:3001
 
-```sh
-npx nx build myproject
+### Deploy Infrastructure
+
+```bash
+cd infrastructure
+./deploy.sh dev
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+See [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) for details.
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Project Structure
 
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+```
+.
+├── apps/                    # Next.js frontend application
+│   ├── src/
+│   │   ├── app/            # Next.js 13+ app directory
+│   │   ├── components/     # React components
+│   │   ├── hooks/          # Custom React hooks
+│   │   └── lib/            # Utilities and configurations
+│   └── public/             # Static assets
+│
+├── infrastructure/          # AWS CDK infrastructure
+│   ├── bin/                # CDK app entry point
+│   ├── lib/                # CDK stacks
+│   │   ├── kcms-auth-stack.ts       # Cognito authentication
+│   │   └── kcms-frontend-stack.ts   # S3 + CloudFront
+│   ├── deploy.sh           # Deployment script
+│   └── README.md           # Infrastructure docs
+│
+└── kairos-wireframes-html/ # Design wireframes
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
+## Technology Stack
 
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: AWS Cognito (OAuth 2.0/OIDC)
+- **Icons**: FontAwesome
 
-# Generate a library
-npx nx g @nx/react:lib some-lib
+### Infrastructure
+- **IaC**: AWS CDK (TypeScript)
+- **Authentication**: AWS Cognito User Pool
+- **Hosting**: S3 + CloudFront
+- **Functions**: AWS Lambda
+- **Region**: eu-north-1 (Stockholm)
+
+## Documentation
+
+- [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) - Complete AWS deployment guide
+- [Quick Start](infrastructure/QUICKSTART.md) - 5-minute setup
+- [MFA Testing Guide](MFA_TESTING_GUIDE.md) - Multi-factor authentication
+- [Profile Guide](PROFILE_FUNCTIONALITY_GUIDE.md) - User profile management
+- [Sign Out Guide](SIGNOUT_TESTING_GUIDE.md) - Sign out functionality
+
+## Available Scripts
+
+### Frontend
+
+```bash
+npm run dev          # Start development server (port 3001)
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Infrastructure
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```bash
+cd infrastructure
+npm run build        # Build TypeScript
+npm run synth        # Synthesize CloudFormation
+npm run deploy:all   # Deploy all stacks
+./deploy.sh dev      # Deploy development environment
+./get-outputs.sh dev # Get stack outputs
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## Environment Configuration
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Create `apps/.env.local`:
 
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```bash
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=your-user-pool-id
+NEXT_PUBLIC_COGNITO_CLIENT_ID=your-client-id
+NEXT_PUBLIC_COGNITO_REGION=eu-north-1
+NEXT_PUBLIC_COGNITO_DOMAIN=https://your-domain.auth.eu-north-1.amazoncognito.com
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Get these values after deploying infrastructure:
+```bash
+cd infrastructure
+./get-outputs.sh dev
+```
 
-## Install Nx Console
+## Authentication Features
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+- ✅ Sign up with email
+- ✅ Sign in with username/email
+- ✅ Forgot password flow
+- ✅ Change password
+- ✅ MFA setup (TOTP/SMS)
+- ✅ User profile management
+- ✅ Auto-confirmation (Lambda trigger)
+- ✅ OAuth 2.0/OIDC integration
+- ✅ Secure sign out
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Deployment
 
-## Useful links
+### Development
+```bash
+cd infrastructure
+./deploy.sh dev
+```
 
-Learn more:
+### Staging
+```bash
+./deploy.sh staging
+```
 
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Production
+```bash
+./deploy.sh prod
+```
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    CloudFront CDN                        │
+│              (Global Content Delivery)                   │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                   S3 Bucket                              │
+│              (Static Website Hosting)                    │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│              AWS Cognito User Pool                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Users      │  │  OAuth 2.0   │  │  Hosted UI   │  │
+│  │ Management   │  │    OIDC      │  │   Domain     │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  Lambda Pre-Signup Trigger (Auto-confirm)        │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Cost Estimate
+
+### Development
+- ~$2-6/month (mostly free tier)
+
+### Production
+- ~$25-175/month (depends on usage)
+
+See [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) for details.
+
+## Security
+
+- HTTPS enforced everywhere
+- S3 bucket private (CloudFront OAI)
+- Cognito advanced security mode
+- MFA support (optional)
+- Strong password policies
+- Auto-confirmation via Lambda
+- No credentials in code
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Test locally
+4. Push to your branch
+5. Create a pull request
+
+## Support
+
+For issues or questions:
+- Check documentation in `/docs`
+- Review [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md)
+- Check AWS CloudWatch logs
+
+## License
+
+Proprietary - Kharis Church Management System
+
+---
+
+Built with ❤️ using Next.js and AWS
