@@ -10,29 +10,67 @@ A modern, cloud-native church management system built with Next.js and AWS.
 - ☁️ **Cloud Infrastructure**: AWS CDK for Infrastructure as Code
 - 🚀 **Global CDN**: CloudFront for fast content delivery
 - 🔒 **Security First**: Auto-confirmation, advanced security features
+- 🌐 **Multi-Device**: Works on any laptop automatically
 
-## Quick Start
+## 🚀 Quick Start (5 Minutes)
 
-### Development
+### For Project Owner (First Time Setup)
+
+**Prerequisites:**
+- AWS Account ([Create one](https://aws.amazon.com/free))
+- AWS CLI installed (`brew install awscli` on macOS)
+- Node.js v18+ installed
+
+**Step 1: Get AWS Credentials**
+
+1. Go to https://console.aws.amazon.com/iam
+2. Click "Users" → Your user → "Security credentials"
+3. Click "Create access key" → Select "CLI"
+4. Download the CSV file
+
+**Step 2: Set Credentials**
 
 ```bash
-# Install dependencies
-npm install
+export AWS_ACCESS_KEY_ID="your-access-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
+# If using temporary credentials, also set:
+# export AWS_SESSION_TOKEN="your-session-token"
+```
 
-# Start development server
+**Step 3: Deploy Everything**
+
+```bash
+cd Untitled
+./DEPLOY_EVERYTHING.sh
+```
+
+This ONE command will:
+- ✓ Install CDK CLI if needed
+- ✓ Bootstrap CDK in your AWS account
+- ✓ Deploy Cognito User Pool with auto-confirmation
+- ✓ Deploy S3 + CloudFront
+- ✓ Configure frontend automatically
+- ✓ Install dependencies
+
+**Step 4: Start Development**
+
+```bash
 npm run dev
 ```
 
 Open http://localhost:3001
 
-### Deploy Infrastructure
+---
+
+### For Team Members (New Laptop Setup)
 
 ```bash
-cd infrastructure
-./deploy.sh dev
+git clone https://github.com/kharis-min-tech/kairos.git
+cd kairos/Untitled
+./COMPLETE_SETUP.sh
 ```
 
-See [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) for details.
+That's it! No AWS credentials needed for team members.
 
 ## Project Structure
 
@@ -75,11 +113,27 @@ See [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) for details.
 
 ## Documentation
 
-- [Infrastructure Guide](INFRASTRUCTURE_GUIDE.md) - Complete AWS deployment guide
-- [Quick Start](infrastructure/QUICKSTART.md) - 5-minute setup
-- [MFA Testing Guide](MFA_TESTING_GUIDE.md) - Multi-factor authentication
-- [Profile Guide](PROFILE_FUNCTIONALITY_GUIDE.md) - User profile management
-- [Sign Out Guide](SIGNOUT_TESTING_GUIDE.md) - Sign out functionality
+### Getting Started
+- **[START_HERE.md](START_HERE.md)** - Quick reference for everyone
+- **[SIMPLE_SETUP_GUIDE.md](SIMPLE_SETUP_GUIDE.md)** - 15-minute walkthrough
+- **[GET_AWS_CREDENTIALS.md](GET_AWS_CREDENTIALS.md)** - How to get AWS keys
+
+### Deployment & Infrastructure
+- **[DEPLOY_EVERYTHING.sh](DEPLOY_EVERYTHING.sh)** - Automated deployment (run this first!)
+- **[INFRASTRUCTURE_GUIDE.md](INFRASTRUCTURE_GUIDE.md)** - Complete deployment guide
+- **[DEPLOYMENT_WORKFLOW.md](DEPLOYMENT_WORKFLOW.md)** - Step-by-step workflow
+- **[CDK_MIGRATION_SUMMARY.md](CDK_MIGRATION_SUMMARY.md)** - What was built
+
+### Team Setup
+- **[COMPLETE_SETUP.sh](COMPLETE_SETUP.sh)** - Team member setup script
+- **[SETUP_NEW_LAPTOP.md](SETUP_NEW_LAPTOP.md)** - New laptop setup guide
+- **[UPDATE_COGNITO_URLS.md](UPDATE_COGNITO_URLS.md)** - Fix login issues
+
+### Features & Testing
+- **[MFA_TESTING_GUIDE.md](MFA_TESTING_GUIDE.md)** - Multi-factor authentication
+- **[PROFILE_FUNCTIONALITY_GUIDE.md](PROFILE_FUNCTIONALITY_GUIDE.md)** - User profiles
+- **[SIGNOUT_TESTING_GUIDE.md](SIGNOUT_TESTING_GUIDE.md)** - Sign out functionality
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Common commands
 
 ## Available Scripts
 
@@ -96,12 +150,62 @@ npm run lint         # Run ESLint
 
 ```bash
 cd infrastructure
-npm run build        # Build TypeScript
-npm run synth        # Synthesize CloudFormation
-npm run deploy:all   # Deploy all stacks
-./deploy.sh dev      # Deploy development environment
-./get-outputs.sh dev # Get stack outputs
+./DEPLOY_EVERYTHING.sh   # Deploy everything (first time - recommended!)
+./deploy.sh dev          # Deploy to dev environment
+./deploy.sh prod         # Deploy to production
+./destroy.sh dev         # Destroy dev infrastructure
+./get-outputs.sh dev     # Get stack outputs
+npm run build            # Build TypeScript
+npm run synth            # Synthesize CloudFormation
 ```
+
+### Utilities
+
+```bash
+./COMPLETE_SETUP.sh      # Setup on new laptop (team members)
+./update-cognito-urls.sh # Fix login issues
+```
+
+## Troubleshooting
+
+### "CDK not bootstrapped" Error
+
+```bash
+cd infrastructure
+cdk bootstrap
+```
+
+### "Connection refused" when logging in
+
+The app now automatically detects your URL. If you still have issues:
+
+```bash
+./update-cognito-urls.sh
+```
+
+### "Module not found"
+
+```bash
+npm install
+```
+
+### AWS Credentials Expired
+
+Temporary credentials expire after a few hours. Get new ones:
+
+```bash
+export AWS_ACCESS_KEY_ID="new-key"
+export AWS_SECRET_ACCESS_KEY="new-secret"
+export AWS_SESSION_TOKEN="new-token"  # If using temporary credentials
+```
+
+### Deployment Fails
+
+1. Check AWS credentials: `aws sts get-caller-identity`
+2. Check region: `echo $AWS_REGION`
+3. Try bootstrapping again: `cd infrastructure && cdk bootstrap`
+
+---
 
 ## Environment Configuration
 
