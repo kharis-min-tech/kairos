@@ -16,8 +16,20 @@ const env = {
 const config = {
   dev: {
     domainPrefix: 'kcms-dev',
-    callbackUrls: ['http://localhost:3001', 'http://localhost:3001/dashboard'],
-    logoutUrls: ['http://localhost:3001'],
+    callbackUrls: [
+      'http://localhost:3001',
+      'http://localhost:3001/dashboard',
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:3001/dashboard',
+      // Add more for flexibility
+      'http://localhost:3000',
+      'http://localhost:3000/dashboard',
+    ],
+    logoutUrls: [
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+      'http://localhost:3000',
+    ],
   },
   staging: {
     domainPrefix: 'kcms-staging',
