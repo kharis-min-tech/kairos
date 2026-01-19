@@ -2,6 +2,30 @@
 -- Church Administration System - PostgreSQL Database Schema
 -- Generated from ADMINISTRATION.md specification
 -- ============================================================================
+-- 
+-- ⚠️  DEPRECATION NOTICE
+-- ============================================================================
+-- This monolithic schema file is DEPRECATED and kept for reference only.
+-- 
+-- For new installations, use the modular migration scripts located in:
+--   database/migrations/
+-- 
+-- The schema has been split into separate files for better maintainability:
+--   01_functions.sql      - Utility functions
+--   02_tables.sql         - Table definitions
+--   03_constraints.sql    - Foreign keys, check constraints, unique constraints
+--   04_indexes.sql        - Performance indexes
+--   05_triggers.sql       - Automated column update triggers
+--   06_comments.sql       - Table documentation comments
+-- 
+-- See database/migrations/README.md for complete setup instructions.
+-- 
+-- Quick Start:
+--   cd database/migrations
+--   ./init_schema.sh
+-- 
+-- Last Updated: January 18, 2026
+-- ============================================================================
 
 -- ============================================================================
 -- SECTION 1: UTILITY FUNCTIONS AND TRIGGERS

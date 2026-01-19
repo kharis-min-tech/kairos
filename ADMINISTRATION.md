@@ -10,20 +10,43 @@ This document describes the database schema for a Church Administration System d
 
 ### Core Entities
 
-1. **Regions** - Geographic areas where branches are located
-2. **Branches** - Individual church locations
-3. **Members** - Church members
-4. **Roles** - Church roles (e.g., Choir, Usher)
-5. **Fellowships** - Small groups/fellowships
-6. **Departments** - Ministry departments
-7. **Outreach Programs** - Evangelism events
-8. **Services** - Weekly worship services
+1. **Languages** - Languages used in church services and communications
+2. **Regions** - Geographic areas where branches are located
+3. **Branches** - Individual church locations
+4. **Members** - Church members
+5. **Roles** - Church roles (e.g., Choir, Usher)
+6. **Fellowships** - Small groups/fellowships
+7. **Departments** - Ministry departments
+8. **Outreach Programs** - Evangelism events
+9. **Services** - Weekly worship services
 
 ---
 
 ## Detailed Table Specifications
 
-### 1. REGIONS
+### 1. LANGUAGES
+
+**Purpose:** Store languages used in church services and communications
+
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| language_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
+| language_name | VARCHAR(50) | NOT NULL, UNIQUE | Name of the language |
+| language_code | VARCHAR(10) | NOT NULL, UNIQUE | ISO language code |
+| is_active | BOOLEAN | DEFAULT TRUE | Active status |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
+| updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record update timestamp |
+
+**Indexes:**
+
+- Primary Key on `language_id`
+- Unique index on `language_name`
+- Unique index on `language_code`
+- Index on `is_active`
+
+---
+
+### 2. REGIONS
 
 **Purpose:** Store geographical regions where branches are located
 
@@ -42,7 +65,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 2. BRANCHES
+### 3. BRANCHES
 
 **Purpose:** Store church branch information across different regions
 
@@ -51,6 +74,7 @@ This document describes the database schema for a Church Administration System d
 | branch_id | SERIAL | PRIMARY KEY | Auto-incrementing identifier |
 | branch_name | VARCHAR(150) | NOT NULL | Name of the branch |
 | region_id | INTEGER | NOT NULL, FK → regions | Associated region |
+| language_id | INTEGER | FK → languages | Primary language used |
 | branch_type | VARCHAR(50) | NOT NULL, DEFAULT 'Main' | Type of branch |
 | address | TEXT | | Physical address |
 | city | VARCHAR(100) | | City name |
@@ -65,6 +89,7 @@ This document describes the database schema for a Church Administration System d
 **Foreign Keys:**
 
 - `region_id` → `regions.region_id` (ON DELETE RESTRICT)
+- `language_id` → `languages.language_id` (ON DELETE SET NULL)
 
 **Check Constraints:**
 
@@ -80,10 +105,11 @@ This document describes the database schema for a Church Administration System d
 
 - Primary Key on `branch_id`
 - Foreign key index on `region_id`
+- Foreign key index on `language_id`
 
 ---
 
-### 3. MEMBERS
+### 4. MEMBERS
 
 **Purpose:** Store church member information
 
@@ -128,7 +154,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 4. BRANCH_LEADERSHIP
+### 5. BRANCH_LEADERSHIP
 **Purpose:** Store pastor and elder assignments for each branch
 
 | Column Name | Data Type | Constraints | Description |
@@ -169,7 +195,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 5. ROLES
+### 6. ROLES
 
 **Purpose:** Store church role definitions (e.g., Choir Member, Usher, Teacher)
 
@@ -190,7 +216,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 6. MEMBER_ROLES
+### 7. MEMBER_ROLES
 **Purpose:** Store member role assignments (many-to-many relationship with history)
 
 | Column Name | Data Type | Constraints | Description |
@@ -232,7 +258,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 7. FELLOWSHIPS
+### 8. FELLOWSHIPS
 
 **Purpose:** Store fellowship group information
 
@@ -272,7 +298,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 8. FELLOWSHIP_MEMBERS
+### 9. FELLOWSHIP_MEMBERS
 
 **Purpose:** Store member assignments to fellowships (many-to-many relationship with history)
 
@@ -309,7 +335,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 9. FELLOWSHIP_MEETINGS
+### 10. FELLOWSHIP_MEETINGS
 
 **Purpose:** Store fellowship meeting information
 
@@ -345,7 +371,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 10. FELLOWSHIP_MEETING_ATTENDANCE
+### 11. FELLOWSHIP_MEETING_ATTENDANCE
 
 **Purpose:** Store attendance records for fellowship meetings
 
@@ -380,7 +406,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 11. DEPARTMENTS
+### 12. DEPARTMENTS
 
 **Purpose:** Store department definitions (common across all branches)
 
@@ -404,7 +430,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 12. OUTREACH_PROGRAMS
+### 13. OUTREACH_PROGRAMS
 
 **Purpose:** Store outreach program information and activities
 
@@ -448,7 +474,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 13. SOULS
+### 14. SOULS
 
 **Purpose:** Store information about new individuals reached through outreach
 
@@ -500,7 +526,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 14. FOLLOW_UPS
+### 15. FOLLOW_UPS
 
 **Purpose:** Store follow-up activities for souls
 
@@ -539,7 +565,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 15. OUTREACH_PARTICIPANTS
+### 16. OUTREACH_PARTICIPANTS
 
 **Purpose:** Store member participation in outreach programs
 
@@ -566,7 +592,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 16. BRANCH_DEPARTMENTS
+### 17. BRANCH_DEPARTMENTS
 
 **Purpose:** Link departments to specific branches with leadership assignments
 
@@ -607,7 +633,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 17. DEPARTMENT_MEMBERS
+### 18. DEPARTMENT_MEMBERS
 
 **Purpose:** Store member assignments to departments (many-to-many relationship with history)
 
@@ -643,7 +669,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 18. DEPARTMENT_MEETINGS
+### 19. DEPARTMENT_MEETINGS
 
 **Purpose:** Store department meeting information
 
@@ -681,7 +707,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 19. MEETING_ATTENDANCE
+### 20. MEETING_ATTENDANCE
 
 **Purpose:** Store attendance records for department meetings
 
@@ -713,7 +739,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 20. SERVICES
+### 21. SERVICES
 
 **Purpose:** Store weekly service information for each branch
 
@@ -754,7 +780,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 21. SERVICE_ATTENDANCE
+### 22. SERVICE_ATTENDANCE
 
 **Purpose:** Store attendance records for services
 
@@ -790,7 +816,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 22. DONATIONS
+### 23. DONATIONS
 
 **Purpose:** Store member donation/giving records with purpose tracking
 
@@ -835,7 +861,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 23. NOTIFICATIONS
+### 24. NOTIFICATIONS
 
 **Purpose:** Store notifications and announcements broadcast to members
 
@@ -889,7 +915,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 24. NOTIFICATION_RECIPIENTS
+### 25. NOTIFICATION_RECIPIENTS
 
 **Purpose:** Track notification delivery and read status per member
 
@@ -919,7 +945,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 25. EVENTS
+### 26. EVENTS
 
 **Purpose:** Store church-wide and branch events with scheduling and registration settings
 
@@ -976,7 +1002,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 26. EVENT_ORGANIZERS
+### 27. EVENT_ORGANIZERS
 
 **Purpose:** Store organizing team members for events
 
@@ -1004,7 +1030,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 27. EVENT_NOTES
+### 28. EVENT_NOTES
 
 **Purpose:** Store messages and notes logged by event organizers for collaboration
 
@@ -1040,7 +1066,7 @@ This document describes the database schema for a Church Administration System d
 
 ---
 
-### 28. EVENT_REGISTRATIONS
+### 29. EVENT_REGISTRATIONS
 
 **Purpose:** Store member registrations for events requiring sign-up with attendance tracking
 
@@ -1087,6 +1113,8 @@ This document describes the database schema for a Church Administration System d
 ### Relationship Diagram (Text Format)
 
 ```
+LANGUAGES (1) ──────< (N) BRANCHES
+
 REGIONS (1) ──────< (N) BRANCHES
 
 BRANCHES (1) ──────< (N) MEMBERS
@@ -1159,27 +1187,28 @@ EVENTS (1) ──────< (N) EVENT_ORGANIZERS
 
 #### One-to-Many Relationships:
 
-1. **REGIONS → BRANCHES**: One region can have many branches
-2. **BRANCHES → MEMBERS**: One branch can have many members
-3. **BRANCHES → BRANCH_LEADERSHIP**: One branch can have many leaders
-4. **BRANCHES → FELLOWSHIPS**: One branch can have many fellowships
-5. **BRANCHES → OUTREACH_PROGRAMS**: One branch can have many outreach programs
-6. **BRANCHES → BRANCH_DEPARTMENTS**: One branch can have many department instances
-7. **BRANCHES → SERVICES**: One branch can hold many services
-8. **FELLOWSHIPS → FELLOWSHIP_MEETINGS**: One fellowship can have many meetings
-9. **FELLOWSHIP_MEETINGS → FELLOWSHIP_MEETING_ATTENDANCE**: One meeting can have many attendance records
-10. **OUTREACH_PROGRAMS → SOULS**: One outreach can reach many souls
-11. **SOULS → FOLLOW_UPS**: One soul can have many follow-up records
-12. **DEPARTMENTS → BRANCH_DEPARTMENTS**: One department definition can exist in many branches
-13. **BRANCH_DEPARTMENTS → DEPARTMENT_MEETINGS**: Each department instance can hold many meetings
-14. **DEPARTMENT_MEETINGS → MEETING_ATTENDANCE**: Each meeting can have many attendance records
-15. **SERVICES → SERVICE_ATTENDANCE**: Each service can have many attendance records
-16. **MEMBERS → DONATIONS**: One member can make many donations
-17. **BRANCHES → DONATIONS**: One branch can receive many donations
-18. **NOTIFICATIONS → NOTIFICATION_RECIPIENTS**: One notification can have many recipients
-19. **EVENTS → EVENT_ORGANIZERS**: One event can have many organizers
-20. **EVENTS → EVENT_NOTES**: One event can have many notes
-21. **EVENTS → EVENT_REGISTRATIONS**: One event can have many registrations
+1. **LANGUAGES → BRANCHES**: One language can be used by many branches
+2. **REGIONS → BRANCHES**: One region can have many branches
+3. **BRANCHES → MEMBERS**: One branch can have many members
+4. **BRANCHES → BRANCH_LEADERSHIP**: One branch can have many leaders
+5. **BRANCHES → FELLOWSHIPS**: One branch can have many fellowships
+6. **BRANCHES → OUTREACH_PROGRAMS**: One branch can have many outreach programs
+7. **BRANCHES → BRANCH_DEPARTMENTS**: One branch can have many department instances
+8. **BRANCHES → SERVICES**: One branch can hold many services
+9. **FELLOWSHIPS → FELLOWSHIP_MEETINGS**: One fellowship can have many meetings
+10. **FELLOWSHIP_MEETINGS → FELLOWSHIP_MEETING_ATTENDANCE**: One meeting can have many attendance records
+11. **OUTREACH_PROGRAMS → SOULS**: One outreach can reach many souls
+12. **SOULS → FOLLOW_UPS**: One soul can have many follow-up records
+13. **DEPARTMENTS → BRANCH_DEPARTMENTS**: One department definition can exist in many branches
+14. **BRANCH_DEPARTMENTS → DEPARTMENT_MEETINGS**: Each department instance can hold many meetings
+15. **DEPARTMENT_MEETINGS → MEETING_ATTENDANCE**: Each meeting can have many attendance records
+16. **SERVICES → SERVICE_ATTENDANCE**: Each service can have many attendance records
+17. **MEMBERS → DONATIONS**: One member can make many donations
+18. **BRANCHES → DONATIONS**: One branch can receive many donations
+19. **NOTIFICATIONS → NOTIFICATION_RECIPIENTS**: One notification can have many recipients
+20. **EVENTS → EVENT_ORGANIZERS**: One event can have many organizers
+21. **EVENTS → EVENT_NOTES**: One event can have many notes
+22. **EVENTS → EVENT_REGISTRATIONS**: One event can have many registrations
 
 #### Many-to-Many Relationships:
 

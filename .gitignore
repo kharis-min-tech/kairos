@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Database backups and dumps
+*.dump
+*.sql.backup
+*_backup_*.sql
+database/backups/
+
+# Database connection files (if any contain credentials)
+.env
+.env.local
+database.conf
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
