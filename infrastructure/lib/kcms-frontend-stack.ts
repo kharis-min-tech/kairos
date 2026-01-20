@@ -20,7 +20,7 @@ export class KcmsFrontendStack extends cdk.Stack {
 
     // S3 Bucket for hosting
     this.bucket = new s3.Bucket(this, 'KcmsFrontendBucket', {
-      bucketName: `kcms-frontend-${props.environment}-${cdk.Stack.of(this).account}`,
+      bucketName: `kcms-frontend-${cdk.Stack.of(this).account}-${props.environment}`,
       
       // Security
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
