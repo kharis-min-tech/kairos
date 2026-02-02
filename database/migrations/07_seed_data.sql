@@ -606,6 +606,7 @@ DECLARE
     event_titles TEXT[] := ARRAY['Annual Conference', 'Youth Convention', 'Family Day', 'Harvest Thanksgiving', 'Easter Convention'];
     event_themes TEXT[] := ARRAY['Moving Forward in Faith', 'Youth Empowerment', 'Family Unity', 'Gods Provision', 'Resurrection Power'];
     event_types TEXT[] := ARRAY['Conference', 'Retreat', 'Celebration', 'Celebration', 'Conference'];
+    event_start_date DATE;
 BEGIN
     SELECT COUNT(*) INTO event_count FROM events;
     IF event_count >= 5 THEN
@@ -615,14 +616,17 @@ BEGIN
 
     FOR n IN 1..5 LOOP
         IF NOT EXISTS (SELECT 1 FROM events WHERE event_title = event_titles[n]) THEN
+            -- Generate start date first, then calculate end date from it
+            event_start_date := random_date('2025-01-01'::DATE, '2025-12-28'::DATE);
+            
             INSERT INTO events (event_title, event_theme, description, event_type, start_date, end_date, start_time, end_time, venue, branch_id, requires_registration, max_attendees, coordinator_id, status)
             VALUES (
                 event_titles[n],
                 event_themes[n],
                 'Special church event for all members and visitors',
                 event_types[n],
-                random_date('2025-01-01'::DATE, '2025-12-31'::DATE),
-                random_date('2025-01-01'::DATE, '2025-12-31'::DATE) + INTERVAL '3 days',
+                event_start_date,
+                event_start_date + INTERVAL '3 days',
                 '09:00:00',
                 '17:00:00',
                 'Church Main Auditorium',
