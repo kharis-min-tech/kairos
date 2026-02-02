@@ -2,14 +2,17 @@
 # Kairos Church Administration System - Database Schema Initialization Script
 # ============================================================================
 # Purpose: Automated execution of schema migration scripts in correct order
-# Usage: .\init_schema.ps1 [-DatabaseName <name>]
+# Usage: .\init_schema.ps1 [-DatabaseName <name>] [-DropExisting]
 # Default database name: kairos
 # ============================================================================
 
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$DatabaseName = "kairos"
+    [string]$DatabaseName = "kairos",
+    
+    [Parameter()]
+    [switch]$DropExisting
 )
 
 # Exit on any error
@@ -111,6 +114,46 @@ function Test-MigrationScripts {
     Write-Host "[OK] All required migration scripts found" -ForegroundColor Green
 }
 
+# Terminate all connections to a database
+function Stop-DatabaseConnections {
+    param([string]$DbName)
+    
+    Write-Host "[INFO] Terminating existing connections to '$DbName'..." -ForegroundColor Cyan
+    
+    # PostgreSQL 9.2+ uses pg_terminate_backend
+    $terminateQuery = @"
+SELECT pg_terminate_backend(pid) 
+FROM pg_stat_activity 
+WHERE datname = '$DbName' AND pid <> pg_backend_pid()
+"@
+    
+    $prevErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    
+    psql -c $terminateQuery 2>&1 | Out-Null
+    
+    $ErrorActionPreference = $prevErrorActionPreference
+    
+    # Give connections a moment to close
+    Start-Sleep -Milliseconds 500
+}
+
+# Drop database safely (terminates connections first)
+function Remove-DatabaseSafely {
+    param([string]$DbName)
+    
+    # Terminate any existing connections first
+    Stop-DatabaseConnections -DbName $DbName
+    
+    # Now drop the database
+    dropdb $DbName
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to drop database" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[OK] Database dropped" -ForegroundColor Green
+}
+
 # Create database if it doesn't exist
 function New-DatabaseIfNeeded {
     # Check if database exists
@@ -118,21 +161,22 @@ function New-DatabaseIfNeeded {
     $dbExists = psql -t -c $checkDbQuery 2>&1
     
     if ($LASTEXITCODE -eq 0 -and $dbExists -match "1") {
-        Write-Host "[WARN] Database '$DatabaseName' already exists" -ForegroundColor Yellow
-        $response = Read-Host "Do you want to drop and recreate it? (yes/no)"
-        
-        if ($response -match "^[Yy]([Ee][Ss])?$") {
-            Write-Host "[INFO] Dropping database '$DatabaseName'..." -ForegroundColor Cyan
-            dropdb $DatabaseName
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "[ERROR] Failed to drop database" -ForegroundColor Red
-                exit 1
-            }
-            Write-Host "[OK] Database dropped" -ForegroundColor Green
+        if ($DropExisting) {
+            Write-Host "[INFO] -DropExisting specified. Dropping database '$DatabaseName'..." -ForegroundColor Cyan
+            Remove-DatabaseSafely -DbName $DatabaseName
         }
         else {
-            Write-Host "[INFO] Using existing database" -ForegroundColor Cyan
-            return
+            Write-Host "[WARN] Database '$DatabaseName' already exists" -ForegroundColor Yellow
+            $response = Read-Host "Do you want to drop and recreate it? (yes/no)"
+            
+            if ($response -match "^[Yy]([Ee][Ss])?$") {
+                Write-Host "[INFO] Dropping database '$DatabaseName'..." -ForegroundColor Cyan
+                Remove-DatabaseSafely -DbName $DatabaseName
+            }
+            else {
+                Write-Host "[INFO] Using existing database" -ForegroundColor Cyan
+                return
+            }
         }
     }
     
