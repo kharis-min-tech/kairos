@@ -32,7 +32,7 @@ database/
 - **Why first**: Required by triggers in later scripts
 
 #### `02_tables.sql`
-- **Purpose**: All 29 table definitions
+- **Purpose**: All 29 table definitions in dev schema
 - **Contents**: Table structures with columns and primary keys only
 - **Dependencies**: 01_functions.sql
 - **Why second**: Foundation for all other objects
@@ -40,7 +40,7 @@ database/
 #### `03_constraints.sql`
 - **Purpose**: All constraints
 - **Contents**: 
-  - Foreign key constraints (70+)
+  - Foreign key constraints (63)
   - Check constraints (50+)
   - Unique constraints (30+)
 - **Dependencies**: 02_tables.sql

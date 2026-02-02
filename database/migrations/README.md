@@ -65,8 +65,8 @@ psql -d kairos -f 06_comments.sql
 psql -d kairos -f 07_seed_data.sql
 
 # 4. Verify installation
-psql -d kairos -c "\dt"  # List all tables
-psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
+psql -d kairos -c "\dt dev.*"  # List all tables in dev schema
+psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';"
 ```
 
 #### Method 2: Using Single Command (Automated)
@@ -108,7 +108,7 @@ done
 echo "Schema initialization complete!"
 echo ""
 echo "Verification:"
-psql -d "$DB_NAME" -c "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public';"
+psql -d "$DB_NAME" -c "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'dev';"
 ```
 
 Make it executable and run:
@@ -152,12 +152,12 @@ After executing all scripts, verify the installation:
 -- Check table count (should be 29)
 SELECT COUNT(*) as table_count 
 FROM information_schema.tables 
-WHERE table_schema = 'public';
+WHERE table_schema = 'dev';
 
 -- List all tables
 SELECT table_name 
 FROM information_schema.tables 
-WHERE table_schema = 'public' 
+WHERE table_schema = 'dev' 
 ORDER BY table_name;
 
 -- Check function exists
@@ -169,18 +169,18 @@ WHERE routine_schema = 'public'
 -- Check trigger count
 SELECT COUNT(*) as trigger_count
 FROM information_schema.triggers
-WHERE trigger_schema = 'public';
+WHERE trigger_schema = 'dev';
 
 -- Check foreign key constraints
 SELECT COUNT(*) as fk_count
 FROM information_schema.table_constraints
-WHERE constraint_schema = 'public'
+WHERE constraint_schema = 'dev'
   AND constraint_type = 'FOREIGN KEY';
 
 -- Check indexes
 SELECT COUNT(*) as index_count
 FROM pg_indexes
-WHERE schemaname = 'public';
+WHERE schemaname = 'dev';
 ```
 
 Expected results:
@@ -212,8 +212,8 @@ createdb kairos
 **Solution:** Grant necessary privileges:
 ```sql
 GRANT ALL PRIVILEGES ON DATABASE kairos TO your_username;
-GRANT ALL PRIVILEGES ON SCHEMA public TO your_username;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_username;
+GRANT ALL PRIVILEGES ON SCHEMA dev TO your_username;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA dev TO your_username;
 ```
 
 #### 3. Function Not Found

@@ -62,7 +62,7 @@ This creates:
 ```
 
 This generates:
-- **550+ members** across 5 branches
+- **550+ members** across 5 branches in 3 countries
 - **5 main pastors** and **10 elders**
 - Complete organizational structure
 - **6 months** of service history
@@ -79,17 +79,17 @@ This generates:
 
 | Entity | Count | Details |
 |--------|-------|---------|
-| **Regions** | 5 | Greater Accra, Ashanti, Western, Eastern, Central |
-| **Branches** | 8 | 5 main branches + 3 satellite/campus/cell |
-| **Members** | 550+ | 110 per main branch, realistic Ghanaian names |
+| **Regions** | 3 | United Kingdom, Ghana, Sierra Leone |
+| **Branches** | 5 | London HQ, Birmingham, Bristol (UK), Accra (Ghana), Freetown (Sierra Leone) |
+| **Members** | 550+ | Multi-country distribution with appropriate names |
 | **Active Members** | 520+ | 95% active membership rate |
 
 ### Leadership & Organization
 
 | Entity | Count | Details |
 |--------|-------|---------|
-| **Main Pastors** | 5 | One per main branch |
-| **Elders** | 10 | Two per main branch |
+| **Main Pastors** | 5 | One per branch |
+| **Elders** | 10 | Two per branch |
 | **Roles** | 15 | Choir, Usher, Teacher, Youth Leader, etc. |
 | **Member Roles** | 330+ | 60% of active members have roles |
 | **Departments** | 10 | Choir, Technical, Youth, Children, Evangelism, etc. |
@@ -200,8 +200,8 @@ Create Helper Functions
   ↓
 ┌─────────────────────────────┐
 │ Generate Core Data          │
-│ • 5 Regions                 │
-│ • 8 Branches                │
+│ • 3 Regions                 │
+│ • 5 Branches                │
 │ • 550+ Members              │
 └─────────────────────────────┘
   ↓
@@ -242,20 +242,20 @@ END
 
 ### Schema Design
 ✓ **Modular Architecture**: 6 separate files following dependency order
-✓ **28 Tables**: Complete church administration coverage
-✓ **70+ Foreign Keys**: Full referential integrity
+✓ **29 Tables**: Complete church administration coverage (in dev schema)
+✓ **63 Foreign Keys**: Full referential integrity
 ✓ **50+ Check Constraints**: Data validation rules
 ✓ **30+ Unique Constraints**: Business logic enforcement
-✓ **96+ Indexes**: Performance optimization
+✓ **90+ Indexes**: Performance optimization
 ✓ **23 Triggers**: Automated timestamp updates
 ✓ **Transaction Safety**: All-or-nothing execution
 
 ### Seed Data Quality
-✓ **Realistic Names**: Authentic Ghanaian names (male/female appropriate)
-✓ **Geographic Accuracy**: Real cities and regions from Ghana
+✓ **Realistic Names**: Authentic British, Ghanaian, and Sierra Leonean names
+✓ **Geographic Accuracy**: Real cities from UK, Ghana, Sierra Leone
 ✓ **Temporal Consistency**: Proper date ranges and historical data
 ✓ **Organizational Hierarchy**: Complete leadership structure
-✓ **Financial Realism**: Appropriate amounts and payment methods
+✓ **Financial Realism**: Region-appropriate currencies (GBP, GHS, SLE)
 ✓ **Engagement Metrics**: Realistic attendance and participation rates
 ✓ **Referential Integrity**: All foreign keys properly linked
 
@@ -316,7 +316,7 @@ dropdb kairos && createdb kairos
 ```sql
 -- Table count (should be 29)
 SELECT COUNT(*) FROM information_schema.tables 
-WHERE table_schema = 'public';
+WHERE table_schema = 'dev';
 
 -- Function count (should be 1)
 SELECT COUNT(*) FROM pg_proc 
@@ -324,15 +324,15 @@ WHERE proname = 'update_updated_at_column';
 
 -- Trigger count (should be 23)
 SELECT COUNT(*) FROM information_schema.triggers 
-WHERE trigger_schema = 'public';
+WHERE trigger_schema = 'dev';
 
--- Foreign key count (should be 70+)
+-- Foreign key count (should be 63)
 SELECT COUNT(*) FROM information_schema.table_constraints 
-WHERE constraint_type = 'FOREIGN KEY';
+WHERE constraint_schema = 'dev' AND constraint_type = 'FOREIGN KEY';
 
--- Index count (should be 96+)
+-- Index count (should be 90+)
 SELECT COUNT(*) FROM pg_indexes 
-WHERE schemaname = 'public';
+WHERE schemaname = 'dev';
 ```
 
 ### Check Seed Data
@@ -367,10 +367,10 @@ FROM donations;
 ### Schema Files
 - **01_functions.sql**: 27 lines (1 function)
 - **02_tables.sql**: 619 lines (29 tables)
-- **03_constraints.sql**: 443 lines (70+ FKs, 50+ checks, 30+ uniques)
-- **04_indexes.sql**: 201 lines (96+ indexes, 6 partial)
-- **05_triggers.sql**: 143 lines (23 triggers)
-- **06_comments.sql**: 61 lines (28 comments)
+- **03_constraints.sql**: 443 lines (63 FKs, 50+ checks, 30+ uniques)
+- **04_indexes.sql**: 201 lines (90+ indexes, 6 partial)
+- **05_triggers.sql**: 198 lines (23 triggers)
+- **06_comments.sql**: 61 lines (29 comments)
 - **07_seed_data.sql**: 722 lines (generates 25,000+ records)
 
 ### Automation

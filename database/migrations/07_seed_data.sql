@@ -50,7 +50,7 @@ $$ LANGUAGE plpgsql;
 -- 1. LANGUAGES (5 languages)
 -- Using ON CONFLICT to skip if already exists
 -- ============================================================================
-INSERT INTO core.languages (language_name, language_code, is_active) VALUES
+INSERT INTO dev.languages (language_name, language_code, is_active) VALUES
 ('English', 'en', TRUE),
 ('Twi', 'tw', TRUE),
 ('French', 'fr', TRUE),
@@ -61,7 +61,7 @@ ON CONFLICT (language_name) DO NOTHING;
 -- ============================================================================
 -- 2. REGIONS (3 regions - UK, Ghana, Sierra Leone)
 -- ============================================================================
-INSERT INTO core.regions (region_name, country) VALUES
+INSERT INTO dev.regions (region_name, country) VALUES
     ('United Kingdom', 'United Kingdom'),
     ('Greater Accra', 'Ghana'),
     ('Western Area', 'Sierra Leone')
@@ -71,39 +71,39 @@ ON CONFLICT (region_name) DO NOTHING;
 -- 3. BRANCHES (5 branches across UK, Ghana, Sierra Leone)
 -- ============================================================================
 -- Insert branches directly with specific details for each location
-INSERT INTO core.branches (branch_name, region_id, language_id, branch_type, address, city, postal_code, phone, email, established_date, is_active)
+INSERT INTO dev.branches (branch_name, region_id, language_id, branch_type, address, city, postal_code, phone, email, established_date, is_active)
 SELECT * FROM (VALUES
     -- UK Main Branch - London (Headquarters)
     ('Kharis London Central', 
-     (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
-     (SELECT language_id FROM core.languages WHERE language_code = 'en'),
+     (SELECT region_id FROM dev.regions WHERE region_name = 'United Kingdom'),
+     (SELECT language_id FROM dev.languages WHERE language_code = 'en'),
      'Main', '142 Kingsway', 'London', 'WC2B 6NH', '+442071234567', 'london@kharischurch.org', '2008-03-15'::DATE, TRUE),
     
     -- UK Branch - Birmingham
     ('Kharis Birmingham', 
-     (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
-     (SELECT language_id FROM core.languages WHERE language_code = 'en'),
+     (SELECT region_id FROM dev.regions WHERE region_name = 'United Kingdom'),
+     (SELECT language_id FROM dev.languages WHERE language_code = 'en'),
      'Satellite', '78 Corporation Street', 'Birmingham', 'B2 4RN', '+441212345678', 'birmingham@kharischurch.org', '2012-09-01'::DATE, TRUE),
     
     -- UK Branch - Bristol
     ('Kharis Bristol', 
-     (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
-     (SELECT language_id FROM core.languages WHERE language_code = 'en'),
+     (SELECT region_id FROM dev.regions WHERE region_name = 'United Kingdom'),
+     (SELECT language_id FROM dev.languages WHERE language_code = 'en'),
      'Satellite', '25 Park Street', 'Bristol', 'BS1 5NH', '+441173456789', 'bristol@kharischurch.org', '2015-06-20'::DATE, TRUE),
     
     -- Ghana Branch - Accra
     ('Kharis Accra', 
-     (SELECT region_id FROM core.regions WHERE region_name = 'Greater Accra'),
-     (SELECT language_id FROM core.languages WHERE language_code = 'tw'),
+     (SELECT region_id FROM dev.regions WHERE region_name = 'Greater Accra'),
+     (SELECT language_id FROM dev.languages WHERE language_code = 'tw'),
      'Satellite', '45 Independence Avenue', 'Accra', 'GA-123-4567', '+233302123456', 'accra@kharischurch.org', '2014-01-10'::DATE, TRUE),
     
     -- Sierra Leone Branch - Freetown
     ('Kharis Freetown', 
-     (SELECT region_id FROM core.regions WHERE region_name = 'Western Area'),
-     (SELECT language_id FROM core.languages WHERE language_code = 'kri'),
+     (SELECT region_id FROM dev.regions WHERE region_name = 'Western Area'),
+     (SELECT language_id FROM dev.languages WHERE language_code = 'kri'),
      'Satellite', '12 Siaka Stevens Street', 'Freetown', 'SL-FT-001', '+23276123456', 'freetown@kharischurch.org', '2018-11-25'::DATE, TRUE)
 ) AS v(branch_name, region_id, language_id, branch_type, address, city, postal_code, phone, email, established_date, is_active)
-WHERE NOT EXISTS (SELECT 1 FROM core.branches WHERE email = v.email);
+WHERE NOT EXISTS (SELECT 1 FROM dev.branches WHERE email = v.email);
 
 -- ============================================================================
 -- 4. MEMBERS (550 members - diverse names reflecting UK, Ghana, Sierra Leone)
@@ -164,20 +164,20 @@ DECLARE
     rand_val DOUBLE PRECISION;
 BEGIN
     -- Check if we already have members
-    SELECT COUNT(*) INTO existing_member_count FROM core.members;
+    SELECT COUNT(*) INTO existing_member_count FROM dev.members;
     
     -- Only generate if we have fewer than 100 members
     IF existing_member_count < 100 THEN
         -- Get branch count
-        SELECT COUNT(*) INTO v_branch_count FROM core.branches;
+        SELECT COUNT(*) INTO v_branch_count FROM dev.branches;
         
         IF v_branch_count > 0 THEN
             FOR i IN 1..550 LOOP
                 -- Select random branch and get its city/country
                 SELECT b.branch_id, b.city, r.country 
                 INTO v_branch_id, v_branch_city, v_country
-                FROM core.branches b
-                JOIN core.regions r ON b.region_id = r.region_id
+                FROM dev.branches b
+                JOIN dev.regions r ON b.region_id = r.region_id
                 ORDER BY random() 
                 LIMIT 1;
                 
@@ -229,7 +229,7 @@ BEGIN
                 generated_email := random_email(v_first_name, v_last_name);
                 
                 -- Insert member if email doesn't exist
-                INSERT INTO core.members (
+                INSERT INTO dev.members (
                     first_name, last_name, middle_name, date_of_birth, gender, 
                     email, phone, address, city, postal_code, home_branch_id, 
                     membership_date, is_active, photo_url, 
@@ -258,7 +258,7 @@ BEGIN
                     NULL,
                     CASE WHEN random() > 0.3 THEN v_first_name || ' ' || v_last_name || ' Sr.' ELSE NULL END,
                     CASE WHEN random() > 0.3 THEN random_phone(v_phone_code) ELSE NULL END
-                WHERE NOT EXISTS (SELECT 1 FROM core.members WHERE email = generated_email);
+                WHERE NOT EXISTS (SELECT 1 FROM dev.members WHERE email = generated_email);
             END LOOP;
         END IF;
     END IF;
@@ -267,7 +267,7 @@ END $$;
 -- ============================================================================
 -- 5. ROLES (15 roles)
 -- ============================================================================
-INSERT INTO ministry.roles (role_name, description, is_active) VALUES
+INSERT INTO dev.roles (role_name, description, is_active) VALUES
     ('Choir Member', 'Member of the church choir', TRUE),
     ('Usher', 'Church usher responsible for seating and assistance', TRUE),
     ('Sunday School Teacher', 'Teaches Sunday school classes', TRUE),
@@ -296,50 +296,50 @@ DECLARE
     v_elder_count INTEGER;
 BEGIN
     -- Assign Main Pastors for each branch (only if no current pastor exists)
-    FOR r IN SELECT branch_id FROM core.branches WHERE is_active = TRUE LOOP
+    FOR r IN SELECT branch_id FROM dev.branches WHERE is_active = TRUE LOOP
         -- Check if branch already has a current main pastor
         IF NOT EXISTS (
-            SELECT 1 FROM core.branch_leadership 
+            SELECT 1 FROM dev.branch_leadership 
             WHERE branch_id = r.branch_id AND role = 'Main Pastor' AND is_current = TRUE
         ) THEN
             -- Get a random active member from this branch who isn't already a leader
             SELECT m.member_id INTO v_member_id
-            FROM core.members m
+            FROM dev.members m
             WHERE m.home_branch_id = r.branch_id 
                 AND m.is_active = TRUE
                 AND m.gender = 'Male'
                 AND NOT EXISTS (
-                    SELECT 1 FROM core.branch_leadership bl 
+                    SELECT 1 FROM dev.branch_leadership bl 
                     WHERE bl.member_id = m.member_id AND bl.is_current = TRUE
                 )
             ORDER BY random()
             LIMIT 1;
             
             IF v_member_id IS NOT NULL THEN
-                INSERT INTO core.branch_leadership (branch_id, member_id, role, start_date, is_current)
+                INSERT INTO dev.branch_leadership (branch_id, member_id, role, start_date, is_current)
                 VALUES (r.branch_id, v_member_id, 'Main Pastor', random_date('2018-01-01'::DATE, '2023-12-31'::DATE), TRUE);
             END IF;
         END IF;
         
         -- Add 2 elders per branch (only if branch has fewer than 2 current elders)
         SELECT COUNT(*) INTO v_elder_count 
-        FROM core.branch_leadership 
+        FROM dev.branch_leadership 
         WHERE branch_id = r.branch_id AND role = 'Elder' AND is_current = TRUE;
         
         WHILE v_elder_count < 2 LOOP
             SELECT m.member_id INTO v_member_id
-            FROM core.members m
+            FROM dev.members m
             WHERE m.home_branch_id = r.branch_id 
                 AND m.is_active = TRUE
                 AND NOT EXISTS (
-                    SELECT 1 FROM core.branch_leadership bl 
+                    SELECT 1 FROM dev.branch_leadership bl 
                     WHERE bl.member_id = m.member_id AND bl.is_current = TRUE
                 )
             ORDER BY random()
             LIMIT 1;
             
             IF v_member_id IS NOT NULL THEN
-                INSERT INTO core.branch_leadership (branch_id, member_id, role, start_date, is_current)
+                INSERT INTO dev.branch_leadership (branch_id, member_id, role, start_date, is_current)
                 VALUES (r.branch_id, v_member_id, 'Elder', random_date('2019-01-01'::DATE, '2024-06-30'::DATE), TRUE);
                 v_elder_count := v_elder_count + 1;
             ELSE
@@ -353,26 +353,26 @@ END $$;
 -- 7. MEMBER_ROLES (Assign roles to ~60% of members)
 -- Only assign if member doesn't already have an active role
 -- ============================================================================
-INSERT INTO ministry.member_roles (member_id, role_id, branch_id, assigned_date, is_active)
+INSERT INTO dev.member_roles (member_id, role_id, branch_id, assigned_date, is_active)
 SELECT 
     m.member_id,
     r.role_id,
     m.home_branch_id,
     random_date('2020-01-01'::DATE, '2025-06-30'::DATE),
     TRUE
-FROM core.members m
+FROM dev.members m
 CROSS JOIN LATERAL (
-    SELECT role_id FROM ministry.roles WHERE is_active = TRUE ORDER BY random() LIMIT 1
+    SELECT role_id FROM dev.roles WHERE is_active = TRUE ORDER BY random() LIMIT 1
 ) r
 WHERE m.is_active = TRUE 
     AND random() > 0.4
-    AND NOT EXISTS (SELECT 1 FROM ministry.member_roles WHERE member_id = m.member_id AND is_active = TRUE)
+    AND NOT EXISTS (SELECT 1 FROM dev.member_roles WHERE member_id = m.member_id AND is_active = TRUE)
 LIMIT 330;
 
 -- ============================================================================
 -- 8. DEPARTMENTS (10 departments)
 -- ============================================================================
-INSERT INTO ministry.departments (department_name, description, is_active) VALUES
+INSERT INTO dev.departments (department_name, description, is_active) VALUES
     ('Choir', 'Church choir department', TRUE),
     ('Ushering', 'Ushering and protocol department', TRUE),
     ('Technical', 'Audio, visual, and technical support', TRUE),
@@ -389,36 +389,36 @@ ON CONFLICT (department_name) DO NOTHING;
 -- 9. BRANCH_DEPARTMENTS (Instantiate departments in branches)
 -- Only create if not already exists
 -- ============================================================================
-INSERT INTO ministry.branch_departments (branch_id, department_id, lead_member_id, deputy_member_id, start_date, is_active)
+INSERT INTO dev.branch_departments (branch_id, department_id, lead_member_id, deputy_member_id, start_date, is_active)
 SELECT 
     b.branch_id,
     d.department_id,
-    (SELECT member_id FROM core.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1),
-    (SELECT member_id FROM core.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1 OFFSET 1),
+    (SELECT member_id FROM dev.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1),
+    (SELECT member_id FROM dev.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1 OFFSET 1),
     random_date('2020-01-01'::DATE, '2024-01-01'::DATE),
     TRUE
-FROM core.branches b
-CROSS JOIN ministry.departments d
+FROM dev.branches b
+CROSS JOIN dev.departments d
 WHERE b.is_active = TRUE AND d.is_active = TRUE
     AND NOT EXISTS (
-        SELECT 1 FROM ministry.branch_departments bd 
+        SELECT 1 FROM dev.branch_departments bd 
         WHERE bd.branch_id = b.branch_id AND bd.department_id = d.department_id AND bd.is_active = TRUE
     );
 
 -- ============================================================================
 -- 10. DEPARTMENT_MEMBERS (Assign members to departments)
 -- ============================================================================
-INSERT INTO ministry.department_members (branch_department_id, member_id, join_date, is_active)
+INSERT INTO dev.department_members (branch_department_id, member_id, join_date, is_active)
 SELECT 
     bd.branch_department_id,
     m.member_id,
     random_date('2021-01-01'::DATE, '2025-01-01'::DATE),
     TRUE
-FROM ministry.branch_departments bd
-JOIN core.members m ON m.home_branch_id = bd.branch_id AND m.is_active = TRUE
+FROM dev.branch_departments bd
+JOIN dev.members m ON m.home_branch_id = bd.branch_id AND m.is_active = TRUE
 WHERE random() > 0.7
     AND NOT EXISTS (
-        SELECT 1 FROM ministry.department_members dm 
+        SELECT 1 FROM dev.department_members dm 
         WHERE dm.branch_department_id = bd.branch_department_id AND dm.member_id = m.member_id
     )
 LIMIT 500;
@@ -437,26 +437,26 @@ DECLARE
     v_co_leader_id INTEGER;
     fellowship_count INTEGER;
 BEGIN
-    FOR r IN SELECT branch_id FROM core.branches WHERE is_active = TRUE LOOP
+    FOR r IN SELECT branch_id FROM dev.branches WHERE is_active = TRUE LOOP
         -- Check how many fellowships already exist for this branch
-        SELECT COUNT(*) INTO fellowship_count FROM ministry.fellowships WHERE branch_id = r.branch_id;
+        SELECT COUNT(*) INTO fellowship_count FROM dev.fellowships WHERE branch_id = r.branch_id;
         
         -- Add fellowships only if fewer than 3 exist
         IF fellowship_count < 3 THEN
             FOR i IN 1..floor(random() * 3 + 3)::INTEGER LOOP
                 -- Get random leader
                 SELECT member_id INTO v_leader_id
-                FROM core.members 
+                FROM dev.members 
                 WHERE home_branch_id = r.branch_id AND is_active = TRUE
                 ORDER BY random() LIMIT 1;
                 
                 -- Get random co-leader (different from leader)
                 SELECT member_id INTO v_co_leader_id
-                FROM core.members 
+                FROM dev.members 
                 WHERE home_branch_id = r.branch_id AND is_active = TRUE AND member_id != v_leader_id
                 ORDER BY random() LIMIT 1;
                 
-                INSERT INTO ministry.fellowships (fellowship_name, branch_id, description, leader_id, co_leader_id, meeting_schedule, is_active)
+                INSERT INTO dev.fellowships (fellowship_name, branch_id, description, leader_id, co_leader_id, meeting_schedule, is_active)
                 SELECT
                     fellowship_names[((i - 1) % 8) + 1],
                     r.branch_id,
@@ -471,7 +471,7 @@ BEGIN
                     END,
                     TRUE
                 WHERE NOT EXISTS (
-                    SELECT 1 FROM ministry.fellowships f 
+                    SELECT 1 FROM dev.fellowships f 
                     WHERE f.branch_id = r.branch_id AND f.fellowship_name = fellowship_names[((i - 1) % 8) + 1]
                 );
             END LOOP;
@@ -482,17 +482,17 @@ END $$;
 -- ============================================================================
 -- 12. FELLOWSHIP_MEMBERS (Assign members to fellowships)
 -- ============================================================================
-INSERT INTO ministry.fellowship_members (fellowship_id, member_id, join_date, is_active)
+INSERT INTO dev.fellowship_members (fellowship_id, member_id, join_date, is_active)
 SELECT 
     f.fellowship_id,
     m.member_id,
     random_date('2021-01-01'::DATE, '2025-01-01'::DATE),
     TRUE
-FROM ministry.fellowships f
-JOIN core.members m ON m.home_branch_id = f.branch_id AND m.is_active = TRUE
+FROM dev.fellowships f
+JOIN dev.members m ON m.home_branch_id = f.branch_id AND m.is_active = TRUE
 WHERE random() > 0.6
     AND NOT EXISTS (
-        SELECT 1 FROM ministry.fellowship_members fm 
+        SELECT 1 FROM dev.fellowship_members fm 
         WHERE fm.fellowship_id = f.fellowship_id AND fm.member_id = m.member_id
     )
 LIMIT 400;
@@ -500,7 +500,7 @@ LIMIT 400;
 -- ============================================================================
 -- 13. SERVICES (Create services for the past 12 months)
 -- ============================================================================
-INSERT INTO ministry.services (branch_id, service_date, service_type, service_title, preacher_id, topic, expected_attendance)
+INSERT INTO dev.services (branch_id, service_date, service_type, service_title, preacher_id, topic, expected_attendance)
 SELECT 
     b.branch_id,
     (CURRENT_DATE - (s.week_offset * 7))::DATE + TIME '09:00:00',
@@ -512,7 +512,7 @@ SELECT
         WHEN 1 THEN 'Sunday Worship Service'
         ELSE 'Midweek Bible Study'
     END,
-    (SELECT member_id FROM core.branch_leadership WHERE branch_id = b.branch_id AND role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
+    (SELECT member_id FROM dev.branch_leadership WHERE branch_id = b.branch_id AND role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
     CASE floor(random() * 10)::INTEGER
         WHEN 0 THEN 'Walking in Faith'
         WHEN 1 THEN 'The Power of Prayer'
@@ -526,13 +526,13 @@ SELECT
         ELSE 'The Faithful Life'
     END,
     floor(random() * 200 + 50)::INTEGER
-FROM core.branches b
+FROM dev.branches b
 CROSS JOIN (
     SELECT generate_series(0, 51) as week_offset, generate_series(1, 2) as service_num
 ) s
 WHERE b.is_active = TRUE
     AND NOT EXISTS (
-        SELECT 1 FROM ministry.services srv 
+        SELECT 1 FROM dev.services srv 
         WHERE srv.branch_id = b.branch_id 
         AND srv.service_date::DATE = (CURRENT_DATE - (s.week_offset * 7))::DATE
         AND srv.service_type = CASE s.service_num WHEN 1 THEN 'Sunday Service' ELSE 'Midweek Service' END
@@ -542,7 +542,7 @@ LIMIT 500;
 -- ============================================================================
 -- 14. SERVICE_ATTENDANCE (Random attendance for services)
 -- ============================================================================
-INSERT INTO ministry.service_attendance (service_id, member_id, attendance_status, is_first_time_visitor)
+INSERT INTO dev.service_attendance (service_id, member_id, attendance_status, is_first_time_visitor)
 SELECT 
     s.service_id,
     m.member_id,
@@ -552,16 +552,16 @@ SELECT
         ELSE 'Absent'
     END,
     CASE WHEN random() > 0.98 THEN TRUE ELSE FALSE END
-FROM ministry.services s
-JOIN core.members m ON m.home_branch_id = s.branch_id AND m.is_active = TRUE
+FROM dev.services s
+JOIN dev.members m ON m.home_branch_id = s.branch_id AND m.is_active = TRUE
 WHERE random() > 0.3
-    AND NOT EXISTS (SELECT 1 FROM ministry.service_attendance WHERE service_id = s.service_id AND member_id = m.member_id)
+    AND NOT EXISTS (SELECT 1 FROM dev.service_attendance WHERE service_id = s.service_id AND member_id = m.member_id)
 LIMIT 5000;
 
 -- ============================================================================
 -- 15. OUTREACH_PROGRAMS (2-3 per branch)
 -- ============================================================================
-INSERT INTO outreach.outreach_programs (branch_id, program_name, program_date, location, address, city, description, coordinator_id, total_souls_reached, is_completed)
+INSERT INTO dev.outreach_programs (branch_id, program_name, program_date, location, address, city, description, coordinator_id, total_souls_reached, is_completed)
 SELECT 
     b.branch_id,
     program_names.name,
@@ -570,15 +570,15 @@ SELECT
     floor(random() * 100 + 1)::TEXT || ' Main Street',
     b.city,  -- Use branch city
     'Community outreach and evangelism program',
-    (SELECT member_id FROM core.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1),
+    (SELECT member_id FROM dev.members WHERE home_branch_id = b.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1),
     floor(random() * 50 + 10)::INTEGER,
     CASE WHEN random() > 0.3 THEN TRUE ELSE FALSE END
-FROM core.branches b
+FROM dev.branches b
 CROSS JOIN (VALUES ('Street Evangelism'), ('Community Outreach'), ('Hospital Visitation'), ('Prison Ministry')) AS program_names(name)
 CROSS JOIN (VALUES ('Market Square'), ('Town Centre'), ('Hospital'), ('Community Centre')) AS locations(loc)
 WHERE b.is_active = TRUE AND random() > 0.7
     AND NOT EXISTS (
-        SELECT 1 FROM outreach.outreach_programs op 
+        SELECT 1 FROM dev.outreach_programs op 
         WHERE op.branch_id = b.branch_id AND op.program_name = program_names.name
     )
 LIMIT 25;
@@ -586,7 +586,7 @@ LIMIT 25;
 -- ============================================================================
 -- 16. SOULS (People reached through outreach - diverse names by country)
 -- ============================================================================
-INSERT INTO outreach.souls (outreach_id, first_name, last_name, phone, email, city, gender, status, assigned_member_id)
+INSERT INTO dev.souls (outreach_id, first_name, last_name, phone, email, city, gender, status, assigned_member_id)
 SELECT 
     op.outreach_id,
     -- Select names based on country of the outreach branch
@@ -623,18 +623,18 @@ SELECT
     op.city,
     CASE WHEN random() > 0.5 THEN 'Male' ELSE 'Female' END,
     (ARRAY['New', 'Following Up', 'Interested', 'Converted'])[floor(random() * 4 + 1)],
-    (SELECT member_id FROM core.members WHERE home_branch_id = op.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1)
-FROM outreach.outreach_programs op
-JOIN core.branches b ON op.branch_id = b.branch_id
-JOIN core.regions r ON b.region_id = r.region_id
+    (SELECT member_id FROM dev.members WHERE home_branch_id = op.branch_id AND is_active = TRUE ORDER BY random() LIMIT 1)
+FROM dev.outreach_programs op
+JOIN dev.branches b ON op.branch_id = b.branch_id
+JOIN dev.regions r ON b.region_id = r.region_id
 CROSS JOIN generate_series(1, 5) AS s
-WHERE NOT EXISTS (SELECT 1 FROM outreach.souls WHERE outreach_id = op.outreach_id)
+WHERE NOT EXISTS (SELECT 1 FROM dev.souls WHERE outreach_id = op.outreach_id)
 LIMIT 100;
 
 -- ============================================================================
 -- 17. FOLLOW_UPS (For souls)
 -- ============================================================================
-INSERT INTO outreach.follow_ups (soul_id, member_id, follow_up_date, contact_method, contact_status, duration_minutes, notes)
+INSERT INTO dev.follow_ups (soul_id, member_id, follow_up_date, contact_method, contact_status, duration_minutes, notes)
 SELECT 
     s.soul_id,
     s.assigned_member_id,
@@ -643,15 +643,15 @@ SELECT
     (ARRAY['Successful', 'No Answer', 'Call Back Later', 'Interested'])[floor(random() * 4 + 1)],
     floor(random() * 30 + 5)::INTEGER,
     'Follow-up conversation with prospect'
-FROM outreach.souls s
+FROM dev.souls s
 WHERE s.assigned_member_id IS NOT NULL
-    AND NOT EXISTS (SELECT 1 FROM outreach.follow_ups WHERE soul_id = s.soul_id)
+    AND NOT EXISTS (SELECT 1 FROM dev.follow_ups WHERE soul_id = s.soul_id)
 LIMIT 150;
 
 -- ============================================================================
 -- 18. DONATIONS (Financial giving records with country-appropriate currencies)
 -- ============================================================================
-INSERT INTO finance.donations (member_id, branch_id, donation_date, amount, currency, donation_purpose, payment_method, is_anonymous)
+INSERT INTO dev.donations (member_id, branch_id, donation_date, amount, currency, donation_purpose, payment_method, is_anonymous)
 SELECT 
     m.member_id,
     m.home_branch_id,
@@ -673,23 +673,23 @@ SELECT
         ELSE (ARRAY['Cash', 'Mobile Money', 'Bank Transfer', 'Cash'])[floor(random() * 4 + 1)]
     END,
     CASE WHEN random() > 0.95 THEN TRUE ELSE FALSE END
-FROM core.members m
-JOIN core.branches b ON m.home_branch_id = b.branch_id
-JOIN core.regions r ON b.region_id = r.region_id
+FROM dev.members m
+JOIN dev.branches b ON m.home_branch_id = b.branch_id
+JOIN dev.regions r ON b.region_id = r.region_id
 WHERE m.is_active = TRUE AND random() > 0.5
 LIMIT 1000;
 
 -- ============================================================================
 -- 19. NOTIFICATIONS (Sample announcements)
 -- ============================================================================
-INSERT INTO comms.notifications (title, message, notification_type, priority, target_scope, sent_by, sent_at)
+INSERT INTO dev.notifications (title, message, notification_type, priority, target_scope, sent_by, sent_at)
 SELECT 
     titles.title,
     'This is an important announcement for all members. Please take note of the upcoming activities and events.',
     types.type,
     priorities.priority,
     'All',
-    (SELECT member_id FROM core.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
+    (SELECT member_id FROM dev.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
     random_date('2025-01-01'::DATE, '2025-12-31'::DATE)::TIMESTAMP
 FROM (VALUES 
     ('Sunday Service Reminder'),
@@ -706,7 +706,7 @@ LIMIT 15;
 -- ============================================================================
 -- 20. EVENTS (Church events - hosted at headquarters in London)
 -- ============================================================================
-INSERT INTO comms.events (event_title, event_theme, description, event_type, start_date, end_date, start_time, end_time, venue, city, requires_registration, max_attendees, coordinator_id, status)
+INSERT INTO dev.events (event_title, event_theme, description, event_type, start_date, end_date, start_time, end_time, venue, city, requires_registration, max_attendees, coordinator_id, status)
 SELECT 
     event_titles.title,
     'Growing Together in Faith',
@@ -720,7 +720,7 @@ SELECT
     'London',
     CASE WHEN random() > 0.5 THEN TRUE ELSE FALSE END,
     floor(random() * 500 + 100)::INTEGER,
-    (SELECT member_id FROM core.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
+    (SELECT member_id FROM dev.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE LIMIT 1),
     (ARRAY['Published', 'Draft', 'Completed'])[floor(random() * 3 + 1)]
 FROM (VALUES 
     ('Annual Church Conference'),
@@ -739,19 +739,19 @@ LIMIT 10;
 -- ============================================================================
 -- 21. EVENT_REGISTRATIONS (Member registrations for events)
 -- ============================================================================
-INSERT INTO comms.event_registrations (event_id, member_id, registration_status, guest_count)
+INSERT INTO dev.event_registrations (event_id, member_id, registration_status, guest_count)
 SELECT 
     e.event_id,
     m.member_id,
     (ARRAY['Registered', 'Confirmed', 'Waitlisted'])[floor(random() * 3 + 1)],
     floor(random() * 3)::INTEGER
-FROM comms.events e
-CROSS JOIN core.members m
+FROM dev.events e
+CROSS JOIN dev.members m
 WHERE e.requires_registration = TRUE 
     AND m.is_active = TRUE 
     AND random() > 0.9
     AND NOT EXISTS (
-        SELECT 1 FROM comms.event_registrations er 
+        SELECT 1 FROM dev.event_registrations er 
         WHERE er.event_id = e.event_id AND er.member_id = m.member_id
     )
 LIMIT 200;
@@ -770,30 +770,30 @@ COMMIT;
 -- ============================================================================
 SELECT 'Data Generation Complete!' as status;
 
-SELECT 'Languages' as entity, COUNT(*) as count FROM core.languages
-UNION ALL SELECT 'Regions', COUNT(*) FROM core.regions
-UNION ALL SELECT 'Branches', COUNT(*) FROM core.branches
-UNION ALL SELECT 'Members', COUNT(*) FROM core.members
-UNION ALL SELECT 'Active Members', COUNT(*) FROM core.members WHERE is_active = TRUE
-UNION ALL SELECT 'Branch Leadership', COUNT(*) FROM core.branch_leadership
-UNION ALL SELECT 'Main Pastors', COUNT(*) FROM core.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
-UNION ALL SELECT 'Elders', COUNT(*) FROM core.branch_leadership WHERE role = 'Elder' AND is_current = TRUE
-UNION ALL SELECT 'Roles', COUNT(*) FROM ministry.roles
-UNION ALL SELECT 'Member Roles', COUNT(*) FROM ministry.member_roles
-UNION ALL SELECT 'Departments', COUNT(*) FROM ministry.departments
-UNION ALL SELECT 'Branch Departments', COUNT(*) FROM ministry.branch_departments
-UNION ALL SELECT 'Department Members', COUNT(*) FROM ministry.department_members
-UNION ALL SELECT 'Fellowships', COUNT(*) FROM ministry.fellowships
-UNION ALL SELECT 'Fellowship Members', COUNT(*) FROM ministry.fellowship_members
-UNION ALL SELECT 'Services', COUNT(*) FROM ministry.services
-UNION ALL SELECT 'Service Attendance', COUNT(*) FROM ministry.service_attendance
-UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM outreach.outreach_programs
-UNION ALL SELECT 'Souls', COUNT(*) FROM outreach.souls
-UNION ALL SELECT 'Follow-ups', COUNT(*) FROM outreach.follow_ups
-UNION ALL SELECT 'Donations', COUNT(*) FROM finance.donations
-UNION ALL SELECT 'Notifications', COUNT(*) FROM comms.notifications
-UNION ALL SELECT 'Events', COUNT(*) FROM comms.events
-UNION ALL SELECT 'Event Registrations', COUNT(*) FROM comms.event_registrations
+SELECT 'Languages' as entity, COUNT(*) as count FROM dev.languages
+UNION ALL SELECT 'Regions', COUNT(*) FROM dev.regions
+UNION ALL SELECT 'Branches', COUNT(*) FROM dev.branches
+UNION ALL SELECT 'Members', COUNT(*) FROM dev.members
+UNION ALL SELECT 'Active Members', COUNT(*) FROM dev.members WHERE is_active = TRUE
+UNION ALL SELECT 'Branch Leadership', COUNT(*) FROM dev.branch_leadership
+UNION ALL SELECT 'Main Pastors', COUNT(*) FROM dev.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
+UNION ALL SELECT 'Elders', COUNT(*) FROM dev.branch_leadership WHERE role = 'Elder' AND is_current = TRUE
+UNION ALL SELECT 'Roles', COUNT(*) FROM dev.roles
+UNION ALL SELECT 'Member Roles', COUNT(*) FROM dev.member_roles
+UNION ALL SELECT 'Departments', COUNT(*) FROM dev.departments
+UNION ALL SELECT 'Branch Departments', COUNT(*) FROM dev.branch_departments
+UNION ALL SELECT 'Department Members', COUNT(*) FROM dev.department_members
+UNION ALL SELECT 'Fellowships', COUNT(*) FROM dev.fellowships
+UNION ALL SELECT 'Fellowship Members', COUNT(*) FROM dev.fellowship_members
+UNION ALL SELECT 'Services', COUNT(*) FROM dev.services
+UNION ALL SELECT 'Service Attendance', COUNT(*) FROM dev.service_attendance
+UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM dev.outreach_programs
+UNION ALL SELECT 'Souls', COUNT(*) FROM dev.souls
+UNION ALL SELECT 'Follow-ups', COUNT(*) FROM dev.follow_ups
+UNION ALL SELECT 'Donations', COUNT(*) FROM dev.donations
+UNION ALL SELECT 'Notifications', COUNT(*) FROM dev.notifications
+UNION ALL SELECT 'Events', COUNT(*) FROM dev.events
+UNION ALL SELECT 'Event Registrations', COUNT(*) FROM dev.event_registrations
 ORDER BY entity;
 
 -- ============================================================================

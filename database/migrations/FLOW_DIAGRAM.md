@@ -25,7 +25,7 @@
                     ┌─────────────────────┐
                     │  02_tables.sql      │
                     │                     │
-                    │  • Creates 28       │
+                    │  • Creates 29       │
                     │    tables with      │
                     │    primary keys     │
                     │  • No constraints   │

@@ -8,15 +8,15 @@
 -- Note: This script is IDEMPOTENT - safe to run multiple times
 -- ============================================================================
 -- Schema Layout:
---   core.languages, core.regions, core.branches, core.members, core.branch_leadership
---   ministry.roles, ministry.member_roles, ministry.fellowships, ministry.fellowship_members,
---   ministry.fellowship_meetings, ministry.fellowship_meeting_attendance, ministry.departments,
---   ministry.branch_departments, ministry.department_members, ministry.department_meetings,
---   ministry.meeting_attendance, ministry.services, ministry.service_attendance
---   outreach.outreach_programs, outreach.outreach_participants, outreach.souls, outreach.follow_ups
---   finance.donations
---   comms.notifications, comms.notification_recipients, comms.events, comms.event_organizers,
---   comms.event_notes, comms.event_registrations
+--   dev.languages, dev.regions, dev.branches, dev.members, dev.branch_leadership
+--   dev.roles, dev.member_roles, dev.fellowships, dev.fellowship_members,
+--   dev.fellowship_meetings, dev.fellowship_meeting_attendance, dev.departments,
+--   dev.branch_departments, dev.department_members, dev.department_meetings,
+--   dev.meeting_attendance, dev.services, dev.service_attendance
+--   dev.outreach_programs, dev.outreach_participants, dev.souls, dev.follow_ups
+--   dev.donations
+--   dev.notifications, dev.notification_recipients, dev.events, dev.event_organizers,
+--   dev.event_notes, dev.event_registrations
 -- ============================================================================
 
 -- ############################################################################
@@ -24,10 +24,10 @@
 -- ############################################################################
 
 -- ----------------------------------------------------------------------------
--- 1. core.LANGUAGES
+-- 1. dev.LANGUAGES
 -- Purpose: Store languages used in church services and communications
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS core.languages (
+CREATE TABLE IF NOT EXISTS dev.languages (
     language_id SERIAL PRIMARY KEY,
     language_name VARCHAR(50) NOT NULL UNIQUE,
     language_code VARCHAR(10) NOT NULL UNIQUE,
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS core.languages (
 );
 
 -- ----------------------------------------------------------------------------
--- 2. core.REGIONS
+-- 2. dev.REGIONS
 -- Purpose: Store geographical regions where branches are located
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS core.regions (
+CREATE TABLE IF NOT EXISTS dev.regions (
     region_id SERIAL PRIMARY KEY,
     region_name VARCHAR(100) NOT NULL,
     country VARCHAR(100) NOT NULL,
@@ -49,10 +49,10 @@ CREATE TABLE IF NOT EXISTS core.regions (
 );
 
 -- ----------------------------------------------------------------------------
--- 3. core.BRANCHES
+-- 3. dev.BRANCHES
 -- Purpose: Store church branch information across different regions
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS core.branches (
+CREATE TABLE IF NOT EXISTS dev.branches (
     branch_id SERIAL PRIMARY KEY,
     branch_name VARCHAR(150) NOT NULL,
     region_id INTEGER NOT NULL,
@@ -70,10 +70,10 @@ CREATE TABLE IF NOT EXISTS core.branches (
 );
 
 -- ----------------------------------------------------------------------------
--- 4. core.MEMBERS
+-- 4. dev.MEMBERS
 -- Purpose: Store church member information
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS core.members (
+CREATE TABLE IF NOT EXISTS dev.members (
     member_id SERIAL PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -96,10 +96,10 @@ CREATE TABLE IF NOT EXISTS core.members (
 );
 
 -- ----------------------------------------------------------------------------
--- 5. core.BRANCH_LEADERSHIP
+-- 5. dev.BRANCH_LEADERSHIP
 -- Purpose: Store pastor and elder assignments for each branch
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS core.branch_leadership (
+CREATE TABLE IF NOT EXISTS dev.branch_leadership (
     leadership_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -116,10 +116,10 @@ CREATE TABLE IF NOT EXISTS core.branch_leadership (
 -- ############################################################################
 
 -- ----------------------------------------------------------------------------
--- 6. ministry.ROLES
+-- 6. dev.ROLES
 -- Purpose: Store church role definitions (e.g., Choir Member, Usher, Teacher)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.roles (
+CREATE TABLE IF NOT EXISTS dev.roles (
     role_id SERIAL PRIMARY KEY,
     role_name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -129,10 +129,10 @@ CREATE TABLE IF NOT EXISTS ministry.roles (
 );
 
 -- ----------------------------------------------------------------------------
--- 7. ministry.MEMBER_ROLES
+-- 7. dev.MEMBER_ROLES
 -- Purpose: Store member role assignments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.member_roles (
+CREATE TABLE IF NOT EXISTS dev.member_roles (
     member_role_id SERIAL PRIMARY KEY,
     member_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
@@ -146,10 +146,10 @@ CREATE TABLE IF NOT EXISTS ministry.member_roles (
 );
 
 -- ----------------------------------------------------------------------------
--- 8. ministry.FELLOWSHIPS
+-- 8. dev.FELLOWSHIPS
 -- Purpose: Store fellowship group information
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.fellowships (
+CREATE TABLE IF NOT EXISTS dev.fellowships (
     fellowship_id SERIAL PRIMARY KEY,
     fellowship_name VARCHAR(150) NOT NULL,
     branch_id INTEGER NOT NULL,
@@ -163,10 +163,10 @@ CREATE TABLE IF NOT EXISTS ministry.fellowships (
 );
 
 -- ----------------------------------------------------------------------------
--- 9. ministry.FELLOWSHIP_MEMBERS
+-- 9. dev.FELLOWSHIP_MEMBERS
 -- Purpose: Store member assignments to fellowships (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.fellowship_members (
+CREATE TABLE IF NOT EXISTS dev.fellowship_members (
     fellowship_member_id SERIAL PRIMARY KEY,
     fellowship_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -179,10 +179,10 @@ CREATE TABLE IF NOT EXISTS ministry.fellowship_members (
 );
 
 -- ----------------------------------------------------------------------------
--- 10. ministry.FELLOWSHIP_MEETINGS
+-- 10. dev.FELLOWSHIP_MEETINGS
 -- Purpose: Store fellowship meeting information
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.fellowship_meetings (
+CREATE TABLE IF NOT EXISTS dev.fellowship_meetings (
     meeting_id SERIAL PRIMARY KEY,
     fellowship_id INTEGER NOT NULL,
     meeting_date TIMESTAMP NOT NULL,
@@ -197,10 +197,10 @@ CREATE TABLE IF NOT EXISTS ministry.fellowship_meetings (
 );
 
 -- ----------------------------------------------------------------------------
--- 11. ministry.FELLOWSHIP_MEETING_ATTENDANCE
+-- 11. dev.FELLOWSHIP_MEETING_ATTENDANCE
 -- Purpose: Store attendance records for fellowship meetings
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.fellowship_meeting_attendance (
+CREATE TABLE IF NOT EXISTS dev.fellowship_meeting_attendance (
     meeting_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL DEFAULT 'Present',
@@ -212,10 +212,10 @@ CREATE TABLE IF NOT EXISTS ministry.fellowship_meeting_attendance (
 );
 
 -- ----------------------------------------------------------------------------
--- 12. ministry.DEPARTMENTS
+-- 12. dev.DEPARTMENTS
 -- Purpose: Store department definitions (common across all branches)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.departments (
+CREATE TABLE IF NOT EXISTS dev.departments (
     department_id SERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -225,10 +225,10 @@ CREATE TABLE IF NOT EXISTS ministry.departments (
 );
 
 -- ----------------------------------------------------------------------------
--- 13. ministry.BRANCH_DEPARTMENTS
+-- 13. dev.BRANCH_DEPARTMENTS
 -- Purpose: Link departments to specific branches with leadership assignments
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.branch_departments (
+CREATE TABLE IF NOT EXISTS dev.branch_departments (
     branch_department_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     department_id INTEGER NOT NULL,
@@ -242,10 +242,10 @@ CREATE TABLE IF NOT EXISTS ministry.branch_departments (
 );
 
 -- ----------------------------------------------------------------------------
--- 14. ministry.DEPARTMENT_MEMBERS
+-- 14. dev.DEPARTMENT_MEMBERS
 -- Purpose: Store member assignments to departments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.department_members (
+CREATE TABLE IF NOT EXISTS dev.department_members (
     department_member_id SERIAL PRIMARY KEY,
     branch_department_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -257,10 +257,10 @@ CREATE TABLE IF NOT EXISTS ministry.department_members (
 );
 
 -- ----------------------------------------------------------------------------
--- 15. ministry.DEPARTMENT_MEETINGS
+-- 15. dev.DEPARTMENT_MEETINGS
 -- Purpose: Store department meeting information
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.department_meetings (
+CREATE TABLE IF NOT EXISTS dev.department_meetings (
     meeting_id SERIAL PRIMARY KEY,
     branch_department_id INTEGER NOT NULL,
     meeting_date TIMESTAMP NOT NULL,
@@ -274,10 +274,10 @@ CREATE TABLE IF NOT EXISTS ministry.department_meetings (
 );
 
 -- ----------------------------------------------------------------------------
--- 16. ministry.MEETING_ATTENDANCE
+-- 16. dev.MEETING_ATTENDANCE
 -- Purpose: Store attendance records for department meetings
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.meeting_attendance (
+CREATE TABLE IF NOT EXISTS dev.meeting_attendance (
     meeting_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL,
@@ -289,10 +289,10 @@ CREATE TABLE IF NOT EXISTS ministry.meeting_attendance (
 );
 
 -- ----------------------------------------------------------------------------
--- 17. ministry.SERVICES
+-- 17. dev.SERVICES
 -- Purpose: Store weekly service information for each branch
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.services (
+CREATE TABLE IF NOT EXISTS dev.services (
     service_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     service_date TIMESTAMP NOT NULL,
@@ -307,10 +307,10 @@ CREATE TABLE IF NOT EXISTS ministry.services (
 );
 
 -- ----------------------------------------------------------------------------
--- 18. ministry.SERVICE_ATTENDANCE
+-- 18. dev.SERVICE_ATTENDANCE
 -- Purpose: Store attendance records for services
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ministry.service_attendance (
+CREATE TABLE IF NOT EXISTS dev.service_attendance (
     service_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL,
@@ -327,10 +327,10 @@ CREATE TABLE IF NOT EXISTS ministry.service_attendance (
 -- ############################################################################
 
 -- ----------------------------------------------------------------------------
--- 19. outreach.OUTREACH_PROGRAMS
+-- 19. dev.OUTREACH_PROGRAMS
 -- Purpose: Store outreach program information and activities
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS outreach.outreach_programs (
+CREATE TABLE IF NOT EXISTS dev.outreach_programs (
     outreach_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     program_name VARCHAR(200) NOT NULL,
@@ -348,10 +348,10 @@ CREATE TABLE IF NOT EXISTS outreach.outreach_programs (
 );
 
 -- ----------------------------------------------------------------------------
--- 20. outreach.OUTREACH_PARTICIPANTS
+-- 20. dev.OUTREACH_PARTICIPANTS
 -- Purpose: Store member participation in outreach programs
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS outreach.outreach_participants (
+CREATE TABLE IF NOT EXISTS dev.outreach_participants (
     outreach_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     role VARCHAR(50),
@@ -361,10 +361,10 @@ CREATE TABLE IF NOT EXISTS outreach.outreach_participants (
 );
 
 -- ----------------------------------------------------------------------------
--- 21. outreach.SOULS
+-- 21. dev.SOULS
 -- Purpose: Store information about new individuals reached through outreach
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS outreach.souls (
+CREATE TABLE IF NOT EXISTS dev.souls (
     soul_id SERIAL PRIMARY KEY,
     outreach_id INTEGER NOT NULL,
     first_name VARCHAR(100) NOT NULL,
@@ -384,10 +384,10 @@ CREATE TABLE IF NOT EXISTS outreach.souls (
 );
 
 -- ----------------------------------------------------------------------------
--- 22. outreach.FOLLOW_UPS
+-- 22. dev.FOLLOW_UPS
 -- Purpose: Store follow-up activities for souls
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS outreach.follow_ups (
+CREATE TABLE IF NOT EXISTS dev.follow_ups (
     follow_up_id SERIAL PRIMARY KEY,
     soul_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -406,10 +406,10 @@ CREATE TABLE IF NOT EXISTS outreach.follow_ups (
 -- ############################################################################
 
 -- ----------------------------------------------------------------------------
--- 23. finance.DONATIONS
+-- 23. dev.DONATIONS
 -- Purpose: Store member donation/giving records
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS finance.donations (
+CREATE TABLE IF NOT EXISTS dev.donations (
     donation_id SERIAL PRIMARY KEY,
     member_id INTEGER NOT NULL,
     branch_id INTEGER NOT NULL,
@@ -432,10 +432,10 @@ CREATE TABLE IF NOT EXISTS finance.donations (
 -- ############################################################################
 
 -- ----------------------------------------------------------------------------
--- 24. comms.NOTIFICATIONS
+-- 24. dev.NOTIFICATIONS
 -- Purpose: Store notifications and announcements broadcast to members
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.notifications (
+CREATE TABLE IF NOT EXISTS dev.notifications (
     notification_id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
@@ -458,10 +458,10 @@ CREATE TABLE IF NOT EXISTS comms.notifications (
 );
 
 -- ----------------------------------------------------------------------------
--- 25. comms.NOTIFICATION_RECIPIENTS
+-- 25. dev.NOTIFICATION_RECIPIENTS
 -- Purpose: Track which members received and read notifications
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.notification_recipients (
+CREATE TABLE IF NOT EXISTS dev.notification_recipients (
     notification_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
@@ -473,10 +473,10 @@ CREATE TABLE IF NOT EXISTS comms.notification_recipients (
 );
 
 -- ----------------------------------------------------------------------------
--- 26. comms.EVENTS
+-- 26. dev.EVENTS
 -- Purpose: Store church-wide and branch events
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.events (
+CREATE TABLE IF NOT EXISTS dev.events (
     event_id SERIAL PRIMARY KEY,
     event_title VARCHAR(200) NOT NULL,
     event_theme VARCHAR(300),
@@ -504,10 +504,10 @@ CREATE TABLE IF NOT EXISTS comms.events (
 );
 
 -- ----------------------------------------------------------------------------
--- 27. comms.EVENT_ORGANIZERS
+-- 27. dev.EVENT_ORGANIZERS
 -- Purpose: Store organizing team members for events
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.event_organizers (
+CREATE TABLE IF NOT EXISTS dev.event_organizers (
     event_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     organizer_role VARCHAR(100),
@@ -518,10 +518,10 @@ CREATE TABLE IF NOT EXISTS comms.event_organizers (
 );
 
 -- ----------------------------------------------------------------------------
--- 28. comms.EVENT_NOTES
+-- 28. dev.EVENT_NOTES
 -- Purpose: Store messages and notes logged by event organizers
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.event_notes (
+CREATE TABLE IF NOT EXISTS dev.event_notes (
     note_id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL,
     author_id INTEGER NOT NULL,
@@ -534,10 +534,10 @@ CREATE TABLE IF NOT EXISTS comms.event_notes (
 );
 
 -- ----------------------------------------------------------------------------
--- 29. comms.EVENT_REGISTRATIONS
+-- 29. dev.EVENT_REGISTRATIONS
 -- Purpose: Store member registrations for events requiring sign-up
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS comms.event_registrations (
+CREATE TABLE IF NOT EXISTS dev.event_registrations (
     registration_id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,

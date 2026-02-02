@@ -127,11 +127,11 @@ verify_installation() {
     print_section "Verifying Installation"
     
     # Check table count
-    local table_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" | xargs)
-    if [ "$table_count" -eq 28 ]; then
+    local table_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';" | xargs)
+    if [ "$table_count" -ge 29 ]; then
         print_success "Table count verified: $table_count tables created"
     else
-        print_warning "Expected 28 tables, found $table_count"
+        print_warning "Expected at least 29 tables, found $table_count"
     fi
     
     # Check function count
@@ -143,23 +143,23 @@ verify_installation() {
     fi
     
     # Check trigger count
-    local trigger_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = 'public';" | xargs)
-    if [ "$trigger_count" -ge 23 ]; then
+    local trigger_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = 'dev';" | xargs)
+    if [ "$trigger_count" -ge 25 ]; then
         print_success "Trigger count verified: $trigger_count triggers created"
     else
-        print_warning "Expected at least 23 triggers, found $trigger_count"
+        print_warning "Expected at least 25 triggers, found $trigger_count"
     fi
     
     # Check foreign key count
-    local fk_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = 'public' AND constraint_type = 'FOREIGN KEY';" | xargs)
-    if [ "$fk_count" -ge 70 ]; then
+    local fk_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = 'dev' AND constraint_type = 'FOREIGN KEY';" | xargs)
+    if [ "$fk_count" -ge 63 ]; then
         print_success "Foreign key count verified: $fk_count constraints created"
     else
-        print_warning "Expected at least 70 foreign keys, found $fk_count"
+        print_warning "Expected at least 63 foreign keys, found $fk_count"
     fi
     
     # Check index count
-    local index_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public';" | xargs)
+    local index_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'dev';" | xargs)
     if [ "$index_count" -ge 90 ]; then
         print_success "Index count verified: $index_count indexes created"
     else
@@ -212,7 +212,7 @@ main() {
     echo "  psql -d $DB_NAME"
     echo ""
     print_info "To verify the schema:"
-    echo "  psql -d $DB_NAME -c '\\dt'"
+    echo "  psql -d $DB_NAME -c '\\dt dev.*'"
     echo ""
 }
 

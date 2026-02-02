@@ -30,16 +30,16 @@ psql -d kairos -f 07_seed_data.sql
 ### Verification
 ```bash
 # Table count (expected: 29)
-psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
+psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';"
 
 # List all tables
-psql -d kairos -c "\dt"
+psql -d kairos -c "\dt dev.*"
 
 # Check functions
 psql -d kairos -c "\df"
 
 # Check triggers
-psql -d kairos -c "SELECT trigger_name, event_object_table FROM information_schema.triggers WHERE trigger_schema = 'public';"
+psql -d kairos -c "SELECT trigger_name, event_object_table FROM information_schema.triggers WHERE trigger_schema = 'dev';"
 ```
 
 ### Backup & Restore
@@ -65,11 +65,11 @@ psql -d kairos -c "\d+ table_name"
 
 ## Key Schema Statistics
 
-- **Tables**: 28
+- **Tables**: 29
 - **Functions**: 1 (update_updated_at_column)
 - **Triggers**: 23 (one per table with updated_at)
-- **Foreign Keys**: 70+
-- **Indexes**: 100+ (including partial indexes)
+- **Foreign Keys**: 63
+- **Indexes**: 90+ (including partial indexes)
 - **Check Constraints**: 50+
 - **Unique Constraints**: 30+
 
@@ -93,14 +93,14 @@ regions → branches → members
 
 ### Get all active members in a branch
 ```sql
-SELECT * FROM members 
+SELECT * FROM dev.members 
 WHERE home_branch_id = $1 AND is_active = TRUE;
 ```
 
 ### Get current pastor of a branch
 ```sql
-SELECT m.* FROM branch_leadership bl
-JOIN members m ON bl.member_id = m.member_id
+SELECT m.* FROM dev.branch_leadership bl
+JOIN dev.members m ON bl.member_id = m.member_id
 WHERE bl.branch_id = $1 
   AND bl.role = 'Main Pastor' 
   AND bl.is_current = TRUE;
@@ -109,16 +109,16 @@ WHERE bl.branch_id = $1
 ### Get member's roles
 ```sql
 SELECT r.role_name, mr.branch_id 
-FROM member_roles mr
-JOIN roles r ON mr.role_id = r.role_id
+FROM dev.member_roles mr
+JOIN dev.roles r ON mr.role_id = r.role_id
 WHERE mr.member_id = $1 AND mr.is_active = TRUE;
 ```
 
 ### Service attendance for date range
 ```sql
 SELECT s.service_date, COUNT(sa.member_id) as attendees
-FROM services s
-LEFT JOIN service_attendance sa ON s.service_id = sa.service_id
+FROM dev.services s
+LEFT JOIN dev.service_attendance sa ON s.service_id = sa.service_id
 WHERE s.branch_id = $1 
   AND s.service_date BETWEEN $2 AND $3
 GROUP BY s.service_id, s.service_date

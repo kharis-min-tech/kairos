@@ -14,10 +14,10 @@ cd database/migrations
 ## What Gets Created
 
 ### Summary
-- **550+ members** across 5 branches (110 per main branch)
-- **5 main branches** with full organizational structure
+- **550+ members** across 5 branches in 3 countries
+- **5 branches** with full organizational structure
 - **5 main pastors** (one per branch)
-- **10 elders** (two per main branch)
+- **10 elders** (two per branch)
 - **Complete church structure**: departments, fellowships, roles
 - **6 months of service history** with attendance records
 - **5,000+ donation records**
@@ -29,10 +29,10 @@ cd database/migrations
 
 | Entity | Count | Description |
 |--------|-------|-------------|
-| Regions | 5 | Greater Accra, Ashanti, Western, Eastern, Central |
-| Branches | 8 | 5 main + 3 satellite/campus/cell |
-| Members | 550+ | Realistic Ghanaian names, 95% active |
-| Main Pastors | 5 | One per main branch |
+| Regions | 3 | United Kingdom, Ghana, Sierra Leone |
+| Branches | 5 | London HQ, Birmingham, Bristol, Accra, Freetown |
+| Members | 550+ | British, Ghanaian, Sierra Leonean names, 95% active |
+| Main Pastors | 5 | One per branch |
 | Elders | 10 | Two per main branch |
 | Roles | 15 | Choir, Usher, Teacher, Youth Leader, etc. |
 | Member Roles | 330+ | Role assignments to members |
@@ -92,7 +92,7 @@ cd database/migrations
 ./seed_data.sh kairos
 
 # 3. Verify
-psql -d kairos -c "SELECT COUNT(*) FROM members;"
+psql -d kairos -c "SELECT COUNT(*) FROM dev.members;"
 ```
 
 ### Reset and Regenerate
@@ -112,8 +112,8 @@ After running seed data, verify with these queries:
 ```sql
 -- Member distribution by branch
 SELECT b.branch_name, COUNT(m.member_id) as members
-FROM branches b
-LEFT JOIN members m ON b.branch_id = m.home_branch_id
+FROM dev.branches b
+LEFT JOIN dev.members m ON b.branch_id = m.home_branch_id
 GROUP BY b.branch_name
 ORDER BY members DESC;
 
@@ -121,9 +121,9 @@ ORDER BY members DESC;
 SELECT b.branch_name, 
        m.first_name || ' ' || m.last_name as leader_name,
        bl.role
-FROM branch_leadership bl
-JOIN branches b ON bl.branch_id = b.branch_id
-JOIN members m ON bl.member_id = m.member_id
+FROM dev.branch_leadership bl
+JOIN dev.branches b ON bl.branch_id = b.branch_id
+JOIN dev.members m ON bl.member_id = m.member_id
 WHERE bl.is_current = TRUE
 ORDER BY b.branch_name, bl.role;
 
@@ -132,8 +132,8 @@ SELECT
     COUNT(DISTINCT s.service_id) as total_services,
     COUNT(sa.member_id) as total_attendance_records,
     ROUND(AVG(CASE WHEN sa.attendance_status = 'Present' THEN 1 ELSE 0 END) * 100, 2) as attendance_rate_percent
-FROM services s
-LEFT JOIN service_attendance sa ON s.service_id = sa.service_id;
+FROM dev.services s
+LEFT JOIN dev.service_attendance sa ON s.service_id = sa.service_id;
 
 -- Financial summary
 SELECT 
@@ -141,29 +141,29 @@ SELECT
     COUNT(*) as transactions,
     SUM(amount) as total_amount,
     ROUND(AVG(amount), 2) as avg_amount
-FROM donations
+FROM dev.donations
 GROUP BY donation_purpose;
 
 -- Overall summary
-SELECT 'Members' as entity, COUNT(*) as count FROM members
-UNION ALL SELECT 'Services', COUNT(*) FROM services
-UNION ALL SELECT 'Attendance Records', COUNT(*) FROM service_attendance
-UNION ALL SELECT 'Donations', COUNT(*) FROM donations
-UNION ALL SELECT 'Events', COUNT(*) FROM events
+SELECT 'Members' as entity, COUNT(*) as count FROM dev.members
+UNION ALL SELECT 'Services', COUNT(*) FROM dev.services
+UNION ALL SELECT 'Attendance Records', COUNT(*) FROM dev.service_attendance
+UNION ALL SELECT 'Donations', COUNT(*) FROM dev.donations
+UNION ALL SELECT 'Events', COUNT(*) FROM dev.events
 ORDER BY entity;
 ```
 
 ## Key Features of Generated Data
 
 ### Realistic Names
-- Authentic Ghanaian first and last names
+- Authentic British, Ghanaian, and Sierra Leonean names
 - Gender-appropriate name selection
-- Mix of traditional and modern names
+- Mix of traditional and modern names from each country
 
 ### Geographic Distribution
-- 5 regions matching Ghana's actual regions
-- Realistic city names (Accra, Kumasi, Takoradi, etc.)
-- Appropriate postal codes and addresses
+- 3 countries: United Kingdom, Ghana, Sierra Leone
+- 5 branches: London HQ, Birmingham, Bristol, Accra, Freetown
+- Region-appropriate phone formats and currencies
 
 ### Temporal Data
 - Services span past 6 months
@@ -178,7 +178,7 @@ ORDER BY entity;
 - Role assignments matching real church structures
 
 ### Financial Records
-- Realistic donation amounts (50-550 GHS)
+- Region-appropriate currencies (GBP, GHS, SLE)
 - Mix of payment methods (Cash, Mobile Money, Bank Transfer, Card)
 - 90% attributed, 10% anonymous
 - Various purposes (Offering, Building Fund)
@@ -319,8 +319,8 @@ npm run dev
 
 ### Donations (5,000)
 - Average: ~10 per active member
-- Amount range: 50-550 GHS
-- Currency: GHS (Ghana Cedis)
+- Region-appropriate amounts and currencies
+- GBP (UK), GHS (Ghana), SLE (Sierra Leone)
 - 70% Offering, 30% Building Fund
 
 ### Events (5)
@@ -339,7 +339,7 @@ npm run dev
 
 For issues or questions about seed data:
 1. Check [SEED_DATA_GUIDE.md](SEED_DATA_GUIDE.md) for detailed troubleshooting
-2. Verify schema is complete: `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';`
+2. Verify schema is complete: `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';`
 3. Check PostgreSQL logs for errors
 4. Review transaction rollback messages
 

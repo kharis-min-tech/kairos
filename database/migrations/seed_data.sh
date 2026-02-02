@@ -60,10 +60,10 @@ check_database() {
 
 # Check if schema is initialized
 check_schema() {
-    local table_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" | xargs)
+    local table_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';" | xargs)
     
-    if [ "$table_count" -lt 28 ]; then
-        print_error "Database schema is incomplete (found $table_count tables, expected 28)"
+    if [ "$table_count" -lt 29 ]; then
+        print_error "Database schema is incomplete (found $table_count tables, expected 29)"
         print_info "Please run init_schema.sh first to initialize the database schema"
         exit 1
     fi
@@ -72,7 +72,7 @@ check_schema() {
 
 # Check if data already exists
 check_existing_data() {
-    local member_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM members;" | xargs)
+    local member_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM dev.members;" | xargs)
     
     if [ "$member_count" -gt 0 ]; then
         print_info "Database already contains data ($member_count members found)"
@@ -101,16 +101,16 @@ display_summary() {
     print_section "Data Generation Summary"
     
     psql -d "$DB_NAME" -c "
-        SELECT 'Regions' as entity, COUNT(*) as count FROM regions
-        UNION ALL SELECT 'Branches', COUNT(*) FROM branches
-        UNION ALL SELECT 'Members', COUNT(*) FROM members
-        UNION ALL SELECT 'Active Members', COUNT(*) FROM members WHERE is_active = TRUE
-        UNION ALL SELECT 'Main Pastors', COUNT(*) FROM branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
-        UNION ALL SELECT 'Services', COUNT(*) FROM services
-        UNION ALL SELECT 'Service Attendance Records', COUNT(*) FROM service_attendance
-        UNION ALL SELECT 'Donations', COUNT(*) FROM donations
-        UNION ALL SELECT 'Events', COUNT(*) FROM events
-        UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM outreach_programs
+        SELECT 'Regions' as entity, COUNT(*) as count FROM dev.regions
+        UNION ALL SELECT 'Branches', COUNT(*) FROM dev.branches
+        UNION ALL SELECT 'Members', COUNT(*) FROM dev.members
+        UNION ALL SELECT 'Active Members', COUNT(*) FROM dev.members WHERE is_active = TRUE
+        UNION ALL SELECT 'Main Pastors', COUNT(*) FROM dev.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
+        UNION ALL SELECT 'Services', COUNT(*) FROM dev.services
+        UNION ALL SELECT 'Service Attendance Records', COUNT(*) FROM dev.service_attendance
+        UNION ALL SELECT 'Donations', COUNT(*) FROM dev.donations
+        UNION ALL SELECT 'Events', COUNT(*) FROM dev.events
+        UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM dev.outreach_programs
         ORDER BY entity;
     "
 }

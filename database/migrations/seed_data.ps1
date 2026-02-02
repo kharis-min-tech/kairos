@@ -39,10 +39,10 @@ function Test-DatabaseExists {
     return $false
 }
 
-# Check if schema is initialized (check for custom schemas)
+# Check if schema is initialized (check for dev schema)
 function Test-SchemaExists {
-    $customSchemas = "'core', 'ministry', 'outreach', 'finance', 'comms'"
-    $tableCountQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema IN ($customSchemas);"
+    $devSchema = "'dev'"
+    $tableCountQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = $devSchema;"
     $result = psql -d $DatabaseName -t -c $tableCountQuery 2>&1
     
     if ($result -is [array]) {
@@ -55,7 +55,7 @@ function Test-SchemaExists {
 
 # Check existing data
 function Get-MemberCount {
-    $result = psql -d $DatabaseName -t -c "SELECT COUNT(*) FROM core.members;" 2>&1
+    $result = psql -d $DatabaseName -t -c "SELECT COUNT(*) FROM dev.members;" 2>&1
     if ($result -is [array]) {
         $result = $result[0]
     }
@@ -122,16 +122,16 @@ function Show-Summary {
     Write-SectionHeader "Data Generation Summary"
     
     $summaryQuery = @"
-        SELECT 'Regions' as entity, COUNT(*) as count FROM core.regions
-        UNION ALL SELECT 'Branches', COUNT(*) FROM core.branches
-        UNION ALL SELECT 'Members', COUNT(*) FROM core.members
-        UNION ALL SELECT 'Active Members', COUNT(*) FROM core.members WHERE is_active = TRUE
-        UNION ALL SELECT 'Main Pastors', COUNT(*) FROM core.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
-        UNION ALL SELECT 'Services', COUNT(*) FROM ministry.services
-        UNION ALL SELECT 'Service Attendance', COUNT(*) FROM ministry.service_attendance
-        UNION ALL SELECT 'Donations', COUNT(*) FROM finance.donations
-        UNION ALL SELECT 'Events', COUNT(*) FROM comms.events
-        UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM outreach.outreach_programs
+        SELECT 'Regions' as entity, COUNT(*) as count FROM dev.regions
+        UNION ALL SELECT 'Branches', COUNT(*) FROM dev.branches
+        UNION ALL SELECT 'Members', COUNT(*) FROM dev.members
+        UNION ALL SELECT 'Active Members', COUNT(*) FROM dev.members WHERE is_active = TRUE
+        UNION ALL SELECT 'Main Pastors', COUNT(*) FROM dev.branch_leadership WHERE role = 'Main Pastor' AND is_current = TRUE
+        UNION ALL SELECT 'Services', COUNT(*) FROM dev.services
+        UNION ALL SELECT 'Service Attendance', COUNT(*) FROM dev.service_attendance
+        UNION ALL SELECT 'Donations', COUNT(*) FROM dev.donations
+        UNION ALL SELECT 'Events', COUNT(*) FROM dev.events
+        UNION ALL SELECT 'Outreach Programs', COUNT(*) FROM dev.outreach_programs
         ORDER BY entity;
 "@
     
@@ -209,9 +209,9 @@ function Main {
     Write-Host "  psql -d $DatabaseName" -ForegroundColor White
     Write-Host ""
     Write-Host "Sample queries:" -ForegroundColor Cyan
-    Write-Host "  SELECT * FROM core.members LIMIT 10;" -ForegroundColor White
-    Write-Host "  SELECT branch_name, COUNT(*) as member_count FROM core.branches b" -ForegroundColor White
-    Write-Host "    JOIN core.members m ON b.branch_id = m.home_branch_id" -ForegroundColor White
+    Write-Host "  SELECT * FROM dev.members LIMIT 10;" -ForegroundColor White
+    Write-Host "  SELECT branch_name, COUNT(*) as member_count FROM dev.branches b" -ForegroundColor White
+    Write-Host "    JOIN dev.members m ON b.branch_id = m.home_branch_id" -ForegroundColor White
     Write-Host "    GROUP BY branch_name;" -ForegroundColor White
     Write-Host ""
 }

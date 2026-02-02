@@ -132,28 +132,28 @@ Status values: `'Present'`, `'Absent'`, `'Excused'`, `'Late'` (services also sup
 
 **Get all active members of a branch**:
 ```sql
-SELECT * FROM members WHERE home_branch_id=$1 AND is_active=TRUE;
+SELECT * FROM dev.members WHERE home_branch_id=$1 AND is_active=TRUE;
 ```
 
 **Get current main pastor of a branch**:
 ```sql
-SELECT m.* FROM branch_leadership bl
-JOIN members m ON bl.member_id = m.member_id
+SELECT m.* FROM dev.branch_leadership bl
+JOIN dev.members m ON bl.member_id = m.member_id
 WHERE bl.branch_id=$1 AND bl.role='Main Pastor' AND bl.is_current=TRUE;
 ```
 
 **Get all current roles a member holds**:
 ```sql
-SELECT r.role_name, mr.branch_id FROM member_roles mr
-JOIN roles r ON mr.role_id = r.role_id
+SELECT r.role_name, mr.branch_id FROM dev.member_roles mr
+JOIN dev.roles r ON mr.role_id = r.role_id
 WHERE mr.member_id=$1 AND mr.is_active=TRUE;
 ```
 
 **Get fellowship attendance for a specific meeting**:
 ```sql
 SELECT m.*, fma.attendance_status 
-FROM fellowship_meeting_attendance fma
-JOIN members m ON fma.member_id = m.member_id
+FROM dev.fellowship_meeting_attendance fma
+JOIN dev.members m ON fma.member_id = m.member_id
 WHERE fma.meeting_id=$1;
 ```
 
@@ -162,8 +162,8 @@ WHERE fma.meeting_id=$1;
 **Cross-branch member participation** (e.g., which members serve in multiple branches):
 ```sql
 SELECT m.member_id, m.first_name, m.last_name, COUNT(DISTINCT mr.branch_id) as branch_count
-FROM members m
-JOIN member_roles mr ON m.member_id = mr.member_id
+FROM dev.members m
+JOIN dev.member_roles mr ON m.member_id = mr.member_id
 WHERE mr.is_active = TRUE
 GROUP BY m.member_id, m.first_name, m.last_name
 HAVING COUNT(DISTINCT mr.branch_id) > 1;
@@ -172,11 +172,11 @@ HAVING COUNT(DISTINCT mr.branch_id) > 1;
 **Regional member distribution with branch pastors**:
 ```sql
 SELECT r.region_name, b.branch_name, CONCAT(m.first_name, ' ', m.last_name) as pastor_name, COUNT(mem.member_id) as member_count
-FROM regions r
-JOIN branches b ON r.region_id = b.region_id
-LEFT JOIN branch_leadership bl ON b.branch_id = bl.branch_id AND bl.role='Main Pastor' AND bl.is_current=TRUE
-LEFT JOIN members m ON bl.member_id = m.member_id
-LEFT JOIN members mem ON b.branch_id = mem.home_branch_id AND mem.is_active=TRUE
+FROM dev.regions r
+JOIN dev.branches b ON r.region_id = b.region_id
+LEFT JOIN dev.branch_leadership bl ON b.branch_id = bl.branch_id AND bl.role='Main Pastor' AND bl.is_current=TRUE
+LEFT JOIN dev.members m ON bl.member_id = m.member_id
+LEFT JOIN dev.members mem ON b.branch_id = mem.home_branch_id AND mem.is_active=TRUE
 WHERE b.is_active = TRUE
 GROUP BY r.region_name, b.branch_name, m.member_id, m.first_name, m.last_name;
 ```
@@ -186,8 +186,8 @@ GROUP BY r.region_name, b.branch_name, m.member_id, m.first_name, m.last_name;
 SELECT s.service_id, s.service_date, s.service_type,
   COUNT(CASE WHEN sa.attendance_status = 'Present' THEN 1 END)::FLOAT / 
   NULLIF(COUNT(*), 0) * 100 as attendance_percent
-FROM services s
-LEFT JOIN service_attendance sa ON s.service_id = sa.service_id
+FROM dev.services s
+LEFT JOIN dev.service_attendance sa ON s.service_id = sa.service_id
 WHERE s.branch_id = $1 AND s.service_date BETWEEN $2 AND $3
 GROUP BY s.service_id, s.service_date, s.service_type
 ORDER BY s.service_date DESC;
@@ -199,7 +199,7 @@ SELECT
   COALESCE(status, 'Total') as status,
   COUNT(*) as soul_count,
   ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) as percentage
-FROM souls
+FROM dev.souls
 WHERE outreach_id = $1
 GROUP BY ROLLUP(status)
 ORDER BY soul_count DESC;
@@ -208,12 +208,12 @@ ORDER BY soul_count DESC;
 **Active members missing from recent services** (engagement tracking):
 ```sql
 SELECT m.member_id, m.first_name, m.last_name
-FROM members m
+FROM dev.members m
 WHERE m.home_branch_id = $1 AND m.is_active = TRUE
   AND m.member_id NOT IN (
     SELECT DISTINCT sa.member_id
-    FROM service_attendance sa
-    JOIN services s ON sa.service_id = s.service_id
+    FROM dev.service_attendance sa
+    JOIN dev.services s ON sa.service_id = s.service_id
     WHERE s.branch_id = $1 AND s.service_date >= (CURRENT_DATE - INTERVAL '30 days')
   )
 ORDER BY m.last_name, m.first_name;
@@ -226,8 +226,8 @@ SELECT
   fu.contact_status,
   COUNT(*) as count,
   ROUND(AVG(fu.duration_minutes), 1) as avg_duration_minutes
-FROM follow_ups fu
-JOIN souls s ON fu.soul_id = s.soul_id
+FROM dev.follow_ups fu
+JOIN dev.souls s ON fu.soul_id = s.soul_id
 WHERE s.outreach_id = $1
 GROUP BY fu.contact_method, fu.contact_status
 ORDER BY count DESC;
@@ -242,11 +242,11 @@ SELECT
   m_pastor.member_id as pastor_id, CONCAT(m_pastor.first_name, ' ', m_pastor.last_name) as pastor_name,
   COUNT(DISTINCT mem.member_id) as total_members,
   COUNT(DISTINCT f.fellowship_id) as total_fellowships
-FROM branches b
-LEFT JOIN branch_leadership bl ON b.branch_id = bl.branch_id AND bl.role='Main Pastor' AND bl.is_current=TRUE
-LEFT JOIN members m_pastor ON bl.member_id = m_pastor.member_id
-LEFT JOIN members mem ON b.branch_id = mem.home_branch_id AND mem.is_active=TRUE
-LEFT JOIN fellowships f ON b.branch_id = f.branch_id AND f.is_active=TRUE
+FROM dev.branches b
+LEFT JOIN dev.branch_leadership bl ON b.branch_id = bl.branch_id AND bl.role='Main Pastor' AND bl.is_current=TRUE
+LEFT JOIN dev.members m_pastor ON bl.member_id = m_pastor.member_id
+LEFT JOIN dev.members mem ON b.branch_id = mem.home_branch_id AND mem.is_active=TRUE
+LEFT JOIN dev.fellowships f ON b.branch_id = f.branch_id AND f.is_active=TRUE
 WHERE b.region_id = $1 AND b.is_active = TRUE
 GROUP BY b.branch_id, b.branch_name, b.email, b.phone, m_pastor.member_id, m_pastor.first_name, m_pastor.last_name;
 ```
@@ -258,12 +258,12 @@ SELECT
   m_lead.member_id as lead_id, CONCAT(m_lead.first_name, ' ', m_lead.last_name) as lead_name,
   m_deputy.member_id as deputy_id, CONCAT(m_deputy.first_name, ' ', m_deputy.last_name) as deputy_name,
   STRING_AGG(CONCAT(mem.first_name, ' ', mem.last_name), ', ' ORDER BY mem.last_name) as members
-FROM branch_departments bd
-JOIN departments d ON bd.department_id = d.department_id
-JOIN members m_lead ON bd.lead_member_id = m_lead.member_id
-LEFT JOIN members m_deputy ON bd.deputy_member_id = m_deputy.member_id
-LEFT JOIN department_members dm ON bd.branch_department_id = dm.branch_department_id AND dm.is_active=TRUE
-LEFT JOIN members mem ON dm.member_id = mem.member_id
+FROM dev.branch_departments bd
+JOIN dev.departments d ON bd.department_id = d.department_id
+JOIN dev.members m_lead ON bd.lead_member_id = m_lead.member_id
+LEFT JOIN dev.members m_deputy ON bd.deputy_member_id = m_deputy.member_id
+LEFT JOIN dev.department_members dm ON bd.branch_department_id = dm.branch_department_id AND dm.is_active=TRUE
+LEFT JOIN dev.members mem ON dm.member_id = mem.member_id
 WHERE bd.branch_id = $1 AND bd.is_active = TRUE
 GROUP BY bd.branch_department_id, d.department_name, m_lead.member_id, m_lead.first_name, m_lead.last_name, m_deputy.member_id, m_deputy.first_name, m_deputy.last_name;
 ```
@@ -275,24 +275,24 @@ SELECT m.*,
   JSON_BUILD_OBJECT(
     'roles', (
       SELECT JSON_AGG(JSON_BUILD_OBJECT('role_name', r.role_name, 'branch_id', mr.branch_id))
-      FROM member_roles mr
-      JOIN roles r ON mr.role_id = r.role_id
+      FROM dev.member_roles mr
+      JOIN dev.roles r ON mr.role_id = r.role_id
       WHERE mr.member_id = m.member_id AND mr.is_active = TRUE
     ),
     'fellowships', (
       SELECT JSON_AGG(JSON_BUILD_OBJECT('fellowship_name', f.fellowship_name, 'fellowship_id', f.fellowship_id))
-      FROM fellowship_members fm
-      JOIN fellowships f ON fm.fellowship_id = f.fellowship_id
+      FROM dev.fellowship_members fm
+      JOIN dev.fellowships f ON fm.fellowship_id = f.fellowship_id
       WHERE fm.member_id = m.member_id AND fm.is_active = TRUE
     ),
     'leadership', (
       SELECT JSON_AGG(JSON_BUILD_OBJECT('role', bl.role, 'branch_id', bl.branch_id, 'is_current', bl.is_current))
-      FROM branch_leadership bl
+      FROM dev.branch_leadership bl
       WHERE bl.member_id = m.member_id AND bl.is_current = TRUE
     )
   ) as associations
-FROM members m
-JOIN branches b ON m.home_branch_id = b.branch_id
+FROM dev.members m
+JOIN dev.branches b ON m.home_branch_id = b.branch_id
 WHERE m.member_id = $1 AND m.is_active = TRUE;
 ```
 
@@ -301,7 +301,7 @@ WHERE m.member_id = $1 AND m.is_active = TRUE;
 **Get member donation history**:
 ```sql
 SELECT d.donation_date, d.amount, d.currency, d.donation_purpose, d.description
-FROM donations d
+FROM dev.donations d
 WHERE d.member_id = $1
 ORDER BY d.donation_date DESC;
 ```
@@ -309,7 +309,7 @@ ORDER BY d.donation_date DESC;
 **Get total donations by purpose for a branch (yearly)**:
 ```sql
 SELECT donation_purpose, SUM(amount) as total, COUNT(*) as count
-FROM donations
+FROM dev.donations
 WHERE branch_id = $1 AND EXTRACT(YEAR FROM donation_date) = $2
 GROUP BY donation_purpose
 ORDER BY total DESC;
@@ -321,8 +321,8 @@ SELECT
   CASE WHEN d.is_anonymous THEN 'Anonymous' ELSE CONCAT(m.first_name, ' ', m.last_name) END as donor_name,
   SUM(d.amount) as total_amount,
   COUNT(*) as donation_count
-FROM donations d
-JOIN members m ON d.member_id = m.member_id
+FROM dev.donations d
+JOIN dev.members m ON d.member_id = m.member_id
 WHERE d.branch_id = $1 AND d.donation_date BETWEEN $2 AND $3
 GROUP BY d.member_id, d.is_anonymous, m.first_name, m.last_name
 ORDER BY total_amount DESC
@@ -333,21 +333,21 @@ LIMIT 10;
 
 **Send notification to all members of a branch**:
 ```sql
-INSERT INTO notifications (title, message, notification_type, priority, target_scope, target_branch_id, sent_by)
+INSERT INTO dev.notifications (title, message, notification_type, priority, target_scope, target_branch_id, sent_by)
 VALUES ($1, $2, 'Announcement', 'Normal', 'Branch', $3, $4)
 RETURNING notification_id;
 ```
 
 **Send notification to all branch pastors** (cross-branch leadership):
 ```sql
-INSERT INTO notifications (title, message, notification_type, priority, target_scope, target_leadership_role, sent_by)
+INSERT INTO dev.notifications (title, message, notification_type, priority, target_scope, target_leadership_role, sent_by)
 VALUES ($1, $2, 'Announcement', 'High', 'Leadership', 'Main Pastor', $3)
 RETURNING notification_id;
 ```
 
 **Send notification to all members in a region**:
 ```sql
-INSERT INTO notifications (title, message, notification_type, priority, target_scope, target_region_id, sent_by)
+INSERT INTO dev.notifications (title, message, notification_type, priority, target_scope, target_region_id, sent_by)
 VALUES ($1, $2, 'Announcement', 'Normal', 'Region', $3, $4)
 RETURNING notification_id;
 ```
@@ -355,27 +355,27 @@ RETURNING notification_id;
 **Get notifications for a member (based on their associations)**:
 ```sql
 SELECT n.*, nr.is_read, nr.read_at
-FROM notifications n
-LEFT JOIN notification_recipients nr ON n.notification_id = nr.notification_id AND nr.member_id = $1
+FROM dev.notifications n
+LEFT JOIN dev.notification_recipients nr ON n.notification_id = nr.notification_id AND nr.member_id = $1
 WHERE n.is_active = TRUE AND (
     n.target_scope = 'All' OR
-    (n.target_scope = 'Branch' AND n.target_branch_id = (SELECT home_branch_id FROM members WHERE member_id = $1)) OR
+    (n.target_scope = 'Branch' AND n.target_branch_id = (SELECT home_branch_id FROM dev.members WHERE member_id = $1)) OR
     (n.target_scope = 'Region' AND n.target_region_id = (
-        SELECT b.region_id FROM members m JOIN branches b ON m.home_branch_id = b.branch_id WHERE m.member_id = $1
+        SELECT b.region_id FROM dev.members m JOIN dev.branches b ON m.home_branch_id = b.branch_id WHERE m.member_id = $1
     )) OR
     (n.target_scope = 'Department' AND n.target_department_id IN (
-        SELECT bd.department_id FROM department_members dm
-        JOIN branch_departments bd ON dm.branch_department_id = bd.branch_department_id
+        SELECT bd.department_id FROM dev.department_members dm
+        JOIN dev.branch_departments bd ON dm.branch_department_id = bd.branch_department_id
         WHERE dm.member_id = $1 AND dm.is_active = TRUE
     )) OR
     (n.target_scope = 'Fellowship' AND n.target_fellowship_id IN (
-        SELECT fellowship_id FROM fellowship_members WHERE member_id = $1 AND is_active = TRUE
+        SELECT fellowship_id FROM dev.fellowship_members WHERE member_id = $1 AND is_active = TRUE
     )) OR
     (n.target_scope = 'Role' AND n.target_role_id IN (
-        SELECT role_id FROM member_roles WHERE member_id = $1 AND is_active = TRUE
+        SELECT role_id FROM dev.member_roles WHERE member_id = $1 AND is_active = TRUE
     )) OR
     (n.target_scope = 'Leadership' AND n.target_leadership_role IN (
-        SELECT role FROM branch_leadership WHERE member_id = $1 AND is_current = TRUE
+        SELECT role FROM dev.branch_leadership WHERE member_id = $1 AND is_current = TRUE
     ))
 )
 ORDER BY n.sent_at DESC;
@@ -384,14 +384,14 @@ ORDER BY n.sent_at DESC;
 **Get unread notification count**:
 ```sql
 SELECT COUNT(*) as unread_count
-FROM notification_recipients nr
-JOIN notifications n ON nr.notification_id = n.notification_id
+FROM dev.notification_recipients nr
+JOIN dev.notifications n ON nr.notification_id = n.notification_id
 WHERE nr.member_id = $1 AND nr.is_read = FALSE AND n.is_active = TRUE;
 ```
 
 **Mark notification as read**:
 ```sql
-UPDATE notification_recipients 
+UPDATE dev.notification_recipients 
 SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
 WHERE notification_id = $1 AND member_id = $2;
 ```
@@ -400,14 +400,14 @@ WHERE notification_id = $1 AND member_id = $2;
 
 **Create a church-wide event**:
 ```sql
-INSERT INTO events (event_title, event_theme, description, event_type, start_date, end_date, start_time, end_time, venue, coordinator_id, status)
+INSERT INTO dev.events (event_title, event_theme, description, event_type, start_date, end_date, start_time, end_time, venue, coordinator_id, status)
 VALUES ($1, $2, $3, 'Conference', $4, $5, $6, $7, $8, $9, 'Draft')
 RETURNING event_id;
 ```
 
 **Create a branch-specific event**:
 ```sql
-INSERT INTO events (event_title, event_type, start_date, end_date, branch_id, requires_registration, max_attendees, coordinator_id, status)
+INSERT INTO dev.events (event_title, event_type, start_date, end_date, branch_id, requires_registration, max_attendees, coordinator_id, status)
 VALUES ($1, 'Workshop', $2, $3, $4, TRUE, $5, $6, 'Published')
 RETURNING event_id;
 ```
@@ -415,19 +415,19 @@ RETURNING event_id;
 **Get upcoming events for a member** (based on scope):
 ```sql
 SELECT e.*
-FROM events e
+FROM dev.events e
 WHERE e.is_active = TRUE AND e.status IN ('Published', 'Ongoing') AND e.start_date >= CURRENT_DATE
   AND (
     (e.branch_id IS NULL AND e.region_id IS NULL) OR  -- Church-wide
-    e.branch_id = (SELECT home_branch_id FROM members WHERE member_id = $1) OR  -- Branch event
-    e.region_id = (SELECT b.region_id FROM members m JOIN branches b ON m.home_branch_id = b.branch_id WHERE m.member_id = $1)  -- Region event
+    e.branch_id = (SELECT home_branch_id FROM dev.members WHERE member_id = $1) OR  -- Branch event
+    e.region_id = (SELECT b.region_id FROM dev.members m JOIN dev.branches b ON m.home_branch_id = b.branch_id WHERE m.member_id = $1)  -- Region event
   )
 ORDER BY e.start_date, e.start_time;
 ```
 
 **Register member for event**:
 ```sql
-INSERT INTO event_registrations (event_id, member_id, registration_status)
+INSERT INTO dev.event_registrations (event_id, member_id, registration_status)
 VALUES ($1, $2, 'Registered')
 ON CONFLICT (event_id, member_id) DO UPDATE SET registration_status = 'Registered', updated_at = CURRENT_TIMESTAMP
 RETURNING registration_id;
@@ -438,8 +438,8 @@ RETURNING registration_id;
 SELECT e.*,
   COUNT(er.registration_id) FILTER (WHERE er.registration_status IN ('Registered', 'Confirmed')) as registered_count,
   e.max_attendees - COUNT(er.registration_id) FILTER (WHERE er.registration_status IN ('Registered', 'Confirmed')) as spots_remaining
-FROM events e
-LEFT JOIN event_registrations er ON e.event_id = er.event_id
+FROM dev.events e
+LEFT JOIN dev.event_registrations er ON e.event_id = er.event_id
 WHERE e.event_id = $1
 GROUP BY e.event_id;
 ```
@@ -447,8 +447,8 @@ GROUP BY e.event_id;
 **Get event organizers with their roles**:
 ```sql
 SELECT m.member_id, CONCAT(m.first_name, ' ', m.last_name) as name, eo.organizer_role
-FROM event_organizers eo
-JOIN members m ON eo.member_id = m.member_id
+FROM dev.event_organizers eo
+JOIN dev.members m ON eo.member_id = m.member_id
 WHERE eo.event_id = $1
 ORDER BY eo.assigned_date;
 ```
@@ -456,15 +456,15 @@ ORDER BY eo.assigned_date;
 **Get event notes for organizers** (with pinned first):
 ```sql
 SELECT en.*, CONCAT(m.first_name, ' ', m.last_name) as author_name
-FROM event_notes en
-JOIN members m ON en.author_id = m.member_id
+FROM dev.event_notes en
+JOIN dev.members m ON en.author_id = m.member_id
 WHERE en.event_id = $1
 ORDER BY en.is_pinned DESC, en.created_at DESC;
 ```
 
 **Check in attendee at event**:
 ```sql
-UPDATE event_registrations
+UPDATE dev.event_registrations
 SET attended = TRUE, check_in_time = CURRENT_TIMESTAMP, registration_status = 'Confirmed'
 WHERE event_id = $1 AND member_id = $2;
 ```
@@ -476,7 +476,7 @@ SELECT
   COUNT(*) FILTER (WHERE attended = TRUE) as total_attended,
   COUNT(*) FILTER (WHERE registration_status = 'No-Show') as no_shows,
   SUM(guest_count) FILTER (WHERE attended = TRUE) as total_guests
-FROM event_registrations
+FROM dev.event_registrations
 WHERE event_id = $1;
 ```
 

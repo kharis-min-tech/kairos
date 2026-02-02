@@ -1292,60 +1292,60 @@ EVENTS (1) ──────< (N) EVENT_ORGANIZERS
 
 ```sql
 -- Get all active members in a specific branch
-SELECT m.* FROM members m
+SELECT m.* FROM dev.members m
 WHERE m.home_branch_id = 1 AND m.is_active = TRUE;
 
 -- Get current pastor of a branch
-SELECT m.first_name, m.last_name FROM branch_leadership bl
-JOIN members m ON bl.member_id = m.member_id
+SELECT m.first_name, m.last_name FROM dev.branch_leadership bl
+JOIN dev.members m ON bl.member_id = m.member_id
 WHERE bl.branch_id = 1 AND bl.role = 'Main Pastor' AND bl.is_current = TRUE;
 
 -- Get all departments a member belongs to
 SELECT d.department_name, bd.branch_id
-FROM department_members dm
-JOIN branch_departments bd ON dm.branch_department_id = bd.branch_department_id
-JOIN departments d ON bd.department_id = d.department_id
+FROM dev.department_members dm
+JOIN dev.branch_departments bd ON dm.branch_department_id = bd.branch_department_id
+JOIN dev.departments d ON bd.department_id = d.department_id
 WHERE dm.member_id = 1 AND dm.is_active = TRUE;
 
 -- Get attendance for a specific service
 SELECT m.first_name, m.last_name, sa.attendance_status
-FROM service_attendance sa
-JOIN members m ON sa.member_id = m.member_id
+FROM dev.service_attendance sa
+JOIN dev.members m ON sa.member_id = m.member_id
 WHERE sa.service_id = 1
 ORDER BY m.last_name, m.first_name;
 
 -- Get meeting attendance summary for a department
 SELECT dm.meeting_date, COUNT(ma.member_id) as attendees
-FROM department_meetings dm
-LEFT JOIN meeting_attendance ma ON dm.meeting_id = ma.meeting_id
+FROM dev.department_meetings dm
+LEFT JOIN dev.meeting_attendance ma ON dm.meeting_id = ma.meeting_id
 WHERE dm.branch_department_id = 1
 GROUP BY dm.meeting_id, dm.meeting_date
 ORDER BY dm.meeting_date DESC;
 
 -- Get member donation history
 SELECT d.donation_date, d.amount, d.currency, d.donation_purpose, d.description
-FROM donations d
+FROM dev.donations d
 WHERE d.member_id = 1
 ORDER BY d.donation_date DESC;
 
 -- Get total donations by purpose for a branch
 SELECT donation_purpose, SUM(amount) as total, COUNT(*) as count
-FROM donations
+FROM dev.donations
 WHERE branch_id = 1 AND donation_date BETWEEN '2025-01-01' AND '2025-12-31'
 GROUP BY donation_purpose;
 
 -- Get notifications for a specific member (based on their associations)
-SELECT n.* FROM notifications n
+SELECT n.* FROM dev.notifications n
 WHERE n.is_active = TRUE AND (
     n.target_scope = 'All' OR
-    (n.target_scope = 'Branch' AND n.target_branch_id = (SELECT home_branch_id FROM members WHERE member_id = 1)) OR
-    (n.target_scope = 'Role' AND n.target_role_id IN (SELECT role_id FROM member_roles WHERE member_id = 1 AND is_active = TRUE))
+    (n.target_scope = 'Branch' AND n.target_branch_id = (SELECT home_branch_id FROM dev.members WHERE member_id = 1)) OR
+    (n.target_scope = 'Role' AND n.target_role_id IN (SELECT role_id FROM dev.member_roles WHERE member_id = 1 AND is_active = TRUE))
 )
 ORDER BY n.sent_at DESC;
 
 -- Get unread notification count for a member
 SELECT COUNT(*) as unread_count
-FROM notification_recipients nr
+FROM dev.notification_recipients nr
 WHERE nr.member_id = 1 AND nr.is_read = FALSE;
 ```
 

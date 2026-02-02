@@ -60,7 +60,7 @@ cd database/migrations
 
 After running migrations, verify with:
 ```bash
-psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
+psql -d kairos -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'dev';"
 # Expected: 29 tables
 ```
 

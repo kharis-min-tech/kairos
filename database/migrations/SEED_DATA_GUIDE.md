@@ -22,8 +22,8 @@ The script generates the following data:
 
 | Entity | Approximate Count |
 |--------|-------------------|
-| Regions | 5 |
-| Branches | 8 (5 main + 3 satellite) |
+| Regions | 3 |
+| Branches | 5 |
 | Members | 550+ |
 | Active Members | 520+ (95% active rate) |
 | Main Pastors | 5 (one per main branch) |
@@ -48,17 +48,17 @@ The script generates the following data:
 ### Detailed Breakdown
 
 #### Geographic Structure
-- **5 Regions**: Greater Accra, Ashanti, Western, Eastern, Central
-- **5 Main Branches**: One per region with full member base
-- **3 Additional Branches**: Satellite, Campus, and Cell branches
+- **3 Regions**: United Kingdom, Ghana, Sierra Leone
+- **5 Main Branches**: London HQ, Birmingham, Bristol (UK), Accra (Ghana), Freetown (Sierra Leone)
+- Multi-country presence with culturally appropriate names and data
 
 #### Members (550+)
-- Distributed across branches (110 per main branch)
-- Realistic Ghanaian names (first and last names)
+- Distributed across branches (varying by branch size)
+- Realistic names from UK, Ghana, and Sierra Leone
 - Mix of male and female (approximately 50/50)
 - Ages ranging from 18-75 years
 - 95% active membership rate
-- Complete contact information (phone, email, address)
+- Region-appropriate phone formats and currencies
 - Emergency contacts included
 
 #### Leadership Structure
@@ -152,7 +152,7 @@ The script uses several PostgreSQL features:
    - `random_email()`: Generate email addresses from names
 
 2. **Random Data Generation**:
-   - Arrays of realistic Ghanaian names
+   - Arrays of realistic British, Ghanaian, and Sierra Leonean names
    - `random()` function for variation
    - `generate_series()` for bulk record creation
 
@@ -189,16 +189,16 @@ After running the seed script, verify the data:
 ```sql
 -- Check member counts per branch
 SELECT b.branch_name, COUNT(m.member_id) as member_count
-FROM branches b
-LEFT JOIN members m ON b.branch_id = m.home_branch_id
+FROM dev.branches b
+LEFT JOIN dev.members m ON b.branch_id = m.home_branch_id
 GROUP BY b.branch_name
 ORDER BY member_count DESC;
 
 -- Check leadership assignments
 SELECT b.branch_name, m.first_name || ' ' || m.last_name as pastor_name, bl.role
-FROM branch_leadership bl
-JOIN branches b ON bl.branch_id = b.branch_id
-JOIN members m ON bl.member_id = m.member_id
+FROM dev.branch_leadership bl
+JOIN dev.branches b ON bl.branch_id = b.branch_id
+JOIN dev.members m ON bl.member_id = m.member_id
 WHERE bl.is_current = TRUE
 ORDER BY b.branch_name, bl.role;
 
@@ -207,14 +207,14 @@ SELECT COUNT(*) as total_services,
        COUNT(DISTINCT branch_id) as branches_with_services,
        MIN(service_date) as earliest_service,
        MAX(service_date) as latest_service
-FROM services;
+FROM dev.services;
 
 -- Check donation summary
 SELECT donation_purpose, 
        COUNT(*) as transaction_count,
        SUM(amount) as total_amount,
        AVG(amount) as average_amount
-FROM donations
+FROM dev.donations
 GROUP BY donation_purpose;
 ```
 
@@ -238,9 +238,9 @@ GROUP BY donation_purpose;
 ```sql
 -- Check for any data
 SELECT 
-    (SELECT COUNT(*) FROM members) as members,
-    (SELECT COUNT(*) FROM branches) as branches,
-    (SELECT COUNT(*) FROM services) as services;
+    (SELECT COUNT(*) FROM dev.members) as members,
+    (SELECT COUNT(*) FROM dev.branches) as branches,
+    (SELECT COUNT(*) FROM dev.services) as services;
 ```
 
 ### Issue: Performance is slow

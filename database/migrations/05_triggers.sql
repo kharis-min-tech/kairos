@@ -16,37 +16,37 @@
 -- ############################################################################
 
 -- LANGUAGES trigger
-DROP TRIGGER IF EXISTS languages_updated_at ON core.languages;
+DROP TRIGGER IF EXISTS languages_updated_at ON dev.languages;
 CREATE TRIGGER languages_updated_at
-    BEFORE UPDATE ON core.languages
+    BEFORE UPDATE ON dev.languages
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- REGIONS trigger
-DROP TRIGGER IF EXISTS regions_updated_at ON core.regions;
+DROP TRIGGER IF EXISTS regions_updated_at ON dev.regions;
 CREATE TRIGGER regions_updated_at
-    BEFORE UPDATE ON core.regions
+    BEFORE UPDATE ON dev.regions
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- BRANCHES trigger
-DROP TRIGGER IF EXISTS branches_updated_at ON core.branches;
+DROP TRIGGER IF EXISTS branches_updated_at ON dev.branches;
 CREATE TRIGGER branches_updated_at
-    BEFORE UPDATE ON core.branches
+    BEFORE UPDATE ON dev.branches
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- MEMBERS trigger
-DROP TRIGGER IF EXISTS members_updated_at ON core.members;
+DROP TRIGGER IF EXISTS members_updated_at ON dev.members;
 CREATE TRIGGER members_updated_at
-    BEFORE UPDATE ON core.members
+    BEFORE UPDATE ON dev.members
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- BRANCH_LEADERSHIP trigger
-DROP TRIGGER IF EXISTS branch_leadership_updated_at ON core.branch_leadership;
+DROP TRIGGER IF EXISTS branch_leadership_updated_at ON dev.branch_leadership;
 CREATE TRIGGER branch_leadership_updated_at
-    BEFORE UPDATE ON core.branch_leadership
+    BEFORE UPDATE ON dev.branch_leadership
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -55,72 +55,72 @@ CREATE TRIGGER branch_leadership_updated_at
 -- ############################################################################
 
 -- ROLES trigger
-DROP TRIGGER IF EXISTS roles_updated_at ON ministry.roles;
+DROP TRIGGER IF EXISTS roles_updated_at ON dev.roles;
 CREATE TRIGGER roles_updated_at
-    BEFORE UPDATE ON ministry.roles
+    BEFORE UPDATE ON dev.roles
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- MEMBER_ROLES trigger
-DROP TRIGGER IF EXISTS member_roles_updated_at ON ministry.member_roles;
+DROP TRIGGER IF EXISTS member_roles_updated_at ON dev.member_roles;
 CREATE TRIGGER member_roles_updated_at
-    BEFORE UPDATE ON ministry.member_roles
+    BEFORE UPDATE ON dev.member_roles
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- FELLOWSHIPS trigger
-DROP TRIGGER IF EXISTS fellowships_updated_at ON ministry.fellowships;
+DROP TRIGGER IF EXISTS fellowships_updated_at ON dev.fellowships;
 CREATE TRIGGER fellowships_updated_at
-    BEFORE UPDATE ON ministry.fellowships
+    BEFORE UPDATE ON dev.fellowships
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- FELLOWSHIP_MEMBERS trigger
-DROP TRIGGER IF EXISTS fellowship_members_updated_at ON ministry.fellowship_members;
+DROP TRIGGER IF EXISTS fellowship_members_updated_at ON dev.fellowship_members;
 CREATE TRIGGER fellowship_members_updated_at
-    BEFORE UPDATE ON ministry.fellowship_members
+    BEFORE UPDATE ON dev.fellowship_members
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- FELLOWSHIP_MEETINGS trigger
-DROP TRIGGER IF EXISTS fellowship_meetings_updated_at ON ministry.fellowship_meetings;
+DROP TRIGGER IF EXISTS fellowship_meetings_updated_at ON dev.fellowship_meetings;
 CREATE TRIGGER fellowship_meetings_updated_at
-    BEFORE UPDATE ON ministry.fellowship_meetings
+    BEFORE UPDATE ON dev.fellowship_meetings
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- DEPARTMENTS trigger
-DROP TRIGGER IF EXISTS departments_updated_at ON ministry.departments;
+DROP TRIGGER IF EXISTS departments_updated_at ON dev.departments;
 CREATE TRIGGER departments_updated_at
-    BEFORE UPDATE ON ministry.departments
+    BEFORE UPDATE ON dev.departments
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- BRANCH_DEPARTMENTS trigger
-DROP TRIGGER IF EXISTS branch_departments_updated_at ON ministry.branch_departments;
+DROP TRIGGER IF EXISTS branch_departments_updated_at ON dev.branch_departments;
 CREATE TRIGGER branch_departments_updated_at
-    BEFORE UPDATE ON ministry.branch_departments
+    BEFORE UPDATE ON dev.branch_departments
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- DEPARTMENT_MEMBERS trigger
-DROP TRIGGER IF EXISTS department_members_updated_at ON ministry.department_members;
+DROP TRIGGER IF EXISTS department_members_updated_at ON dev.department_members;
 CREATE TRIGGER department_members_updated_at
-    BEFORE UPDATE ON ministry.department_members
+    BEFORE UPDATE ON dev.department_members
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- DEPARTMENT_MEETINGS trigger
-DROP TRIGGER IF EXISTS department_meetings_updated_at ON ministry.department_meetings;
+DROP TRIGGER IF EXISTS department_meetings_updated_at ON dev.department_meetings;
 CREATE TRIGGER department_meetings_updated_at
-    BEFORE UPDATE ON ministry.department_meetings
+    BEFORE UPDATE ON dev.department_meetings
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- SERVICES trigger
-DROP TRIGGER IF EXISTS services_updated_at ON ministry.services;
+DROP TRIGGER IF EXISTS services_updated_at ON dev.services;
 CREATE TRIGGER services_updated_at
-    BEFORE UPDATE ON ministry.services
+    BEFORE UPDATE ON dev.services
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -129,23 +129,23 @@ CREATE TRIGGER services_updated_at
 -- ############################################################################
 
 -- OUTREACH_PROGRAMS trigger
-DROP TRIGGER IF EXISTS outreach_programs_updated_at ON outreach.outreach_programs;
+DROP TRIGGER IF EXISTS outreach_programs_updated_at ON dev.outreach_programs;
 CREATE TRIGGER outreach_programs_updated_at
-    BEFORE UPDATE ON outreach.outreach_programs
+    BEFORE UPDATE ON dev.outreach_programs
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- SOULS trigger
-DROP TRIGGER IF EXISTS souls_updated_at ON outreach.souls;
+DROP TRIGGER IF EXISTS souls_updated_at ON dev.souls;
 CREATE TRIGGER souls_updated_at
-    BEFORE UPDATE ON outreach.souls
+    BEFORE UPDATE ON dev.souls
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- FOLLOW_UPS trigger
-DROP TRIGGER IF EXISTS follow_ups_updated_at ON outreach.follow_ups;
+DROP TRIGGER IF EXISTS follow_ups_updated_at ON dev.follow_ups;
 CREATE TRIGGER follow_ups_updated_at
-    BEFORE UPDATE ON outreach.follow_ups
+    BEFORE UPDATE ON dev.follow_ups
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -154,9 +154,9 @@ CREATE TRIGGER follow_ups_updated_at
 -- ############################################################################
 
 -- DONATIONS trigger
-DROP TRIGGER IF EXISTS donations_updated_at ON finance.donations;
+DROP TRIGGER IF EXISTS donations_updated_at ON dev.donations;
 CREATE TRIGGER donations_updated_at
-    BEFORE UPDATE ON finance.donations
+    BEFORE UPDATE ON dev.donations
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -165,30 +165,30 @@ CREATE TRIGGER donations_updated_at
 -- ############################################################################
 
 -- NOTIFICATIONS trigger
-DROP TRIGGER IF EXISTS notifications_updated_at ON comms.notifications;
+DROP TRIGGER IF EXISTS notifications_updated_at ON dev.notifications;
 CREATE TRIGGER notifications_updated_at
-    BEFORE UPDATE ON comms.notifications
+    BEFORE UPDATE ON dev.notifications
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- EVENTS trigger
-DROP TRIGGER IF EXISTS events_updated_at ON comms.events;
+DROP TRIGGER IF EXISTS events_updated_at ON dev.events;
 CREATE TRIGGER events_updated_at
-    BEFORE UPDATE ON comms.events
+    BEFORE UPDATE ON dev.events
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- EVENT_NOTES trigger
-DROP TRIGGER IF EXISTS event_notes_updated_at ON comms.event_notes;
+DROP TRIGGER IF EXISTS event_notes_updated_at ON dev.event_notes;
 CREATE TRIGGER event_notes_updated_at
-    BEFORE UPDATE ON comms.event_notes
+    BEFORE UPDATE ON dev.event_notes
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- EVENT_REGISTRATIONS trigger
-DROP TRIGGER IF EXISTS event_registrations_updated_at ON comms.event_registrations;
+DROP TRIGGER IF EXISTS event_registrations_updated_at ON dev.event_registrations;
 CREATE TRIGGER event_registrations_updated_at
-    BEFORE UPDATE ON comms.event_registrations
+    BEFORE UPDATE ON dev.event_registrations
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 

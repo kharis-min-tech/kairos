@@ -309,7 +309,7 @@ Set these environment variables so the scripts can connect without prompting for
      psql -d kairos
 
    [INFO] To verify the schema:
-     psql -d kairos -c '\dt core.*'
+     psql -d kairos -c '\dt dev.*'
    ```
 
 ---
@@ -321,49 +321,40 @@ Set these environment variables so the scripts can connect without prompting for
    - Expand "Databases" → "kairos"
    - Expand "Schemas"
 
-2. **You should see 5 custom schemas with 29 tables total:**
+2. **You should see the dev schema with 29 tables:**
 
-   **core** (5 tables) - Core organizational entities:
-   - languages
-   - regions
+   **dev** (29 tables) - All database entities:
    - branches
-   - members
-   - branch_leadership
-
-   **ministry** (14 tables) - Ministry and service tracking:
-   - roles
-   - member_roles
-   - departments
    - branch_departments
+   - branch_leadership
+   - departments
    - department_members
    - department_meetings
-   - meeting_attendance
+   - donations
+   - events
+   - event_notes
+   - event_organizers
+   - event_registrations
    - fellowships
    - fellowship_members
    - fellowship_meetings
    - fellowship_meeting_attendance
-   - services
-   - service_attendance
-
-   **outreach** (4 tables) - Evangelism and follow-up:
-   - outreach_programs
-   - outreach_participants
-   - souls
    - follow_ups
-
-   **finance** (1 table) - Financial records:
-   - donations
-
-   **comms** (5 tables) - Communications and events:
+   - meeting_attendance
+   - members
+   - member_roles
    - notifications
    - notification_recipients
-   - events
-   - event_organizers
-   - event_notes
-   - event_registrations
+   - outreach_programs
+   - outreach_participants
+   - regions
+   - roles
+   - services
+   - service_attendance
+   - souls
 
 3. **Browse data structure:**
-   - Expand any schema (e.g., "core")
+   - Expand "dev" schema
    - Expand "Tables"
    - Right-click any table
    - Select "View/Edit Data" → "All Rows"
@@ -383,22 +374,18 @@ psql -d kairos
 -- List all schemas
 \dn
 
--- List all tables in all custom schemas
-\dt core.*
-\dt ministry.*
-\dt outreach.*
-\dt finance.*
-\dt comms.*
+-- List all tables in the dev schema
+\dt dev.*
 
 -- Describe a table (use schema prefix)
-\d core.members
+\d dev.members
 
 -- Query a table (use schema prefix)
-SELECT * FROM core.regions;
-SELECT * FROM ministry.roles;
+SELECT * FROM dev.regions;
+SELECT * FROM dev.roles;
 
 -- Set search_path to avoid typing schema prefixes
-SET search_path TO core, ministry, outreach, finance, comms;
+SET search_path TO dev;
 SELECT * FROM members;  -- Now works without prefix
 
 -- Exit
@@ -550,21 +537,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    CREATE USER kairos_app WITH PASSWORD 'secure_password';
    GRANT ALL PRIVILEGES ON DATABASE kairos TO kairos_app;
    
-   -- Grant access to all custom schemas
-   GRANT USAGE ON SCHEMA core, ministry, outreach, finance, comms TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA core TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ministry TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA outreach TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA finance TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA comms TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA core TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ministry TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA outreach TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA finance TO kairos_app;
-   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA comms TO kairos_app;
+   -- Grant access to the dev schema
+   GRANT USAGE ON SCHEMA dev TO kairos_app;
+   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA dev TO kairos_app;
+   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA dev TO kairos_app;
    
    -- Set default search_path for the user
-   ALTER USER kairos_app SET search_path TO core, ministry, outreach, finance, comms;
+   ALTER USER kairos_app SET search_path TO dev;
    ```
 
 ---
@@ -604,18 +583,15 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## Schema Architecture Reference
 
-The Kairos database uses 5 custom schemas for logical organization:
+The Kairos database uses a single `dev` schema for development:
 
 | Schema | Purpose | Tables |
 |--------|---------|--------|
-| `core` | Core organizational entities | languages, regions, branches, members, branch_leadership |
-| `ministry` | Ministry operations and tracking | roles, member_roles, departments, branch_departments, department_members, department_meetings, meeting_attendance, fellowships, fellowship_members, fellowship_meetings, fellowship_meeting_attendance, services, service_attendance |
-| `outreach` | Evangelism and conversion tracking | outreach_programs, outreach_participants, souls, follow_ups |
-| `finance` | Financial records | donations |
-| `comms` | Communications and events | notifications, notification_recipients, events, event_organizers, event_notes, event_registrations |
+| `dev` | All database entities | 29 tables covering regions, branches, members, leadership, roles, departments, fellowships, services, outreach, donations, notifications, events |
 
-This separation enables:
-- Granular backup and restore by schema
-- Schema-level security and access control
-- Clearer organization of related tables
-- Independent schema versioning if needed
+**Key table categories:**
+- **Core entities:** regions, branches, members, branch_leadership
+- **Ministry operations:** roles, member_roles, departments, branch_departments, department_members, department_meetings, meeting_attendance, fellowships, fellowship_members, fellowship_meetings, fellowship_meeting_attendance, services, service_attendance
+- **Outreach tracking:** outreach_programs, outreach_participants, souls, follow_ups
+- **Financial records:** donations
+- **Communications:** notifications, notification_recipients, events, event_organizers, event_notes, event_registrations

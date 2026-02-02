@@ -258,11 +258,11 @@ function Test-Installation {
         return [int]($result.ToString().Trim())
     }
     
-    # Define the custom schemas used in this project
-    $customSchemas = "'core', 'ministry', 'outreach', 'finance', 'comms'"
+    # Define the schema used in this project
+    $devSchema = "'dev'"
     
-    # Check table count (across all custom schemas)
-    $tableCountQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema IN ($customSchemas);"
+    # Check table count (in dev schema)
+    $tableCountQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = $devSchema;"
     $tableCount = Get-PsqlCount $tableCountQuery
     if ($tableCount -ge 29) {
         Write-Host "[OK] Table count verified: $tableCount tables created" -ForegroundColor Green
@@ -281,18 +281,18 @@ function Test-Installation {
         Write-Host "[WARN] Expected at least 1 function, found $functionCount" -ForegroundColor Yellow
     }
     
-    # Check trigger count (across all custom schemas)
-    $triggerCountQuery = "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema IN ($customSchemas);"
+    # Check trigger count (in dev schema)
+    $triggerCountQuery = "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = $devSchema;"
     $triggerCount = Get-PsqlCount $triggerCountQuery
-    if ($triggerCount -ge 25) {
+    if ($triggerCount -ge 23) {
         Write-Host "[OK] Trigger count verified: $triggerCount triggers created" -ForegroundColor Green
     }
     else {
-        Write-Host "[WARN] Expected at least 25 triggers, found $triggerCount" -ForegroundColor Yellow
+        Write-Host "[WARN] Expected at least 23 triggers, found $triggerCount" -ForegroundColor Yellow
     }
     
-    # Check foreign key count (across all custom schemas)
-    $fkCountQuery = "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema IN ($customSchemas) AND constraint_type = 'FOREIGN KEY';"
+    # Check foreign key count (in dev schema)
+    $fkCountQuery = "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = $devSchema AND constraint_type = 'FOREIGN KEY';"
     $fkCount = Get-PsqlCount $fkCountQuery
     if ($fkCount -ge 63) {
         Write-Host "[OK] Foreign key count verified: $fkCount constraints created" -ForegroundColor Green
@@ -301,8 +301,8 @@ function Test-Installation {
         Write-Host "[WARN] Expected at least 63 foreign keys, found $fkCount" -ForegroundColor Yellow
     }
     
-    # Check index count (across all custom schemas)
-    $indexCountQuery = "SELECT COUNT(*) FROM pg_indexes WHERE schemaname IN ($customSchemas);"
+    # Check index count (in dev schema)
+    $indexCountQuery = "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = $devSchema;"
     $indexCount = Get-PsqlCount $indexCountQuery
     if ($indexCount -ge 90) {
         Write-Host "[OK] Index count verified: $indexCount indexes created" -ForegroundColor Green
