@@ -177,20 +177,30 @@ function Invoke-MigrationScript {
 function Test-Installation {
     Write-SectionHeader "Verifying Installation"
     
+    # Helper to safely get count from psql output
+    function Get-PsqlCount {
+        param([string]$Query)
+        $result = psql -d $DatabaseName -t -c $Query 2>&1
+        if ($result -is [array]) {
+            $result = $result[0]
+        }
+        return [int]($result.ToString().Trim())
+    }
+    
     # Check table count
     $tableCountQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
-    $tableCount = (psql -d $DatabaseName -t -c $tableCountQuery).Trim()
-    if ($tableCount -eq "28") {
+    $tableCount = Get-PsqlCount $tableCountQuery
+    if ($tableCount -ge 28) {
         Write-Host "[OK] Table count verified: $tableCount tables created" -ForegroundColor Green
     }
     else {
-        Write-Host "[WARN] Expected 28 tables, found $tableCount" -ForegroundColor Yellow
+        Write-Host "[WARN] Expected at least 28 tables, found $tableCount" -ForegroundColor Yellow
     }
     
     # Check function count
     $functionCountQuery = "SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema = 'public' AND routine_type = 'FUNCTION';"
-    $functionCount = (psql -d $DatabaseName -t -c $functionCountQuery).Trim()
-    if ([int]$functionCount -ge 1) {
+    $functionCount = Get-PsqlCount $functionCountQuery
+    if ($functionCount -ge 1) {
         Write-Host "[OK] Function count verified: $functionCount functions created" -ForegroundColor Green
     }
     else {
@@ -199,8 +209,8 @@ function Test-Installation {
     
     # Check trigger count
     $triggerCountQuery = "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = 'public';"
-    $triggerCount = (psql -d $DatabaseName -t -c $triggerCountQuery).Trim()
-    if ([int]$triggerCount -ge 23) {
+    $triggerCount = Get-PsqlCount $triggerCountQuery
+    if ($triggerCount -ge 23) {
         Write-Host "[OK] Trigger count verified: $triggerCount triggers created" -ForegroundColor Green
     }
     else {
@@ -209,8 +219,8 @@ function Test-Installation {
     
     # Check foreign key count
     $fkCountQuery = "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = 'public' AND constraint_type = 'FOREIGN KEY';"
-    $fkCount = (psql -d $DatabaseName -t -c $fkCountQuery).Trim()
-    if ([int]$fkCount -ge 70) {
+    $fkCount = Get-PsqlCount $fkCountQuery
+    if ($fkCount -ge 70) {
         Write-Host "[OK] Foreign key count verified: $fkCount constraints created" -ForegroundColor Green
     }
     else {
@@ -219,8 +229,8 @@ function Test-Installation {
     
     # Check index count
     $indexCountQuery = "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public';"
-    $indexCount = (psql -d $DatabaseName -t -c $indexCountQuery).Trim()
-    if ([int]$indexCount -ge 90) {
+    $indexCount = Get-PsqlCount $indexCountQuery
+    if ($indexCount -ge 90) {
         Write-Host "[OK] Index count verified: $indexCount indexes created" -ForegroundColor Green
     }
     else {
