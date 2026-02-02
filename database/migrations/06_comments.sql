@@ -5,6 +5,7 @@
 -- ============================================================================
 -- Execution Order: 6 (Last - optional but recommended)
 -- Dependencies: 02_tables.sql
+-- Note: This script is IDEMPOTENT - COMMENT ON naturally replaces existing comments
 -- ============================================================================
 
 -- Table comments provide documentation visible in database metadata

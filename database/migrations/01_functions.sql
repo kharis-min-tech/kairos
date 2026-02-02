@@ -5,6 +5,7 @@
 -- ============================================================================
 -- Execution Order: 1 (Must be run first)
 -- Dependencies: None
+-- Note: This script is IDEMPOTENT - CREATE OR REPLACE safely updates functions
 -- ============================================================================
 
 -- Function to automatically update updated_at timestamp

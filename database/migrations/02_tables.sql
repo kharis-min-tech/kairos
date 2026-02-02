@@ -5,13 +5,14 @@
 -- ============================================================================
 -- Execution Order: 2 (After functions)
 -- Dependencies: 01_functions.sql
+-- Note: This script is IDEMPOTENT - safe to run multiple times
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
 -- 1. LANGUAGES
 -- Purpose: Store languages used in church services and communications
 -- ----------------------------------------------------------------------------
-CREATE TABLE languages (
+CREATE TABLE IF NOT EXISTS languages (
     language_id SERIAL PRIMARY KEY,
     language_name VARCHAR(50) NOT NULL UNIQUE,
     language_code VARCHAR(10) NOT NULL UNIQUE,
@@ -24,7 +25,7 @@ CREATE TABLE languages (
 -- 2. REGIONS
 -- Purpose: Store geographical regions where branches are located
 -- ----------------------------------------------------------------------------
-CREATE TABLE regions (
+CREATE TABLE IF NOT EXISTS regions (
     region_id SERIAL PRIMARY KEY,
     region_name VARCHAR(100) NOT NULL,
     country VARCHAR(100) NOT NULL,
@@ -36,7 +37,7 @@ CREATE TABLE regions (
 -- 3. BRANCHES
 -- Purpose: Store church branch information across different regions
 -- ----------------------------------------------------------------------------
-CREATE TABLE branches (
+CREATE TABLE IF NOT EXISTS branches (
     branch_id SERIAL PRIMARY KEY,
     branch_name VARCHAR(150) NOT NULL,
     region_id INTEGER NOT NULL,
@@ -57,7 +58,7 @@ CREATE TABLE branches (
 -- 4. MEMBERS
 -- Purpose: Store church member information
 -- ----------------------------------------------------------------------------
-CREATE TABLE members (
+CREATE TABLE IF NOT EXISTS members (
     member_id SERIAL PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -83,7 +84,7 @@ CREATE TABLE members (
 -- 5. BRANCH_LEADERSHIP
 -- Purpose: Store pastor and elder assignments for each branch
 -- ----------------------------------------------------------------------------
-CREATE TABLE branch_leadership (
+CREATE TABLE IF NOT EXISTS branch_leadership (
     leadership_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -99,7 +100,7 @@ CREATE TABLE branch_leadership (
 -- 6. ROLES
 -- Purpose: Store church role definitions (e.g., Choir Member, Usher, Teacher)
 -- ----------------------------------------------------------------------------
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     role_id SERIAL PRIMARY KEY,
     role_name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -112,7 +113,7 @@ CREATE TABLE roles (
 -- 7. MEMBER_ROLES
 -- Purpose: Store member role assignments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE member_roles (
+CREATE TABLE IF NOT EXISTS member_roles (
     member_role_id SERIAL PRIMARY KEY,
     member_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
@@ -129,7 +130,7 @@ CREATE TABLE member_roles (
 -- 8. FELLOWSHIPS
 -- Purpose: Store fellowship group information
 -- ----------------------------------------------------------------------------
-CREATE TABLE fellowships (
+CREATE TABLE IF NOT EXISTS fellowships (
     fellowship_id SERIAL PRIMARY KEY,
     fellowship_name VARCHAR(150) NOT NULL,
     branch_id INTEGER NOT NULL,
@@ -146,7 +147,7 @@ CREATE TABLE fellowships (
 -- 9. FELLOWSHIP_MEMBERS
 -- Purpose: Store member assignments to fellowships (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE fellowship_members (
+CREATE TABLE IF NOT EXISTS fellowship_members (
     fellowship_member_id SERIAL PRIMARY KEY,
     fellowship_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -162,7 +163,7 @@ CREATE TABLE fellowship_members (
 -- 10. FELLOWSHIP_MEETINGS
 -- Purpose: Store fellowship meeting information
 -- ----------------------------------------------------------------------------
-CREATE TABLE fellowship_meetings (
+CREATE TABLE IF NOT EXISTS fellowship_meetings (
     meeting_id SERIAL PRIMARY KEY,
     fellowship_id INTEGER NOT NULL,
     meeting_date TIMESTAMP NOT NULL,
@@ -180,7 +181,7 @@ CREATE TABLE fellowship_meetings (
 -- 11. FELLOWSHIP_MEETING_ATTENDANCE
 -- Purpose: Store attendance records for fellowship meetings
 -- ----------------------------------------------------------------------------
-CREATE TABLE fellowship_meeting_attendance (
+CREATE TABLE IF NOT EXISTS fellowship_meeting_attendance (
     meeting_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL DEFAULT 'Present',
@@ -195,7 +196,7 @@ CREATE TABLE fellowship_meeting_attendance (
 -- 12. DEPARTMENTS
 -- Purpose: Store department definitions (common across all branches)
 -- ----------------------------------------------------------------------------
-CREATE TABLE departments (
+CREATE TABLE IF NOT EXISTS departments (
     department_id SERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -208,7 +209,7 @@ CREATE TABLE departments (
 -- 13. OUTREACH_PROGRAMS
 -- Purpose: Store outreach program information and activities
 -- ----------------------------------------------------------------------------
-CREATE TABLE outreach_programs (
+CREATE TABLE IF NOT EXISTS outreach_programs (
     outreach_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     program_name VARCHAR(200) NOT NULL,
@@ -229,7 +230,7 @@ CREATE TABLE outreach_programs (
 -- 14. SOULS
 -- Purpose: Store information about new individuals reached through outreach
 -- ----------------------------------------------------------------------------
-CREATE TABLE souls (
+CREATE TABLE IF NOT EXISTS souls (
     soul_id SERIAL PRIMARY KEY,
     outreach_id INTEGER NOT NULL,
     first_name VARCHAR(100) NOT NULL,
@@ -252,7 +253,7 @@ CREATE TABLE souls (
 -- 15. FOLLOW_UPS
 -- Purpose: Store follow-up activities for souls
 -- ----------------------------------------------------------------------------
-CREATE TABLE follow_ups (
+CREATE TABLE IF NOT EXISTS follow_ups (
     follow_up_id SERIAL PRIMARY KEY,
     soul_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -270,7 +271,7 @@ CREATE TABLE follow_ups (
 -- 16. OUTREACH_PARTICIPANTS
 -- Purpose: Store member participation in outreach programs
 -- ----------------------------------------------------------------------------
-CREATE TABLE outreach_participants (
+CREATE TABLE IF NOT EXISTS outreach_participants (
     outreach_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     role VARCHAR(50),
@@ -283,7 +284,7 @@ CREATE TABLE outreach_participants (
 -- 17. BRANCH_DEPARTMENTS
 -- Purpose: Link departments to specific branches with leadership assignments
 -- ----------------------------------------------------------------------------
-CREATE TABLE branch_departments (
+CREATE TABLE IF NOT EXISTS branch_departments (
     branch_department_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     department_id INTEGER NOT NULL,
@@ -300,7 +301,7 @@ CREATE TABLE branch_departments (
 -- 18. DEPARTMENT_MEMBERS
 -- Purpose: Store member assignments to departments (many-to-many relationship)
 -- ----------------------------------------------------------------------------
-CREATE TABLE department_members (
+CREATE TABLE IF NOT EXISTS department_members (
     department_member_id SERIAL PRIMARY KEY,
     branch_department_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
@@ -315,7 +316,7 @@ CREATE TABLE department_members (
 -- 19. DEPARTMENT_MEETINGS
 -- Purpose: Store department meeting information
 -- ----------------------------------------------------------------------------
-CREATE TABLE department_meetings (
+CREATE TABLE IF NOT EXISTS department_meetings (
     meeting_id SERIAL PRIMARY KEY,
     branch_department_id INTEGER NOT NULL,
     meeting_date TIMESTAMP NOT NULL,
@@ -332,7 +333,7 @@ CREATE TABLE department_meetings (
 -- 20. MEETING_ATTENDANCE
 -- Purpose: Store attendance records for department meetings
 -- ----------------------------------------------------------------------------
-CREATE TABLE meeting_attendance (
+CREATE TABLE IF NOT EXISTS meeting_attendance (
     meeting_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL,
@@ -347,7 +348,7 @@ CREATE TABLE meeting_attendance (
 -- 21. SERVICES
 -- Purpose: Store weekly service information for each branch
 -- ----------------------------------------------------------------------------
-CREATE TABLE services (
+CREATE TABLE IF NOT EXISTS services (
     service_id SERIAL PRIMARY KEY,
     branch_id INTEGER NOT NULL,
     service_date TIMESTAMP NOT NULL,
@@ -365,7 +366,7 @@ CREATE TABLE services (
 -- 22. SERVICE_ATTENDANCE
 -- Purpose: Store attendance records for services
 -- ----------------------------------------------------------------------------
-CREATE TABLE service_attendance (
+CREATE TABLE IF NOT EXISTS service_attendance (
     service_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     attendance_status VARCHAR(20) NOT NULL,
@@ -381,7 +382,7 @@ CREATE TABLE service_attendance (
 -- 23. DONATIONS
 -- Purpose: Store member donation/giving records
 -- ----------------------------------------------------------------------------
-CREATE TABLE donations (
+CREATE TABLE IF NOT EXISTS donations (
     donation_id SERIAL PRIMARY KEY,
     member_id INTEGER NOT NULL,
     branch_id INTEGER NOT NULL,
@@ -403,7 +404,7 @@ CREATE TABLE donations (
 -- 24. NOTIFICATIONS
 -- Purpose: Store notifications and announcements broadcast to members
 -- ----------------------------------------------------------------------------
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     notification_id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
@@ -429,7 +430,7 @@ CREATE TABLE notifications (
 -- 25. NOTIFICATION_RECIPIENTS
 -- Purpose: Track which members received and read notifications
 -- ----------------------------------------------------------------------------
-CREATE TABLE notification_recipients (
+CREATE TABLE IF NOT EXISTS notification_recipients (
     notification_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
@@ -444,7 +445,7 @@ CREATE TABLE notification_recipients (
 -- 26. EVENTS
 -- Purpose: Store church-wide and branch events
 -- ----------------------------------------------------------------------------
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     event_id SERIAL PRIMARY KEY,
     event_title VARCHAR(200) NOT NULL,
     event_theme VARCHAR(300),
@@ -475,7 +476,7 @@ CREATE TABLE events (
 -- 27. EVENT_ORGANIZERS
 -- Purpose: Store organizing team members for events
 -- ----------------------------------------------------------------------------
-CREATE TABLE event_organizers (
+CREATE TABLE IF NOT EXISTS event_organizers (
     event_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
     organizer_role VARCHAR(100),
@@ -489,7 +490,7 @@ CREATE TABLE event_organizers (
 -- 28. EVENT_NOTES
 -- Purpose: Store messages and notes logged by event organizers
 -- ----------------------------------------------------------------------------
-CREATE TABLE event_notes (
+CREATE TABLE IF NOT EXISTS event_notes (
     note_id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL,
     author_id INTEGER NOT NULL,
@@ -505,7 +506,7 @@ CREATE TABLE event_notes (
 -- 29. EVENT_REGISTRATIONS
 -- Purpose: Store member registrations for events requiring sign-up
 -- ----------------------------------------------------------------------------
-CREATE TABLE event_registrations (
+CREATE TABLE IF NOT EXISTS event_registrations (
     registration_id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL,
     member_id INTEGER NOT NULL,
