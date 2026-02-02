@@ -153,20 +153,47 @@ function Invoke-MigrationScript {
     
     Write-Host "[INFO] Executing $ScriptName..." -ForegroundColor Cyan
     
+    # Temporarily set error preference to Continue so NOTICE messages don't throw
+    $prevErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    
     try {
+        # Run psql and capture output
         $output = psql -d $DatabaseName -f $scriptPath -v ON_ERROR_STOP=1 2>&1
-        if ($LASTEXITCODE -eq 0) {
+        $exitCode = $LASTEXITCODE
+        
+        # Restore error preference
+        $ErrorActionPreference = $prevErrorActionPreference
+        
+        if ($exitCode -eq 0) {
+            # Check if there are any NOTICE messages and display them as info
+            $noticeMessages = $output | Where-Object { $_ -match "NOTICE:" }
+            if ($noticeMessages) {
+                foreach ($notice in $noticeMessages) {
+                    $cleanNotice = $notice -replace ".*NOTICE:\s*", ""
+                    Write-Host "[INFO] $cleanNotice" -ForegroundColor Gray
+                }
+            }
             Write-Host "[OK] $ScriptName completed successfully" -ForegroundColor Green
             return $true
         }
         else {
             Write-Host "[ERROR] Error executing $ScriptName" -ForegroundColor Red
-            Write-Host "[ERROR] Check the SQL script for syntax errors" -ForegroundColor Red
-            Write-Host $output -ForegroundColor Red
+            # Filter out NOTICE messages, show only actual errors
+            $errorMessages = $output | Where-Object { $_ -notmatch "NOTICE:" -and $_ -match "ERROR|FATAL" }
+            if ($errorMessages) {
+                foreach ($err in $errorMessages) {
+                    Write-Host "[ERROR] $err" -ForegroundColor Red
+                }
+            }
+            else {
+                Write-Host $output -ForegroundColor Red
+            }
             return $false
         }
     }
     catch {
+        $ErrorActionPreference = $prevErrorActionPreference
         Write-Host "[ERROR] Error executing $ScriptName" -ForegroundColor Red
         Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
         return $false
