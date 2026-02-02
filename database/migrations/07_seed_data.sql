@@ -74,34 +74,34 @@ ON CONFLICT (region_name) DO NOTHING;
 INSERT INTO core.branches (branch_name, region_id, language_id, branch_type, address, city, postal_code, phone, email, established_date, is_active)
 SELECT * FROM (VALUES
     -- UK Main Branch - London (Headquarters)
-    ('Kairos London Central', 
+    ('Kharis London Central', 
      (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
      (SELECT language_id FROM core.languages WHERE language_code = 'en'),
-     'Main', '142 Kingsway', 'London', 'WC2B 6NH', '+442071234567', 'london@kairoschurch.org', '2008-03-15'::DATE, TRUE),
+     'Main', '142 Kingsway', 'London', 'WC2B 6NH', '+442071234567', 'london@kharischurch.org', '2008-03-15'::DATE, TRUE),
     
     -- UK Branch - Birmingham
-    ('Kairos Birmingham', 
+    ('Kharis Birmingham', 
      (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
      (SELECT language_id FROM core.languages WHERE language_code = 'en'),
-     'Satellite', '78 Corporation Street', 'Birmingham', 'B2 4RN', '+441212345678', 'birmingham@kairoschurch.org', '2012-09-01'::DATE, TRUE),
+     'Satellite', '78 Corporation Street', 'Birmingham', 'B2 4RN', '+441212345678', 'birmingham@kharischurch.org', '2012-09-01'::DATE, TRUE),
     
     -- UK Branch - Bristol
-    ('Kairos Bristol', 
+    ('Kharis Bristol', 
      (SELECT region_id FROM core.regions WHERE region_name = 'United Kingdom'),
      (SELECT language_id FROM core.languages WHERE language_code = 'en'),
-     'Satellite', '25 Park Street', 'Bristol', 'BS1 5NH', '+441173456789', 'bristol@kairoschurch.org', '2015-06-20'::DATE, TRUE),
+     'Satellite', '25 Park Street', 'Bristol', 'BS1 5NH', '+441173456789', 'bristol@kharischurch.org', '2015-06-20'::DATE, TRUE),
     
     -- Ghana Branch - Accra
-    ('Kairos Accra', 
+    ('Kharis Accra', 
      (SELECT region_id FROM core.regions WHERE region_name = 'Greater Accra'),
      (SELECT language_id FROM core.languages WHERE language_code = 'tw'),
-     'Satellite', '45 Independence Avenue', 'Accra', 'GA-123-4567', '+233302123456', 'accra@kairoschurch.org', '2014-01-10'::DATE, TRUE),
+     'Satellite', '45 Independence Avenue', 'Accra', 'GA-123-4567', '+233302123456', 'accra@kharischurch.org', '2014-01-10'::DATE, TRUE),
     
     -- Sierra Leone Branch - Freetown
-    ('Kairos Freetown', 
+    ('Kharis Freetown', 
      (SELECT region_id FROM core.regions WHERE region_name = 'Western Area'),
      (SELECT language_id FROM core.languages WHERE language_code = 'kri'),
-     'Satellite', '12 Siaka Stevens Street', 'Freetown', 'SL-FT-001', '+23276123456', 'freetown@kairoschurch.org', '2018-11-25'::DATE, TRUE)
+     'Satellite', '12 Siaka Stevens Street', 'Freetown', 'SL-FT-001', '+23276123456', 'freetown@kharischurch.org', '2018-11-25'::DATE, TRUE)
 ) AS v(branch_name, region_id, language_id, branch_type, address, city, postal_code, phone, email, established_date, is_active)
 WHERE NOT EXISTS (SELECT 1 FROM core.branches WHERE email = v.email);
 
