@@ -5,6 +5,7 @@
 # Purpose: Populate database with realistic test/development data
 # Usage: ./seed_data.sh [database_name]
 # Default database name: kairos
+# Note: This script is IDEMPOTENT - safe to run multiple times
 # ============================================================================
 # WARNING: This generates test data and should NOT be run in production!
 # ============================================================================
@@ -74,12 +75,8 @@ check_existing_data() {
     local member_count=$(psql -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM members;" | xargs)
     
     if [ "$member_count" -gt 0 ]; then
-        print_warning "Database already contains data ($member_count members found)"
-        read -p "Do you want to continue? This will add more data. (yes/no): " -r
-        if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-            print_info "Operation cancelled"
-            exit 0
-        fi
+        print_info "Database already contains data ($member_count members found)"
+        print_info "This script is idempotent - it will skip existing records"
     fi
 }
 
@@ -87,8 +84,9 @@ check_existing_data() {
 execute_seed_script() {
     print_info "Generating seed data... This may take a few minutes."
     print_info "Creating: 550+ members, 5 branches, services, donations, events, and more..."
+    print_info "Note: Script is idempotent - existing records will be skipped."
     
-    if psql -d "$DB_NAME" -f "$SCRIPT_DIR/$SEED_SCRIPT" > /dev/null 2>&1; then
+    if psql -d "$DB_NAME" -f "$SCRIPT_DIR/$SEED_SCRIPT" 2>&1 | grep -v "^NOTICE:"; then
         print_success "Seed data generated successfully"
         return 0
     else
