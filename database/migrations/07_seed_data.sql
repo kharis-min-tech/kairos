@@ -60,15 +60,13 @@ ON CONFLICT (language_name) DO NOTHING;
 -- ============================================================================
 -- 2. REGIONS (5 regions)
 -- ============================================================================
-INSERT INTO regions (region_name, country) 
-SELECT * FROM (VALUES
+INSERT INTO regions (region_name, country) VALUES
     ('Greater Accra Region', 'Ghana'),
     ('Ashanti Region', 'Ghana'),
     ('Western Region', 'Ghana'),
     ('Eastern Region', 'Ghana'),
     ('Central Region', 'Ghana')
-) AS v(region_name, country)
-WHERE NOT EXISTS (SELECT 1 FROM regions WHERE region_name = v.region_name);
+ON CONFLICT (region_name) DO NOTHING;
 
 -- ============================================================================
 -- 3. BRANCHES (5 main branches + 3 additional)
@@ -190,8 +188,7 @@ END $$;
 -- ============================================================================
 -- 5. ROLES (15 roles)
 -- ============================================================================
-INSERT INTO roles (role_name, description, is_active) 
-SELECT * FROM (VALUES
+INSERT INTO roles (role_name, description, is_active) VALUES
     ('Choir Member', 'Member of the church choir', TRUE),
     ('Usher', 'Church usher responsible for seating and assistance', TRUE),
     ('Sunday School Teacher', 'Teaches Sunday school classes', TRUE),
@@ -207,8 +204,7 @@ SELECT * FROM (VALUES
     ('Treasurer', 'Handles church finances', TRUE),
     ('Secretary', 'Church administrative duties', TRUE),
     ('Children Ministry', 'Works with children programs', TRUE)
-) AS v(role_name, description, is_active)
-WHERE NOT EXISTS (SELECT 1 FROM roles WHERE role_name = v.role_name);
+ON CONFLICT (role_name) DO NOTHING;
 
 -- ============================================================================
 -- 6. BRANCH_LEADERSHIP (5 main pastors, 10 elders)
@@ -273,8 +269,7 @@ LIMIT 330;
 -- ============================================================================
 -- 8. DEPARTMENTS (10 departments)
 -- ============================================================================
-INSERT INTO departments (department_name, description, is_active) 
-SELECT * FROM (VALUES
+INSERT INTO departments (department_name, description, is_active) VALUES
     ('Choir', 'Church choir department', TRUE),
     ('Ushering', 'Ushering and protocol department', TRUE),
     ('Technical', 'Audio, visual, and technical support', TRUE),
@@ -285,8 +280,7 @@ SELECT * FROM (VALUES
     ('Prayer Ministry', 'Intercessory prayer and prayer meetings', TRUE),
     ('Welfare', 'Member welfare and support', TRUE),
     ('Administration', 'Church administration and operations', TRUE)
-) AS v(department_name, description, is_active)
-WHERE NOT EXISTS (SELECT 1 FROM departments WHERE department_name = v.department_name);
+ON CONFLICT (department_name) DO NOTHING;
 
 -- ============================================================================
 -- 9. BRANCH_DEPARTMENTS (Instantiate departments in branches)
