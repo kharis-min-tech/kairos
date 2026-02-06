@@ -1,3 +1,5 @@
+import { buildAuthUrl } from "../../config/cognito";
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,8 +21,8 @@ export default function SignupPage() {
     // Redirect to Cognito Hosted UI with signup parameter
     const clientId = "7mqmc57sb18ideegj293pk81ib";
     const redirectUri = encodeURIComponent("http://localhost:3001");
-    const signUpUrl = `${cognitoDomain}/signup?client_id=${clientId}&response_type=code&scope=openid+email+phone&redirect_uri=${redirectUri}`;
-    window.location.href = signUpUrl;
+    window.location.href = buildAuthUrl("signUp");
+
   };
 
   // Don't render auth-dependent content on server

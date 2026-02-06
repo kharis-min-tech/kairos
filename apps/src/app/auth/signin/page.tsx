@@ -165,7 +165,7 @@ export default function SignInPage() {
 
         <footer className="px-4 py-6 border-t border-neutral-200 bg-white">
           <div className="text-center space-y-2">
-            <p className="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+            <p className="text-xs text-neutral-500">© 2026 Kharis Church Management System</p>
             <div className="flex justify-center space-x-4 text-xs">
               <a href="#" className="text-neutral-500 hover:text-neutral-700">Privacy</a>
               <a href="#" className="text-neutral-500 hover:text-neutral-700">Terms</a>
@@ -229,7 +229,7 @@ export default function SignInPage() {
 
       <footer className="px-4 py-6 border-t border-neutral-200 bg-white">
         <div className="text-center space-y-2">
-          <p className="text-xs text-neutral-500">© 2025 Kharis Church Management System</p>
+          <p className="text-xs text-neutral-500">© 2026 Kharis Church Management System</p>
           <div className="flex justify-center space-x-4 text-xs">
             <a href="#" className="text-neutral-500 hover:text-neutral-700">Privacy</a>
             <a href="#" className="text-neutral-500 hover:text-neutral-700">Terms</a>

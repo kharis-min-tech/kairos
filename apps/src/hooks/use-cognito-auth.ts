@@ -1,7 +1,11 @@
 "use client";
 
-import { useAuth } from "react-oidc-context";
-import { cognitoDomain, buildAuthUrl } from "../lib/auth-config";
+import { useAuth} from "react-oidc-context";
+import {
+  cognitoConfig,
+  buildAuthUrl,
+  buildLogoutUrl,
+} from '../config/cognito';
 
 export function useCognitoAuth() {
   const auth = useAuth();
@@ -12,11 +16,13 @@ export function useCognitoAuth() {
       await auth.removeUser();
       
       // Then redirect to Cognito logout to clear server-side session
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
+     const clientId = cognitoConfig.clientId;
+
       const logoutUri = encodeURIComponent(window.location.origin);
       
       // Use the proper Cognito logout URL
-      const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+      const logoutUrl = buildLogoutUrl(window.location.origin);
+
       
       // Small delay to ensure local cleanup completes
       setTimeout(() => {
@@ -25,9 +31,8 @@ export function useCognitoAuth() {
     } catch (error) {
       console.error("Error during sign out:", error);
       // Fallback: force redirect to logout even if local cleanup fails
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
+      const clientId = cognitoConfig.clientId;
       const logoutUri = encodeURIComponent(window.location.origin);
-      window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
     }
   };
 
@@ -50,14 +55,16 @@ export function useCognitoAuth() {
       await auth.removeUser();
       
       // Clear any additional local storage items
-      localStorage.removeItem("oidc.user:https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK:7mqmc57sb18ideegj293pk81ib");
+      localStorage.removeItem(cognitoConfig.clientId
+);
       sessionStorage.clear();
       
       // Then redirect to Cognito logout
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
+      const clientId = cognitoConfig.clientId;
       const logoutUri = encodeURIComponent(window.location.origin);
       
-      const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+      const logoutUrl = buildLogoutUrl(window.location.origin);
+
       
       // Force a complete page reload after logout
       setTimeout(() => {
@@ -83,12 +90,12 @@ export function useCognitoAuth() {
   const mfaSetupRedirect = () => {
     // Cognito doesn't have a direct MFA setup URL, so we redirect to the user settings
     // where users can manage their MFA settings
-    const clientId = "7mqmc57sb18ideegj293pk81ib";
+    const clientId = cognitoConfig.clientId;
+
     const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
     
     // Redirect to Cognito hosted UI with a prompt to manage account settings
     // This will allow users to set up MFA through Cognito's interface
-    window.location.href = `${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=openid+email+phone+profile&redirect_uri=${redirectUri}&prompt=login`;
   };
 
   const getUserInfo = () => {

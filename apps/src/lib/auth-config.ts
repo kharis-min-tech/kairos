@@ -8,7 +8,7 @@ const getBaseUrl = () => {
 };
 
 export const cognitoAuthConfig = {
-  authority: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
+  authority: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || `${cognitoConfig.domain}/oauth2/token`,
   client_id: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "7mqmc57sb18ideegj293pk81ib",
   redirect_uri: `${getBaseUrl()}/dashboard`,
   response_type: "code",
@@ -27,26 +27,26 @@ export const cognitoAuthConfig = {
   },
   // Metadata for better OIDC compliance
   metadata: {
-    issuer: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
+    issuer: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || `${cognitoConfig.domain}/oauth2/token`,
     authorization_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN 
       ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/authorize`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/authorize",
+      : `${cognitoConfig.domain}/oauth2/token`,
     token_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
       ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/token`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/token",
+      : `${cognitoConfig.domain}/oauth2/token`,
     userinfo_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
       ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/userInfo`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/userInfo",
+      : `${cognitoConfig.domain}/oauth2/token`,
     end_session_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
       ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/logout`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/logout",
+      : `${cognitoConfig.domain}/oauth2/token`,
     jwks_uri: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY
       ? `${process.env.NEXT_PUBLIC_COGNITO_AUTHORITY}/.well-known/jwks.json`
-      : "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK/.well-known/jwks.json",
+      : `${cognitoConfig.domain}/oauth2/token`,
   },
 };
 
-export const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com";
+export const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "`${cognitoConfig.domain}/oauth2/token";
 export const logoutUri = getBaseUrl();
 
 // Auth flow URLs
@@ -61,21 +61,15 @@ export const authUrls = {
 };
 
 // Helper function to build auth URLs with parameters
-export const buildAuthUrl = (
-  type: keyof typeof authUrls,
-  additionalParams: Record<string, string> = {}
-) => {
-  const baseUrl = authUrls[type];
-  const params = new URLSearchParams({
-    client_id: cognitoAuthConfig.client_id,
-    response_type: cognitoAuthConfig.response_type,
-    scope: cognitoAuthConfig.scope, // This will now use "openid email phone"
-    redirect_uri: `${getBaseUrl()}/dashboard`,
-    ...additionalParams,
-  });
+export {
+  cognitoConfig,
+  getBaseUrl,
+  buildAuthUrl,
+  buildLogoutUrl,
+} from "../config/cognito";
   
-  return `${baseUrl}?${params.toString()}`;
-};
+
+
 
 // Helper function to build logout URL
 export const buildLogoutUrl = (redirectUri?: string) => {

@@ -1,3 +1,5 @@
+import { buildAuthUrl } from "../config/cognito";
+
 "use client";
 
 import { useState, useEffect } from "react";
