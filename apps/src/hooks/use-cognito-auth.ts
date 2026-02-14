@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from "react-oidc-context";
-import { cognitoDomain, buildAuthUrl } from "../lib/auth-config";
+import { cognitoAuthConfig, cognitoDomain, buildAuthUrl, getBaseUrl } from "../lib/auth-config";
+import { clearAuthStorage, getAuthErrorMessage } from "../lib/auth";
 
 export function useCognitoAuth() {
   const auth = useAuth();
@@ -12,11 +13,10 @@ export function useCognitoAuth() {
       await auth.removeUser();
       
       // Then redirect to Cognito logout to clear server-side session
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent(window.location.origin);
+      const logoutUri = encodeURIComponent(getBaseUrl());
       
       // Use the proper Cognito logout URL
-      const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+      const logoutUrl = `${cognitoDomain}/logout?client_id=${cognitoAuthConfig.client_id}&logout_uri=${logoutUri}`;
       
       // Small delay to ensure local cleanup completes
       setTimeout(() => {
@@ -25,9 +25,8 @@ export function useCognitoAuth() {
     } catch (error) {
       console.error("Error during sign out:", error);
       // Fallback: force redirect to logout even if local cleanup fails
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent(window.location.origin);
-      window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+      const logoutUri = encodeURIComponent(getBaseUrl());
+      window.location.href = `${cognitoDomain}/logout?client_id=${cognitoAuthConfig.client_id}&logout_uri=${logoutUri}`;
     }
   };
 
@@ -49,15 +48,13 @@ export function useCognitoAuth() {
       // Clear local session first
       await auth.removeUser();
       
-      // Clear any additional local storage items
-      localStorage.removeItem("oidc.user:https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK:7mqmc57sb18ideegj293pk81ib");
-      sessionStorage.clear();
+      // Clear only auth-related local storage items
+      clearAuthStorage();
       
       // Then redirect to Cognito logout
-      const clientId = "7mqmc57sb18ideegj293pk81ib";
-      const logoutUri = encodeURIComponent(window.location.origin);
+      const logoutUri = encodeURIComponent(getBaseUrl());
       
-      const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+      const logoutUrl = `${cognitoDomain}/logout?client_id=${cognitoAuthConfig.client_id}&logout_uri=${logoutUri}`;
       
       // Force a complete page reload after logout
       setTimeout(() => {
@@ -65,9 +62,8 @@ export function useCognitoAuth() {
       }, 100);
     } catch (error) {
       console.error("Error during complete sign out:", error);
-      // Fallback: clear everything and redirect
-      localStorage.clear();
-      sessionStorage.clear();
+      // Fallback: clear auth storage only and redirect
+      clearAuthStorage();
       window.location.replace("/");
     }
   };
@@ -81,16 +77,15 @@ export function useCognitoAuth() {
   };
 
   const mfaSetupRedirect = () => {
-    // Cognito doesn't have a direct MFA setup URL, so we redirect to the user settings
-    // where users can manage their MFA settings
-    const clientId = "7mqmc57sb18ideegj293pk81ib";
-    const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
+    const redirectUri = encodeURIComponent(`${getBaseUrl()}/profile`);
     
-    // Redirect to Cognito hosted UI with a prompt to manage account settings
-    // This will allow users to set up MFA through Cognito's interface
-    window.location.href = `${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=openid+email+phone+profile&redirect_uri=${redirectUri}&prompt=login`;
+    window.location.href = `${cognitoDomain}/login?client_id=${cognitoAuthConfig.client_id}&response_type=code&scope=openid+email+phone+profile&redirect_uri=${redirectUri}&prompt=login`;
   };
 
+  /**
+   * Returns user profile information only — tokens are intentionally excluded
+   * to prevent accidental exposure through the UI or logging.
+   */
   const getUserInfo = () => {
     if (!auth.isAuthenticated || !auth.user) return null;
     
@@ -103,10 +98,15 @@ export function useCognitoAuth() {
       phoneVerified: auth.user.profile.phone_number_verified,
       mfaEnabled: auth.user.profile["cognito:mfa_enabled"],
       profile: auth.user.profile,
-      idToken: auth.user.id_token,
-      accessToken: auth.user.access_token,
-      refreshToken: auth.user.refresh_token,
     };
+  };
+
+  /**
+   * Get the access token for making authenticated API calls.
+   * This should only be used inside API call functions, never rendered in the UI.
+   */
+  const getAccessToken = (): string | undefined => {
+    return auth.user?.access_token;
   };
 
   const hasRequiredScopes = (requiredScopes: string[]) => {
@@ -125,6 +125,7 @@ export function useCognitoAuth() {
     forgotPasswordRedirect,
     mfaSetupRedirect,
     getUserInfo,
+    getAccessToken,
     hasRequiredScopes,
     isReady: !auth.isLoading && !auth.error,
   };

@@ -9,9 +9,16 @@ export default function SilentCallbackPage() {
     if (window.parent !== window) {
       // We're in an iframe, let the parent handle this
       try {
-        window.parent.postMessage(window.location.href, window.location.origin);
+        // Only post message to same origin to prevent data leakage
+        window.parent.postMessage(
+          { type: 'oidc-silent-callback', url: window.location.href },
+          window.location.origin
+        );
       } catch (error) {
-        console.error('Silent callback error:', error);
+        // Silently fail — don't expose error details
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Silent callback error:', error);
+        }
       }
     }
   }, []);

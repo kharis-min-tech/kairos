@@ -1,98 +1,58 @@
 /**
  * Auth utility functions
- * This file will be updated when auth details are provided
+ * All authentication is handled via Cognito OIDC (react-oidc-context).
+ * This module provides helper utilities only — no direct sign-in/sign-up logic.
  */
-
-export interface AuthUser {
-  email: string;
-  name?: string;
-  // Add more user fields as needed
-}
 
 /**
- * Sign in function
- * TODO: Replace with actual auth implementation when details are provided
+ * Map raw auth errors to user-friendly messages.
+ * Never expose internal details in production.
  */
-export async function signIn(email: string, password: string): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
-  // Placeholder - will be replaced with actual auth logic
-  // This could be Cognito, Firebase, custom API, etc.
-  
-  // For now, simulate a successful login
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        user: {
-          email,
-          name: email.split('@')[0],
-        },
-      });
-    }, 500);
-  });
-}
-
-/**
- * Sign up function
- * TODO: Replace with actual auth implementation when details are provided
- */
-export async function signUp(
-  name: string,
-  email: string,
-  password: string
-): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
-  // Placeholder - will be replaced with actual auth logic
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        user: {
-          email,
-          name,
-        },
-      });
-    }, 500);
-  });
-}
-
-/**
- * Sign out function
- * TODO: Replace with actual auth implementation when details are provided
- */
-export async function signOut(): Promise<void> {
-  // Clear any stored auth tokens/session
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('user');
+export function getAuthErrorMessage(error: Error | unknown): string {
+  if (!(error instanceof Error)) {
+    return 'An unexpected error occurred. Please try again.';
   }
-  
-  // Redirect will be handled by the component
+
+  const msg = error.message.toLowerCase();
+
+  if (msg.includes('network') || msg.includes('fetch')) {
+    return 'Network error. Please check your connection and try again.';
+  }
+  if (msg.includes('expired') || msg.includes('token')) {
+    return 'Your session has expired. Please sign in again.';
+  }
+  if (msg.includes('unauthorized') || msg.includes('401')) {
+    return 'You are not authorized. Please sign in.';
+  }
+  if (msg.includes('invalid_grant') || msg.includes('invalid grant')) {
+    return 'Invalid credentials. Please try again.';
+  }
+
+  // Generic fallback — never leak internal error details
+  return 'Something went wrong. Please try again or contact support.';
 }
 
 /**
- * Get current user
- * TODO: Replace with actual auth implementation when details are provided
+ * Clear only auth-related items from storage.
+ * Never call localStorage.clear() / sessionStorage.clear() as it
+ * destroys unrelated application state.
  */
-export function getCurrentUser(): AuthUser | null {
-  if (typeof window === 'undefined') return null;
-  
-  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-  if (!userStr) return null;
-  
-  try {
-    return JSON.parse(userStr);
-  } catch {
-    return null;
+export function clearAuthStorage(): void {
+  if (typeof window === 'undefined') return;
+
+  const AUTH_KEYS_PREFIX = 'oidc.';
+
+  // Remove OIDC-specific keys
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(AUTH_KEYS_PREFIX)) {
+      localStorage.removeItem(key);
+    }
+  }
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i);
+    if (key && key.startsWith(AUTH_KEYS_PREFIX)) {
+      sessionStorage.removeItem(key);
+    }
   }
 }
-
-/**
- * Check if user is authenticated
- */
-export function isAuthenticated(): boolean {
-  return getCurrentUser() !== null;
-}
-
-

@@ -7,7 +7,6 @@ import { useCognitoAuth } from "../../../hooks/use-cognito-auth";
 export default function ProfilePage() {
   const { getUserInfo, signOutComplete, signOutLocal } = useCognitoAuth();
   const [isClient, setIsClient] = useState(false);
-  const [showTokens, setShowTokens] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -202,19 +201,6 @@ export default function ProfilePage() {
         <div className="bg-white border border-neutral-200 rounded-lg p-4">
           <h3 className="font-medium text-neutral-800 mb-3">Account Management</h3>
           <div className="space-y-3">
-            <button
-              onClick={() => setShowTokens(!showTokens)}
-              className="flex items-center justify-between w-full p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors text-left"
-            >
-              <div className="flex items-center">
-                <i className="fa-solid fa-code mr-3 text-neutral-600"></i>
-                <span className="text-sm text-neutral-700">
-                  {showTokens ? 'Hide' : 'Show'} Debug Info
-                </span>
-              </div>
-              <i className="fa-solid fa-chevron-right text-neutral-400"></i>
-            </button>
-            
             <Link 
               href="/dashboard"
               className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
@@ -228,36 +214,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* Debug Information */}
-      {showTokens && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
-          <h3 className="font-medium text-neutral-800 mb-3 flex items-center">
-            <i className="fa-solid fa-bug mr-2 text-neutral-600"></i>
-            Debug Information
-          </h3>
-          <div className="space-y-3 text-xs">
-            <div>
-              <span className="text-neutral-600 font-medium">ID Token:</span>
-              <div className="font-mono bg-white p-3 rounded border mt-1 break-all max-h-32 overflow-y-auto">
-                {userInfo.idToken || 'Not available'}
-              </div>
-            </div>
-            <div>
-              <span className="text-neutral-600 font-medium">Access Token:</span>
-              <div className="font-mono bg-white p-3 rounded border mt-1 break-all max-h-32 overflow-y-auto">
-                {userInfo.accessToken || 'Not available'}
-              </div>
-            </div>
-            <div>
-              <span className="text-neutral-600 font-medium">Refresh Token:</span>
-              <div className="font-mono bg-white p-3 rounded border mt-1 break-all max-h-32 overflow-y-auto">
-                {userInfo.refreshToken || 'Not available'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Sign Out Section */}
       <div className="bg-white border border-neutral-200 rounded-lg p-4">

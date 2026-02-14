@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCognitoAuth } from "../../../hooks/use-cognito-auth";
+import { getAuthErrorMessage } from "../../../lib/auth";
 
 export default function SignInPage() {
   const { isAuthenticated, isLoading, error, signinRedirect, getUserInfo } = useCognitoAuth();
@@ -64,7 +65,7 @@ export default function SignInPage() {
               <i className="fa-solid fa-exclamation-triangle text-red-600 text-2xl"></i>
             </div>
             <h1 className="text-2xl text-neutral-900 mb-2">Authentication Error</h1>
-            <p className="text-neutral-600">{error.message}</p>
+            <p className="text-neutral-600">{getAuthErrorMessage(error)}</p>
           </div>
           
           <div className="space-y-3">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "react-oidc-context";
-import { cognitoDomain } from "../../lib/auth-config";
+import { cognitoAuthConfig, cognitoDomain, getBaseUrl } from "../../lib/auth-config";
 import { useCognitoAuth } from "../../hooks/use-cognito-auth";
 
 export default function SignupPage() {
@@ -16,10 +16,8 @@ export default function SignupPage() {
   }, []);
 
   const redirectToSignUp = () => {
-    // Redirect to Cognito Hosted UI with signup parameter
-    const clientId = "7mqmc57sb18ideegj293pk81ib";
-    const redirectUri = encodeURIComponent("http://localhost:3001");
-    const signUpUrl = `${cognitoDomain}/signup?client_id=${clientId}&response_type=code&scope=openid+email+phone&redirect_uri=${redirectUri}`;
+    const redirectUri = encodeURIComponent(getBaseUrl());
+    const signUpUrl = `${cognitoDomain}/signup?client_id=${cognitoAuthConfig.client_id}&response_type=code&scope=openid+email+phone&redirect_uri=${redirectUri}`;
     window.location.href = signUpUrl;
   };
 
@@ -50,7 +48,7 @@ export default function SignupPage() {
         <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="text-center text-red-600 mb-4">
             <h2 className="text-lg font-semibold mb-2">Authentication Error</h2>
-            <p className="text-sm">{auth.error.message}</p>
+            <p className="text-sm">Something went wrong. Please try again.</p>
           </div>
           
           <div className="mt-4 text-center">

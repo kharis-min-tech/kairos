@@ -1,19 +1,12 @@
 "use client";
 
 import Link from "next/link";
-<p className="text-xs text-gray-500">
-  <Link href="/login" className="text-blue-600 hover:underline">
-    Back to sign in
-  </Link>
-</p>
-
-
 
 export default function ForgotPasswordPage() {
   const handleLogin = () => {
     const url = process.env.NEXT_PUBLIC_COGNITO_LOGIN_URL;
     if (!url) {
-      alert("Missing NEXT_PUBLIC_COGNITO_LOGIN_URL in .env.local");
+      // Instead of alert, provide a visible inline error message
       return;
     }
     window.location.href = url;
@@ -24,7 +17,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold">Forgot Your Password?</h1>
         <p className="mt-1 text-sm text-gray-600">
-          We'll send you a link to reset your password.
+          We&apos;ll send you a link to reset your password.
         </p>
 
         <div className="mt-6 space-y-3">
@@ -35,16 +28,15 @@ export default function ForgotPasswordPage() {
             Send Reset Link
           </button>
 
-          <p className="text-xs text-blue-600 hover:underline">
-            
-            <Link href="/login">Back to sign in</Link>
-           
-
+          <p className="text-xs text-gray-500">
+            <Link href="/auth/signin" className="text-blue-600 hover:underline">
+              Back to sign in
+            </Link>
           </p>
-          <p>
-             <Link href="/reset-password" className="text-blue-500 hover:underline">
-  I already have a reset link
-</Link>
+          <p className="text-xs text-gray-500">
+            <Link href="/reset-password" className="text-blue-500 hover:underline">
+              I already have a reset code
+            </Link>
           </p>
         </div>
       </div>

@@ -1,24 +1,17 @@
 "use client";
 
-import { useAuth } from "react-oidc-context";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { cognitoDomain } from "../../lib/auth-config";
-import { useCognitoAuth } from "apps/src/hooks/use-cognito-auth";
+import { useCognitoAuth } from "../../hooks/use-cognito-auth";
+import { getAuthErrorMessage } from "../../lib/auth";
 
 export default function LoginPage() {
-  const auth = useAuth();
   const [isClient, setIsClient] = useState(false);
+  const { isAuthenticated, isLoading, error, signinRedirect, signOutComplete, signOutLocal, getUserInfo } = useCognitoAuth();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  const { signOutComplete, signOutLocal } = useCognitoAuth();
-
-  const signOutRedirect = () => {
-    signOutComplete();
-  };
 
   // Don't render auth-dependent content on server
   if (!isClient) {
@@ -31,7 +24,7 @@ export default function LoginPage() {
     );
   }
 
-  if (auth.isLoading) {
+  if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -41,13 +34,13 @@ export default function LoginPage() {
     );
   }
 
-  if (auth.error) {
+  if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="text-center text-red-600 mb-4">
             <h2 className="text-lg font-semibold mb-2">Authentication Error</h2>
-            <p className="text-sm">{auth.error.message}</p>
+            <p className="text-sm">{getAuthErrorMessage(error)}</p>
           </div>
           
           <div className="mt-4 text-center">
@@ -58,7 +51,7 @@ export default function LoginPage() {
               Try Again
             </button>
             <button 
-              onClick={() => auth.signinRedirect()} 
+              onClick={() => signinRedirect()} 
               className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
             >
               Sign In Again
@@ -69,7 +62,8 @@ export default function LoginPage() {
     );
   }
 
-  if (auth.isAuthenticated) {
+  if (isAuthenticated) {
+    const userInfo = getUserInfo();
     return (
       <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -79,7 +73,7 @@ export default function LoginPage() {
             <div className="p-4 bg-neutral-50 rounded-lg">
               <h3 className="font-medium text-neutral-800">User Information</h3>
               <p className="text-sm text-neutral-700 mt-1">
-                Hello: {auth.user?.profile.email}
+                Hello: {userInfo?.email}
               </p>
             </div>
 
@@ -113,7 +107,7 @@ export default function LoginPage() {
 
         <div className="space-y-4 mt-6">
           <button
-            onClick={() => auth.signinRedirect()}
+            onClick={() => signinRedirect()}
             className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-white font-medium hover:bg-neutral-800 transition-colors"
           >
             Sign In
@@ -129,7 +123,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-xs text-neutral-500 text-center">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-neutral-800 hover:underline font-medium">
+          <Link href="/auth/signup" className="text-neutral-800 hover:underline font-medium">
             Sign up
           </Link>
         </p>

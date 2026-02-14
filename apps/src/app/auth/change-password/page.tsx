@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCognitoAuth } from "../../../hooks/use-cognito-auth";
 import { AuthGuard } from "../../../components/auth-guard";
-import { cognitoDomain } from "../../../lib/auth-config";
+import { cognitoAuthConfig, cognitoDomain, getBaseUrl } from "../../../lib/auth-config";
 
 export default function ChangePasswordPage() {
   const { getUserInfo } = useCognitoAuth();
@@ -15,14 +15,9 @@ export default function ChangePasswordPage() {
   }, []);
 
   const redirectToChangePassword = () => {
-    // Cognito doesn't have a direct change password URL, so we redirect to the user settings
-    // This would typically be handled through the Cognito Hosted UI or a custom implementation
-    const clientId = "7mqmc57sb18ideegj293pk81ib";
-    const redirectUri = encodeURIComponent("http://localhost:3001/auth/profile");
+    const redirectUri = encodeURIComponent(`${getBaseUrl()}/auth/profile`);
     
-    // For now, redirect to the main Cognito domain where users can manage their account
-    // In a production app, you might implement this with AWS SDK directly
-    window.location.href = `${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=openid+email+phone+profile&redirect_uri=${redirectUri}&prompt=login`;
+    window.location.href = `${cognitoDomain}/login?client_id=${cognitoAuthConfig.client_id}&response_type=code&scope=openid+email+phone+profile&redirect_uri=${redirectUri}&prompt=login`;
   };
 
   if (!isClient) {

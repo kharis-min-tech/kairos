@@ -1,5 +1,19 @@
+// Validate required environment variables at module load time
+const requireEnv = (name: string, fallback?: string): string => {
+  const value = process.env[name] || fallback;
+  if (!value) {
+    // In development, warn but allow fallback; in production, throw
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Missing required environment variable: ${name}`);
+    }
+    console.warn(`[auth-config] Missing env var ${name} — using empty string`);
+    return '';
+  }
+  return value;
+};
+
 // Get the base URL dynamically (works in browser)
-const getBaseUrl = () => {
+export const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
@@ -7,9 +21,13 @@ const getBaseUrl = () => {
   return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
 };
 
+const COGNITO_AUTHORITY = requireEnv('NEXT_PUBLIC_COGNITO_AUTHORITY');
+const COGNITO_CLIENT_ID = requireEnv('NEXT_PUBLIC_COGNITO_CLIENT_ID');
+const COGNITO_DOMAIN = requireEnv('NEXT_PUBLIC_COGNITO_DOMAIN');
+
 export const cognitoAuthConfig = {
-  authority: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
-  client_id: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "7mqmc57sb18ideegj293pk81ib",
+  authority: COGNITO_AUTHORITY,
+  client_id: COGNITO_CLIENT_ID,
   redirect_uri: `${getBaseUrl()}/dashboard`,
   response_type: "code",
   scope: "openid email phone",
@@ -27,26 +45,16 @@ export const cognitoAuthConfig = {
   },
   // Metadata for better OIDC compliance
   metadata: {
-    issuer: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY || "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK",
-    authorization_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN 
-      ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/authorize`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/authorize",
-    token_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
-      ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/token`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/token",
-    userinfo_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
-      ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/oauth2/userInfo`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/oauth2/userInfo",
-    end_session_endpoint: process.env.NEXT_PUBLIC_COGNITO_DOMAIN
-      ? `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}/logout`
-      : "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com/logout",
-    jwks_uri: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY
-      ? `${process.env.NEXT_PUBLIC_COGNITO_AUTHORITY}/.well-known/jwks.json`
-      : "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_OM97wjySK/.well-known/jwks.json",
+    issuer: COGNITO_AUTHORITY,
+    authorization_endpoint: `${COGNITO_DOMAIN}/oauth2/authorize`,
+    token_endpoint: `${COGNITO_DOMAIN}/oauth2/token`,
+    userinfo_endpoint: `${COGNITO_DOMAIN}/oauth2/userInfo`,
+    end_session_endpoint: `${COGNITO_DOMAIN}/logout`,
+    jwks_uri: COGNITO_AUTHORITY ? `${COGNITO_AUTHORITY}/.well-known/jwks.json` : '',
   },
 };
 
-export const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "https://eu-north-1om97wjysk.auth.eu-north-1.amazoncognito.com";
+export const cognitoDomain = COGNITO_DOMAIN;
 export const logoutUri = getBaseUrl();
 
 // Auth flow URLs

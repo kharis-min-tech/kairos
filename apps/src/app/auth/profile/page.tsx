@@ -8,7 +8,6 @@ import { AuthGuard } from "../../../components/auth-guard";
 export default function ProfilePage() {
   const { getUserInfo, signOutComplete, signOutLocal } = useCognitoAuth();
   const [isClient, setIsClient] = useState(false);
-  const [showTokens, setShowTokens] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -161,38 +160,9 @@ export default function ProfilePage() {
                           <i className="fa-solid fa-key mr-2"></i>
                           Change Password
                         </Link>
-                        
-                        <button
-                          onClick={() => setShowTokens(!showTokens)}
-                          className="w-full px-4 py-3 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors flex items-center justify-center"
-                        >
-                          <i className="fa-solid fa-code mr-2"></i>
-                          {showTokens ? 'Hide' : 'Show'} Debug Tokens
-                        </button>
                       </div>
 
-                      {/* Debug Tokens */}
-                      {showTokens && (
-                        <div className="p-4 bg-neutral-50 rounded-lg">
-                          <h3 className="font-medium text-neutral-800 mb-3">Debug Information</h3>
-                          <div className="space-y-2 text-xs">
-                            <div>
-                              <span className="text-neutral-600">ID Token:</span>
-                              <div className="font-mono bg-white p-2 rounded border mt-1 break-all">
-                                {userInfo.idToken || 'Not available'}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-neutral-600">Access Token:</span>
-                              <div className="font-mono bg-white p-2 rounded border mt-1 break-all">
-                                {userInfo.accessToken || 'Not available'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Sign Out Options */}
+                      {/* Sign Out Options */}}
                       <div className="border-t border-neutral-200 pt-4 space-y-3">
                         <h3 className="font-medium text-neutral-800">Sign Out Options</h3>
                         
