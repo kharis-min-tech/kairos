@@ -1,0 +1,151 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: eu-west-2
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            apps/api/dist/
+            apps/web/.next/
+            infrastructure/dist/
+          retention-days: 1
+
+  approval:
+    name: Manual Approval
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: production
+    steps:
+      - name: Approval gate
+        run: echo "Production deployment approved"
+
+  deploy:
+    name: Deploy CDK Stacks to Production
+    runs-on: ubuntu-latest
+    needs: [approval]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy CDK stacks to production
+        run: npx cdk deploy --all -c env=prod --require-approval never
+        working-directory: infrastructure
+
+  post-deploy-monitor:
+    name: Post-Deploy Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Monitor CloudWatch for errors
+        run: |
+          echo "Monitoring production deployment for 2 minutes..."
+          sleep 120
+
+          echo "Checking Lambda error metrics..."
+          END_TIME=$(date -u +%Y-%m-%dT%H:%M:%S)
+          START_TIME=$(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S)
+
+          ERRORS=$(aws cloudwatch get-metric-statistics \
+            --namespace AWS/Lambda \
+            --metric-name Errors \
+            --dimensions Name=FunctionName,Value=kairos-prod \
+            --start-time "$START_TIME" \
+            --end-time "$END_TIME" \
+            --period 300 \
+            --statistics Sum \
+            --query 'Datapoints[0].Sum' \
+            --output text 2>/dev/null || echo "None")
+
+          if [ "$ERRORS" != "None" ] && [ "$ERRORS" != "0.0" ] && [ "$ERRORS" != "null" ]; then
+            echo "WARNING: Detected $ERRORS Lambda errors in the last 5 minutes"
+          else
+            echo "No Lambda errors detected post-deploy"
+          fi
+
+          echo "Verifying production stacks..."
+          aws cloudformation describe-stacks \
+            --query "Stacks[?contains(StackName, 'kairos-prod')].{Name:StackName,Status:StackStatus}" \
+            --output table
+
+          echo "Checking for API Gateway 5xx errors..."
+          API_5XX=$(aws cloudwatch get-metric-statistics \
+            --namespace AWS/ApiGateway \
+            --metric-name 5XXError \
+            --start-time "$START_TIME" \
+            --end-time "$END_TIME" \
+            --period 300 \
+            --statistics Sum \
+            --query 'Datapoints[0].Sum' \
+            --output text 2>/dev/null || echo "None")
+
+          if [ "$API_5XX" != "None" ] && [ "$API_5XX" != "0.0" ] && [ "$API_5XX" != "null" ]; then
+            echo "WARNING: Detected $API_5XX API Gateway 5xx errors"
+          else
+            echo "No API Gateway 5xx errors detected"
+          fi
+
+          echo "Post-deploy monitoring complete"

@@ -1,0 +1,25 @@
+{
+  "name": "@kairos/infrastructure",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "synth:staging": "cdk synth -c env=staging",
+    "synth:prod": "cdk synth -c env=prod",
+    "deploy": "cdk deploy --all",
+    "deploy:staging": "cdk deploy --all -c env=staging",
+    "deploy:prod": "cdk deploy --all -c env=prod",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist cdk.out"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.237.1",
+    "constructs": "^10.4.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.237.1",
+    "typescript": "^5.9.3"
+  }
+}
