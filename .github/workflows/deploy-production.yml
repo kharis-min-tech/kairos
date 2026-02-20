@@ -19,15 +19,30 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build
+  ci:
+    name: CI (Build, Lint, Test, Security)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: kairos_test
+          POSTGRES_PASSWORD: kairos_test_password
+          POSTGRES_DB: kairos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U kairos_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://kairos_test:kairos_test_password@localhost:5432/kairos_test
+      NODE_ENV: test
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -35,13 +50,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Apply database schema
+        run: psql "$DATABASE_URL" -f database/schema.sql
+        env:
+          PGPASSWORD: kairos_test_password
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
       - name: Build all packages
         run: npm run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ github.sha }}
           path: |
             apps/api/dist/
             apps/web/.next/
@@ -51,22 +83,24 @@ jobs:
   approval:
     name: Manual Approval
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [ci]
     environment: production
     steps:
-      - name: Approval gate
-        run: echo "Production deployment approved"
+      - name: Approved
+        run: echo "Production deployment approved — proceeding"
 
   deploy:
     name: Deploy CDK Stacks to Production
     runs-on: ubuntu-latest
     needs: [approval]
+    outputs:
+      api_url: ${{ steps.stack-outputs.outputs.api_url }}
+      cognito_client_id: ${{ steps.stack-outputs.outputs.cognito_client_id }}
+      cognito_user_pool_id: ${{ steps.stack-outputs.outputs.cognito_user_pool_id }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -77,7 +111,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ github.sha }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -85,14 +119,29 @@ jobs:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy CDK stacks to production
-        run: npx cdk deploy --all -c env=prod --require-approval never
+      - name: Deploy CDK stacks
+        run: npx cdk deploy --all -c env=prod --require-approval never --outputs-file cdk-outputs.json
         working-directory: infrastructure
 
-  post-deploy-monitor:
-    name: Post-Deploy Monitoring
+      - name: Read CDK stack outputs
+        id: stack-outputs
+        run: |
+          API_URL=$(jq -r '.["kairos-prod-api"].ApiUrl' infrastructure/cdk-outputs.json)
+          CLIENT_ID=$(jq -r '.["kairos-prod-auth"].UserPoolClientId' infrastructure/cdk-outputs.json)
+          USER_POOL_ID=$(jq -r '.["kairos-prod-auth"].UserPoolId' infrastructure/cdk-outputs.json)
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "cognito_client_id=$CLIENT_ID" >> $GITHUB_OUTPUT
+          echo "cognito_user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
+
+  smoke-tests:
+    name: Smoke Tests (Live API)
     runs-on: ubuntu-latest
     needs: [deploy]
+    environment: production
+    env:
+      API_URL: ${{ needs.deploy.outputs.api_url }}
+      COGNITO_CLIENT_ID: ${{ needs.deploy.outputs.cognito_client_id }}
+      COGNITO_USER_POOL_ID: ${{ needs.deploy.outputs.cognito_user_pool_id }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -100,52 +149,48 @@ jobs:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Monitor CloudWatch for errors
+      - name: Get auth token via Cognito admin-initiate-auth
+        id: auth
         run: |
-          echo "Monitoring production deployment for 2 minutes..."
-          sleep 120
+          RESULT=$(aws cognito-idp admin-initiate-auth \
+            --user-pool-id "$COGNITO_USER_POOL_ID" \
+            --client-id "$COGNITO_CLIENT_ID" \
+            --auth-flow ADMIN_USER_PASSWORD_AUTH \
+            --auth-parameters \
+              USERNAME="${{ secrets.SMOKE_TEST_USERNAME }}" \
+              PASSWORD="${{ secrets.SMOKE_TEST_PASSWORD }}")
+          TOKEN=$(echo "$RESULT" | jq -r '.AuthenticationResult.IdToken')
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
-          echo "Checking Lambda error metrics..."
-          END_TIME=$(date -u +%Y-%m-%dT%H:%M:%S)
-          START_TIME=$(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S)
+      - name: GET /v1/branches
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/branches")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/branches returned HTTP $STATUS" && exit 1)
 
-          ERRORS=$(aws cloudwatch get-metric-statistics \
-            --namespace AWS/Lambda \
-            --metric-name Errors \
-            --dimensions Name=FunctionName,Value=kairos-prod \
-            --start-time "$START_TIME" \
-            --end-time "$END_TIME" \
-            --period 300 \
-            --statistics Sum \
-            --query 'Datapoints[0].Sum' \
-            --output text 2>/dev/null || echo "None")
+      - name: GET /v1/members
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/members")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/members returned HTTP $STATUS" && exit 1)
 
-          if [ "$ERRORS" != "None" ] && [ "$ERRORS" != "0.0" ] && [ "$ERRORS" != "null" ]; then
-            echo "WARNING: Detected $ERRORS Lambda errors in the last 5 minutes"
-          else
-            echo "No Lambda errors detected post-deploy"
-          fi
+      - name: GET /v1/departments
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/departments")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/departments returned HTTP $STATUS" && exit 1)
 
-          echo "Verifying production stacks..."
-          aws cloudformation describe-stacks \
-            --query "Stacks[?contains(StackName, 'kairos-prod')].{Name:StackName,Status:StackStatus}" \
-            --output table
-
-          echo "Checking for API Gateway 5xx errors..."
-          API_5XX=$(aws cloudwatch get-metric-statistics \
-            --namespace AWS/ApiGateway \
-            --metric-name 5XXError \
-            --start-time "$START_TIME" \
-            --end-time "$END_TIME" \
-            --period 300 \
-            --statistics Sum \
-            --query 'Datapoints[0].Sum' \
-            --output text 2>/dev/null || echo "None")
-
-          if [ "$API_5XX" != "None" ] && [ "$API_5XX" != "0.0" ] && [ "$API_5XX" != "null" ]; then
-            echo "WARNING: Detected $API_5XX API Gateway 5xx errors"
-          else
-            echo "No API Gateway 5xx errors detected"
-          fi
-
-          echo "Post-deploy monitoring complete"
+      - name: GET /v1/fellowships
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/fellowships")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/fellowships returned HTTP $STATUS" && exit 1)

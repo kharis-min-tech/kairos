@@ -1173,22 +1173,22 @@ This implementation plan breaks down the Kairos MVP into actionable coding tasks
 
 ### Week 10: CI/CD, Security, Polish & Launch
 
-- [x] 35. Set up CI/CD pipeline with GitHub Actions
-  - [x] 35.1 Create test workflow
+- [ ] 35. Set up CI/CD pipeline with GitHub Actions
+  - [ ] 35.1 Create test workflow
     - Trigger on pull request
     - Set up PostgreSQL service container
     - Run unit tests, property tests, integration tests
     - Run linting and type checking
     - _Requirements: Testing strategy_
 
-  - [x] 35.2 Create staging deployment workflow
+  - [ ] 35.2 Create staging deployment workflow
     - Trigger on push to staging branch
     - Build Lambda bundles and Next.js app
     - Deploy CDK stacks to staging (kairos-staging-*)
     - Run smoke tests
     - _Requirements: 35.4_
 
-  - [x] 35.3 Create production deployment workflow
+  - [ ] 35.3 Create production deployment workflow
     - Trigger on push to main branch
     - Require manual approval gate
     - Build and deploy to production (kairos-prod-*)
