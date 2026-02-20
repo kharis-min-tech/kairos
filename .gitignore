@@ -13,3 +13,5 @@ coverage/
 .DS_Store
 # next.js static export output
 apps/web/out/
+# Turborepo
+.turbo
