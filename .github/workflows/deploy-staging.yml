@@ -83,8 +83,7 @@ jobs:
           name: build-artifacts-${{ github.sha }}
           path: |
             apps/api/dist/
-            apps/web/.next/
-            infrastructure/dist/
+            apps/web/out/
           retention-days: 1
 
   deploy:
@@ -111,6 +110,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts-${{ github.sha }}
+          path: .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
