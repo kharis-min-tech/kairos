@@ -35,5 +35,9 @@
     "aws-jwt-verify": "^5.1.1",
     "csv-parse": "^6.1.0",
     "csv-stringify": "^6.6.0"
+  },
+  "overrides": {
+    "minimatch": ">=10.2.1",
+    "esbuild": ">=0.25.0"
   }
 }
