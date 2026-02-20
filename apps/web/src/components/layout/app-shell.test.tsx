@@ -4,7 +4,7 @@ import { AppShell } from './app-shell';
 import { Breadcrumbs } from './breadcrumbs';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: vi.fn(() => '/'),
 }));
 
 afterEach(() => {
