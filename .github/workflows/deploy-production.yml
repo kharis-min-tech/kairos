@@ -69,6 +69,12 @@ jobs:
 
       - name: Build all packages
         run: npm run build
+        env:
+          NEXT_PUBLIC_AUTH_MOCK: 'false'
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_WS_URL: ''
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: ${{ vars.NEXT_PUBLIC_COGNITO_USER_POOL_ID }}
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: ${{ vars.NEXT_PUBLIC_COGNITO_CLIENT_ID }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
