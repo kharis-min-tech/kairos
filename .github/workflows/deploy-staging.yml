@@ -90,7 +90,6 @@ jobs:
           name: web-out-${{ github.sha }}
           path: apps/web/out/
           retention-days: 1
-
   deploy:
     name: Deploy CDK Stacks to Staging
     runs-on: ubuntu-latest
@@ -142,7 +141,6 @@ jobs:
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
           echo "cognito_client_id=$CLIENT_ID" >> $GITHUB_OUTPUT
           echo "cognito_user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
-
   smoke-tests:
     name: Smoke Tests (Live API)
     runs-on: ubuntu-latest
