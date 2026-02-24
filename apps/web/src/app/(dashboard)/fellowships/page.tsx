@@ -162,7 +162,7 @@ export default function FellowshipsPage() {
               <Card
                 key={f.fellowship_id}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => router.push(`/fellowships/${f.fellowship_id}`)}
+                onClick={() => router.push(`/fellowships/view?id=${f.fellowship_id}`)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">

@@ -1,31 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Users, Calendar, MessageSquare, Plus, UserPlus, X, Send } from 'lucide-react';
 import { fellowships } from '@kairos/api-client';
 import type { Fellowship } from '@kairos/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, Skeleton, Badge, Modal, TextInput, Textarea } from '@/components/ui';
 
-// Generate static params for build (empty array means no pre-rendering)
-export function generateStaticParams() {
-  return [];
-}
-
 type Tab = 'members' | 'meetings' | 'messages';
 
 export default function FellowshipDetailPage() {
-  const params = useParams();
+  const searchParams = useSearchParams();
+  const fellowshipIdParam = searchParams.get('id');
   const router = useRouter();
-  const fellowshipId = parseInt(params.fellowshipId as string, 10);
+  const fellowshipId = fellowshipIdParam ? parseInt(fellowshipIdParam, 10) : 0;
 
   const [fellowship, setFellowship] = useState<Fellowship | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('members');
 
   useEffect(() => {
-    loadFellowship();
+    if (fellowshipId) {
+      loadFellowship();
+    }
   }, [fellowshipId]);
 
   const loadFellowship = async () => {
