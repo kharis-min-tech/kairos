@@ -15,6 +15,13 @@
       "when": 1770442200000,
       "tag": "0001_add_tithe_purpose",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771896977944,
+      "tag": "0002_faithful_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

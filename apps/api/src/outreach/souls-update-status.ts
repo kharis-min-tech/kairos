@@ -18,7 +18,7 @@ import {
   BadRequestError,
   isAdmin,
 } from '@kairos/utils';
-import { souls, outreachPrograms } from '@kairos/database';
+import { souls, outreachPrograms, members } from '@kairos/database';
 import { eq, sql } from 'drizzle-orm';
 
 const logger = createLogger('souls-update-status');
@@ -50,15 +50,16 @@ export const handler = async (
 
     const db = getDb();
 
-    // Get current soul status
+    // Get current soul status — use leftJoin to support ad-hoc souls (null outreach_id)
     const [soul] = await db
       .select({
         soulId: souls.soulId,
         status: souls.status,
-        branchId: outreachPrograms.branchId,
+        outreachBranchId: outreachPrograms.branchId,
+        assignedMemberId: souls.assignedMemberId,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
       .where(eq(souls.soulId, soulId))
       .limit(1);
 
@@ -66,8 +67,19 @@ export const handler = async (
       throw new NotFoundError('Soul', String(soulId));
     }
 
-    if (!isAdmin(ctx)) {
-      enforceBranchAccess(ctx, soul.branchId);
+    // Derive branch: from outreach program, or from assigned member for ad-hoc souls
+    let branchId = soul.outreachBranchId;
+    if (!branchId && soul.assignedMemberId) {
+      const [assignedMember] = await db
+        .select({ homeBranchId: members.homeBranchId })
+        .from(members)
+        .where(eq(members.memberId, soul.assignedMemberId))
+        .limit(1);
+      branchId = assignedMember?.homeBranchId ?? null;
+    }
+
+    if (!isAdmin(ctx) && branchId) {
+      enforceBranchAccess(ctx, branchId);
     }
 
     // Validate status transition

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
+import { Button, TextInput, SelectInput, Textarea, Alert } from '@/components/ui';
 import { souls, outreach } from '@kairos/api-client';
 
 const sourceOptions = [
@@ -10,24 +10,42 @@ const sourceOptions = [
   { value: 'outreach', label: 'Outreach Program' },
 ];
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const genderOptions = [
+  { value: '', label: 'Select gender...' },
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+];
+
+const ageGroupOptions = [
+  { value: '', label: 'Select age group...' },
+  { value: 'Under 18', label: 'Under 18' },
+  { value: '18-25', label: '18-25' },
+  { value: '26-35', label: '26-35' },
+  { value: '36-45', label: '36-45' },
+  { value: '46-60', label: '46-60' },
+  { value: 'Over 60', label: 'Over 60' },
+];
+
+const initialForm = {
+  firstName: '',
+  lastName: '',
+  phone: '',
+  email: '',
+  address: '',
+  gender: '',
+  ageGroup: '',
+  notes: '',
+  source: 'ad-hoc',
+  outreachId: '',
+};
 
 export default function SoulCapturePage() {
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    captureDate: todayStr(),
-    email: '',
-    address: '',
-    notes: '',
-    source: 'ad-hoc',
-    outreachId: '',
-  });
+  const [form, setForm] = useState(initialForm);
   const [programs, setPrograms] = useState<Array<{ value: string; label: string }>>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState('');
   const [apiError, setApiError] = useState('');
 
   useEffect(() => {
@@ -44,8 +62,6 @@ export default function SoulCapturePage() {
     const e: Record<string, string> = {};
     if (!form.firstName.trim()) e.firstName = 'First name is required';
     if (!form.lastName.trim()) e.lastName = 'Last name is required';
-    if (!form.phone.trim()) e.phone = 'Phone is required';
-    if (!form.captureDate) e.captureDate = 'Capture date is required';
     if (form.source === 'outreach' && !form.outreachId) e.outreachId = 'Select an outreach program';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -55,26 +71,31 @@ export default function SoulCapturePage() {
     e.preventDefault();
     setSuccess(false);
     setApiError('');
+    setDuplicateWarning('');
     if (!validate()) return;
 
     setSubmitting(true);
     try {
-      await souls.create({
+      const result = await souls.create({
         first_name: form.firstName,
         last_name: form.lastName,
-        phone: form.phone,
-        capture_date: new Date(form.captureDate),
+        phone: form.phone || undefined,
         email: form.email || undefined,
         address: form.address || undefined,
+        gender: form.gender || undefined,
+        age_range: form.ageGroup || undefined,
         notes: form.notes || undefined,
         outreach_id: form.source === 'outreach' ? Number(form.outreachId) : undefined,
       } as Parameters<typeof souls.create>[0]);
+
+      // Check for duplicate phone warning in API response
+      const response = result as unknown as Record<string, unknown>;
+      if (response.warning && typeof response.warning === 'string') {
+        setDuplicateWarning(response.warning);
+      }
+
       setSuccess(true);
-      setForm({
-        firstName: '', lastName: '', phone: '',
-        captureDate: todayStr(),
-        email: '', address: '', notes: '', source: 'ad-hoc', outreachId: '',
-      });
+      setForm({ ...initialForm });
     } catch {
       setApiError('Failed to capture soul. Please try again.');
     } finally {
@@ -96,7 +117,13 @@ export default function SoulCapturePage() {
       <h1 className="text-2xl font-bold text-gray-900">Capture Soul</h1>
       <p className="mt-1 text-sm text-gray-600">Record a new soul reached during evangelism.</p>
 
-      {success && <Alert variant="success" title="Soul captured successfully!" className="mt-4" onDismiss={() => setSuccess(false)} />}
+      {success && !duplicateWarning && <Alert variant="success" title="Soul captured successfully!" className="mt-4" onDismiss={() => setSuccess(false)} />}
+      {success && duplicateWarning && (
+        <Alert variant="warning" title="Soul captured with warning" className="mt-4" onDismiss={() => { setSuccess(false); setDuplicateWarning(''); }}>
+          <p className="text-sm">Soul was captured successfully, but a duplicate phone number was detected:</p>
+          <p className="mt-1 text-sm font-medium">{duplicateWarning}</p>
+        </Alert>
+      )}
       {apiError && <Alert variant="error" title={apiError} className="mt-4" onDismiss={() => setApiError('')} />}
 
       <form onSubmit={handleSubmit} className="mt-6 max-w-2xl space-y-4">
@@ -105,11 +132,14 @@ export default function SoulCapturePage() {
           <TextInput label="Last Name *" name="lastName" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} error={errors.lastName} />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput label="Phone *" name="phone" type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} error={errors.phone} />
-          <DatePicker label="Capture Date *" name="captureDate" value={form.captureDate} onChange={(e) => update('captureDate', e.target.value)} error={errors.captureDate} />
+          <TextInput label="Phone" name="phone" type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+          <TextInput label="Email" name="email" type="email" value={form.email} onChange={(e) => update('email', e.target.value)} />
         </div>
-        <TextInput label="Email" name="email" type="email" value={form.email} onChange={(e) => update('email', e.target.value)} />
         <TextInput label="Address" name="address" value={form.address} onChange={(e) => update('address', e.target.value)} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SelectInput label="Gender" name="gender" options={genderOptions} value={form.gender} onChange={(e) => update('gender', e.target.value)} />
+          <SelectInput label="Age Group" name="ageGroup" options={ageGroupOptions} value={form.ageGroup} onChange={(e) => update('ageGroup', e.target.value)} />
+        </div>
 
         <SelectInput label="Source *" name="source" options={sourceOptions} value={form.source} onChange={(e) => update('source', e.target.value)} />
         {form.source === 'outreach' && (

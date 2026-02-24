@@ -30,10 +30,15 @@ vi.mock('@kairos/database', () => ({
     status: 'status',
     convertedToMemberId: 'converted_to_member_id',
     updatedAt: 'updated_at',
+    assignedMemberId: 'assigned_member_id',
   },
   outreachPrograms: {
     outreachId: 'outreach_id',
     branchId: 'branch_id',
+  },
+  members: {
+    memberId: 'member_id',
+    homeBranchId: 'home_branch_id',
   },
 }));
 
@@ -82,12 +87,13 @@ function setupDbWithSoul(currentStatus: string) {
   const mockDb = {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
-        innerJoin: vi.fn().mockReturnValue({
+        leftJoin: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue([{
               soulId: 1,
               status: currentStatus,
-              branchId: 10,
+              outreachBranchId: 10,
+              assignedMemberId: 1,
             }]),
           }),
         }),
@@ -174,7 +180,7 @@ describe('souls-update-status handler', () => {
     const mockDb = {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
-          innerJoin: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
             where: vi.fn().mockReturnValue({
               limit: vi.fn().mockReturnValue([]),
             }),

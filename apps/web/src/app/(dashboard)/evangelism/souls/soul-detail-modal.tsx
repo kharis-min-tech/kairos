@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
 import type { Soul, FollowUp } from '@kairos/types';
+import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
   { value: 'Phone Call', label: 'Phone Call' },
@@ -59,6 +60,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [showConversionForm, setShowConversionForm] = useState(false);
 
   useEffect(() => {
     if (open && soul.soul_id) {
@@ -110,6 +112,10 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   };
 
   const handleStatusUpdate = async (newStatus: string) => {
+    if (newStatus === 'Converted') {
+      setShowConversionForm(true);
+      return;
+    }
     setError('');
     setStatusUpdating(true);
     try {
@@ -118,6 +124,24 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
       onClose();
     } catch {
       setError('Failed to update status.');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleConversionSuccess = async (memberId: number) => {
+    setError('');
+    setStatusUpdating(true);
+    try {
+      await souls.updateStatus(soul.soul_id, {
+        status: 'Converted',
+        convertedToMemberId: memberId,
+      });
+      setShowConversionForm(false);
+      onUpdate();
+      onClose();
+    } catch {
+      setError('Member registered but failed to update soul status. Please update manually.');
     } finally {
       setStatusUpdating(false);
     }
@@ -196,6 +220,15 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           )}
         </div>
       </div>
+
+      {showConversionForm && (
+        <ConversionMemberForm
+          soul={soul}
+          open={showConversionForm}
+          onClose={() => setShowConversionForm(false)}
+          onSuccess={handleConversionSuccess}
+        />
+      )}
     </Modal>
   );
 }

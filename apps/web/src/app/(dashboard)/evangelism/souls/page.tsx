@@ -8,6 +8,7 @@ import { souls } from '@kairos/api-client';
 import type { Soul } from '@kairos/types';
 import { AlertTriangle } from 'lucide-react';
 import { SoulDetailModal } from './soul-detail-modal';
+import { ConversionMemberForm } from './conversion-member-form';
 
 const COLUMNS = ['New', 'Following Up', 'Interested', 'Converted'] as const;
 type ColumnStatus = (typeof COLUMNS)[number];
@@ -126,6 +127,7 @@ export default function SoulsKanbanPage() {
   const [allSouls, setAllSouls] = useState<Soul[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSoul, setSelectedSoul] = useState<Soul | null>(null);
+  const [conversionSoul, setConversionSoul] = useState<Soul | null>(null);
 
   const fetchSouls = useCallback(async () => {
     try {
@@ -144,6 +146,13 @@ export default function SoulsKanbanPage() {
     const allowed = VALID_TRANSITIONS[fromStatus] || [];
     if (!allowed.includes(toStatus)) return;
 
+    // Intercept Converted — show pre-fill member registration form
+    if (toStatus === 'Converted') {
+      const soul = allSouls.find((s) => s.soul_id === soulId);
+      if (soul) setConversionSoul(soul);
+      return;
+    }
+
     // Optimistic update
     setAllSouls((prev) =>
       prev.map((s) => (s.soul_id === soulId ? { ...s, status: toStatus as Soul['status'] } : s))
@@ -156,6 +165,22 @@ export default function SoulsKanbanPage() {
       setAllSouls((prev) =>
         prev.map((s) => (s.soul_id === soulId ? { ...s, status: fromStatus as Soul['status'] } : s))
       );
+    }
+  };
+
+  const handleConversionSuccess = async (memberId: number) => {
+    if (!conversionSoul) return;
+    try {
+      await souls.updateStatus(conversionSoul.soul_id, {
+        status: 'Converted',
+        convertedToMemberId: memberId,
+      });
+      setConversionSoul(null);
+      fetchSouls();
+    } catch {
+      // Member was created but status update failed
+      setConversionSoul(null);
+      fetchSouls();
     }
   };
 
@@ -199,6 +224,15 @@ export default function SoulsKanbanPage() {
           open={!!selectedSoul}
           onClose={() => setSelectedSoul(null)}
           onUpdate={fetchSouls}
+        />
+      )}
+
+      {conversionSoul && (
+        <ConversionMemberForm
+          soul={conversionSoul}
+          open={!!conversionSoul}
+          onClose={() => setConversionSoul(null)}
+          onSuccess={handleConversionSuccess}
         />
       )}
     </>

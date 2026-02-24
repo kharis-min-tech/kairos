@@ -199,6 +199,9 @@ export const outreachWorkerRegisterSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
+/** Schema for completing an outreach program (no body — outreachId from path) */
+export const outreachCompleteSchema = z.object({});
+
 /** Schema for capturing a soul */
 export const soulCaptureSchema = z.object({
   first_name: nonEmptyString.max(100),
@@ -219,19 +222,23 @@ export const followUpCreateSchema = z.object({
   contact_date: z.coerce.date(),
   contact_method: z.enum([
     'Phone Call',
-    'Home Visit',
     'Text Message',
     'Email',
-    'In-Person Meeting',
+    'WhatsApp',
+    'In-Person Visit',
+    'Other',
   ]),
   contact_status: z.enum([
     'Successful',
     'No Answer',
+    'Wrong Number',
     'Call Back Later',
     'Not Interested',
+    'Interested',
   ]),
   duration_minutes: z.number().int().positive().optional(),
   notes: z.string().trim().max(2000).optional(),
+  next_follow_up_date: z.coerce.date().optional(),
 });
 
 /** Schema for updating soul status */
@@ -390,6 +397,7 @@ export type FellowshipAttendanceBulkInput = z.infer<typeof fellowshipAttendanceB
 export type FellowshipAttendanceRecordInput = z.infer<typeof fellowshipAttendanceRecordSchema>;
 export type OutreachProgramCreateInput = z.infer<typeof outreachProgramCreateSchema>;
 export type OutreachWorkerRegisterInput = z.infer<typeof outreachWorkerRegisterSchema>;
+export type OutreachCompleteInput = z.infer<typeof outreachCompleteSchema>;
 export type SoulCaptureInput = z.infer<typeof soulCaptureSchema>;
 export type FollowUpCreateInput = z.infer<typeof followUpCreateSchema>;
 export type SoulStatusUpdateInput = z.infer<typeof soulStatusUpdateSchema>;

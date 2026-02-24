@@ -1,12 +1,13 @@
 // @kairos/api - Souls Get Alerts Lambda
-// Queries souls not followed up within threshold (default 2-3 days).
-// Returns souls past threshold with assigned worker info.
+// Hybrid overdue detection: uses next_follow_up_date when available,
+// falls back to days since last follow-up or soul creation.
+// Returns overdue souls with assigned worker info.
 //
-// **Requirements: 15.4, 15.5**
+// **Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7**
 
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { eq, and, lte, sql } from 'drizzle-orm';
-import { souls, members, outreachPrograms } from '@kairos/database';
+import { eq, and, or, sql, isNull, isNotNull } from 'drizzle-orm';
+import { souls, members, outreachPrograms, followUps } from '@kairos/database';
 import {
   resolveAuthContext,
   isAdmin,
@@ -19,7 +20,7 @@ import {
 
 const logger = createLogger('souls-get-alerts');
 
-const DEFAULT_THRESHOLD_DAYS = 3;
+const DEFAULT_THRESHOLD_DAYS = 2;
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -40,11 +41,30 @@ export const handler = async (
 
     const db = getDb();
 
-    // Find souls that are in active statuses and haven't been followed up within threshold
-    const thresholdDate = new Date();
-    thresholdDate.setDate(thresholdDate.getDate() - thresholdDays);
+    // Subquery: get latest follow-up per soul with its next_follow_up_date
+    const latestFollowUp = db
+      .select({
+        soulId: followUps.soulId,
+        lastFollowUpDate: sql<Date>`MAX(${followUps.followUpDate})`.as('last_follow_up_date'),
+        nextFollowUpDate: sql<string | null>`(
+          SELECT ${followUps.nextFollowUpDate}
+          FROM ${followUps} AS fu2
+          WHERE fu2.soul_id = ${followUps.soulId}
+          ORDER BY fu2.follow_up_date DESC
+          LIMIT 1
+        )`.as('next_follow_up_date'),
+      })
+      .from(followUps)
+      .groupBy(followUps.soulId)
+      .as('latest_fu');
 
-    const overduesouls = await db
+    // Alias for the assigned member (worker)
+    const assignedMember = members;
+
+    // Alias for the member linked to the soul (for ad-hoc branch derivation)
+    // We use the assigned member's homeBranchId when outreach_id IS NULL
+
+    const overdueRows = await db
       .select({
         soulId: souls.soulId,
         firstName: souls.firstName,
@@ -52,38 +72,70 @@ export const handler = async (
         phone: souls.phone,
         status: souls.status,
         assignedMemberId: souls.assignedMemberId,
-        assignedFirstName: members.firstName,
-        assignedLastName: members.lastName,
-        assignedEmail: members.email,
-        lastUpdated: souls.updatedAt,
+        assignedFirstName: assignedMember.firstName,
+        assignedLastName: assignedMember.lastName,
+        assignedEmail: assignedMember.email,
+        createdAt: souls.createdAt,
         programName: outreachPrograms.programName,
-        daysSinceUpdate: sql<number>`EXTRACT(DAY FROM NOW() - ${souls.updatedAt})::int`.as('days_since_update'),
+        lastFollowUpDate: latestFollowUp.lastFollowUpDate,
+        nextFollowUpDate: latestFollowUp.nextFollowUpDate,
+        daysSinceActivity: sql<number>`
+          CASE
+            WHEN ${latestFollowUp.lastFollowUpDate} IS NOT NULL
+              THEN EXTRACT(DAY FROM NOW() - ${latestFollowUp.lastFollowUpDate})::int
+            ELSE EXTRACT(DAY FROM NOW() - ${souls.createdAt})::int
+          END
+        `.as('days_since_activity'),
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .leftJoin(members, eq(souls.assignedMemberId, members.memberId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .leftJoin(assignedMember, eq(souls.assignedMemberId, assignedMember.memberId))
+      .leftJoin(latestFollowUp, eq(souls.soulId, latestFollowUp.soulId))
       .where(
         and(
-          eq(outreachPrograms.branchId, branchId),
+          // Active statuses only
           sql`${souls.status} IN ('New', 'Following Up', 'Interested')`,
-          lte(souls.updatedAt, thresholdDate)
+          // Branch isolation: program-linked via outreachPrograms.branchId,
+          // ad-hoc via assigned member's homeBranchId
+          or(
+            eq(outreachPrograms.branchId, branchId),
+            and(isNull(souls.outreachId), eq(assignedMember.homeBranchId, branchId))
+          ),
+          // Hybrid overdue conditions:
+          or(
+            // (a) next_follow_up_date is set and in the past
+            and(
+              isNotNull(latestFollowUp.nextFollowUpDate),
+              sql`${latestFollowUp.nextFollowUpDate}::date < CURRENT_DATE`
+            ),
+            // (b) next_follow_up_date is NULL, has follow-ups, and days since last exceeds threshold
+            and(
+              isNull(latestFollowUp.nextFollowUpDate),
+              isNotNull(latestFollowUp.lastFollowUpDate),
+              sql`(NOW() - ${latestFollowUp.lastFollowUpDate}) > INTERVAL '1 day' * ${thresholdDays}`
+            ),
+            // (c) No follow-ups exist and days since soul creation exceeds threshold
+            and(
+              isNull(latestFollowUp.soulId),
+              sql`(NOW() - ${souls.createdAt}) > INTERVAL '1 day' * ${thresholdDays}`
+            )
+          )
         )
       );
 
-    logger.info('Follow-up alerts retrieved', { count: overduesouls.length, thresholdDays });
+    logger.info('Follow-up alerts retrieved', { count: overdueRows.length, thresholdDays });
 
     return successResponse({
       branchId,
       thresholdDays,
-      overdueSouls: overduesouls.map(s => ({
+      overdueSouls: overdueRows.map(s => ({
         soulId: s.soulId,
         firstName: s.firstName,
         lastName: s.lastName,
         phone: s.phone,
         status: s.status,
-        lastUpdated: s.lastUpdated,
-        daysSinceUpdate: s.daysSinceUpdate,
-        programName: s.programName,
+        daysSinceActivity: s.daysSinceActivity,
+        programName: s.programName ?? null,
         assignedWorker: s.assignedFirstName
           ? {
               memberId: s.assignedMemberId,
