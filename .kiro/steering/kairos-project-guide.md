@@ -56,6 +56,10 @@ modifying, or suggesting changes in this repository.
 - Keep changes minimal, intentional, and reviewable.
 - use my Context7 MCP server where necessary.
 
+### Frontend Navigation Rules
+- ALWAYS use Next.js `<Link>` component (`import Link from 'next/link'`) for internal navigation. NEVER use plain `<a href>` tags for internal routes — they cause full page reloads which break client-side state (auth context, etc.) in the static export SPA.
+- The app uses `output: "export"` (static export) — dynamic `[param]` routes are NOT allowed. Use `useSearchParams()` with query params instead (e.g., `/members/view?id=X`).
+
 ### Decision Escalation
 - When uncertain, ask for clarification instead of making assumptions.
 - Never “fill in gaps” with implied product decisions.
