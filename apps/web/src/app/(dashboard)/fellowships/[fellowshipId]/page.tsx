@@ -8,6 +8,11 @@ import type { Fellowship } from '@kairos/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, Skeleton, Badge, Modal, TextInput, Textarea } from '@/components/ui';
 
+// Generate static params for build (empty array means no pre-rendering)
+export function generateStaticParams() {
+  return [];
+}
+
 type Tab = 'members' | 'meetings' | 'messages';
 
 export default function FellowshipDetailPage() {
