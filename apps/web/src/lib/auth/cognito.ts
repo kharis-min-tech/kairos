@@ -7,7 +7,7 @@ import {
 
 const POOL_CONFIG = {
   UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'eu-west-2_pcXtxTuhu',
-  ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '',
+  ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '51g4egqn15ukgho80mbgsdi5r3',
 };
 
 const userPool = new CognitoUserPool(POOL_CONFIG);
