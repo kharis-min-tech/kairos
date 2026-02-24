@@ -105,7 +105,43 @@ export interface Fellowship extends BaseEntity {
   leader_id?: number;
   co_leader_id?: number;
   meeting_schedule?: string;
+  location?: string;
   is_active: boolean;
+}
+
+/** Fellowship member entity */
+export interface FellowshipMember extends BaseEntity {
+  fellowship_member_id: number;
+  fellowship_id: number;
+  member_id: number;
+  join_date: Date;
+  leave_date?: Date;
+  is_active: boolean;
+  notes?: string;
+}
+
+/** Fellowship meeting entity */
+export interface FellowshipMeeting extends BaseEntity {
+  meeting_id: number;
+  fellowship_id: number;
+  meeting_date: Date;
+  meeting_title?: string;
+  meeting_topic?: string;
+  meeting_notes?: string;
+  location?: string;
+  duration_minutes?: number;
+  created_by?: number;
+}
+
+/** Fellowship meeting attendance entity */
+export interface FellowshipMeetingAttendance {
+  meeting_id: number;
+  member_id: number;
+  attendance_status: 'Present' | 'Absent' | 'Excused' | 'Late';
+  arrival_time?: Date;
+  notes?: string;
+  recorded_at: Date;
+  recorded_by?: number;
 }
 
 /** Service entity */

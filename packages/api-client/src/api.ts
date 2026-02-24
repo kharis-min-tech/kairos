@@ -120,11 +120,29 @@ export const fellowships = {
   get: (id: number) =>
     get<Fellowship>(`/v1/fellowships/${id}`),
 
+  update: (id: number, data: Partial<Fellowship>) =>
+    put<Fellowship>(`/v1/fellowships/${id}`, data),
+
   addMember: (id: number, data: { memberId: number }) =>
     post<void>(`/v1/fellowships/${id}/add-member`, data),
 
+  removeMember: (id: number, data: { fellowshipId: number; memberId: number; notes?: string }) =>
+    post<void>(`/v1/fellowships/${id}/remove-member`, data),
+
   sendMessage: (id: number, data: { title: string; body: string; memberIds?: number[] }) =>
     post<void>(`/v1/fellowships/${id}/send-message`, data),
+
+  createMeeting: (id: number, data: { fellowshipId: number; meetingDate: string; meetingTitle?: string; meetingTopic?: string; meetingNotes?: string; location?: string; durationMinutes?: number }) =>
+    post<{ meeting_id: number }>(`/v1/fellowships/${id}/meetings`, data),
+
+  listMeetings: (id: number) =>
+    get<{ fellowshipId: number; meetings: Array<{ meetingId: number; meetingDate: Date; meetingTitle?: string; presentCount: number; totalCount: number; attendancePercentage: number }> }>(`/v1/fellowships/${id}/meetings`),
+
+  getMeeting: (fellowshipId: number, meetingId: number) =>
+    get<{ meeting_id: number; meeting_date: Date; attendance: Array<{ memberId: number; attendanceStatus: string; firstName: string; lastName: string }> }>(`/v1/fellowships/${fellowshipId}/meetings/${meetingId}`),
+
+  recordAttendance: (fellowshipId: number, data: { meetingId: number; attendance: Array<{ memberId: number; attendanceStatus: 'Present' | 'Absent' | 'Excused' | 'Late'; arrivalTime?: string; notes?: string }> }) =>
+    post<{ meetingId: number; recordsProcessed: number }>(`/v1/fellowships/${fellowshipId}/record-attendance`, data),
 };
 
 // ─── Attendance ──────────────────────────────────────────────────

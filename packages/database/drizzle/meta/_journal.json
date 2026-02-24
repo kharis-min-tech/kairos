@@ -15,6 +15,13 @@
       "when": 1770442200000,
       "tag": "0001_add_tithe_purpose",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770442300000,
+      "tag": "0002_add_fellowship_location",
+      "breakpoints": true
     }
   ]
 }

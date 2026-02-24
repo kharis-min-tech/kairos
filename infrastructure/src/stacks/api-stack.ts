@@ -246,8 +246,14 @@ export class ApiStack extends cdk.Stack {
     route('FellowCreate', 'fellowships/fellowships-create.ts', POST, '/v1/fellowships');
     route('FellowList', 'fellowships/fellowships-list.ts', GET, '/v1/fellowships');
     route('FellowGet', 'fellowships/fellowships-get.ts', GET, '/v1/fellowships/{fellowshipId}');
+    route('FellowUpdate', 'fellowships/fellowships-update.ts', PUT, '/v1/fellowships/{fellowshipId}');
     route('FellowAddMember', 'fellowships/fellowships-add-member.ts', POST, '/v1/fellowships/{fellowshipId}/members');
+    route('FellowRemoveMember', 'fellowships/fellowships-remove-member.ts', POST, '/v1/fellowships/{fellowshipId}/remove-member');
     route('FellowSendMsg', 'fellowships/fellowships-send-message.ts', POST, '/v1/fellowships/{fellowshipId}/messages');
+    route('FellowCreateMeeting', 'fellowships/fellowships-create-meeting.ts', POST, '/v1/fellowships/{fellowshipId}/meetings');
+    route('FellowListMeetings', 'fellowships/fellowships-list-meetings.ts', GET, '/v1/fellowships/{fellowshipId}/meetings');
+    route('FellowGetMeeting', 'fellowships/fellowships-get-meeting.ts', GET, '/v1/fellowships/{fellowshipId}/meetings/{meetingId}');
+    route('FellowRecordAttendance', 'fellowships/fellowships-record-attendance.ts', POST, '/v1/fellowships/{fellowshipId}/record-attendance');
 
     // ================= ATTENDANCE =================
     route('AttRecordSvc', 'attendance/attendance-record-service.ts', POST, '/v1/attendance/services');

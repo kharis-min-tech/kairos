@@ -70,11 +70,13 @@ export const handler = async (
       .insert(fellowships)
       .values({
         fellowshipName: input.fellowship_name,
+        fellowshipType: input.fellowship_type,
         branchId: input.branch_id,
         description: input.description,
         leaderId: input.leader_id,
         coLeaderId: input.co_leader_id,
         meetingSchedule: input.meeting_schedule,
+        location: input.location,
       })
       .returning();
 

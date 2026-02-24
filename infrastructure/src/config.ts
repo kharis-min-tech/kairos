@@ -60,7 +60,7 @@ export const stagingConfig: KairosConfig = {
   auroraMultiAz: false,
   apiThrottleRateLimit: 100,
   apiThrottleBurstLimit: 50,
-  webAppDomains: ['https://staging.khar.is'],
+  webAppDomains: ['https://staging.khar.is', 'http://localhost:3000'],
   authorizerCacheTtlSeconds: 300,
   domain: 'khar.is',
   webSubdomain: 'staging',

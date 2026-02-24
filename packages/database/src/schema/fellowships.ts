@@ -24,6 +24,7 @@ export const fellowships = pgTable(
   {
     fellowshipId: serial('fellowship_id').primaryKey(),
     fellowshipName: varchar('fellowship_name', { length: 150 }).notNull(),
+    fellowshipType: varchar('fellowship_type', { length: 100 }).notNull().default('K-Groups'),
     branchId: integer('branch_id')
       .notNull()
       .references(() => branches.branchId, { onDelete: 'cascade' }),
@@ -35,6 +36,7 @@ export const fellowships = pgTable(
       onDelete: 'set null',
     }),
     meetingSchedule: varchar('meeting_schedule', { length: 200 }),
+    location: varchar('location', { length: 200 }),
     isActive: boolean('is_active').default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -47,6 +49,10 @@ export const fellowships = pgTable(
     check(
       'chk_fellowships_leaders_different',
       sql`${table.leaderId} IS NULL OR ${table.coLeaderId} IS NULL OR ${table.leaderId} != ${table.coLeaderId}`
+    ),
+    check(
+      'chk_fellowships_type',
+      sql`${table.fellowshipType} IN ('K-Groups', 'Kharis Express', 'New Breeds', 'Kharis on Campus', 'Kharis on Campus Colleges')`
     ),
   ]
 );

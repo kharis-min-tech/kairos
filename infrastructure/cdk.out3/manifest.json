@@ -1,0 +1,4652 @@
+{
+  "version": "48.0.0",
+  "artifacts": {
+    "kairos-staging-network.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-network.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-network": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-network.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/e29f618b958a77f976fa0ea715082c953c4f5f8e43e90b6ca4cc329c91ecd8fa.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-network.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-network.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-network": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-network/Vpc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Vpc8378EB38"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet1Subnet24CE21A9"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet1RouteTableE4679C7E"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet1RouteTableAssociation6DF2F129"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet2Subnet14FC6BC3"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet2RouteTableBE55F435"
+          }
+        ],
+        "/kairos-staging-network/Vpc/private-isolatedSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcprivateisolatedSubnet2RouteTableAssociation32540CC7"
+          }
+        ],
+        "/kairos-staging-network/Vpc/S3Endpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcS3Endpoint4A3DE4B5"
+          }
+        ],
+        "/kairos-staging-network/Vpc/SecretsManagerEndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcSecretsManagerEndpoint93E49F69"
+          }
+        ],
+        "/kairos-staging-network/Vpc/SsmEndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcSsmEndpointC46DB833"
+          }
+        ],
+        "/kairos-staging-network/LambdaSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaSg30A6108C"
+          }
+        ],
+        "/kairos-staging-network/LambdaSg/to kairosstagingnetworkAuroraSg4B035CE7:5432": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaSgtokairosstagingnetworkAuroraSg4B035CE75432C14DD045"
+          }
+        ],
+        "/kairos-staging-network/AuroraSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraSgFE0A4948"
+          }
+        ],
+        "/kairos-staging-network/AuroraSg/from kairosstagingnetworkLambdaSg27AA21D1:5432": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraSgfromkairosstagingnetworkLambdaSg27AA21D154322316EFF6"
+          }
+        ],
+        "/kairos-staging-network/secrets-manager-endpoint-sg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "secretsmanagerendpointsgEDEFB109"
+          }
+        ],
+        "/kairos-staging-network/ssm-endpoint-sg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ssmendpointsg8B28B084"
+          }
+        ],
+        "/kairos-staging-network/VpcId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcId"
+          }
+        ],
+        "/kairos-staging-network/LambdaSecurityGroupId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaSecurityGroupId"
+          }
+        ],
+        "/kairos-staging-network/AuroraSecurityGroupId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraSecurityGroupId"
+          }
+        ],
+        "/kairos-staging-network/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-network/Exports/Output{\"Ref\":\"VpcprivateisolatedSubnet1Subnet24CE21A9\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefVpcprivateisolatedSubnet1Subnet24CE21A9CBBC011F"
+          }
+        ],
+        "/kairos-staging-network/Exports/Output{\"Ref\":\"VpcprivateisolatedSubnet2Subnet14FC6BC3\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefVpcprivateisolatedSubnet2Subnet14FC6BC360484DFA"
+          }
+        ],
+        "/kairos-staging-network/Exports/Output{\"Fn::GetAtt\":[\"AuroraSgFE0A4948\",\"GroupId\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttAuroraSgFE0A4948GroupId3283060E"
+          }
+        ],
+        "/kairos-staging-network/Exports/Output{\"Fn::GetAtt\":[\"LambdaSg30A6108C\",\"GroupId\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttLambdaSg30A6108CGroupId30BB2F0D"
+          }
+        ],
+        "/kairos-staging-network/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-network/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-network"
+    },
+    "kairos-staging-database.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-database.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-database": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-database.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/f50f0bdc5ffd2e2479689c47978a56b5ec395ee8b2c0ad22d830e69834f1edb9.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-database.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-network",
+        "kairos-staging-database.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-database": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-database/SubnetGroup/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubnetGroup"
+          }
+        ],
+        "/kairos-staging-database/AuroraCluster/Secret/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "kairosstagingdatabaseAuroraClusterSecretF523CED83fdaad7efa858a3daf9490cf0a702aeb"
+          }
+        ],
+        "/kairos-staging-database/AuroraCluster/Secret/Attachment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraClusterSecretAttachmentDB8032DA"
+          }
+        ],
+        "/kairos-staging-database/AuroraCluster/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraCluster23D869C0"
+          }
+        ],
+        "/kairos-staging-database/AuroraCluster/writer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraClusterwriter499C523E"
+          }
+        ],
+        "/kairos-staging-database/ClusterEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterEndpoint"
+          }
+        ],
+        "/kairos-staging-database/ClusterReaderEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterReaderEndpoint"
+          }
+        ],
+        "/kairos-staging-database/ClusterSecretArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterSecretArn"
+          }
+        ],
+        "/kairos-staging-database/DatabaseName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DatabaseName"
+          }
+        ],
+        "/kairos-staging-database/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-database/Exports/Output{\"Ref\":\"AuroraClusterSecretAttachmentDB8032DA\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefAuroraClusterSecretAttachmentDB8032DAFDEEBE73"
+          }
+        ],
+        "/kairos-staging-database/Exports/Output{\"Ref\":\"AuroraCluster23D869C0\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefAuroraCluster23D869C0CA1C7DB5"
+          }
+        ],
+        "/kairos-staging-database/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-database/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-database"
+    },
+    "kairos-staging-storage.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-storage.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-storage": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-storage.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/b31b425b32e443c706844af7547e276f19ea05c5bc1fb991b5dc3e5846840096.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-storage.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-storage.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-storage": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-storage/MemberPhotosBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemberPhotosBucketC2B673D5"
+          }
+        ],
+        "/kairos-staging-storage/MemberPhotosBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemberPhotosBucketPolicy25B2668B"
+          }
+        ],
+        "/kairos-staging-storage/MemberPhotosBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemberPhotosBucketAutoDeleteObjectsCustomResource79B68587"
+          }
+        ],
+        "/kairos-staging-storage/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/kairos-staging-storage/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/kairos-staging-storage/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/kairos-staging-storage/FormUploadsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormUploadsBucketD2CDBA9B"
+          }
+        ],
+        "/kairos-staging-storage/FormUploadsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormUploadsBucketPolicy41923B9A"
+          }
+        ],
+        "/kairos-staging-storage/FormUploadsBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormUploadsBucketAutoDeleteObjectsCustomResource935C413D"
+          }
+        ],
+        "/kairos-staging-storage/CsvExportsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CsvExportsBucketB38925E1"
+          }
+        ],
+        "/kairos-staging-storage/CsvExportsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CsvExportsBucketPolicy1289C152"
+          }
+        ],
+        "/kairos-staging-storage/CsvExportsBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CsvExportsBucketAutoDeleteObjectsCustomResourceE290B7C1"
+          }
+        ],
+        "/kairos-staging-storage/AnalyticsExportsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportsBucket041125DF"
+          }
+        ],
+        "/kairos-staging-storage/AnalyticsExportsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportsBucketPolicy7BB0A92A"
+          }
+        ],
+        "/kairos-staging-storage/AnalyticsExportsBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportsBucketAutoDeleteObjectsCustomResourceA00CFE18"
+          }
+        ],
+        "/kairos-staging-storage/Distribution/Origin1/S3OriginAccessControl/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DistributionOrigin1S3OriginAccessControlEB606076"
+          }
+        ],
+        "/kairos-staging-storage/Distribution/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Distribution830FAC52"
+          }
+        ],
+        "/kairos-staging-storage/MemberPhotosBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemberPhotosBucketName"
+          }
+        ],
+        "/kairos-staging-storage/FormUploadsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormUploadsBucketName"
+          }
+        ],
+        "/kairos-staging-storage/CsvExportsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CsvExportsBucketName"
+          }
+        ],
+        "/kairos-staging-storage/AnalyticsExportsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportsBucketName"
+          }
+        ],
+        "/kairos-staging-storage/CloudFrontDomainName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudFrontDomainName"
+          }
+        ],
+        "/kairos-staging-storage/CloudFrontDistributionId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudFrontDistributionId"
+          }
+        ],
+        "/kairos-staging-storage/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Fn::GetAtt\":[\"MemberPhotosBucketC2B673D5\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttMemberPhotosBucketC2B673D5Arn69A9E13E"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Ref\":\"MemberPhotosBucketC2B673D5\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefMemberPhotosBucketC2B673D5ACAAE3FF"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Fn::GetAtt\":[\"CsvExportsBucketB38925E1\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttCsvExportsBucketB38925E1Arn32090AAA"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Ref\":\"CsvExportsBucketB38925E1\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefCsvExportsBucketB38925E1AA7D3832"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Fn::GetAtt\":[\"AnalyticsExportsBucket041125DF\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttAnalyticsExportsBucket041125DFArn9FCE14AB"
+          }
+        ],
+        "/kairos-staging-storage/Exports/Output{\"Ref\":\"AnalyticsExportsBucket041125DF\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefAnalyticsExportsBucket041125DF9EC21C1D"
+          }
+        ],
+        "/kairos-staging-storage/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-storage/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-storage"
+    },
+    "kairos-staging-auth.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-auth.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-auth": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-auth.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/2f900f8a1c6a9d0ca12ff962036176013fa1f97fc2ccbb2274a32d969ae33b8c.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-auth.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-auth.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-auth": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-auth/UserPool/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPool6BA7E5F2"
+          }
+        ],
+        "/kairos-staging-auth/WebAppClient/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebAppClient958C5457"
+          }
+        ],
+        "/kairos-staging-auth/UserPoolId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolId"
+          }
+        ],
+        "/kairos-staging-auth/UserPoolArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolArn"
+          }
+        ],
+        "/kairos-staging-auth/UserPoolClientId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolClientId"
+          }
+        ],
+        "/kairos-staging-auth/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-auth/Exports/Output{\"Ref\":\"UserPool6BA7E5F2\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefUserPool6BA7E5F296FD7236"
+          }
+        ],
+        "/kairos-staging-auth/Exports/Output{\"Ref\":\"WebAppClient958C5457\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefWebAppClient958C54570F5F0151"
+          }
+        ],
+        "/kairos-staging-auth/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-auth/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-auth"
+    },
+    "kairos-staging-api.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-api.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-api": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-api.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/379a29963e6b85e7774115b5943ebea2a05cf0dce07e9090dea474ea562849f6.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-api.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-network",
+        "kairos-staging-auth",
+        "kairos-staging-database",
+        "kairos-staging-storage",
+        "kairos-staging-api.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-api": [
+          {
+            "type": "aws:cdk:info",
+            "data": "Number of resources: 490 is approaching allowed maximum of 500",
+            "trace": [
+              "Annotations.addMessage (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2066)",
+              "Annotations.addInfo (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1443)",
+              "ApiStack._synthesizeTemplate (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/stack.js:1:15800)",
+              "DefaultStackSynthesizer.synthesizeTemplate (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/stack-synthesizers/stack-synthesizer.js:1:2397)",
+              "DefaultStackSynthesizer.synthesize (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/stack-synthesizers/default-synthesizer.js:1:8682)",
+              "/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:2:6190",
+              "visit (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:4:372)",
+              "visit (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:4:334)",
+              "synthesizeTree (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:2:6032)",
+              "synthesize (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:1:2028)",
+              "App.synth (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/aws-cdk-lib/core/lib/stage.js:1:2912)",
+              "Object.<anonymous> (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/infrastructure/src/index.ts:131:5)",
+              "Module._compile (node:internal/modules/cjs/loader:1521:14)",
+              "Module.m._compile (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/index.ts:1618:23)",
+              "Module._extensions..js (node:internal/modules/cjs/loader:1623:10)",
+              "Object.require.extensions.<computed> [as .ts] (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1266:32)",
+              "Function.Module._load (node:internal/modules/cjs/loader:1091:12)",
+              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)",
+              "phase4 (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/kalvertabbey/Library/CloudStorage/OneDrive-Personal/Documents/kairos/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1521:14)",
+              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)",
+              "Module.load (node:internal/modules/cjs/loader:1266:32)",
+              "Function.Module._load (node:internal/modules/cjs/loader:1091:12)",
+              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)",
+              "node:internal/main/run_main_module:28:49"
+            ]
+          },
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-api/HttpApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiF5A9A8A7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DefaultStage/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDefaultStage3EEB07D6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members/MembersCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersMembersCreateIntB44E6A5E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members/MembersCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersMembersCreateIntPermissionB72BA288"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1members92FB5FF2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/KairosAuthorizer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiKairosAuthorizer661BAB9F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/kairosstagingapiHttpApiKairosAuthorizer0F3AB36E-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApikairosstagingapiHttpApiKairosAuthorizer0F3AB36EPermissionC6B7DCD7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members/MembersListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersMembersListInt688C4626"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members/MembersListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersMembersListIntPermission447603E2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1members9EDADE3A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--{memberId}/MembersGetInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersmemberIdMembersGetIntA62815C2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--{memberId}/MembersGetInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersmemberIdMembersGetIntPermission67BD2AD2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--{memberId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersmemberId5E105C66"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--members--{memberId}/MembersUpdateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1membersmemberIdMembersUpdateInt4C758E7D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--members--{memberId}/MembersUpdateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1membersmemberIdMembersUpdateIntPermission632FC9A2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--members--{memberId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1membersmemberIdEDBAF89F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--members--{memberId}/MembersDeleteInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1membersmemberIdMembersDeleteIntD293ADD2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--members--{memberId}/MembersDeleteInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1membersmemberIdMembersDeleteIntPermission7F398296"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--members--{memberId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1membersmemberIdB858EF24"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--{memberId}--approve/MembersApproveInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersmemberIdapproveMembersApproveIntE9E523C1"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--{memberId}--approve/MembersApproveInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersmemberIdapproveMembersApproveIntPermissionA9675977"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--{memberId}--approve/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersmemberIdapproveFD617C19"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--import/MembersImportInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersimportMembersImportInt8FDD856E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--import/MembersImportInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersimportMembersImportIntPermission4C9F485C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--members--import/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1membersimportE2583D42"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--export/MembersExportInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersexportMembersExportInt3FCA1805"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--export/MembersExportInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersexportMembersExportIntPermission19F3F916"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--members--export/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1membersexport4AE1360C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches/BranchesCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesBranchesCreateIntC77FDC9B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches/BranchesCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesBranchesCreateIntPermission35B3D126"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branches9B455367"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches/BranchesListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesBranchesListInt6EEAB168"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches/BranchesListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesBranchesListIntPermission8A863C1F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesCC6439E1"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches--{branchId}/BranchesGetInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesbranchIdBranchesGetIntD73FEAA3"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches--{branchId}/BranchesGetInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesbranchIdBranchesGetIntPermission71590C3E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--branches--{branchId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1branchesbranchIdB6F89BFC"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--branches--{branchId}/BranchesUpdateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1branchesbranchIdBranchesUpdateInt351FE7B6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--branches--{branchId}/BranchesUpdateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1branchesbranchIdBranchesUpdateIntPermission1187770E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--branches--{branchId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1branchesbranchId43802848"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--branches--{branchId}/BranchesDeleteInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1branchesbranchIdBranchesDeleteInt91D1C204"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--branches--{branchId}/BranchesDeleteInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1branchesbranchIdBranchesDeleteIntPermissionB06576A9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/DELETE--v1--branches--{branchId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiDELETEv1branchesbranchId1ADEB526"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--pastor/BranchAssignPastorInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdpastorBranchAssignPastorInt60D0393E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--pastor/BranchAssignPastorInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdpastorBranchAssignPastorIntPermission8CAE2655"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--pastor/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdpastor1CAC5429"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--elder/BranchAssignElderInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdelderBranchAssignElderInt10005884"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--elder/BranchAssignElderInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdelderBranchAssignElderIntPermissionF3EA4834"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--branches--{branchId}--elder/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1branchesbranchIdelder7377EAFD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments/DeptCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsDeptCreateInt6D66D1BB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments/DeptCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsDeptCreateIntPermissionC3F505DB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsA47418A2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments/DeptListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departmentsDeptListIntC06639CB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments/DeptListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departmentsDeptListIntPermission56AC2BA6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departments30743899"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--members/DeptAssignMemberInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdmembersDeptAssignMemberInt0044538F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--members/DeptAssignMemberInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdmembersDeptAssignMemberIntPermission70269F26"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--members/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdmembersDD37A2EA"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--approve/DeptApproveReqInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdapproveDeptApproveReqIntE37D86F6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--approve/DeptApproveReqInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdapproveDeptApproveReqIntPermission3C012FD8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--approve/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdapprove296886F9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--followups/DeptAddFollowupInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdfollowupsDeptAddFollowupInt369A7B02"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--followups/DeptAddFollowupInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdfollowupsDeptAddFollowupIntPermissionD2731B4A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--departments--{departmentId}--followups/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1departmentsdepartmentIdfollowupsF862AA70"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments--{departmentId}--alerts/DeptGetAlertsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departmentsdepartmentIdalertsDeptGetAlertsInt97FDF5CD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments--{departmentId}--alerts/DeptGetAlertsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departmentsdepartmentIdalertsDeptGetAlertsIntPermission40614BA8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--departments--{departmentId}--alerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1departmentsdepartmentIdalertsDA280A9B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships/FellowCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsFellowCreateInt7246D88A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships/FellowCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsFellowCreateIntPermission7428D6CB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowships6BC56588"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships/FellowListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsFellowListInt57653A85"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships/FellowListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsFellowListIntPermissionA48DEC04"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowships1AFE8876"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}/FellowGetInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdFellowGetInt71FC16F8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}/FellowGetInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdFellowGetIntPermission959846AD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipId33C20F0C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--fellowships--{fellowshipId}/FellowUpdateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1fellowshipsfellowshipIdFellowUpdateIntD0CD5E7B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--fellowships--{fellowshipId}/FellowUpdateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1fellowshipsfellowshipIdFellowUpdateIntPermission4C28AE3A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--fellowships--{fellowshipId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1fellowshipsfellowshipId2C3D80D4"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--members/FellowAddMemberInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmembersFellowAddMemberInt3BE8821B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--members/FellowAddMemberInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmembersFellowAddMemberIntPermission504821FB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--members/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmembers51AB0964"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--remove-member/FellowRemoveMemberInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdremovememberFellowRemoveMemberIntBFC1401A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--remove-member/FellowRemoveMemberInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdremovememberFellowRemoveMemberIntPermission235DD058"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--remove-member/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdremovememberA35B2623"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--messages/FellowSendMsgInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmessagesFellowSendMsgIntA8B485FC"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--messages/FellowSendMsgInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmessagesFellowSendMsgIntPermission9B97F262"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--messages/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmessages9D73E52D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--meetings/FellowCreateMeetingInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmeetingsFellowCreateMeetingInt4FB39E37"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--meetings/FellowCreateMeetingInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmeetingsFellowCreateMeetingIntPermission385F3639"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--meetings/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdmeetingsA37969E2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings/FellowListMeetingsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetingsFellowListMeetingsIntA716DE15"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings/FellowListMeetingsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetingsFellowListMeetingsIntPermissionCF03E3DC"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetings71F07826"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings--{meetingId}/FellowGetMeetingInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetingsmeetingIdFellowGetMeetingInt820959BC"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings--{meetingId}/FellowGetMeetingInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetingsmeetingIdFellowGetMeetingIntPermission35EFB69D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--fellowships--{fellowshipId}--meetings--{meetingId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1fellowshipsfellowshipIdmeetingsmeetingId312A7EF5"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--record-attendance/FellowRecordAttendanceInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdrecordattendanceFellowRecordAttendanceInt461F2AD0"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--record-attendance/FellowRecordAttendanceInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdrecordattendanceFellowRecordAttendanceIntPermission37C3745A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--fellowships--{fellowshipId}--record-attendance/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1fellowshipsfellowshipIdrecordattendance91C06F0B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--services/AttRecordSvcInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendanceservicesAttRecordSvcInt687DF0F9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--services/AttRecordSvcInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendanceservicesAttRecordSvcIntPermission639EEC5B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--services/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendanceservicesEE79A2D9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--services/AttListSvcInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceservicesAttListSvcInt223990F3"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--services/AttListSvcInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceservicesAttListSvcIntPermissionBE832EF2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--services/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceservices4294ECEE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--fellowships/AttRecordFellowInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendancefellowshipsAttRecordFellowInt13562045"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--fellowships/AttRecordFellowInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendancefellowshipsAttRecordFellowIntPermission9B082DC0"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--attendance--fellowships/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1attendancefellowships3CBB8A2D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--fellowships/AttListFellowInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancefellowshipsAttListFellowInt181FD424"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--fellowships/AttListFellowInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancefellowshipsAttListFellowIntPermissionA023E057"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--fellowships/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancefellowshipsF7057A69"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--trends/AttGetTrendsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancetrendsAttGetTrendsIntEB71FDD4"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--trends/AttGetTrendsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancetrendsAttGetTrendsIntPermission9E3EDF2A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--trends/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancetrendsAFA86C2C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--missing-members/AttGetMissingInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancemissingmembersAttGetMissingInt2E23728B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--missing-members/AttGetMissingInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancemissingmembersAttGetMissingIntPermission3098F67D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--missing-members/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendancemissingmembers9DDA7575"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--export/AttExportInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceexportAttExportInt7418F834"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--export/AttExportInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceexportAttExportIntPermissionACE533EE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--attendance--export/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1attendanceexportCD47EF9B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs/OutreachCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsOutreachCreateIntCB220B9E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs/OutreachCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsOutreachCreateIntPermission2C7C52D3"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsC880C0CD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--outreach--programs/OutreachListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1outreachprogramsOutreachListIntCD76AEB4"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--outreach--programs/OutreachListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1outreachprogramsOutreachListIntPermissionF32A6B4A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--outreach--programs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1outreachprogramsF4B93E85"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs--{outreachId}--workers/OutreachRegWorkerInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsoutreachIdworkersOutreachRegWorkerInt78346DA8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs--{outreachId}--workers/OutreachRegWorkerInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsoutreachIdworkersOutreachRegWorkerIntPermission21677E36"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--programs--{outreachId}--workers/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachprogramsoutreachIdworkers36AB5365"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--override-branch/OutreachOverrideInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachoverridebranchOutreachOverrideInt33B8A2EF"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--override-branch/OutreachOverrideInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachoverridebranchOutreachOverrideIntPermission78122164"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--outreach--override-branch/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1outreachoverridebranchA7079BBF"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls/SoulsCaptureInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1soulsSoulsCaptureInt879E48F7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls/SoulsCaptureInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1soulsSoulsCaptureIntPermission0568EB31"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1souls06A8BE43"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls/SoulsListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsSoulsListIntD0C31B3B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls/SoulsListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsSoulsListIntPermissionA7B8F0C6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsFDD74EA1"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--{soulId}/SoulsGetInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulssoulIdSoulsGetInt75D7717A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--{soulId}/SoulsGetInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulssoulIdSoulsGetIntPermission01F4DEA0"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--{soulId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulssoulId11BED812"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls--{soulId}--followups/SoulsLogFollowupInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1soulssoulIdfollowupsSoulsLogFollowupInt14487793"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls--{soulId}--followups/SoulsLogFollowupInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1soulssoulIdfollowupsSoulsLogFollowupIntPermission0237DC4B"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--souls--{soulId}--followups/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1soulssoulIdfollowupsE233150E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--status/SoulsUpdateStatusInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdstatusSoulsUpdateStatusIntEA72F7FE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--status/SoulsUpdateStatusInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdstatusSoulsUpdateStatusIntPermission598737DD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--status/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdstatusA10E18D8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--reassign/SoulsReassignInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdreassignSoulsReassignIntC45DEDC7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--reassign/SoulsReassignInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdreassignSoulsReassignIntPermissionA12EA882"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--souls--{soulId}--reassign/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1soulssoulIdreassign820E4A6D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--alerts/SoulsGetAlertsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsalertsSoulsGetAlertsIntBC0CBFE9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--alerts/SoulsGetAlertsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsalertsSoulsGetAlertsIntPermissionB2B3D3E9"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--alerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsalertsB51B2D34"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--conversion-funnel/SoulsConvFunnelInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsconversionfunnelSoulsConvFunnelInt32F31B2F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--conversion-funnel/SoulsConvFunnelInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsconversionfunnelSoulsConvFunnelIntPermission6C40ACAE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--souls--conversion-funnel/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1soulsconversionfunnelF8F8185E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--online/DonationsOnlineInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsonlineDonationsOnlineInt1518E393"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--online/DonationsOnlineInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsonlineDonationsOnlineIntPermission7730E62C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--online/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsonline7DF31F0C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--manual/DonationsManualInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsmanualDonationsManualInt79BBDF23"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--manual/DonationsManualInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsmanualDonationsManualIntPermissionB78051B7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--manual/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationsmanual454D740A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations/DonationsListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsDonationsListInt31294B33"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations/DonationsListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsDonationsListIntPermissionED3C572A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donations879043C5"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--reports/DonationsReportsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsreportsDonationsReportsIntFF9F49D8"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--reports/DonationsReportsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsreportsDonationsReportsIntPermissionC879A037"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--reports/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsreportsEB86A036"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--member-summary/DonationsMemberSumInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsmembersummaryDonationsMemberSumInt111A37BA"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--member-summary/DonationsMemberSumInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsmembersummaryDonationsMemberSumIntPermissionCBD5125F"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--member-summary/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsmembersummary997C11FD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--export/DonationsExportInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsexportDonationsExportIntA0591761"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--export/DonationsExportInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsexportDonationsExportIntPermissionB3F15D44"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--donations--export/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1donationsexportD58182D0"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--webhook/DonationsWebhookInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationswebhookDonationsWebhookIntE8B02114"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--webhook/DonationsWebhookInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationswebhookDonationsWebhookIntPermission24DCD7B4"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--donations--webhook/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1donationswebhook8A59EE5C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms/FormsCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsFormsCreateInt8905AAD5"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms/FormsCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsFormsCreateIntPermissionA6CD0D75"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1forms9AEFC523"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms/FormsListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsFormsListInt6D8C0378"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms/FormsListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsFormsListIntPermissionCF299352"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1forms02172240"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}/FormsGetInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdFormsGetInt24D30A59"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}/FormsGetInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdFormsGetIntPermission4979043C"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformId87F54821"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--{formId}--submit/FormsSubmitInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsformIdsubmitFormsSubmitInt8CA585CD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--{formId}--submit/FormsSubmitInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsformIdsubmitFormsSubmitIntPermissionABF96562"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--{formId}--submit/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsformIdsubmit36165992"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions/FormsListSubsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissionsFormsListSubsIntC8CE49DD"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions/FormsListSubsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissionsFormsListSubsIntPermissionC6ED3D9D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissions3DE5032D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions--export/FormsExportSubsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissionsexportFormsExportSubsIntF21F76EE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions--export/FormsExportSubsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissionsexportFormsExportSubsIntPermissionB560D713"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--forms--{formId}--submissions--export/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1formsformIdsubmissionsexport38FE50FA"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--templates/FormsSaveTemplateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formstemplatesFormsSaveTemplateInt949580DE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--templates/FormsSaveTemplateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formstemplatesFormsSaveTemplateIntPermissionC36B7160"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--templates/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formstemplates114EFB48"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--from-template/FormsFromTemplateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsfromtemplateFormsFromTemplateIntEC491C48"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--from-template/FormsFromTemplateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsfromtemplateFormsFromTemplateIntPermissionE6BA1256"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--from-template/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsfromtemplate213E50CE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--prebuilt--{formType}--submit/FormsPrebuiltInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsprebuiltformTypesubmitFormsPrebuiltInt51DD83CC"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--prebuilt--{formType}--submit/FormsPrebuiltInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsprebuiltformTypesubmitFormsPrebuiltIntPermissionDD24C5BE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--forms--prebuilt--{formType}--submit/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1formsprebuiltformTypesubmitBA1E993E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications/NotifCreateInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsNotifCreateIntB6794B24"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications/NotifCreateInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsNotifCreateIntPermission8B68DDD7"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsAF502D3E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications/NotifListInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsNotifListIntCC25B8CF"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications/NotifListInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsNotifListIntPermission25017133"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsF6BC79FE"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--notifications--mark-read/NotifMarkReadInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1notificationsmarkreadNotifMarkReadInt5C7B32D4"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--notifications--mark-read/NotifMarkReadInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1notificationsmarkreadNotifMarkReadIntPermissionB3A8699E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/PUT--v1--notifications--mark-read/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPUTv1notificationsmarkreadDDCBCB42"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications--unread-count/NotifUnreadCountInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsunreadcountNotifUnreadCountInt73A79778"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications--unread-count/NotifUnreadCountInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsunreadcountNotifUnreadCountIntPermissionA2C8B0D3"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--notifications--unread-count/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1notificationsunreadcount17A925D2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications--broadcast/NotifBroadcastInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsbroadcastNotifBroadcastInt10CBD7E6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications--broadcast/NotifBroadcastInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsbroadcastNotifBroadcastIntPermission40524379"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--notifications--broadcast/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1notificationsbroadcastD5DA7E93"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--admin/RptAdminDashInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardadminRptAdminDashIntCD47A810"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--admin/RptAdminDashInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardadminRptAdminDashIntPermissionA9C75DE1"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--admin/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardadmin7DEA96E5"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--pastor/RptPastorDashInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardpastorRptPastorDashIntCDDBCC43"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--pastor/RptPastorDashInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardpastorRptPastorDashIntPermissionD49B30A2"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--pastor/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardpastorD1462F3E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--leader/RptLeaderDashInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardleaderRptLeaderDashInt3B792B37"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--leader/RptLeaderDashInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardleaderRptLeaderDashIntPermission69532F2E"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--dashboard--leader/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdashboardleader7781DC21"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--attendance-trends/RptAttTrendsInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsattendancetrendsRptAttTrendsInt62BC0BC6"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--attendance-trends/RptAttTrendsInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsattendancetrendsRptAttTrendsIntPermissionAAC58F91"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--attendance-trends/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsattendancetrendsD63E8DA3"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--donation-summary/RptDonationSumInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdonationsummaryRptDonationSumInt68B08D96"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--donation-summary/RptDonationSumInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdonationsummaryRptDonationSumIntPermissionE5CE5A3A"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--donation-summary/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportsdonationsummary82D1D2FF"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--soul-funnel/RptSoulFunnelInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportssoulfunnelRptSoulFunnelInt8B51BC13"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--soul-funnel/RptSoulFunnelInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportssoulfunnelRptSoulFunnelIntPermissionCF1ED996"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/GET--v1--reports--soul-funnel/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiGETv1reportssoulfunnelD0B3726D"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--reports--export/RptExportCsvInt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1reportsexportRptExportCsvInt17E77F31"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--reports--export/RptExportCsvInt-Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1reportsexportRptExportCsvIntPermissionED5BC7BB"
+          }
+        ],
+        "/kairos-staging-api/HttpApi/POST--v1--reports--export/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiPOSTv1reportsexport7D18E405"
+          }
+        ],
+        "/kairos-staging-api/ApiDomainName/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiDomainNameEB571102"
+          }
+        ],
+        "/kairos-staging-api/ApiMapping/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiMapping8F180979"
+          }
+        ],
+        "/kairos-staging-api/ApiCustomDomainTarget": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCustomDomainTarget"
+          }
+        ],
+        "/kairos-staging-api/ApiCustomDomain": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCustomDomain"
+          }
+        ],
+        "/kairos-staging-api/AuthorizerFn/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuthorizerFnServiceRole91AE9242"
+          }
+        ],
+        "/kairos-staging-api/AuthorizerFn/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuthorizerFnServiceRoleDefaultPolicy7504E436"
+          }
+        ],
+        "/kairos-staging-api/AuthorizerFn/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuthorizerFn97B9AA7C"
+          }
+        ],
+        "/kairos-staging-api/MembersCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersCreateServiceRoleCBA72340"
+          }
+        ],
+        "/kairos-staging-api/MembersCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersCreateServiceRoleDefaultPolicyB4491060"
+          }
+        ],
+        "/kairos-staging-api/MembersCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersCreate9C96E382"
+          }
+        ],
+        "/kairos-staging-api/MembersList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersListServiceRole28F32AC8"
+          }
+        ],
+        "/kairos-staging-api/MembersList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersListServiceRoleDefaultPolicy567784DA"
+          }
+        ],
+        "/kairos-staging-api/MembersList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersListCF0D92BC"
+          }
+        ],
+        "/kairos-staging-api/MembersGet/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersGetServiceRole6579A462"
+          }
+        ],
+        "/kairos-staging-api/MembersGet/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersGetServiceRoleDefaultPolicy42DD10DF"
+          }
+        ],
+        "/kairos-staging-api/MembersGet/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersGetF58A1728"
+          }
+        ],
+        "/kairos-staging-api/MembersUpdate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersUpdateServiceRole09439E33"
+          }
+        ],
+        "/kairos-staging-api/MembersUpdate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersUpdateServiceRoleDefaultPolicy2027D256"
+          }
+        ],
+        "/kairos-staging-api/MembersUpdate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersUpdate4CBE87D3"
+          }
+        ],
+        "/kairos-staging-api/MembersDelete/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersDeleteServiceRole8893B285"
+          }
+        ],
+        "/kairos-staging-api/MembersDelete/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersDeleteServiceRoleDefaultPolicyB785DBDB"
+          }
+        ],
+        "/kairos-staging-api/MembersDelete/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersDelete3F150BC9"
+          }
+        ],
+        "/kairos-staging-api/MembersApprove/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersApproveServiceRole889753E3"
+          }
+        ],
+        "/kairos-staging-api/MembersApprove/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersApproveServiceRoleDefaultPolicy24C0F58A"
+          }
+        ],
+        "/kairos-staging-api/MembersApprove/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersApprove709C9856"
+          }
+        ],
+        "/kairos-staging-api/MembersImport/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersImportServiceRole6535790B"
+          }
+        ],
+        "/kairos-staging-api/MembersImport/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersImportServiceRoleDefaultPolicy6EF8E520"
+          }
+        ],
+        "/kairos-staging-api/MembersImport/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersImport245B7E53"
+          }
+        ],
+        "/kairos-staging-api/MembersExport/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersExportServiceRoleD5B454D0"
+          }
+        ],
+        "/kairos-staging-api/MembersExport/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersExportServiceRoleDefaultPolicy7DE6B610"
+          }
+        ],
+        "/kairos-staging-api/MembersExport/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MembersExport030693BB"
+          }
+        ],
+        "/kairos-staging-api/BranchesCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesCreateServiceRole127736D5"
+          }
+        ],
+        "/kairos-staging-api/BranchesCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesCreateServiceRoleDefaultPolicyC72283C2"
+          }
+        ],
+        "/kairos-staging-api/BranchesCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesCreateFA76E0E6"
+          }
+        ],
+        "/kairos-staging-api/BranchesList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesListServiceRoleD19E89D5"
+          }
+        ],
+        "/kairos-staging-api/BranchesList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesListServiceRoleDefaultPolicy2D5380FA"
+          }
+        ],
+        "/kairos-staging-api/BranchesList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesList5FDBFBD2"
+          }
+        ],
+        "/kairos-staging-api/BranchesGet/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesGetServiceRole45E9AE88"
+          }
+        ],
+        "/kairos-staging-api/BranchesGet/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesGetServiceRoleDefaultPolicy312CFB12"
+          }
+        ],
+        "/kairos-staging-api/BranchesGet/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesGetAB8E796F"
+          }
+        ],
+        "/kairos-staging-api/BranchesUpdate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesUpdateServiceRole5C26F280"
+          }
+        ],
+        "/kairos-staging-api/BranchesUpdate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesUpdateServiceRoleDefaultPolicyAEF88071"
+          }
+        ],
+        "/kairos-staging-api/BranchesUpdate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesUpdateEAA5B06B"
+          }
+        ],
+        "/kairos-staging-api/BranchesDelete/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesDeleteServiceRoleF0DE7DA0"
+          }
+        ],
+        "/kairos-staging-api/BranchesDelete/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesDeleteServiceRoleDefaultPolicy5DF70379"
+          }
+        ],
+        "/kairos-staging-api/BranchesDelete/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchesDelete4BF8215C"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignPastor/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignPastorServiceRoleA2DC965D"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignPastor/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignPastorServiceRoleDefaultPolicyD13B6172"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignPastor/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignPastorCC4246AB"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignElder/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignElderServiceRole9D0228AE"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignElder/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignElderServiceRoleDefaultPolicy55938636"
+          }
+        ],
+        "/kairos-staging-api/BranchAssignElder/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BranchAssignElder873FDC71"
+          }
+        ],
+        "/kairos-staging-api/DeptCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptCreateServiceRole71BB01E7"
+          }
+        ],
+        "/kairos-staging-api/DeptCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptCreateServiceRoleDefaultPolicy8B8BEDD1"
+          }
+        ],
+        "/kairos-staging-api/DeptCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptCreate1140EE67"
+          }
+        ],
+        "/kairos-staging-api/DeptList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptListServiceRole35D88B76"
+          }
+        ],
+        "/kairos-staging-api/DeptList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptListServiceRoleDefaultPolicy3CD4CC9B"
+          }
+        ],
+        "/kairos-staging-api/DeptList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptListFEA2FAA5"
+          }
+        ],
+        "/kairos-staging-api/DeptAssignMember/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAssignMemberServiceRoleACA4C6C2"
+          }
+        ],
+        "/kairos-staging-api/DeptAssignMember/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAssignMemberServiceRoleDefaultPolicy583EFD7F"
+          }
+        ],
+        "/kairos-staging-api/DeptAssignMember/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAssignMemberD2E222A3"
+          }
+        ],
+        "/kairos-staging-api/DeptApproveReq/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptApproveReqServiceRoleD67B9F01"
+          }
+        ],
+        "/kairos-staging-api/DeptApproveReq/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptApproveReqServiceRoleDefaultPolicyEDCB0E8D"
+          }
+        ],
+        "/kairos-staging-api/DeptApproveReq/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptApproveReqEFCE463D"
+          }
+        ],
+        "/kairos-staging-api/DeptAddFollowup/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAddFollowupServiceRoleBC524DC7"
+          }
+        ],
+        "/kairos-staging-api/DeptAddFollowup/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAddFollowupServiceRoleDefaultPolicyB822D03C"
+          }
+        ],
+        "/kairos-staging-api/DeptAddFollowup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptAddFollowup2B9F714D"
+          }
+        ],
+        "/kairos-staging-api/DeptGetAlerts/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptGetAlertsServiceRole035492FF"
+          }
+        ],
+        "/kairos-staging-api/DeptGetAlerts/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptGetAlertsServiceRoleDefaultPolicyDB93DDBC"
+          }
+        ],
+        "/kairos-staging-api/DeptGetAlerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeptGetAlerts360FEC23"
+          }
+        ],
+        "/kairos-staging-api/FellowCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateServiceRole33C1031F"
+          }
+        ],
+        "/kairos-staging-api/FellowCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateServiceRoleDefaultPolicy852295FF"
+          }
+        ],
+        "/kairos-staging-api/FellowCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateA8DFF779"
+          }
+        ],
+        "/kairos-staging-api/FellowList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowListServiceRoleC91480FB"
+          }
+        ],
+        "/kairos-staging-api/FellowList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowListServiceRoleDefaultPolicy3E03635A"
+          }
+        ],
+        "/kairos-staging-api/FellowList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowList49EBFB0C"
+          }
+        ],
+        "/kairos-staging-api/FellowGet/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGetServiceRole047FBECE"
+          }
+        ],
+        "/kairos-staging-api/FellowGet/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGetServiceRoleDefaultPolicyFEDF9A41"
+          }
+        ],
+        "/kairos-staging-api/FellowGet/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGet6E6A5EB1"
+          }
+        ],
+        "/kairos-staging-api/FellowUpdate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowUpdateServiceRoleB0A83BEB"
+          }
+        ],
+        "/kairos-staging-api/FellowUpdate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowUpdateServiceRoleDefaultPolicy53362799"
+          }
+        ],
+        "/kairos-staging-api/FellowUpdate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowUpdateC3B8863E"
+          }
+        ],
+        "/kairos-staging-api/FellowAddMember/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowAddMemberServiceRoleFAA97215"
+          }
+        ],
+        "/kairos-staging-api/FellowAddMember/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowAddMemberServiceRoleDefaultPolicy49E458EC"
+          }
+        ],
+        "/kairos-staging-api/FellowAddMember/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowAddMemberCC4331F9"
+          }
+        ],
+        "/kairos-staging-api/FellowRemoveMember/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRemoveMemberServiceRoleEBDDCFA9"
+          }
+        ],
+        "/kairos-staging-api/FellowRemoveMember/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRemoveMemberServiceRoleDefaultPolicy8D2FB9E3"
+          }
+        ],
+        "/kairos-staging-api/FellowRemoveMember/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRemoveMemberC89EF021"
+          }
+        ],
+        "/kairos-staging-api/FellowSendMsg/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowSendMsgServiceRoleF8B3E10A"
+          }
+        ],
+        "/kairos-staging-api/FellowSendMsg/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowSendMsgServiceRoleDefaultPolicy065E58E1"
+          }
+        ],
+        "/kairos-staging-api/FellowSendMsg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowSendMsg650600A0"
+          }
+        ],
+        "/kairos-staging-api/FellowCreateMeeting/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateMeetingServiceRole64C36562"
+          }
+        ],
+        "/kairos-staging-api/FellowCreateMeeting/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateMeetingServiceRoleDefaultPolicy3228A535"
+          }
+        ],
+        "/kairos-staging-api/FellowCreateMeeting/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowCreateMeetingEC01B499"
+          }
+        ],
+        "/kairos-staging-api/FellowListMeetings/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowListMeetingsServiceRole96124262"
+          }
+        ],
+        "/kairos-staging-api/FellowListMeetings/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowListMeetingsServiceRoleDefaultPolicyC140CD44"
+          }
+        ],
+        "/kairos-staging-api/FellowListMeetings/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowListMeetingsB8A7DFAF"
+          }
+        ],
+        "/kairos-staging-api/FellowGetMeeting/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGetMeetingServiceRoleCDAE47B8"
+          }
+        ],
+        "/kairos-staging-api/FellowGetMeeting/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGetMeetingServiceRoleDefaultPolicyD780728B"
+          }
+        ],
+        "/kairos-staging-api/FellowGetMeeting/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowGetMeetingA357E818"
+          }
+        ],
+        "/kairos-staging-api/FellowRecordAttendance/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRecordAttendanceServiceRoleDA582E27"
+          }
+        ],
+        "/kairos-staging-api/FellowRecordAttendance/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRecordAttendanceServiceRoleDefaultPolicy974B1544"
+          }
+        ],
+        "/kairos-staging-api/FellowRecordAttendance/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FellowRecordAttendance49EE0D84"
+          }
+        ],
+        "/kairos-staging-api/AttRecordSvc/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordSvcServiceRoleBE8B8EF4"
+          }
+        ],
+        "/kairos-staging-api/AttRecordSvc/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordSvcServiceRoleDefaultPolicy029BF58A"
+          }
+        ],
+        "/kairos-staging-api/AttRecordSvc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordSvcC1077FE7"
+          }
+        ],
+        "/kairos-staging-api/AttListSvc/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListSvcServiceRole0D7C7D49"
+          }
+        ],
+        "/kairos-staging-api/AttListSvc/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListSvcServiceRoleDefaultPolicyBC4966C9"
+          }
+        ],
+        "/kairos-staging-api/AttListSvc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListSvcE14BD05C"
+          }
+        ],
+        "/kairos-staging-api/AttRecordFellow/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordFellowServiceRole3B630882"
+          }
+        ],
+        "/kairos-staging-api/AttRecordFellow/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordFellowServiceRoleDefaultPolicyAEEA933F"
+          }
+        ],
+        "/kairos-staging-api/AttRecordFellow/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttRecordFellow1E877C92"
+          }
+        ],
+        "/kairos-staging-api/AttListFellow/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListFellowServiceRole08349332"
+          }
+        ],
+        "/kairos-staging-api/AttListFellow/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListFellowServiceRoleDefaultPolicyB462E80F"
+          }
+        ],
+        "/kairos-staging-api/AttListFellow/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttListFellowB3A08083"
+          }
+        ],
+        "/kairos-staging-api/AttGetTrends/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetTrendsServiceRoleE10BA9E9"
+          }
+        ],
+        "/kairos-staging-api/AttGetTrends/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetTrendsServiceRoleDefaultPolicyAAFE7C77"
+          }
+        ],
+        "/kairos-staging-api/AttGetTrends/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetTrendsE7A333DC"
+          }
+        ],
+        "/kairos-staging-api/AttGetMissing/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetMissingServiceRole74BD442C"
+          }
+        ],
+        "/kairos-staging-api/AttGetMissing/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetMissingServiceRoleDefaultPolicyD8F429DB"
+          }
+        ],
+        "/kairos-staging-api/AttGetMissing/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttGetMissing77E94DD4"
+          }
+        ],
+        "/kairos-staging-api/AttExport/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttExportServiceRole72857A10"
+          }
+        ],
+        "/kairos-staging-api/AttExport/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttExportServiceRoleDefaultPolicy72935BE2"
+          }
+        ],
+        "/kairos-staging-api/AttExport/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AttExport503B733C"
+          }
+        ],
+        "/kairos-staging-api/OutreachCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachCreateServiceRole17351CF9"
+          }
+        ],
+        "/kairos-staging-api/OutreachCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachCreateServiceRoleDefaultPolicyD7CB8FA8"
+          }
+        ],
+        "/kairos-staging-api/OutreachCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachCreate3BCAC05D"
+          }
+        ],
+        "/kairos-staging-api/OutreachList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachListServiceRoleAF73CCA7"
+          }
+        ],
+        "/kairos-staging-api/OutreachList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachListServiceRoleDefaultPolicyC55E7F49"
+          }
+        ],
+        "/kairos-staging-api/OutreachList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachListDCC34F56"
+          }
+        ],
+        "/kairos-staging-api/OutreachRegWorker/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachRegWorkerServiceRole3EAB34EE"
+          }
+        ],
+        "/kairos-staging-api/OutreachRegWorker/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachRegWorkerServiceRoleDefaultPolicyB4D220A2"
+          }
+        ],
+        "/kairos-staging-api/OutreachRegWorker/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachRegWorker9919EC12"
+          }
+        ],
+        "/kairos-staging-api/OutreachOverride/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachOverrideServiceRole4A40CD3A"
+          }
+        ],
+        "/kairos-staging-api/OutreachOverride/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachOverrideServiceRoleDefaultPolicyA9BBB9EF"
+          }
+        ],
+        "/kairos-staging-api/OutreachOverride/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OutreachOverrideB74D6116"
+          }
+        ],
+        "/kairos-staging-api/SoulsCapture/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsCaptureServiceRole1B8544E2"
+          }
+        ],
+        "/kairos-staging-api/SoulsCapture/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsCaptureServiceRoleDefaultPolicyE6434302"
+          }
+        ],
+        "/kairos-staging-api/SoulsCapture/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsCaptureBFA93D64"
+          }
+        ],
+        "/kairos-staging-api/SoulsList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsListServiceRoleCAB0BBED"
+          }
+        ],
+        "/kairos-staging-api/SoulsList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsListServiceRoleDefaultPolicyE5363BE5"
+          }
+        ],
+        "/kairos-staging-api/SoulsList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsList5B3B2844"
+          }
+        ],
+        "/kairos-staging-api/SoulsGet/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGetServiceRole08E124D5"
+          }
+        ],
+        "/kairos-staging-api/SoulsGet/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGetServiceRoleDefaultPolicyC42E9DE6"
+          }
+        ],
+        "/kairos-staging-api/SoulsGet/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGet146185D3"
+          }
+        ],
+        "/kairos-staging-api/SoulsLogFollowup/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsLogFollowupServiceRole9D4FEC8A"
+          }
+        ],
+        "/kairos-staging-api/SoulsLogFollowup/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsLogFollowupServiceRoleDefaultPolicyE1871478"
+          }
+        ],
+        "/kairos-staging-api/SoulsLogFollowup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsLogFollowupFDC1987E"
+          }
+        ],
+        "/kairos-staging-api/SoulsUpdateStatus/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsUpdateStatusServiceRole2F16C0D4"
+          }
+        ],
+        "/kairos-staging-api/SoulsUpdateStatus/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsUpdateStatusServiceRoleDefaultPolicy318FED28"
+          }
+        ],
+        "/kairos-staging-api/SoulsUpdateStatus/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsUpdateStatus6E93EDA6"
+          }
+        ],
+        "/kairos-staging-api/SoulsReassign/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsReassignServiceRole21E161F8"
+          }
+        ],
+        "/kairos-staging-api/SoulsReassign/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsReassignServiceRoleDefaultPolicy9BC56C54"
+          }
+        ],
+        "/kairos-staging-api/SoulsReassign/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsReassign1FC17B4C"
+          }
+        ],
+        "/kairos-staging-api/SoulsGetAlerts/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGetAlertsServiceRoleF20333BD"
+          }
+        ],
+        "/kairos-staging-api/SoulsGetAlerts/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGetAlertsServiceRoleDefaultPolicyB0E85461"
+          }
+        ],
+        "/kairos-staging-api/SoulsGetAlerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsGetAlerts15EC3CF4"
+          }
+        ],
+        "/kairos-staging-api/SoulsConvFunnel/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsConvFunnelServiceRoleDF418966"
+          }
+        ],
+        "/kairos-staging-api/SoulsConvFunnel/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsConvFunnelServiceRoleDefaultPolicy7404BA14"
+          }
+        ],
+        "/kairos-staging-api/SoulsConvFunnel/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SoulsConvFunnel019BFF58"
+          }
+        ],
+        "/kairos-staging-api/DonationsOnline/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsOnlineServiceRole8DF6CDAF"
+          }
+        ],
+        "/kairos-staging-api/DonationsOnline/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsOnlineServiceRoleDefaultPolicy89504BA4"
+          }
+        ],
+        "/kairos-staging-api/DonationsOnline/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsOnlineE6CBAC23"
+          }
+        ],
+        "/kairos-staging-api/DonationsManual/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsManualServiceRole1FF266CA"
+          }
+        ],
+        "/kairos-staging-api/DonationsManual/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsManualServiceRoleDefaultPolicyDDDC69B8"
+          }
+        ],
+        "/kairos-staging-api/DonationsManual/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsManual4CC39CE9"
+          }
+        ],
+        "/kairos-staging-api/DonationsList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsListServiceRoleE7D503FE"
+          }
+        ],
+        "/kairos-staging-api/DonationsList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsListServiceRoleDefaultPolicyFF5A8C0E"
+          }
+        ],
+        "/kairos-staging-api/DonationsList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsListB6C65364"
+          }
+        ],
+        "/kairos-staging-api/DonationsReports/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsReportsServiceRoleE2D773C4"
+          }
+        ],
+        "/kairos-staging-api/DonationsReports/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsReportsServiceRoleDefaultPolicyFF655336"
+          }
+        ],
+        "/kairos-staging-api/DonationsReports/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsReports7448A1BF"
+          }
+        ],
+        "/kairos-staging-api/DonationsMemberSum/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsMemberSumServiceRole96618CDA"
+          }
+        ],
+        "/kairos-staging-api/DonationsMemberSum/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsMemberSumServiceRoleDefaultPolicy7EEC4D32"
+          }
+        ],
+        "/kairos-staging-api/DonationsMemberSum/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsMemberSumFC156CDA"
+          }
+        ],
+        "/kairos-staging-api/DonationsExport/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsExportServiceRole02B12476"
+          }
+        ],
+        "/kairos-staging-api/DonationsExport/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsExportServiceRoleDefaultPolicyF4B8A019"
+          }
+        ],
+        "/kairos-staging-api/DonationsExport/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsExportFE7C1C55"
+          }
+        ],
+        "/kairos-staging-api/DonationsWebhook/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsWebhookServiceRoleE27A127B"
+          }
+        ],
+        "/kairos-staging-api/DonationsWebhook/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsWebhookServiceRoleDefaultPolicyC87D7E0A"
+          }
+        ],
+        "/kairos-staging-api/DonationsWebhook/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DonationsWebhookD577B477"
+          }
+        ],
+        "/kairos-staging-api/FormsCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsCreateServiceRole881CCA00"
+          }
+        ],
+        "/kairos-staging-api/FormsCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsCreateServiceRoleDefaultPolicyBDAFA413"
+          }
+        ],
+        "/kairos-staging-api/FormsCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsCreateDCE97057"
+          }
+        ],
+        "/kairos-staging-api/FormsList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsListServiceRole92E741C6"
+          }
+        ],
+        "/kairos-staging-api/FormsList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsListServiceRoleDefaultPolicy7253FFA3"
+          }
+        ],
+        "/kairos-staging-api/FormsList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsList61E3F30A"
+          }
+        ],
+        "/kairos-staging-api/FormsGet/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsGetServiceRole5AB83FB8"
+          }
+        ],
+        "/kairos-staging-api/FormsGet/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsGetServiceRoleDefaultPolicy8C809BA1"
+          }
+        ],
+        "/kairos-staging-api/FormsGet/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsGet67EE362F"
+          }
+        ],
+        "/kairos-staging-api/FormsSubmit/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSubmitServiceRole47269BBB"
+          }
+        ],
+        "/kairos-staging-api/FormsSubmit/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSubmitServiceRoleDefaultPolicy74B2F6F3"
+          }
+        ],
+        "/kairos-staging-api/FormsSubmit/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSubmit6D0B04BD"
+          }
+        ],
+        "/kairos-staging-api/FormsListSubs/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsListSubsServiceRole2DD30EFD"
+          }
+        ],
+        "/kairos-staging-api/FormsListSubs/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsListSubsServiceRoleDefaultPolicyA6FC2592"
+          }
+        ],
+        "/kairos-staging-api/FormsListSubs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsListSubs73690849"
+          }
+        ],
+        "/kairos-staging-api/FormsExportSubs/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsExportSubsServiceRole028E78B3"
+          }
+        ],
+        "/kairos-staging-api/FormsExportSubs/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsExportSubsServiceRoleDefaultPolicyC232E0A6"
+          }
+        ],
+        "/kairos-staging-api/FormsExportSubs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsExportSubs1EE80B52"
+          }
+        ],
+        "/kairos-staging-api/FormsSaveTemplate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSaveTemplateServiceRole33622E69"
+          }
+        ],
+        "/kairos-staging-api/FormsSaveTemplate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSaveTemplateServiceRoleDefaultPolicy3D4C8B5A"
+          }
+        ],
+        "/kairos-staging-api/FormsSaveTemplate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsSaveTemplate5B309779"
+          }
+        ],
+        "/kairos-staging-api/FormsFromTemplate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsFromTemplateServiceRole349FEBB1"
+          }
+        ],
+        "/kairos-staging-api/FormsFromTemplate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsFromTemplateServiceRoleDefaultPolicy67D0D790"
+          }
+        ],
+        "/kairos-staging-api/FormsFromTemplate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsFromTemplate17A744B2"
+          }
+        ],
+        "/kairos-staging-api/FormsPrebuilt/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsPrebuiltServiceRole81D1380D"
+          }
+        ],
+        "/kairos-staging-api/FormsPrebuilt/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsPrebuiltServiceRoleDefaultPolicy0A3A8DCD"
+          }
+        ],
+        "/kairos-staging-api/FormsPrebuilt/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FormsPrebuiltD3B27395"
+          }
+        ],
+        "/kairos-staging-api/NotifCreate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifCreateServiceRole603BE487"
+          }
+        ],
+        "/kairos-staging-api/NotifCreate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifCreateServiceRoleDefaultPolicyCA82B00F"
+          }
+        ],
+        "/kairos-staging-api/NotifCreate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifCreateBF52A56D"
+          }
+        ],
+        "/kairos-staging-api/NotifList/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifListServiceRole0C1920A1"
+          }
+        ],
+        "/kairos-staging-api/NotifList/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifListServiceRoleDefaultPolicyF1682954"
+          }
+        ],
+        "/kairos-staging-api/NotifList/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifListE1B394F9"
+          }
+        ],
+        "/kairos-staging-api/NotifMarkRead/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifMarkReadServiceRoleE03872E0"
+          }
+        ],
+        "/kairos-staging-api/NotifMarkRead/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifMarkReadServiceRoleDefaultPolicy5C7DBFF3"
+          }
+        ],
+        "/kairos-staging-api/NotifMarkRead/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifMarkRead80AED56F"
+          }
+        ],
+        "/kairos-staging-api/NotifUnreadCount/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifUnreadCountServiceRoleF8DA5E35"
+          }
+        ],
+        "/kairos-staging-api/NotifUnreadCount/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifUnreadCountServiceRoleDefaultPolicy15D2AD77"
+          }
+        ],
+        "/kairos-staging-api/NotifUnreadCount/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifUnreadCount2704E25D"
+          }
+        ],
+        "/kairos-staging-api/NotifBroadcast/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifBroadcastServiceRole8AC7CB52"
+          }
+        ],
+        "/kairos-staging-api/NotifBroadcast/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifBroadcastServiceRoleDefaultPolicyB0AE5D29"
+          }
+        ],
+        "/kairos-staging-api/NotifBroadcast/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NotifBroadcast54C94786"
+          }
+        ],
+        "/kairos-staging-api/RptAdminDash/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAdminDashServiceRole17C7647E"
+          }
+        ],
+        "/kairos-staging-api/RptAdminDash/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAdminDashServiceRoleDefaultPolicy23E214AA"
+          }
+        ],
+        "/kairos-staging-api/RptAdminDash/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAdminDash02429085"
+          }
+        ],
+        "/kairos-staging-api/RptPastorDash/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptPastorDashServiceRoleE563D0AC"
+          }
+        ],
+        "/kairos-staging-api/RptPastorDash/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptPastorDashServiceRoleDefaultPolicy97260BB8"
+          }
+        ],
+        "/kairos-staging-api/RptPastorDash/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptPastorDash6EFE7D26"
+          }
+        ],
+        "/kairos-staging-api/RptLeaderDash/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptLeaderDashServiceRole30FF908F"
+          }
+        ],
+        "/kairos-staging-api/RptLeaderDash/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptLeaderDashServiceRoleDefaultPolicyE369F298"
+          }
+        ],
+        "/kairos-staging-api/RptLeaderDash/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptLeaderDashBAE362AC"
+          }
+        ],
+        "/kairos-staging-api/RptAttTrends/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAttTrendsServiceRoleC9394ED0"
+          }
+        ],
+        "/kairos-staging-api/RptAttTrends/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAttTrendsServiceRoleDefaultPolicy966A6B67"
+          }
+        ],
+        "/kairos-staging-api/RptAttTrends/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptAttTrends2040FADC"
+          }
+        ],
+        "/kairos-staging-api/RptDonationSum/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptDonationSumServiceRole46CC6595"
+          }
+        ],
+        "/kairos-staging-api/RptDonationSum/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptDonationSumServiceRoleDefaultPolicy9E4E0655"
+          }
+        ],
+        "/kairos-staging-api/RptDonationSum/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptDonationSumA6C3ABDA"
+          }
+        ],
+        "/kairos-staging-api/RptSoulFunnel/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptSoulFunnelServiceRole057E7986"
+          }
+        ],
+        "/kairos-staging-api/RptSoulFunnel/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptSoulFunnelServiceRoleDefaultPolicy682C7112"
+          }
+        ],
+        "/kairos-staging-api/RptSoulFunnel/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptSoulFunnel078D4FA0"
+          }
+        ],
+        "/kairos-staging-api/RptExportCsv/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptExportCsvServiceRole95ADD0C5"
+          }
+        ],
+        "/kairos-staging-api/RptExportCsv/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptExportCsvServiceRoleDefaultPolicyE7F64A20"
+          }
+        ],
+        "/kairos-staging-api/RptExportCsv/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RptExportCsv9BE555B0"
+          }
+        ],
+        "/kairos-staging-api/DbMigrate/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbMigrateServiceRoleC6291150"
+          }
+        ],
+        "/kairos-staging-api/DbMigrate/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbMigrateServiceRoleDefaultPolicyB2B11036"
+          }
+        ],
+        "/kairos-staging-api/DbMigrate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbMigrate5AD6F72D"
+          }
+        ],
+        "/kairos-staging-api/DbSeed/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSeedServiceRole22F33D3B"
+          }
+        ],
+        "/kairos-staging-api/DbSeed/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSeedServiceRoleDefaultPolicy31047A38"
+          }
+        ],
+        "/kairos-staging-api/DbSeed/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSeed923D468B"
+          }
+        ],
+        "/kairos-staging-api/HttpApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiId"
+          }
+        ],
+        "/kairos-staging-api/HttpApiUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HttpApiUrl"
+          }
+        ],
+        "/kairos-staging-api/AuthorizerFunctionArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuthorizerFunctionArn"
+          }
+        ],
+        "/kairos-staging-api/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-api/Exports/Output{\"Ref\":\"HttpApiF5A9A8A7\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+          }
+        ],
+        "/kairos-staging-api/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-api/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-api"
+    },
+    "kairos-staging-analytics.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-analytics.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-analytics": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-analytics.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/2639fb5212ceb3cd51f2994bd92be09e40a13b26b2c933c965252b9de49cd39b.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-analytics.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-network",
+        "kairos-staging-database",
+        "kairos-staging-storage",
+        "kairos-staging-analytics.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-analytics": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-analytics/AnalyticsExportFn/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportFnServiceRole4C480396"
+          }
+        ],
+        "/kairos-staging-analytics/AnalyticsExportFn/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportFnServiceRoleDefaultPolicy3BE28AF4"
+          }
+        ],
+        "/kairos-staging-analytics/AnalyticsExportFn/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportFn29F17397"
+          }
+        ],
+        "/kairos-staging-analytics/NightlyExportRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NightlyExportRule85A4C270"
+          }
+        ],
+        "/kairos-staging-analytics/NightlyExportRule/AllowEventRulekairosstaginganalyticsAnalyticsExportFn89452807": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NightlyExportRuleAllowEventRulekairosstaginganalyticsAnalyticsExportFn89452807699985E2"
+          }
+        ],
+        "/kairos-staging-analytics/AnalyticsExportFunctionArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AnalyticsExportFunctionArn"
+          }
+        ],
+        "/kairos-staging-analytics/NightlyExportRuleArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NightlyExportRuleArn"
+          }
+        ],
+        "/kairos-staging-analytics/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-analytics/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-analytics/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-analytics"
+    },
+    "kairos-staging-monitoring.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-monitoring.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-monitoring": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-monitoring.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/bf3086f4781049fbfa3a9808d8cbbeeea6bdc4b464a9b81119f3bd10fa159769.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-monitoring.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-api",
+        "kairos-staging-database",
+        "kairos-staging-monitoring.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-monitoring": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-monitoring/LambdaErrorRateAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaErrorRateAlarm35685FAA"
+          }
+        ],
+        "/kairos-staging-monitoring/LambdaDurationAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaDurationAlarmA8007F1F"
+          }
+        ],
+        "/kairos-staging-monitoring/ApiGateway5xxAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiGateway5xxAlarm4F808175"
+          }
+        ],
+        "/kairos-staging-monitoring/AuroraCpuAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraCpuAlarm999C031F"
+          }
+        ],
+        "/kairos-staging-monitoring/AuroraConnectionsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AuroraConnectionsAlarm320D1F2B"
+          }
+        ],
+        "/kairos-staging-monitoring/KairosDashboard/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KairosDashboard1E2FDBE2"
+          }
+        ],
+        "/kairos-staging-monitoring/XRaySamplingRule": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "XRaySamplingRule"
+          }
+        ],
+        "/kairos-staging-monitoring/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-monitoring/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-monitoring/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-monitoring"
+    },
+    "kairos-staging-web.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "kairos-staging-web.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "kairos-staging-web": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/eu-west-2",
+      "properties": {
+        "templateFile": "kairos-staging-web.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "staging",
+          "Project": "kairos"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2/5430f8b584b5e43174d48cacc454114494620877103ee26c409c0909a0475e7f.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "kairos-staging-web.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-west-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "kairos-staging-web.assets"
+      ],
+      "metadata": {
+        "/kairos-staging-web": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "staging"
+              },
+              {
+                "Key": "Project",
+                "Value": "kairos"
+              }
+            ]
+          }
+        ],
+        "/kairos-staging-web/SiteBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SiteBucket397A1860"
+          }
+        ],
+        "/kairos-staging-web/SiteBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SiteBucketPolicy3AC1D0F8"
+          }
+        ],
+        "/kairos-staging-web/SiteBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SiteBucketAutoDeleteObjectsCustomResource9585E968"
+          }
+        ],
+        "/kairos-staging-web/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/kairos-staging-web/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/kairos-staging-web/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/kairos-staging-web/WebDistribution/Origin1/S3OriginAccessControl/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebDistributionOrigin1S3OriginAccessControl83AD2F73"
+          }
+        ],
+        "/kairos-staging-web/WebDistribution/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebDistribution59C46482"
+          }
+        ],
+        "/kairos-staging-web/DeploySite/AwsCliLayer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeploySiteAwsCliLayer88B0EBE2"
+          }
+        ],
+        "/kairos-staging-web/DeploySite/CustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeploySiteCustomResourceE47C9748"
+          }
+        ],
+        "/kairos-staging-web/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-singleton",
+            "data": true
+          },
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 2
+          }
+        ],
+        "/kairos-staging-web/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
+          }
+        ],
+        "/kairos-staging-web/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF"
+          }
+        ],
+        "/kairos-staging-web/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536"
+          }
+        ],
+        "/kairos-staging-web/WebUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebUrl"
+          }
+        ],
+        "/kairos-staging-web/WebDistributionId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebDistributionId"
+          }
+        ],
+        "/kairos-staging-web/WebBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebBucketName"
+          }
+        ],
+        "/kairos-staging-web/WebCustomDomain": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebCustomDomain"
+          }
+        ],
+        "/kairos-staging-web/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/kairos-staging-web/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/kairos-staging-web/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "kairos-staging-web"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "aws-cdk-lib/feature-flag-report": {
+      "type": "cdk:feature-flag-report",
+      "properties": {
+        "module": "aws-cdk-lib",
+        "flags": {
+          "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": {
+            "recommendedValue": true,
+            "explanation": "Pass signingProfileName to CfnSigningProfile"
+          },
+          "@aws-cdk/core:newStyleStackSynthesis": {
+            "recommendedValue": true,
+            "explanation": "Switch to new stack synthesis method which enables CI/CD",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:stackRelativeExports": {
+            "recommendedValue": true,
+            "explanation": "Name exports based on the construct paths relative to the stack, rather than the global construct path",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": {
+            "recommendedValue": true,
+            "explanation": "Disable implicit openListener when custom security groups are provided"
+          },
+          "@aws-cdk/aws-rds:lowercaseDbIdentifier": {
+            "recommendedValue": true,
+            "explanation": "Force lowercasing of RDS Cluster names in CDK",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": {
+            "recommendedValue": true,
+            "explanation": "Allow adding/removing multiple UsagePlanKeys independently",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeVersionProps": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the  `fn.currentVersion`.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeLayerVersion": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the `fn.currentVersion`."
+          },
+          "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have cloudfront distributions use the security policy TLSv1.2_2021 by default.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:checkSecretUsage": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this flag to make it impossible to accidentally use SecretValues in unsafe locations"
+          },
+          "@aws-cdk/core:target-partitions": {
+            "userValue": [
+              "aws"
+            ],
+            "recommendedValue": [
+              "aws",
+              "aws-cn"
+            ],
+            "explanation": "What regions to include in lookup tables of environment agnostic stacks"
+          },
+          "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": {
+            "recommendedValue": true,
+            "explanation": "ECS extensions will automatically add an `awslogs` driver if no logging is specified"
+          },
+          "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have Launch Templates generated by the `InstanceRequireImdsv2Aspect` use unique names."
+          },
+          "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "ARN format used by ECS. In the new ARN format, the cluster name is part of the resource ID."
+          },
+          "@aws-cdk/aws-iam:minimizePolicies": {
+            "recommendedValue": true,
+            "explanation": "Minimize IAM policies by combining Statements"
+          },
+          "@aws-cdk/core:validateSnapshotRemovalPolicy": {
+            "recommendedValue": true,
+            "explanation": "Error on snapshot removal policies on resources that do not support it."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": {
+            "recommendedValue": true,
+            "explanation": "Generate key aliases that include the stack name"
+          },
+          "@aws-cdk/aws-s3:createDefaultLoggingPolicy": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to create an S3 bucket policy by default in cases where an AWS service would automatically create the Policy if one does not exist."
+          },
+          "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": {
+            "recommendedValue": true,
+            "explanation": "Restrict KMS key policy for encrypted Queues a bit more"
+          },
+          "@aws-cdk/aws-apigateway:disableCloudWatchRole": {
+            "recommendedValue": true,
+            "explanation": "Make default CloudWatch Role behavior safe for multiple API Gateways in one environment"
+          },
+          "@aws-cdk/core:enablePartitionLiterals": {
+            "recommendedValue": true,
+            "explanation": "Make ARNs concrete if AWS partition is known"
+          },
+          "@aws-cdk/aws-events:eventsTargetQueueSameAccount": {
+            "recommendedValue": true,
+            "explanation": "Event Rules may only push to encrypted SQS queues in the same account"
+          },
+          "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": {
+            "recommendedValue": true,
+            "explanation": "Avoid setting the \"ECS\" deployment controller when adding a circuit breaker"
+          },
+          "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature to create default policy names for imported roles that depend on the stack the role is in."
+          },
+          "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": {
+            "recommendedValue": true,
+            "explanation": "Use S3 Bucket Policy instead of ACLs for Server Access Logging"
+          },
+          "@aws-cdk/aws-route53-patters:useCertificate": {
+            "recommendedValue": true,
+            "explanation": "Use the official `Certificate` resource instead of `DnsValidatedCertificate`"
+          },
+          "@aws-cdk/customresources:installLatestAwsSdkDefault": {
+            "recommendedValue": false,
+            "explanation": "Whether to install the latest SDK by default in AwsCustomResource"
+          },
+          "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": {
+            "recommendedValue": true,
+            "explanation": "Use unique resource name for Database Proxy"
+          },
+          "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": {
+            "recommendedValue": true,
+            "explanation": "Remove CloudWatch alarms from deployment group"
+          },
+          "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": {
+            "recommendedValue": true,
+            "explanation": "Include authorizer configuration in the calculation of the API deployment logical ID."
+          },
+          "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": {
+            "recommendedValue": true,
+            "explanation": "Define user data for a launch template by default when a machine image is provided."
+          },
+          "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": {
+            "recommendedValue": true,
+            "explanation": "SecretTargetAttachments uses the ResourcePolicy of the attached Secret."
+          },
+          "@aws-cdk/aws-redshift:columnId": {
+            "recommendedValue": true,
+            "explanation": "Whether to use an ID to track Redshift column changes"
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": {
+            "recommendedValue": true,
+            "explanation": "Enable AmazonEMRServicePolicy_v2 managed policies"
+          },
+          "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": {
+            "recommendedValue": true,
+            "explanation": "Restrict access to the VPC default security group"
+          },
+          "@aws-cdk/aws-apigateway:requestValidatorUniqueId": {
+            "recommendedValue": true,
+            "explanation": "Generate a unique id for each RequestValidator added to a method"
+          },
+          "@aws-cdk/aws-kms:aliasNameRef": {
+            "recommendedValue": true,
+            "explanation": "KMS Alias name and keyArn will have implicit reference to KMS Key"
+          },
+          "@aws-cdk/aws-kms:applyImportedAliasPermissionsToPrincipal": {
+            "recommendedValue": true,
+            "explanation": "Enable grant methods on Aliases imported by name to use kms:ResourceAliases condition"
+          },
+          "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": {
+            "recommendedValue": true,
+            "explanation": "Generate a launch template when creating an AutoScalingGroup"
+          },
+          "@aws-cdk/core:includePrefixInUniqueNameGeneration": {
+            "recommendedValue": true,
+            "explanation": "Include the stack prefix in the stack name generation process"
+          },
+          "@aws-cdk/aws-efs:denyAnonymousAccess": {
+            "recommendedValue": true,
+            "explanation": "EFS denies anonymous clients accesses"
+          },
+          "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": {
+            "recommendedValue": true,
+            "explanation": "Enables support for Multi-AZ with Standby deployment for opensearch domains"
+          },
+          "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": {
+            "recommendedValue": true,
+            "explanation": "Enables aws-lambda-nodejs.Function to use the latest available NodeJs runtime as the default"
+          },
+          "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, mount targets will have a stable logicalId that is linked to the associated subnet."
+          },
+          "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a scope of InstanceParameterGroup for AuroraClusterInstance with each parameters will change."
+          },
+          "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": {
+            "recommendedValue": true,
+            "explanation": "When enabled, will always use the arn for identifiers for CfnSourceApiAssociation in the GraphqlApi construct rather than id."
+          },
+          "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": {
+            "recommendedValue": true,
+            "explanation": "When enabled, creating an RDS database cluster from a snapshot will only render credentials for snapshot credentials."
+          },
+          "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the CodeCommit source action is using the default branch name 'main'."
+          },
+          "@aws-cdk/aws-cloudwatch-actions:changeLambdaPermissionLogicalIdForLambdaAction": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the logical ID of a Lambda permission for a Lambda action includes an alarm ID."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeysDefaultValueToFalse": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default value for crossAccountKeys to false."
+          },
+          "@aws-cdk/aws-codepipeline:defaultPipelineTypeToV2": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default pipeline type to V2."
+          },
+          "@aws-cdk/aws-kms:reduceCrossAccountRegionPolicyScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, IAM Policy created from KMS key grant will reduce the resource scope to this key only."
+          },
+          "@aws-cdk/pipelines:reduceAssetRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from PipelineAssetsFileRole trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-eks:nodegroupNameAttribute": {
+            "recommendedValue": true,
+            "explanation": "When enabled, nodegroupName attribute of the provisioned EKS NodeGroup will not have the cluster name prefix."
+          },
+          "@aws-cdk/aws-eks:useNativeOidcProvider": {
+            "recommendedValue": true,
+            "explanation": "When enabled, EKS V2 clusters will use the native OIDC provider resource AWS::IAM::OIDCProvider instead of creating the OIDCProvider with a custom resource (iam.OpenIDConnectProvider)."
+          },
+          "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default volume type of the EBS volume will be GP3"
+          },
+          "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": {
+            "recommendedValue": true,
+            "explanation": "When enabled, remove default deployment alarm settings"
+          },
+          "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": {
+            "recommendedValue": false,
+            "explanation": "When enabled, the custom resource used for `AwsCustomResource` will configure the `logApiResponseData` property as true by default"
+          },
+          "@aws-cdk/aws-s3:keepNotificationInImportedBucket": {
+            "recommendedValue": false,
+            "explanation": "When enabled, Adding notifications to a bucket in the current stack will not remove notification from imported stack."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:useNewS3UriParametersForBedrockInvokeModelTask": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use new props for S3 URI field in task definition of state machine for bedrock invoke model.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:explicitStackTags": {
+            "recommendedValue": true,
+            "explanation": "When enabled, stack tags need to be assigned explicitly on a Stack."
+          },
+          "@aws-cdk/aws-ecs:reduceEc2FargateCloudWatchPermissions": {
+            "recommendedValue": true,
+            "explanation": "When enabled, we will only grant the necessary permissions when users specify cloudwatch log group through logConfiguration"
+          },
+          "@aws-cdk/aws-dynamodb:resourcePolicyPerReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled will allow you to specify a resource policy per replica, and not copy the source table policy to all replicas"
+          },
+          "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": {
+            "recommendedValue": true,
+            "explanation": "When enabled, initOptions.timeout and resourceSignalTimeout values will be summed together."
+          },
+          "@aws-cdk/aws-appsync:appSyncGraphQLAPIScopeLambdaPermission": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a Lambda authorizer Permission created when using GraphqlApi will be properly scoped with a SourceArn."
+          },
+          "@aws-cdk/aws-rds:setCorrectValueForDatabaseInstanceReadReplicaInstanceResourceId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the value of property `instanceResourceId` in construct `DatabaseInstanceReadReplica` will be set to the correct value which is `DbiResourceId` instead of currently `DbInstanceArn`"
+          },
+          "@aws-cdk/core:cfnIncludeRejectComplexResourceUpdateCreatePolicyIntrinsics": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CFN templates added with `cfn-include` will error if the template contains Resource Update or Create policies with CFN Intrinsics that include non-primitive values."
+          },
+          "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": {
+            "recommendedValue": true,
+            "explanation": "When enabled, both `@aws-sdk` and `@smithy` packages will be excluded from the Lambda Node.js 18.x runtime to prevent version mismatches in bundled applications."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:fixRunEcsTaskPolicy": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resource of IAM Run Ecs policy generated by SFN EcsRunTask will reference the definition, instead of constructing ARN."
+          },
+          "@aws-cdk/aws-ec2:bastionHostUseAmazonLinux2023ByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the BastionHost construct will use the latest Amazon Linux 2023 AMI, instead of Amazon Linux 2."
+          },
+          "@aws-cdk/core:aspectStabilization": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a stabilization loop will be run when invoking Aspects during synthesis.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-route53-targets:userPoolDomainNameMethodWithoutCustomResource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use a new method for DNS Name of user pool domain target without creating a custom resource."
+          },
+          "@aws-cdk/aws-elasticloadbalancingV2:albDualstackWithoutPublicIpv4SecurityGroupRulesDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default security group ingress rules will allow IPv6 ingress from anywhere"
+          },
+          "@aws-cdk/aws-iam:oidcRejectUnauthorizedConnections": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default behaviour of OIDC provider will reject unauthorized connections"
+          },
+          "@aws-cdk/core:enableAdditionalMetadataCollection": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will expand the scope of usage data collected to better inform CDK development and improve communication for security concerns and emerging issues."
+          },
+          "@aws-cdk/aws-lambda:createNewPoliciesWithAddToRolePolicy": {
+            "recommendedValue": false,
+            "explanation": "[Deprecated] When enabled, Lambda will create new inline policies with AddToRolePolicy instead of adding to the Default Policy Statement"
+          },
+          "@aws-cdk/aws-s3:setUniqueReplicationRoleName": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will automatically generate a unique role name that is used for s3 object replication."
+          },
+          "@aws-cdk/pipelines:reduceStageRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from Stage addActions trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-events:requireEventBusPolicySid": {
+            "recommendedValue": true,
+            "explanation": "When enabled, grantPutEventsTo() will use resource policies with Statement IDs for service principals."
+          },
+          "@aws-cdk/core:aspectPrioritiesMutating": {
+            "recommendedValue": true,
+            "explanation": "When set to true, Aspects added by the construct library on your behalf will be given a priority of MUTATING."
+          },
+          "@aws-cdk/aws-dynamodb:retainTableReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled, table replica will be default to the removal policy of source table unless specified otherwise."
+          },
+          "@aws-cdk/cognito:logUserPoolClientSecretValue": {
+            "recommendedValue": false,
+            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs."
+          },
+          "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, scopes down the trust policy for the cross-account action role",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-stepfunctions:useDistributedMapResultWriterV2": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resultWriterV2 property of DistributedMap will be used insted of resultWriter"
+          },
+          "@aws-cdk/s3-notifications:addS3TrustKeyPolicyForSnsSubscriptions": {
+            "recommendedValue": true,
+            "explanation": "Add an S3 trust policy to a KMS key resource policy for SNS subscriptions."
+          },
+          "@aws-cdk/aws-ec2:requirePrivateSubnetsForEgressOnlyInternetGateway": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the EgressOnlyGateway resource is only created if private subnets are defined in the dual-stack VPC."
+          },
+          "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": {
+            "recommendedValue": false,
+            "explanation": "When enabled, use resource IDs for VPC V2 migration"
+          },
+          "@aws-cdk/aws-s3:publicAccessBlockedByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, setting any combination of options for BlockPublicAccess will automatically set true for any options not defined."
+          },
+          "@aws-cdk/aws-lambda:useCdkManagedLogGroup": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function"
+          },
+          "@aws-cdk/aws-elasticloadbalancingv2:networkLoadBalancerWithSecurityGroupByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, Network Load Balancer will be created with a security group by default."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:httpInvokeDynamicJsonPathEndpoint": {
+            "recommendedValue": true,
+            "explanation": "When enabled, allows using a dynamic apiEndpoint with JSONPath format in HttpInvoke tasks.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:uniqueTargetGroupId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, ECS patterns will generate unique target group IDs to prevent conflicts during load balancer replacement"
+          },
+          "@aws-cdk/aws-route53-patterns:useDistribution": {
+            "recommendedValue": true,
+            "explanation": "Use the `Distribution` resource instead of `CloudFrontWebDistribution`"
+          }
+        }
+      }
+    }
+  },
+  "minimumCliVersion": "2.1033.0"
+}
