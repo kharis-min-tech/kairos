@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+cdk.out/
+coverage/
+*.js.map
+*.d.ts.map
+.DS_Store
+# next.js static export output
+apps/web/out/
+# Turborepo
+.turbo

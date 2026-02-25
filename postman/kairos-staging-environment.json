@@ -1,0 +1,67 @@
+{
+  "id": "kairos-staging-env",
+  "name": "Kairos Staging",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://YOUR_API_GATEWAY_URL",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "member_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "branch_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "department_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fellowship_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "soul_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "outreach_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "form_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "donation_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

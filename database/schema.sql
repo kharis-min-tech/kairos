@@ -992,7 +992,7 @@ CREATE TABLE donations (
     
     -- Check Constraints
     CONSTRAINT chk_donations_amount CHECK (amount > 0),
-    CONSTRAINT chk_donations_purpose CHECK (donation_purpose IN ('Offering', 'Building Fund', 'Other')),
+    CONSTRAINT chk_donations_purpose CHECK (donation_purpose IN ('Offering', 'Tithe', 'Building Fund', 'Other')),
     CONSTRAINT chk_donations_payment_method CHECK (payment_method IS NULL OR payment_method IN ('Cash', 'Check', 'Bank Transfer', 'Mobile Money', 'Card', 'Online', 'Other')),
     CONSTRAINT chk_donations_description CHECK (
         (donation_purpose != 'Other') OR 
