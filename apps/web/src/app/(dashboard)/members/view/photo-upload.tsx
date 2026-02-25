@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { User } from 'lucide-react';
 import { Spinner, Alert } from '@/components/ui';
 import { members } from '@kairos/api-client';
@@ -22,7 +22,12 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 export function PhotoUpload({ memberId, photoUrl, onUploaded }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null | undefined>(photoUrl);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalPhotoUrl(photoUrl);
+  }, [photoUrl]);
 
   const handleClick = () => {
     inputRef.current?.click();
@@ -67,6 +72,7 @@ export function PhotoUpload({ memberId, photoUrl, onUploaded }: PhotoUploadProps
       }
 
       await members.update(memberId, { photoUrl: photoKey });
+      setLocalPhotoUrl(photoKey);
       onUploaded();
     } catch {
       setError('Failed to upload photo. Please try again.');
@@ -86,9 +92,9 @@ export function PhotoUpload({ memberId, photoUrl, onUploaded }: PhotoUploadProps
       >
         {uploading ? (
           <Spinner size="sm" />
-        ) : photoUrl ? (
+        ) : localPhotoUrl ? (
           <img
-            src={photoUrl}
+            src={localPhotoUrl}
             alt="Member photo"
             className="w-full h-full object-cover"
           />

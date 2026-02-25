@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { TopBar } from './topbar';
 import { Sidebar } from './sidebar';
 import { MobileNav } from './mobile-nav';
 import { useAuth } from '@/lib/auth';
-import { members } from '@kairos/api-client';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -17,7 +16,6 @@ export function AppShell({ children }: AppShellProps) {
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [memberIsActive, setMemberIsActive] = useState<boolean | null>(null);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
@@ -31,24 +29,7 @@ export function AppShell({ children }: AppShellProps) {
     setMobileNavOpen(false);
   }, []);
 
-  // Fetch current user's member record to check active status
-  useEffect(() => {
-    if (!user?.email) return;
-    let cancelled = false;
-    members
-      .list({ email: user.email, limit: 1 })
-      .then((res) => {
-        if (cancelled) return;
-        const match = res.data?.[0];
-        setMemberIsActive(match ? match.isActive : null);
-      })
-      .catch(() => {
-        if (!cancelled) setMemberIsActive(null);
-      });
-    return () => { cancelled = true; };
-  }, [user?.email]);
-
-  const isPending = user && memberIsActive === false;
+  const isPending = user?.role === 'Member';
 
   return (
     <div className="min-h-screen bg-gray-50">

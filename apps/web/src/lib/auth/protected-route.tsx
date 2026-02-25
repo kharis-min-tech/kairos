@@ -33,7 +33,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     );
   }
 
-  if (!isAuthenticated) return null;
+  // Show spinner instead of null while the redirect to /login is in flight.
+  // This prevents a blank white screen during the brief window between auth
+  // state resolving to unauthenticated and the router.replace('/login') completing.
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Loading">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) return null;
 

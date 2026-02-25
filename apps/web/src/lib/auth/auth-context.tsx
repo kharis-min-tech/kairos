@@ -68,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Check for existing session on mount (skip in mock mode)
+  // Includes a single retry with 200ms delay to handle transient Cognito localStorage
+  // read failures on rapid page refreshes (prevents blank screen regression).
   useEffect(() => {
     if (IS_AUTH_MOCK) return;
     let cancelled = false;
@@ -79,7 +81,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setState({ user: extractUser(session), isAuthenticated: true, isLoading: false });
           startRefreshTimer();
         } else {
-          setState({ user: null, isAuthenticated: false, isLoading: false });
+          // Retry once after 200ms — handles transient Cognito SDK failures on rapid refreshes.
+          // isLoading stays true during the retry window so ProtectedRoute keeps showing a spinner.
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          if (cancelled) return;
+          const retrySession = await getCurrentSession();
+          if (cancelled) return;
+          if (retrySession) {
+            setState({ user: extractUser(retrySession), isAuthenticated: true, isLoading: false });
+            startRefreshTimer();
+          } else {
+            setState({ user: null, isAuthenticated: false, isLoading: false });
+          }
         }
       } catch {
         if (!cancelled) setState({ user: null, isAuthenticated: false, isLoading: false });

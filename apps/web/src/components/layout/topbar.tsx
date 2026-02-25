@@ -2,6 +2,7 @@
 
 import { Menu, Search, Bell, ChevronDown, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 interface TopBarProps {
   onMenuToggle: () => void;
@@ -102,12 +103,12 @@ export function TopBar({ onMenuToggle, notificationCount = 0 }: TopBarProps) {
               className="absolute right-0 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
               role="menu"
             >
-              <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
+              <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
                 Profile
-              </a>
-              <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
+              </Link>
+              <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
                 Settings
-              </a>
+              </Link>
               <hr className="my-1 border-gray-200" />
               <button className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
                 Sign out
