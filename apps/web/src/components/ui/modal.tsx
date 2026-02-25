@@ -62,7 +62,7 @@ function Modal({ open, onClose, title, children, footer, maxWidth = 'md' }: Moda
       onClick={handleBackdropClick}
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      <div className={`w-full ${maxWidthStyles[maxWidth]}`}>
+      <div className={`w-[calc(100vw-2rem)] sm:w-full ${maxWidthStyles[maxWidth]}`}>
         {title && (
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <h2 id="modal-title" className="text-lg font-semibold text-gray-900">{title}</h2>

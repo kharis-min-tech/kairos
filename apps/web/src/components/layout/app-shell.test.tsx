@@ -7,6 +7,20 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/'),
 }));
 
+vi.mock('@/lib/auth', () => ({
+  useAuth: vi.fn(() => ({
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    isAuthenticated: true,
+    isLoading: false,
+  })),
+}));
+
+vi.mock('@kairos/api-client', () => ({
+  members: {
+    list: vi.fn().mockResolvedValue({ data: [{ isActive: true }], pagination: { total: 0 } }),
+  },
+}));
+
 afterEach(() => {
   cleanup();
 });

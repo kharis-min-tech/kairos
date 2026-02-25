@@ -224,6 +224,8 @@ export class ApiStack extends cdk.Stack {
     route('MembersImport', 'members/members-import.ts', POST, '/v1/members/import');
     route('MembersExport', 'members/members-export.ts', GET, '/v1/members/export',
       { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+    route('MembersPhotoUploadUrl', 'members/members-photo-upload-url.ts', POST, '/v1/members/{memberId}/photo-upload-url',
+      { env: { MEMBER_PHOTOS_BUCKET: memberPhotosBucket.bucketName }, grants: s3Write(memberPhotosBucket) });
 
     // ================= BRANCHES =================
     route('BranchesCreate', 'branches/branches-create.ts', POST, '/v1/branches');

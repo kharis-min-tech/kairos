@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
 import { Button, Alert, Spinner, Card, CardBody, Modal } from '@/components/ui';
 import { Breadcrumbs } from '@/components/layout';
-import { members } from '@kairos/api-client';
-import type { Member } from '@kairos/types';
+import { members, branches } from '@kairos/api-client';
+import type { Member, Branch } from '@kairos/types';
 
 const formatDate = (date: Date | string) =>
   new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -17,6 +17,19 @@ export default function PendingApprovalsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState<Member | null>(null);
+  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [rejectConfirm, setRejectConfirm] = useState<Member | null>(null);
+
+  const resolveBranchName = (branchId: number) => {
+    const branch = branchList.find((b) => b.branchId === branchId);
+    return branch ? branch.branchName : `Branch ${branchId}`;
+  };
+
+  useEffect(() => {
+    branches.list({ limit: 100, isActive: true }).then((res) => {
+      setBranchList(res.data ?? []);
+    }).catch(() => {});
+  }, []);
 
   const fetchPending = useCallback(async () => {
     try {
@@ -37,7 +50,7 @@ export default function PendingApprovalsPage() {
     try {
       await members.approve(id);
       setPending((prev) => prev.filter((m) => m.memberId !== id));
-      setSuccess('Member approved successfully.');
+      setSuccess('Member approved. Welcome email sent.');
     } catch {
       setError('Failed to approve member.');
     } finally {
@@ -98,7 +111,7 @@ export default function PendingApprovalsPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleReject(member.memberId)}
+                      onClick={() => setRejectConfirm(member)}
                       disabled={actionLoading === member.memberId}
                     >
                       <XCircle size={16} className="mr-1" /> Reject
@@ -130,10 +143,10 @@ export default function PendingApprovalsPage() {
               <div><span className="text-gray-500">Date of Birth:</span> {preview.dateOfBirth ? formatDate(preview.dateOfBirth) : '—'}</div>
               <div><span className="text-gray-500">Address:</span> {preview.address || '—'}</div>
               <div><span className="text-gray-500">City:</span> {preview.city || '—'}</div>
-              <div><span className="text-gray-500">Branch ID:</span> {preview.homeBranchId}</div>
+              <div><span className="text-gray-500">Branch:</span> {resolveBranchName(preview.homeBranchId)}</div>
             </div>
             <div className="flex gap-2 pt-4 border-t">
-              <Button variant="secondary" size="sm" onClick={() => { handleReject(preview.memberId); setPreview(null); }}>
+              <Button variant="secondary" size="sm" onClick={() => { setRejectConfirm(preview); setPreview(null); }}>
                 Reject
               </Button>
               <Button size="sm" onClick={() => { handleApprove(preview.memberId); setPreview(null); }}>
@@ -142,6 +155,32 @@ export default function PendingApprovalsPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Reject Confirmation Modal */}
+      <Modal open={!!rejectConfirm} onClose={() => setRejectConfirm(null)} title="Confirm Rejection">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to reject this member? This action cannot be undone.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setRejectConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                if (rejectConfirm) {
+                  handleReject(rejectConfirm.memberId);
+                  setRejectConfirm(null);
+                }
+              }}
+            >
+              Reject
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

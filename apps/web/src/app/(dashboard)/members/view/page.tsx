@@ -3,11 +3,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, UserX } from 'lucide-react';
-import { Button, Badge, Card, CardBody, Spinner, Alert } from '@/components/ui';
+import { Button, Badge, Card, CardBody, Spinner, Alert, Modal } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { members } from '@kairos/api-client';
-import type { Member } from '@kairos/types';
+import { members, branches } from '@kairos/api-client';
+import type { Member, Branch } from '@kairos/types';
 import { MemberEditModal } from './member-edit-modal';
+import { AttendanceTab } from './attendance-tab';
+import { DonationsTab } from './donations-tab';
+import { PhotoUpload } from './photo-upload';
+
+interface DepartmentAssignment {
+  departmentMemberId: number;
+  departmentName: string;
+  branchDepartmentId: number;
+  joinDate: string;
+  isActive: boolean;
+}
+
+interface FellowshipAssignment {
+  fellowshipMemberId: number;
+  fellowshipName: string;
+  fellowshipId: number;
+  joinDate: string;
+  isActive: boolean;
+}
 
 type BadgeVariant = 'active' | 'inactive' | 'pending';
 
@@ -24,12 +43,21 @@ export default function MemberDetailPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'donations' | 'attendance'>('profile');
   const [editOpen, setEditOpen] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [deactivateError, setDeactivateError] = useState('');
+  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
+  const [fellowshipAssignments, setFellowshipAssignments] = useState<FellowshipAssignment[]>([]);
 
   const fetchMember = useCallback(async () => {
     setLoading(true);
     try {
       const data = await members.get(Number(id));
       setMember(data);
+      // The members.get endpoint returns departments and fellowships with the member data
+      const extended = data as Member & { departments?: DepartmentAssignment[]; fellowships?: FellowshipAssignment[] };
+      setDepartmentAssignments(extended.departments ?? []);
+      setFellowshipAssignments(extended.fellowships ?? []);
     } catch {
       setError('Failed to load member details.');
     } finally {
@@ -41,14 +69,20 @@ export default function MemberDetailPage() {
     fetchMember();
   }, [fetchMember]);
 
+  useEffect(() => {
+    branches.list({ limit: 100, isActive: true }).then(res => setBranchList(res.data)).catch(() => {});
+  }, []);
+
   const handleDeactivate = async () => {
-    if (!member || !confirm('Are you sure you want to deactivate this member?')) return;
+    if (!member) return;
     setDeactivating(true);
+    setDeactivateError('');
     try {
       await members.delete(member.memberId);
-      router.push('/members');
+      setMember(prev => prev ? { ...prev, isActive: false } : null);
+      setConfirmDeactivate(false);
     } catch {
-      setError('Failed to deactivate member.');
+      setDeactivateError('Failed to deactivate member.');
     } finally {
       setDeactivating(false);
     }
@@ -67,6 +101,7 @@ export default function MemberDetailPage() {
   }
 
   const statusVariant: BadgeVariant = member.isActive ? 'active' : 'inactive';
+  const branchName = branchList.find(b => b.branchId === member.homeBranchId)?.branchName ?? `Branch ${member.homeBranchId}`;
   const tabs = [
     { key: 'profile' as const, label: 'Profile' },
     { key: 'donations' as const, label: 'Donations' },
@@ -76,12 +111,13 @@ export default function MemberDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.push('/members')} aria-label="Back to members">
           <ArrowLeft size={16} />
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
+            <PhotoUpload memberId={member.memberId} photoUrl={member.photoUrl} onUploaded={fetchMember} />
             <h1 className="text-2xl font-semibold text-gray-900">
               {member.firstName} {member.lastName}
             </h1>
@@ -95,7 +131,7 @@ export default function MemberDetailPage() {
               <Edit size={16} className="mr-2" />
               Edit
             </Button>
-            <Button variant="danger" size="sm" onClick={handleDeactivate} disabled={deactivating || !member.isActive}>
+            <Button variant="danger" size="sm" onClick={() => setConfirmDeactivate(true)} disabled={deactivating || !member.isActive}>
               <UserX size={16} className="mr-2" />
               Deactivate
             </Button>
@@ -110,7 +146,7 @@ export default function MemberDetailPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
                 activeTab === tab.key
                   ? 'border-primary text-primary'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -163,7 +199,7 @@ export default function MemberDetailPage() {
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Home Branch</dt>
-                  <dd className="text-sm text-gray-900">Branch {member.homeBranchId}</dd>
+                  <dd className="text-sm text-gray-900">{branchName}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Membership Date</dt>
@@ -214,24 +250,52 @@ export default function MemberDetailPage() {
               </dl>
             </CardBody>
           </Card>
+
+          <Card>
+            <CardBody>
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Departments</h3>
+              {departmentAssignments.length > 0 ? (
+                <dl className="space-y-3">
+                  {departmentAssignments.map(dept => (
+                    <div key={dept.departmentMemberId} className="flex justify-between">
+                      <dt className="text-sm text-gray-900">{dept.departmentName}</dt>
+                      <dd className="text-sm text-gray-500">
+                        Joined {new Date(dept.joinDate).toLocaleDateString('en-GB')}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-sm text-gray-500">No departments assigned</p>
+              )}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardBody>
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Fellowship</h3>
+              {fellowshipAssignments.length > 0 ? (
+                <dl className="space-y-3">
+                  {fellowshipAssignments.map(fel => (
+                    <div key={fel.fellowshipMemberId} className="flex justify-between">
+                      <dt className="text-sm text-gray-900">{fel.fellowshipName}</dt>
+                      <dd className="text-sm text-gray-500">
+                        Joined {new Date(fel.joinDate).toLocaleDateString('en-GB')}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-sm text-gray-500">No fellowship assigned</p>
+              )}
+            </CardBody>
+          </Card>
         </div>
       )}
 
-      {activeTab === 'donations' && (
-        <Card>
-          <CardBody>
-            <p className="text-sm text-gray-500">Donation history will be displayed here.</p>
-          </CardBody>
-        </Card>
-      )}
+      {activeTab === 'donations' && <DonationsTab memberId={member.memberId} />}
 
-      {activeTab === 'attendance' && (
-        <Card>
-          <CardBody>
-            <p className="text-sm text-gray-500">Attendance records will be displayed here.</p>
-          </CardBody>
-        </Card>
-      )}
+      {activeTab === 'attendance' && <AttendanceTab memberId={member.memberId} />}
 
       {/* Edit Modal */}
       <MemberEditModal
@@ -243,6 +307,32 @@ export default function MemberDetailPage() {
           fetchMember();
         }}
       />
+
+      {/* Deactivation error */}
+      {deactivateError && (
+        <Alert variant="error" title="Deactivation Failed">{deactivateError}</Alert>
+      )}
+
+      {/* Deactivation Confirmation Modal */}
+      <Modal
+        open={confirmDeactivate}
+        onClose={() => setConfirmDeactivate(false)}
+        title="Confirm Deactivation"
+        footer={
+          <>
+            <Button variant="secondary" size="sm" onClick={() => setConfirmDeactivate(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" size="sm" onClick={handleDeactivate} disabled={deactivating}>
+              {deactivating ? 'Deactivating…' : 'Deactivate'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          Are you sure you want to deactivate this member? Their data will be retained for reporting purposes.
+        </p>
+      </Modal>
     </div>
   );
 }

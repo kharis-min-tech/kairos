@@ -29,6 +29,7 @@ export default function MembersListPage() {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -72,14 +73,16 @@ export default function MembersListPage() {
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const [b, d, f] = await Promise.all([
+        const [b, d, f, pending] = await Promise.all([
           branches.list({ limit: 100 }),
           departments.list({ limit: 100 }),
           fellowships.list({ limit: 100 }),
+          members.list({ status: 'pending', limit: 1 }),
         ]);
         setBranchList(b.data as unknown as Branch[]);
         setDepartmentList(d.data);
         setFellowshipList(f.data as unknown as Fellowship[]);
+        setPendingCount(pending.pagination.total);
       } catch {
         // Filters will remain empty
       }
@@ -116,19 +119,30 @@ export default function MembersListPage() {
         </Link>
       ),
     },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Phone' },
+    { accessorKey: 'email', header: 'Email', meta: { className: 'hidden sm:table-cell' } },
+    { accessorKey: 'phone', header: 'Phone', meta: { className: 'hidden sm:table-cell' } },
+    {
+      accessorKey: 'homeBranchId',
+      header: 'Home Branch',
+      meta: { className: 'hidden sm:table-cell' },
+      cell: ({ row }) => {
+        const branch = branchList.find((b) => b.branchId === row.original.homeBranchId);
+        return branch?.branchName || `Branch ${row.original.homeBranchId}`;
+      },
+    },
     {
       accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.original.isActive ? 'active' : 'inactive';
-        return <Badge variant={statusVariant[status]}>{status}</Badge>;
+        const status = row.original.isActive ? 'active' : 'pending';
+        const label = row.original.isActive ? 'Active' : 'Pending';
+        return <Badge variant={statusVariant[status]}>{label}</Badge>;
       },
     },
     {
       accessorKey: 'membershipDate',
       header: 'Joined',
+      meta: { className: 'hidden sm:table-cell' },
       cell: ({ row }) => {
         const d = row.original.membershipDate;
         if (!d) return '—';
@@ -140,12 +154,18 @@ export default function MembersListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Members</h1>
           <p className="text-sm text-gray-500 mt-1">{total} total members</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/members/approvals" className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary min-h-[44px]">
+            Pending Approvals
+            {pendingCount > 0 && (
+              <Badge variant="pending">{pendingCount}</Badge>
+            )}
+          </Link>
           <Link href="/members/import">
             <Button variant="secondary" size="sm">
               <Upload size={16} className="mr-2" />

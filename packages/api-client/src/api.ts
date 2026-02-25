@@ -51,7 +51,7 @@ export const members = {
   approve: (id: number) =>
     post<Member>(`/v1/members/${id}/approve`),
 
-  import: (data: { file: string; branchId: number }) =>
+  import: (data: { rows: Array<Record<string, string>>; branchId: number }) =>
     post<{ created: number; errors: Array<{ row: number; field: string; message: string }> }>(
       '/v1/members/import',
       data
@@ -59,6 +59,9 @@ export const members = {
 
   export: (params?: ListParams) =>
     get<{ url: string }>('/v1/members/export', params),
+
+  getPhotoUploadUrl: (id: number, data: { contentType: string; extension: string }) =>
+    post<{ uploadUrl: string; photoKey: string }>(`/v1/members/${id}/photo-upload-url`, data),
 };
 
 // ─── Branches ────────────────────────────────────────────────────

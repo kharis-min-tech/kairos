@@ -5,13 +5,17 @@ import Link from 'next/link';
 import { navItems } from './sidebar';
 import { useEffect } from 'react';
 
+// Nav items allowed for pending (not yet approved) members
+const PENDING_ALLOWED_LABELS = new Set(['Dashboard', 'Members']);
+
 interface MobileNavProps {
   open: boolean;
   onClose: () => void;
   currentPath?: string;
+  isPendingMember?: boolean;
 }
 
-export function MobileNav({ open, onClose, currentPath = '' }: MobileNavProps) {
+export function MobileNav({ open, onClose, currentPath = '', isPendingMember = false }: MobileNavProps) {
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
@@ -47,8 +51,18 @@ export function MobileNav({ open, onClose, currentPath = '' }: MobileNavProps) {
         <ul className="space-y-1 p-2">
           {navItems.map((item) => {
             const isActive = currentPath.startsWith(item.href);
+            const isDisabled = isPendingMember && !PENDING_ALLOWED_LABELS.has(item.label);
             return (
               <li key={item.href}>
+                {isDisabled ? (
+                  <span
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium min-h-[44px] opacity-40 cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </span>
+                ) : (
                 <Link
                   href={item.href}
                   onClick={onClose}
@@ -63,6 +77,7 @@ export function MobileNav({ open, onClose, currentPath = '' }: MobileNavProps) {
                   <span className="shrink-0">{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
+                )}
               </li>
             );
           })}

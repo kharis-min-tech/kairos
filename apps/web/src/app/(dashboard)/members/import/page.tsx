@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Upload, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button, Alert, Card, CardHeader, CardBody, SelectInput } from '@/components/ui';
 import { Breadcrumbs } from '@/components/layout';
@@ -15,7 +16,40 @@ const REQUIRED_FIELDS = [
   'date_of_birth', 'gender', 'address', 'home_branch_id',
 ];
 
-type Step = 'upload' | 'mapping' | 'result';
+type Step = 'upload' | 'mapping' | 'preview' | 'result';
+
+/**
+ * Parse a single CSV line handling quoted values that may contain commas.
+ */
+function parseCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      values.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
 
 export default function CSVImportPage() {
   const router = useRouter();
@@ -30,15 +64,21 @@ export default function CSVImportPage() {
   const [errors, setErrors] = useState<ImportError[]>([]);
   const [createdCount, setCreatedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
+  const [csvRows, setCsvRows] = useState<string[][]>([]);
+  const [mappedRows, setMappedRows] = useState<Record<string, string>[]>([]);
 
-  const parseHeaders = useCallback((csvFile: File) => {
+  const parseFile = useCallback((csvFile: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const firstLine = text.split('\n')[0];
-      if (!firstLine) return;
-      const headers = firstLine.split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+      const lines = text.split('\n').filter((l) => l.trim() !== '');
+      if (lines.length === 0) return;
+      const headerLine = lines[0];
+      if (!headerLine) return;
+      const headers = parseCsvLine(headerLine);
       setCsvHeaders(headers);
+      const dataRows = lines.slice(1).map((line) => parseCsvLine(line));
+      setCsvRows(dataRows);
       const autoMap: Record<string, string> = {};
       REQUIRED_FIELDS.forEach((field) => {
         const match = headers.find((h) => h.toLowerCase().replace(/[\s-]/g, '_') === field);
@@ -57,7 +97,7 @@ export default function CSVImportPage() {
     }
     setErrorMsg('');
     setFile(selectedFile);
-    parseHeaders(selectedFile);
+    parseFile(selectedFile);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -67,20 +107,39 @@ export default function CSVImportPage() {
     if (droppedFile) handleFileSelect(droppedFile);
   };
 
-  const handleSubmit = async () => {
+  const handlePreview = () => {
     setErrorMsg('');
     const unmapped = REQUIRED_FIELDS.filter((f) => !columnMapping[f]);
     if (unmapped.length > 0) {
       setErrorMsg(`Please map all required fields: ${unmapped.join(', ')}`);
       return;
     }
-    if (!file) return;
+    const mapped = csvRows.map((row) => {
+      const obj: Record<string, string> = {};
+      REQUIRED_FIELDS.forEach((field) => {
+        const csvCol = columnMapping[field];
+        if (!csvCol) {
+          obj[field] = '';
+          return;
+        }
+        const colIndex = csvHeaders.indexOf(csvCol);
+        obj[field] = colIndex >= 0 && colIndex < row.length ? (row[colIndex] ?? '') : '';
+      });
+      return obj;
+    });
+    setMappedRows(mapped);
+    setStep('preview');
+  };
+
+  const handleSubmit = async () => {
+    setErrorMsg('');
+    if (mappedRows.length === 0) return;
     setSubmitting(true);
     try {
       const res = await members.import({
-        file: file.name,
+        rows: mappedRows,
         branchId: user?.branchId ? Number(user.branchId) : 0,
-      } as Parameters<typeof members.import>[0]);
+      });
       setCreatedCount(res.created ?? 0);
       setErrors(res.errors ?? []);
       setStep('result');
@@ -96,10 +155,14 @@ export default function CSVImportPage() {
     setFile(null);
     setCsvHeaders([]);
     setColumnMapping({});
+    setCsvRows([]);
+    setMappedRows([]);
     setErrors([]);
     setCreatedCount(0);
     setErrorMsg('');
   };
+
+  const previewRows = mappedRows.slice(0, 5);
 
   return (
     <>
@@ -117,7 +180,7 @@ export default function CSVImportPage() {
         <Card>
           <CardBody>
             <div
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors hidden sm:block ${
                 dragOver ? 'border-primary bg-purple-50' : 'border-gray-300'
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -140,6 +203,15 @@ export default function CSVImportPage() {
                   if (f) handleFileSelect(f);
                 }}
               />
+            </div>
+            {/* Mobile: simple tap-to-upload button */}
+            <div className="sm:hidden text-center py-8">
+              <Upload size={32} className="mx-auto text-gray-400 mb-3" />
+              <p className="text-sm text-gray-500 mb-4">Select a CSV file to import</p>
+              <Button onClick={() => fileInputRef.current?.click()}>
+                <Upload size={16} className="mr-2" />
+                Choose File
+              </Button>
             </div>
             <div className="mt-4 text-sm text-gray-500">
               <p className="font-medium mb-1">Required columns:</p>
@@ -179,12 +251,67 @@ export default function CSVImportPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="secondary" onClick={reset}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? 'Importing…' : 'Import Members'}
+              <Button onClick={handlePreview}>
+                Preview Import
               </Button>
             </div>
           </CardBody>
         </Card>
+      )}
+
+      {step === 'preview' && (
+        <div className="space-y-4">
+          {mappedRows.length > 500 && (
+            <Alert variant="warning" className="mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} />
+                <span>Large files may take longer to process.</span>
+              </div>
+            </Alert>
+          )}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Preview Import</h2>
+                <p className="text-sm text-gray-500">
+                  Showing {previewRows.length} of {mappedRows.length} row{mappedRows.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </CardHeader>
+            <CardBody>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      {REQUIRED_FIELDS.map((field) => (
+                        <th key={field} className="text-left py-2 px-2 text-gray-500 whitespace-nowrap">
+                          {field.replace(/_/g, ' ')}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-100">
+                        {REQUIRED_FIELDS.map((field) => (
+                          <td key={field} className="py-2 px-2 text-gray-700 whitespace-nowrap">
+                            {row[field] || '—'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button variant="secondary" onClick={() => setStep('mapping')}>Back to Mapping</Button>
+                <Button onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? 'Importing…' : 'Import Members'}
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
       )}
 
       {step === 'result' && (
@@ -193,7 +320,12 @@ export default function CSVImportPage() {
             <Alert variant="success">
               <div className="flex items-center gap-2">
                 <CheckCircle size={16} />
-                <span>Successfully imported {createdCount} member{createdCount !== 1 ? 's' : ''}.</span>
+                <span>
+                  Successfully imported {createdCount} member{createdCount !== 1 ? 's' : ''}.{' '}
+                  <Link href="/members" className="underline font-medium">
+                    View Members
+                  </Link>
+                </span>
               </div>
             </Alert>
           )}
@@ -231,7 +363,9 @@ export default function CSVImportPage() {
           )}
           <div className="flex gap-3">
             <Button variant="secondary" onClick={reset}>Import Another File</Button>
-            <Button onClick={() => router.push('/members')}>Back to Members</Button>
+            <Link href="/members">
+              <Button>Back to Members</Button>
+            </Link>
           </div>
         </div>
       )}
