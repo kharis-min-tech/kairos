@@ -176,7 +176,7 @@ export const outreach = {
     get<PaginatedResponse<OutreachProgram>>('/v1/outreach/programs', params),
 
   registerWorker: (programId: number, data: { memberId: number }) =>
-    post<void>(`/v1/outreach/programs/${programId}/register-worker`, data),
+    post<void>(`/v1/outreach/programs/${programId}/workers`, data),
 
   getProgram: (id: number) =>
     get<OutreachProgram & { participants: Member[]; souls: Soul[] }>(`/v1/outreach/programs/${id}`),

@@ -49,6 +49,8 @@ modifying, or suggesting changes in this repository.
 - Do NOT change API shapes, naming, or semantics without explicit instruction.
 - Backward compatibility is required unless a breaking change is explicitly requested.
 - Generated OpenAPI schemas must reflect the existing domain model exactly.
+- Entity type interfaces in `@kairos/types` MUST use camelCase field names matching the Drizzle ORM schema column definitions (e.g., `outreachId` not `outreach_id`, `programName` not `program_name`). Drizzle returns camelCase by default — types must match to avoid `undefined` field access at runtime.
+- Every Lambda handler file in `apps/api/src/` MUST have a corresponding CDK route in `api-stack.ts`, and the API client path in `packages/api-client/src/api.ts` MUST match the CDK route path exactly. Verify all three layers (Lambda handler, CDK route, API client) are aligned before marking a task complete.
 
 ### Code Generation Boundaries
 - Do NOT generate large files unless explicitly requested.

@@ -262,10 +262,13 @@ export class ApiStack extends cdk.Stack {
     // ================= OUTREACH & SOULS =================
     route('OutreachCreate', 'outreach/outreach-create-program.ts', POST, '/v1/outreach/programs');
     route('OutreachList', 'outreach/outreach-list-programs.ts', GET, '/v1/outreach/programs');
+    route('OutreachGetProgram', 'outreach/outreach-get-program.ts', GET, '/v1/outreach/programs/{outreachId}');
+    route('OutreachComplete', 'outreach/outreach-complete-program.ts', PUT, '/v1/outreach/programs/{outreachId}/complete');
     route('OutreachRegWorker', 'outreach/outreach-register-worker.ts', POST, '/v1/outreach/programs/{outreachId}/workers');
     route('OutreachOverride', 'outreach/outreach-override-branch.ts', POST, '/v1/outreach/override-branch');
     route('SoulsCapture', 'outreach/souls-capture.ts', POST, '/v1/souls');
     route('SoulsList', 'outreach/souls-list.ts', GET, '/v1/souls');
+    route('SoulsFollowUpTracker', 'outreach/souls-get-follow-up-tracker.ts', GET, '/v1/souls/follow-up-tracker');
     route('SoulsGet', 'outreach/souls-get.ts', GET, '/v1/souls/{soulId}');
     route('SoulsLogFollowup', 'outreach/souls-log-followup.ts', POST, '/v1/souls/{soulId}/followups');
     route('SoulsUpdateStatus', 'outreach/souls-update-status.ts', PUT, '/v1/souls/{soulId}/status');
@@ -340,7 +343,8 @@ export class ApiStack extends cdk.Stack {
         commandHooks: {
           beforeBundling: () => [],
           afterBundling: (inputDir: string, outputDir: string) => [
-            `cp ${inputDir}/packages/database/drizzle/0000_loving_kid_colt.sql ${outputDir}/migration.sql`,
+            `mkdir -p ${outputDir}/migrations`,
+            `cp ${inputDir}/packages/database/drizzle/*.sql ${outputDir}/migrations/`,
           ],
           beforeInstall: () => [],
         },

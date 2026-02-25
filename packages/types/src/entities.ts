@@ -1,5 +1,6 @@
 // @kairos/types - Shared entity interfaces for the Kairos platform
-// These align with the Drizzle schemas being created in packages/database/
+// These align with the Drizzle schemas in packages/database/src/schema/
+// All field names use camelCase to match Drizzle ORM query output.
 
 import type {
   BranchType,
@@ -20,230 +21,237 @@ import type {
 
 /** Base fields present on most entities */
 export interface BaseEntity {
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-/** Region entity */
+/** Region entity — matches schema/core.ts regions */
 export interface Region extends BaseEntity {
-  region_id: number;
-  region_name: string;
+  regionId: number;
+  regionName: string;
   country: string;
 }
 
-/** Branch entity */
+/** Branch entity — matches schema/core.ts branches */
 export interface Branch extends BaseEntity {
-  branch_id: number;
-  branch_name: string;
-  region_id: number;
-  branch_type: BranchType;
+  branchId: number;
+  branchName: string;
+  regionId: number;
+  branchType: BranchType;
   address?: string;
   city?: string;
-  postal_code?: string;
+  postalCode?: string;
   phone?: string;
   email?: string;
-  established_date?: Date;
-  is_active: boolean;
+  establishedDate?: Date;
+  isActive: boolean;
 }
 
-/** Member entity */
+/** Member entity — matches schema/core.ts members */
 export interface Member extends BaseEntity {
-  member_id: number;
-  first_name: string;
-  last_name: string;
-  middle_name?: string;
-  date_of_birth?: Date;
+  memberId: number;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  dateOfBirth?: Date;
   gender?: Gender;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
-  postal_code?: string;
-  home_branch_id: number;
-  membership_date: Date;
-  is_active: boolean;
-  photo_url?: string;
-  emergency_contact_name?: string;
-  emergency_contact_phone?: string;
+  postalCode?: string;
+  homeBranchId: number;
+  membershipDate: Date;
+  isActive: boolean;
+  photoUrl?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
 }
 
-/** Branch leadership entity */
+/** Branch leadership entity — matches schema/core.ts branchLeadership */
 export interface BranchLeadership extends BaseEntity {
-  leadership_id: number;
-  branch_id: number;
-  member_id: number;
+  leadershipId: number;
+  branchId: number;
+  memberId: number;
   role: LeadershipRole;
-  start_date: Date;
-  end_date?: Date;
-  is_current: boolean;
+  startDate: Date;
+  endDate?: Date;
+  isCurrent: boolean;
 }
 
-/** Department entity (global definition) */
+/** Department entity (global definition) — matches schema/departments.ts departments */
 export interface Department extends BaseEntity {
-  department_id: number;
-  department_name: string;
+  departmentId: number;
+  departmentName: string;
   description?: string;
-  is_active: boolean;
+  isActive: boolean;
 }
 
-/** Branch department instance */
+/** Branch department instance — matches schema/departments.ts branchDepartments */
 export interface BranchDepartment extends BaseEntity {
-  branch_department_id: number;
-  branch_id: number;
-  department_id: number;
-  lead_member_id: number;
-  deputy_member_id?: number;
-  is_active: boolean;
+  branchDepartmentId: number;
+  branchId: number;
+  departmentId: number;
+  leadMemberId: number;
+  deputyMemberId?: number;
+  startDate: Date;
+  endDate?: Date;
+  isActive: boolean;
 }
 
-/** Fellowship entity */
+/** Fellowship entity — matches schema/fellowships.ts fellowships */
 export interface Fellowship extends BaseEntity {
-  fellowship_id: number;
-  fellowship_name: string;
-  branch_id: number;
+  fellowshipId: number;
+  fellowshipName: string;
+  branchId: number;
   description?: string;
-  leader_id?: number;
-  co_leader_id?: number;
-  meeting_schedule?: string;
-  is_active: boolean;
+  leaderId?: number;
+  coLeaderId?: number;
+  meetingSchedule?: string;
+  isActive: boolean;
 }
 
-/** Service entity */
+/** Service entity — matches schema/attendance.ts services */
 export interface Service extends BaseEntity {
-  service_id: number;
-  branch_id: number;
-  service_date: Date;
-  service_type: ServiceType;
-  service_time?: string;
+  serviceId: number;
+  branchId: number;
+  serviceDate: Date;
+  serviceType: ServiceType;
+  serviceTitle?: string;
+  preacherId?: number;
+  topic?: string;
   notes?: string;
-  created_by?: number;
+  expectedAttendance?: number;
 }
 
-/** Service attendance record */
+/** Service attendance record — matches schema/attendance.ts serviceAttendance */
 export interface ServiceAttendance {
-  service_id: number;
-  member_id: number;
-  attendance_status: ServiceAttendanceStatus;
-  is_first_time: boolean;
-  arrival_time?: Date;
+  serviceId: number;
+  memberId: number;
+  attendanceStatus: ServiceAttendanceStatus;
+  isFirstTimeVisitor: boolean;
+  arrivalTime?: Date;
   notes?: string;
-  recorded_at: Date;
-  recorded_by?: number;
+  recordedAt: Date;
+  recordedBy?: number;
 }
 
-/** Outreach program entity */
+/** Outreach program entity — matches schema/outreach.ts outreachPrograms */
 export interface OutreachProgram extends BaseEntity {
-  outreach_id: number;
-  branch_id: number;
-  program_name: string;
-  program_date: Date;
+  outreachId: number;
+  branchId: number;
+  programName: string;
+  programDate: Date;
   location: string;
   address?: string;
   city?: string;
   description?: string;
-  coordinator_id?: number;
-  total_souls_reached: number;
+  coordinatorId?: number;
+  totalSoulsReached: number;
   notes?: string;
-  is_completed: boolean;
+  isCompleted: boolean;
 }
 
-/** Soul entity */
+/** Soul entity — matches schema/outreach.ts souls */
 export interface Soul extends BaseEntity {
-  soul_id: number;
-  outreach_id?: number;
-  first_name: string;
-  last_name: string;
+  soulId: number;
+  outreachId?: number;
+  firstName: string;
+  lastName: string;
   phone: string;
   email?: string;
   address?: string;
   city?: string;
-  capture_date: Date;
-  capture_location?: string;
-  assigned_member_id?: number;
+  gender?: string;
+  ageRange?: string;
+  assignedMemberId?: number;
   status: SoulStatus;
-  converted_to_member_id?: number;
-  conversion_date?: Date;
+  convertedToMemberId?: number;
   notes?: string;
 }
 
-/** Follow-up record */
-export interface FollowUp {
-  followup_id: number;
-  soul_id: number;
-  contact_date: Date;
-  contact_method: ContactMethod;
-  contact_status: ContactStatus;
-  duration_minutes?: number;
+/** Follow-up record — matches schema/outreach.ts followUps */
+export interface FollowUp extends BaseEntity {
+  followUpId: number;
+  soulId: number;
+  memberId: number;
+  followUpDate: Date;
+  contactMethod: ContactMethod;
+  contactStatus: ContactStatus;
+  durationMinutes?: number;
   notes?: string;
-  followed_up_by?: number;
-  created_at: Date;
+  nextFollowUpDate?: Date;
 }
 
-/** Donation entity */
+/** Donation entity — matches schema/donations.ts donations */
 export interface Donation extends BaseEntity {
-  donation_id: number;
-  member_id?: number;
-  branch_id: number;
+  donationId: number;
+  memberId?: number;
+  branchId: number;
+  donationDate: Date;
   amount: number;
   currency: string;
-  donation_date: Date;
-  donation_purpose: DonationPurpose;
+  donationPurpose: DonationPurpose;
   description?: string;
-  payment_method: PaymentMethod;
-  stripe_payment_id?: string;
-  is_anonymous: boolean;
-  recorded_by?: number;
+  paymentMethod: PaymentMethod;
+  referenceNumber?: string;
+  stripePaymentId?: string;
+  status?: string;
+  isAnonymous: boolean;
+  notes?: string;
+  recordedBy?: number;
 }
 
-/** Form entity */
+/** Form entity — matches schema/forms.ts forms */
 export interface Form extends BaseEntity {
-  form_id: number;
-  form_name: string;
-  form_description?: string;
-  form_definition: Record<string, unknown>;
+  formId: number;
+  formName: string;
+  formDescription?: string;
+  formDefinition: Record<string, unknown>;
   scope: FormScope;
-  target_branch_id?: number;
-  is_active: boolean;
-  created_by?: number;
+  targetBranchId?: number;
+  isActive: boolean;
+  isTemplate?: boolean;
+  createdBy?: number;
 }
 
-/** Form submission entity */
+/** Form submission entity — matches schema/forms.ts formSubmissions */
 export interface FormSubmission {
-  submission_id: number;
-  form_id: number;
-  member_id?: number;
-  submission_data: Record<string, unknown>;
-  submitted_at: Date;
+  submissionId: number;
+  formId: number;
+  memberId?: number;
+  submissionData: Record<string, unknown>;
+  submittedAt: Date;
 }
 
-/** Notification entity */
+/** Notification entity — matches schema/notifications.ts notifications */
 export interface Notification extends BaseEntity {
-  notification_id: number;
+  notificationId: number;
   title: string;
   message: string;
-  notification_type: NotificationType;
+  notificationType: NotificationType;
   priority: NotificationPriority;
-  target_scope: TargetScope;
-  target_branch_id?: number;
-  target_region_id?: number;
-  target_department_id?: number;
-  target_fellowship_id?: number;
-  target_role_id?: number;
-  target_leadership_role?: string;
-  sent_by?: number;
-  sent_at: Date;
-  scheduled_for?: Date;
-  expires_at?: Date;
-  is_active: boolean;
+  targetScope: TargetScope;
+  targetBranchId?: number;
+  targetRegionId?: number;
+  targetDepartmentId?: number;
+  targetFellowshipId?: number;
+  targetRoleId?: number;
+  targetLeadershipRole?: string;
+  sentBy: number;
+  sentAt: Date;
+  scheduledFor?: Date;
+  expiresAt?: Date;
+  isActive: boolean;
 }
 
-/** Notification recipient */
+/** Notification recipient — matches schema/notifications.ts notificationRecipients */
 export interface NotificationRecipient {
-  recipient_id: number;
-  notification_id: number;
-  member_id: number;
-  is_read: boolean;
-  read_at?: Date;
-  is_dismissed: boolean;
-  dismissed_at?: Date;
+  notificationId: number;
+  memberId: number;
+  isRead: boolean;
+  readAt?: Date;
+  isDismissed: boolean;
+  dismissedAt?: Date;
+  createdAt: Date;
 }
