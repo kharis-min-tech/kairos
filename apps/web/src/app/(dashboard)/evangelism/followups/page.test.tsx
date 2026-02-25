@@ -312,8 +312,8 @@ describe('FollowUpTrackerPage', () => {
 
     await waitFor(() => {
       expect(mockAddFollowup).toHaveBeenCalledWith(10, expect.objectContaining({
-        contact_method: 'Phone Call',
-        contact_status: 'Successful',
+        contactMethod: 'Phone Call',
+        contactStatus: 'Successful',
       }));
     });
 

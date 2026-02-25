@@ -36,7 +36,7 @@ export default function PendingApprovalsPage() {
     setError('');
     try {
       await members.approve(id);
-      setPending((prev) => prev.filter((m) => m.member_id !== id));
+      setPending((prev) => prev.filter((m) => m.memberId !== id));
       setSuccess('Member approved successfully.');
     } catch {
       setError('Failed to approve member.');
@@ -50,7 +50,7 @@ export default function PendingApprovalsPage() {
     setError('');
     try {
       await members.delete(id);
-      setPending((prev) => prev.filter((m) => m.member_id !== id));
+      setPending((prev) => prev.filter((m) => m.memberId !== id));
       setSuccess('Member rejected.');
     } catch {
       setError('Failed to reject member.');
@@ -74,16 +74,16 @@ export default function PendingApprovalsPage() {
       ) : (
         <div className="space-y-3">
           {pending.map((member) => (
-            <Card key={member.member_id}>
+            <Card key={member.memberId}>
               <CardBody>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900">
-                      {member.first_name} {member.last_name}
+                      {member.firstName} {member.lastName}
                     </p>
                     <p className="text-sm text-gray-500">{member.email} · {member.phone}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Registered: {member.membership_date ? formatDate(member.membership_date) : '—'}
+                      Registered: {member.membershipDate ? formatDate(member.membershipDate) : '—'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -91,22 +91,22 @@ export default function PendingApprovalsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setPreview(member)}
-                      aria-label={`Preview ${member.first_name}`}
+                      aria-label={`Preview ${member.firstName}`}
                     >
                       <Eye size={16} />
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleReject(member.member_id)}
-                      disabled={actionLoading === member.member_id}
+                      onClick={() => handleReject(member.memberId)}
+                      disabled={actionLoading === member.memberId}
                     >
                       <XCircle size={16} className="mr-1" /> Reject
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => handleApprove(member.member_id)}
-                      disabled={actionLoading === member.member_id}
+                      onClick={() => handleApprove(member.memberId)}
+                      disabled={actionLoading === member.memberId}
                     >
                       <CheckCircle size={16} className="mr-1" /> Approve
                     </Button>
@@ -123,20 +123,20 @@ export default function PendingApprovalsPage() {
         {preview && (
           <div className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-3">
-              <div><span className="text-gray-500">Name:</span> <span className="font-medium">{preview.first_name} {preview.last_name}</span></div>
+              <div><span className="text-gray-500">Name:</span> <span className="font-medium">{preview.firstName} {preview.lastName}</span></div>
               <div><span className="text-gray-500">Email:</span> {preview.email || '—'}</div>
               <div><span className="text-gray-500">Phone:</span> {preview.phone || '—'}</div>
               <div><span className="text-gray-500">Gender:</span> {preview.gender || '—'}</div>
-              <div><span className="text-gray-500">Date of Birth:</span> {preview.date_of_birth ? formatDate(preview.date_of_birth) : '—'}</div>
+              <div><span className="text-gray-500">Date of Birth:</span> {preview.dateOfBirth ? formatDate(preview.dateOfBirth) : '—'}</div>
               <div><span className="text-gray-500">Address:</span> {preview.address || '—'}</div>
               <div><span className="text-gray-500">City:</span> {preview.city || '—'}</div>
-              <div><span className="text-gray-500">Branch ID:</span> {preview.home_branch_id}</div>
+              <div><span className="text-gray-500">Branch ID:</span> {preview.homeBranchId}</div>
             </div>
             <div className="flex gap-2 pt-4 border-t">
-              <Button variant="secondary" size="sm" onClick={() => { handleReject(preview.member_id); setPreview(null); }}>
+              <Button variant="secondary" size="sm" onClick={() => { handleReject(preview.memberId); setPreview(null); }}>
                 Reject
               </Button>
-              <Button size="sm" onClick={() => { handleApprove(preview.member_id); setPreview(null); }}>
+              <Button size="sm" onClick={() => { handleApprove(preview.memberId); setPreview(null); }}>
                 Approve
               </Button>
             </div>

@@ -19,20 +19,20 @@ const genderOptions = [
 
 export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditModalProps) {
   const [form, setForm] = useState({
-    first_name: member.first_name,
-    last_name: member.last_name,
-    middle_name: member.middle_name || '',
+    firstName: member.firstName,
+    lastName: member.lastName,
+    middleName: member.middleName || '',
     email: member.email || '',
     phone: member.phone || '',
     gender: member.gender || '',
-    date_of_birth: member.date_of_birth
-      ? new Date(member.date_of_birth).toISOString().split('T')[0]
+    dateOfBirth: member.dateOfBirth
+      ? new Date(member.dateOfBirth).toISOString().split('T')[0]
       : '',
     address: member.address || '',
     city: member.city || '',
-    postal_code: member.postal_code || '',
-    emergency_contact_name: member.emergency_contact_name || '',
-    emergency_contact_phone: member.emergency_contact_phone || '',
+    postalCode: member.postalCode || '',
+    emergencyContactName: member.emergencyContactName || '',
+    emergencyContactPhone: member.emergencyContactPhone || '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -45,8 +45,8 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!form.first_name.trim()) errs.first_name = 'First name is required';
-    if (!form.last_name.trim()) errs.last_name = 'Last name is required';
+    if (!form.firstName.trim()) errs.firstName = 'First name is required';
+    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Invalid email format';
     }
@@ -62,19 +62,19 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
     setSaving(true);
     setApiError('');
     try {
-      await members.update(member.member_id, {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        middle_name: form.middle_name || undefined,
+      await members.update(member.memberId, {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        middleName: form.middleName || undefined,
         email: form.email || undefined,
         phone: form.phone || undefined,
         gender: (form.gender as 'Male' | 'Female') || undefined,
-        date_of_birth: form.date_of_birth ? new Date(form.date_of_birth) : undefined,
+        dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth) : undefined,
         address: form.address || undefined,
         city: form.city || undefined,
-        postal_code: form.postal_code || undefined,
-        emergency_contact_name: form.emergency_contact_name || undefined,
-        emergency_contact_phone: form.emergency_contact_phone || undefined,
+        postalCode: form.postalCode || undefined,
+        emergencyContactName: form.emergencyContactName || undefined,
+        emergencyContactPhone: form.emergencyContactPhone || undefined,
       });
       onSaved();
     } catch {
@@ -106,17 +106,17 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
           <TextInput
             label="First Name"
             name="first_name"
-            value={form.first_name}
-            onChange={(e) => handleChange('first_name', e.target.value)}
-            error={errors.first_name}
+            value={form.firstName}
+            onChange={(e) => handleChange('firstName', e.target.value)}
+            error={errors.firstName}
             required
           />
           <TextInput
             label="Last Name"
             name="last_name"
-            value={form.last_name}
-            onChange={(e) => handleChange('last_name', e.target.value)}
-            error={errors.last_name}
+            value={form.lastName}
+            onChange={(e) => handleChange('lastName', e.target.value)}
+            error={errors.lastName}
             required
           />
         </div>
@@ -124,8 +124,8 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
         <TextInput
           label="Middle Name"
           name="middle_name"
-          value={form.middle_name}
-          onChange={(e) => handleChange('middle_name', e.target.value)}
+          value={form.middleName}
+          onChange={(e) => handleChange('middleName', e.target.value)}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -160,8 +160,8 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
             label="Date of Birth"
             name="date_of_birth"
             type="date"
-            value={form.date_of_birth}
-            onChange={(e) => handleChange('date_of_birth', e.target.value)}
+            value={form.dateOfBirth}
+            onChange={(e) => handleChange('dateOfBirth', e.target.value)}
           />
         </div>
 
@@ -182,8 +182,8 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
           <TextInput
             label="Postal Code"
             name="postal_code"
-            value={form.postal_code}
-            onChange={(e) => handleChange('postal_code', e.target.value)}
+            value={form.postalCode}
+            onChange={(e) => handleChange('postalCode', e.target.value)}
           />
         </div>
 
@@ -191,15 +191,15 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
           <TextInput
             label="Emergency Contact Name"
             name="emergency_contact_name"
-            value={form.emergency_contact_name}
-            onChange={(e) => handleChange('emergency_contact_name', e.target.value)}
+            value={form.emergencyContactName}
+            onChange={(e) => handleChange('emergencyContactName', e.target.value)}
           />
           <TextInput
             label="Emergency Contact Phone"
             name="emergency_contact_phone"
             type="tel"
-            value={form.emergency_contact_phone}
-            onChange={(e) => handleChange('emergency_contact_phone', e.target.value)}
+            value={form.emergencyContactPhone}
+            onChange={(e) => handleChange('emergencyContactPhone', e.target.value)}
           />
         </div>
 
@@ -208,14 +208,14 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
           <p className="text-xs text-gray-500 mb-2">The following fields cannot be edited:</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
             <div>
-              <span className="font-medium">Home Branch:</span> Branch {member.home_branch_id}
+              <span className="font-medium">Home Branch:</span> Branch {member.homeBranchId}
             </div>
             <div>
               <span className="font-medium">Membership Date:</span>{' '}
-              {member.membership_date ? new Date(member.membership_date).toLocaleDateString('en-GB') : '—'}
+              {member.membershipDate ? new Date(member.membershipDate).toLocaleDateString('en-GB') : '—'}
             </div>
             <div>
-              <span className="font-medium">Status:</span> {member.is_active ? 'Active' : 'Inactive'}
+              <span className="font-medium">Status:</span> {member.isActive ? 'Active' : 'Inactive'}
             </div>
           </div>
         </div>

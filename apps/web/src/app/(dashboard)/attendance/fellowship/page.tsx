@@ -59,9 +59,9 @@ export default function FellowshipAttendancePage() {
         status: 'active',
       });
       setMemberRows(
-        membersRes.data.map((m: { member_id: number; first_name: string; last_name: string }) => ({
-          memberId: m.member_id,
-          name: `${m.first_name} ${m.last_name}`,
+        membersRes.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
+          memberId: m.memberId,
+          name: `${m.firstName} ${m.lastName}`,
           status: 'Absent' as FellowshipStatus,
         }))
       );
@@ -111,8 +111,8 @@ export default function FellowshipAttendancePage() {
   };
 
   const fellowshipOptions = fellowshipList.map((f) => ({
-    value: String(f.fellowship_id),
-    label: f.fellowship_name,
+    value: String(f.fellowshipId),
+    label: f.fellowshipName,
   }));
 
   return (

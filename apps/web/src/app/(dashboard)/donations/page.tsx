@@ -25,14 +25,14 @@ const formatDate = (date: Date | string) => {
 };
 
 const columns: ColumnDef<Donation, unknown>[] = [
-  { accessorKey: 'donation_date', header: 'Date', cell: ({ getValue }) => formatDate(getValue() as string) },
+  { accessorKey: 'donationDate', header: 'Date', cell: ({ getValue }) => formatDate(getValue() as string) },
   { accessorKey: 'amount', header: 'Amount', cell: ({ getValue }) => formatGBP(getValue() as number) },
-  { accessorKey: 'donation_purpose', header: 'Purpose' },
-  { accessorKey: 'payment_method', header: 'Method' },
+  { accessorKey: 'donationPurpose', header: 'Purpose' },
+  { accessorKey: 'paymentMethod', header: 'Method' },
   {
-    accessorKey: 'is_anonymous',
+    accessorKey: 'isAnonymous',
     header: 'Donor',
-    cell: ({ row }) => row.original.is_anonymous ? 'Anonymous' : `Member #${row.original.member_id ?? '—'}`,
+    cell: ({ row }) => row.original.isAnonymous ? 'Anonymous' : `Member #${row.original.memberId ?? '—'}`,
   },
 ];
 

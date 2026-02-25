@@ -48,9 +48,9 @@ export default function ServiceAttendancePage() {
     try {
       const res = await members.list({ branchId, limit: 500, status: 'active' });
       setMemberRows(
-        res.data.map((m: { member_id: number; first_name: string; last_name: string }) => ({
-          memberId: m.member_id,
-          name: `${m.first_name} ${m.last_name}`,
+        res.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
+          memberId: m.memberId,
+          name: `${m.firstName} ${m.lastName}`,
           status: 'Absent' as AttendanceStatus,
           selected: false,
         }))

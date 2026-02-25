@@ -34,8 +34,8 @@ import RegisterPage from './page';
 
 const MOCK_BRANCHES = {
   data: [
-    { branch_id: 1, branch_name: 'London Main', is_active: true },
-    { branch_id: 2, branch_name: 'Manchester Branch', is_active: true },
+    { branchId: 1, branchName: 'London Main', isActive: true },
+    { branchId: 2, branchName: 'Manchester Branch', isActive: true },
   ],
   pagination: { page: 1, limit: 100, total: 2, totalPages: 1 },
 };
@@ -74,7 +74,7 @@ describe('RegisterPage', () => {
       expect(screen.getByText('London Main')).toBeInTheDocument();
     });
     expect(screen.getByText('Manchester Branch')).toBeInTheDocument();
-    expect(mockBranchesList).toHaveBeenCalledWith({ limit: 100, is_active: true });
+    expect(mockBranchesList).toHaveBeenCalledWith({ limit: 100, isActive: true });
   });
 
   it('shows validation errors for empty required fields', async () => {
@@ -132,7 +132,7 @@ describe('RegisterPage', () => {
   });
 
   it('submits the form and shows pending approval message', async () => {
-    mockCreate.mockResolvedValue({ member_id: 1, first_name: 'John' });
+    mockCreate.mockResolvedValue({ memberId: 1, firstName: 'John' });
     const user = userEvent.setup();
     render(<RegisterPage />);
 
@@ -157,13 +157,13 @@ describe('RegisterPage', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        first_name: 'John',
-        last_name: 'Doe',
+        firstName: 'John',
+        lastName: 'Doe',
         email: 'john@example.com',
         phone: '+44 7700 900000',
         gender: 'Male',
         address: '123 Church Lane',
-        home_branch_id: 1,
+        homeBranchId: 1,
       }),
     );
   });

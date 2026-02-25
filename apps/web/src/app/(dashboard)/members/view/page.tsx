@@ -45,7 +45,7 @@ export default function MemberDetailPage() {
     if (!member || !confirm('Are you sure you want to deactivate this member?')) return;
     setDeactivating(true);
     try {
-      await members.delete(member.member_id);
+      await members.delete(member.memberId);
       router.push('/members');
     } catch {
       setError('Failed to deactivate member.');
@@ -66,7 +66,7 @@ export default function MemberDetailPage() {
     return <Alert variant="error" title="Error">{error || 'Member not found.'}</Alert>;
   }
 
-  const statusVariant: BadgeVariant = member.is_active ? 'active' : 'inactive';
+  const statusVariant: BadgeVariant = member.isActive ? 'active' : 'inactive';
   const tabs = [
     { key: 'profile' as const, label: 'Profile' },
     { key: 'donations' as const, label: 'Donations' },
@@ -83,9 +83,9 @@ export default function MemberDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-gray-900">
-              {member.first_name} {member.last_name}
+              {member.firstName} {member.lastName}
             </h1>
-            <Badge variant={statusVariant}>{member.is_active ? 'Active' : 'Inactive'}</Badge>
+            <Badge variant={statusVariant}>{member.isActive ? 'Active' : 'Inactive'}</Badge>
           </div>
           <p className="text-sm text-gray-500 mt-1">{member.email}</p>
         </div>
@@ -95,7 +95,7 @@ export default function MemberDetailPage() {
               <Edit size={16} className="mr-2" />
               Edit
             </Button>
-            <Button variant="danger" size="sm" onClick={handleDeactivate} disabled={deactivating || !member.is_active}>
+            <Button variant="danger" size="sm" onClick={handleDeactivate} disabled={deactivating || !member.isActive}>
               <UserX size={16} className="mr-2" />
               Deactivate
             </Button>
@@ -133,7 +133,7 @@ export default function MemberDetailPage() {
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Full Name</dt>
-                  <dd className="text-sm text-gray-900">{member.first_name} {member.middle_name ? `${member.middle_name} ` : ''}{member.last_name}</dd>
+                  <dd className="text-sm text-gray-900">{member.firstName} {member.middleName ? `${member.middleName} ` : ''}{member.lastName}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Email</dt>
@@ -150,7 +150,7 @@ export default function MemberDetailPage() {
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Date of Birth</dt>
                   <dd className="text-sm text-gray-900">
-                    {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString('en-GB') : '—'}
+                    {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString('en-GB') : '—'}
                   </dd>
                 </div>
               </dl>
@@ -163,17 +163,17 @@ export default function MemberDetailPage() {
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Home Branch</dt>
-                  <dd className="text-sm text-gray-900">Branch {member.home_branch_id}</dd>
+                  <dd className="text-sm text-gray-900">Branch {member.homeBranchId}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Membership Date</dt>
                   <dd className="text-sm text-gray-900">
-                    {member.membership_date ? new Date(member.membership_date).toLocaleDateString('en-GB') : '—'}
+                    {member.membershipDate ? new Date(member.membershipDate).toLocaleDateString('en-GB') : '—'}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Status</dt>
-                  <dd><Badge variant={statusVariant}>{member.is_active ? 'Active' : 'Inactive'}</Badge></dd>
+                  <dd><Badge variant={statusVariant}>{member.isActive ? 'Active' : 'Inactive'}</Badge></dd>
                 </div>
               </dl>
             </CardBody>
@@ -193,7 +193,7 @@ export default function MemberDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Postal Code</dt>
-                  <dd className="text-sm text-gray-900">{member.postal_code || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{member.postalCode || '—'}</dd>
                 </div>
               </dl>
             </CardBody>
@@ -205,11 +205,11 @@ export default function MemberDetailPage() {
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Name</dt>
-                  <dd className="text-sm text-gray-900">{member.emergency_contact_name || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{member.emergencyContactName || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Phone</dt>
-                  <dd className="text-sm text-gray-900">{member.emergency_contact_phone || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{member.emergencyContactPhone || '—'}</dd>
                 </div>
               </dl>
             </CardBody>

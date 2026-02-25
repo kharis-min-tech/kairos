@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 
 interface BranchItem {
-  branch_id: number;
-  branch_name: string;
-  branch_type: string;
-  is_active: boolean;
-  contact_email?: string;
-  contact_phone?: string;
+  branchId: number;
+  branchName: string;
+  branchType: string;
+  isActive: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 export default function BranchesPage() {
@@ -56,25 +56,25 @@ export default function BranchesPage() {
             <p className="text-sm text-gray-500 col-span-full text-center py-12">No branches found.</p>
           ) : (
             data.map((branch) => (
-              <Card key={branch.branch_id}>
+              <Card key={branch.branchId}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Building2 size={18} className="text-primary" />
-                      <h2 className="text-sm font-semibold text-gray-900">{branch.branch_name}</h2>
+                      <h2 className="text-sm font-semibold text-gray-900">{branch.branchName}</h2>
                     </div>
-                    <Badge variant={branch.is_active ? 'active' : 'inactive'}>
-                      {branch.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={branch.isActive ? 'active' : 'inactive'}>
+                      {branch.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardBody>
-                  <p className="text-xs text-gray-500">Type: {branch.branch_type}</p>
-                  {branch.contact_email && (
-                    <p className="text-xs text-gray-500 mt-1">{branch.contact_email}</p>
+                  <p className="text-xs text-gray-500">Type: {branch.branchType}</p>
+                  {branch.contactEmail && (
+                    <p className="text-xs text-gray-500 mt-1">{branch.contactEmail}</p>
                   )}
-                  {branch.contact_phone && (
-                    <p className="text-xs text-gray-500 mt-1">{branch.contact_phone}</p>
+                  {branch.contactPhone && (
+                    <p className="text-xs text-gray-500 mt-1">{branch.contactPhone}</p>
                   )}
                 </CardBody>
               </Card>

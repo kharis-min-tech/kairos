@@ -29,8 +29,8 @@ import SoulCapturePage from './page';
 
 const MOCK_PROGRAMS = {
   data: [
-    { outreach_id: 1, program_name: 'Easter Outreach' },
-    { outreach_id: 2, program_name: 'Summer Campaign' },
+    { outreachId: 1, programName: 'Easter Outreach' },
+    { outreachId: 2, programName: 'Summer Campaign' },
   ],
   pagination: { page: 1, limit: 100, total: 2, totalPages: 1 },
 };

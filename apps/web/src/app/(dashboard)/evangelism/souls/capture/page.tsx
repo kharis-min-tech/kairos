@@ -49,10 +49,10 @@ export default function SoulCapturePage() {
   const [apiError, setApiError] = useState('');
 
   useEffect(() => {
-    outreach.listPrograms({ limit: 100 }).then((res: { data: Array<{ outreach_id: number; program_name: string }> }) => {
-      const items = (res.data || []).map((p: { outreach_id: number; program_name: string }) => ({
-        value: String(p.outreach_id),
-        label: p.program_name,
+    outreach.listPrograms({ limit: 100 }).then((res: { data: Array<{ outreachId: number; programName: string }> }) => {
+      const items = (res.data || []).map((p: { outreachId: number; programName: string }) => ({
+        value: String(p.outreachId),
+        label: p.programName,
       }));
       setPrograms(items);
     }).catch(() => {});
@@ -77,15 +77,15 @@ export default function SoulCapturePage() {
     setSubmitting(true);
     try {
       const result = await souls.create({
-        first_name: form.firstName,
-        last_name: form.lastName,
+        firstName: form.firstName,
+        lastName: form.lastName,
         phone: form.phone || undefined,
         email: form.email || undefined,
         address: form.address || undefined,
         gender: form.gender || undefined,
-        age_range: form.ageGroup || undefined,
+        ageRange: form.ageGroup || undefined,
         notes: form.notes || undefined,
-        outreach_id: form.source === 'outreach' ? Number(form.outreachId) : undefined,
+        outreachId: form.source === 'outreach' ? Number(form.outreachId) : undefined,
       } as Parameters<typeof souls.create>[0]);
 
       // Check for duplicate phone warning in API response

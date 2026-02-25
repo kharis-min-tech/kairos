@@ -19,10 +19,10 @@ interface FormFieldDef {
 }
 
 interface FormData {
-  form_id: number;
-  form_name: string;
-  form_description?: string;
-  form_definition: { fields: FormFieldDef[] };
+  formId: number;
+  formName: string;
+  formDescription?: string;
+  formDefinition: { fields: FormFieldDef[] };
   scope: string;
 }
 
@@ -42,12 +42,12 @@ export default function FormSubmissionPage() {
     (async () => {
       try {
         const res = await forms.get(Number(formId));
-        const definition = (res.form_definition ?? {}) as { fields?: FormFieldDef[] };
+        const definition = (res.formDefinition ?? {}) as { fields?: FormFieldDef[] };
         setFormDef({
-          form_id: res.form_id,
-          form_name: res.form_name,
-          form_description: res.form_description ?? undefined,
-          form_definition: { fields: definition.fields ?? [] },
+          formId: res.formId,
+          formName: res.formName,
+          formDescription: res.formDescription ?? undefined,
+          formDefinition: { fields: definition.fields ?? [] },
           scope: res.scope,
         });
         // Auto-populate from member profile
@@ -72,7 +72,7 @@ export default function FormSubmissionPage() {
   const validate = (): boolean => {
     if (!formDef) return false;
     const errs: Record<string, string> = {};
-    formDef.form_definition.fields.forEach((field) => {
+    formDef.formDefinition.fields.forEach((field) => {
       const val = values[field.id];
       if (field.required && (!val || (Array.isArray(val) && val.length === 0))) {
         errs[field.id] = `${field.label} is required`;
@@ -157,7 +157,7 @@ export default function FormSubmissionPage() {
   if (submitted) {
     return (
       <>
-        <Breadcrumbs items={[{ label: 'Forms', href: '/forms' }, { label: formDef.form_name }]} />
+        <Breadcrumbs items={[{ label: 'Forms', href: '/forms' }, { label: formDef.formName }]} />
         <Card className="max-w-lg mx-auto mt-12">
           <CardBody>
             <div className="text-center py-8">
@@ -174,16 +174,16 @@ export default function FormSubmissionPage() {
 
   return (
     <>
-      <Breadcrumbs items={[{ label: 'Forms', href: '/forms' }, { label: formDef.form_name }]} />
+      <Breadcrumbs items={[{ label: 'Forms', href: '/forms' }, { label: formDef.formName }]} />
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <h1 className="text-xl font-semibold text-gray-900">{formDef.form_name}</h1>
-          {formDef.form_description && <p className="text-sm text-gray-500 mt-1">{formDef.form_description}</p>}
+          <h1 className="text-xl font-semibold text-gray-900">{formDef.formName}</h1>
+          {formDef.formDescription && <p className="text-sm text-gray-500 mt-1">{formDef.formDescription}</p>}
         </CardHeader>
         <CardBody>
           {errors._form && <Alert variant="error" className="mb-4">{errors._form}</Alert>}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {formDef.form_definition.fields.map((field) => (
+            {formDef.formDefinition.fields.map((field) => (
               <div key={field.id}>{renderField(field)}</div>
             ))}
             <Button type="submit" disabled={submitting} className="w-full">

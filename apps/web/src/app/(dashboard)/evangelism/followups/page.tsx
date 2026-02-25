@@ -5,6 +5,7 @@ import { Clock, CheckCircle, Search, AlertTriangle, Phone, Mail, MessageSquare, 
 import { Breadcrumbs } from '@/components/layout';
 import { Button, TextInput, SelectInput, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
 import { souls } from '@kairos/api-client';
+import type { ContactMethod, ContactStatus } from '@kairos/types';
 
 type Tab = 'all' | 'pending' | 'overdue';
 
@@ -148,12 +149,12 @@ export default function FollowUpTrackerPage() {
     setSubmitting(true);
     try {
       await souls.addFollowup(logSoulId, {
-        contact_method: logForm.contactMethod,
-        contact_status: logForm.contactStatus,
+        contactMethod: logForm.contactMethod as ContactMethod,
+        contactStatus: logForm.contactStatus as ContactStatus,
         notes: logForm.notes || undefined,
-        next_follow_up_date: logForm.nextFollowUpDate || undefined,
-        duration_minutes: logForm.durationMinutes ? Number(logForm.durationMinutes) : undefined,
-      } as Parameters<typeof souls.addFollowup>[1]);
+        nextFollowUpDate: logForm.nextFollowUpDate ? new Date(logForm.nextFollowUpDate) : undefined,
+        durationMinutes: logForm.durationMinutes ? Number(logForm.durationMinutes) : undefined,
+      });
       setShowLogModal(false);
       setSuccess('Follow-up logged successfully!');
       setLoading(true);

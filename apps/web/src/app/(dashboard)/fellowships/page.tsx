@@ -48,15 +48,15 @@ export default function FellowshipsPage() {
             <p className="text-sm text-gray-500 col-span-full text-center py-12">No fellowships found.</p>
           ) : (
             data.map((f) => (
-              <Card key={f.fellowship_id}>
+              <Card key={f.fellowshipId}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <UsersRound size={18} className="text-primary" />
-                      <h2 className="text-sm font-semibold text-gray-900">{f.fellowship_name}</h2>
+                      <h2 className="text-sm font-semibold text-gray-900">{f.fellowshipName}</h2>
                     </div>
-                    <Badge variant={f.is_active ? 'active' : 'inactive'}>
-                      {f.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={f.isActive ? 'active' : 'inactive'}>
+                      {f.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -64,8 +64,8 @@ export default function FellowshipsPage() {
                   {f.description && (
                     <p className="text-xs text-gray-500 mb-2">{f.description}</p>
                   )}
-                  {f.meeting_schedule && (
-                    <p className="text-xs text-gray-500 mt-1">Schedule: {f.meeting_schedule}</p>
+                  {f.meetingSchedule && (
+                    <p className="text-xs text-gray-500 mt-1">Schedule: {f.meetingSchedule}</p>
                   )}
                 </CardBody>
               </Card>

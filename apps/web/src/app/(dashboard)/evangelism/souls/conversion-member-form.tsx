@@ -13,12 +13,12 @@ const GENDER_OPTIONS = [
 ];
 
 interface FormErrors {
-  first_name?: string;
-  last_name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone?: string;
   gender?: string;
-  home_branch_id?: string;
+  homeBranchId?: string;
 }
 
 interface ConversionMemberFormProps {
@@ -30,14 +30,14 @@ interface ConversionMemberFormProps {
 
 export function ConversionMemberForm({ soul, open, onClose, onSuccess }: ConversionMemberFormProps) {
   const [formData, setFormData] = useState({
-    first_name: soul.first_name || '',
-    last_name: soul.last_name || '',
+    firstName: soul.firstName || '',
+    lastName: soul.lastName || '',
     phone: soul.phone || '',
     email: soul.email || '',
     address: soul.address || '',
     city: soul.city || '',
     gender: (soul as Soul & { gender?: string }).gender || '',
-    home_branch_id: '',
+    homeBranchId: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [branchOptions, setBranchOptions] = useState<{ value: string; label: string }[]>([]);
@@ -50,17 +50,17 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     let cancelled = false;
     (async () => {
       try {
-        const res = await branches.list({ limit: 100, is_active: true });
+        const res = await branches.list({ limit: 100, isActive: true });
         if (cancelled) return;
         const options = (res.data as Branch[]).map((b) => ({
-          value: String(b.branch_id),
-          label: b.branch_name,
+          value: String(b.branchId),
+          label: b.branchName,
         }));
         setBranchOptions(options);
         // Auto-select first branch if only one
         if (options.length === 1 && options[0]) {
           const firstBranch = options[0];
-          setFormData((prev) => ({ ...prev, home_branch_id: firstBranch.value }));
+          setFormData((prev) => ({ ...prev, homeBranchId: firstBranch.value }));
         }
       } catch {
         setBranchOptions([]);
@@ -74,14 +74,14 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
   // Reset form when soul changes
   useEffect(() => {
     setFormData({
-      first_name: soul.first_name || '',
-      last_name: soul.last_name || '',
+      firstName: soul.firstName || '',
+      lastName: soul.lastName || '',
       phone: soul.phone || '',
       email: soul.email || '',
       address: soul.address || '',
       city: soul.city || '',
       gender: (soul as Soul & { gender?: string }).gender || '',
-      home_branch_id: '',
+      homeBranchId: '',
     });
     setErrors({});
     setSubmitError('');
@@ -96,9 +96,9 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
 
   function validate(): FormErrors {
     const e: FormErrors = {};
-    if (!formData.first_name.trim()) e.first_name = 'First name is required';
-    if (!formData.last_name.trim()) e.last_name = 'Last name is required';
-    if (!formData.home_branch_id) e.home_branch_id = 'Please select a home branch';
+    if (!formData.firstName.trim()) e.firstName = 'First name is required';
+    if (!formData.lastName.trim()) e.lastName = 'Last name is required';
+    if (!formData.homeBranchId) e.homeBranchId = 'Please select a home branch';
     return e;
   }
 
@@ -116,16 +116,16 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
 
     try {
       const result = await members.create({
-        first_name: formData.first_name.trim(),
-        last_name: formData.last_name.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         email: formData.email.trim() || undefined,
         phone: formData.phone.trim() || undefined,
         address: formData.address.trim() || undefined,
         city: formData.city.trim() || undefined,
         gender: formData.gender as 'Male' | 'Female' || undefined,
-        home_branch_id: Number(formData.home_branch_id),
+        homeBranchId: Number(formData.homeBranchId),
       });
-      onSuccess(result.member_id);
+      onSuccess(result.memberId);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setSubmitError(err.message || 'Failed to create member registration.');
@@ -145,7 +145,7 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
         )}
 
         <p className="text-sm text-gray-600 mb-4">
-          Review and complete the member registration for <span className="font-medium">{soul.first_name} {soul.last_name}</span>.
+          Review and complete the member registration for <span className="font-medium">{soul.firstName} {soul.lastName}</span>.
           The registration will be submitted for branch admin approval.
         </p>
 
@@ -155,17 +155,17 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
               label="First name"
               name="first_name"
               required
-              value={formData.first_name}
-              onChange={(e) => handleChange('first_name', e.target.value)}
-              error={errors.first_name}
+              value={formData.firstName}
+              onChange={(e) => handleChange('firstName', e.target.value)}
+              error={errors.firstName}
             />
             <TextInput
               label="Last name"
               name="last_name"
               required
-              value={formData.last_name}
-              onChange={(e) => handleChange('last_name', e.target.value)}
-              error={errors.last_name}
+              value={formData.lastName}
+              onChange={(e) => handleChange('lastName', e.target.value)}
+              error={errors.lastName}
             />
           </div>
 
@@ -219,9 +219,9 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
             required
             options={branchOptions}
             placeholder={loadingBranches ? 'Loading branches...' : 'Select a branch'}
-            value={formData.home_branch_id}
-            onChange={(e) => handleChange('home_branch_id', e.target.value)}
-            error={errors.home_branch_id}
+            value={formData.homeBranchId}
+            onChange={(e) => handleChange('homeBranchId', e.target.value)}
+            error={errors.homeBranchId}
             disabled={loadingBranches}
           />
         </div>

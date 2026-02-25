@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { Soul, FollowUp } from '@kairos/types';
+import type { Soul, FollowUp, ContactMethod, ContactStatus } from '@kairos/types';
 import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
@@ -63,12 +63,12 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   const [showConversionForm, setShowConversionForm] = useState(false);
 
   useEffect(() => {
-    if (open && soul.soul_id) {
-      souls.get(soul.soul_id).then((res: { followUps: FollowUp[] }) => {
+    if (open && soul.soulId) {
+      souls.get(soul.soulId).then((res: { followUps: FollowUp[] }) => {
         setFollowUps(res.followUps || []);
       }).catch(() => {});
     }
-  }, [open, soul.soul_id]);
+  }, [open, soul.soulId]);
 
   const validateFollowUp = () => {
     const e: Record<string, string> = {};
@@ -86,12 +86,12 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
 
     setSubmitting(true);
     try {
-      await souls.addFollowup(soul.soul_id, {
-        contact_date: new Date(followUpForm.contactDate),
-        contact_method: followUpForm.contactMethod,
-        contact_status: followUpForm.contactStatus,
+      await souls.addFollowup(soul.soulId, {
+        followUpDate: new Date(followUpForm.contactDate),
+        contactMethod: followUpForm.contactMethod as ContactMethod,
+        contactStatus: followUpForm.contactStatus as ContactStatus,
         notes: followUpForm.notes || undefined,
-      } as Parameters<typeof souls.addFollowup>[1]);
+      });
       setShowFollowUpForm(false);
       setFollowUpForm({
         contactDate: todayStr(),
@@ -101,7 +101,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
         notes: '',
       });
       // Refresh follow-ups
-      const res = await souls.get(soul.soul_id);
+      const res = await souls.get(soul.soulId);
       setFollowUps(res.followUps || []);
       onUpdate();
     } catch {
@@ -119,7 +119,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
     setError('');
     setStatusUpdating(true);
     try {
-      await souls.updateStatus(soul.soul_id, { status: newStatus });
+      await souls.updateStatus(soul.soulId, { status: newStatus });
       onUpdate();
       onClose();
     } catch {
@@ -133,7 +133,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
     setError('');
     setStatusUpdating(true);
     try {
-      await souls.updateStatus(soul.soul_id, {
+      await souls.updateStatus(soul.soulId, {
         status: 'Converted',
         convertedToMemberId: memberId,
       });
@@ -150,7 +150,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   const nextStatuses = VALID_TRANSITIONS[soul.status] || [];
 
   return (
-    <Modal open={open} onClose={onClose} title={`${soul.first_name} ${soul.last_name}`} maxWidth="lg">
+    <Modal open={open} onClose={onClose} title={`${soul.firstName} ${soul.lastName}`} maxWidth="lg">
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       <div className="space-y-4">
@@ -160,7 +160,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           <div><span className="text-gray-500">Email:</span> <span className="font-medium">{soul.email || '—'}</span></div>
           <div><span className="text-gray-500">Address:</span> <span className="font-medium">{soul.address || '—'}</span></div>
           <div><span className="text-gray-500">Status:</span> <Badge variant={STATUS_BADGE[soul.status]}>{soul.status}</Badge></div>
-          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{soul.capture_date ? new Date(soul.capture_date).toLocaleDateString('en-GB') : '—'}</span></div>
+          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{soul.createdAt ? new Date(soul.createdAt).toLocaleDateString('en-GB') : '—'}</span></div>
           {soul.notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="font-medium">{soul.notes}</span></div>}
         </div>
 
@@ -205,13 +205,13 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {followUps.map((fu) => (
-                <div key={fu.followup_id} className="rounded border border-gray-100 bg-white p-2 text-sm">
+                <div key={fu.followUpId} className="rounded border border-gray-100 bg-white p-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{fu.contact_method}</span>
-                    <span className="text-xs text-gray-500">{new Date(fu.contact_date).toLocaleDateString('en-GB')}</span>
+                    <span className="font-medium">{fu.contactMethod}</span>
+                    <span className="text-xs text-gray-500">{new Date(fu.followUpDate).toLocaleDateString('en-GB')}</span>
                   </div>
-                  <Badge variant={fu.contact_status === 'Successful' ? 'active' : fu.contact_status === 'Not Interested' ? 'error' : 'pending'} className="mt-1">
-                    {fu.contact_status}
+                  <Badge variant={fu.contactStatus === 'Successful' ? 'active' : fu.contactStatus === 'Not Interested' ? 'error' : 'pending'} className="mt-1">
+                    {fu.contactStatus}
                   </Badge>
                   {fu.notes && <p className="mt-1 text-xs text-gray-600">{fu.notes}</p>}
                 </div>

@@ -46,8 +46,8 @@ export default function OutreachProgramsPage() {
 
   // Stat card computations
   const totalPrograms = programs.length;
-  const activePrograms = programs.filter((p) => !p.is_completed).length;
-  const totalSoulsWon = programs.reduce((sum, p) => sum + (p.total_souls_reached ?? 0), 0);
+  const activePrograms = programs.filter((p) => !p.isCompleted).length;
+  const totalSoulsWon = programs.reduce((sum, p) => sum + (p.totalSoulsReached ?? 0), 0);
 
   const validateCreate = () => {
     const e: Record<string, string> = {};
@@ -65,11 +65,11 @@ export default function OutreachProgramsPage() {
     setSubmitting(true);
     try {
       await outreach.createProgram({
-        program_name: createForm.programName,
-        program_date: new Date(createForm.programDate),
+        programName: createForm.programName,
+        programDate: new Date(createForm.programDate),
         location: createForm.location,
         description: createForm.description || undefined,
-        branch_id: user?.branchId ? Number(user.branchId) : undefined,
+        branchId: user?.branchId ? Number(user.branchId) : undefined,
       });
       setShowCreate(false);
       setCreateForm({ programName: '', programDate: '', location: '', description: '' });
@@ -172,50 +172,50 @@ export default function OutreachProgramsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {programs.map((program) => (
             <Card
-              key={program.outreach_id}
+              key={program.outreachId}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => router.push(`/evangelism/outreach/detail?id=${program.outreach_id}`)}
+              onClick={() => router.push(`/evangelism/outreach/detail?id=${program.outreachId}`)}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 truncate">{program.program_name}</h3>
-                  <Badge variant={program.is_completed ? 'inactive' : 'active'}>
-                    {program.is_completed ? 'Completed' : 'Active'}
+                  <h3 className="font-semibold text-gray-900 truncate">{program.programName}</h3>
+                  <Badge variant={program.isCompleted ? 'inactive' : 'active'}>
+                    {program.isCompleted ? 'Completed' : 'Active'}
                   </Badge>
                 </div>
               </CardHeader>
               <CardBody>
                 <div className="space-y-2 text-sm">
-                  <p className="text-gray-600">📅 {formatDate(program.program_date)}</p>
+                  <p className="text-gray-600">📅 {formatDate(program.programDate)}</p>
                   <p className="text-gray-600">📍 {program.location}</p>
                   {program.description && <p className="text-gray-500">{program.description}</p>}
                   <div className="flex items-center gap-4 pt-2 border-t border-gray-100">
                     <span className="flex items-center gap-1 text-gray-600">
-                      <Users size={14} /> Souls: <span className="font-medium">{program.total_souls_reached ?? 0}</span>
+                      <Users size={14} /> Souls: <span className="font-medium">{program.totalSoulsReached ?? 0}</span>
                     </span>
                   </div>
                   <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                    {!program.is_completed && (
+                    {!program.isCompleted && (
                       <Button
                         variant="secondary"
                         size="sm"
                         className="flex-1"
-                        onClick={() => handleRegisterWorker(program.outreach_id)}
-                        disabled={registeringProgram === program.outreach_id}
+                        onClick={() => handleRegisterWorker(program.outreachId)}
+                        disabled={registeringProgram === program.outreachId}
                       >
                         <UserPlus size={14} className="mr-1" />
-                        {registeringProgram === program.outreach_id ? 'Registering…' : 'Register as Worker'}
+                        {registeringProgram === program.outreachId ? 'Registering…' : 'Register as Worker'}
                       </Button>
                     )}
-                    {!program.is_completed && isPastorOrAdmin && (
+                    {!program.isCompleted && isPastorOrAdmin && (
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => handleCompleteProgram(program.outreach_id)}
-                        disabled={completingProgram === program.outreach_id}
+                        onClick={() => handleCompleteProgram(program.outreachId)}
+                        disabled={completingProgram === program.outreachId}
                       >
                         <CheckCircle size={14} className="mr-1" />
-                        {completingProgram === program.outreach_id ? 'Completing…' : 'Complete'}
+                        {completingProgram === program.outreachId ? 'Completing…' : 'Complete'}
                       </Button>
                     )}
                   </div>

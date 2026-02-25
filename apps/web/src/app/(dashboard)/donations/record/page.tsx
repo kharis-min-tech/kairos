@@ -91,12 +91,12 @@ export default function DonationRecordPage() {
       await donations.createManual({
         amount,
         currency: 'GBP',
-        donation_date: new Date(manualDate),
-        donation_purpose: manualPurpose as 'Offering' | 'Tithe' | 'Building Fund' | 'Other',
+        donationDate: new Date(manualDate),
+        donationPurpose: manualPurpose as 'Offering' | 'Tithe' | 'Building Fund' | 'Other',
         description: manualPurpose === 'Other' ? manualDescription : undefined,
-        payment_method: manualPaymentMethod as 'Cash' | 'Check' | 'Bank Transfer' | 'Mobile Money',
-        is_anonymous: manualAnonymous,
-        member_id: manualAnonymous ? undefined : (manualMemberId ? parseInt(manualMemberId) : undefined),
+        paymentMethod: manualPaymentMethod as 'Cash' | 'Check' | 'Bank Transfer' | 'Mobile Money',
+        isAnonymous: manualAnonymous,
+        memberId: manualAnonymous ? undefined : (manualMemberId ? parseInt(manualMemberId) : undefined),
       });
       setSuccess(`Manual donation of ${formatGBP(amount)} recorded successfully`);
       resetForms();

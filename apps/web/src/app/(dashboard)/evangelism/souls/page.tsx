@@ -29,8 +29,8 @@ function daysSince(dateStr?: string | Date | null): number {
 }
 
 function SoulCard({ soul, onClick }: { soul: Soul; onClick: () => void }) {
-  const lastFollowUp = (soul as Soul & { last_follow_up_date?: string }).last_follow_up_date;
-  const days = daysSince(lastFollowUp || soul.created_at);
+  const lastFollowUp = (soul as Soul & { lastFollowUpDate?: string }).lastFollowUpDate;
+  const days = daysSince(lastFollowUp || soul.createdAt);
   const overdue = soul.status !== 'Converted' && soul.status !== 'Not Interested' && days >= FOLLOW_UP_ALERT_DAYS;
 
   return (
@@ -39,15 +39,15 @@ function SoulCard({ soul, onClick }: { soul: Soul; onClick: () => void }) {
       className="w-full rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       draggable
       onDragStart={(e) => {
-        e.dataTransfer.setData('soulId', String(soul.soul_id));
+        e.dataTransfer.setData('soulId', String(soul.soulId));
         e.dataTransfer.setData('currentStatus', soul.status);
       }}
       onClick={onClick}
-      aria-label={`Soul: ${soul.first_name} ${soul.last_name}`}
+      aria-label={`Soul: ${soul.firstName} ${soul.lastName}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-medium text-gray-900 truncate">{soul.first_name} {soul.last_name}</p>
+          <p className="font-medium text-gray-900 truncate">{soul.firstName} {soul.lastName}</p>
           <p className="text-xs text-gray-500 mt-0.5">{soul.phone}</p>
         </div>
         {overdue && (
@@ -113,7 +113,7 @@ function KanbanColumn({
       </div>
       <div className="flex flex-col gap-2 flex-1">
         {soulsList.map((soul) => (
-          <SoulCard key={soul.soul_id} soul={soul} onClick={() => onCardClick(soul)} />
+          <SoulCard key={soul.soulId} soul={soul} onClick={() => onCardClick(soul)} />
         ))}
         {soulsList.length === 0 && (
           <p className="text-xs text-gray-500 text-center py-4">No souls</p>
@@ -148,14 +148,14 @@ export default function SoulsKanbanPage() {
 
     // Intercept Converted — show pre-fill member registration form
     if (toStatus === 'Converted') {
-      const soul = allSouls.find((s) => s.soul_id === soulId);
+      const soul = allSouls.find((s) => s.soulId === soulId);
       if (soul) setConversionSoul(soul);
       return;
     }
 
     // Optimistic update
     setAllSouls((prev) =>
-      prev.map((s) => (s.soul_id === soulId ? { ...s, status: toStatus as Soul['status'] } : s))
+      prev.map((s) => (s.soulId === soulId ? { ...s, status: toStatus as Soul['status'] } : s))
     );
 
     try {
@@ -163,7 +163,7 @@ export default function SoulsKanbanPage() {
     } catch {
       // Revert on failure
       setAllSouls((prev) =>
-        prev.map((s) => (s.soul_id === soulId ? { ...s, status: fromStatus as Soul['status'] } : s))
+        prev.map((s) => (s.soulId === soulId ? { ...s, status: fromStatus as Soul['status'] } : s))
       );
     }
   };
@@ -171,7 +171,7 @@ export default function SoulsKanbanPage() {
   const handleConversionSuccess = async (memberId: number) => {
     if (!conversionSoul) return;
     try {
-      await souls.updateStatus(conversionSoul.soul_id, {
+      await souls.updateStatus(conversionSoul.soulId, {
         status: 'Converted',
         convertedToMemberId: memberId,
       });
