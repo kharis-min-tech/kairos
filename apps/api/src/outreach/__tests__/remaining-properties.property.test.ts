@@ -169,6 +169,17 @@ vi.mock('@kairos/utils', async () => {
   };
 });
 
+vi.mock('drizzle-orm', () => {
+  const mockSql = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
+    as: vi.fn((alias: string) => alias),
+  }));
+  mockSql.raw = vi.fn((query: string) => query);
+  return {
+    eq: vi.fn((..._args: unknown[]) => 'eq'),
+    sql: mockSql,
+  };
+});
+
 vi.mock('@kairos/database', () => ({
   souls: {
     soulId: 'soul_id',
