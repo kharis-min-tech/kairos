@@ -184,7 +184,7 @@ export const outreach = {
   completeProgram: (id: number) =>
     put<OutreachProgram>(`/v1/outreach/programs/${id}/complete`, {}),
 
-  overrideBranch: (data: { memberId: number; newBranchId: number }) =>
+  overrideBranch: (data: { member_id: number; target_branch_id: number; restore?: boolean; original_branch_id?: number }) =>
     post<void>('/v1/outreach/override-branch', data),
 };
 
@@ -205,6 +205,9 @@ export const souls = {
 
   updateStatus: (id: number, data: { status: string; convertedToMemberId?: number }) =>
     put<Soul>(`/v1/souls/${id}/status`, data),
+
+  convert: (id: number, data: { first_name: string; last_name: string; email?: string; phone?: string; address?: string; city?: string; gender?: string; home_branch_id: number }) =>
+    post<{ member: Member; soul_id: number; message: string }>(`/v1/souls/${id}/convert`, data),
 
   getAlerts: (params?: { threshold?: number }) =>
     get<Array<{ soulId: number; assignedMemberId: number; lastFollowup: string }>>(

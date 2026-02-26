@@ -17,7 +17,7 @@ import {
   NotFoundError,
   isAdmin,
 } from '@kairos/utils';
-import { souls, followUps, outreachPrograms } from '@kairos/database';
+import { souls, followUps, outreachPrograms, members } from '@kairos/database';
 import { eq, sql } from 'drizzle-orm';
 
 const logger = createLogger('souls-log-followup');
@@ -34,15 +34,16 @@ export const handler = async (
 
     const db = getDb();
 
-    // Verify soul exists and get branch
+    // Verify soul exists and get branch (use leftJoin to support ad-hoc souls)
     const [soul] = await db
       .select({
         soulId: souls.soulId,
         outreachId: souls.outreachId,
         branchId: outreachPrograms.branchId,
+        assignedMemberId: souls.assignedMemberId,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
       .where(eq(souls.soulId, input.soul_id))
       .limit(1);
 
@@ -50,8 +51,19 @@ export const handler = async (
       throw new NotFoundError('Soul', String(input.soul_id));
     }
 
-    if (!isAdmin(ctx)) {
-      enforceBranchAccess(ctx, soul.branchId);
+    // Derive branch: from outreach program, or from assigned member for ad-hoc souls
+    let branchId = soul.branchId;
+    if (!branchId && soul.assignedMemberId) {
+      const [assignedMember] = await db
+        .select({ homeBranchId: members.homeBranchId })
+        .from(members)
+        .where(eq(members.memberId, soul.assignedMemberId))
+        .limit(1);
+      branchId = assignedMember?.homeBranchId ?? null;
+    }
+
+    if (!isAdmin(ctx) && branchId) {
+      enforceBranchAccess(ctx, branchId);
     }
 
     // Insert follow-up record

@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { Modal, Button, Alert } from '@/components/ui';
 import { TextInput, SelectInput } from '@/components/ui/form-input';
-import { members, branches } from '@kairos/api-client';
+import { souls, branches } from '@kairos/api-client';
 import { ApiError } from '@kairos/api-client';
 import type { Soul, Branch } from '@kairos/types';
 
@@ -115,9 +115,10 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     setSubmitting(true);
 
     try {
-      const result = await members.create({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
+      // Use the new atomic convert endpoint that handles both member creation and soul update
+      const result = await souls.convert(soul.soul_id, {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
         email: formData.email.trim() || undefined,
         phone: formData.phone.trim() || undefined,
         address: formData.address.trim() || undefined,
@@ -125,10 +126,11 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
         gender: formData.gender as 'Male' | 'Female' || undefined,
         homeBranchId: Number(formData.homeBranchId),
       });
-      onSuccess(result.memberId);
+      onSuccess(result.member.member_id);
     } catch (err: unknown) {
+      console.error('Soul conversion failed:', err);
       if (err instanceof ApiError) {
-        setSubmitError(err.message || 'Failed to create member registration.');
+        setSubmitError(err.message || 'Failed to convert soul to member.');
       } else {
         setSubmitError('An unexpected error occurred. Please try again.');
       }
@@ -231,7 +233,7 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Submitting...' : 'Register as Member'}
+            {submitting ? 'Converting...' : 'Register as Member'}
           </Button>
         </div>
       </form>

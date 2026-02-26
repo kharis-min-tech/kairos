@@ -120,8 +120,8 @@ export default function OutreachProgramsPage() {
     setSubmitting(true);
     try {
       await outreach.overrideBranch({
-        memberId: Number(overrideForm.memberId),
-        newBranchId: Number(overrideForm.newBranchId),
+        member_id: Number(overrideForm.memberId),
+        target_branch_id: Number(overrideForm.newBranchId),
       });
       setShowOverride(false);
       setOverrideForm({ memberId: '', newBranchId: '' });

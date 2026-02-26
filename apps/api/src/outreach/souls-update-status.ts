@@ -23,13 +23,14 @@ import { eq, sql } from 'drizzle-orm';
 
 const logger = createLogger('souls-update-status');
 
-/** Valid status transitions */
+/** Valid status transitions - updated to allow more flexible workflow */
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  'New': ['Following Up'],
-  'Following Up': ['Interested', 'Not Interested'],
-  'Interested': ['Converted', 'Not Interested'],
+  'New': ['Following Up', 'Not Interested'],
+  'Following Up': ['Interested', 'Not Interested', 'Lost Contact'],
+  'Interested': ['Converted', 'Not Interested', 'Following Up'],
   'Converted': [],
-  'Not Interested': [],
+  'Not Interested': ['Following Up'],
+  'Lost Contact': ['Following Up'],
 };
 
 export const handler = async (
@@ -83,7 +84,7 @@ export const handler = async (
     }
 
     // Validate status transition
-    const currentStatus = soul.status || 'New';
+    const currentStatus = soul.status?.trim() || 'New';
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] || [];
 
     if (!allowedTransitions.includes(input.status)) {

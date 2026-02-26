@@ -14,9 +14,10 @@ import {
   createLogger,
   getDb,
   ConflictError,
+  BadRequestError,
 } from '@kairos/utils';
 import { outreachPrograms } from '@kairos/database';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 const logger = createLogger('outreach-create-program');
 
@@ -30,20 +31,29 @@ export const handler = async (
     const body = JSON.parse(event.body || '{}');
     const input = validateOrThrow(outreachProgramCreateSchema, body);
 
+    if (!input.branch_id) {
+      throw new BadRequestError('Branch ID is required');
+    }
+
     enforceBranchAccess(ctx, input.branch_id);
 
     const db = getDb();
 
-    // Check for duplicate program
+    // Sanitize inputs for duplicate check
+    const normalizedProgramName = input.program_name.trim().toLowerCase();
+    const normalizedLocation = input.location.trim().toLowerCase();
+    const programDate = input.program_date.toISOString().split('T')[0]!;
+
+    // Check for duplicate program (case-insensitive, trimmed)
     const [existing] = await db
       .select({ outreachId: outreachPrograms.outreachId })
       .from(outreachPrograms)
       .where(
         and(
           eq(outreachPrograms.branchId, input.branch_id),
-          eq(outreachPrograms.programName, input.program_name),
-          eq(outreachPrograms.programDate, input.program_date.toISOString().split('T')[0]! as string),
-          eq(outreachPrograms.location, input.location)
+          sql`LOWER(TRIM(${outreachPrograms.programName})) = ${normalizedProgramName}`,
+          eq(outreachPrograms.programDate, programDate),
+          sql`LOWER(TRIM(${outreachPrograms.location})) = ${normalizedLocation}`
         )
       )
       .limit(1);
@@ -56,14 +66,14 @@ export const handler = async (
       .insert(outreachPrograms)
       .values({
         branchId: input.branch_id,
-        programName: input.program_name,
-        programDate: input.program_date.toISOString().split('T')[0]!,
-        location: input.location,
-        address: input.address,
-        city: input.city,
-        description: input.description,
+        programName: input.program_name.trim(),
+        programDate: programDate,
+        location: input.location.trim(),
+        address: input.address?.trim(),
+        city: input.city?.trim(),
+        description: input.description?.trim(),
         coordinatorId: input.coordinator_id,
-        notes: input.notes,
+        notes: input.notes?.trim(),
       })
       .returning();
 

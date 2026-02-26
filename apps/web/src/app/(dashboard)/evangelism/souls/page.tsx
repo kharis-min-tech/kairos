@@ -14,10 +14,12 @@ const COLUMNS = ['New', 'Following Up', 'Interested', 'Converted'] as const;
 type ColumnStatus = (typeof COLUMNS)[number];
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  'New': ['Following Up'],
-  'Following Up': ['Interested', 'Not Interested'],
-  'Interested': ['Converted', 'Not Interested'],
+  'New': ['Following Up', 'Not Interested'],
+  'Following Up': ['Interested', 'Not Interested', 'Lost Contact'],
+  'Interested': ['Converted', 'Not Interested', 'Following Up'],
   'Converted': [],
+  'Not Interested': ['Following Up'],
+  'Lost Contact': ['Following Up'],
 };
 
 const FOLLOW_UP_ALERT_DAYS = 3;
@@ -144,7 +146,10 @@ export default function SoulsKanbanPage() {
 
   const handleDrop = async (soulId: number, fromStatus: string, toStatus: string) => {
     const allowed = VALID_TRANSITIONS[fromStatus] || [];
-    if (!allowed.includes(toStatus)) return;
+    if (!allowed.includes(toStatus)) {
+      console.warn(`Invalid transition: ${fromStatus} → ${toStatus}`);
+      return;
+    }
 
     // Intercept Converted — show pre-fill member registration form
     if (toStatus === 'Converted') {
@@ -160,7 +165,8 @@ export default function SoulsKanbanPage() {
 
     try {
       await souls.updateStatus(soulId, { status: toStatus });
-    } catch {
+    } catch (err) {
+      console.error('Failed to update soul status:', err);
       // Revert on failure
       setAllSouls((prev) =>
         prev.map((s) => (s.soulId === soulId ? { ...s, status: fromStatus as Soul['status'] } : s))
@@ -169,19 +175,9 @@ export default function SoulsKanbanPage() {
   };
 
   const handleConversionSuccess = async (memberId: number) => {
-    if (!conversionSoul) return;
-    try {
-      await souls.updateStatus(conversionSoul.soulId, {
-        status: 'Converted',
-        convertedToMemberId: memberId,
-      });
-      setConversionSoul(null);
-      fetchSouls();
-    } catch {
-      // Member was created but status update failed
-      setConversionSoul(null);
-      fetchSouls();
-    }
+    // Conversion is now atomic - form handles both member creation and soul update
+    setConversionSoul(null);
+    fetchSouls();
   };
 
   const grouped = COLUMNS.reduce(

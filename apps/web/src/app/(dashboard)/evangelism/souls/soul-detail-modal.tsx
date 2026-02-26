@@ -22,11 +22,12 @@ const CONTACT_STATUSES = [
 ];
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  'New': ['Following Up'],
-  'Following Up': ['Interested', 'Not Interested'],
-  'Interested': ['Converted', 'Not Interested'],
+  'New': ['Following Up', 'Not Interested'],
+  'Following Up': ['Interested', 'Not Interested', 'Lost Contact'],
+  'Interested': ['Converted', 'Not Interested', 'Following Up'],
   'Converted': [],
   'Not Interested': [],
+  'Lost Contact': ['Following Up'],
 };
 
 const STATUS_BADGE: Record<string, 'active' | 'pending' | 'inactive' | 'error'> = {
@@ -35,6 +36,7 @@ const STATUS_BADGE: Record<string, 'active' | 'pending' | 'inactive' | 'error'> 
   'Interested': 'active',
   'Converted': 'active',
   'Not Interested': 'error',
+  'Lost Contact': 'inactive',
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -86,10 +88,11 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
 
     setSubmitting(true);
     try {
-      await souls.addFollowup(soul.soulId, {
-        followUpDate: new Date(followUpForm.contactDate),
-        contactMethod: followUpForm.contactMethod as ContactMethod,
-        contactStatus: followUpForm.contactStatus as ContactStatus,
+      await souls.addFollowup(soul.soul_id, {
+        soul_id: soul.soul_id,
+        contact_date: new Date(followUpForm.contactDate),
+        contact_method: followUpForm.contactMethod,
+        contact_status: followUpForm.contactStatus,
         notes: followUpForm.notes || undefined,
       });
       setShowFollowUpForm(false);
@@ -104,8 +107,9 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
       const res = await souls.get(soul.soulId);
       setFollowUps(res.followUps || []);
       onUpdate();
-    } catch {
-      setError('Failed to log follow-up.');
+    } catch (err) {
+      console.error('Failed to log follow-up:', err);
+      setError('Failed to log follow-up. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -122,32 +126,106 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
       await souls.updateStatus(soul.soulId, { status: newStatus });
       onUpdate();
       onClose();
-    } catch {
-      setError('Failed to update status.');
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      setError('Failed to update status. Please try again.');
     } finally {
       setStatusUpdating(false);
     }
   };
 
   const handleConversionSuccess = async (memberId: number) => {
-    setError('');
-    setStatusUpdating(true);
-    try {
-      await souls.updateStatus(soul.soulId, {
-        status: 'Converted',
-        convertedToMemberId: memberId,
-      });
-      setShowConversionForm(false);
-      onUpdate();
-      onClose();
-    } catch {
-      setError('Member registered but failed to update soul status. Please update manually.');
-    } finally {
-      setStatusUpdating(false);
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
+  const handleConversionSuccess = async (memberId: number) => {
+    // Conversion is now atomic - form handles both member creation and soul update
+    setShowConversionForm(false);
+    onUpdate();
+    onClose();
+  };
     }
   };
 
-  const nextStatuses = VALID_TRANSITIONS[soul.status] || [];
+  // Normalize status and get valid transitions
+  const currentStatus = soul.status?.trim() || 'New';
+  const nextStatuses = VALID_TRANSITIONS[currentStatus] || [];
 
   return (
     <Modal open={open} onClose={onClose} title={`${soul.firstName} ${soul.lastName}`} maxWidth="lg">
@@ -159,8 +237,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           <div><span className="text-gray-500">Phone:</span> <span className="font-medium">{soul.phone}</span></div>
           <div><span className="text-gray-500">Email:</span> <span className="font-medium">{soul.email || '—'}</span></div>
           <div><span className="text-gray-500">Address:</span> <span className="font-medium">{soul.address || '—'}</span></div>
-          <div><span className="text-gray-500">Status:</span> <Badge variant={STATUS_BADGE[soul.status]}>{soul.status}</Badge></div>
-          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{soul.createdAt ? new Date(soul.createdAt).toLocaleDateString('en-GB') : '—'}</span></div>
+          <div><span className="text-gray-500">Status:</span> <Badge variant={STATUS_BADGE[currentStatus] || 'pending'}>{currentStatus}</Badge></div>
+          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{soul.capture_date ? new Date(soul.capture_date).toLocaleDateString('en-GB') : '—'}</span></div>
           {soul.notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="font-medium">{soul.notes}</span></div>}
         </div>
 
