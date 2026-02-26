@@ -27,6 +27,7 @@ vi.mock('@kairos/database', () => ({
   souls: {
     soulId: 'soul_id',
     outreachId: 'outreach_id',
+    assignedMemberId: 'assigned_member_id',
     updatedAt: 'updated_at',
   },
   followUps: {
@@ -42,6 +43,12 @@ vi.mock('@kairos/database', () => ({
   outreachPrograms: {
     outreachId: 'outreach_id',
     branchId: 'branch_id',
+  },
+  members: {
+    memberId: 'member_id',
+    homeBranchId: 'home_branch_id',
+  },
+}));
   },
 }));
 
@@ -110,9 +117,9 @@ describe('souls-log-followup handler', () => {
           // Soul lookup with branch
           return {
             from: vi.fn().mockReturnValue({
-              innerJoin: vi.fn().mockReturnValue({
+              leftJoin: vi.fn().mockReturnValue({
                 where: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue([{ soulId: 5, outreachId: 1, branchId: 10 }]),
+                  limit: vi.fn().mockReturnValue([{ soulId: 5, outreachId: 1, branchId: 10, assignedMemberId: 42 }]),
                 }),
               }),
             }),
@@ -148,7 +155,7 @@ describe('souls-log-followup handler', () => {
     const mockDb = {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
-          innerJoin: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
             where: vi.fn().mockReturnValue({
               limit: vi.fn().mockReturnValue([]),
             }),
