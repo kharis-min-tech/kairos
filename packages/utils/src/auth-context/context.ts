@@ -39,6 +39,11 @@ export function getAuthContext(event: APIGatewayProxyEvent): AuthContext {
     throw new UnauthorizedError('Missing authorization context');
   }
 
+  // Check the `authorized` flag (CORS-safe authorizer pattern)
+  if (authorizer['authorized'] === 'false') {
+    throw new UnauthorizedError('Invalid or missing authentication token');
+  }
+
   // Try full-context mode first (authorizer provided member_id + branch_id)
   const memberId = parseNumericField(authorizer, 'member_id') ??
     parseNumericField(authorizer, 'memberId') ??
@@ -80,6 +85,13 @@ export async function resolveAuthContext(event: APIGatewayProxyEvent): Promise<A
 
   if (!authorizer) {
     throw new UnauthorizedError('Missing authorization context');
+  }
+
+  // Check the `authorized` flag set by the authorizer Lambda.
+  // The authorizer always returns isAuthorized: true (for CORS), but sets
+  // authorized: 'false' when the JWT is invalid/missing.
+  if (authorizer['authorized'] === 'false') {
+    throw new UnauthorizedError('Invalid or missing authentication token');
   }
 
   // Already have full context? Return immediately.

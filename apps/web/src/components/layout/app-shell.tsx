@@ -6,6 +6,7 @@ import { TopBar } from './topbar';
 import { Sidebar } from './sidebar';
 import { MobileNav } from './mobile-nav';
 import { useAuth } from '@/lib/auth';
+import { useNotifications } from '@/lib/ws';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const currentPath = usePathname();
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -29,11 +31,11 @@ export function AppShell({ children }: AppShellProps) {
     setMobileNavOpen(false);
   }, []);
 
-  const isPending = user?.role === 'Member';
+  const isPending = user?.role === 'Member' && user?.isApproved === false;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopBar onMenuToggle={toggleMobileNav} notificationCount={3} />
+      <TopBar onMenuToggle={toggleMobileNav} notificationCount={unreadCount} />
 
       <Sidebar
         collapsed={sidebarCollapsed}

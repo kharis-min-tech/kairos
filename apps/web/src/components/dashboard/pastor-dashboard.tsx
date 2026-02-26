@@ -2,24 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { StatCard, Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
+import { StatCard, Card, CardHeader, CardBody, Skeleton } from '@/components/ui';
 import { AttendanceChart } from './attendance-chart';
 import { dashboard } from '@kairos/api-client';
 import type { PastorDashboard as PastorDashboardData } from '@kairos/api-client';
 
 const formatGBP = (amount: number) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount);
-
-const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-interface OverdueFollowUp {
-  memberId: number;
-  memberName: string;
-  type: string;
-  lastFollowUp: string | null;
-  daysSince: number;
-}
 
 export function PastorDashboard() {
   const [data, setData] = useState<PastorDashboardData | null>(null);
@@ -42,7 +31,7 @@ export function PastorDashboard() {
     );
   }
 
-  const overdueFollowUps: OverdueFollowUp[] = (data.overdueFollowups as unknown as OverdueFollowUp[]) ?? [];
+  const overdueCount = typeof data.overdueFollowups === 'number' ? data.overdueFollowups : 0;
 
   return (
     <div className="space-y-6">
@@ -50,7 +39,7 @@ export function PastorDashboard() {
         <StatCard label="Branch Members" value={data.branchMemberCount?.toLocaleString() ?? 0} />
         <StatCard label="Donations (30d)" value={formatGBP(data.branchDonationsLast30Days ?? 0)} />
         <StatCard label="Souls Captured" value={data.branchSouls ?? 0} />
-        <StatCard label="Overdue Follow-ups" value={overdueFollowUps.length} />
+        <StatCard label="Overdue Follow-ups" value={overdueCount} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -67,29 +56,19 @@ export function PastorDashboard() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle size={16} className="text-amber-500" />
-              <h2 className="text-sm font-medium text-gray-700">Overdue Follow-ups ({overdueFollowUps.length})</h2>
+              <h2 className="text-sm font-medium text-gray-700">Overdue Follow-ups</h2>
             </div>
           </CardHeader>
           <CardBody>
-            {overdueFollowUps.length === 0 ? (
+            {overdueCount === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">No overdue follow-ups.</p>
             ) : (
-              <ul className="divide-y divide-gray-100" role="list" aria-label="Overdue follow-ups">
-                {overdueFollowUps.slice(0, 10).map((item) => (
-                  <li key={item.memberId} className="py-2 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-900 truncate">{item.memberName}</p>
-                      <p className="text-xs text-gray-500">{item.type}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <Badge variant="error">{item.daysSince}d overdue</Badge>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {item.lastFollowUp ? formatDate(item.lastFollowUp) : 'Never'}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex items-center justify-center py-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-red-600">{overdueCount}</p>
+                  <p className="text-sm text-gray-500 mt-1">overdue follow-ups</p>
+                </div>
+              </div>
             )}
           </CardBody>
         </Card>

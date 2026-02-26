@@ -52,9 +52,13 @@ vi.mock('@kairos/api-client', () => ({
   },
 }));
 
+vi.mock('@/lib/ws', () => ({
+  useNotifications: vi.fn(() => ({ unreadCount: 0 })),
+}));
+
 vi.mock('@/lib/auth', () => ({
   useAuth: vi.fn(() => ({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),
@@ -66,7 +70,7 @@ vi.mock('@/lib/auth', () => ({
 // ProtectedRoute imports useAuth from './auth-context' (relative path)
 vi.mock('@/lib/auth/auth-context', () => ({
   useAuth: vi.fn(() => ({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),
@@ -91,7 +95,7 @@ afterEach(() => {
     pagination: { total: 1 },
   });
   vi.mocked(useAuthContext).mockReturnValue({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),
@@ -277,7 +281,7 @@ describe('Preservation 4 — Dashboard content renders when isAuthenticated=true
 
   it('renders children when isAuthenticated=true and isLoading=false', () => {
     vi.mocked(useAuthContext).mockReturnValue({
-      user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+      user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
       isAuthenticated: true,
       isLoading: false,
       signIn: vi.fn(),

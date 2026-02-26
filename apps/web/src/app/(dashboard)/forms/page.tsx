@@ -108,7 +108,7 @@ export default function FormsListPage() {
       <Card className="mb-6">
         <CardBody>
           <div className="flex flex-wrap gap-4">
-            <SelectInput name="scopeFilter" options={[{ value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} placeholder="All Scopes" value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} aria-label="Filter by scope" />
+            <SelectInput name="scopeFilter" options={[{ value: '', label: 'All Scopes' }, { value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} placeholder="All Scopes" value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} aria-label="Filter by scope" />
             {!isPastor && (
               <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
             )}

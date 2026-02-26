@@ -209,7 +209,10 @@ export default function MembersListPage() {
           />
         )}
         <SelectInput
-          options={departmentList.map((d) => ({ value: String(d.branchDepartmentId), label: String(d.departmentId) }))}
+          options={departmentList.map((d) => {
+            const name = (d as BranchDepartment & { departmentName?: string }).departmentName;
+            return { value: String(d.branchDepartmentId), label: name || `Department ${d.departmentId}` };
+          })}
           placeholder="All Departments"
           value={departmentFilter}
           onChange={(e) => { setDepartmentFilter(e.target.value); setPage(1); }}

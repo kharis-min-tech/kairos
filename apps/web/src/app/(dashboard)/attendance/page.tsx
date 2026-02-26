@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Breadcrumbs } from '@/components/layout';
 import { Button, SelectInput, DatePicker, Alert, Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { attendance, members } from '@kairos/api-client';
+import { attendance, members, branches as branchesApi } from '@kairos/api-client';
+import type { Branch } from '@kairos/types';
 
 type ServiceType = 'Sunday Service' | 'Midweek Service' | 'Special Service';
 type AttendanceStatus = 'Present' | 'Absent' | 'Virtual';
@@ -30,6 +31,7 @@ const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
 
 export default function ServiceAttendancePage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [serviceDate, setServiceDate] = useState('');
   const [serviceType, setServiceType] = useState<string>('');
   const [memberRows, setMemberRows] = useState<MemberRow[]>([]);
@@ -38,8 +40,19 @@ export default function ServiceAttendancePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [allSelected, setAllSelected] = useState(false);
+  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
 
-  const branchId = user?.branchId ? Number(user.branchId) : undefined;
+  const branchId = isAdmin
+    ? (selectedBranch ? Number(selectedBranch) : undefined)
+    : (user?.branchId ? Number(user.branchId) : undefined);
+
+  // Load branch list for Admin users
+  useEffect(() => {
+    if (isAdmin) {
+      branchesApi.list({ limit: 100 }).then((res) => setBranchList(res.data as unknown as Branch[])).catch(() => {});
+    }
+  }, [isAdmin]);
 
   const loadMembers = useCallback(async () => {
     if (!branchId) return;
@@ -100,7 +113,7 @@ export default function ServiceAttendancePage() {
 
   const handleSubmit = async () => {
     if (!serviceDate || !serviceType || !branchId) {
-      setError('Please select a service date and type.');
+      setError(isAdmin && !branchId ? 'Please select a branch.' : 'Please select a service date and type.');
       return;
     }
     setSubmitting(true);
@@ -137,7 +150,18 @@ export default function ServiceAttendancePage() {
       {error && <Alert variant="error" className="mt-4" onDismiss={() => setError(null)}>{error}</Alert>}
       {success && <Alert variant="success" className="mt-4" onDismiss={() => setSuccess(null)}>{success}</Alert>}
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {isAdmin && (
+          <SelectInput
+            label="Branch"
+            name="branch"
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))}
+            placeholder="Select branch..."
+            required
+          />
+        )}
         <DatePicker
           label="Service Date"
           name="serviceDate"

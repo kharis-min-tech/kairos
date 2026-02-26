@@ -77,6 +77,18 @@ describe('getAuthContext', () => {
     expect(ctx.roles).toEqual(['Leader']);
   });
 
+  it('should throw UnauthorizedError when authorized flag is false (CORS-safe denial)', () => {
+    const event = createMockEvent({
+      authorized: 'false',
+      sub: '',
+      email: '',
+      role: '',
+      branch_id: '',
+    });
+    expect(() => getAuthContext(event)).toThrow(UnauthorizedError);
+    expect(() => getAuthContext(event)).toThrow('Invalid or missing authentication token');
+  });
+
   it('should throw UnauthorizedError when authorizer is missing', () => {
     const event = createMockEvent(undefined);
     expect(() => getAuthContext(event)).toThrow(UnauthorizedError);

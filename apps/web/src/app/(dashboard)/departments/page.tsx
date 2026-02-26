@@ -7,6 +7,41 @@ import type { BranchDepartment } from '@kairos/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 
+interface EnrichedDept extends BranchDepartment {
+  departmentName?: string;
+  leadName?: string;
+  deputyName?: string;
+  memberCount?: number;
+}
+
+function DepartmentCard({ dept }: { dept: BranchDepartment }) {
+  const enriched = dept as EnrichedDept;
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers size={18} className="text-primary" />
+            <h2 className="text-sm font-semibold text-gray-900">{enriched.departmentName || `Department #${dept.departmentId}`}</h2>
+          </div>
+          <Badge variant={dept.isActive ? 'active' : 'inactive'}>
+            {dept.isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardBody>
+        <p className="text-xs text-gray-700">Lead: {enriched.leadName || `Member #${dept.leadMemberId}`}</p>
+        {dept.deputyMemberId && (
+          <p className="text-xs text-gray-700">Deputy: {enriched.deputyName || `Member #${dept.deputyMemberId}`}</p>
+        )}
+        {typeof enriched.memberCount === 'number' && (
+          <p className="text-xs text-gray-500 mt-1">{enriched.memberCount} member{enriched.memberCount !== 1 ? 's' : ''}</p>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
 export default function DepartmentsPage() {
   const [data, setData] = useState<BranchDepartment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,26 +83,7 @@ export default function DepartmentsPage() {
             <p className="text-sm text-gray-500 col-span-full text-center py-12">No departments found.</p>
           ) : (
             data.map((dept) => (
-              <Card key={dept.branchDepartmentId}>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Layers size={18} className="text-primary" />
-                    <h2 className="text-sm font-semibold text-gray-900">Department #{dept.departmentId}</h2>
-                  </div>
-                </CardHeader>
-                <CardBody>
-                  <p className="text-xs text-gray-700">Branch: {dept.branchId}</p>
-                  <p className="text-xs text-gray-700">Lead: Member #{dept.leadMemberId}</p>
-                  {dept.deputyMemberId && (
-                    <p className="text-xs text-gray-700">Deputy: Member #{dept.deputyMemberId}</p>
-                  )}
-                  <div className="mt-2">
-                    <Badge variant={dept.isActive ? 'active' : 'inactive'}>
-                      {dept.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </CardBody>
-              </Card>
+              <DepartmentCard key={dept.branchDepartmentId} dept={dept} />
             ))
           )}
         </div>

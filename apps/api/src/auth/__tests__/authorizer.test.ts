@@ -79,6 +79,7 @@ describe('Authorizer Lambda handler', () => {
 
     expect(result.isAuthorized).toBe(true);
     expect(result.context).toEqual({
+      authorized: 'true',
       sub: 'cognito-user-123',
       email: 'pastor@kairos.church',
       role: 'Pastor',
@@ -88,12 +89,13 @@ describe('Authorizer Lambda handler', () => {
     expect(mockedVerify).toHaveBeenCalledWith('valid-jwt-token');
   });
 
-  // Test 2: Missing Authorization header returns Deny
-  it('should return isAuthorized=false when Authorization header is missing', async () => {
+  // Test 2: Missing Authorization header — isAuthorized stays true (for CORS), but authorized='false'
+  it('should return authorized=false when Authorization header is missing', async () => {
     const event = createEvent();
     const result = await handler(event);
 
-    expect(result.isAuthorized).toBe(false);
+    expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('false');
     expect(result.context.sub).toBe('');
     expect(result.context.email).toBe('');
     expect(result.context.role).toBe('');
@@ -102,28 +104,30 @@ describe('Authorizer Lambda handler', () => {
     expect(mockedVerify).not.toHaveBeenCalled();
   });
 
-  // Test 3: Invalid token format (no "Bearer " prefix) returns Deny
-  it('should return isAuthorized=false when Authorization header lacks Bearer prefix', async () => {
+  // Test 3: Invalid token format (no "Bearer " prefix)
+  it('should return authorized=false when Authorization header lacks Bearer prefix', async () => {
     const event = createEvent('Basic some-credentials');
     const result = await handler(event);
 
-    expect(result.isAuthorized).toBe(false);
+    expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('false');
     expect(mockedVerify).not.toHaveBeenCalled();
   });
 
-  // Test 4: Expired/invalid token returns Deny
-  it('should return isAuthorized=false when token verification fails', async () => {
+  // Test 4: Expired/invalid token
+  it('should return authorized=false when token verification fails', async () => {
     mockedVerify.mockRejectedValue(new Error('Token expired'));
 
     const event = createEvent('Bearer expired-jwt-token');
     const result = await handler(event);
 
-    expect(result.isAuthorized).toBe(false);
+    expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('false');
     expect(result.context.sub).toBe('');
   });
 
-  // Test 5: Missing email claim returns Deny
-  it('should return isAuthorized=false when member has no email in JWT', async () => {
+  // Test 5: Missing email claim
+  it('should return authorized=false when member has no email in JWT', async () => {
     mockedVerify.mockResolvedValue({
       sub: 'cognito-user-456',
       email: undefined,
@@ -135,15 +139,17 @@ describe('Authorizer Lambda handler', () => {
     const event = createEvent('Bearer valid-but-no-email-token');
     const result = await handler(event);
 
-    expect(result.isAuthorized).toBe(false);
+    expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('false');
   });
 
   // Test 6: Bearer token with empty string after prefix
-  it('should return isAuthorized=false when Bearer token is empty', async () => {
+  it('should return authorized=false when Bearer token is empty', async () => {
     const event = createEvent('Bearer ');
     const result = await handler(event);
 
-    expect(result.isAuthorized).toBe(false);
+    expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('false');
     expect(mockedVerify).not.toHaveBeenCalled();
   });
 
@@ -161,6 +167,7 @@ describe('Authorizer Lambda handler', () => {
     const result = await handler(event);
 
     expect(result.isAuthorized).toBe(true);
+    expect(result.context.authorized).toBe('true');
     expect(result.context.role).toBe('Admin');
     expect(result.context.email).toBe('admin@kairos.church');
   });

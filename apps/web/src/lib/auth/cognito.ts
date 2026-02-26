@@ -17,6 +17,7 @@ export interface AuthUser {
   email: string;
   role: string;
   branchId: string;
+  isApproved: boolean;
 }
 
 function extractUser(session: CognitoUserSession): AuthUser {
@@ -27,6 +28,7 @@ function extractUser(session: CognitoUserSession): AuthUser {
     email: payload.email,
     role: payload['custom:role'] || 'Member',
     branchId: payload['custom:branchId'] || '',
+    isApproved: payload['custom:isApproved'] === 'true',
   };
 }
 

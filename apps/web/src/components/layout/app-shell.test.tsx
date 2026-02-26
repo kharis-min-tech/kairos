@@ -9,9 +9,22 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/auth', () => ({
   useAuth: vi.fn(() => ({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
+  })),
+}));
+
+vi.mock('@/lib/ws', () => ({
+  useNotifications: vi.fn(() => ({
+    notifications: [],
+    unreadCount: 0,
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn(),
+    clearNotifications: vi.fn(),
+    isConnected: false,
+    toast: null,
+    dismissToast: vi.fn(),
   })),
 }));
 

@@ -60,9 +60,13 @@ vi.mock('@kairos/api-client', () => ({
   },
 }));
 
+vi.mock('@/lib/ws', () => ({
+  useNotifications: vi.fn(() => ({ unreadCount: 0 })),
+}));
+
 vi.mock('@/lib/auth', () => ({
   useAuth: vi.fn(() => ({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
   })),
@@ -71,7 +75,7 @@ vi.mock('@/lib/auth', () => ({
 // ProtectedRoute imports useAuth from './auth-context' (relative), so we also mock that path
 vi.mock('@/lib/auth/auth-context', () => ({
   useAuth: vi.fn(() => ({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),
@@ -104,7 +108,7 @@ afterEach(() => {
   });
   membersUpdateMock.mockResolvedValue({});
   vi.mocked(useAuth).mockReturnValue({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),
@@ -112,7 +116,7 @@ afterEach(() => {
     getToken: vi.fn(),
   });
   vi.mocked(useAuthContext).mockReturnValue({
-    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1' },
+    user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
     signIn: vi.fn(),

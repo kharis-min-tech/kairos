@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Users, AlertTriangle, UserPlus, Calendar } from 'lucide-react';
-import { StatCard, Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
+import { StatCard, Card, CardHeader, CardBody, Skeleton } from '@/components/ui';
 import { dashboard } from '@kairos/api-client';
 import type { LeaderDashboard as LeaderDashboardData } from '@kairos/api-client';
 
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-interface FollowUpMember { memberId: number; memberName: string; lastFollowUp: string | null; daysSince: number; }
 interface JoinRequest { requestId: number; memberName: string; requestDate: string; }
 interface RecentAttendance { date: string; present: number; total: number; }
 
@@ -34,7 +33,7 @@ export function LeaderDashboard() {
     );
   }
 
-  const followUps: FollowUpMember[] = (data.membersNeedingFollowup as unknown as FollowUpMember[]) ?? [];
+  const followUpCount = typeof data.membersNeedingFollowup === 'number' ? data.membersNeedingFollowup : 0;
   const joinRequests: JoinRequest[] = [];
   const pendingCount = data.pendingJoinRequests ?? 0;
   const recentAttendance: RecentAttendance[] = data.recentAttendance ?? [];
@@ -43,7 +42,7 @@ export function LeaderDashboard() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard icon={<Users size={20} />} label="Group Members" value={data.groupMemberCount ?? 0} />
-        <StatCard icon={<AlertTriangle size={20} />} label="Needing Follow-up" value={typeof data.membersNeedingFollowup === 'number' ? data.membersNeedingFollowup : followUps.length} />
+        <StatCard icon={<AlertTriangle size={20} />} label="Needing Follow-up" value={followUpCount} />
         <StatCard icon={<UserPlus size={20} />} label="Pending Requests" value={pendingCount} />
       </div>
 
@@ -91,24 +90,19 @@ export function LeaderDashboard() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle size={16} className="text-amber-500" />
-              <h2 className="text-sm font-medium text-gray-700">Members Needing Follow-up ({followUps.length})</h2>
+              <h2 className="text-sm font-medium text-gray-700">Members Needing Follow-up</h2>
             </div>
           </CardHeader>
           <CardBody>
-            {followUps.length === 0 ? (
+            {followUpCount === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">All members are up to date.</p>
             ) : (
-              <ul className="divide-y divide-gray-100" role="list" aria-label="Members needing follow-up">
-                {followUps.slice(0, 8).map((m) => (
-                  <li key={m.memberId} className="py-2 flex items-center justify-between">
-                    <span className="text-sm text-gray-900">{m.memberName}</span>
-                    <div className="text-right">
-                      <Badge variant="error">{m.daysSince}d</Badge>
-                      <p className="text-xs text-gray-500">{m.lastFollowUp ? formatDate(m.lastFollowUp) : 'Never'}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex items-center justify-center py-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-amber-600">{followUpCount}</p>
+                  <p className="text-sm text-gray-500 mt-1">members need follow-up</p>
+                </div>
+              </div>
             )}
           </CardBody>
         </Card>

@@ -210,7 +210,8 @@ describe('Property-Based Tests: Authorizer', () => {
           const event = createEvent(undefined);
           const result = await handler(event);
 
-          expect(result.isAuthorized).toBe(false);
+          expect(result.isAuthorized).toBe(true);
+          expect(result.context.authorized).toBe('false');
           expect(result.context.sub).toBe('');
           expect(result.context.email).toBe('');
           expect(result.context.role).toBe('');

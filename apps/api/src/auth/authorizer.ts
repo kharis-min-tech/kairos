@@ -14,12 +14,24 @@ const logger = createLogger('authorizer');
 
 /** Context values injected into downstream Lambda events */
 export interface AuthorizerContext {
+  /** 'true' if JWT is valid, 'false' otherwise. Route Lambdas MUST check this. */
+  authorized: string;
   sub: string;
   email: string;
   role: string;
   branch_id: string;
 }
 
+/**
+ * Always returns isAuthorized: true so API Gateway includes CORS headers
+ * in the response. The `authorized` context field tells route Lambdas
+ * whether the JWT was actually valid. Route Lambdas must check
+ * `event.requestContext.authorizer.lambda.authorized === 'true'`
+ * and return 401 themselves if not.
+ *
+ * This is the recommended workaround for HTTP API not returning CORS
+ * headers on authorizer denial (AWS limitation).
+ */
 export const handler = async (
   event: APIGatewayRequestAuthorizerEventV2
 ): Promise<APIGatewaySimpleAuthorizerWithContextResult<AuthorizerContext>> => {
@@ -33,7 +45,7 @@ export const handler = async (
     const token = extractBearerToken(event);
     if (!token) {
       logger.warn('Missing or invalid Authorization header');
-      return denyResponse();
+      return passWithDenied();
     }
 
     // 2. Verify JWT with Cognito
@@ -43,13 +55,14 @@ export const handler = async (
     const email = payload.email;
     if (!email) {
       logger.warn('JWT missing email claim', { sub: payload.sub });
-      return denyResponse();
+      return passWithDenied();
     }
 
     // 3. Return JWT claims as context — route Lambdas do DB lookup
     return {
       isAuthorized: true,
       context: {
+        authorized: 'true',
         sub: payload.sub,
         email,
         role: payload['custom:role'] ?? '',
@@ -58,7 +71,7 @@ export const handler = async (
     };
   } catch (error) {
     logger.error('Authorization failed', error);
-    return denyResponse();
+    return passWithDenied();
   }
 };
 
@@ -72,9 +85,13 @@ function extractBearerToken(
   return token.length > 0 ? token : null;
 }
 
-function denyResponse(): APIGatewaySimpleAuthorizerWithContextResult<AuthorizerContext> {
+/**
+ * Always passes the request through (isAuthorized: true) so CORS headers
+ * are included, but marks authorized: 'false' so route Lambdas can reject.
+ */
+function passWithDenied(): APIGatewaySimpleAuthorizerWithContextResult<AuthorizerContext> {
   return {
-    isAuthorized: false,
-    context: { sub: '', email: '', role: '', branch_id: '' },
+    isAuthorized: true,
+    context: { authorized: 'false', sub: '', email: '', role: '', branch_id: '' },
   };
 }

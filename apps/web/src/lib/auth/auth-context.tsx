@@ -34,6 +34,7 @@ const MOCK_USER: AuthUser = {
   email: 'admin@kairos.church',
   role: 'Admin',
   branchId: '1',
+  isApproved: true,
 };
 
 const IS_AUTH_MOCK = process.env.NEXT_PUBLIC_AUTH_MOCK === 'true';

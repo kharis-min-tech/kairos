@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Breadcrumbs } from '@/components/layout';
 import { Button, Card, CardHeader, CardBody, SelectInput, TextInput, StatCard, DataTable, Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -98,9 +99,9 @@ export default function DonationHistoryPage() {
           <Button variant="secondary" onClick={handleExport} disabled={exporting}>
             {exporting ? 'Exporting…' : 'Export CSV'}
           </Button>
-          <a href="/donations/record">
+          <Link href="/donations/record">
             <Button>Record Donation</Button>
-          </a>
+          </Link>
         </div>
       </div>
 
