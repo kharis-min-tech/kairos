@@ -112,7 +112,6 @@ export const handler = async (
           gender: input.gender,
           homeBranchId: input.home_branch_id,
           isActive: false, // Pending approval
-          membershipStatus: 'Pending',
         })
         .returning();
 
