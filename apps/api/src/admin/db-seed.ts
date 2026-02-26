@@ -209,11 +209,12 @@ export const handler: Handler = async (event) => {
       { branchIdx: 4, memberIdx: 25, role: 'Elder' },         // Tunde → Lagos Elder
     ];
 
+    // Clear existing leadership to avoid partial unique index conflicts on re-seed
+    await sql`DELETE FROM branch_leadership WHERE branch_id = ANY(${branchIds})`;
     for (const l of leadershipData) {
       await sql`
         INSERT INTO branch_leadership (branch_id, member_id, role, start_date, is_current)
         VALUES (${branchIds[l.branchIdx]!}, ${memberIds[l.memberIdx]!}, ${l.role}, ${daysAgo(180)}, true)
-        ON CONFLICT (branch_id, member_id, role, start_date) DO NOTHING
       `;
     }
     console.log('Branch leadership seeded.');
