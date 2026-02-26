@@ -500,12 +500,13 @@ export const handler: Handler = async (event) => {
       { first: 'Nancy', last: 'Martinez', phone: '+447555000014', email: 'nancy.m@email.com', outreachIdx: 3, assignedIdx: 14, status: 'New', city: 'Manchester' },
     ];
 
+    // Clear existing souls for these outreach programs to avoid partial unique index conflicts on re-seed
+    await sql`DELETE FROM souls WHERE outreach_id = ANY(${outreachIds})`;
     const soulIds: number[] = [];
     for (const s of soulData) {
       const [row] = await sql`
         INSERT INTO souls (outreach_id, first_name, last_name, phone, email, assigned_member_id, status, city, gender, notes)
         VALUES (${outreachIds[s.outreachIdx]!}, ${s.first}, ${s.last}, ${s.phone}, ${s.email}, ${memberIds[s.assignedIdx]!}, ${s.status}, ${s.city}, ${Math.random() > 0.5 ? 'Male' : 'Female'}, ${'Captured during ' + outreachData[s.outreachIdx]!.name})
-        ON CONFLICT (phone, outreach_id) WHERE phone IS NOT NULL DO UPDATE SET status = ${s.status}
         RETURNING soul_id
       `;
       soulIds.push(row!.soul_id);
@@ -574,6 +575,8 @@ export const handler: Handler = async (event) => {
       { memberIdx: 25, branchIdx: 4, amount: '100.00', purpose: 'Building Fund', method: 'Bank Transfer', date: daysAgo(14), anon: false },
     ];
 
+    // Clear existing seed donations to avoid duplicates on re-seed
+    await sql`DELETE FROM donations WHERE recorded_by = ${memberIds[0]!}`;
     for (const d of donationData) {
       const desc = d.purpose === 'Other' ? 'Special missions fund contribution' : null;
       await sql`
@@ -661,6 +664,8 @@ export const handler: Handler = async (event) => {
       },
     ];
 
+    // Clear existing seed forms to avoid duplicates on re-seed
+    await sql`DELETE FROM forms WHERE created_by = ${memberIds[0]!}`;
     const formIds: number[] = [];
     for (const f of formData) {
       const [row] = await sql`
@@ -735,6 +740,8 @@ export const handler: Handler = async (event) => {
       },
     ];
 
+    // Clear existing seed notifications to avoid duplicates on re-seed
+    await sql`DELETE FROM notifications WHERE sent_by = ${memberIds[0]!}`;
     for (const n of notifData) {
       let targetDeptId = null;
       if (n.scope === 'Department' && 'deptId' in n) {
