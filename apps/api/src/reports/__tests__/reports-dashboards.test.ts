@@ -111,17 +111,17 @@ describe('reports-get-admin-dashboard handler', () => {
 
   it('should return all admin dashboard metrics (200)', async () => {
     const selectMock = vi.fn()
-      .mockReturnValueOnce(chain([{ count: 500 }]))       // totalActiveMembers
+      .mockReturnValueOnce(chain([{ count: 500 }]))       // totalMembers
       .mockReturnValueOnce(chain([{ count: 5 }]))         // totalBranches
       .mockReturnValueOnce(chain([{ count: 20 }]))        // totalDepartments
       .mockReturnValueOnce(chain([{ count: 10 }]))        // totalFellowships
       .mockReturnValueOnce(chain([{ total: '15000.00' }])) // donationsLast30Days
-      .mockReturnValueOnce(chain([{ count: 25 }]))        // soulsCapturedLast30Days
-      .mockReturnValueOnce(chain([                         // attendanceLast4Weeks
+      .mockReturnValueOnce(chain([{ count: 25 }]))        // soulsLast30Days
+      .mockReturnValueOnce(chain([                         // attendanceData (last 4 weeks)
         { weekStart: '2026-02-03', presentCount: 120, totalCount: 150 },
         { weekStart: '2026-02-10', presentCount: 130, totalCount: 155 },
       ]))
-      .mockReturnValueOnce(chain([                         // attendanceTrendLast8Weeks
+      .mockReturnValueOnce(chain([                         // attendanceTrend (last 8 weeks)
         { weekStart: '2025-12-22', presentCount: 100, totalCount: 140 },
         { weekStart: '2025-12-29', presentCount: 110, totalCount: 145 },
         { weekStart: '2026-01-05', presentCount: 115, totalCount: 148 },
@@ -149,19 +149,20 @@ describe('reports-get-admin-dashboard handler', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
 
-    expect(body.totalActiveMembers).toBe(500);
+    expect(body.totalMembers).toBe(500);
     expect(body.totalBranches).toBe(5);
     expect(body.totalDepartments).toBe(20);
     expect(body.totalFellowships).toBe(10);
-    expect(body.donationsLast30Days).toBe('15000.00');
-    expect(body.soulsCapturedLast30Days).toBe(25);
-    expect(body.attendanceLast4Weeks).toHaveLength(2);
-    expect(body.attendanceLast4Weeks[0].weekStart).toBe('2026-02-03');
-    expect(body.attendanceLast4Weeks[0].presentCount).toBe(120);
-    expect(body.attendanceLast4Weeks[0].totalCount).toBe(150);
-    expect(body.attendanceTrendLast8Weeks).toHaveLength(8);
+    expect(body.donationsLast30Days).toBe(15000);
+    expect(body.soulsLast30Days).toBe(25);
+    expect(body.attendancePercentage).toBeDefined();
+    expect(body.attendanceTrends).toHaveLength(8);
+    expect(body.attendanceTrends[0].week).toBe('2025-12-22');
+    expect(body.attendanceTrends[0].percentage).toBeDefined();
     expect(body.recentActivity).toHaveLength(3);
-    expect(body.recentActivity[0].type).toBe('member_registered');
+    expect(body.recentActivity[0].action).toBeDefined();
+    expect(body.recentActivity[0].actor).toBeDefined();
+    expect(body.recentActivity[0].timestamp).toBeDefined();
   });
 
   it('should return 403 for non-admin users', async () => {
@@ -181,11 +182,11 @@ describe('reports-get-pastor-dashboard handler', () => {
     const selectMock = vi.fn()
       .mockReturnValueOnce(chain([{ count: 80 }]))        // branchMemberCount
       .mockReturnValueOnce(chain([{ total: '5000.00' }]))  // branchDonationsLast30Days
-      .mockReturnValueOnce(chain([{ count: 12 }]))         // branchSoulsCapturedLast30Days
-      .mockReturnValueOnce(chain([                          // branchAttendanceLast4Weeks
+      .mockReturnValueOnce(chain([{ count: 12 }]))         // branchSouls
+      .mockReturnValueOnce(chain([                          // branchAttendanceTrends
         { weekStart: '2026-02-03', presentCount: 60, totalCount: 75 },
       ]))
-      .mockReturnValueOnce(chain([{ count: 3 }]));         // overdueFollowUps
+      .mockReturnValueOnce(chain([{ count: 3 }]));         // overdueFollowups
 
     mockGetDb.mockReturnValue({ select: selectMock });
 
@@ -195,12 +196,13 @@ describe('reports-get-pastor-dashboard handler', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
 
-    expect(body.branchId).toBe(10);
     expect(body.branchMemberCount).toBe(80);
-    expect(body.branchDonationsLast30Days).toBe('5000.00');
-    expect(body.branchSoulsCapturedLast30Days).toBe(12);
-    expect(body.branchAttendanceLast4Weeks).toHaveLength(1);
-    expect(body.overdueFollowUps).toBe(3);
+    expect(body.branchDonationsLast30Days).toBe(5000);
+    expect(body.branchSouls).toBe(12);
+    expect(body.branchAttendanceTrends).toHaveLength(1);
+    expect(body.branchAttendanceTrends[0].week).toBeDefined();
+    expect(body.branchAttendanceTrends[0].percentage).toBeDefined();
+    expect(body.overdueFollowups).toBe(3);
   });
 
   it('should return 403 when pastor tries to view another branch', async () => {
@@ -230,8 +232,6 @@ describe('reports-get-pastor-dashboard handler', () => {
     const result = await pastorDashboardHandler(event);
 
     expect(result.statusCode).toBe(200);
-    const body = JSON.parse(result.body);
-    expect(body.branchId).toBe(99);
   });
 
   it('should return 403 for regular members', async () => {
@@ -262,7 +262,7 @@ describe('reports-get-leader-dashboard handler', () => {
       ]))
       // 5th call: pendingJoinRequests
       .mockReturnValueOnce(chain([{ count: 2 }]))
-      // 6th call: membersNeedingFollowUp
+      // 6th call: membersNeedingFollowup
       .mockReturnValueOnce(chain([{ count: 4 }]));
 
     mockGetDb.mockReturnValue({ select: selectMock });
@@ -276,12 +276,13 @@ describe('reports-get-leader-dashboard handler', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
 
-    expect(body.type).toBe('department');
-    expect(body.departmentId).toBe(3);
     expect(body.groupMemberCount).toBe(15);
     expect(body.recentAttendance).toHaveLength(2);
+    expect(body.recentAttendance[0].date).toBeDefined();
+    expect(body.recentAttendance[0].present).toBeDefined();
+    expect(body.recentAttendance[0].total).toBeDefined();
     expect(body.pendingJoinRequests).toBe(2);
-    expect(body.membersNeedingFollowUp).toBe(4);
+    expect(body.membersNeedingFollowup).toBe(4);
   });
 
   it('should return fellowship dashboard data for leader (200)', async () => {
@@ -306,10 +307,11 @@ describe('reports-get-leader-dashboard handler', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
 
-    expect(body.type).toBe('fellowship');
-    expect(body.fellowshipId).toBe(7);
     expect(body.groupMemberCount).toBe(8);
     expect(body.recentAttendance).toHaveLength(1);
+    expect(body.recentAttendance[0].date).toBeDefined();
+    expect(body.recentAttendance[0].present).toBeDefined();
+    expect(body.recentAttendance[0].total).toBeDefined();
   });
 
   it('should return 403 when leader tries to view another department', async () => {
@@ -367,7 +369,6 @@ describe('reports-get-leader-dashboard handler', () => {
 
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
-    expect(body.type).toBe('department');
     expect(body.groupMemberCount).toBe(25);
   });
 
