@@ -9,9 +9,15 @@ import {
   SecretsManagerClient,
   GetSecretValueCommand,
 } from '@aws-sdk/client-secrets-manager';
+import {
+  CognitoIdentityProviderClient,
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 import postgres from 'postgres';
 
 const secretsClient = new SecretsManagerClient({});
+const cognitoClient = new CognitoIdentityProviderClient({});
 
 // ── Helper: date arithmetic ──────────────────────────────────────────────────
 const daysAgo = (n: number) => {
@@ -760,6 +766,58 @@ export const handler: Handler = async (event) => {
       }
     }
     console.log('Notifications seeded.');
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 15. COGNITO USER PROVISIONING
+    // ═══════════════════════════════════════════════════════════════════════
+    const userPoolId = process.env['COGNITO_USER_POOL_ID'];
+    if (userPoolId) {
+      const cognitoUsers = [
+        { email: 'daniel@kairos.church', role: 'Admin', branchId: branchIds[0]!, password: 'Admin@Kairos2026!' },
+        { email: 'grace.adeyemi@kairos.church', role: 'Pastor', branchId: branchIds[0]!, password: 'Pastor@Grace2026!' },
+        { email: 'james.appiah@kairos.church', role: 'Pastor', branchId: branchIds[1]!, password: 'Pastor@James2026!' },
+        { email: 'samuel.okonkwo@kairos.church', role: 'Leader', branchId: branchIds[0]!, password: 'Leader@Samuel2026!' },
+        { email: 'esther.williams@kairos.church', role: 'Member', branchId: branchIds[0]!, password: 'Member@Esther2026!' },
+      ];
+
+      for (const u of cognitoUsers) {
+        try {
+          await cognitoClient.send(new AdminCreateUserCommand({
+            UserPoolId: userPoolId,
+            Username: u.email,
+            UserAttributes: [
+              { Name: 'email', Value: u.email },
+              { Name: 'email_verified', Value: 'true' },
+              { Name: 'custom:role', Value: u.role },
+              { Name: 'custom:branchId', Value: String(u.branchId) },
+            ],
+            MessageAction: 'SUPPRESS',
+          }));
+          console.log(`Cognito user created: ${u.email}`);
+        } catch (err: any) {
+          if (err.name === 'UsernameExistsException') {
+            console.log(`Cognito user already exists: ${u.email}`);
+          } else {
+            console.error(`Failed to create Cognito user ${u.email}:`, err.message);
+          }
+        }
+
+        try {
+          await cognitoClient.send(new AdminSetUserPasswordCommand({
+            UserPoolId: userPoolId,
+            Username: u.email,
+            Password: u.password,
+            Permanent: true,
+          }));
+          console.log(`Password set for: ${u.email}`);
+        } catch (err: any) {
+          console.error(`Failed to set password for ${u.email}:`, err.message);
+        }
+      }
+      console.log('Cognito users provisioned.');
+    } else {
+      console.log('COGNITO_USER_POOL_ID not set — skipping Cognito user provisioning.');
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // SUMMARY

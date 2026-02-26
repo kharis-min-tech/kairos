@@ -45,7 +45,11 @@ export default function FormSubmissionsPage() {
       if (branchFilter) params.branchId = branchFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      const res = await forms.listSubmissions(params);
+      if (!formFilter) {
+        setSubmissions([]);
+        return;
+      }
+      const res = await forms.listSubmissions(Number(formFilter), params);
       setSubmissions(res.data ?? []);
     } catch {
       setError('Failed to load submissions.');
@@ -64,7 +68,8 @@ export default function FormSubmissionsPage() {
       if (branchFilter) params.branchId = branchFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      const res = await forms.exportSubmissions(params);
+      if (!formFilter) return;
+      const res = await forms.exportSubmissions(Number(formFilter), params);
       if (res.url) window.open(res.url, '_blank');
     } catch {
       // silent

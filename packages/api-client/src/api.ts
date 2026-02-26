@@ -83,10 +83,10 @@ export const branches = {
     del(`/v1/branches/${id}`),
 
   assignPastor: (id: number, data: { memberId: number }) =>
-    post<void>(`/v1/branches/${id}/assign-pastor`, data),
+    post<void>(`/v1/branches/${id}/pastor`, data),
 
   assignElder: (id: number, data: { memberId: number }) =>
-    post<void>(`/v1/branches/${id}/assign-elder`, data),
+    post<void>(`/v1/branches/${id}/elder`, data),
 };
 
 // ─── Departments ─────────────────────────────────────────────────
@@ -99,13 +99,13 @@ export const departments = {
     get<PaginatedResponse<BranchDepartment>>('/v1/departments', params),
 
   assignMember: (id: number, data: { memberId: number; adminOverride?: boolean }) =>
-    post<void>(`/v1/departments/${id}/assign-member`, data),
+    post<void>(`/v1/departments/${id}/members`, data),
 
   approveRequest: (id: number, data: { requestId: number }) =>
-    post<void>(`/v1/departments/${id}/approve-request`, data),
+    post<void>(`/v1/departments/${id}/approve`, data),
 
   addFollowup: (id: number, data: { memberId: number; notes: string }) =>
-    post<void>(`/v1/departments/${id}/followup`, data),
+    post<void>(`/v1/departments/${id}/followups`, data),
 
   getAlerts: (id: number, params?: { threshold?: number }) =>
     get<Array<{ memberId: number; lastFollowup: string }>>(`/v1/departments/${id}/alerts`, params),
@@ -124,10 +124,10 @@ export const fellowships = {
     get<Fellowship>(`/v1/fellowships/${id}`),
 
   addMember: (id: number, data: { memberId: number }) =>
-    post<void>(`/v1/fellowships/${id}/add-member`, data),
+    post<void>(`/v1/fellowships/${id}/members`, data),
 
   sendMessage: (id: number, data: { title: string; body: string; memberIds?: number[] }) =>
-    post<void>(`/v1/fellowships/${id}/send-message`, data),
+    post<void>(`/v1/fellowships/${id}/messages`, data),
 };
 
 // ─── Attendance ──────────────────────────────────────────────────
@@ -139,10 +139,10 @@ export const attendance = {
     branchId: number;
     records: Array<{ memberId: number; status: string }>;
   }) =>
-    post<Service>('/v1/attendance/service', data),
+    post<Service>('/v1/attendance/services', data),
 
   listService: (params?: ListParams) =>
-    get<PaginatedResponse<ServiceAttendance>>('/v1/attendance/service', params),
+    get<PaginatedResponse<ServiceAttendance>>('/v1/attendance/services', params),
 
   recordFellowship: (data: {
     meetingDate: string;
@@ -151,10 +151,10 @@ export const attendance = {
     notes?: string;
     records: Array<{ memberId: number; status: string }>;
   }) =>
-    post<void>('/v1/attendance/fellowship', data),
+    post<void>('/v1/attendance/fellowships', data),
 
   listFellowship: (params?: ListParams) =>
-    get<PaginatedResponse<ServiceAttendance>>('/v1/attendance/fellowship', params),
+    get<PaginatedResponse<ServiceAttendance>>('/v1/attendance/fellowships', params),
 
   getTrends: (params?: { branchId?: number; weeks?: number }) =>
     get<Array<{ week: string; percentage: number }>>('/v1/attendance/trends', params),
@@ -204,7 +204,7 @@ export const souls = {
     get<Soul & { followUps: FollowUp[] }>(`/v1/souls/${id}`),
 
   addFollowup: (id: number, data: Partial<FollowUp>) =>
-    post<FollowUp>(`/v1/souls/${id}/followup`, data),
+    post<FollowUp>(`/v1/souls/${id}/followups`, data),
 
   updateStatus: (id: number, data: { status: string; convertedToMemberId?: number }) =>
     put<Soul>(`/v1/souls/${id}/status`, data),
@@ -268,14 +268,14 @@ export const forms = {
   submit: (id: number, data: Record<string, unknown>) =>
     post<FormSubmission>(`/v1/forms/${id}/submit`, data),
 
-  listSubmissions: (params?: ListParams) =>
-    get<PaginatedResponse<FormSubmission>>('/v1/forms/submissions', params),
+  listSubmissions: (formId: number, params?: ListParams) =>
+    get<PaginatedResponse<FormSubmission>>(`/v1/forms/${formId}/submissions`, params),
 
-  exportSubmissions: (params?: ListParams) =>
-    get<{ url: string }>('/v1/forms/submissions/export', params),
+  exportSubmissions: (formId: number, params?: ListParams) =>
+    get<{ url: string }>(`/v1/forms/${formId}/submissions/export`, params),
 
   saveTemplate: (data: { name: string; definition: Record<string, unknown> }) =>
-    post<Form>('/v1/forms/save-template', data),
+    post<Form>('/v1/forms/templates', data),
 
   listTemplates: (params?: ListParams) =>
     get<PaginatedResponse<Form>>('/v1/forms/templates', params),
@@ -294,10 +294,7 @@ export const notifications = {
     ),
 
   markRead: (id: number) =>
-    put<void>(`/v1/notifications/${id}/read`),
-
-  markAllRead: () =>
-    put<void>('/v1/notifications/read-all'),
+    put<void>('/v1/notifications/mark-read', { notificationIds: [id] }),
 
   broadcast: (data: { title: string; body: string; priority: string; targetScope: string; targetId?: number; expiresAt?: string }) =>
     post<Notification>('/v1/notifications/broadcast', data),
@@ -334,36 +331,27 @@ export interface LeaderDashboard {
 
 export const dashboard = {
   getAdmin: () =>
-    get<AdminDashboard>('/v1/dashboard/admin'),
+    get<AdminDashboard>('/v1/reports/dashboard/admin'),
 
   getPastor: () =>
-    get<PastorDashboard>('/v1/dashboard/pastor'),
+    get<PastorDashboard>('/v1/reports/dashboard/pastor'),
 
   getLeader: () =>
-    get<LeaderDashboard>('/v1/dashboard/leader'),
+    get<LeaderDashboard>('/v1/reports/dashboard/leader'),
 };
 
 // ─── Reports ─────────────────────────────────────────────────────
 
 export const reports = {
-  members: (params?: ListParams) =>
-    get<PaginatedResponse<Member>>('/v1/reports/members', params),
-
   attendance: (params?: { branchId?: number; startDate?: string; endDate?: string }) =>
-    get<Array<{ week: string; percentage: number }>>('/v1/reports/attendance', params),
+    get<Array<{ week: string; percentage: number }>>('/v1/reports/attendance-trends', params),
 
   donations: (params?: { branchId?: number; startDate?: string; endDate?: string }) =>
     get<{ totalByPurpose: Record<string, number>; totalByBranch: Record<string, number> }>(
-      '/v1/reports/donations',
+      '/v1/reports/donation-summary',
       params
     ),
 
   souls: (params?: { branchId?: number }) =>
-    get<Record<string, number>>('/v1/reports/souls', params),
-
-  followups: (params?: { branchId?: number }) =>
-    get<Array<{ memberId: number; memberName: string; lastFollowup: string; daysOverdue: number }>>(
-      '/v1/reports/followups',
-      params
-    ),
+    get<Record<string, number>>('/v1/reports/soul-funnel', params),
 };
