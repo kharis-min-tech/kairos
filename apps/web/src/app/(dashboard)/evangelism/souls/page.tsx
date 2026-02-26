@@ -174,7 +174,7 @@ export default function SoulsKanbanPage() {
     }
   };
 
-  const handleConversionSuccess = async (memberId: number) => {
+  const handleConversionSuccess = async () => {
     // Conversion is now atomic - form handles both member creation and soul update
     setConversionSoul(null);
     fetchSouls();
