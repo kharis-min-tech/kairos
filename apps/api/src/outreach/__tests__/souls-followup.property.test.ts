@@ -10,7 +10,7 @@ vi.mock('@kairos/utils', async () => {
   const actual = await vi.importActual<typeof import('@kairos/utils')>('@kairos/utils');
   return {
     ...actual,
-    getAuthContext: vi.fn(),
+    resolveAuthContext: vi.fn(),
     enforceBranchAccess: vi.fn(),
     validateOrThrow: vi.fn(),
     createLogger: () => ({
@@ -31,9 +31,9 @@ vi.mock('@kairos/database', () => ({
 }));
 
 import { handler } from '../souls-log-followup';
-import { getAuthContext, getDb, enforceBranchAccess, validateOrThrow } from '@kairos/utils';
+import { resolveAuthContext, getDb, enforceBranchAccess, validateOrThrow } from '@kairos/utils';
 
-const mockedGetAuthContext = vi.mocked(getAuthContext);
+const mockedGetAuthContext = vi.mocked(resolveAuthContext);
 const mockedGetDb = vi.mocked(getDb);
 const mockedValidateOrThrow = vi.mocked(validateOrThrow);
 
@@ -94,7 +94,7 @@ describe('Follow-up Date Update (Property)', () => {
           const mockDb = {
             select: vi.fn().mockReturnValue({
               from: vi.fn().mockReturnValue({
-                innerJoin: vi.fn().mockReturnValue({
+                leftJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     limit: vi.fn().mockReturnValue([{ soulId, outreachId: 1, branchId: 10 }]),
                   }),

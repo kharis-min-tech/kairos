@@ -10,7 +10,7 @@ vi.mock('@kairos/utils', async () => {
   const actual = await vi.importActual<typeof import('@kairos/utils')>('@kairos/utils');
   return {
     ...actual,
-    getAuthContext: vi.fn(),
+    resolveAuthContext: vi.fn(),
     enforceBranchAccess: vi.fn(),
     createLogger: () => ({
       info: vi.fn(),
@@ -49,13 +49,11 @@ vi.mock('@kairos/database', () => ({
     homeBranchId: 'home_branch_id',
   },
 }));
-  },
-}));
 
 import { handler } from '../souls-log-followup';
-import { getAuthContext, getDb, enforceBranchAccess } from '@kairos/utils';
+import { resolveAuthContext, getDb, enforceBranchAccess } from '@kairos/utils';
 
-const mockedGetAuthContext = vi.mocked(getAuthContext);
+const mockedGetAuthContext = vi.mocked(resolveAuthContext);
 const mockedGetDb = vi.mocked(getDb);
 const mockedEnforceBranchAccess = vi.mocked(enforceBranchAccess);
 
