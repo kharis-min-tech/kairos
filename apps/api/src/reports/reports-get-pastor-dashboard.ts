@@ -130,16 +130,14 @@ export const handler = async (
     });
 
     return successResponse({
-      branchId,
       branchMemberCount: memberCount?.count ?? 0,
-      branchDonationsLast30Days: donationTotal?.total ?? '0',
-      branchSoulsCapturedLast30Days: soulsCount?.count ?? 0,
-      branchAttendanceLast4Weeks: attendanceData.map((row) => ({
-        weekStart: row.weekStart,
-        presentCount: row.presentCount ?? 0,
-        totalCount: row.totalCount ?? 0,
+      branchDonationsLast30Days: parseFloat(donationTotal?.total ?? '0'),
+      branchAttendanceTrends: attendanceData.map((row) => ({
+        week: row.weekStart,
+        percentage: row.totalCount ? Math.round(((row.presentCount ?? 0) / row.totalCount) * 100) : 0,
       })),
-      overdueFollowUps: overdueCount?.count ?? 0,
+      branchSouls: soulsCount?.count ?? 0,
+      overdueFollowups: overdueCount?.count ?? 0,
     });
   } catch (error) {
     return handleError(error, { operation: 'reports-get-pastor-dashboard' });

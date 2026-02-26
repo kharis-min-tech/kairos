@@ -141,16 +141,13 @@ export const handler = async (
       logger.info('Leader department dashboard generated', { departmentId });
 
       return successResponse({
-        type: 'department',
-        departmentId,
         groupMemberCount: memberCount?.count ?? 0,
         recentAttendance: recentAttendance.map((row) => ({
-          serviceId: row.serviceId,
-          serviceDate: row.serviceDate,
-          presentCount: row.presentCount ?? 0,
-          totalCount: row.totalCount ?? 0,
+          date: String(row.serviceDate),
+          present: row.presentCount ?? 0,
+          total: row.totalCount ?? 0,
         })),
-        membersNeedingFollowUp: followUpCount?.count ?? 0,
+        membersNeedingFollowup: followUpCount?.count ?? 0,
         pendingJoinRequests: pendingCount?.count ?? 0,
       });
     } else {
@@ -203,15 +200,14 @@ export const handler = async (
       logger.info('Leader fellowship dashboard generated', { fellowshipId });
 
       return successResponse({
-        type: 'fellowship',
-        fellowshipId,
         groupMemberCount: memberCount?.count ?? 0,
         recentAttendance: recentAttendance.map((row) => ({
-          serviceId: row.serviceId,
-          serviceDate: row.serviceDate,
-          presentCount: row.presentCount ?? 0,
-          totalCount: row.totalCount ?? 0,
+          date: String(row.serviceDate),
+          present: row.presentCount ?? 0,
+          total: row.totalCount ?? 0,
         })),
+        membersNeedingFollowup: 0,
+        pendingJoinRequests: 0,
       });
     }
   } catch (error) {

@@ -175,24 +175,28 @@ export const handler = async (
       totalBranches: branchCount?.count ?? 0,
     });
 
+    // Calculate overall attendance percentage from last 4 weeks
+    const totalPresent = attendanceData.reduce((sum, row) => sum + (row.presentCount ?? 0), 0);
+    const totalAttendees = attendanceData.reduce((sum, row) => sum + (row.totalCount ?? 0), 0);
+    const attendancePercentage = totalAttendees > 0 ? Math.round((totalPresent / totalAttendees) * 100) : 0;
+
     return successResponse({
-      totalActiveMembers: memberCount?.count ?? 0,
+      totalMembers: memberCount?.count ?? 0,
       totalBranches: branchCount?.count ?? 0,
       totalDepartments: departmentCount?.count ?? 0,
       totalFellowships: fellowshipCount?.count ?? 0,
-      donationsLast30Days: donationTotal?.total ?? '0',
-      soulsCapturedLast30Days: soulsCount?.count ?? 0,
-      attendanceLast4Weeks: attendanceData.map((row) => ({
-        weekStart: row.weekStart,
-        presentCount: row.presentCount ?? 0,
-        totalCount: row.totalCount ?? 0,
+      donationsLast30Days: parseFloat(donationTotal?.total ?? '0'),
+      soulsLast30Days: soulsCount?.count ?? 0,
+      attendancePercentage,
+      attendanceTrends: attendanceTrend.map((row) => ({
+        week: row.weekStart,
+        percentage: row.totalCount ? Math.round(((row.presentCount ?? 0) / row.totalCount) * 100) : 0,
       })),
-      attendanceTrendLast8Weeks: attendanceTrend.map((row) => ({
-        weekStart: row.weekStart,
-        presentCount: row.presentCount ?? 0,
-        totalCount: row.totalCount ?? 0,
+      recentActivity: allActivity.map((a) => ({
+        action: a.description,
+        timestamp: a.timestamp ? new Date(a.timestamp).toISOString() : '',
+        actor: a.type,
       })),
-      recentActivity: allActivity,
     });
   } catch (error) {
     return handleError(error, { operation: 'reports-get-admin-dashboard' });
