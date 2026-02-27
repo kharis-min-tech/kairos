@@ -489,7 +489,7 @@ describe('Property 9: Conversion Funnel Count Consistency', () => {
           const mockDb = {
             select: vi.fn().mockReturnValue({
               from: vi.fn().mockReturnValue({
-                leftJoin: vi.fn().mockReturnValue({
+                innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     groupBy: vi.fn().mockResolvedValue(dbRows),
                   }),
@@ -554,7 +554,7 @@ describe('Property 9: Conversion Funnel Count Consistency', () => {
           const mockDb = {
             select: vi.fn().mockReturnValue({
               from: vi.fn().mockReturnValue({
-                leftJoin: vi.fn().mockReturnValue({
+                innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     groupBy: vi.fn().mockResolvedValue(dbRows),
                   }),
@@ -659,7 +659,7 @@ describe('Property 13: Cross-Branch Reassignment Prevention', () => {
                 // Soul exists with matching branch
                 return {
                   from: vi.fn().mockReturnValue({
-                    leftJoin: vi.fn().mockReturnValue({
+                    innerJoin: vi.fn().mockReturnValue({
                       where: vi.fn().mockReturnValue({
                         limit: vi.fn().mockReturnValue([
                           { soulId, branchId },
@@ -738,7 +738,7 @@ describe('Property 13: Cross-Branch Reassignment Prevention', () => {
           const mockDb = {
             select: vi.fn().mockReturnValue({
               from: vi.fn().mockReturnValue({
-                leftJoin: vi.fn().mockReturnValue({
+                innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     limit: vi.fn().mockReturnValue([
                       { soulId, branchId: soulBranchId },
