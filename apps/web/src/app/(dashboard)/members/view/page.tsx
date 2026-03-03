@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, UserX } from 'lucide-react';
 import { Button, Badge, Card, CardBody, Spinner, Alert } from '@/components/ui';
@@ -11,7 +11,7 @@ import { MemberEditModal } from './member-edit-modal';
 
 type BadgeVariant = 'active' | 'inactive' | 'pending';
 
-export default function MemberDetailPage() {
+function MemberDetailContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id') ?? '';
   const router = useRouter();
@@ -244,5 +244,13 @@ export default function MemberDetailPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function MemberDetailPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="lg" /></div>}>
+      <MemberDetailContent />
+    </Suspense>
   );
 }

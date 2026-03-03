@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
@@ -26,7 +26,7 @@ interface FormData {
   scope: string;
 }
 
-export default function FormSubmissionPage() {
+function FormSubmissionContent() {
   const searchParams = useSearchParams();
   const formId = searchParams.get('id') ?? '';
   const { user } = useAuth();
@@ -193,5 +193,13 @@ export default function FormSubmissionPage() {
         </CardBody>
       </Card>
     </>
+  );
+}
+
+export default function FormSubmissionPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="lg" /></div>}>
+      <FormSubmissionContent />
+    </Suspense>
   );
 }

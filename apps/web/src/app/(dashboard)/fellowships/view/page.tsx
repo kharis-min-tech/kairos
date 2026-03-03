@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Users, Calendar, MessageSquare, Plus, UserPlus, X, Send } from 'lucide-react';
 import { fellowships } from '@kairos/api-client';
@@ -10,7 +10,7 @@ import { Card, CardBody, Skeleton, Badge, Modal, TextInput, Textarea } from '@/c
 
 type Tab = 'members' | 'meetings' | 'messages';
 
-export default function FellowshipDetailPage() {
+function FellowshipDetailContent() {
   const searchParams = useSearchParams();
   const fellowshipIdParam = searchParams.get('id');
   const router = useRouter();
@@ -161,6 +161,14 @@ export default function FellowshipDetailPage() {
       {activeTab === 'meetings' && <MeetingsTab fellowshipId={fellowshipId} />}
       {activeTab === 'messages' && <MessagesTab fellowshipId={fellowshipId} />}
     </section>
+  );
+}
+
+export default function FellowshipDetailPage() {
+  return (
+    <Suspense fallback={<div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>}>
+      <FellowshipDetailContent />
+    </Suspense>
   );
 }
 
