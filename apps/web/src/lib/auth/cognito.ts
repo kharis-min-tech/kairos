@@ -30,7 +30,7 @@ function extractUser(session: CognitoUserSession): AuthUser {
   };
 }
 
-export function signIn(email: string, password: string): Promise<{ user: AuthUser; session: CognitoUserSession }> {
+export function signIn(email: string, password: string): Promise<{ user: AuthUser; session: CognitoUserSession; requiresNewPassword?: boolean; cognitoUser?: CognitoUser }> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
     const authDetails = new AuthenticationDetails({ Username: email, Password: password });
@@ -43,8 +43,8 @@ export function signIn(email: string, password: string): Promise<{ user: AuthUse
         reject(err);
       },
       newPasswordRequired: (_userAttributes) => {
-        // For MVP, reject and ask user to reset password
-        reject(new Error('NEW_PASSWORD_REQUIRED'));
+        // Return a special response indicating password change is needed
+        reject({ code: 'NEW_PASSWORD_REQUIRED', cognitoUser });
       },
     });
   });
@@ -130,5 +130,21 @@ export function confirmPassword(email: string, code: string, newPassword: string
   });
 }
 
+export function completeNewPasswordChallenge(
+  cognitoUser: CognitoUser,
+  newPassword: string,
+  requiredAttributes: Record<string, string> = {}
+): Promise<{ user: AuthUser; session: CognitoUserSession }> {
+  return new Promise((resolve, reject) => {
+    cognitoUser.completeNewPasswordChallenge(newPassword, requiredAttributes, {
+      onSuccess: (session) => {
+        resolve({ user: extractUser(session), session });
+      },
+      onFailure: (err) => {
+        reject(err);
+      },
+    });
+  });
+}
 
 export { extractUser, userPool };

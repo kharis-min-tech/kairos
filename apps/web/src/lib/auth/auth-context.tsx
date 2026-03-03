@@ -97,9 +97,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState({ user: { ...MOCK_USER, email }, isAuthenticated: true, isLoading: false });
         return;
       }
-      const { user } = await cognitoSignIn(email, password);
-      setState({ user, isAuthenticated: true, isLoading: false });
-      startRefreshTimer();
+      try {
+        const { user } = await cognitoSignIn(email, password);
+        setState({ user, isAuthenticated: true, isLoading: false });
+        startRefreshTimer();
+      } catch (error: any) {
+        if (error?.code === 'NEW_PASSWORD_REQUIRED') {
+          // Re-throw with cognitoUser attached so the login page can handle it
+          throw error;
+        }
+        throw error;
+      }
     },
     [startRefreshTimer],
   );
