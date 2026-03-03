@@ -47,10 +47,10 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Members" value={data.totalMembers.toLocaleString()} />
-        <StatCard label="Branches" value={data.totalBranches} />
-        <StatCard label="Donations (30d)" value={formatGBP(data.donationsLast30Days)} />
-        <StatCard label="Souls (30d)" value={data.soulsLast30Days} />
+        <StatCard label="Total Members" value={data.totalMembers?.toLocaleString() ?? '0'} />
+        <StatCard label="Branches" value={data.totalBranches ?? 0} />
+        <StatCard label="Donations (30d)" value={formatGBP(data.donationsLast30Days ?? 0)} />
+        <StatCard label="Souls (30d)" value={data.soulsLast30Days ?? 0} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
