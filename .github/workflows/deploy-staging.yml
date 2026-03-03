@@ -45,6 +45,7 @@ jobs:
           path: |
             apps/api/dist/
             apps/web/.next/
+            apps/web/out/
             infrastructure/dist/
           retention-days: 1
 
