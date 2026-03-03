@@ -136,7 +136,13 @@ export function completeNewPasswordChallenge(
   requiredAttributes: Record<string, string> = {}
 ): Promise<{ user: AuthUser; session: CognitoUserSession }> {
   return new Promise((resolve, reject) => {
-    cognitoUser.completeNewPasswordChallenge(newPassword, requiredAttributes, {
+    // Cognito requires 'name' attribute - provide a default if not specified
+    const attributes = {
+      name: 'User',
+      ...requiredAttributes,
+    };
+    
+    cognitoUser.completeNewPasswordChallenge(newPassword, attributes, {
       onSuccess: (session) => {
         resolve({ user: extractUser(session), session });
       },
