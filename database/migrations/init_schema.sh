@@ -19,6 +19,9 @@ REQUIRED_SCRIPTS=(
     "04_indexes.sql"
     "05_triggers.sql"
     "06_comments.sql"
+    "09_row_level_security.sql"
+    "11_audit_trail.sql"
+    "12_pgaudit.sql"
 )
 
 # Colors for output

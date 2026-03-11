@@ -15,7 +15,14 @@ database/
     ├── 03_constraints.sql        # Foreign keys, check constraints, unique constraints
     ├── 04_indexes.sql            # Performance indexes
     ├── 05_triggers.sql           # Automated column update triggers
-    └── 06_comments.sql           # Table documentation comments
+    ├── 06_comments.sql           # Table documentation comments
+    ├── 08_powerbi_schemas_setup.sql # Optional reporting roles/schemas
+    ├── 09_row_level_security.sql # Row-level security policies for sensitive tables
+    ├── 10_rls_smoke_tests.sql    # Optional RLS smoke tests
+    ├── 11_audit_trail.sql        # Centralized audit logging triggers/table
+    ├── 12_pgaudit.sql            # Native statement logging setup (log_statement)
+    ├── 13_rls_test_users.sql     # Optional RLS test users provisioning for members table
+    └── AUDITING.md               # Hybrid auditing model and verification guide
 ```
 
 ## Execution Order
@@ -31,9 +38,32 @@ database/
 | 3 | `03_constraints.sql` | Adds foreign keys, check constraints, unique constraints | `02_tables.sql` |
 | 4 | `04_indexes.sql` | Creates performance indexes | `02_tables.sql`, `03_constraints.sql` |
 | 5 | `05_triggers.sql` | Creates update triggers | `01_functions.sql`, `02_tables.sql` |
-| 6 | `06_comments.sql` | Adds table documentation | `02_tables.sql` || 7 | `07_seed_data.sql` | **Generates test data (OPTIONAL)** | All above (01-06) |
+| 6 | `06_comments.sql` | Adds table documentation | `02_tables.sql` |
+| 7 | `09_row_level_security.sql` | Enables RLS and creates policies | `01-06` |
+| 8 | `11_audit_trail.sql` | Enables schema-level row-change auditing | `01-06, 09` |
+| 9 | `12_pgaudit.sql` | Configures native statement logging (`log_statement='mod'`) | `01-06, 09, 11` |
+| 10 | `07_seed_data.sql` | **Generates test data (OPTIONAL)** | All above (01-06, 09, 11, 12) |
 
-**Note**: File 7 (`07_seed_data.sql`) is optional and generates realistic dummy data for testing and development. **DO NOT run in production!**
+**Note**: File `07_seed_data.sql` is optional and generates realistic dummy data for testing and development. **DO NOT run in production!**
+
+**RLS Note**: `09_row_level_security.sql` expects application session settings before data access:
+`SET app.member_id = '<member_id>';` and `SET app.is_admin = 'true'|'false';`.
+
+**Audit Logging Note**: `12_pgaudit.sql` configures database-level native logging with `log_statement='mod'` and `log_duration='on'`. Reconnect sessions after applying.
+
+**Hybrid Auditing Note**: Use both `11_audit_trail.sql` and `12_pgaudit.sql` together.
+See `AUDITING.md` for detailed coverage, tradeoffs, and verification steps.
+
+**RLS Testing Note**: For login-based RLS testing on `dev.members`, run `13_rls_test_users.sql`.
+This script provisions `u_member`, `u_branch_leader`, and `u_admin` plus role-level session settings.
+
+Quick run command:
+
+```bash
+psql -d kairos -f 13_rls_test_users.sql
+```
+
+See `RLS_TEST_USERS.md` for login examples and expected query behavior.
 ## Initial Database Setup
 
 ### Prerequisites
@@ -60,6 +90,9 @@ psql -d kairos -f 03_constraints.sql
 psql -d kairos -f 04_indexes.sql
 psql -d kairos -f 05_triggers.sql
 psql -d kairos -f 06_comments.sql
+psql -d kairos -f 09_row_level_security.sql
+psql -d kairos -f 11_audit_trail.sql
+psql -d kairos -f 12_pgaudit.sql
 
 # 3b. OPTIONAL: Populate with test data (for development/testing only)
 psql -d kairos -f 07_seed_data.sql
@@ -93,7 +126,7 @@ if ! psql -lqt | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
 fi
 
 # Execute scripts in order
-for script in 01_functions.sql 02_tables.sql 03_constraints.sql 04_indexes.sql 05_triggers.sql 06_comments.sql; do
+for script in 01_functions.sql 02_tables.sql 03_constraints.sql 04_indexes.sql 05_triggers.sql 06_comments.sql 09_row_level_security.sql 11_audit_trail.sql 12_pgaudit.sql; do
     echo "Executing $script..."
     psql -d "$DB_NAME" -f "$SCRIPTS_DIR/$script"
     if [ $? -eq 0 ]; then
