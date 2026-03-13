@@ -15,3 +15,5 @@ coverage/
 apps/web/out/
 # Turborepo
 .turbo
+screenshots/
+playwright-report/

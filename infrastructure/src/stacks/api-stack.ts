@@ -356,7 +356,7 @@ export class ApiStack extends cdk.Stack {
 
     const seedFn = new nodejs.NodejsFunction(this, 'DbSeed', {
       functionName: `${config.prefix}-db-seed`,
-      description: 'Seeds Aurora with region, branch, and admin member + Cognito users',
+      description: 'Seeds Aurora with demo data',
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(apiSrc, 'admin', 'db-seed.ts'),
       handler: 'handler',
@@ -369,7 +369,6 @@ export class ApiStack extends cdk.Stack {
       securityGroups: [lambdaSecurityGroup],
       environment: {
         DATABASE_SECRET_ARN: databaseSecret.secretArn,
-        COGNITO_USER_POOL_ID: userPool.userPoolId,
         NODE_OPTIONS: '--enable-source-maps',
       },
       projectRoot: monorepoRoot,
@@ -377,10 +376,6 @@ export class ApiStack extends cdk.Stack {
       bundling: sharedBundling,
     });
     databaseSecret.grantRead(seedFn);
-    seedFn.addToRolePolicy(new cdk.aws_iam.PolicyStatement({
-      actions: ['cognito-idp:AdminCreateUser', 'cognito-idp:AdminSetUserPassword'],
-      resources: [userPool.userPoolArn],
-    }));
 
     // ---------------------------------------------------------------
     // Tags & Outputs

@@ -137,7 +137,7 @@ describe('Duplicate Program Detection (Property 6)', () => {
         fc.integer({ min: 1, max: 100 }),
         programNameArb,
         locationArb,
-        fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+        fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).filter((d) => !isNaN(d.getTime())),
         async (memberId, branchId, programName, location, programDate) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});
@@ -199,7 +199,7 @@ describe('Duplicate Program Detection (Property 6)', () => {
         fc.integer({ min: 1, max: 100 }),
         programNameArb,
         locationArb,
-        fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+        fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).filter((d) => !isNaN(d.getTime())),
         async (memberId, branchId, programName, location, programDate) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});

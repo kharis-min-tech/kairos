@@ -6,7 +6,7 @@ import {
 } from 'amazon-cognito-identity-js';
 
 const POOL_CONFIG = {
-  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'eu-west-2_pcXtxTuhu',
+  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'eu-west-2_rK28AIoE6',
   ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '',
 };
 
