@@ -3,6 +3,7 @@ import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -128,6 +129,46 @@ export class ApiStack extends cdk.Stack {
       },
     };
 
+    const createSharedLambdaRole = (
+      id: string,
+      description: string,
+      managedPolicies: string[],
+    ) => {
+      const role = new iam.Role(this, id, {
+        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        description,
+      });
+
+      for (const managedPolicy of managedPolicies) {
+        role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName(managedPolicy));
+      }
+
+      return role;
+    };
+
+    const authorizerRole = createSharedLambdaRole(
+      'AuthorizerSharedRole',
+      'Shared execution role for the Kairos API authorizer Lambda',
+      [
+        'service-role/AWSLambdaBasicExecutionRole',
+        'AWSXRayDaemonWriteAccess',
+      ],
+    );
+
+    const apiLambdaRole = createSharedLambdaRole(
+      'ApiSharedRole',
+      'Shared execution role for Kairos API Lambdas running inside the VPC',
+      [
+        'service-role/AWSLambdaBasicExecutionRole',
+        'service-role/AWSLambdaVPCAccessExecutionRole',
+        'AWSXRayDaemonWriteAccess',
+      ],
+    );
+
+    databaseSecret.grantRead(apiLambdaRole);
+
+    const appliedGrantKeys = new Set<string>();
+
     const authorizerFn = new nodejs.NodejsFunction(this, 'AuthorizerFn', {
       functionName: `${config.prefix}-authorizer`,
       description: 'Custom authorizer: JWT validation (no VPC — needs internet for JWKS)',
@@ -144,6 +185,7 @@ export class ApiStack extends cdk.Stack {
         COGNITO_CLIENT_ID: userPoolClient.userPoolClientId,
         NODE_OPTIONS: '--enable-source-maps',
       },
+      role: authorizerRole,
       projectRoot: monorepoRoot,
       depsLockFilePath: path.join(monorepoRoot, 'package-lock.json'),
       bundling: sharedBundling,
@@ -170,12 +212,18 @@ export class ApiStack extends cdk.Stack {
       method: apigatewayv2.HttpMethod, routePath: string,
       opts?: {
         env?: Record<string, string>;
-        grants?: (fn: lambda.IFunction) => void;
+        grants?: (principal: iam.IGrantable) => void;
+        grantKey?: string;
         skipAuth?: boolean;
         memory?: number;
         timeout?: number;
       },
     ) => {
+      if (opts?.grants && opts.grantKey && !appliedGrantKeys.has(opts.grantKey)) {
+        opts.grants(apiLambdaRole);
+        appliedGrantKeys.add(opts.grantKey);
+      }
+
       const fn = new nodejs.NodejsFunction(this, lid, {
         functionName: `${config.prefix}-${lid.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`,
         runtime: lambda.Runtime.NODEJS_20_X,
@@ -189,12 +237,11 @@ export class ApiStack extends cdk.Stack {
         vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
         securityGroups: [lambdaSecurityGroup],
         environment: { ...sharedEnv, ...opts?.env },
+        role: apiLambdaRole,
         projectRoot: monorepoRoot,
         depsLockFilePath: path.join(monorepoRoot, 'package-lock.json'),
         bundling: sharedBundling,
       });
-      databaseSecret.grantRead(fn);
-      if (opts?.grants) opts.grants(fn);
 
       this.httpApi.addRoutes({
         path: routePath,
@@ -209,21 +256,33 @@ export class ApiStack extends cdk.Stack {
     const POST = apigatewayv2.HttpMethod.POST;
     const PUT = apigatewayv2.HttpMethod.PUT;
     const DELETE = apigatewayv2.HttpMethod.DELETE;
-    const s3Write = (bucket: s3.IBucket) => (fn: lambda.IFunction) => bucket.grantWrite(fn);
-    const s3RW = (bucket: s3.IBucket) => (fn: lambda.IFunction) => bucket.grantReadWrite(fn);
+    const s3Write = (bucket: s3.IBucket) => (principal: iam.IGrantable) => bucket.grantWrite(principal);
+    const s3RW = (bucket: s3.IBucket) => (principal: iam.IGrantable) => bucket.grantReadWrite(principal);
 
     // ================= MEMBERS =================
     route('MembersCreate', 'members/members-create.ts', POST, '/v1/members',
-      { env: { MEMBER_PHOTOS_BUCKET: memberPhotosBucket.bucketName }, grants: s3Write(memberPhotosBucket) });
+      {
+        env: { MEMBER_PHOTOS_BUCKET: memberPhotosBucket.bucketName },
+        grants: s3Write(memberPhotosBucket),
+        grantKey: 'member-photos-write',
+      });
     route('MembersList', 'members/members-list.ts', GET, '/v1/members');
     route('MembersGet', 'members/members-get.ts', GET, '/v1/members/{memberId}');
     route('MembersUpdate', 'members/members-update.ts', PUT, '/v1/members/{memberId}',
-      { env: { MEMBER_PHOTOS_BUCKET: memberPhotosBucket.bucketName }, grants: s3RW(memberPhotosBucket) });
+      {
+        env: { MEMBER_PHOTOS_BUCKET: memberPhotosBucket.bucketName },
+        grants: s3RW(memberPhotosBucket),
+        grantKey: 'member-photos-rw',
+      });
     route('MembersDelete', 'members/members-delete.ts', DELETE, '/v1/members/{memberId}');
     route('MembersApprove', 'members/members-approve.ts', POST, '/v1/members/{memberId}/approve');
     route('MembersImport', 'members/members-import.ts', POST, '/v1/members/import');
     route('MembersExport', 'members/members-export.ts', GET, '/v1/members/export',
-      { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+      {
+        env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName },
+        grants: s3Write(csvExportsBucket),
+        grantKey: 'csv-exports-write',
+      });
 
     // ================= BRANCHES =================
     route('BranchesCreate', 'branches/branches-create.ts', POST, '/v1/branches');
@@ -263,7 +322,11 @@ export class ApiStack extends cdk.Stack {
     route('AttGetTrends', 'attendance/attendance-get-trends.ts', GET, '/v1/attendance/trends');
     route('AttGetMissing', 'attendance/attendance-get-missing-members.ts', GET, '/v1/attendance/missing-members');
     route('AttExport', 'attendance/attendance-export.ts', GET, '/v1/attendance/export',
-      { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+      {
+        env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName },
+        grants: s3Write(csvExportsBucket),
+        grantKey: 'csv-exports-write',
+      });
 
     // ================= OUTREACH & SOULS =================
     route('OutreachCreate', 'outreach/outreach-create-program.ts', POST, '/v1/outreach/programs');
@@ -290,7 +353,11 @@ export class ApiStack extends cdk.Stack {
     route('DonationsReports', 'donations/donations-get-reports.ts', GET, '/v1/donations/reports');
     route('DonationsMemberSum', 'donations/donations-get-member-summary.ts', GET, '/v1/donations/member-summary');
     route('DonationsExport', 'donations/donations-export.ts', GET, '/v1/donations/export',
-      { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+      {
+        env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName },
+        grants: s3Write(csvExportsBucket),
+        grantKey: 'csv-exports-write',
+      });
     // Stripe webhook — NO authorizer (Stripe verifies its own signature)
     route('DonationsWebhook', 'donations/donations-webhook.ts', POST, '/v1/donations/webhook',
       { env: { STRIPE_WEBHOOK_SECRET_ARN: `/${config.prefix}/stripe/webhook-secret` }, skipAuth: true });
@@ -302,7 +369,11 @@ export class ApiStack extends cdk.Stack {
     route('FormsSubmit', 'forms/forms-submit.ts', POST, '/v1/forms/{formId}/submit');
     route('FormsListSubs', 'forms/forms-list-submissions.ts', GET, '/v1/forms/{formId}/submissions');
     route('FormsExportSubs', 'forms/forms-export-submissions.ts', GET, '/v1/forms/{formId}/submissions/export',
-      { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+      {
+        env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName },
+        grants: s3Write(csvExportsBucket),
+        grantKey: 'csv-exports-write',
+      });
     route('FormsSaveTemplate', 'forms/forms-save-template.ts', POST, '/v1/forms/templates');
     route('FormsFromTemplate', 'forms/forms-create-from-template.ts', POST, '/v1/forms/from-template');
     route('FormsPrebuilt', 'forms/forms-handle-prebuilt.ts', POST, '/v1/forms/prebuilt/{formType}/submit');
@@ -322,7 +393,11 @@ export class ApiStack extends cdk.Stack {
     route('RptDonationSum', 'reports/reports-get-donation-summary.ts', GET, '/v1/reports/donation-summary');
     route('RptSoulFunnel', 'reports/reports-get-soul-funnel.ts', GET, '/v1/reports/soul-funnel');
     route('RptExportCsv', 'reports/reports-export-csv.ts', POST, '/v1/reports/export',
-      { env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName }, grants: s3Write(csvExportsBucket) });
+      {
+        env: { CSV_EXPORTS_BUCKET: csvExportsBucket.bucketName },
+        grants: s3Write(csvExportsBucket),
+        grantKey: 'csv-exports-write',
+      });
 
     // ================= ADMIN (invoke-only, no API routes) =================
     const migrateFn = new nodejs.NodejsFunction(this, 'DbMigrate', {
@@ -338,6 +413,7 @@ export class ApiStack extends cdk.Stack {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       securityGroups: [lambdaSecurityGroup],
+      role: apiLambdaRole,
       environment: {
         DATABASE_SECRET_ARN: databaseSecret.secretArn,
         NODE_OPTIONS: '--enable-source-maps',
@@ -356,7 +432,6 @@ export class ApiStack extends cdk.Stack {
         },
       },
     });
-    databaseSecret.grantRead(migrateFn);
 
     const seedFn = new nodejs.NodejsFunction(this, 'DbSeed', {
       functionName: `${config.prefix}-db-seed`,
@@ -371,6 +446,7 @@ export class ApiStack extends cdk.Stack {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       securityGroups: [lambdaSecurityGroup],
+      role: apiLambdaRole,
       environment: {
         DATABASE_SECRET_ARN: databaseSecret.secretArn,
         NODE_OPTIONS: '--enable-source-maps',
@@ -379,7 +455,6 @@ export class ApiStack extends cdk.Stack {
       depsLockFilePath: path.join(monorepoRoot, 'package-lock.json'),
       bundling: sharedBundling,
     });
-    databaseSecret.grantRead(seedFn);
 
     // ---------------------------------------------------------------
     // Tags & Outputs
