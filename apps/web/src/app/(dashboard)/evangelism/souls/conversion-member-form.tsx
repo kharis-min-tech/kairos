@@ -115,24 +115,25 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     setSubmitting(true);
 
     try {
-      // Use the new atomic convert endpoint that handles both member creation and soul update
-      const result = await souls.convert(soul.soul_id, {
-        first_name: formData.first_name.trim(),
-        last_name: formData.last_name.trim(),
+      const result = await souls.convert(soul.soulId, {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
         email: formData.email.trim() || undefined,
         phone: formData.phone.trim() || undefined,
         address: formData.address.trim() || undefined,
         city: formData.city.trim() || undefined,
         gender: formData.gender as 'Male' | 'Female' || undefined,
-        homeBranchId: Number(formData.homeBranchId),
+        home_branch_id: Number(formData.homeBranchId),
       });
-      onSuccess(result.member.member_id);
-    } catch (err: unknown) {
+      
+      onSuccess(result.member.memberId);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error('An unexpected error occurred');
       console.error('Soul conversion failed:', err);
       if (err instanceof ApiError) {
         setSubmitError(err.message || 'Failed to convert soul to member.');
       } else {
-        setSubmitError('An unexpected error occurred. Please try again.');
+        setSubmitError(err.message || 'An unexpected error occurred. Please try again.');
       }
     } finally {
       setSubmitting(false);

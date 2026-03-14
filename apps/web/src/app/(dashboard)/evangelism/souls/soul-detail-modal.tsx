@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { Soul, FollowUp, ContactMethod, ContactStatus } from '@kairos/types';
+import type { Soul, FollowUp } from '@kairos/types';
 import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
@@ -88,8 +88,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
 
     setSubmitting(true);
     try {
-      await souls.addFollowup(soul.soul_id, {
-        soul_id: soul.soul_id,
+      await souls.addFollowup(soul.soulId, {
+        soulId: soul.soulId,
         contact_date: new Date(followUpForm.contactDate),
         contact_method: followUpForm.contactMethod,
         contact_status: followUpForm.contactStatus,
@@ -135,7 +135,6 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   };
 
   const handleConversionSuccess = async () => {
-    // Conversion is now atomic - form handles both member creation and soul update
     setShowConversionForm(false);
     onUpdate();
     onClose();
@@ -144,6 +143,9 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   // Normalize status and get valid transitions
   const currentStatus = soul.status?.trim() || 'New';
   const nextStatuses = VALID_TRANSITIONS[currentStatus] || [];
+
+  // Helper for capture date - try different possible property names
+  const captureDate = (soul as any).captureDate || (soul as any).capture_date || (soul as any).createdAt || (soul as any).created_at;
 
   return (
     <Modal open={open} onClose={onClose} title={`${soul.firstName} ${soul.lastName}`} maxWidth="lg">
@@ -156,7 +158,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           <div><span className="text-gray-500">Email:</span> <span className="font-medium">{soul.email || '—'}</span></div>
           <div><span className="text-gray-500">Address:</span> <span className="font-medium">{soul.address || '—'}</span></div>
           <div><span className="text-gray-500">Status:</span> <Badge variant={STATUS_BADGE[currentStatus] || 'pending'}>{currentStatus}</Badge></div>
-          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{soul.capture_date ? new Date(soul.capture_date).toLocaleDateString('en-GB') : '—'}</span></div>
+          <div><span className="text-gray-500">Captured:</span> <span className="font-medium">{captureDate ? new Date(captureDate).toLocaleDateString('en-GB') : '—'}</span></div>
           {soul.notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="font-medium">{soul.notes}</span></div>}
         </div>
 

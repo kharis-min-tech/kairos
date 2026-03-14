@@ -3,7 +3,7 @@
   "compilerOptions": {
     "jsx": "preserve",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
@@ -35,5 +35,19 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../packages/api-client"
+    },
+    {
+      "path": "../../packages/types"
+    },
+    {
+      "path": "../../packages/ui"
+    },
+    {
+      "path": "../../packages/utils"
+    }
   ]
 }
