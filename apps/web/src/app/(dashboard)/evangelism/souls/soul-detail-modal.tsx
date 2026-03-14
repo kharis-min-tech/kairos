@@ -208,7 +208,9 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
                 <div key={fu.followUpId} className="rounded border border-gray-100 bg-white p-2 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{fu.contactMethod}</span>
-                    <span className="text-xs text-gray-500">{new Date(fu.followUpDate).toLocaleDateString('en-GB')}</span>
+                    <span className="text-xs text-gray-500">
+                      {fu.followUpDate ? new Date(fu.followUpDate).toLocaleDateString('en-GB') : '—'}
+                    </span>
                   </div>
                   <Badge variant={fu.contactStatus === 'Successful' ? 'active' : fu.contactStatus === 'Not Interested' ? 'error' : 'pending'} className="mt-1">
                     {fu.contactStatus}

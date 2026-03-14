@@ -74,17 +74,17 @@ function FellowshipDetailContent() {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{fellowship.fellowship_name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{fellowship.fellowshipName}</h1>
             {fellowship.description && (
               <p className="text-sm text-gray-500 mt-1">{fellowship.description}</p>
             )}
             <div className="flex gap-4 mt-2 text-sm text-gray-600">
-              {fellowship.meeting_schedule && <span>📅 {fellowship.meeting_schedule}</span>}
+              {fellowship.meetingSchedule && <span>📅 {fellowship.meetingSchedule}</span>}
               {fellowship.location && <span>📍 {fellowship.location}</span>}
             </div>
           </div>
-          <Badge variant={fellowship.is_active ? 'active' : 'inactive'}>
-            {fellowship.is_active ? 'Active' : 'Inactive'}
+          <Badge variant={fellowship.isActive ? 'active' : 'inactive'}>
+            {fellowship.isActive ? 'Active' : 'Inactive'}
           </Badge>
         </div>
       </div>

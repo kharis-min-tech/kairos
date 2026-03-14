@@ -46,7 +46,7 @@ export default function FellowshipsPage() {
     // Filter data based on search term
     if (searchTerm) {
       const filtered = data.filter((f) =>
-        f.fellowship_name.toLowerCase().includes(searchTerm.toLowerCase())
+        f.fellowshipName.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredData(filtered);
     } else {
@@ -160,18 +160,18 @@ export default function FellowshipsPage() {
           ) : (
             filteredData.map((f) => (
               <Card
-                key={f.fellowship_id}
+                key={f.fellowshipId}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => router.push(`/fellowships/view?id=${f.fellowship_id}`)}
+                onClick={() => router.push(`/fellowships/view?id=${f.fellowshipId}`)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <UsersRound size={18} className="text-primary" />
-                      <h2 className="text-sm font-semibold text-gray-900">{f.fellowship_name}</h2>
+                      <h2 className="text-sm font-semibold text-gray-900">{f.fellowshipName}</h2>
                     </div>
-                    <Badge variant={f.is_active ? 'active' : 'inactive'}>
-                      {f.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={f.isActive ? 'active' : 'inactive'}>
+                      {f.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -179,8 +179,8 @@ export default function FellowshipsPage() {
                   {f.description && (
                     <p className="text-xs text-gray-500 mb-2 line-clamp-2">{f.description}</p>
                   )}
-                  {f.meeting_schedule && (
-                    <p className="text-xs text-gray-500 mt-1">📅 {f.meeting_schedule}</p>
+                  {f.meetingSchedule && (
+                    <p className="text-xs text-gray-500 mt-1">📅 {f.meetingSchedule}</p>
                   )}
                   {f.location && (
                     <p className="text-xs text-gray-500 mt-1">📍 {f.location}</p>
