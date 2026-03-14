@@ -1,5 +1,5 @@
 // @kairos/api - Database Migration Lambda
-// Runs the Drizzle SQL migration against Aurora from inside the VPC.
+// Runs all Drizzle SQL migrations in order against Aurora from inside the VPC.
 // Invoke manually: aws lambda invoke --function-name kairos-staging-db-migrate out.json
 
 import type { Handler } from 'aws-lambda';
@@ -9,6 +9,7 @@ import {
 } from '@aws-sdk/client-secrets-manager';
 import postgres from 'postgres';
 import * as fs from 'fs';
+import * as path from 'path';
 
 const secretsClient = new SecretsManagerClient({});
 
@@ -32,49 +33,76 @@ export const handler: Handler = async () => {
   });
 
   try {
-    // 3. Read and execute the migration SQL
-    const migrationPath = process.env['MIGRATION_PATH'] || '/var/task/migration.sql';
-    let migrationSql: string;
+    // 3. Ensure the migrations tracking table exists
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS _drizzle_migrations (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        applied_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
 
-    if (fs.existsSync(migrationPath)) {
-      migrationSql = fs.readFileSync(migrationPath, 'utf-8');
-    } else {
-      // Fallback: migration SQL is bundled inline via environment variable
-      const inlineSql = process.env['MIGRATION_SQL'];
-      if (!inlineSql) {
-        throw new Error('No migration SQL found. Set MIGRATION_PATH or MIGRATION_SQL.');
+    // 4. Read all migration files and sort alphabetically
+    const migrationsDir = '/var/task/migrations/';
+    const files = fs.readdirSync(migrationsDir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+
+    console.log(`Found ${files.length} migration files`);
+
+    let applied = 0;
+    let skipped = 0;
+
+    for (const file of files) {
+      // Check if this migration has already been applied
+      const existing = await sql`
+        SELECT id FROM _drizzle_migrations WHERE name = ${file}
+      `;
+
+      if (existing.length > 0) {
+        console.log(`Migration ${file} SKIPPED (already applied)`);
+        skipped++;
+        continue;
       }
-      migrationSql = inlineSql;
-    }
 
-    // Split by Drizzle statement breakpoints and execute each
-    const statements = migrationSql
-      .split('--> statement-breakpoint')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+      // Read and execute the migration
+      const migrationSql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+      const statements = migrationSql
+        .split('--> statement-breakpoint')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
 
-    console.log(`Executing ${statements.length} migration statements...`);
+      console.log(`Applying migration ${file} (${statements.length} statements)...`);
 
-    for (let i = 0; i < statements.length; i++) {
-      try {
-        await sql.unsafe(statements[i]!);
-        console.log(`Statement ${i + 1}/${statements.length} OK`);
-      } catch (err: any) {
-        // Skip "already exists" errors for idempotency
-        if (
-          err.message?.includes('already exists') ||
-          err.message?.includes('duplicate key')
-        ) {
-          console.log(`Statement ${i + 1}/${statements.length} SKIPPED (already exists)`);
-        } else {
-          console.error(`Statement ${i + 1}/${statements.length} FAILED:`, err.message);
-          throw err;
+      for (let i = 0; i < statements.length; i++) {
+        try {
+          await sql.unsafe(statements[i]!);
+          console.log(`  Statement ${i + 1}/${statements.length} OK`);
+        } catch (err: any) {
+          // Skip "already exists" errors for idempotency
+          if (
+            err.message?.includes('already exists') ||
+            err.message?.includes('duplicate key')
+          ) {
+            console.log(`  Statement ${i + 1}/${statements.length} SKIPPED (already exists)`);
+          } else {
+            console.error(`  Statement ${i + 1}/${statements.length} FAILED:`, err.message);
+            throw err;
+          }
         }
       }
+
+      // Record the migration as applied
+      await sql`
+        INSERT INTO _drizzle_migrations (name) VALUES (${file})
+      `;
+      console.log(`Migration ${file} applied successfully`);
+      applied++;
     }
 
-    console.log('Migration completed successfully');
-    return { statusCode: 200, body: `Migration complete: ${statements.length} statements executed` };
+    const summary = `Migration complete: ${applied} applied, ${skipped} skipped (${files.length} total)`;
+    console.log(summary);
+    return { statusCode: 200, body: summary };
   } finally {
     await sql.end();
   }

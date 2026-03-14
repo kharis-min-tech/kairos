@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Heart, Users, UserPlus } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui';
 
@@ -12,7 +13,7 @@ export default function OutreachPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <a href="/evangelism/outreach" className="block group">
+        <Link href="/evangelism/outreach" className="block group">
           <Card>
             <CardBody>
               <div className="flex items-center gap-3 py-4">
@@ -26,9 +27,9 @@ export default function OutreachPage() {
               </div>
             </CardBody>
           </Card>
-        </a>
+        </Link>
 
-        <a href="/evangelism/souls" className="block group">
+        <Link href="/evangelism/souls" className="block group">
           <Card>
             <CardBody>
               <div className="flex items-center gap-3 py-4">
@@ -42,9 +43,9 @@ export default function OutreachPage() {
               </div>
             </CardBody>
           </Card>
-        </a>
+        </Link>
 
-        <a href="/evangelism/souls" className="block group">
+        <Link href="/evangelism/followups" className="block group">
           <Card>
             <CardBody>
               <div className="flex items-center gap-3 py-4">
@@ -58,7 +59,7 @@ export default function OutreachPage() {
               </div>
             </CardBody>
           </Card>
-        </a>
+        </Link>
       </div>
     </section>
   );

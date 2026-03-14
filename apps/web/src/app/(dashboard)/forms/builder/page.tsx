@@ -146,11 +146,11 @@ export default function FormBuilderPage() {
     setSaving(true);
     try {
       await forms.create({
-        form_name: form.name,
-        form_description: form.description || undefined,
-        form_definition: { fields: form.fields },
+        formName: form.name,
+        formDescription: form.description || undefined,
+        formDefinition: { fields: form.fields },
         scope: form.scope,
-        target_branch_id: form.targetBranchId,
+        targetBranchId: form.targetBranchId,
       });
       setSuccess('Form saved successfully!');
     } catch {
@@ -178,10 +178,10 @@ export default function FormBuilderPage() {
     setLoadingTemplates(true);
     try {
       const res = await forms.listTemplates();
-      setTemplates((res.data ?? []).map((t: { form_id: number; form_name: string; form_description?: string }) => ({
-        id: t.form_id,
-        name: t.form_name,
-        description: t.form_description,
+      setTemplates((res.data ?? []).map((t: { formId: number; formName: string; formDescription?: string }) => ({
+        id: t.formId,
+        name: t.formName,
+        description: t.formDescription,
       })));
     } catch {
       // silent
@@ -194,9 +194,9 @@ export default function FormBuilderPage() {
   const loadFromTemplate = async (templateId: number) => {
     try {
       const res = await forms.get(templateId);
-      const definition = res.form_definition as { fields?: FormField[] };
+      const definition = res.formDefinition as { fields?: FormField[] };
       if (definition?.fields) {
-        setForm((prev) => ({ ...prev, name: res.form_name || prev.name, description: res.form_description || prev.description, fields: definition.fields! }));
+        setForm((prev) => ({ ...prev, name: res.formName || prev.name, description: res.formDescription || prev.description, fields: definition.fields! }));
       }
       setShowTemplates(false);
       setSuccess('Template loaded!');

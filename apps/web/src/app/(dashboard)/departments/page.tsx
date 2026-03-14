@@ -48,22 +48,22 @@ export default function DepartmentsPage() {
             <p className="text-sm text-gray-500 col-span-full text-center py-12">No departments found.</p>
           ) : (
             data.map((dept) => (
-              <Card key={dept.branch_department_id}>
+              <Card key={dept.branchDepartmentId}>
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Layers size={18} className="text-primary" />
-                    <h2 className="text-sm font-semibold text-gray-900">Department #{dept.department_id}</h2>
+                    <h2 className="text-sm font-semibold text-gray-900">Department #{dept.departmentId}</h2>
                   </div>
                 </CardHeader>
                 <CardBody>
-                  <p className="text-xs text-gray-700">Branch: {dept.branch_id}</p>
-                  <p className="text-xs text-gray-700">Lead: Member #{dept.lead_member_id}</p>
-                  {dept.deputy_member_id && (
-                    <p className="text-xs text-gray-700">Deputy: Member #{dept.deputy_member_id}</p>
+                  <p className="text-xs text-gray-700">Branch: {dept.branchId}</p>
+                  <p className="text-xs text-gray-700">Lead: Member #{dept.leadMemberId}</p>
+                  {dept.deputyMemberId && (
+                    <p className="text-xs text-gray-700">Deputy: Member #{dept.deputyMemberId}</p>
                   )}
                   <div className="mt-2">
-                    <Badge variant={dept.is_active ? 'active' : 'inactive'}>
-                      {dept.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={dept.isActive ? 'active' : 'inactive'}>
+                      {dept.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </CardBody>

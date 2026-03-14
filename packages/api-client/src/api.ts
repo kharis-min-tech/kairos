@@ -194,7 +194,13 @@ export const outreach = {
     get<PaginatedResponse<OutreachProgram>>('/v1/outreach/programs', params),
 
   registerWorker: (programId: number, data: { memberId: number }) =>
-    post<void>(`/v1/outreach/programs/${programId}/register-worker`, data),
+    post<void>(`/v1/outreach/programs/${programId}/workers`, data),
+
+  getProgram: (id: number) =>
+    get<OutreachProgram & { participants: Member[]; souls: Soul[] }>(`/v1/outreach/programs/${id}`),
+
+  completeProgram: (id: number) =>
+    put<OutreachProgram>(`/v1/outreach/programs/${id}/complete`, {}),
 
   overrideBranch: (data: { memberId: number; newBranchId: number }) =>
     post<void>('/v1/outreach/override-branch', data),
@@ -229,6 +235,9 @@ export const souls = {
 
   reassign: (id: number, data: { memberId: number }) =>
     put<Soul>(`/v1/souls/${id}/reassign`, data),
+
+  getFollowUpTracker: (params?: { tab?: string; search?: string; status?: string; contactMethod?: string }) =>
+    get<{ pending: number; completed: number; items: FollowUp[] }>('/v1/souls/follow-up-tracker', params),
 };
 
 // ─── Donations ───────────────────────────────────────────────────

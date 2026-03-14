@@ -47,12 +47,12 @@ export default function FormsListPage() {
 
   const columns: ColumnDef<Form, unknown>[] = [
     {
-      accessorKey: 'form_name',
+      accessorKey: 'formName',
       header: 'Form Name',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <FileText size={16} className="text-gray-400" />
-          <span className="font-medium text-gray-900">{row.original.form_name}</span>
+          <span className="font-medium text-gray-900">{row.original.formName}</span>
         </div>
       ),
     },
@@ -66,12 +66,12 @@ export default function FormsListPage() {
       ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: 'Created',
       cell: ({ getValue }) => formatDate(getValue() as string),
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: 'Status',
       cell: ({ getValue }) => (
         <Badge variant={getValue() ? 'active' : 'inactive'}>
@@ -84,10 +84,10 @@ export default function FormsListPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Link href={`/forms/view?id=${row.original.form_id}`}>
+          <Link href={`/forms/view?id=${row.original.formId}`}>
             <Button variant="ghost" size="sm" aria-label="Preview form"><Eye size={14} /></Button>
           </Link>
-          <Link href={`/forms/builder?edit=${row.original.form_id}`}>
+          <Link href={`/forms/builder?edit=${row.original.formId}`}>
             <Button variant="ghost" size="sm" aria-label="Edit form"><Edit size={14} /></Button>
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default function FormsListPage() {
           <div className="flex flex-wrap gap-4">
             <SelectInput name="scopeFilter" options={[{ value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} placeholder="All Scopes" value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} aria-label="Filter by scope" />
             {!isPastor && (
-              <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: String(b.branch_id), label: b.branch_name }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
+              <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
             )}
           </div>
         </CardBody>

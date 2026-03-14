@@ -63,8 +63,8 @@ describe('Follow-up Date Update (Property)', () => {
   });
 
   it('should always update soul updatedAt after logging any follow-up', async () => {
-    const contactMethods = ['Phone Call', 'Home Visit', 'Text Message', 'Email', 'In-Person Meeting'] as const;
-    const contactStatuses = ['Successful', 'No Answer', 'Call Back Later', 'Not Interested'] as const;
+    const contactMethods = ['Phone Call', 'Text Message', 'Email', 'WhatsApp', 'In-Person Visit', 'Other'] as const;
+    const contactStatuses = ['Successful', 'No Answer', 'Wrong Number', 'Call Back Later', 'Not Interested', 'Interested'] as const;
 
     await fc.assert(
       fc.asyncProperty(

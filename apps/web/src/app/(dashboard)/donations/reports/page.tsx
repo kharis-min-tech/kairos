@@ -88,7 +88,7 @@ export default function DonationReportsPage() {
         <CardBody>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {!isPastor && (
-              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: String(b.branch_id), label: b.branch_name }))} placeholder="All Branches" value={String(branchFilter)} onChange={(e) => setBranchFilter(e.target.value)} />
+              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={String(branchFilter)} onChange={(e) => setBranchFilter(e.target.value)} />
             )}
             <DatePicker label="Start Date" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <DatePicker label="End Date" name="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />

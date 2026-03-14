@@ -10,14 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 
 interface FormErrors {
-  first_name?: string;
-  last_name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone?: string;
-  date_of_birth?: string;
+  dateOfBirth?: string;
   gender?: string;
   address?: string;
-  home_branch_id?: string;
+  homeBranchId?: string;
 }
 
 const GENDER_OPTIONS = [
@@ -36,8 +36,8 @@ function validatePhone(phone: string): boolean {
 function validateForm(data: typeof defaultFormData): FormErrors {
   const errors: FormErrors = {};
 
-  if (!data.first_name.trim()) errors.first_name = 'First name is required';
-  if (!data.last_name.trim()) errors.last_name = 'Last name is required';
+  if (!data.firstName.trim()) errors.firstName = 'First name is required';
+  if (!data.lastName.trim()) errors.lastName = 'Last name is required';
 
   if (!data.email.trim()) {
     errors.email = 'Email is required';
@@ -51,29 +51,29 @@ function validateForm(data: typeof defaultFormData): FormErrors {
     errors.phone = 'Please enter a valid phone number';
   }
 
-  if (!data.date_of_birth) {
-    errors.date_of_birth = 'Date of birth is required';
+  if (!data.dateOfBirth) {
+    errors.dateOfBirth = 'Date of birth is required';
   } else {
-    const dob = new Date(data.date_of_birth);
-    if (dob >= new Date()) errors.date_of_birth = 'Date of birth must be in the past';
+    const dob = new Date(data.dateOfBirth);
+    if (dob >= new Date()) errors.dateOfBirth = 'Date of birth must be in the past';
   }
 
   if (!data.gender) errors.gender = 'Gender is required';
   if (!data.address.trim()) errors.address = 'Address is required';
-  if (!data.home_branch_id) errors.home_branch_id = 'Please select a home branch';
+  if (!data.homeBranchId) errors.homeBranchId = 'Please select a home branch';
 
   return errors;
 }
 
 const defaultFormData = {
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
-  date_of_birth: '',
+  dateOfBirth: '',
   gender: '',
   address: '',
-  home_branch_id: '',
+  homeBranchId: '',
 };
 
 export default function RegisterPage() {
@@ -90,11 +90,11 @@ export default function RegisterPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await branches.list({ limit: 100, is_active: true });
+        const res = await branches.list({ limit: 100, isActive: true });
         if (cancelled) return;
         const options = (res.data as Branch[]).map((b) => ({
-          value: String(b.branch_id),
-          label: b.branch_name,
+          value: String(b.branchId),
+          label: b.branchName,
         }));
         setBranchOptions(options);
       } catch {
@@ -129,14 +129,14 @@ export default function RegisterPage() {
 
     try {
       await members.create({
-        first_name: formData.first_name.trim(),
-        last_name: formData.last_name.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        date_of_birth: new Date(formData.date_of_birth),
+        dateOfBirth: new Date(formData.dateOfBirth),
         gender: formData.gender as 'Male' | 'Female',
         address: formData.address.trim(),
-        home_branch_id: Number(formData.home_branch_id),
+        homeBranchId: Number(formData.homeBranchId),
       });
       setSubmitted(true);
     } catch (err: unknown) {
@@ -200,18 +200,18 @@ export default function RegisterPage() {
               label="First name"
               name="first_name"
               required
-              value={formData.first_name}
-              onChange={(e) => handleChange('first_name', e.target.value)}
-              error={errors.first_name}
+              value={formData.firstName}
+              onChange={(e) => handleChange('firstName', e.target.value)}
+              error={errors.firstName}
               autoComplete="given-name"
             />
             <TextInput
               label="Last name"
               name="last_name"
               required
-              value={formData.last_name}
-              onChange={(e) => handleChange('last_name', e.target.value)}
-              error={errors.last_name}
+              value={formData.lastName}
+              onChange={(e) => handleChange('lastName', e.target.value)}
+              error={errors.lastName}
               autoComplete="family-name"
             />
           </div>
@@ -245,9 +245,9 @@ export default function RegisterPage() {
               label="Date of birth"
               name="date_of_birth"
               required
-              value={formData.date_of_birth}
-              onChange={(e) => handleChange('date_of_birth', e.target.value)}
-              error={errors.date_of_birth}
+              value={formData.dateOfBirth}
+              onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+              error={errors.dateOfBirth}
               max={new Date().toISOString().split('T')[0]}
             />
             <SelectInput
@@ -278,9 +278,9 @@ export default function RegisterPage() {
             required
             options={branchOptions}
             placeholder={loadingBranches ? 'Loading branches...' : 'Select a branch'}
-            value={formData.home_branch_id}
-            onChange={(e) => handleChange('home_branch_id', e.target.value)}
-            error={errors.home_branch_id}
+            value={formData.homeBranchId}
+            onChange={(e) => handleChange('homeBranchId', e.target.value)}
+            error={errors.homeBranchId}
             disabled={loadingBranches}
           />
 

@@ -9,6 +9,7 @@ import { ApiStack } from './stacks/api-stack';
 import { AnalyticsStack } from './stacks/analytics-stack';
 import { MonitoringStack } from './stacks/monitoring-stack';
 import { WebStack } from './stacks/web-stack';
+import { CicdStack } from './stacks/cicd-stack';
 
 /**
  * Kairos CDK Application Entry Point.
@@ -126,6 +127,18 @@ const webStack = new WebStack(app, `${config.prefix}-web`, {
   config,
   env: awsEnv,
   description: `Kairos ${config.env} - Next.js static site (S3 + CloudFront)`,
+});
+
+
+// ---------------------------------------------------------------
+// 9. CI/CD Stack — GitHub Actions OIDC role for deployments
+// ---------------------------------------------------------------
+new CicdStack(app, `${config.prefix}-cicd`, {
+  config,
+  githubOrg: 'kharis-min-tech',
+  githubRepo: 'kairos',
+  env: awsEnv,
+  description: `Kairos ${config.env} - GitHub Actions OIDC deploy role`,
 });
 
 app.synth();

@@ -97,7 +97,7 @@ export default function AttendanceReportsPage() {
               <SelectInput
                 label="Branch"
                 name="branchFilter"
-                options={branchList.map((b) => ({ value: String(b.branch_id), label: b.branch_name }))}
+                options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))}
                 placeholder="All Branches"
                 value={String(branchFilter)}
                 onChange={(e) => setBranchFilter(e.target.value)}

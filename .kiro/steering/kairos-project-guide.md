@@ -49,12 +49,18 @@ modifying, or suggesting changes in this repository.
 - Do NOT change API shapes, naming, or semantics without explicit instruction.
 - Backward compatibility is required unless a breaking change is explicitly requested.
 - Generated OpenAPI schemas must reflect the existing domain model exactly.
+- Entity type interfaces in `@kairos/types` MUST use camelCase field names matching the Drizzle ORM schema column definitions (e.g., `outreachId` not `outreach_id`, `programName` not `program_name`). Drizzle returns camelCase by default — types must match to avoid `undefined` field access at runtime.
+- Every Lambda handler file in `apps/api/src/` MUST have a corresponding CDK route in `api-stack.ts`, and the API client path in `packages/api-client/src/api.ts` MUST match the CDK route path exactly. Verify all three layers (Lambda handler, CDK route, API client) are aligned before marking a task complete.
 
 ### Code Generation Boundaries
 - Do NOT generate large files unless explicitly requested.
 - Do NOT refactor unrelated code while making targeted changes.
 - Keep changes minimal, intentional, and reviewable.
 - use my Context7 MCP server where necessary.
+
+### Frontend Navigation Rules
+- ALWAYS use Next.js `<Link>` component (`import Link from 'next/link'`) for internal navigation. NEVER use plain `<a href>` tags for internal routes — they cause full page reloads which break client-side state (auth context, etc.) in the static export SPA.
+- The app uses `output: "export"` (static export) — dynamic `[param]` routes are NOT allowed. Use `useSearchParams()` with query params instead (e.g., `/members/view?id=X`).
 
 ### Decision Escalation
 - When uncertain, ask for clarification instead of making assumptions.

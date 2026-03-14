@@ -105,32 +105,32 @@ export default function MembersListPage() {
 
   const columns: ColumnDef<Member, unknown>[] = [
     {
-      accessorKey: 'first_name',
+      accessorKey: 'firstName',
       header: 'Name',
       cell: ({ row }) => (
         <Link
-          href={`/members/view?id=${row.original.member_id}`}
+          href={`/members/view?id=${row.original.memberId}`}
           className="text-primary hover:underline font-medium"
         >
-          {row.original.first_name} {row.original.last_name}
+          {row.original.firstName} {row.original.lastName}
         </Link>
       ),
     },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'phone', header: 'Phone' },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.original.is_active ? 'active' : 'inactive';
+        const status = row.original.isActive ? 'active' : 'inactive';
         return <Badge variant={statusVariant[status]}>{status}</Badge>;
       },
     },
     {
-      accessorKey: 'membership_date',
+      accessorKey: 'membershipDate',
       header: 'Joined',
       cell: ({ row }) => {
-        const d = row.original.membership_date;
+        const d = row.original.membershipDate;
         if (!d) return '—';
         const date = new Date(d);
         return date.toLocaleDateString('en-GB');
@@ -181,7 +181,7 @@ export default function MembersListPage() {
         </div>
         {!isPastor && (
           <SelectInput
-            options={branchList.map((b) => ({ value: String(b.branch_id), label: b.branch_name }))}
+            options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))}
             placeholder="All Branches"
             value={branchFilter}
             onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
@@ -189,14 +189,14 @@ export default function MembersListPage() {
           />
         )}
         <SelectInput
-          options={departmentList.map((d) => ({ value: String(d.branch_department_id), label: String(d.department_id) }))}
+          options={departmentList.map((d) => ({ value: String(d.branchDepartmentId), label: String(d.departmentId) }))}
           placeholder="All Departments"
           value={departmentFilter}
           onChange={(e) => { setDepartmentFilter(e.target.value); setPage(1); }}
           aria-label="Filter by department"
         />
         <SelectInput
-          options={fellowshipList.map((f) => ({ value: String(f.fellowship_id), label: f.fellowship_name }))}
+          options={fellowshipList.map((f) => ({ value: String(f.fellowshipId), label: f.fellowshipName }))}
           placeholder="All Fellowships"
           value={fellowshipFilter}
           onChange={(e) => { setFellowshipFilter(e.target.value); setPage(1); }}

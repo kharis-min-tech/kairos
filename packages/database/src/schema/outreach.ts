@@ -92,9 +92,10 @@ export const souls = pgTable(
   'souls',
   {
     soulId: serial('soul_id').primaryKey(),
-    outreachId: integer('outreach_id')
-      .notNull()
-      .references(() => outreachPrograms.outreachId, { onDelete: 'cascade' }),
+    outreachId: integer('outreach_id').references(
+      () => outreachPrograms.outreachId,
+      { onDelete: 'cascade' }
+    ),
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
     phone: varchar('phone', { length: 20 }),
@@ -122,12 +123,18 @@ export const souls = pgTable(
     index('idx_souls_status').on(table.status),
     index('idx_souls_phone').on(table.phone),
     index('idx_souls_email').on(table.email),
+    // Partial index for efficient ad-hoc soul queries (souls without an outreach program)
+    index('idx_souls_assigned_adhoc')
+      .on(table.assignedMemberId)
+      .where(sql`outreach_id IS NULL`),
+    // Unique phone per outreach program (when program-linked)
     uniqueIndex('idx_souls_phone_outreach')
       .on(table.phone, table.outreachId)
-      .where(sql`phone IS NOT NULL`),
+      .where(sql`phone IS NOT NULL AND outreach_id IS NOT NULL`),
+    // Unique email per outreach program (when program-linked)
     uniqueIndex('idx_souls_email_outreach')
       .on(table.email, table.outreachId)
-      .where(sql`email IS NOT NULL`),
+      .where(sql`email IS NOT NULL AND outreach_id IS NOT NULL`),
     check(
       'chk_souls_gender',
       sql`${table.gender} IS NULL OR ${table.gender} IN ('Male', 'Female')`
