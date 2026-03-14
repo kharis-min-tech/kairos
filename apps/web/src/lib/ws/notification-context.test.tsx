@@ -2,11 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotificationProvider, useNotifications } from './notification-context';
-import type { WSMessage, MessageHandler } from './ws-manager';
+import type { MessageHandler } from './ws-manager';
 
 // Capture the message handler registered by NotificationProvider
 let capturedMessageHandler: MessageHandler | null = null;
-let capturedConnectHandler: (() => void) | null = null;
 
 vi.mock('./ws-manager', () => {
   class MockWSManager {
@@ -19,9 +18,8 @@ vi.mock('./ws-manager', () => {
       return () => { capturedMessageHandler = null; };
     }
 
-    onConnect(handler: () => void) {
-      capturedConnectHandler = handler;
-      return () => { capturedConnectHandler = null; };
+    onConnect(_handler: () => void) {
+      return () => {};
     }
 
     onDisconnect() {
@@ -69,7 +67,6 @@ describe('NotificationProvider', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_WS_URL = 'wss://test.example.com';
     capturedMessageHandler = null;
-    capturedConnectHandler = null;
     vi.clearAllMocks();
   });
 
@@ -177,8 +174,8 @@ describe('NotificationProvider', () => {
     });
 
     const items = screen.getByTestId('notification-list').querySelectorAll('li');
-    expect(items[0].textContent).toContain('Second');
-    expect(items[1].textContent).toContain('First');
+    expect(items[0]!.textContent).toContain('Second');
+    expect(items[1]!.textContent).toContain('First');
   });
 
   it('marks a single notification as read', async () => {

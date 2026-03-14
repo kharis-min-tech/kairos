@@ -110,7 +110,6 @@ async function exportTable(
   logger.info(`Starting export for table: ${tableName}`);
 
   // Fetch in batches to limit memory usage and DB load
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const batch = await queryFn(offset, BATCH_SIZE);
 

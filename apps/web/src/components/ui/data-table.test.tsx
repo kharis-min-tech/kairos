@@ -1,6 +1,6 @@
 import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { DataTable } from './data-table';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -33,7 +33,7 @@ describe('DataTable', () => {
 
   it('renders column headers', () => {
     render(<DataTable data={testData} columns={columns} />);
-    const thead = screen.getAllByRole('row')[0];
+    const thead = screen.getAllByRole('row')[0]!;
     expect(within(thead).getByText('ID')).toBeInTheDocument();
     expect(within(thead).getByText('Name')).toBeInTheDocument();
     expect(within(thead).getByText('Status')).toBeInTheDocument();

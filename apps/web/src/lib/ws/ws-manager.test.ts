@@ -76,7 +76,7 @@ describe('WSManager', () => {
       await manager.connect();
 
       expect(MockWebSocket.instances).toHaveLength(1);
-      expect(MockWebSocket.instances[0].url).toBe(
+      expect(MockWebSocket.instances[0]!.url).toBe(
         'wss://test.example.com?token=test-token',
       );
     });
@@ -94,14 +94,14 @@ describe('WSManager', () => {
       await manager.connect();
 
       expect(manager.isConnected).toBe(false);
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
       expect(manager.isConnected).toBe(true);
     });
 
     it('does not create a new connection if already open', async () => {
       const manager = createManager();
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       await manager.connect();
       expect(MockWebSocket.instances).toHaveLength(1);
@@ -112,21 +112,21 @@ describe('WSManager', () => {
     it('closes the WebSocket and resets state', async () => {
       const manager = createManager();
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       manager.disconnect();
-      expect(MockWebSocket.instances[0].closeCalled).toBe(true);
+      expect(MockWebSocket.instances[0]!.closeCalled).toBe(true);
       expect(manager.isConnected).toBe(false);
     });
 
     it('does not attempt reconnect after intentional disconnect', async () => {
       const manager = createManager();
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       manager.disconnect();
       // Simulate the close event that follows
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateClose();
 
       // Advance timers — no reconnect should happen
       await vi.advanceTimersByTimeAsync(60_000);
@@ -141,8 +141,8 @@ describe('WSManager', () => {
       manager.onMessage(handler);
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
-      MockWebSocket.instances[0].simulateMessage(
+      MockWebSocket.instances[0]!.simulateOpen();
+      MockWebSocket.instances[0]!.simulateMessage(
         JSON.stringify({ type: 'Alert', data: { title: 'Test' } }),
       );
 
@@ -155,8 +155,8 @@ describe('WSManager', () => {
       manager.onMessage(handler);
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
-      MockWebSocket.instances[0].simulateMessage('not-json');
+      MockWebSocket.instances[0]!.simulateOpen();
+      MockWebSocket.instances[0]!.simulateMessage('not-json');
 
       expect(handler).not.toHaveBeenCalled();
     });
@@ -167,10 +167,10 @@ describe('WSManager', () => {
       const unsub = manager.onMessage(handler);
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       unsub();
-      MockWebSocket.instances[0].simulateMessage(
+      MockWebSocket.instances[0]!.simulateMessage(
         JSON.stringify({ type: 'Alert', data: {} }),
       );
 
@@ -185,7 +185,7 @@ describe('WSManager', () => {
       manager.onConnect(handler);
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       expect(handler).toHaveBeenCalledOnce();
     });
@@ -196,9 +196,9 @@ describe('WSManager', () => {
       manager.onDisconnect(handler);
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
       manager.disconnect();
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateClose();
 
       expect(handler).toHaveBeenCalledOnce();
     });
@@ -210,10 +210,10 @@ describe('WSManager', () => {
       const manager = createManager({ getToken, initialBackoffMs: 100, maxBackoffMs: 1600 });
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0]!.simulateOpen();
 
       // Simulate unexpected close
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateClose();
       expect(MockWebSocket.instances).toHaveLength(1);
 
       // First reconnect after 100ms
@@ -221,7 +221,7 @@ describe('WSManager', () => {
       expect(MockWebSocket.instances).toHaveLength(2);
 
       // Simulate another close
-      MockWebSocket.instances[1].simulateClose();
+      MockWebSocket.instances[1]!.simulateClose();
 
       // Second reconnect after 200ms (2^1 * 100)
       await vi.advanceTimersByTimeAsync(200);
@@ -233,18 +233,18 @@ describe('WSManager', () => {
       const manager = createManager({ getToken, initialBackoffMs: 100 });
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateOpen();
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateOpen();
+      MockWebSocket.instances[0]!.simulateClose();
 
       // Reconnect
       await vi.advanceTimersByTimeAsync(100);
       expect(MockWebSocket.instances).toHaveLength(2);
 
       // Successful reconnect
-      MockWebSocket.instances[1].simulateOpen();
+      MockWebSocket.instances[1]!.simulateOpen();
 
       // Close again — should use initial backoff (100ms), not 200ms
-      MockWebSocket.instances[1].simulateClose();
+      MockWebSocket.instances[1]!.simulateClose();
       await vi.advanceTimersByTimeAsync(100);
       expect(MockWebSocket.instances).toHaveLength(3);
     });
@@ -258,17 +258,17 @@ describe('WSManager', () => {
       });
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateClose();
 
       // Attempt 1
       await vi.advanceTimersByTimeAsync(50);
       expect(MockWebSocket.instances).toHaveLength(2);
-      MockWebSocket.instances[1].simulateClose();
+      MockWebSocket.instances[1]!.simulateClose();
 
       // Attempt 2
       await vi.advanceTimersByTimeAsync(100);
       expect(MockWebSocket.instances).toHaveLength(3);
-      MockWebSocket.instances[2].simulateClose();
+      MockWebSocket.instances[2]!.simulateClose();
 
       // No more attempts
       await vi.advanceTimersByTimeAsync(60_000);
@@ -285,19 +285,19 @@ describe('WSManager', () => {
       });
 
       await manager.connect();
-      MockWebSocket.instances[0].simulateClose();
+      MockWebSocket.instances[0]!.simulateClose();
 
       // Attempt 1: 1000ms
       await vi.advanceTimersByTimeAsync(1000);
       expect(MockWebSocket.instances).toHaveLength(2);
-      MockWebSocket.instances[1].simulateClose();
+      MockWebSocket.instances[1]!.simulateClose();
 
       // Attempt 2: min(2000, 2000) = 2000ms
       await vi.advanceTimersByTimeAsync(1999);
       expect(MockWebSocket.instances).toHaveLength(2); // not yet
       await vi.advanceTimersByTimeAsync(1);
       expect(MockWebSocket.instances).toHaveLength(3);
-      MockWebSocket.instances[2].simulateClose();
+      MockWebSocket.instances[2]!.simulateClose();
 
       // Attempt 3: min(4000, 2000) = 2000ms (capped)
       await vi.advanceTimersByTimeAsync(2000);
