@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { Soul, FollowUp } from '@kairos/types';
+import type { Soul, FollowUp  } from '@kairos/types';
 import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
@@ -54,7 +54,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   const [followUpForm, setFollowUpForm] = useState({
     contactDate: todayStr(),
     contactTime: '',
-    contactMethod: 'Phone Call',
+    contactMethod: CONTACT_METHODS,
     contactStatus: 'Successful',
     notes: '',
   });
@@ -90,9 +90,9 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
     try {
       await souls.addFollowup(soul.soulId, {
         soulId: soul.soulId,
-        contact_date: new Date(followUpForm.contactDate),
-        contact_method: followUpForm.contactMethod,
-        contact_status: followUpForm.contactStatus,
+        followUpDate: new Date(followUpForm.contactDate),
+        contactMethod: followUpForm.contactMethod,
+        contactStatus: followUpForm.contactStatus,
         notes: followUpForm.notes || undefined,
       });
       setShowFollowUpForm(false);
