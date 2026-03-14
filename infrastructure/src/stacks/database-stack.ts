@@ -47,7 +47,7 @@ export class DatabaseStack extends cdk.Stack {
     const cluster = new rds.DatabaseCluster(this, 'AuroraCluster', {
       clusterIdentifier: `${config.prefix}-aurora-cluster`,
       engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_15_14,
+        version: rds.AuroraPostgresEngineVersion.VER_15_15,
       }),
       serverlessV2MinCapacity: config.auroraMinAcu,
       serverlessV2MaxCapacity: config.auroraMaxAcu,
