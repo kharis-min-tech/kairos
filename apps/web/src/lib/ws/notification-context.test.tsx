@@ -32,7 +32,7 @@ vi.mock('./ws-manager', () => {
   return { WSManager: MockWSManager };
 });
 
-// Mock auth — authenticated by default
+//  — authenticated by default
 vi.mock('@/lib/auth', () => ({
   useAuth: vi.fn().mockReturnValue({
     isAuthenticated: true,
