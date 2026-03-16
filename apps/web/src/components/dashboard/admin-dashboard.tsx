@@ -1,42 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { StatCard, Card, CardHeader, CardBody, Skeleton } from '@/components/ui';
-import { AttendanceChart } from './attendance-chart';
-import { dashboard } from '@kairos/api-client';
-import type { AdminDashboard as AdminDashboardData } from '@kairos/api-client';
+import {
+  Users, Building2, HandCoins, Heart,
+  UserPlus, CalendarCheck, BarChart3, FileText,
+} from 'lucide-react';
+import { StatCard } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SimpleBarChart } from '@/components/shared/chart-wrapper';
+import { ActivityFeed } from '@/components/shared/activity-feed';
+import { QuickActions } from '@/components/shared/quick-actions';
+import { DarkHeader } from '@/components/shared/dark-header';
+import { useAdminDashboard } from '@/hooks/use-dashboard';
 
 const formatGBP = (amount: number) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount);
 
-function formatTimeAgo(timestamp: string): string {
-  const diff = Date.now() - new Date(timestamp).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
+const quickActions = [
+  { label: 'Add Member', icon: <UserPlus size={18} />, href: '/members/new', color: 'bg-primary/10 text-primary' },
+  { label: 'Record Attendance', icon: <CalendarCheck size={18} />, href: '/attendance', color: 'bg-green-100 text-green-700' },
+  { label: 'View Reports', icon: <BarChart3 size={18} />, href: '/reports', color: 'bg-blue-100 text-blue-700' },
+  { label: 'Create Form', icon: <FileText size={18} />, href: '/forms/builder', color: 'bg-amber-100 text-amber-700' },
+];
 
 export function AdminDashboard() {
-  const [data, setData] = useState<AdminDashboardData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    dashboard.getAdmin().then(setData).catch(() => setError('Failed to load dashboard'));
-  }, []);
+  const { data, isLoading, error } = useAdminDashboard();
 
   if (error) {
-    return <p className="text-red-600 text-sm">{error}</p>;
+    return <p className="text-sm text-destructive">Failed to load dashboard data.</p>;
   }
 
-  if (!data) {
+  if (isLoading || !data) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
         <Skeleton className="h-64 rounded-lg" />
@@ -44,49 +43,59 @@ export function AdminDashboard() {
     );
   }
 
+  const chartData = (data.attendanceTrends ?? []).map((t) => ({
+    name: t.week,
+    value: t.percentage,
+  }));
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Members" value={data.totalMembers.toLocaleString()} />
-        <StatCard label="Branches" value={data.totalBranches} />
-        <StatCard label="Donations (30d)" value={formatGBP(data.donationsLast30Days)} />
-        <StatCard label="Souls (30d)" value={data.soulsLast30Days} />
+      {/* Dark greeting header — mobile prominent */}
+      <DarkHeader
+        title="Church Overview"
+        subtitle={`${data.totalBranches} branches · ${data.totalMembers.toLocaleString()} members`}
+        className="lg:hidden"
+      />
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatCard icon={<Users size={20} />} label="Total Members" value={data.totalMembers.toLocaleString()} />
+        <StatCard icon={<Building2 size={20} />} label="Branches" value={data.totalBranches} />
+        <StatCard icon={<HandCoins size={20} />} label="Donations (30d)" value={formatGBP(data.donationsLast30Days)} />
+        <StatCard icon={<Heart size={20} />} label="Souls (30d)" value={data.soulsLast30Days} />
       </div>
 
+      {/* Charts + Activity row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Attendance Trends */}
         <Card>
-          <CardHeader>
-            <h2 className="text-sm font-medium text-gray-700">Attendance Trends (8 weeks)</h2>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Attendance Trends (8 weeks)</CardTitle>
           </CardHeader>
-          <CardBody>
-            <AttendanceChart data={data.attendanceTrends} />
-          </CardBody>
+          <CardContent>
+            {chartData.length > 0 ? (
+              <SimpleBarChart data={chartData} height={220} />
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">No attendance data available</p>
+            )}
+          </CardContent>
         </Card>
 
+        {/* Recent Activity */}
         <Card>
-          <CardHeader>
-            <h2 className="text-sm font-medium text-gray-700">Recent Activity</h2>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
           </CardHeader>
-          <CardBody>
-            {data.recentActivity.length === 0 ? (
-              <p className="text-sm text-gray-500">No recent activity</p>
-            ) : (
-              <ul className="divide-y divide-gray-100" role="list" aria-label="Recent activity">
-                {data.recentActivity.slice(0, 10).map((item: { action: string; timestamp: string; actor: string }, i: number) => (
-                  <li key={i} className="py-2 flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-900 truncate">{item.action}</p>
-                      <p className="text-xs text-gray-500">{item.actor}</p>
-                    </div>
-                    <time className="text-xs text-gray-500 shrink-0" dateTime={item.timestamp}>
-                      {formatTimeAgo(item.timestamp)}
-                    </time>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardBody>
+          <CardContent>
+            <ActivityFeed items={data.recentActivity ?? []} />
+          </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h3 className="mb-3 text-sm font-medium text-muted-foreground">Quick Actions</h3>
+        <QuickActions actions={quickActions} />
       </div>
     </div>
   );

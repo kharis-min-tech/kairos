@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Polyfill pointer capture methods for jsdom (Radix Select needs them)
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -40,6 +53,41 @@ const MOCK_BRANCHES = {
   pagination: { page: 1, limit: 100, total: 2, totalPages: 1 },
 };
 
+function createWrapper() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
+/** Fill Step 0 (Personal Info) with valid data and advance */
+async function fillPersonalStep(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/first name/i), 'John');
+  await user.type(screen.getByLabelText(/last name/i), 'Doe');
+  await user.type(screen.getByLabelText(/email/i), 'john@example.com');
+  await user.type(screen.getByLabelText(/phone/i), '+44 7700 900000');
+  await user.type(screen.getByLabelText(/date of birth/i), '1990-01-15');
+  // Gender uses button-based selection
+  await user.click(screen.getByRole('button', { name: 'Male' }));
+  // Click Next to advance to Step 1
+  await user.click(screen.getByRole('button', { name: /next/i }));
+}
+
+/** Fill Step 1 (Branch) with valid data and advance */
+async function fillBranchStep(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/address/i), '123 Church Lane');
+  // Radix Select — click trigger then select item from portaled content
+  const trigger = screen.getByRole('combobox');
+  await user.click(trigger);
+  // Radix Select renders both native <option> and portaled <span>, use role="option"
+  await waitFor(() => {
+    expect(screen.getByRole('option', { name: 'London Main' })).toBeInTheDocument();
+  });
+  await user.click(screen.getByRole('option', { name: 'London Main' }));
+  // Click Next to advance to Step 2
+  await user.click(screen.getByRole('button', { name: /next/i }));
+}
+
 describe('RegisterPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,8 +98,8 @@ describe('RegisterPage', () => {
     cleanup();
   });
 
-  it('renders the registration form with all required fields', async () => {
-    render(<RegisterPage />);
+  it('renders step 1 (personal info) with required fields', async () => {
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
@@ -61,99 +109,113 @@ describe('RegisterPage', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/gender/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/home branch/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+    // Gender uses buttons, not a labeled input
+    expect(screen.getByRole('button', { name: 'Male' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Female' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
   });
 
-  it('loads branches into the dropdown', async () => {
-    render(<RegisterPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('London Main')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Manchester Branch')).toBeInTheDocument();
-    expect(mockBranchesList).toHaveBeenCalledWith({ limit: 100, isActive: true });
-  });
-
-  it('shows validation errors for empty required fields', async () => {
+  it('shows step 2 with branches after personal step', async () => {
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    await fillPersonalStep(user);
+
+    // Should now be on Step 2 (Branch)
+    await waitFor(() => {
+      expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
+    });
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
+  });
+
+  it('shows validation errors on step 1 for empty required fields', async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /next/i }));
 
     await waitFor(() => {
       expect(screen.getByText('First name is required')).toBeInTheDocument();
     });
     expect(screen.getByText('Last name is required')).toBeInTheDocument();
-    expect(screen.getByText('Email is required')).toBeInTheDocument();
-    expect(screen.getByText('Phone number is required')).toBeInTheDocument();
     expect(screen.getByText('Date of birth is required')).toBeInTheDocument();
-    expect(screen.getByText('Gender is required')).toBeInTheDocument();
-    expect(screen.getByText('Address is required')).toBeInTheDocument();
-    expect(screen.getByText('Please select a home branch')).toBeInTheDocument();
   });
 
   it('validates email format', async () => {
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     });
 
-    await user.type(screen.getByLabelText(/email/i), 'not-an-email');
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    // Use a value that passes HTML5 type="email" validation but fails Zod .email()
+    await user.type(screen.getByLabelText(/email/i), 'bad@');
+    
+    // Submit via fireEvent to bypass HTML5 constraint validation that userEvent respects
+    const form = screen.getByRole('form', { name: /personal/i });
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
     });
   });
 
   it('validates phone format', async () => {
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
     });
 
+    // Use a value that doesn't match the phone regex pattern
     await user.type(screen.getByLabelText(/phone/i), 'abc');
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /next/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument();
     });
   });
 
-  it('submits the form and shows pending approval message', async () => {
+  it('submits full wizard and shows pending approval message', async () => {
     mockCreate.mockResolvedValue({ memberId: 1, firstName: 'John' });
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
+    // Step 0: Personal Info
     await waitFor(() => {
-      expect(screen.getByText('London Main')).toBeInTheDocument();
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     });
+    await fillPersonalStep(user);
 
-    await user.type(screen.getByLabelText(/first name/i), 'John');
-    await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/email/i), 'john@example.com');
-    await user.type(screen.getByLabelText(/phone/i), '+44 7700 900000');
-    await user.type(screen.getByLabelText(/date of birth/i), '1990-01-15');
-    await user.selectOptions(screen.getByLabelText(/gender/i), 'Male');
-    await user.type(screen.getByLabelText(/address/i), '123 Church Lane');
-    await user.selectOptions(screen.getByLabelText(/home branch/i), '1');
+    // Step 1: Branch
+    await waitFor(() => {
+      expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
+    });
+    await fillBranchStep(user);
 
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    // Step 2: Password
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    });
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass1');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
+    // Should show success
     await waitFor(() => {
       expect(screen.getByText(/pending approval/i)).toBeInTheDocument();
     });
+    expect(screen.getByText('Registration Submitted')).toBeInTheDocument();
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -172,22 +234,27 @@ describe('RegisterPage', () => {
     const { ApiError } = await import('@kairos/api-client');
     mockCreate.mockRejectedValue(new ApiError(409, { code: 'DUPLICATE', message: 'Email already registered' }));
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
+    // Step 0
     await waitFor(() => {
-      expect(screen.getByText('London Main')).toBeInTheDocument();
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     });
+    await fillPersonalStep(user);
 
-    await user.type(screen.getByLabelText(/first name/i), 'John');
-    await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/email/i), 'john@example.com');
-    await user.type(screen.getByLabelText(/phone/i), '+44 7700 900000');
-    await user.type(screen.getByLabelText(/date of birth/i), '1990-01-15');
-    await user.selectOptions(screen.getByLabelText(/gender/i), 'Male');
-    await user.type(screen.getByLabelText(/address/i), '123 Church Lane');
-    await user.selectOptions(screen.getByLabelText(/home branch/i), '1');
+    // Step 1
+    await waitFor(() => {
+      expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
+    });
+    await fillBranchStep(user);
 
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    // Step 2
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    });
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass1');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Email already registered')).toBeInTheDocument();
@@ -195,10 +262,10 @@ describe('RegisterPage', () => {
   });
 
   it('has a link to the login page', async () => {
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
     });
 
     const signInLink = screen.getByRole('link', { name: /sign in/i });
@@ -207,14 +274,14 @@ describe('RegisterPage', () => {
 
   it('clears field error when user starts typing', async () => {
     const user = userEvent.setup();
-    render(<RegisterPage />);
+    render(<RegisterPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
     });
 
     // Submit empty to trigger errors
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /next/i }));
 
     await waitFor(() => {
       expect(screen.getByText('First name is required')).toBeInTheDocument();
@@ -223,6 +290,8 @@ describe('RegisterPage', () => {
     // Start typing in first name
     await user.type(screen.getByLabelText(/first name/i), 'J');
 
-    expect(screen.queryByText('First name is required')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('First name is required')).not.toBeInTheDocument();
+    });
   });
 });

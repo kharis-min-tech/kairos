@@ -187,10 +187,11 @@ describe('OutreachProgramsPage', () => {
     });
 
     // The completed program card should not have Register or Complete buttons
-    const summerCard = screen.getByText('Summer Campaign').closest('[class*="bg-white"]');
+    const summerCard = screen.getByText('Summer Campaign').closest('[class*="rounded-lg"]');
     expect(summerCard).toBeTruthy();
     // Completed program should not have action buttons
-    expect(summerCard?.querySelector('button')).toBeNull();
+    const buttons = summerCard?.querySelectorAll('button');
+    expect(buttons?.length ?? 0).toBe(0);
   });
 
   it('does not show Complete button for regular members', async () => {

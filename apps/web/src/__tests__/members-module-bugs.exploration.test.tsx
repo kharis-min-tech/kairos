@@ -9,7 +9,10 @@
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ─── Hoisted mocks (must be declared before vi.mock calls) ────────────────────
 
@@ -58,10 +61,22 @@ vi.mock('@kairos/api-client', () => ({
     getPhotoUploadUrl: membersGetPhotoUploadUrlMock,
     update: membersUpdateMock,
   },
+  branches: {
+    list: vi.fn().mockResolvedValue({ data: [], pagination: { total: 0 } }),
+  },
 }));
 
 vi.mock('@/lib/ws', () => ({
-  useNotifications: vi.fn(() => ({ unreadCount: 0 })),
+  useNotifications: vi.fn(() => ({
+    notifications: [],
+    unreadCount: 0,
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn(),
+    clearNotifications: vi.fn(),
+    isConnected: false,
+    toast: null,
+    dismissToast: vi.fn(),
+  })),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -69,6 +84,9 @@ vi.mock('@/lib/auth', () => ({
     user: { sub: 'u1', email: 'admin@kairos.church', role: 'Admin', branchId: '1', isApproved: true },
     isAuthenticated: true,
     isLoading: false,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    getToken: vi.fn(),
   })),
 }));
 
@@ -93,6 +111,13 @@ import { ProtectedRoute } from '@/lib/auth/protected-route';
 import { useAuth } from '@/lib/auth';
 import { useAuth as useAuthContext } from '@/lib/auth/auth-context';
 import { useRouter } from 'next/navigation';
+
+function createWrapper() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
 
 afterEach(() => {
   cleanup();
@@ -137,7 +162,7 @@ describe('Condition A — Routing bugs: Profile and Settings links use bare <a> 
    * Counterexample: Profile/Settings links are bare <a> tags — Next.js Link was NOT used
    */
 
-  it('Profile link should use Next.js Link component (not a bare <a> tag)', () => {
+  it('Profile link should use Next.js Link component (not a bare <a> tag)', async () => {
     /**
      * On unfixed code: topbar.tsx does NOT import next/link.
      * The Profile link is rendered as <a href="/profile"> — a bare anchor.
@@ -145,11 +170,17 @@ describe('Condition A — Routing bugs: Profile and Settings links use bare <a> 
      * On unfixed code: the Profile anchor will NOT have data-nextjs-link="true".
      * This assertion FAILS on unfixed code.
      */
-    const { container } = render(<TopBar onMenuToggle={() => {}} />);
-    const userMenuBtn = container.querySelector('[aria-label="User menu"]')!;
-    fireEvent.click(userMenuBtn);
+    render(<TopBar onMenuToggle={() => {}} />, { wrapper: createWrapper() });
+    const user = userEvent.setup();
+    const userMenuBtn = screen.getByLabelText('User menu');
+    await user.click(userMenuBtn);
 
-    const profileLink = container.querySelector('a[href="/profile"]');
+    // DropdownMenu content is portaled to document.body
+    await waitFor(() => {
+      expect(screen.getByText('Profile')).toBeInTheDocument();
+    });
+
+    const profileLink = document.querySelector('a[href="/profile"]');
     expect(profileLink).not.toBeNull();
 
     // EXPECTED TO FAIL on unfixed code:
@@ -158,33 +189,45 @@ describe('Condition A — Routing bugs: Profile and Settings links use bare <a> 
     expect(profileLink?.getAttribute('data-nextjs-link')).toBe('true');
   });
 
-  it('Settings link should use Next.js Link component (not a bare <a> tag)', () => {
+  it('Settings link should use Next.js Link component (not a bare <a> tag)', async () => {
     /**
      * On unfixed code: topbar.tsx does NOT import next/link.
      * The Settings link is rendered as <a href="/settings"> — a bare anchor.
      * This assertion FAILS on unfixed code.
      */
-    const { container } = render(<TopBar onMenuToggle={() => {}} />);
-    const userMenuBtn = container.querySelector('[aria-label="User menu"]')!;
-    fireEvent.click(userMenuBtn);
+    render(<TopBar onMenuToggle={() => {}} />, { wrapper: createWrapper() });
+    const user = userEvent.setup();
+    const userMenuBtn = screen.getByLabelText('User menu');
+    await user.click(userMenuBtn);
 
-    const settingsLink = container.querySelector('a[href="/settings"]');
+    // DropdownMenu content is portaled to document.body
+    await waitFor(() => {
+      expect(screen.getByText('Settings')).toBeInTheDocument();
+    });
+
+    const settingsLink = document.querySelector('a[href="/settings"]');
     expect(settingsLink).not.toBeNull();
 
     // EXPECTED TO FAIL on unfixed code:
     expect(settingsLink?.getAttribute('data-nextjs-link')).toBe('true');
   });
 
-  it('Next.js Link component should be rendered for /profile and /settings routes', () => {
+  it('Next.js Link component should be rendered for /profile and /settings routes', async () => {
     /**
      * Verifies that the next/link mock was called with the correct hrefs.
      * On unfixed code: linkRenderSpy is never called for /profile or /settings
      * because next/link is not imported in topbar.tsx.
      * This assertion FAILS on unfixed code.
      */
-    render(<TopBar onMenuToggle={() => {}} />);
+    render(<TopBar onMenuToggle={() => {}} />, { wrapper: createWrapper() });
+    const user = userEvent.setup();
     const userMenuBtn = screen.getByLabelText('User menu');
-    fireEvent.click(userMenuBtn);
+    await user.click(userMenuBtn);
+
+    // Wait for dropdown to open (portaled content)
+    await waitFor(() => {
+      expect(screen.getByText('Profile')).toBeInTheDocument();
+    });
 
     // EXPECTED TO FAIL on unfixed code:
     // linkRenderSpy is never called because next/link is not used
@@ -276,22 +319,21 @@ describe('Condition C — Email contamination: AppShell calls members.list with 
      * On unfixed code: AppShell has a useEffect that calls
      * members.list({ email: user.email, limit: 1 }) where user.email = 'admin@kairos.church'.
      * This assertion FAILS on unfixed code because the call IS made.
+     *
+     * On FIXED code: AppShell does NOT call members.list at all.
      */
     await act(async () => {
-      render(<AppShell>Dashboard Content</AppShell>);
+      render(<AppShell>Dashboard Content</AppShell>, { wrapper: createWrapper() });
     });
 
     // Wait for any async effects to complete
-    await waitFor(() => {
-      expect(membersListMock).toHaveBeenCalled();
-    });
+    await act(async () => {});
 
     // EXPECTED TO FAIL on unfixed code:
-    // AppShell calls members.list({ email: 'admin@kairos.church', limit: 1 })
-    // We assert it should NOT have been called with the admin's email
+    // AppShell calls members.list with email — this is the bug.
     const calls = membersListMock.mock.calls;
     const emailContaminatedCall = calls.find(
-      (call) => call[0]?.email === 'admin@kairos.church'
+      (call: [Record<string, unknown>]) => call[0]?.email === 'admin@kairos.church'
     );
     expect(emailContaminatedCall).toBeUndefined(); // FAILS on unfixed code
   });
@@ -305,7 +347,7 @@ describe('Condition C — Email contamination: AppShell calls members.list with 
      * This assertion FAILS on unfixed code.
      */
     await act(async () => {
-      render(<AppShell>Dashboard Content</AppShell>);
+      render(<AppShell>Dashboard Content</AppShell>, { wrapper: createWrapper() });
     });
 
     // Allow any async effects to settle
@@ -316,7 +358,7 @@ describe('Condition C — Email contamination: AppShell calls members.list with 
     // We assert no call has BOTH email AND limit=1 (the contaminating combination)
     const calls = membersListMock.mock.calls;
     const emailAndLimitOneCall = calls.find(
-      (call) => call[0]?.email !== undefined && call[0]?.limit === 1
+      (call: [Record<string, unknown>]) => call[0]?.email !== undefined && call[0]?.limit === 1
     );
     expect(emailAndLimitOneCall).toBeUndefined(); // FAILS on unfixed code
   });
@@ -328,7 +370,7 @@ describe('Condition C — Email contamination: AppShell calls members.list with 
      * The bug is that AppShell makes the call at all — we assert it should not.
      */
     await act(async () => {
-      render(<AppShell>Dashboard Content</AppShell>);
+      render(<AppShell>Dashboard Content</AppShell>, { wrapper: createWrapper() });
     });
 
     // Simulate the members list page making its own call
@@ -339,7 +381,7 @@ describe('Condition C — Email contamination: AppShell calls members.list with 
     // EXPECTED TO FAIL on unfixed code:
     // AppShell calls members.list with email — this is the bug.
     const appShellEmailCall = membersListMock.mock.calls.find(
-      (call) => call[0]?.email !== undefined
+      (call: [Record<string, unknown>]) => call[0]?.email !== undefined
     );
     expect(appShellEmailCall).toBeUndefined(); // FAILS on unfixed code
   });

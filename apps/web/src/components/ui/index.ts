@@ -1,14 +1,13 @@
-export { Button } from './button';
-export type { ButtonProps, ButtonVariant, ButtonSize } from './button';
+export { Button, buttonVariants } from './button';
+export type { ButtonProps } from './button';
 
-export { Badge } from './badge';
-export type { BadgeProps, BadgeVariant } from './badge';
+export { Badge, badgeVariants } from './badge';
+export type { BadgeProps } from './badge';
 
 export { Alert } from './alert';
 export type { AlertProps, AlertVariant } from './alert';
 
-export { Card, CardHeader, CardBody, CardFooter } from './card';
-export type { CardProps } from './card';
+export { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from './card';
 
 export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
@@ -26,4 +25,3 @@ export { Spinner } from './spinner';
 export type { SpinnerProps } from './spinner';
 
 export { Skeleton } from './skeleton';
-export type { SkeletonProps } from './skeleton';

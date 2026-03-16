@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, Card, CardHeader, CardBody, TextInput, SelectInput, Textarea, Checkbox } from '@/components/ui';
-import { useAuth } from '@/lib/auth';
-import { donations } from '@kairos/api-client';
+import { PageHeader } from '@/components/shared';
+import { Button, Card, CardHeader, CardContent, TextInput, SelectInput, Textarea, Checkbox, Alert } from '@/components/ui';
+import { useCreateOnlineDonation, useCreateManualDonation } from '@/hooks/use-donations';
+import type { Donation } from '@kairos/types';
 
 const PURPOSES = [
   { value: 'Offering', label: 'Offering' },
@@ -26,9 +28,11 @@ const formatGBP = (amount: number) =>
 type Tab = 'online' | 'manual';
 
 export default function DonationRecordPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const createOnline = useCreateOnlineDonation();
+  const createManual = useCreateManualDonation();
+
   const [activeTab, setActiveTab] = useState<Tab>('online');
-  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,57 +59,61 @@ export default function DonationRecordPage() {
 
   const handleOnlineSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); setSuccess(null); setSubmitting(true);
-    try {
-      const amount = parseFloat(onlineAmount);
-      if (!amount || amount <= 0) { setError('Amount must be greater than zero'); setSubmitting(false); return; }
-      if (!onlinePurpose) { setError('Please select a purpose'); setSubmitting(false); return; }
-      if (onlinePurpose === 'Other' && !onlineDescription.trim()) { setError('Description is required when purpose is Other'); setSubmitting(false); return; }
+    setError(null); setSuccess(null);
+    const amount = parseFloat(onlineAmount);
+    if (!amount || amount <= 0) { setError('Amount must be greater than zero'); return; }
+    if (!onlinePurpose) { setError('Please select a purpose'); return; }
+    if (onlinePurpose === 'Other' && !onlineDescription.trim()) { setError('Description is required when purpose is Other'); return; }
 
-      await donations.createOnline({
+    createOnline.mutate(
+      {
         amount,
         purpose: onlinePurpose,
         paymentMethod: 'Online',
         description: onlinePurpose === 'Other' ? onlineDescription : undefined,
-      });
-      setSuccess(`Online donation of ${formatGBP(amount)} recorded successfully`);
-      resetForms();
-    } catch {
-      setError('Failed to process online donation. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setSuccess(`Online donation of ${formatGBP(amount)} recorded successfully`);
+          resetForms();
+        },
+        onError: () => setError('Failed to process online donation. Please try again.'),
+      }
+    );
   };
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); setSuccess(null); setSubmitting(true);
-    try {
-      const amount = parseFloat(manualAmount);
-      if (!amount || amount <= 0) { setError('Amount must be greater than zero'); setSubmitting(false); return; }
-      if (!manualPurpose) { setError('Please select a purpose'); setSubmitting(false); return; }
-      if (manualPurpose === 'Other' && !manualDescription.trim()) { setError('Description is required when purpose is Other'); setSubmitting(false); return; }
-      if (!manualPaymentMethod) { setError('Please select a payment method'); setSubmitting(false); return; }
-      if (!manualDate) { setError('Please select a date'); setSubmitting(false); return; }
+    setError(null); setSuccess(null);
+    const amount = parseFloat(manualAmount);
+    if (!amount || amount <= 0) { setError('Amount must be greater than zero'); return; }
+    if (!manualPurpose) { setError('Please select a purpose'); return; }
+    if (manualPurpose === 'Other' && !manualDescription.trim()) { setError('Description is required when purpose is Other'); return; }
+    if (!manualPaymentMethod) { setError('Please select a payment method'); return; }
+    if (!manualDate) { setError('Please select a date'); return; }
 
-      await donations.createManual({
+    createManual.mutate(
+      {
         amount,
         currency: 'GBP',
         donationDate: new Date(manualDate),
-        donationPurpose: manualPurpose as 'Offering' | 'Tithe' | 'Building Fund' | 'Other',
+        donationPurpose: manualPurpose as Donation['donationPurpose'],
         description: manualPurpose === 'Other' ? manualDescription : undefined,
-        paymentMethod: manualPaymentMethod as 'Cash' | 'Check' | 'Bank Transfer' | 'Mobile Money',
+        paymentMethod: manualPaymentMethod as Donation['paymentMethod'],
         isAnonymous: manualAnonymous,
         memberId: manualAnonymous ? undefined : (manualMemberId ? parseInt(manualMemberId) : undefined),
-      });
-      setSuccess(`Manual donation of ${formatGBP(amount)} recorded successfully`);
-      resetForms();
-    } catch {
-      setError('Failed to record manual donation. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setSuccess(`Manual donation of ${formatGBP(amount)} recorded successfully`);
+          resetForms();
+        },
+        onError: () => setError('Failed to record manual donation. Please try again.'),
+      }
+    );
   };
+
+  const submitting = createOnline.isPending || createManual.isPending;
 
   const tabClass = (tab: Tab) =>
     `px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 ${
@@ -117,18 +125,10 @@ export default function DonationRecordPage() {
   return (
     <>
       <Breadcrumbs items={[{ label: 'Donations', href: '/donations' }, { label: 'Record Donation' }]} />
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Record Donation</h1>
+      <PageHeader title="Record Donation" />
 
-      {success && (
-        <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800" role="alert">
-          {success}
-        </div>
-      )}
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800" role="alert">
-          {error}
-        </div>
-      )}
+      {success && <Alert variant="success" className="mb-4">{success}</Alert>}
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       <div className="flex gap-1 border-b border-gray-200 mb-0" role="tablist">
         <button role="tab" aria-selected={activeTab === 'online'} className={tabClass('online')} onClick={() => setActiveTab('online')}>
@@ -142,7 +142,7 @@ export default function DonationRecordPage() {
       {activeTab === 'online' && (
         <Card className="rounded-t-none border-t-0">
           <CardHeader><h2 className="text-lg font-semibold">Online Donation (Stripe)</h2></CardHeader>
-          <CardBody>
+          <CardContent>
             <form onSubmit={handleOnlineSubmit} className="space-y-4 max-w-md">
               <TextInput label="Amount (£)" name="amount" type="number" step="0.01" min="0.01" placeholder="0.00" value={onlineAmount} onChange={(e) => setOnlineAmount(e.target.value)} required />
               <SelectInput label="Purpose" name="purpose" options={PURPOSES} placeholder="Select purpose" value={onlinePurpose} onChange={(e) => setOnlinePurpose(e.target.value)} required />
@@ -156,14 +156,14 @@ export default function DonationRecordPage() {
               </div>
               <Button type="submit" disabled={submitting}>{submitting ? 'Processing…' : 'Donate Online'}</Button>
             </form>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
 
       {activeTab === 'manual' && (
         <Card className="rounded-t-none border-t-0">
           <CardHeader><h2 className="text-lg font-semibold">Manual Donation Entry</h2></CardHeader>
-          <CardBody>
+          <CardContent>
             <form onSubmit={handleManualSubmit} className="space-y-4 max-w-md">
               <TextInput label="Amount (£)" name="manualAmount" type="number" step="0.01" min="0.01" placeholder="0.00" value={manualAmount} onChange={(e) => setManualAmount(e.target.value)} required />
               <SelectInput label="Purpose" name="manualPurpose" options={PURPOSES} placeholder="Select purpose" value={manualPurpose} onChange={(e) => setManualPurpose(e.target.value)} required />
@@ -176,15 +176,14 @@ export default function DonationRecordPage() {
               {!manualAnonymous && (
                 <TextInput label="Member ID (optional)" name="memberId" type="number" placeholder="Enter member ID" value={manualMemberId} onChange={(e) => setManualMemberId(e.target.value)} />
               )}
-              <Button type="submit" disabled={submitting}>{submitting ? 'Recording…' : 'Record Donation'}</Button>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={submitting}>{submitting ? 'Recording…' : 'Record Donation'}</Button>
+                <Button type="button" variant="outline" onClick={() => router.push('/donations')}>Cancel</Button>
+              </div>
             </form>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
-
-      <p className="mt-4 text-xs text-gray-500">
-        Logged in as: {user?.email ?? '—'} · Role: {user?.role ?? '—'}
-      </p>
     </>
   );
 }

@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotificationProvider, useNotifications } from './notification-context';
-import type { WSMessage, MessageHandler } from './ws-manager';
+import type { MessageHandler } from './ws-manager';
 
 // Capture the message handler registered by NotificationProvider
 let capturedMessageHandler: MessageHandler | null = null;
-let capturedConnectHandler: (() => void) | null = null;
+let _capturedConnectHandler: (() => void) | null = null;
 
 vi.mock('./ws-manager', () => {
   class MockWSManager {
@@ -20,8 +20,8 @@ vi.mock('./ws-manager', () => {
     }
 
     onConnect(handler: () => void) {
-      capturedConnectHandler = handler;
-      return () => { capturedConnectHandler = null; };
+      _capturedConnectHandler = handler;
+      return () => { _capturedConnectHandler = null; };
     }
 
     onDisconnect() {
@@ -69,7 +69,7 @@ describe('NotificationProvider', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_WS_URL = 'wss://test.example.com';
     capturedMessageHandler = null;
-    capturedConnectHandler = null;
+    _capturedConnectHandler = null;
     vi.clearAllMocks();
   });
 

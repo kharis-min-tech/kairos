@@ -1,307 +1,231 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { members, branches } from '@kairos/api-client';
-import { ApiError } from '@kairos/api-client';
-import type { Branch } from '@kairos/types';
-import { TextInput, SelectInput, Button, Alert } from '@/components/ui';
-import { Breadcrumbs } from '@/components/layout';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Alert, Card, CardContent, CardHeader, CardTitle, TextInput, SelectInput } from '@/components/ui';
+import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/lib/auth';
+import { useCreateMember } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
+import { ApiError } from '@kairos/api-client';
 
-interface FormErrors {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  homeBranchId?: string;
-}
+const addMemberSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email').or(z.literal('')).optional(),
+  phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number').or(z.literal('')).optional(),
+  dateOfBirth: z.string().optional(),
+  gender: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  homeBranchId: z.string().min(1, 'Please select a home branch'),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+});
+
+type AddMemberForm = z.infer<typeof addMemberSchema>;
 
 const GENDER_OPTIONS = [
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' },
 ];
 
-function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone: string): boolean {
-  return /^\+?[\d\s\-()]{7,20}$/.test(phone);
-}
-
-const defaultFormData = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  dateOfBirth: '',
-  gender: '',
-  address: '',
-  city: '',
-  postalCode: '',
-  homeBranchId: '',
-  emergencyContactName: '',
-  emergencyContactPhone: '',
-};
-
-function validateForm(data: typeof defaultFormData): FormErrors {
-  const errors: FormErrors = {};
-
-  if (!data.firstName.trim()) errors.firstName = 'First name is required';
-  if (!data.lastName.trim()) errors.lastName = 'Last name is required';
-  if (!data.homeBranchId) errors.homeBranchId = 'Please select a home branch';
-
-  if (data.email.trim() && !validateEmail(data.email)) {
-    errors.email = 'Please enter a valid email address';
-  }
-
-  if (data.phone.trim() && !validatePhone(data.phone)) {
-    errors.phone = 'Please enter a valid phone number';
-  }
-
-  return errors;
-}
-
 export default function AddMemberPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isPastor = user?.role === 'Pastor';
 
-  const [formData, setFormData] = useState(defaultFormData);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [branchOptions, setBranchOptions] = useState<{ value: string; label: string }[]>([]);
-  const [loadingBranches, setLoadingBranches] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const createMember = useCreateMember();
+  const { data: branchesRes, isLoading: loadingBranches } = useBranches({ limit: 100 });
+  const branchOptions = (branchesRes?.data ?? [])
+    .filter((b: { isActive: boolean }) => b.isActive)
+    .map((b: { branchId: number; branchName: string }) => ({
+      value: String(b.branchId),
+      label: b.branchName,
+    }));
 
-  // Fetch branches for the dropdown
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await branches.list({ limit: 100 });
-        if (cancelled) return;
-        const activeBranches = (res.data as Branch[]).filter((b) => b.isActive);
-        const options = activeBranches.map((b) => ({
-          value: String(b.branchId),
-          label: b.branchName,
-        }));
-        setBranchOptions(options);
-      } catch {
-        setBranchOptions([]);
-      } finally {
-        if (!cancelled) setLoadingBranches(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<AddMemberForm>({
+    resolver: zodResolver(addMemberSchema as never),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: '',
+      address: '',
+      city: '',
+      postalCode: '',
+      homeBranchId: isPastor && user?.branchId ? user.branchId : '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+    },
+  });
 
-  // Pre-select branch for Pastor role
   useEffect(() => {
     if (isPastor && user?.branchId) {
-      setFormData((prev) => ({ ...prev, homeBranchId: user.branchId }));
+      setValue('homeBranchId', user.branchId);
     }
-  }, [isPastor, user?.branchId]);
+  }, [isPastor, user?.branchId, setValue]);
 
-  function handleChange(field: string, value: string) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setSubmitError('');
-
-    const validationErrors = validateForm(formData);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-    setSubmitting(true);
-
+  const onSubmit = async (data: AddMemberForm) => {
     try {
-      // Backend expects snake_case field names
-      await members.create({
-        first_name: formData.firstName.trim(),
-        last_name: formData.lastName.trim(),
-        email: formData.email.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        date_of_birth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
-        gender: (formData.gender as 'Male' | 'Female') || undefined,
-        address: formData.address.trim() || undefined,
-        city: formData.city.trim() || undefined,
-        postal_code: formData.postalCode.trim() || undefined,
-        home_branch_id: Number(formData.homeBranchId),
-        emergency_contact_name: formData.emergencyContactName.trim() || undefined,
-        emergency_contact_phone: formData.emergencyContactPhone.trim() || undefined,
-      } as Record<string, unknown>);
+      await createMember.mutateAsync({
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email?.trim() || undefined,
+        phone: data.phone?.trim() || undefined,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+        gender: (data.gender as 'Male' | 'Female') || undefined,
+        address: data.address?.trim() || undefined,
+        city: data.city?.trim() || undefined,
+        postalCode: data.postalCode?.trim() || undefined,
+        homeBranchId: Number(data.homeBranchId),
+        emergencyContactName: data.emergencyContactName?.trim() || undefined,
+        emergencyContactPhone: data.emergencyContactPhone?.trim() || undefined,
+      });
       router.push('/members');
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        setSubmitError(err.message || 'Failed to create member. Please try again.');
-      } else {
-        setSubmitError('An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      setSubmitting(false);
+      const message = err instanceof ApiError
+        ? err.message || 'Failed to create member.'
+        : 'An unexpected error occurred.';
+      setError('root', { message });
     }
-  }
+  };
 
   return (
-    <div>
-      <Breadcrumbs items={[{ label: 'Members', href: '/members' }, { label: 'Add Member' }]} />
+    <div className="space-y-6">
+      <PageHeader title="Add Member" description="Create a new member record" />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Add Member</h1>
-        <p className="mt-1 text-sm text-gray-600">Create a new member record</p>
-      </div>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Member Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {errors.root && (
+              <Alert variant="error" title="Error">
+                {errors.root.message}
+              </Alert>
+            )}
 
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        aria-label="Add member"
-        className="max-w-2xl rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4"
-      >
-        {submitError && (
-          <Alert variant="error" title="Error">
-            {submitError}
-          </Alert>
-        )}
+            {/* Personal */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextInput
+                label="First Name"
+                {...register('firstName')}
+                error={errors.firstName?.message}
+                required
+                autoComplete="given-name"
+              />
+              <TextInput
+                label="Last Name"
+                {...register('lastName')}
+                error={errors.lastName?.message}
+                required
+                autoComplete="family-name"
+              />
+            </div>
 
-        {/* Name row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput
-            label="First Name"
-            name="first_name"
-            required
-            value={formData.firstName}
-            onChange={(e) => handleChange('firstName', e.target.value)}
-            error={errors.firstName}
-            autoComplete="given-name"
-          />
-          <TextInput
-            label="Last Name"
-            name="last_name"
-            required
-            value={formData.lastName}
-            onChange={(e) => handleChange('lastName', e.target.value)}
-            error={errors.lastName}
-            autoComplete="family-name"
-          />
-        </div>
+            {/* Contact */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextInput
+                label="Email"
+                type="email"
+                {...register('email')}
+                error={errors.email?.message}
+                autoComplete="email"
+              />
+              <TextInput
+                label="Phone"
+                type="tel"
+                {...register('phone')}
+                error={errors.phone?.message}
+                autoComplete="tel"
+                placeholder="+44 7700 900000"
+              />
+            </div>
 
-        {/* Email and Phone */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            error={errors.email}
-            autoComplete="email"
-          />
-          <TextInput
-            label="Phone"
-            name="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
-            error={errors.phone}
-            autoComplete="tel"
-            placeholder="+44 7700 900000"
-          />
-        </div>
+            {/* DOB & Gender */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextInput
+                label="Date of Birth"
+                type="date"
+                {...register('dateOfBirth')}
+              />
+              <SelectInput
+                label="Gender"
+                options={GENDER_OPTIONS}
+                placeholder="Select gender"
+                {...register('gender')}
+              />
+            </div>
 
-        {/* DOB and Gender */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput
-            label="Date of Birth"
-            name="date_of_birth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-          />
-          <SelectInput
-            label="Gender"
-            name="gender"
-            options={GENDER_OPTIONS}
-            placeholder="Select gender"
-            value={formData.gender}
-            onChange={(e) => handleChange('gender', e.target.value)}
-          />
-        </div>
+            {/* Address */}
+            <TextInput
+              label="Address"
+              {...register('address')}
+              autoComplete="street-address"
+            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextInput
+                label="City"
+                {...register('city')}
+                autoComplete="address-level2"
+              />
+              <TextInput
+                label="Postal Code"
+                {...register('postalCode')}
+                autoComplete="postal-code"
+              />
+            </div>
 
-        {/* Address fields */}
-        <TextInput
-          label="Address"
-          name="address"
-          value={formData.address}
-          onChange={(e) => handleChange('address', e.target.value)}
-          autoComplete="street-address"
-        />
+            {/* Church */}
+            <SelectInput
+              label="Home Branch"
+              required
+              options={branchOptions}
+              placeholder={loadingBranches ? 'Loading branches...' : 'Select a branch'}
+              {...register('homeBranchId')}
+              error={errors.homeBranchId?.message}
+              disabled={loadingBranches || isPastor}
+            />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput
-            label="City"
-            name="city"
-            value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-            autoComplete="address-level2"
-          />
-          <TextInput
-            label="Postal Code"
-            name="postal_code"
-            value={formData.postalCode}
-            onChange={(e) => handleChange('postalCode', e.target.value)}
-            autoComplete="postal-code"
-          />
-        </div>
+            {/* Emergency Contact */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextInput
+                label="Emergency Contact Name"
+                {...register('emergencyContactName')}
+              />
+              <TextInput
+                label="Emergency Contact Phone"
+                type="tel"
+                {...register('emergencyContactPhone')}
+              />
+            </div>
 
-        {/* Branch selector */}
-        <SelectInput
-          label="Home Branch"
-          name="home_branch_id"
-          required
-          options={branchOptions}
-          placeholder={loadingBranches ? 'Loading branches...' : 'Select a branch'}
-          value={formData.homeBranchId}
-          onChange={(e) => handleChange('homeBranchId', e.target.value)}
-          error={errors.homeBranchId}
-          disabled={loadingBranches || isPastor}
-        />
-
-        {/* Emergency contact */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextInput
-            label="Emergency Contact Name"
-            name="emergency_contact_name"
-            value={formData.emergencyContactName}
-            onChange={(e) => handleChange('emergencyContactName', e.target.value)}
-          />
-          <TextInput
-            label="Emergency Contact Phone"
-            name="emergency_contact_phone"
-            type="tel"
-            value={formData.emergencyContactPhone}
-            onChange={(e) => handleChange('emergencyContactPhone', e.target.value)}
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3 pt-4">
-          <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating...' : 'Create Member'}
-          </Button>
-          <Link href="/members">
-            <Button type="button" variant="ghost">Cancel</Button>
-          </Link>
-        </div>
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-4 border-t">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Member'}
+              </Button>
+              <Link href="/members">
+                <Button type="button" variant="ghost">Cancel</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </form>
     </div>
   );

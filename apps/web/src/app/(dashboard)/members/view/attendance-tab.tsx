@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardBody, DataTable, Spinner, Badge } from '@/components/ui';
-import { attendance } from '@kairos/api-client';
+import { useMemo } from 'react';
+import { Card, CardContent, DataTable, Spinner, Badge, Alert } from '@/components/ui';
+import { useServiceAttendance } from '@/hooks/use-attendance';
 import type { ColumnDef } from '@tanstack/react-table';
 
 interface AttendanceTabProps {
@@ -17,38 +17,10 @@ interface AttendanceRecord {
   [key: string]: unknown;
 }
 
-interface AttendanceSummary {
-  totalAttended: number;
-  totalServices: number;
-  attendancePercentage: number;
-  lastAttendanceDate: string | null;
-}
-
-export function computeAttendanceSummary(records: AttendanceRecord[]): AttendanceSummary {
-  if (records.length === 0) {
-    return { totalAttended: 0, totalServices: 0, attendancePercentage: 0, lastAttendanceDate: null };
-  }
-
-  const totalServices = records.length;
-  const totalAttended = records.filter(
-    (r) => r.attendanceStatus === 'Present' || r.attendanceStatus === 'Virtual'
-  ).length;
-  const attendancePercentage = totalServices > 0 ? Math.round((totalAttended / totalServices) * 100) : 0;
-
-  const sorted = [...records].sort(
-    (a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
-  );
-  const lastAttendanceDate = sorted[0]?.serviceDate
-    ? new Date(sorted[0].serviceDate).toLocaleDateString('en-GB')
-    : null;
-
-  return { totalAttended, totalServices, attendancePercentage, lastAttendanceDate };
-}
-
-const statusVariant: Record<string, 'active' | 'inactive' | 'pending'> = {
-  Present: 'active',
-  Virtual: 'pending',
-  Absent: 'inactive',
+const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
+  Present: 'default',
+  Virtual: 'outline',
+  Absent: 'secondary',
 };
 
 const columns: ColumnDef<AttendanceRecord, unknown>[] = [
@@ -69,48 +41,46 @@ const columns: ColumnDef<AttendanceRecord, unknown>[] = [
     header: 'Status',
     cell: ({ getValue }) => {
       const status = getValue() as string;
-      return <Badge variant={statusVariant[status] ?? 'inactive'}>{status}</Badge>;
+      return <Badge variant={statusVariant[status] ?? 'secondary'}>{status}</Badge>;
     },
   },
 ];
 
+export function computeAttendanceSummary(records: AttendanceRecord[]) {
+  if (records.length === 0) {
+    return { totalAttended: 0, totalServices: 0, attendancePercentage: 0, lastAttendanceDate: null as string | null };
+  }
+  const totalServices = records.length;
+  const totalAttended = records.filter(
+    (r) => r.attendanceStatus === 'Present' || r.attendanceStatus === 'Virtual'
+  ).length;
+  const attendancePercentage = Math.round((totalAttended / totalServices) * 100);
+  const sorted = [...records].sort(
+    (a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
+  );
+  const lastAttendanceDate = sorted[0]?.serviceDate
+    ? new Date(sorted[0].serviceDate).toLocaleDateString('en-GB')
+    : null;
+  return { totalAttended, totalServices, attendancePercentage, lastAttendanceDate };
+}
+
 export function AttendanceTab({ memberId }: AttendanceTabProps) {
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [summary, setSummary] = useState<AttendanceSummary>({
-    totalAttended: 0,
-    totalServices: 0,
-    attendancePercentage: 0,
-    lastAttendanceDate: null,
+  const { data: res, isLoading, error } = useServiceAttendance({
+    memberId,
+    sortBy: 'serviceDate',
+    sortOrder: 'desc',
   });
 
-  const fetchAttendance = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await attendance.listService({ memberId, sortBy: 'serviceDate', sortOrder: 'desc' });
-      const data = (res.data ?? []) as unknown as AttendanceRecord[];
+  const records = useMemo(() => {
+    const data = (res?.data ?? []) as unknown as AttendanceRecord[];
+    return [...data].sort(
+      (a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
+    );
+  }, [res?.data]);
 
-      // Sort by serviceDate descending (most recent first)
-      const sorted = [...data].sort(
-        (a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
-      );
+  const summary = useMemo(() => computeAttendanceSummary(records), [records]);
 
-      setRecords(sorted);
-      setSummary(computeAttendanceSummary(sorted));
-    } catch {
-      setError('Failed to load attendance records.');
-    } finally {
-      setLoading(false);
-    }
-  }, [memberId]);
-
-  useEffect(() => {
-    fetchAttendance();
-  }, [fetchAttendance]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Spinner size="lg" />
@@ -119,20 +89,13 @@ export function AttendanceTab({ memberId }: AttendanceTabProps) {
   }
 
   if (error) {
-    return (
-      <Card>
-        <CardBody>
-          <p className="text-sm text-red-600">{error}</p>
-        </CardBody>
-      </Card>
-    );
+    return <Alert variant="error" title="Error">Failed to load attendance records.</Alert>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Summary Card */}
       <Card>
-        <CardBody>
+        <CardContent className="pt-6">
           <h3 className="text-sm font-medium text-gray-500 mb-4">Attendance Summary</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -150,15 +113,14 @@ export function AttendanceTab({ memberId }: AttendanceTabProps) {
               <p className="text-lg font-semibold text-gray-900">{summary.lastAttendanceDate ?? '—'}</p>
             </div>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
-      {/* Attendance Table or Empty State */}
       {records.length === 0 ? (
         <Card>
-          <CardBody>
+          <CardContent className="pt-6">
             <p className="text-sm text-gray-500">No attendance records yet.</p>
-          </CardBody>
+          </CardContent>
         </Card>
       ) : (
         <DataTable data={records} columns={columns} />

@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import { TopBar } from './topbar';
 import { Sidebar } from './sidebar';
 import { MobileNav } from './mobile-nav';
+import { BottomNav } from './bottom-nav';
 import { useAuth } from '@/lib/auth';
-import { useNotifications } from '@/lib/ws';
+import { useUiStore } from '@/lib/stores/ui-store';
+import { cn } from '@/lib/utils';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -15,13 +17,8 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const currentPath = usePathname();
   const { user } = useAuth();
-  const { unreadCount } = useNotifications();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { sidebarCollapsed } = useUiStore();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const toggleSidebar = useCallback(() => {
-    setSidebarCollapsed((prev) => !prev);
-  }, []);
 
   const toggleMobileNav = useCallback(() => {
     setMobileNavOpen((prev) => !prev);
@@ -34,35 +31,33 @@ export function AppShell({ children }: AppShellProps) {
   const isPending = user?.role === 'Member' && user?.isApproved === false;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopBar onMenuToggle={toggleMobileNav} notificationCount={unreadCount} />
+    <div className="min-h-screen bg-background">
+      <TopBar onMenuToggle={toggleMobileNav} />
 
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        currentPath={currentPath}
-        isPendingMember={!!isPending}
-      />
+      <Sidebar currentPath={currentPath} />
 
       <MobileNav
         open={mobileNavOpen}
         onClose={closeMobileNav}
         currentPath={currentPath}
-        isPendingMember={!!isPending}
       />
 
       <main
-        className={`pt-16 transition-all duration-200 ease-in-out
-          ${sidebarCollapsed ? 'sm:pl-16' : 'sm:pl-60'}`}
+        className={cn(
+          'pt-16 pb-20 md:pb-0 transition-all duration-200 ease-in-out',
+          sidebarCollapsed ? 'md:pl-16' : 'md:pl-60',
+        )}
         aria-label="Main content"
       >
         {isPending && (
-          <div className="mx-6 mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">
+          <div className="mx-6 mt-4 rounded-lg border border-warning bg-warning-light px-4 py-3 text-sm text-foreground" role="alert">
             Your registration is pending approval. You will be notified once approved.
           </div>
         )}
         <div className="p-6">{children}</div>
       </main>
+
+      <BottomNav currentPath={currentPath} onMorePress={toggleMobileNav} />
     </div>
   );
 }

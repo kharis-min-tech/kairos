@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Heart, Users, UserPlus } from 'lucide-react';
-import { Card, CardBody } from '@/components/ui';
+import { Card, CardContent } from '@/components/ui';
 
 export default function OutreachPage() {
   return (
@@ -15,7 +15,7 @@ export default function OutreachPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Link href="/evangelism/outreach" className="block group">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="flex items-center gap-3 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-primary">
                   <Heart size={20} />
@@ -25,13 +25,13 @@ export default function OutreachPage() {
                   <p className="text-xs text-gray-500">Create and manage outreach events</p>
                 </div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </Link>
 
         <Link href="/evangelism/souls" className="block group">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="flex items-center gap-3 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-secondary">
                   <UserPlus size={20} />
@@ -41,13 +41,13 @@ export default function OutreachPage() {
                   <p className="text-xs text-gray-500">Capture souls and track follow-ups</p>
                 </div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </Link>
 
         <Link href="/evangelism/followups" className="block group">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="flex items-center gap-3 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                   <Users size={20} />
@@ -57,7 +57,7 @@ export default function OutreachPage() {
                   <p className="text-xs text-gray-500">Kanban board for soul status tracking</p>
                 </div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </Link>
       </div>

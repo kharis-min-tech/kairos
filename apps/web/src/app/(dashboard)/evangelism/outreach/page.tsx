@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Users, UserPlus, Shuffle, CheckCircle, Target, Activity } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, TextInput, DatePicker, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
+import { Button, TextInput, DatePicker, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardContent, StatCard } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { outreach } from '@kairos/api-client';
 import type { OutreachProgram } from '@kairos/types';
@@ -164,9 +164,9 @@ export default function OutreachProgramsPage() {
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : programs.length === 0 ? (
         <Card>
-          <CardBody>
+          <CardContent>
             <p className="text-gray-500 text-center py-8">No outreach programs yet. Create one to get started.</p>
-          </CardBody>
+          </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -179,12 +179,12 @@ export default function OutreachProgramsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-900 truncate">{program.programName}</h3>
-                  <Badge variant={program.isCompleted ? 'inactive' : 'active'}>
+                  <Badge variant={program.isCompleted ? 'secondary' : 'default'}>
                     {program.isCompleted ? 'Completed' : 'Active'}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardBody>
+              <CardContent>
                 <div className="space-y-2 text-sm">
                   <p className="text-gray-600">📅 {formatDate(program.programDate)}</p>
                   <p className="text-gray-600">📍 {program.location}</p>
@@ -220,7 +220,7 @@ export default function OutreachProgramsPage() {
                     )}
                   </div>
                 </div>
-              </CardBody>
+              </CardContent>
             </Card>
           ))}
         </div>

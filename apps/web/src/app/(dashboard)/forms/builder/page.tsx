@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Save, Plus, Copy } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, Card, CardHeader, CardBody, TextInput, SelectInput, Checkbox, Textarea, Modal, Alert } from '@/components/ui';
+import { Button, Card, CardHeader, CardContent, TextInput, SelectInput, Checkbox, Textarea, Modal, Alert } from '@/components/ui';
 import { forms } from '@kairos/api-client';
 import type { FormFieldType } from '@kairos/types';
 
@@ -55,10 +55,10 @@ function FieldConfigPanel({ field, onChange, onRemove }: { field: FormField; onC
   const hasOptions = ['Dropdown', 'Radio', 'Checkbox'].includes(field.type);
   return (
     <Card className="mb-3">
-      <CardBody>
+      <CardContent>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">{field.type} Field</span>
-          <Button variant="danger" size="sm" onClick={onRemove} aria-label={`Remove ${field.label || field.type} field`}>Remove</Button>
+          <Button variant="destructive" size="sm" onClick={onRemove} aria-label={`Remove ${field.label || field.type} field`}>Remove</Button>
         </div>
         <div className="space-y-3">
           <TextInput label="Label" value={field.label} onChange={(e) => onChange({ ...field, label: e.target.value })} placeholder="Field label" />
@@ -68,7 +68,7 @@ function FieldConfigPanel({ field, onChange, onRemove }: { field: FormField; onC
             <TextInput label="Options (comma-separated)" value={(field.options || []).join(', ')} onChange={(e) => onChange({ ...field, options: e.target.value.split(',').map((o) => o.trim()).filter(Boolean) })} placeholder="Option 1, Option 2, Option 3" />
           )}
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -80,7 +80,7 @@ function LivePreview({ fields, formName }: { fields: FormField[]; formName: stri
   return (
     <Card>
       <CardHeader><h3 className="text-lg font-semibold text-gray-900">{formName || 'Untitled Form'}</h3></CardHeader>
-      <CardBody>
+      <CardContent>
         {fields.length === 0 ? (
           <p className="text-gray-500 text-sm">Add field types from the palette to build your form.</p>
         ) : (
@@ -105,7 +105,7 @@ function LivePreview({ fields, formName }: { fields: FormField[]; formName: stri
             ))}
           </div>
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -222,7 +222,7 @@ export default function FormBuilderPage() {
 
       {/* Form Settings */}
       <Card className="mb-6">
-        <CardBody>
+        <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <TextInput label="Form Name" name="formName" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Enter form name" />
             <Textarea label="Description" name="formDesc" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Optional description" />
@@ -231,7 +231,7 @@ export default function FormBuilderPage() {
               <TextInput label="Target Branch ID" name="branchId" type="number" value={form.targetBranchId?.toString() || ''} onChange={(e) => setForm((p) => ({ ...p, targetBranchId: e.target.value ? Number(e.target.value) : undefined }))} />
             )}
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -239,7 +239,7 @@ export default function FormBuilderPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader><h2 className="text-sm font-medium text-gray-700">Field Types</h2></CardHeader>
-            <CardBody>
+            <CardContent>
               <div className="space-y-2">
                 {FIELD_TYPES.map((ft) => (
                   <button
@@ -253,7 +253,7 @@ export default function FormBuilderPage() {
                   </button>
                 ))}
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 
@@ -261,7 +261,7 @@ export default function FormBuilderPage() {
         <div className="lg:col-span-5">
           <Card>
             <CardHeader><h2 className="text-sm font-medium text-gray-700">Fields ({form.fields.length})</h2></CardHeader>
-            <CardBody>
+            <CardContent>
               {form.fields.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-8">Click a field type to add it to your form.</p>
               ) : (
@@ -269,7 +269,7 @@ export default function FormBuilderPage() {
                   <FieldConfigPanel key={field.id} field={field} onChange={(updated) => updateField(field.id, updated)} onRemove={() => removeField(field.id)} />
                 ))
               )}
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, CheckCircle, Search, AlertTriangle, Phone, Mail, MessageSquare, User, Calendar } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, TextInput, SelectInput, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
+import { Button, TextInput, SelectInput, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardContent, StatCard } from '@/components/ui';
 import { souls } from '@kairos/api-client';
 import type { ContactMethod, ContactStatus } from '@kairos/types';
 
@@ -220,9 +220,9 @@ export default function FollowUpTrackerPage() {
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : filtered.length === 0 ? (
         <Card>
-          <CardBody>
+          <CardContent>
             <p className="text-gray-500 text-center py-8">No follow-ups found.</p>
-          </CardBody>
+          </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -242,12 +242,12 @@ export default function FollowUpTrackerPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between pr-6">
                     <h3 className="font-semibold text-gray-900 truncate">{item.soulName}</h3>
-                    <Badge variant={derivedStatus === 'Completed' ? 'active' : isOverdue ? 'error' : 'pending'}>
+                    <Badge variant={derivedStatus === 'Completed' ? 'default' : isOverdue ? 'destructive' : 'secondary'}>
                       {derivedStatus}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardBody>
+                <CardContent>
                   <div className="space-y-2 text-sm">
                     <p className="flex items-center gap-1 text-gray-600">
                       <User size={14} /> {item.assignedWorker}
@@ -273,7 +273,7 @@ export default function FollowUpTrackerPage() {
                       </Button>
                     </div>
                   </div>
-                </CardBody>
+                </CardContent>
               </Card>
             );
           })}

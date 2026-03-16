@@ -4,10 +4,10 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Upload, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Button, Alert, Card, CardHeader, CardBody, SelectInput } from '@/components/ui';
-import { Breadcrumbs } from '@/components/layout';
+import { Button, Alert, Card, CardHeader, CardContent, SelectInput } from '@/components/ui';
+import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/lib/auth';
-import { members } from '@kairos/api-client';
+import { useImportMembers } from '@/hooks/use-members';
 
 interface ImportError { row: number; field: string; message: string; }
 
@@ -55,12 +55,12 @@ export default function CSVImportPage() {
   const router = useRouter();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importMembers = useImportMembers();
   const [step, setStep] = useState<Step>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
   const [dragOver, setDragOver] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<ImportError[]>([]);
   const [createdCount, setCreatedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
@@ -134,9 +134,8 @@ export default function CSVImportPage() {
   const handleSubmit = async () => {
     setErrorMsg('');
     if (mappedRows.length === 0) return;
-    setSubmitting(true);
     try {
-      const res = await members.import({
+      const res = await importMembers.mutateAsync({
         rows: mappedRows,
         branchId: user?.branchId ? Number(user.branchId) : 0,
       });
@@ -145,8 +144,6 @@ export default function CSVImportPage() {
       setStep('result');
     } catch {
       setErrorMsg('Import failed. Please try again.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -165,20 +162,21 @@ export default function CSVImportPage() {
   const previewRows = mappedRows.slice(0, 5);
 
   return (
-    <>
-      <Breadcrumbs items={[{ label: 'Members', href: '/members' }, { label: 'Import CSV' }]} />
-      <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/members')} aria-label="Back to members">
-          <ArrowLeft size={16} />
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Import Members from CSV</h1>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Import Members from CSV"
+        actions={
+          <Button variant="ghost" size="sm" onClick={() => router.push('/members')} aria-label="Back to members">
+            <ArrowLeft size={16} />
+          </Button>
+        }
+      />
 
-      {errorMsg && <Alert variant="error" className="mb-4">{errorMsg}</Alert>}
+      {errorMsg && <Alert variant="error">{errorMsg}</Alert>}
 
       {step === 'upload' && (
         <Card>
-          <CardBody>
+          <CardContent className="pt-6">
             <div
               className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors hidden sm:block ${
                 dragOver ? 'border-primary bg-purple-50' : 'border-gray-300'
@@ -217,7 +215,7 @@ export default function CSVImportPage() {
               <p className="font-medium mb-1">Required columns:</p>
               <p>{REQUIRED_FIELDS.join(', ')}</p>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
 
@@ -229,7 +227,7 @@ export default function CSVImportPage() {
               <p className="text-sm text-gray-500">{file?.name}</p>
             </div>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <p className="text-sm text-gray-600 mb-4">
               Map each required field to a column from your CSV file.
             </p>
@@ -255,14 +253,14 @@ export default function CSVImportPage() {
                 Preview Import
               </Button>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
 
       {step === 'preview' && (
         <div className="space-y-4">
           {mappedRows.length > 500 && (
-            <Alert variant="warning" className="mb-4">
+            <Alert variant="warning">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={16} />
                 <span>Large files may take longer to process.</span>
@@ -278,7 +276,7 @@ export default function CSVImportPage() {
                 </p>
               </div>
             </CardHeader>
-            <CardBody>
+            <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -305,11 +303,11 @@ export default function CSVImportPage() {
               </div>
               <div className="flex gap-3 mt-6">
                 <Button variant="secondary" onClick={() => setStep('mapping')}>Back to Mapping</Button>
-                <Button onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? 'Importing…' : 'Import Members'}
+                <Button onClick={handleSubmit} disabled={importMembers.isPending}>
+                  {importMembers.isPending ? 'Importing…' : 'Import Members'}
                 </Button>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       )}
@@ -337,7 +335,7 @@ export default function CSVImportPage() {
                   <h2 className="text-sm font-medium">{errors.length} validation error{errors.length !== 1 ? 's' : ''}</h2>
                 </div>
               </CardHeader>
-              <CardBody>
+              <CardContent>
                 <div className="max-h-64 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -358,7 +356,7 @@ export default function CSVImportPage() {
                     </tbody>
                   </table>
                 </div>
-              </CardBody>
+              </CardContent>
             </Card>
           )}
           <div className="flex gap-3">
@@ -369,6 +367,6 @@ export default function CSVImportPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

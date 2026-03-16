@@ -1,121 +1,156 @@
 'use client';
 
-import { Menu, Search, Bell, ChevronDown, User } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Menu, Search, Bell, User, LogOut, Settings, UserCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAuth } from '@/lib/auth';
+import { useNotifications } from '@/lib/ws';
+import { useBranches } from '@/hooks/use-branches';
+import { useUiStore } from '@/lib/stores/ui-store';
 
 interface TopBarProps {
   onMenuToggle: () => void;
-  notificationCount?: number;
 }
 
-export function TopBar({ onMenuToggle, notificationCount = 0 }: TopBarProps) {
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+export function TopBar({ onMenuToggle }: TopBarProps) {
+  const { user, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
+  const { data: branchesData } = useBranches({ limit: 50 });
+  const { activeBranchId, setActiveBranchId } = useUiStore();
+  const router = useRouter();
+  const showBranchSelector = user?.role === 'Admin' || user?.role === 'Pastor';
+  const displayCount = unreadCount > 99 ? '99+' : unreadCount;
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const displayCount = notificationCount > 99 ? '99+' : notificationCount;
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
 
   return (
     <header
       className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center border-b border-topbar-border bg-topbar-bg px-4"
       role="banner"
     >
-      {/* Hamburger (mobile) */}
-      <button
+      {/* Hamburger (mobile only) */}
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onMenuToggle}
-        className="mr-3 rounded-lg p-2 text-gray-600 hover:bg-gray-100 sm:hidden min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="mr-3 md:hidden"
         aria-label="Toggle navigation menu"
       >
         <Menu size={24} />
-      </button>
+      </Button>
 
       {/* Logo */}
-      <a href="/dashboard" className="flex items-center gap-2 mr-4" aria-label="Kairos home">
+      <Link href="/dashboard" className="flex items-center gap-2 mr-4" aria-label="Kairos home">
         <span className="text-xl font-bold text-primary">Kairos</span>
-      </a>
+      </Link>
 
-      {/* Branch selector */}
-      <div className="hidden md:flex items-center">
-        <button
-          className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2 focus-visible:outline-none"
-          aria-label="Select branch"
-          aria-haspopup="listbox"
-        >
-          <span>All Branches</span>
-          <ChevronDown size={16} />
-        </button>
-      </div>
+      {/* Branch selector (Admin/Pastor only, desktop) */}
+      {showBranchSelector && (
+        <div className="hidden md:flex items-center">
+          <Select
+            value={activeBranchId?.toString() ?? 'all'}
+            onValueChange={(val) => setActiveBranchId(val === 'all' ? null : Number(val))}
+          >
+            <SelectTrigger className="w-[180px] h-10" aria-label="Filter by branch">
+              <SelectValue placeholder="All Branches" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+              {branchesData?.data?.map((branch) => (
+                <SelectItem key={branch.branchId} value={branch.branchId.toString()}>
+                  {branch.branchName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-      {/* Search */}
+      {/* Search + Actions (right side) */}
       <div className="ml-auto flex items-center gap-2">
+        {/* Search */}
         <div className="hidden sm:flex items-center">
           <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
               placeholder="Search..."
-              className="w-48 rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2 min-h-[44px] lg:w-64"
+              className="w-48 rounded-lg border border-input bg-muted py-1.5 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[40px] lg:w-64"
               aria-label="Search"
             />
           </div>
         </div>
 
         {/* Notifications */}
-        <button
-          className="relative rounded-lg p-2 text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2 focus-visible:outline-none"
-          aria-label={`Notifications${notificationCount > 0 ? `, ${notificationCount} unread` : ''}`}
-        >
-          <Bell size={20} />
-          {notificationCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-highlight px-1 text-[10px] font-bold text-white">
-              {displayCount}
-            </span>
-          )}
-        </button>
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href="/notifications"
+            className="relative"
+            aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+                {displayCount}
+              </span>
+            )}
+          </Link>
+        </Button>
 
         {/* User menu */}
-        <div className="relative" ref={userMenuRef}>
-          <button
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2 focus-visible:outline-none"
-            aria-label="User menu"
-            aria-expanded={userMenuOpen}
-            aria-haspopup="menu"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
-              <User size={16} />
-            </div>
-            <ChevronDown size={16} className="hidden sm:block" />
-          </button>
-
-          {userMenuOpen && (
-            <div
-              className="absolute right-0 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-              role="menu"
-            >
-              <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="User menu">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <User size={16} />
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {user && (
+              <div className="px-3 py-2 text-sm">
+                <p className="font-medium truncate">{user.email}</p>
+                <p className="text-muted-foreground text-xs">{user.role}</p>
+              </div>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center gap-2">
+                <UserCircle size={16} />
                 Profile
               </Link>
-              <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] flex items-center focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="flex items-center gap-2">
+                <Settings size={16} />
                 Settings
               </Link>
-              <hr className="my-1 border-gray-200" />
-              <button className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 min-h-[44px] focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:outline-none" role="menuitem">
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 text-destructive">
+              <LogOut size={16} />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -29,12 +29,12 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   'Not Interested': [],
 };
 
-const STATUS_BADGE: Record<string, 'active' | 'pending' | 'inactive' | 'error'> = {
-  'New': 'pending',
-  'Following Up': 'pending',
-  'Interested': 'active',
-  'Converted': 'active',
-  'Not Interested': 'error',
+const STATUS_BADGE: Record<string, 'default' | 'secondary' | 'destructive'> = {
+  'New': 'secondary',
+  'Following Up': 'secondary',
+  'Interested': 'default',
+  'Converted': 'default',
+  'Not Interested': 'destructive',
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -210,7 +210,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
                     <span className="font-medium">{fu.contactMethod}</span>
                     <span className="text-xs text-gray-500">{new Date(fu.followUpDate).toLocaleDateString('en-GB')}</span>
                   </div>
-                  <Badge variant={fu.contactStatus === 'Successful' ? 'active' : fu.contactStatus === 'Not Interested' ? 'error' : 'pending'} className="mt-1">
+                  <Badge variant={fu.contactStatus === 'Successful' ? 'default' : fu.contactStatus === 'Not Interested' ? 'destructive' : 'secondary'} className="mt-1">
                     {fu.contactStatus}
                   </Badge>
                   {fu.notes && <p className="mt-1 text-xs text-gray-600">{fu.notes}</p>}

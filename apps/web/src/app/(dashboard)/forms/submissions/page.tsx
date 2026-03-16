@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, SelectInput, DatePicker, Spinner, Alert, Card, CardHeader, CardBody, DataTable } from '@/components/ui';
+import { Button, SelectInput, DatePicker, Spinner, Alert, Card, CardHeader, CardContent, DataTable } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { forms, branches } from '@kairos/api-client';
 import type { FormSubmission, Form, Branch } from '@kairos/types';
@@ -102,7 +102,7 @@ export default function FormSubmissionsPage() {
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-sm font-medium text-gray-700">Filters</h2></CardHeader>
-        <CardBody>
+        <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <SelectInput label="Form" name="formFilter" options={formList.map((f) => ({ value: String(f.formId), label: f.formName }))} placeholder="All Forms" value={formFilter} onChange={(e) => setFormFilter(e.target.value)} />
             {!isPastor && (
@@ -111,7 +111,7 @@ export default function FormSubmissionsPage() {
             <DatePicker label="Start Date" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <DatePicker label="End Date" name="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
       {loading ? (

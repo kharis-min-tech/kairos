@@ -109,7 +109,7 @@ function KanbanColumn({
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-700">{status}</h3>
-        <Badge variant={status === 'Converted' ? 'active' : 'pending'}>{soulsList.length}</Badge>
+        <Badge variant={status === 'Converted' ? 'default' : 'secondary'}>{soulsList.length}</Badge>
       </div>
       <div className="flex flex-col gap-2 flex-1">
         {soulsList.map((soul) => (

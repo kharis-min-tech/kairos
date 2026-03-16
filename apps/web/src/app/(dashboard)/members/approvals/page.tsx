@@ -1,94 +1,79 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
-import { Button, Alert, Spinner, Card, CardBody, Modal } from '@/components/ui';
-import { Breadcrumbs } from '@/components/layout';
-import { members, branches } from '@kairos/api-client';
-import type { Member, Branch } from '@kairos/types';
+import { Button, Alert, Card, CardContent, Modal } from '@/components/ui';
+import { PageHeader } from '@/components/shared';
+import { LoadingSkeleton } from '@/components/shared';
+import { EmptyState } from '@/components/shared';
+import { useMembers, useApproveMember, useDeleteMember } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
+import type { Member } from '@kairos/types';
 
 const formatDate = (date: Date | string) =>
   new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 export default function PendingApprovalsPage() {
-  const [pending, setPending] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { data: pendingRes, isLoading, error } = useMembers({ status: 'pending' as never, limit: 100 });
+  const { data: branchesRes } = useBranches({ limit: 100 });
+  const approveMember = useApproveMember();
+  const deleteMember = useDeleteMember();
+
   const [preview, setPreview] = useState<Member | null>(null);
-  const [branchList, setBranchList] = useState<Branch[]>([]);
   const [rejectConfirm, setRejectConfirm] = useState<Member | null>(null);
+  const [actionId, setActionId] = useState<number | null>(null);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const resolveBranchName = (branchId: number) => {
-    const branch = branchList.find((b) => b.branchId === branchId);
-    return branch ? branch.branchName : `Branch ${branchId}`;
-  };
+  const pending = (pendingRes?.data ?? []) as Member[];
+  const branches = (branchesRes?.data ?? []) as Array<{ branchId: number; branchName: string }>;
 
-  useEffect(() => {
-    branches.list({ limit: 100, isActive: true }).then((res) => {
-      setBranchList(res.data ?? []);
-    }).catch(() => {});
-  }, []);
-
-  const fetchPending = useCallback(async () => {
-    try {
-      const res = await members.list({ status: 'pending', limit: 100 });
-      setPending(res.data ?? []);
-    } catch {
-      setError('Failed to load pending members.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchPending(); }, [fetchPending]);
+  const resolveBranchName = (branchId: number) =>
+    branches.find((b) => b.branchId === branchId)?.branchName ?? `Branch ${branchId}`;
 
   const handleApprove = async (id: number) => {
-    setActionLoading(id);
-    setError('');
+    setActionId(id);
+    setErrorMsg('');
     try {
-      await members.approve(id);
-      setPending((prev) => prev.filter((m) => m.memberId !== id));
-      setSuccess('Member approved. Welcome email sent.');
+      await approveMember.mutateAsync(id);
+      setSuccessMsg('Member approved. Welcome email sent.');
     } catch {
-      setError('Failed to approve member.');
+      setErrorMsg('Failed to approve member.');
     } finally {
-      setActionLoading(null);
+      setActionId(null);
     }
   };
 
   const handleReject = async (id: number) => {
-    setActionLoading(id);
-    setError('');
+    setActionId(id);
+    setErrorMsg('');
     try {
-      await members.delete(id);
-      setPending((prev) => prev.filter((m) => m.memberId !== id));
-      setSuccess('Member rejected.');
+      await deleteMember.mutateAsync(id);
+      setSuccessMsg('Member rejected.');
     } catch {
-      setError('Failed to reject member.');
+      setErrorMsg('Failed to reject member.');
     } finally {
-      setActionLoading(null);
+      setActionId(null);
     }
   };
 
   return (
-    <>
-      <Breadcrumbs items={[{ label: 'Members', href: '/members' }, { label: 'Pending Approvals' }]} />
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Pending Approvals</h1>
+    <div className="space-y-6">
+      <PageHeader title="Pending Approvals" />
 
-      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
-      {success && <Alert variant="success" className="mb-4">{success}</Alert>}
+      {errorMsg && <Alert variant="error">{errorMsg}</Alert>}
+      {successMsg && <Alert variant="success">{successMsg}</Alert>}
+      {error && <Alert variant="error">{error.message}</Alert>}
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+      {isLoading ? (
+        <LoadingSkeleton variant="list" count={4} />
       ) : pending.length === 0 ? (
-        <Card><CardBody><p className="text-gray-500 text-center py-8">No pending approvals.</p></CardBody></Card>
+        <EmptyState title="No Pending Approvals" description="All members have been reviewed." />
       ) : (
         <div className="space-y-3">
           {pending.map((member) => (
             <Card key={member.memberId}>
-              <CardBody>
+              <CardContent className="pt-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900">
@@ -112,20 +97,20 @@ export default function PendingApprovalsPage() {
                       variant="secondary"
                       size="sm"
                       onClick={() => setRejectConfirm(member)}
-                      disabled={actionLoading === member.memberId}
+                      disabled={actionId === member.memberId}
                     >
                       <XCircle size={16} className="mr-1" /> Reject
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleApprove(member.memberId)}
-                      disabled={actionLoading === member.memberId}
+                      disabled={actionId === member.memberId}
                     >
                       <CheckCircle size={16} className="mr-1" /> Approve
                     </Button>
                   </div>
                 </div>
-              </CardBody>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -168,7 +153,7 @@ export default function PendingApprovalsPage() {
               Cancel
             </Button>
             <Button
-              variant="secondary"
+              variant="destructive"
               size="sm"
               onClick={() => {
                 if (rejectConfirm) {
@@ -182,6 +167,6 @@ export default function PendingApprovalsPage() {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }

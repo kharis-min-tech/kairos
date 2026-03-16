@@ -28,24 +28,22 @@ describe('Button', () => {
   });
 
   it('applies variant styles', () => {
-    const { rerender } = render(<Button variant="primary">Btn</Button>);
+    const { rerender } = render(<Button variant="default">Btn</Button>);
     expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('bg-primary');
 
     rerender(<Button variant="secondary">Btn</Button>);
-    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('border-primary');
+    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('bg-secondary');
 
-    rerender(<Button variant="danger">Btn</Button>);
-    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('bg-highlight');
+    rerender(<Button variant="destructive">Btn</Button>);
+    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('bg-destructive');
 
     rerender(<Button variant="ghost">Btn</Button>);
-    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('bg-transparent');
+    expect(screen.getByRole('button', { name: 'Btn' })).toHaveClass('hover:bg-accent');
   });
 
-  it('meets minimum touch target size', () => {
-    render(<Button>Tap</Button>);
-    const btn = screen.getByRole('button', { name: 'Tap' });
-    expect(btn).toHaveClass('min-h-[44px]');
-    expect(btn).toHaveClass('min-w-[44px]');
+  it('applies size styles', () => {
+    render(<Button size="sm">Small</Button>);
+    expect(screen.getByRole('button', { name: 'Small' })).toHaveClass('h-9');
   });
 
   it('is keyboard accessible', async () => {

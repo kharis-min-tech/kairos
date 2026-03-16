@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, Eye, Edit, FileText } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, Badge, SelectInput, Spinner, Card, CardBody, DataTable } from '@/components/ui';
+import { Button, Badge, SelectInput, Spinner, Card, CardContent, DataTable } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { forms, branches } from '@kairos/api-client';
 import type { Form, Branch } from '@kairos/types';
@@ -60,7 +60,7 @@ export default function FormsListPage() {
       accessorKey: 'scope',
       header: 'Scope',
       cell: ({ getValue }) => (
-        <Badge variant={getValue() === 'Church-wide' ? 'active' : 'pending'}>
+        <Badge variant={getValue() === 'Church-wide' ? 'default' : 'secondary'}>
           {getValue() as string}
         </Badge>
       ),
@@ -74,7 +74,7 @@ export default function FormsListPage() {
       accessorKey: 'isActive',
       header: 'Status',
       cell: ({ getValue }) => (
-        <Badge variant={getValue() ? 'active' : 'inactive'}>
+        <Badge variant={getValue() ? 'default' : 'secondary'}>
           {getValue() ? 'Active' : 'Inactive'}
         </Badge>
       ),
@@ -106,14 +106,14 @@ export default function FormsListPage() {
       </div>
 
       <Card className="mb-6">
-        <CardBody>
+        <CardContent>
           <div className="flex flex-wrap gap-4">
             <SelectInput name="scopeFilter" options={[{ value: '', label: 'All Scopes' }, { value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} placeholder="All Scopes" value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} aria-label="Filter by scope" />
             {!isPastor && (
               <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
             )}
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
       {loading ? (

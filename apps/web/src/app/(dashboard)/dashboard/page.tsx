@@ -1,10 +1,10 @@
 'use client';
 
-import { Breadcrumbs } from '@/components/layout';
 import { useAuth } from '@/lib/auth';
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard';
 import { PastorDashboard } from '@/components/dashboard/pastor-dashboard';
 import { LeaderDashboard } from '@/components/dashboard/leader-dashboard';
+import { PageHeader } from '@/components/shared';
 import { Spinner } from '@/components/ui';
 
 export default function DashboardPage() {
@@ -19,17 +19,17 @@ export default function DashboardPage() {
   }
 
   const role = user?.role;
+  const greeting = user?.email ? `Welcome back` : 'Dashboard';
 
   return (
-    <>
-      <Breadcrumbs items={[{ label: 'Dashboard' }]} />
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+    <div className="space-y-6">
+      <PageHeader title={greeting} description="Here's what's happening across your church." className="hidden lg:flex" />
       {role === 'Admin' && <AdminDashboard />}
       {role === 'Pastor' && <PastorDashboard />}
       {(role === 'Leader' || role === 'Member') && <LeaderDashboard />}
       {!role && (
-        <p className="text-gray-500">Welcome to Kairos Church Administration.</p>
+        <p className="text-muted-foreground">Welcome to Kairos Church Administration.</p>
       )}
-    </>
+    </div>
   );
 }

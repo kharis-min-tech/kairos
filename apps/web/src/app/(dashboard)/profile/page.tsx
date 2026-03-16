@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { Card, CardHeader, CardBody } from '@/components/ui';
+import { Card, CardHeader, CardContent } from '@/components/ui';
 
 export default function ProfilePage() {
   return (
@@ -23,7 +23,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 py-4">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase">Name</p>
@@ -50,7 +50,7 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-900 mt-1">—</p>
             </div>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     </section>
   );

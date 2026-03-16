@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardBody, DataTable, Spinner, TextInput } from '@/components/ui';
-import { donations } from '@kairos/api-client';
+import { useState } from 'react';
+import { Card, CardContent, DataTable, Spinner, TextInput, Alert } from '@/components/ui';
+import { useDonations, useMemberDonationSummary } from '@/hooks/use-donations';
 import type { Donation } from '@kairos/types';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -37,43 +37,25 @@ const columns: ColumnDef<Donation, unknown>[] = [
 ];
 
 export function DonationsTab({ memberId }: DonationsTabProps) {
-  const [donationList, setDonationList] = useState<Donation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [summary, setSummary] = useState<{ total: number; byPurpose: Record<string, number> }>({
-    total: 0,
-    byPurpose: {},
+
+  const { data: listRes, isLoading: listLoading, error: listError } = useDonations({
+    memberId,
+    ...(startDate && { startDate }),
+    ...(endDate && { endDate }),
   });
 
-  const fetchDonations = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const params: Record<string, string | number> = { memberId };
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
+  const { data: summaryRes, isLoading: summaryLoading } = useMemberDonationSummary({ memberId });
 
-      const [listRes, summaryRes] = await Promise.all([
-        donations.list(params),
-        donations.getMemberSummary({ memberId }),
-      ]);
+  const donationList = (listRes?.data ?? []) as Donation[];
+  const summary = {
+    total: (summaryRes as { total?: number })?.total ?? 0,
+    byPurpose: (summaryRes as { byPurpose?: Record<string, number> })?.byPurpose ?? {},
+  };
+  const isLoading = listLoading || summaryLoading;
 
-      setDonationList(listRes.data);
-      setSummary({ total: summaryRes.total, byPurpose: summaryRes.byPurpose });
-    } catch {
-      setError('Failed to load donations.');
-    } finally {
-      setLoading(false);
-    }
-  }, [memberId, startDate, endDate]);
-
-  useEffect(() => {
-    fetchDonations();
-  }, [fetchDonations]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Spinner size="lg" />
@@ -81,21 +63,14 @@ export function DonationsTab({ memberId }: DonationsTabProps) {
     );
   }
 
-  if (error) {
-    return (
-      <Card>
-        <CardBody>
-          <p className="text-sm text-red-600">{error}</p>
-        </CardBody>
-      </Card>
-    );
+  if (listError) {
+    return <Alert variant="error" title="Error">Failed to load donations.</Alert>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Summary Card */}
       <Card>
-        <CardBody>
+        <CardContent className="pt-6">
           <h3 className="text-sm font-medium text-gray-500 mb-4">Donation Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
@@ -111,10 +86,9 @@ export function DonationsTab({ memberId }: DonationsTabProps) {
               </div>
             ))}
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
 
-      {/* Date Range Filters */}
       <div className="flex flex-wrap gap-4 items-end">
         <TextInput
           label="Start Date"
@@ -132,12 +106,11 @@ export function DonationsTab({ memberId }: DonationsTabProps) {
         />
       </div>
 
-      {/* Donations Table or Empty State */}
       {donationList.length === 0 ? (
         <Card>
-          <CardBody>
+          <CardContent className="pt-6">
             <p className="text-sm text-gray-500">No donations recorded yet.</p>
-          </CardBody>
+          </CardContent>
         </Card>
       ) : (
         <DataTable data={donationList} columns={columns} />

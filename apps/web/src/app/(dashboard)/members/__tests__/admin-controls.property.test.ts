@@ -37,7 +37,7 @@ const branchIdArb = fc.integer({ min: 1, max: 10000 });
 
 const branchNameArb = fc.stringMatching(/^[A-Za-z ]{1,30}$/).filter((s) => s.trim().length > 0);
 
-const activeBranchArb: fc.Arbitrary<Branch> = fc
+const _activeBranchArb: fc.Arbitrary<Branch> = fc
   .tuple(branchIdArb, branchNameArb)
   .map(([branchId, branchName]) => ({ branchId, branchName, isActive: true }));
 

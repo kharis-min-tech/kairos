@@ -61,6 +61,7 @@ function Modal({ open, onClose, title, children, footer, maxWidth = 'md' }: Moda
       className="fixed inset-0 z-50 m-auto rounded-lg border-0 p-0 shadow-xl backdrop:bg-black/50"
       onClick={handleBackdropClick}
       aria-labelledby={title ? 'modal-title' : undefined}
+      aria-label={title ? undefined : 'Dialog'}
     >
       <div className={`w-[calc(100vw-2rem)] sm:w-full ${maxWidthStyles[maxWidth]}`}>
         {title && (

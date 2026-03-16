@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, UserX } from 'lucide-react';
-import { Button, Badge, Card, CardBody, Spinner, Alert, Modal } from '@/components/ui';
+import { Button, Badge, Card, CardContent, Spinner, Alert, Modal } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { members, branches } from '@kairos/api-client';
-import type { Member, Branch } from '@kairos/types';
+import { useMember, useDeleteMember } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
+import type { Member } from '@kairos/types';
 import { MemberEditModal } from './member-edit-modal';
 import { AttendanceTab } from './attendance-tab';
 import { DonationsTab } from './donations-tab';
@@ -28,67 +29,37 @@ interface FellowshipAssignment {
   isActive: boolean;
 }
 
-type BadgeVariant = 'active' | 'inactive' | 'pending';
-
 export default function MemberDetailPage() {
   const searchParams = useSearchParams();
-  const id = searchParams.get('id') ?? '';
+  const id = Number(searchParams.get('id') ?? '0');
   const router = useRouter();
   const { user } = useAuth();
   const isAdminOrPastor = user?.role === 'Admin' || user?.role === 'Pastor';
 
-  const [member, setMember] = useState<Member | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: member, isLoading, error, refetch } = useMember(id);
+  const { data: branchesRes } = useBranches({ limit: 100 });
+  const deleteMember = useDeleteMember();
+
   const [activeTab, setActiveTab] = useState<'profile' | 'donations' | 'attendance'>('profile');
   const [editOpen, setEditOpen] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [deactivateError, setDeactivateError] = useState('');
-  const [branchList, setBranchList] = useState<Branch[]>([]);
-  const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
-  const [fellowshipAssignments, setFellowshipAssignments] = useState<FellowshipAssignment[]>([]);
 
-  const fetchMember = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await members.get(Number(id));
-      setMember(data);
-      // The members.get endpoint returns departments and fellowships with the member data
-      const extended = data as Member & { departments?: DepartmentAssignment[]; fellowships?: FellowshipAssignment[] };
-      setDepartmentAssignments(extended.departments ?? []);
-      setFellowshipAssignments(extended.fellowships ?? []);
-    } catch {
-      setError('Failed to load member details.');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchMember();
-  }, [fetchMember]);
-
-  useEffect(() => {
-    branches.list({ limit: 100, isActive: true }).then(res => setBranchList(res.data)).catch(() => {});
-  }, []);
+  const branchList = branchesRes?.data ?? [];
 
   const handleDeactivate = async () => {
     if (!member) return;
-    setDeactivating(true);
     setDeactivateError('');
     try {
-      await members.delete(member.memberId);
-      setMember(prev => prev ? { ...prev, isActive: false } : null);
+      await deleteMember.mutateAsync((member as Member).memberId);
       setConfirmDeactivate(false);
+      refetch();
     } catch {
       setDeactivateError('Failed to deactivate member.');
-    } finally {
-      setDeactivating(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Spinner size="lg" />
@@ -97,11 +68,16 @@ export default function MemberDetailPage() {
   }
 
   if (error || !member) {
-    return <Alert variant="error" title="Error">{error || 'Member not found.'}</Alert>;
+    return <Alert variant="error" title="Error">{error?.message || 'Member not found.'}</Alert>;
   }
 
-  const statusVariant: BadgeVariant = member.isActive ? 'active' : 'inactive';
-  const branchName = branchList.find(b => b.branchId === member.homeBranchId)?.branchName ?? `Branch ${member.homeBranchId}`;
+  const m = member as Member & { departments?: DepartmentAssignment[]; fellowships?: FellowshipAssignment[] };
+  const departmentAssignments = m.departments ?? [];
+  const fellowshipAssignments = m.fellowships ?? [];
+  const statusVariant = m.isActive ? 'default' as const : 'secondary' as const;
+  const branchName = (branchList as Array<{ branchId: number; branchName: string }>).find(
+    (b) => b.branchId === m.homeBranchId
+  )?.branchName ?? `Branch ${m.homeBranchId}`;
   const tabs = [
     { key: 'profile' as const, label: 'Profile' },
     { key: 'donations' as const, label: 'Donations' },
@@ -117,13 +93,13 @@ export default function MemberDetailPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <PhotoUpload memberId={member.memberId} photoUrl={member.photoUrl} onUploaded={fetchMember} />
+            <PhotoUpload memberId={m.memberId} photoUrl={m.photoUrl} onUploaded={() => refetch()} />
             <h1 className="text-2xl font-semibold text-gray-900">
-              {member.firstName} {member.lastName}
+              {m.firstName} {m.lastName}
             </h1>
-            <Badge variant={statusVariant}>{member.isActive ? 'Active' : 'Inactive'}</Badge>
+            <Badge variant={statusVariant}>{m.isActive ? 'Active' : 'Inactive'}</Badge>
           </div>
-          <p className="text-sm text-gray-500 mt-1">{member.email}</p>
+          <p className="text-sm text-gray-500 mt-1">{m.email}</p>
         </div>
         {isAdminOrPastor && (
           <div className="flex items-center gap-3">
@@ -131,7 +107,7 @@ export default function MemberDetailPage() {
               <Edit size={16} className="mr-2" />
               Edit
             </Button>
-            <Button variant="danger" size="sm" onClick={() => setConfirmDeactivate(true)} disabled={deactivating || !member.isActive}>
+            <Button variant="destructive" size="sm" onClick={() => setConfirmDeactivate(true)} disabled={deleteMember.isPending || !m.isActive}>
               <UserX size={16} className="mr-2" />
               Deactivate
             </Button>
@@ -164,37 +140,37 @@ export default function MemberDetailPage() {
       {activeTab === 'profile' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Personal Information</h3>
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Full Name</dt>
-                  <dd className="text-sm text-gray-900">{member.firstName} {member.middleName ? `${member.middleName} ` : ''}{member.lastName}</dd>
+                  <dd className="text-sm text-gray-900">{m.firstName} {m.middleName ? `${m.middleName} ` : ''}{m.lastName}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Email</dt>
-                  <dd className="text-sm text-gray-900">{member.email || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.email || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Phone</dt>
-                  <dd className="text-sm text-gray-900">{member.phone || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.phone || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Gender</dt>
-                  <dd className="text-sm text-gray-900">{member.gender || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.gender || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Date of Birth</dt>
                   <dd className="text-sm text-gray-900">
-                    {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString('en-GB') : '—'}
+                    {m.dateOfBirth ? new Date(m.dateOfBirth).toLocaleDateString('en-GB') : '—'}
                   </dd>
                 </div>
               </dl>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Church Information</h3>
               <dl className="space-y-3">
                 <div className="flex justify-between">
@@ -204,55 +180,55 @@ export default function MemberDetailPage() {
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Membership Date</dt>
                   <dd className="text-sm text-gray-900">
-                    {member.membershipDate ? new Date(member.membershipDate).toLocaleDateString('en-GB') : '—'}
+                    {m.membershipDate ? new Date(m.membershipDate).toLocaleDateString('en-GB') : '—'}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Status</dt>
-                  <dd><Badge variant={statusVariant}>{member.isActive ? 'Active' : 'Inactive'}</Badge></dd>
+                  <dd><Badge variant={statusVariant}>{m.isActive ? 'Active' : 'Inactive'}</Badge></dd>
                 </div>
               </dl>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Address</h3>
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Address</dt>
-                  <dd className="text-sm text-gray-900">{member.address || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.address || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">City</dt>
-                  <dd className="text-sm text-gray-900">{member.city || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.city || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Postal Code</dt>
-                  <dd className="text-sm text-gray-900">{member.postalCode || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.postalCode || '—'}</dd>
                 </div>
               </dl>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Emergency Contact</h3>
               <dl className="space-y-3">
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Name</dt>
-                  <dd className="text-sm text-gray-900">{member.emergencyContactName || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.emergencyContactName || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500">Phone</dt>
-                  <dd className="text-sm text-gray-900">{member.emergencyContactPhone || '—'}</dd>
+                  <dd className="text-sm text-gray-900">{m.emergencyContactPhone || '—'}</dd>
                 </div>
               </dl>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Departments</h3>
               {departmentAssignments.length > 0 ? (
                 <dl className="space-y-3">
@@ -268,11 +244,11 @@ export default function MemberDetailPage() {
               ) : (
                 <p className="text-sm text-gray-500">No departments assigned</p>
               )}
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody>
+            <CardContent className="pt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-4">Fellowship</h3>
               {fellowshipAssignments.length > 0 ? (
                 <dl className="space-y-3">
@@ -288,23 +264,23 @@ export default function MemberDetailPage() {
               ) : (
                 <p className="text-sm text-gray-500">No fellowship assigned</p>
               )}
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       )}
 
-      {activeTab === 'donations' && <DonationsTab memberId={member.memberId} />}
+      {activeTab === 'donations' && <DonationsTab memberId={m.memberId} />}
 
-      {activeTab === 'attendance' && <AttendanceTab memberId={member.memberId} />}
+      {activeTab === 'attendance' && <AttendanceTab memberId={m.memberId} />}
 
       {/* Edit Modal */}
       <MemberEditModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
-        member={member}
+        member={m}
         onSaved={() => {
           setEditOpen(false);
-          fetchMember();
+          refetch();
         }}
       />
 
@@ -323,8 +299,8 @@ export default function MemberDetailPage() {
             <Button variant="secondary" size="sm" onClick={() => setConfirmDeactivate(false)}>
               Cancel
             </Button>
-            <Button variant="danger" size="sm" onClick={handleDeactivate} disabled={deactivating}>
-              {deactivating ? 'Deactivating…' : 'Deactivate'}
+            <Button variant="destructive" size="sm" onClick={handleDeactivate} disabled={deleteMember.isPending}>
+              {deleteMember.isPending ? 'Deactivating…' : 'Deactivate'}
             </Button>
           </>
         }

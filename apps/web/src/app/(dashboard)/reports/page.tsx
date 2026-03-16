@@ -1,7 +1,7 @@
 'use client';
 
 import { BarChart3, Users, HandCoins, CalendarCheck, Heart } from 'lucide-react';
-import { Card, CardBody } from '@/components/ui';
+import { Card, CardContent } from '@/components/ui';
 
 const reportLinks = [
   {
@@ -53,7 +53,7 @@ export default function ReportsPage() {
         {reportLinks.map((item) => (
           <a key={item.href} href={item.href} className="block group">
             <Card>
-              <CardBody>
+              <CardContent>
                 <div className="flex items-center gap-3 py-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${item.color}`}>
                     {item.icon}
@@ -63,7 +63,7 @@ export default function ReportsPage() {
                     <p className="text-xs text-gray-500">{item.description}</p>
                   </div>
                 </div>
-              </CardBody>
+              </CardContent>
             </Card>
           </a>
         ))}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, TextInput, SelectInput, Checkbox, Radio, Textarea, DatePicker, Alert, Spinner, Card, CardHeader, CardBody } from '@/components/ui';
+import { Button, TextInput, SelectInput, Checkbox, Radio, Textarea, DatePicker, Alert, Spinner, Card, CardHeader, CardContent } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { forms } from '@kairos/api-client';
 
@@ -159,14 +159,14 @@ export default function FormSubmissionPage() {
       <>
         <Breadcrumbs items={[{ label: 'Forms', href: '/forms' }, { label: formDef.formName }]} />
         <Card className="max-w-lg mx-auto mt-12">
-          <CardBody>
+          <CardContent>
             <div className="text-center py-8">
               <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Submission Received</h2>
               <p className="text-gray-600">Thank you for submitting the form. A confirmation email has been sent.</p>
               <Button className="mt-6" onClick={() => { setSubmitted(false); setValues({}); }}>Submit Another</Button>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </>
     );
@@ -180,7 +180,7 @@ export default function FormSubmissionPage() {
           <h1 className="text-xl font-semibold text-gray-900">{formDef.formName}</h1>
           {formDef.formDescription && <p className="text-sm text-gray-500 mt-1">{formDef.formDescription}</p>}
         </CardHeader>
-        <CardBody>
+        <CardContent>
           {errors._form && <Alert variant="error" className="mb-4">{errors._form}</Alert>}
           <form onSubmit={handleSubmit} className="space-y-4">
             {formDef.formDefinition.fields.map((field) => (
@@ -190,7 +190,7 @@ export default function FormSubmissionPage() {
               {submitting ? 'Submitting…' : 'Submit'}
             </Button>
           </form>
-        </CardBody>
+        </CardContent>
       </Card>
     </>
   );

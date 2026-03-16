@@ -1,18 +1,15 @@
-interface SkeletonProps {
-  className?: string;
-  width?: string;
-  height?: string;
-}
+import { cn } from "@/lib/utils"
 
-function Skeleton({ className = '', width, height }: SkeletonProps) {
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`animate-pulse rounded bg-gray-200 ${className}`}
-      style={{ width, height }}
-      aria-hidden="true"
+      className={cn("animate-pulse rounded-md bg-muted", className)}
+      {...props}
     />
-  );
+  )
 }
 
-export { Skeleton };
-export type { SkeletonProps };
+export { Skeleton }

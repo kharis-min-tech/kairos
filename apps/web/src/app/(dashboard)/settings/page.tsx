@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardHeader, CardBody } from '@/components/ui';
+import { Card, CardHeader, CardContent } from '@/components/ui';
 
 export default function SettingsPage() {
   return (
@@ -15,18 +15,18 @@ export default function SettingsPage() {
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-900">Account</h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <p className="text-sm text-gray-500 py-4">Account settings will be available here. You can update your password and notification preferences.</p>
-          </CardBody>
+          </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-900">Notifications</h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <p className="text-sm text-gray-500 py-4">Configure which notifications you receive via email and in-app.</p>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </section>

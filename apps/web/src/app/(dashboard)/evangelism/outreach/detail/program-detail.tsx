@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Users, Heart, PhoneCall, MapPin, Calendar, User } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
-import { Button, Badge, Card, CardHeader, CardBody, StatCard, Spinner, Alert } from '@/components/ui';
+import { Button, Badge, Card, CardHeader, CardContent, StatCard, Spinner, Alert } from '@/components/ui';
 import { outreach } from '@kairos/api-client';
 
 interface Participant {
@@ -50,12 +50,12 @@ interface ProgramDetail {
   updatedAt: string;
 }
 
-const STATUS_BADGE: Record<string, 'active' | 'pending' | 'inactive' | 'error'> = {
-  'New': 'pending',
-  'Following Up': 'pending',
-  'Interested': 'active',
-  'Converted': 'active',
-  'Not Interested': 'error',
+const STATUS_BADGE: Record<string, 'default' | 'secondary' | 'destructive'> = {
+  'New': 'secondary',
+  'Following Up': 'secondary',
+  'Interested': 'default',
+  'Converted': 'default',
+  'Not Interested': 'destructive',
 };
 
 const formatDate = (d: string | Date) =>
@@ -124,7 +124,7 @@ export default function OutreachProgramDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900">{program.programName}</h1>
-            <Badge variant={program.isCompleted ? 'inactive' : 'active'}>
+            <Badge variant={program.isCompleted ? 'secondary' : 'default'}>
               {program.isCompleted ? 'Completed' : 'Active'}
             </Badge>
           </div>
@@ -146,9 +146,9 @@ export default function OutreachProgramDetailPage() {
 
       {program.description && (
         <Card className="mb-6">
-          <CardBody>
+          <CardContent>
             <p className="text-sm text-gray-600">{program.description}</p>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
 
@@ -157,7 +157,7 @@ export default function OutreachProgramDetailPage() {
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-700">Participants ({program.participants.length})</h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             {program.participants.length === 0 ? (
               <p className="text-sm text-gray-500">No participants registered.</p>
             ) : (
@@ -165,19 +165,19 @@ export default function OutreachProgramDetailPage() {
                 {program.participants.map((p) => (
                   <li key={p.memberId} className="flex items-center justify-between text-sm">
                     <span className="text-gray-900">{p.firstName} {p.lastName}</span>
-                    {p.role && <Badge variant="info">{p.role}</Badge>}
+                    {p.role && <Badge variant="default">{p.role}</Badge>}
                   </li>
                 ))}
               </ul>
             )}
-          </CardBody>
+          </CardContent>
         </Card>
 
         <Card className="lg:col-span-2">
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-700">Souls Captured ({program.souls.length})</h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             {program.souls.length === 0 ? (
               <p className="text-sm text-gray-500">No souls captured yet.</p>
             ) : (
@@ -196,7 +196,7 @@ export default function OutreachProgramDetailPage() {
                       <tr key={soul.soulId}>
                         <td className="py-2 text-gray-900">{soul.firstName} {soul.lastName}</td>
                         <td className="py-2">
-                          <Badge variant={STATUS_BADGE[soul.status] || 'inactive'}>{soul.status}</Badge>
+                          <Badge variant={STATUS_BADGE[soul.status] || 'secondary'}>{soul.status}</Badge>
                         </td>
                         <td className="py-2 text-gray-600">
                           {soul.assignedWorker
@@ -212,7 +212,7 @@ export default function OutreachProgramDetailPage() {
                 </table>
               </div>
             )}
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
 
@@ -221,18 +221,18 @@ export default function OutreachProgramDetailPage() {
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-700">Follow-up Outcomes Summary</h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <div className="flex flex-wrap gap-4">
               {Object.entries(outcomeTotals).map(([status, count]) => (
                 <div key={status} className="flex items-center gap-2 text-sm">
-                  <Badge variant={status === 'Successful' ? 'active' : status === 'Not Interested' ? 'error' : 'pending'}>
+                  <Badge variant={status === 'Successful' ? 'default' : status === 'Not Interested' ? 'destructive' : 'secondary'}>
                     {status}
                   </Badge>
                   <span className="font-medium text-gray-900">{count}</span>
                 </div>
               ))}
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       )}
     </>

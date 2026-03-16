@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Breadcrumbs } from '@/components/layout';
 import { Button, SelectInput, DatePicker, Textarea, Alert, Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { attendance, fellowships } from '@kairos/api-client';
-import type { Fellowship } from '@kairos/types';
+import { useRecordFellowshipAttendance } from '@/hooks/use-attendance';
+import { useFellowships } from '@/hooks/use-fellowships';
+import { useMembers } from '@/hooks/use-members';
 
 type FellowshipStatus = 'Present' | 'Absent' | 'Excused' | 'Late';
 
@@ -26,59 +27,34 @@ export default function FellowshipAttendancePage() {
   const { user } = useAuth();
   const [meetingDate, setMeetingDate] = useState('');
   const [selectedFellowship, setSelectedFellowship] = useState<string>('');
-  const [fellowshipList, setFellowshipList] = useState<Fellowship[]>([]);
   const [memberRows, setMemberRows] = useState<MemberRow[]>([]);
   const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const branchId = user?.branchId ? Number(user.branchId) : undefined;
 
-  useEffect(() => {
-    if (!branchId) return;
-    setLoading(true);
-    fellowships
-      .list({ branchId, limit: 100 })
-      .then((res) => setFellowshipList(res.data))
-      .catch(() => setError('Failed to load fellowships.'))
-      .finally(() => setLoading(false));
-  }, [branchId]);
+  const { data: fellowshipsRes, isLoading: loadingFellowships } = useFellowships(
+    branchId ? { branchId, limit: 100 } : undefined
+  );
+  const fellowshipList = fellowshipsRes?.data ?? [];
 
-  const loadFellowshipMembers = useCallback(async (fellowshipId: number) => {
-    setLoadingMembers(true);
-    setError(null);
-    try {
-      // The API returns fellowship details; members come from the members list filtered by fellowship
-      const apiClient = await import('@kairos/api-client');
-      const membersRes = await apiClient.members.list({
-        fellowshipId,
-        limit: 500,
-        status: 'active',
-      });
-      setMemberRows(
-        membersRes.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
-          memberId: m.memberId,
-          name: `${m.firstName} ${m.lastName}`,
-          status: 'Absent' as FellowshipStatus,
-        }))
-      );
-    } catch {
-      setError('Failed to load fellowship members.');
-    } finally {
-      setLoadingMembers(false);
-    }
-  }, []);
+  const { data: membersRes, isLoading: loadingMembers } = useMembers(
+    selectedFellowship ? { fellowshipId: Number(selectedFellowship), limit: 500, status: 'active' } : undefined
+  );
+
+  const recordAttendance = useRecordFellowshipAttendance();
 
   useEffect(() => {
-    if (selectedFellowship) {
-      loadFellowshipMembers(Number(selectedFellowship));
-    } else {
-      setMemberRows([]);
-    }
-  }, [selectedFellowship, loadFellowshipMembers]);
+    const members = membersRes?.data ?? [];
+    setMemberRows(
+      members.map((m: { memberId: number; firstName: string; lastName: string }) => ({
+        memberId: m.memberId,
+        name: `${m.firstName} ${m.lastName}`,
+        status: 'Absent' as FellowshipStatus,
+      }))
+    );
+  }, [membersRes]);
 
   const updateStatus = (memberId: number, status: FellowshipStatus) => {
     setMemberRows((prev) =>
@@ -91,11 +67,10 @@ export default function FellowshipAttendancePage() {
       setError('Please select a meeting date and fellowship.');
       return;
     }
-    setSubmitting(true);
     setError(null);
     setSuccess(null);
     try {
-      await attendance.recordFellowship({
+      await recordAttendance.mutateAsync({
         meetingDate,
         fellowshipId: Number(selectedFellowship),
         location: '',
@@ -105,12 +80,10 @@ export default function FellowshipAttendancePage() {
       setSuccess('Fellowship attendance recorded successfully.');
     } catch {
       setError('Failed to record attendance. Please try again.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
-  const fellowshipOptions = fellowshipList.map((f) => ({
+  const fellowshipOptions = fellowshipList.map((f: { fellowshipId: number; fellowshipName: string }) => ({
     value: String(f.fellowshipId),
     label: f.fellowshipName,
   }));
@@ -139,7 +112,7 @@ export default function FellowshipAttendancePage() {
           onChange={(e) => setMeetingDate(e.target.value)}
           required
         />
-        {loading ? (
+        {loadingFellowships ? (
           <div className="flex items-end pb-2"><Spinner size="sm" /></div>
         ) : (
           <SelectInput
@@ -194,7 +167,7 @@ export default function FellowshipAttendancePage() {
                         value={row.status}
                         onChange={(e) => updateStatus(row.memberId, e.target.value as FellowshipStatus)}
                         aria-label={`Status for ${row.name}`}
-                        className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm focus:border-primary focus:outline-2 focus:outline-primary"
+                        className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm min-h-[44px] focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2"
                       >
                         {STATUS_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -210,8 +183,8 @@ export default function FellowshipAttendancePage() {
       </div>
 
       <div className="mt-6 flex justify-end">
-        <Button onClick={handleSubmit} disabled={submitting || !meetingDate || !selectedFellowship}>
-          {submitting ? 'Saving...' : 'Record Attendance'}
+        <Button onClick={handleSubmit} disabled={recordAttendance.isPending || !meetingDate || !selectedFellowship}>
+          {recordAttendance.isPending ? 'Saving...' : 'Record Attendance'}
         </Button>
       </div>
     </>

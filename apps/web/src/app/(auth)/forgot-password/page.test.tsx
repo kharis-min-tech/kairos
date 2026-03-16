@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Mock next/link
@@ -31,7 +31,7 @@ describe('ForgotPasswordPage', () => {
 
   it('renders the email step initially', () => {
     render(<ForgotPasswordPage />);
-    expect(screen.getByText('Reset password')).toBeInTheDocument();
+    expect(screen.getByText('Reset Password')).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send verification code/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to sign in/i })).toHaveAttribute('href', '/login');
@@ -44,7 +44,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Email is required')).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
     });
     expect(mockForgotPassword).not.toHaveBeenCalled();
   });
@@ -54,10 +54,12 @@ describe('ForgotPasswordPage', () => {
     render(<ForgotPasswordPage />);
 
     await user.type(screen.getByLabelText(/email/i), 'not-an-email');
-    await user.click(screen.getByRole('button', { name: /send verification code/i }));
+    // Use fireEvent.submit to bypass HTML5 type="email" constraint validation
+    const form = screen.getByRole('form', { name: /request password reset/i });
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
     });
     expect(mockForgotPassword).not.toHaveBeenCalled();
   });
@@ -71,7 +73,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
     expect(mockForgotPassword).toHaveBeenCalledWith('test@example.com');
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
@@ -99,14 +101,14 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     // Submit without filling in code or password
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter the 6-digit code')).toBeInTheDocument();
+      expect(screen.getByText('Enter the 6-digit verification code')).toBeInTheDocument();
     });
     expect(mockConfirmPassword).not.toHaveBeenCalled();
   });
@@ -120,7 +122,7 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     await user.type(screen.getByLabelText(/verification code/i), '123456');
@@ -128,7 +130,9 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/password must contain/i)).toBeInTheDocument();
+      const errorEl = document.querySelector('p.text-destructive');
+      expect(errorEl).not.toBeNull();
+      expect(errorEl!.textContent).toBe('At least 8 characters');
     });
     expect(mockConfirmPassword).not.toHaveBeenCalled();
   });
@@ -143,7 +147,7 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     // Step 2: code + password
@@ -152,7 +156,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/password reset successful/i)).toBeInTheDocument();
+      expect(screen.getByText('Password Reset')).toBeInTheDocument();
     });
     expect(mockConfirmPassword).toHaveBeenCalledWith('test@example.com', '123456', 'NewPass1x');
     expect(screen.getByRole('link', { name: /back to sign in/i })).toHaveAttribute('href', '/login');
@@ -168,7 +172,7 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     await user.type(screen.getByLabelText(/verification code/i), '000000');
@@ -189,13 +193,13 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     // Go back
     await user.click(screen.getByText(/use a different email/i));
 
-    expect(screen.getByText('Reset password')).toBeInTheDocument();
+    expect(screen.getByText('Reset Password')).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
@@ -208,7 +212,7 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /send verification code/i }));
     await waitFor(() => {
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument();
+      expect(screen.getByText('Enter Code')).toBeInTheDocument();
     });
 
     // Check password rules are displayed

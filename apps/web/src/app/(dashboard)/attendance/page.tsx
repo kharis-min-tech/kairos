@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Breadcrumbs } from '@/components/layout';
 import { Button, SelectInput, DatePicker, Alert, Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { attendance, members, branches as branchesApi } from '@kairos/api-client';
-import type { Branch } from '@kairos/types';
+import { useMembers } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
+import { useRecordServiceAttendance } from '@/hooks/use-attendance';
+import type { Member } from '@kairos/types';
 
-type ServiceType = 'Sunday Service' | 'Midweek Service' | 'Special Service';
 type AttendanceStatus = 'Present' | 'Absent' | 'Virtual';
 
 interface MemberRow {
@@ -17,7 +18,7 @@ interface MemberRow {
   selected: boolean;
 }
 
-const SERVICE_TYPES: { value: ServiceType; label: string }[] = [
+const SERVICE_TYPES = [
   { value: 'Sunday Service', label: 'Sunday Service' },
   { value: 'Midweek Service', label: 'Midweek Service' },
   { value: 'Special Service', label: 'Special Service' },
@@ -35,49 +36,38 @@ export default function ServiceAttendancePage() {
   const [serviceDate, setServiceDate] = useState('');
   const [serviceType, setServiceType] = useState<string>('');
   const [memberRows, setMemberRows] = useState<MemberRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [allSelected, setAllSelected] = useState(false);
-  const [branchList, setBranchList] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [membersLoaded, setMembersLoaded] = useState(false);
 
   const branchId = isAdmin
     ? (selectedBranch ? Number(selectedBranch) : undefined)
     : (user?.branchId ? Number(user.branchId) : undefined);
 
-  // Load branch list for Admin users
-  useEffect(() => {
-    if (isAdmin) {
-      branchesApi.list({ limit: 100 }).then((res) => setBranchList(res.data as unknown as Branch[])).catch(() => {});
-    }
-  }, [isAdmin]);
+  const { data: branchesRes } = useBranches({ limit: 100 });
+  const branchList = (branchesRes?.data ?? []) as Array<{ branchId: number; branchName: string }>;
 
-  const loadMembers = useCallback(async () => {
-    if (!branchId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await members.list({ branchId, limit: 500, status: 'active' });
-      setMemberRows(
-        res.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
-          memberId: m.memberId,
-          name: `${m.firstName} ${m.lastName}`,
-          status: 'Absent' as AttendanceStatus,
-          selected: false,
-        }))
-      );
-    } catch {
-      setError('Failed to load members.');
-    } finally {
-      setLoading(false);
-    }
-  }, [branchId]);
+  const { data: membersRes, isLoading: loadingMembers } = useMembers(
+    branchId ? { branchId, limit: 500, status: 'active' } : undefined
+  );
 
-  useEffect(() => {
-    loadMembers();
-  }, [loadMembers]);
+  // Build member rows when members data changes
+  const members = membersRes?.data ?? [];
+  if (members.length > 0 && !membersLoaded) {
+    setMemberRows(
+      members.map((m: Member) => ({
+        memberId: m.memberId,
+        name: `${m.firstName} ${m.lastName}`,
+        status: 'Absent' as AttendanceStatus,
+        selected: false,
+      }))
+    );
+    setMembersLoaded(true);
+  }
+
+  const recordAttendance = useRecordServiceAttendance();
 
   const toggleAll = () => {
     const next = !allSelected;
@@ -116,11 +106,10 @@ export default function ServiceAttendancePage() {
       setError(isAdmin && !branchId ? 'Please select a branch.' : 'Please select a service date and type.');
       return;
     }
-    setSubmitting(true);
     setError(null);
     setSuccess(null);
     try {
-      await attendance.recordService({
+      await recordAttendance.mutateAsync({
         serviceDate,
         serviceType,
         branchId,
@@ -129,8 +118,6 @@ export default function ServiceAttendancePage() {
       setSuccess('Service attendance recorded successfully.');
     } catch {
       setError('Failed to record attendance. Please try again.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -185,12 +172,12 @@ export default function ServiceAttendancePage() {
           <h2 className="text-lg font-semibold text-gray-900">
             Members ({memberRows.length})
           </h2>
-          <Button variant="secondary" size="sm" onClick={toggleAll}>
+          <Button variant="outline" size="sm" onClick={toggleAll}>
             {allSelected ? 'Deselect All' : 'Mark All Present'}
           </Button>
         </div>
 
-        {loading ? (
+        {loadingMembers ? (
           <div className="flex justify-center py-12"><Spinner /></div>
         ) : memberRows.length === 0 ? (
           <p className="text-gray-500 py-8 text-center">No members found for this branch.</p>
@@ -246,8 +233,8 @@ export default function ServiceAttendancePage() {
       </div>
 
       <div className="mt-6 flex justify-end">
-        <Button onClick={handleSubmit} disabled={submitting || !serviceDate || !serviceType}>
-          {submitting ? 'Saving...' : 'Record Attendance'}
+        <Button onClick={handleSubmit} disabled={recordAttendance.isPending || !serviceDate || !serviceType}>
+          {recordAttendance.isPending ? 'Saving...' : 'Record Attendance'}
         </Button>
       </div>
     </>
