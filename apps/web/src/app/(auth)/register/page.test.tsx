@@ -28,11 +28,11 @@ vi.mock('next/link', () => ({
 }));
 
 // Mock API client
-const mockCreate = vi.fn();
+const mockRegister = vi.fn();
 const mockBranchesList = vi.fn();
 
 vi.mock('@kairos/api-client', () => ({
-  members: { create: (...args: unknown[]) => mockCreate(...args) },
+  auth: { register: (...args: unknown[]) => mockRegister(...args) },
   branches: { list: (...args: unknown[]) => mockBranchesList(...args) },
   ApiError: class ApiError extends Error {
     status: number;
@@ -187,7 +187,7 @@ describe('RegisterPage', () => {
   });
 
   it('submits full wizard and shows pending approval message', async () => {
-    mockCreate.mockResolvedValue({ memberId: 1, firstName: 'John' });
+    mockRegister.mockResolvedValue({ memberId: 1, firstName: 'John' });
     const user = userEvent.setup();
     render(<RegisterPage />, { wrapper: createWrapper() });
 
@@ -217,7 +217,7 @@ describe('RegisterPage', () => {
     });
     expect(screen.getByText('Registration Submitted')).toBeInTheDocument();
 
-    expect(mockCreate).toHaveBeenCalledWith(
+    expect(mockRegister).toHaveBeenCalledWith(
       expect.objectContaining({
         firstName: 'John',
         lastName: 'Doe',
@@ -226,13 +226,14 @@ describe('RegisterPage', () => {
         gender: 'Male',
         address: '123 Church Lane',
         homeBranchId: 1,
+        password: 'StrongPass1',
       }),
     );
   });
 
   it('shows error message when API call fails', async () => {
     const { ApiError } = await import('@kairos/api-client');
-    mockCreate.mockRejectedValue(new ApiError(409, { code: 'DUPLICATE', message: 'Email already registered' }));
+    mockRegister.mockRejectedValue(new ApiError(409, { code: 'DUPLICATE', message: 'Email already registered' }));
     const user = userEvent.setup();
     render(<RegisterPage />, { wrapper: createWrapper() });
 
