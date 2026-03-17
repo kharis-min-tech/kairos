@@ -164,6 +164,7 @@ jobs:
       - name: Read CDK stack outputs
         id: stack-outputs
         run: |
+          API_URL=$(jq -r '.["kairos-staging-api"].HttpApiUrl' infrastructure/cdk-outputs.json)
           CLIENT_ID=$(jq -r '.["kairos-staging-auth"].UserPoolClientId' infrastructure/cdk-outputs.json)
           USER_POOL_ID=$(jq -r '.["kairos-staging-auth"].UserPoolId' infrastructure/cdk-outputs.json)
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
@@ -176,7 +177,7 @@ jobs:
     environment: staging
     timeout-minutes: 20
     env:
-      API_URL: 'https://api-staging.khar.is'
+      API_URL: ${{ needs.deploy.outputs.api_url }}
       COGNITO_CLIENT_ID: ${{ needs.deploy.outputs.cognito_client_id }}
       COGNITO_USER_POOL_ID: ${{ needs.deploy.outputs.cognito_user_pool_id }}
     steps:
