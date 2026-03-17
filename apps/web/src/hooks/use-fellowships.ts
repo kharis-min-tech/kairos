@@ -41,6 +41,18 @@ export function useCreateFellowship() {
   });
 }
 
+export function useUpdateFellowship() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fellowshipId, data }: { fellowshipId: number; data: Partial<Fellowship> }) =>
+      fellowships.update(fellowshipId, data),
+    onSuccess: (_, { fellowshipId }) => {
+      queryClient.invalidateQueries({ queryKey: fellowshipKeys.detail(fellowshipId) });
+      queryClient.invalidateQueries({ queryKey: fellowshipKeys.lists() });
+    },
+  });
+}
+
 export function useAddFellowshipMember() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -52,9 +64,20 @@ export function useAddFellowshipMember() {
   });
 }
 
+export function useRemoveFellowshipMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fellowshipId, memberId }: { fellowshipId: number; memberId: number }) =>
+      fellowships.removeMember(fellowshipId, memberId),
+    onSuccess: (_, { fellowshipId }) => {
+      queryClient.invalidateQueries({ queryKey: fellowshipKeys.detail(fellowshipId) });
+    },
+  });
+}
+
 export function useSendFellowshipMessage() {
   return useMutation({
-    mutationFn: ({ fellowshipId, data }: { fellowshipId: number; data: { title: string; body: string; memberIds?: number[] } }) =>
+    mutationFn: ({ fellowshipId, data }: { fellowshipId: number; data: { title: string; message: string; memberIds?: number[] } }) =>
       fellowships.sendMessage(fellowshipId, data),
   });
 }

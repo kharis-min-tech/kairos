@@ -25,6 +25,7 @@ export {
   departmentCreateSchema,
   branchDepartmentCreateSchema,
   fellowshipCreateSchema,
+  fellowshipUpdateSchema,
   serviceCreateSchema,
   serviceAttendanceBulkSchema,
   attendanceRecordSchema,

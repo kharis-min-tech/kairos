@@ -2,10 +2,16 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { UserPlus, Send, Calendar, User, Users } from 'lucide-react';
+import { UserPlus, UserMinus, Send, Calendar, User, Users, Pencil } from 'lucide-react';
 import type { Fellowship } from '@kairos/types';
 import { useAuth } from '@/lib/auth';
-import { useFellowship, useAddFellowshipMember, useSendFellowshipMessage } from '@/hooks/use-fellowships';
+import {
+  useFellowship,
+  useUpdateFellowship,
+  useAddFellowshipMember,
+  useRemoveFellowshipMember,
+  useSendFellowshipMessage,
+} from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
 import { PageHeader, LoadingSkeleton } from '@/components/shared';
 import { Breadcrumbs } from '@/components/layout';
@@ -35,12 +41,20 @@ export default function FellowshipDetailPage() {
   const allMembers = (membersRes as unknown as { data?: Array<{ memberId: number; firstName: string; lastName: string }> })?.data ?? [];
 
   const addMember = useAddFellowshipMember();
+  const removeMember = useRemoveFellowshipMember();
+  const updateFellowship = useUpdateFellowship();
   const sendMessage = useSendFellowshipMessage();
 
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [showSendMessage, setShowSendMessage] = useState(false);
-  const [messageData, setMessageData] = useState({ title: '', body: '' });
+  const [messageData, setMessageData] = useState({ title: '', message: '' });
+  const [showEditFellowship, setShowEditFellowship] = useState(false);
+  const [editData, setEditData] = useState({
+    fellowship_name: '',
+    description: '',
+    meeting_schedule: '',
+  });
 
   const handleAddMember = async () => {
     if (!selectedMemberId) return;
@@ -50,10 +64,39 @@ export default function FellowshipDetailPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!messageData.title || !messageData.body) return;
+    if (!messageData.title || !messageData.message) return;
     await sendMessage.mutateAsync({ fellowshipId, data: messageData });
     setShowSendMessage(false);
-    setMessageData({ title: '', body: '' });
+    setMessageData({ title: '', message: '' });
+  };
+
+  const handleEditFellowship = async () => {
+    const updates: Record<string, unknown> = {};
+    if (editData.fellowship_name && editData.fellowship_name !== fellowship?.fellowshipName)
+      updates.fellowship_name = editData.fellowship_name;
+    if (editData.description !== (fellowship?.description ?? ''))
+      updates.description = editData.description;
+    if (editData.meeting_schedule !== (fellowship?.meetingSchedule ?? ''))
+      updates.meeting_schedule = editData.meeting_schedule;
+    if (Object.keys(updates).length === 0) {
+      setShowEditFellowship(false);
+      return;
+    }
+    await updateFellowship.mutateAsync({ fellowshipId, data: updates as Partial<Fellowship> });
+    setShowEditFellowship(false);
+  };
+
+  const openEditModal = () => {
+    setEditData({
+      fellowship_name: fellowship?.fellowshipName ?? '',
+      description: fellowship?.description ?? '',
+      meeting_schedule: fellowship?.meetingSchedule ?? '',
+    });
+    setShowEditFellowship(true);
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    await removeMember.mutateAsync({ fellowshipId, memberId });
   };
 
   if (isLoading) return <LoadingSkeleton variant="detail" />;
@@ -72,6 +115,9 @@ export default function FellowshipDetailPage() {
         actions={
           canManage ? (
             <div className="flex gap-2">
+              <Button variant="outline" onClick={openEditModal}>
+                <Pencil size={16} className="mr-2" />Edit
+              </Button>
               <Button variant="outline" onClick={() => setShowAddMember(true)}>
                 <UserPlus size={16} className="mr-2" />Add Member
               </Button>
@@ -168,12 +214,24 @@ export default function FellowshipDetailPage() {
                     <p className="text-sm font-medium">{m.firstName} {m.lastName}</p>
                     {m.email && <p className="text-xs text-gray-500">{m.email}</p>}
                   </div>
-                  {(m.memberId === fellowship.leaderId) && (
-                    <Badge variant="default">Leader</Badge>
-                  )}
-                  {(m.memberId === fellowship.coLeaderId) && (
-                    <Badge variant="outline">Co-Leader</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {(m.memberId === fellowship.leaderId) && (
+                      <Badge variant="default">Leader</Badge>
+                    )}
+                    {(m.memberId === fellowship.coLeaderId) && (
+                      <Badge variant="outline">Co-Leader</Badge>
+                    )}
+                    {canManage && m.memberId !== fellowship.leaderId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMember(m.memberId)}
+                        disabled={removeMember.isPending}
+                      >
+                        <UserMinus size={14} className="text-destructive" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -213,15 +271,42 @@ export default function FellowshipDetailPage() {
           />
           <Textarea
             label="Message"
-            value={messageData.body}
-            onChange={(e) => setMessageData({ ...messageData, body: e.target.value })}
+            value={messageData.message}
+            onChange={(e) => setMessageData({ ...messageData, message: e.target.value })}
             required
           />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" onClick={() => setShowSendMessage(false)}>Cancel</Button>
-          <Button onClick={handleSendMessage} disabled={!messageData.title || !messageData.body || sendMessage.isPending}>
+          <Button onClick={handleSendMessage} disabled={!messageData.title || !messageData.message || sendMessage.isPending}>
             {sendMessage.isPending ? 'Sending...' : 'Send Message'}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Edit Fellowship Modal */}
+      <Modal open={showEditFellowship} onClose={() => setShowEditFellowship(false)} title="Edit Fellowship">
+        <div className="space-y-4">
+          <TextInput
+            label="Fellowship Name"
+            value={editData.fellowship_name}
+            onChange={(e) => setEditData({ ...editData, fellowship_name: e.target.value })}
+          />
+          <Textarea
+            label="Description"
+            value={editData.description}
+            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+          />
+          <TextInput
+            label="Meeting Schedule"
+            value={editData.meeting_schedule}
+            onChange={(e) => setEditData({ ...editData, meeting_schedule: e.target.value })}
+          />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="outline" onClick={() => setShowEditFellowship(false)}>Cancel</Button>
+          <Button onClick={handleEditFellowship} disabled={updateFellowship.isPending}>
+            {updateFellowship.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </Modal>

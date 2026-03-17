@@ -5,22 +5,9 @@ import { Clock, CheckCircle, Search, AlertTriangle, Phone, Mail, MessageSquare, 
 import { Breadcrumbs } from '@/components/layout';
 import { Button, TextInput, SelectInput, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardContent, StatCard } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { ContactMethod, ContactStatus } from '@kairos/types';
+import type { ContactMethod, ContactStatus, FollowUpTrackerItem } from '@kairos/types';
 
 type Tab = 'all' | 'pending' | 'overdue';
-
-interface FollowUpItem {
-  followUpId: number;
-  soulId: number;
-  soulName: string;
-  assignedWorker: string;
-  dueDate: string | null;
-  contactMethod: string | null;
-  contactStatus: string;
-  status: 'Pending' | 'Completed' | 'Overdue';
-  notes: string | null;
-  createdAt: string;
-}
 
 const CONTACT_METHODS = [
   { value: '', label: 'All Methods' },
@@ -59,14 +46,14 @@ const LOG_CONTACT_STATUSES = [
 const formatDate = (d: string | Date) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-function deriveStatus(item: FollowUpItem): 'Pending' | 'Completed' | 'Overdue' {
+function deriveStatus(item: FollowUpTrackerItem): 'Pending' | 'Completed' | 'Overdue' {
   if (item.status === 'Completed') return 'Completed';
   if (item.dueDate && new Date(item.dueDate) < new Date()) return 'Overdue';
   return 'Pending';
 }
 
 export default function FollowUpTrackerPage() {
-  const [items, setItems] = useState<FollowUpItem[]>([]);
+  const [items, setItems] = useState<FollowUpTrackerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -93,7 +80,7 @@ export default function FollowUpTrackerPage() {
         status: filterStatus || undefined,
         contactMethod: filterMethod || undefined,
       });
-      const data = res as unknown as { pending: number; completed: number; items: FollowUpItem[] };
+      const data = res as unknown as { pending: number; completed: number; items: FollowUpTrackerItem[] };
       setItems(data.items || []);
       setPendingCount(data.pending ?? 0);
       setCompletedCount(data.completed ?? 0);

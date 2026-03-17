@@ -13,6 +13,7 @@ import {
   createLogger,
   getDb,
 } from '@kairos/utils';
+import type { AuthContext } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
 
 const logger = createLogger('branches-list');
@@ -21,9 +22,15 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // 1. Extract auth context
-    const ctx = await resolveAuthContext(event);
-    logger.info('Listing branches', { memberId: ctx.memberId });
+    // 1. Extract auth context (optional — endpoint is public for signup)
+    let ctx: AuthContext | null = null;
+    try {
+      ctx = await resolveAuthContext(event);
+      logger.info('Listing branches', { memberId: ctx.memberId });
+    } catch {
+      // Unauthenticated call (e.g. signup branch selector) — show all active branches
+      logger.info('Listing branches (public)');
+    }
 
     // 2. Parse query parameters
     const params = event.queryStringParameters || {};
@@ -38,8 +45,8 @@ export const handler = async (
     // 3. Build filter conditions
     const conditions = [];
 
-    // Pastors see only their assigned branch
-    if (!isAdmin(ctx)) {
+    // Authenticated non-admins see only their assigned branch
+    if (ctx && !isAdmin(ctx)) {
       conditions.push(eq(branches.branchId, ctx.branchId));
     }
 

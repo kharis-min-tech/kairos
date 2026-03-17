@@ -27,6 +27,7 @@ export const fellowships = pgTable(
     branchId: integer('branch_id')
       .notNull()
       .references(() => branches.branchId, { onDelete: 'cascade' }),
+    fellowshipType: varchar('fellowship_type', { length: 50 }),
     description: text('description'),
     leaderId: integer('leader_id').references(() => members.memberId, {
       onDelete: 'set null',

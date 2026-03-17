@@ -259,7 +259,9 @@ export class ApiStack extends cdk.Stack {
     route('FellowCreate', 'fellowships/fellowships-create.ts', POST, '/v1/fellowships');
     route('FellowList', 'fellowships/fellowships-list.ts', GET, '/v1/fellowships');
     route('FellowGet', 'fellowships/fellowships-get.ts', GET, '/v1/fellowships/{fellowshipId}');
+    route('FellowUpdate', 'fellowships/fellowships-update.ts', PUT, '/v1/fellowships/{fellowshipId}');
     route('FellowAddMember', 'fellowships/fellowships-add-member.ts', POST, '/v1/fellowships/{fellowshipId}/members');
+    route('FellowRemoveMember', 'fellowships/fellowships-remove-member.ts', DELETE, '/v1/fellowships/{fellowshipId}/members/{memberId}');
     route('FellowSendMsg', 'fellowships/fellowships-send-message.ts', POST, '/v1/fellowships/{fellowshipId}/messages');
 
     // ================= ATTENDANCE =================

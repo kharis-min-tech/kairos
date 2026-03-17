@@ -104,6 +104,7 @@ export interface Fellowship extends BaseEntity {
   fellowshipId: number;
   fellowshipName: string;
   branchId: number;
+  fellowshipType?: string;
   description?: string;
   leaderId?: number;
   coLeaderId?: number;
@@ -181,6 +182,20 @@ export interface FollowUp extends BaseEntity {
   durationMinutes?: number;
   notes?: string;
   nextFollowUpDate?: Date;
+}
+
+/** Follow-up tracker item — returned by GET /v1/souls/follow-up-tracker */
+export interface FollowUpTrackerItem {
+  followUpId: number;
+  soulId: number;
+  soulName: string;
+  assignedWorker: string;
+  dueDate: string | null;
+  contactMethod: string | null;
+  contactStatus: string;
+  status: 'Pending' | 'Completed' | 'Overdue';
+  notes: string | null;
+  createdAt: string;
 }
 
 /** Donation entity — matches schema/donations.ts donations */

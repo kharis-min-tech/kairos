@@ -12,6 +12,7 @@ import type {
   OutreachProgram,
   Soul,
   FollowUp,
+  FollowUpTrackerItem,
   Donation,
   Form,
   FormSubmission,
@@ -142,10 +143,16 @@ export const fellowships = {
   get: (id: number) =>
     get<Fellowship>(`/v1/fellowships/${id}`),
 
+  update: (id: number, data: Partial<Fellowship>) =>
+    put<Fellowship>(`/v1/fellowships/${id}`, data),
+
   addMember: (id: number, data: { memberId: number }) =>
     post<void>(`/v1/fellowships/${id}/members`, data),
 
-  sendMessage: (id: number, data: { title: string; body: string; memberIds?: number[] }) =>
+  removeMember: (fellowshipId: number, memberId: number) =>
+    del<void>(`/v1/fellowships/${fellowshipId}/members/${memberId}`),
+
+  sendMessage: (id: number, data: { title: string; message: string; memberIds?: number[] }) =>
     post<void>(`/v1/fellowships/${id}/messages`, data),
 };
 
@@ -241,7 +248,7 @@ export const souls = {
     put<Soul>(`/v1/souls/${id}/reassign`, data),
 
   getFollowUpTracker: (params?: { tab?: string; search?: string; status?: string; contactMethod?: string }) =>
-    get<{ pending: number; completed: number; items: FollowUp[] }>('/v1/souls/follow-up-tracker', params),
+    get<{ pending: number; completed: number; items: FollowUpTrackerItem[] }>('/v1/souls/follow-up-tracker', params),
 };
 
 // ─── Donations ───────────────────────────────────────────────────

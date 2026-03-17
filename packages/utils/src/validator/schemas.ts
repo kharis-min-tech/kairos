@@ -105,6 +105,23 @@ export const fellowshipCreateSchema = z.object({
   location: z.string().trim().max(500).optional(),
 });
 
+/** Schema for updating a fellowship (all fields optional) */
+export const fellowshipUpdateSchema = z.object({
+  fellowship_name: nonEmptyString.max(200).optional(),
+  fellowship_type: z.enum([
+    'K-Groups',
+    'Kharis Express',
+    'New Breeds',
+    'Kharis on Campus',
+    'Kharis on Campus Colleges',
+  ]).optional(),
+  description: z.string().trim().max(1000).optional(),
+  leader_id: z.number().int().positive().nullable().optional(),
+  co_leader_id: z.number().int().positive().nullable().optional(),
+  meeting_schedule: z.string().trim().max(500).optional(),
+  is_active: z.boolean().optional(),
+});
+
 // ============================================================
 // Attendance Schemas
 // ============================================================
@@ -389,6 +406,7 @@ export type BranchCreateInput = z.infer<typeof branchCreateSchema>;
 export type DepartmentCreateInput = z.infer<typeof departmentCreateSchema>;
 export type BranchDepartmentCreateInput = z.infer<typeof branchDepartmentCreateSchema>;
 export type FellowshipCreateInput = z.infer<typeof fellowshipCreateSchema>;
+export type FellowshipUpdateInput = z.infer<typeof fellowshipUpdateSchema>;
 export type ServiceCreateInput = z.infer<typeof serviceCreateSchema>;
 export type ServiceAttendanceBulkInput = z.infer<typeof serviceAttendanceBulkSchema>;
 export type AttendanceRecordInput = z.infer<typeof attendanceRecordSchema>;

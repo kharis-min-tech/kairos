@@ -85,7 +85,7 @@ export const handler = async (
         updatedAt: souls.updatedAt,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
       .leftJoin(members, eq(souls.assignedMemberId, members.memberId))
       .where(whereClause)
       .orderBy(desc(souls.createdAt))
@@ -95,7 +95,7 @@ export const handler = async (
     const [countResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
       .where(whereClause);
 
     const total = countResult?.count ?? 0;

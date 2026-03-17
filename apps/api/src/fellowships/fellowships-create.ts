@@ -71,6 +71,7 @@ export const handler = async (
       .values({
         fellowshipName: input.fellowship_name,
         branchId: input.branch_id,
+        fellowshipType: input.fellowship_type,
         description: input.description,
         leaderId: input.leader_id,
         coLeaderId: input.co_leader_id,
