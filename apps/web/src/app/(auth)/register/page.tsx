@@ -325,7 +325,7 @@ function BranchStep({
       <div className="space-y-2">
         <Label>Home Branch</Label>
         <Select
-          value={selectedBranch}
+          value={selectedBranch || undefined}
           onValueChange={(val) => setValue('homeBranchId', val, { shouldValidate: true })}
           disabled={loadingBranches}
         >

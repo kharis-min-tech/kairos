@@ -240,7 +240,7 @@ export class ApiStack extends cdk.Stack {
 
     // ================= BRANCHES =================
     route('BranchesCreate', 'branches/branches-create.ts', POST, '/v1/branches');
-    route('BranchesList', 'branches/branches-list.ts', GET, '/v1/branches');
+    route('BranchesList', 'branches/branches-list.ts', GET, '/v1/branches', { skipAuth: true });
     route('BranchesGet', 'branches/branches-get.ts', GET, '/v1/branches/{branchId}');
     route('BranchesUpdate', 'branches/branches-update.ts', PUT, '/v1/branches/{branchId}');
     route('BranchesDelete', 'branches/branches-delete.ts', DELETE, '/v1/branches/{branchId}');
