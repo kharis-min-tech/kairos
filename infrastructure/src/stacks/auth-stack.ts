@@ -108,6 +108,7 @@ export class AuthStack extends cdk.Stack {
       authFlows: {
         userPassword: true,
         userSrp: true,
+        adminUserPassword: true,
       },
       accessTokenValidity: cdk.Duration.hours(config.jwtTokenValidityHours),
       idTokenValidity: cdk.Duration.hours(config.jwtTokenValidityHours),

@@ -152,7 +152,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_STAGING_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
+                                                                    
       - name: CDK synth validation
         run: npx cdk synth -c env=staging >/tmp/cdk-synth-staging.log
         working-directory: infrastructure
