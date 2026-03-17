@@ -5,6 +5,7 @@ export type { ClientConfig, GetTokenFn } from './client';
 export { ApiError } from './errors';
 export type { ApiErrorBody, ApiErrorDetail } from './errors';
 export {
+  auth,
   members,
   branches,
   departments,
@@ -18,4 +19,5 @@ export {
   dashboard,
   reports,
 } from './api';
+export type { RegisterInput } from './api';
 export type { AdminDashboard, PastorDashboard, LeaderDashboard } from './api';

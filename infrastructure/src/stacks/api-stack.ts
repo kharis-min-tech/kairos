@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -211,6 +212,16 @@ export class ApiStack extends cdk.Stack {
     const DELETE = apigatewayv2.HttpMethod.DELETE;
     const s3Write = (bucket: s3.IBucket) => (fn: lambda.IFunction) => bucket.grantWrite(fn);
     const s3RW = (bucket: s3.IBucket) => (fn: lambda.IFunction) => bucket.grantReadWrite(fn);
+
+    // ================= AUTH (public) =================
+    const registerFn = route('AuthRegister', 'auth/auth-register.ts', POST, '/v1/auth/register', {
+      env: { COGNITO_USER_POOL_ID: userPool.userPoolId },
+      skipAuth: true,
+    });
+    registerFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminCreateUser', 'cognito-idp:AdminSetUserPassword'],
+      resources: [userPool.userPoolArn],
+    }));
 
     // ================= MEMBERS =================
     route('MembersCreate', 'members/members-create.ts', POST, '/v1/members',

@@ -9,7 +9,7 @@ import {
   User, Mail, Phone, Calendar, MapPin, ChevronRight, ChevronLeft,
   Lock, Eye, EyeOff, Check, Building2,
 } from 'lucide-react';
-import { members } from '@kairos/api-client';
+import { auth } from '@kairos/api-client';
 import { ApiError } from '@kairos/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,12 +79,12 @@ export default function RegisterPage() {
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
-  async function handleFinalSubmit(_passwordVals: PasswordValues) {
+  async function handleFinalSubmit(passwordVals: PasswordValues) {
     if (!personalData || !branchData) return;
     setSubmitError('');
     setSubmitting(true);
     try {
-      await members.create({
+      await auth.register({
         firstName: personalData.firstName.trim(),
         lastName: personalData.lastName.trim(),
         email: personalData.email.trim(),
@@ -93,6 +93,7 @@ export default function RegisterPage() {
         gender: personalData.gender as 'Male' | 'Female',
         address: branchData.address.trim(),
         homeBranchId: Number(branchData.homeBranchId),
+        password: passwordVals.password,
       });
       setSubmitted(true);
     } catch (err: unknown) {

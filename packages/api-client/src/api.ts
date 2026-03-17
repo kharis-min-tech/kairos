@@ -20,6 +20,25 @@ import type {
 } from '@kairos/types';
 import type { PaginatedResponse } from '@kairos/types';
 
+// ─── Auth (public) ───────────────────────────────────────────────
+
+export interface RegisterInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  dateOfBirth?: Date;
+  gender?: 'Male' | 'Female';
+  address?: string;
+  homeBranchId: number;
+  password: string;
+}
+
+export const auth = {
+  register: (data: RegisterInput) =>
+    post<{ message: string; memberId: number }>('/v1/auth/register', data),
+};
+
 // ─── Query helpers ───────────────────────────────────────────────
 
 type ListParams = {

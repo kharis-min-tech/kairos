@@ -109,6 +109,13 @@ export class NetworkStack extends cdk.Stack {
       securityGroups: [this.createEndpointSecurityGroup('ssm')],
     });
 
+    // Cognito User Pools (IDP) Interface Endpoint — allows in-VPC Lambdas to call admin APIs
+    this.vpc.addInterfaceEndpoint('CognitoIdpEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.COGNITO_IDP,
+      privateDnsEnabled: true,
+      securityGroups: [this.createEndpointSecurityGroup('cognito-idp')],
+    });
+
     // ---------------------------------------------------------------
     // Tags
     // ---------------------------------------------------------------
