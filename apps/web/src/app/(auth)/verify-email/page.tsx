@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useVerifyEmail } from '@/hooks/use-auth';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const memberId = searchParams.get('memberId');
@@ -73,5 +73,13 @@ export default function VerifyEmailPage() {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

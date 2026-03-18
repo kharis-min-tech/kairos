@@ -41,6 +41,10 @@ export interface Branch extends BaseEntity {
   isActive: boolean;
 }
 
+export interface BranchWithRegion extends Branch {
+  regionName: string;
+}
+
 // ── Member ─────────────────────────────────────────────────
 
 export interface Member extends BaseEntity {
@@ -74,6 +78,11 @@ export interface BranchLeadership extends BaseEntity {
   startDate: string; // ISO date string
   endDate: string | null;
   isCurrent: boolean;
+}
+
+export interface BranchLeadershipWithMember extends BranchLeadership {
+  memberFirstName: string;
+  memberLastName: string;
 }
 
 // ── Role ───────────────────────────────────────────────────

@@ -183,3 +183,11 @@ export interface CreateRegionRequest {
 }
 
 export interface UpdateRegionRequest extends Partial<CreateRegionRequest> {}
+
+// ── Leadership ─────────────────────────────────────────────
+
+export interface AssignLeadershipRequest {
+  memberId: string;
+  role: 'Main Pastor' | 'Elder';
+  startDate?: string;
+}

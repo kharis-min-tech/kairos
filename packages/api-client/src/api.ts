@@ -10,6 +10,8 @@ import type {
   RefreshRequest,
   CreateBranchRequest,
   UpdateBranchRequest,
+  CreateRegionRequest,
+  AssignLeadershipRequest,
   UpdateMemberRequest,
   ApproveMemberRequest,
   CreateFellowshipRequest,
@@ -21,6 +23,9 @@ import type {
 
 import type {
   Branch,
+  BranchWithRegion,
+  Region,
+  BranchLeadershipWithMember,
   Member,
   Fellowship,
   FellowshipMeeting,
@@ -49,7 +54,7 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
 
     branches: {
       list: () =>
-        client.get<ApiResponse<Branch[]>>('/api/branches'),
+        client.get<ApiResponse<BranchWithRegion[]>>('/api/branches'),
       get: (id: string) =>
         client.get<ApiResponse<Branch>>(`/api/branches/${encodeURIComponent(id)}`),
       create: (data: CreateBranchRequest) =>
@@ -58,6 +63,22 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         client.patch<ApiResponse<Branch>>(`/api/branches/${encodeURIComponent(id)}`, data),
       delete: (id: string) =>
         client.delete<ApiResponse<void>>(`/api/branches/${encodeURIComponent(id)}`),
+    },
+
+    regions: {
+      list: () =>
+        client.get<ApiResponse<Region[]>>('/api/branches/regions'),
+      create: (data: CreateRegionRequest) =>
+        client.post<ApiResponse<Region>>('/api/branches/regions', data),
+    },
+
+    leadership: {
+      list: (branchId: string) =>
+        client.get<ApiResponse<BranchLeadershipWithMember[]>>(`/api/branches/${encodeURIComponent(branchId)}/leadership`),
+      assign: (branchId: string, data: AssignLeadershipRequest) =>
+        client.post<ApiResponse<BranchLeadershipWithMember>>(`/api/branches/${encodeURIComponent(branchId)}/leadership`, data),
+      remove: (branchId: string, leadershipId: string) =>
+        client.delete<ApiResponse<void>>(`/api/branches/${encodeURIComponent(branchId)}/leadership/${encodeURIComponent(leadershipId)}`),
     },
 
     members: {
