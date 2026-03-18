@@ -20,6 +20,8 @@ import type {
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
   RecordAttendanceRequest,
+  FellowshipListParams,
+  AddFellowshipMemberRequest,
   PaginatedResponse,
 } from '@kairos/types';
 
@@ -33,7 +35,11 @@ import type {
   MemberRole,
   MemberRoleWithDetails,
   Fellowship,
+  FellowshipWithBranch,
   FellowshipMeeting,
+  FellowshipMember,
+  FellowshipMemberWithDetails,
+  FellowshipMeetingAttendance,
 } from '@kairos/types';
 
 import { ApiClient } from './client';
@@ -118,25 +124,46 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
     },
 
     fellowships: {
-      list: () =>
-        client.get<ApiResponse<Fellowship[]>>('/api/fellowships'),
+      list: (params?: FellowshipListParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.fellowshipType) qs.set('fellowshipType', params.fellowshipType);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<FellowshipWithBranch>>>(`/api/fellowships${query ? `?${query}` : ''}`);
+      },
       get: (id: string) =>
-        client.get<ApiResponse<Fellowship>>(`/api/fellowships/${encodeURIComponent(id)}`),
+        client.get<ApiResponse<FellowshipWithBranch>>(`/api/fellowships/${encodeURIComponent(id)}`),
       create: (data: CreateFellowshipRequest) =>
         client.post<ApiResponse<Fellowship>>('/api/fellowships', data),
       update: (id: string, data: UpdateFellowshipRequest) =>
         client.patch<ApiResponse<Fellowship>>(`/api/fellowships/${encodeURIComponent(id)}`, data),
       delete: (id: string) =>
         client.delete<ApiResponse<void>>(`/api/fellowships/${encodeURIComponent(id)}`),
+      members: {
+        list: (fellowshipId: string) =>
+          client.get<ApiResponse<FellowshipMemberWithDetails[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members`),
+        add: (fellowshipId: string, data: AddFellowshipMemberRequest) =>
+          client.post<ApiResponse<FellowshipMember>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members`, data),
+        remove: (fellowshipId: string, memberId: string) =>
+          client.delete<ApiResponse<FellowshipMember>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members/${encodeURIComponent(memberId)}`),
+      },
       meetings: {
         list: (fellowshipId: string) =>
           client.get<ApiResponse<FellowshipMeeting[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings`),
         create: (fellowshipId: string, data: CreateFellowshipMeetingRequest) =>
           client.post<ApiResponse<FellowshipMeeting>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings`, data),
+        update: (fellowshipId: string, meetingId: string, data: Partial<CreateFellowshipMeetingRequest>) =>
+          client.patch<ApiResponse<FellowshipMeeting>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings/${encodeURIComponent(meetingId)}`, data),
       },
       attendance: {
-        record: (meetingId: string, data: RecordAttendanceRequest) =>
-          client.post<ApiResponse<void>>(`/api/fellowships/meetings/${encodeURIComponent(meetingId)}/attendance`, data),
+        record: (fellowshipId: string, meetingId: string, data: RecordAttendanceRequest) =>
+          client.post<ApiResponse<void>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings/${encodeURIComponent(meetingId)}/attendance`, data),
+        get: (fellowshipId: string, meetingId: string) =>
+          client.get<ApiResponse<FellowshipMeetingAttendance[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings/${encodeURIComponent(meetingId)}/attendance`),
+        summary: (fellowshipId: string) =>
+          client.get<ApiResponse<unknown[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/attendance/summary`),
       },
     },
   };

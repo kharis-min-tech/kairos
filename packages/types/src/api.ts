@@ -167,10 +167,21 @@ export interface CreateFellowshipRequest {
 
 export interface UpdateFellowshipRequest extends Partial<CreateFellowshipRequest> {}
 
+export interface FellowshipListParams {
+  page?: number;
+  limit?: number;
+  fellowshipType?: string;
+  branchId?: string;
+}
+
+export interface AddFellowshipMemberRequest {
+  memberId: string;
+  notes?: string;
+}
+
 // ── Fellowship Meeting ─────────────────────────────────────
 
 export interface CreateFellowshipMeetingRequest {
-  fellowshipId: string;
   meetingDate: string;
   meetingTitle?: string;
   meetingTopic?: string;

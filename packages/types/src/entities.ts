@@ -127,6 +127,10 @@ export interface Fellowship extends BaseEntity {
   isActive: boolean;
 }
 
+export interface FellowshipWithBranch extends Fellowship {
+  branchName: string;
+}
+
 // ── Fellowship Member ──────────────────────────────────────
 
 export interface FellowshipMember extends BaseEntity {
@@ -136,6 +140,12 @@ export interface FellowshipMember extends BaseEntity {
   leaveDate: string | null;
   isActive: boolean;
   notes: string | null;
+}
+
+export interface FellowshipMemberWithDetails extends FellowshipMember {
+  memberFirstName: string;
+  memberLastName: string;
+  memberEmail: string;
 }
 
 // ── Fellowship Meeting ─────────────────────────────────────
