@@ -6,6 +6,7 @@ import { authRouter } from './auth/router';
 import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
+import { analyticsRouter } from './analytics/router';
 
 export function createApp() {
   const app = new Hono();
@@ -25,6 +26,7 @@ export function createApp() {
   app.route('/api/branches', branchesRouter);
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
+  app.route('/api/analytics', analyticsRouter);
 
   // Error handler
   app.onError(errorHandler);

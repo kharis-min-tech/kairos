@@ -215,3 +215,34 @@ export interface AssignLeadershipRequest {
   role: 'Main Pastor' | 'Elder';
   startDate?: string;
 }
+
+// ── Dashboard / Analytics ──────────────────────────────────
+
+export interface AdminDashboardStats {
+  totalBranches: number;
+  totalMembers: number;
+  totalFellowships: number;
+  membersByApproval: { status: string; count: number }[];
+  fellowshipsByType: { type: string; count: number }[];
+}
+
+export interface BranchDashboardStats {
+  totalMembers: number;
+  totalFellowships: number;
+  recentMeetings: number;
+  pendingApprovals: number;
+}
+
+export interface MemberDashboardStats {
+  fellowshipsJoined: number;
+  fellowships: {
+    fellowshipId: string;
+    fellowshipName: string;
+    fellowshipType: string;
+  }[];
+  recentAttendance: {
+    total: number;
+    present: number;
+    rate: number;
+  };
+}

@@ -23,6 +23,9 @@ import type {
   FellowshipListParams,
   AddFellowshipMemberRequest,
   PaginatedResponse,
+  AdminDashboardStats,
+  BranchDashboardStats,
+  MemberDashboardStats,
 } from '@kairos/types';
 
 import type {
@@ -165,6 +168,15 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         summary: (fellowshipId: string) =>
           client.get<ApiResponse<unknown[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/attendance/summary`),
       },
+    },
+
+    analytics: {
+      adminStats: () =>
+        client.get<ApiResponse<AdminDashboardStats>>('/api/analytics/admin'),
+      branchStats: () =>
+        client.get<ApiResponse<BranchDashboardStats>>('/api/analytics/branch'),
+      memberStats: () =>
+        client.get<ApiResponse<MemberDashboardStats>>('/api/analytics/member'),
     },
   };
 }
