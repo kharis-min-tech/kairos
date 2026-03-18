@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint": "echo 'lint ok'"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
