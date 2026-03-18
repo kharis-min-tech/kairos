@@ -136,8 +136,21 @@ export interface UpdateMemberRequest {
 }
 
 export interface ApproveMemberRequest {
-  memberId: string;
   approved: boolean;
+}
+
+export interface AssignRoleRequest {
+  roleId: string;
+  branchId: string;
+  notes?: string;
+}
+
+export interface MemberListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  branchId?: string;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 // ── Fellowship ─────────────────────────────────────────────

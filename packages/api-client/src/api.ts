@@ -14,6 +14,8 @@ import type {
   AssignLeadershipRequest,
   UpdateMemberRequest,
   ApproveMemberRequest,
+  AssignRoleRequest,
+  MemberListParams,
   CreateFellowshipRequest,
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
@@ -27,6 +29,9 @@ import type {
   Region,
   BranchLeadershipWithMember,
   Member,
+  MemberWithBranch,
+  MemberRole,
+  MemberRoleWithDetails,
   Fellowship,
   FellowshipMeeting,
 } from '@kairos/types';
@@ -82,9 +87,15 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
     },
 
     members: {
-      list: (params?: { page?: number; limit?: number }) => {
-        const qs = params ? `?page=${params.page ?? 1}&limit=${params.limit ?? 20}` : '';
-        return client.get<PaginatedResponse<Member>>(`/api/members${qs}`);
+      list: (params?: MemberListParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.search) qs.set('search', params.search);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<MemberWithBranch>>>(`/api/members${query ? `?${query}` : ''}`);
       },
       get: (id: string) =>
         client.get<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
@@ -92,8 +103,18 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         client.patch<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`, data),
       approve: (id: string, data: ApproveMemberRequest) =>
         client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/approve`, data),
+      deactivate: (id: string) =>
+        client.delete<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
+      roles: {
+        list: (memberId: string) =>
+          client.get<ApiResponse<MemberRoleWithDetails[]>>(`/api/members/${encodeURIComponent(memberId)}/roles`),
+        assign: (memberId: string, data: AssignRoleRequest) =>
+          client.post<ApiResponse<MemberRole>>(`/api/members/${encodeURIComponent(memberId)}/roles`, data),
+        remove: (memberId: string, roleAssignmentId: string) =>
+          client.delete<ApiResponse<MemberRole>>(`/api/members/${encodeURIComponent(memberId)}/roles/${encodeURIComponent(roleAssignmentId)}`),
+      },
     },
 
     fellowships: {

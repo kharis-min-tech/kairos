@@ -69,6 +69,10 @@ export interface Member extends BaseEntity {
   emailVerified: boolean;
 }
 
+export interface MemberWithBranch extends Member {
+  branchName: string;
+}
+
 // ── Branch Leadership ──────────────────────────────────────
 
 export interface BranchLeadership extends BaseEntity {
@@ -103,6 +107,11 @@ export interface MemberRole extends BaseEntity {
   endDate: string | null;
   isActive: boolean;
   notes: string | null;
+}
+
+export interface MemberRoleWithDetails extends MemberRole {
+  roleName: string;
+  branchName: string;
 }
 
 // ── Fellowship ─────────────────────────────────────────────
