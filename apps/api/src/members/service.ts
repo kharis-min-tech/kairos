@@ -157,7 +157,7 @@ export async function approveMember(
   const [member] = await db
     .select({ id: members.id, approvalStatus: members.approvalStatus })
     .from(members)
-    .where(and(eq(members.id, memberId), eq(members.isActive, true)));
+    .where(eq(members.id, memberId));
 
   if (!member) throw new NotFoundError('Member not found');
   if (member.approvalStatus !== 'pending') {
@@ -168,6 +168,7 @@ export async function approveMember(
     .update(members)
     .set({
       approvalStatus: approved ? 'approved' : 'rejected',
+      isActive: approved ? true : false,
       updatedAt: sql`NOW()`,
     })
     .where(eq(members.id, memberId))
