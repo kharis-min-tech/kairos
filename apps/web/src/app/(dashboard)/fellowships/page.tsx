@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { UsersRound, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { fellowships } from '@kairos/api-client';
-import type { Fellowship } from '@kairos/types';
+import { fellowships, branches, members } from '@kairos/api-client';
+import type { Fellowship, Branch, Member } from '@kairos/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardBody, Skeleton, Badge, Modal } from '@/components/ui';
 import { TextInput, Textarea } from '@/components/ui/form-input';
@@ -28,11 +28,16 @@ export default function FellowshipsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
+  const [memberOptions, setMemberOptions] = useState<Member[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
     fellowship_name: '',
     fellowship_type: 'K-Groups' as typeof FELLOWSHIP_TYPES[number],
+    branch_id: '',
+    leader_id: '',
     description: '',
     meeting_schedule: '',
     location: '',
@@ -41,6 +46,38 @@ export default function FellowshipsPage() {
   useEffect(() => {
     loadFellowships();
   }, []);
+
+  // Load branches and members when the modal opens
+  useEffect(() => {
+    if (!showCreateModal) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingOptions(true);
+      try {
+        const [branchRes, memberRes] = await Promise.all([
+          branches.list({ limit: 100, isActive: true }),
+          members.list({ limit: 200, status: 'active' }),
+        ]);
+        if (cancelled) return;
+        setBranchOptions(branchRes.data as unknown as Branch[]);
+        setMemberOptions(memberRes.data as unknown as Member[]);
+        // Pre-select the user's own branch if no branch selected
+        if (!formData.branch_id && user?.branchId) {
+          const myBranch = (branchRes.data as unknown as Branch[]).find(
+            (b) => String(b.branchId) === String(user.branchId)
+          );
+          if (myBranch) {
+            setFormData((prev) => ({ ...prev, branch_id: String(myBranch.branchId) }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load branch/member options', err);
+      } finally {
+        if (!cancelled) setLoadingOptions(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showCreateModal]);
 
   useEffect(() => {
     // Filter data based on search term
@@ -69,16 +106,23 @@ export default function FellowshipsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user?.branchId) {
-      alert('Unable to determine your branch. Please contact support.');
+
+    const branchId = formData.branch_id
+      ? parseInt(formData.branch_id, 10)
+      : user?.branchId
+        ? parseInt(user.branchId, 10)
+        : undefined;
+
+    if (!branchId) {
+      alert('Please select a branch.');
       return;
     }
 
     const payload = {
       fellowship_name: formData.fellowship_name,
       fellowship_type: formData.fellowship_type,
-      branch_id: parseInt(user.branchId, 10),
+      branch_id: branchId,
+      leader_id: formData.leader_id ? parseInt(formData.leader_id, 10) : undefined,
       description: formData.description || undefined,
       meeting_schedule: formData.meeting_schedule || undefined,
       location: formData.location || undefined,
@@ -94,6 +138,8 @@ export default function FellowshipsPage() {
       setFormData({
         fellowship_name: '',
         fellowship_type: 'K-Groups',
+        branch_id: '',
+        leader_id: '',
         description: '',
         meeting_schedule: '',
         location: '',
@@ -195,11 +241,11 @@ export default function FellowshipsPage() {
         </div>
       )}
 
-      {/* Create Fellowship Modal */}
+      {/* Add Fellowship Modal */}
       <Modal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create New Fellowship"
+        title="Add Fellowship"
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <TextInput
@@ -236,11 +282,50 @@ export default function FellowshipsPage() {
             rows={3}
           />
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Branch <span className="text-red-500">*</span>
+            </label>
+            <select
+              required
+              value={formData.branch_id}
+              onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+              disabled={loadingOptions}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
+            >
+              <option value="">{loadingOptions ? 'Loading...' : 'Select branch...'}</option>
+              {branchOptions.map((b) => (
+                <option key={b.branchId} value={String(b.branchId)}>
+                  {b.branchName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Leader
+            </label>
+            <select
+              value={formData.leader_id}
+              onChange={(e) => setFormData({ ...formData, leader_id: e.target.value })}
+              disabled={loadingOptions}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
+            >
+              <option value="">{loadingOptions ? 'Loading...' : 'Select leader (optional)...'}</option>
+              {memberOptions.map((m) => (
+                <option key={m.memberId} value={String(m.memberId)}>
+                  {m.firstName} {m.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <TextInput
             label="Meeting Schedule"
             value={formData.meeting_schedule}
             onChange={(e) => setFormData({ ...formData, meeting_schedule: e.target.value })}
-            placeholder="e.g., Wednesdays 7:00 PM"
+            placeholder="e.g., Every Tuesday 7:00 PM"
           />
 
           <TextInput
@@ -259,7 +344,7 @@ export default function FellowshipsPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={creating}>
+            <Button type="submit" disabled={creating || loadingOptions}>
               {creating ? 'Creating...' : 'Create Fellowship'}
             </Button>
           </div>
