@@ -23,6 +23,7 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
+  activeRole: z.enum(['admin', 'pastor', 'leader', 'member']).default('member'),
 });
 
 export const refreshSchema = z.object({

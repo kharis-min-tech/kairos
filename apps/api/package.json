@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "node --env-file=.env --import=tsx --watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
@@ -14,15 +14,16 @@
   "dependencies": {
     "@hono/node-server": "^1.13.8",
     "@hono/zod-validator": "^0.4.3",
-    "hono": "^4.7.4",
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "drizzle-orm": "^0.38.4",
-    "postgres": "^3.4.5",
-    "zod": "^3.24.2",
-    "@kairos/types": "*",
     "@kairos/database": "*",
-    "@kairos/utils": "*"
+    "@kairos/types": "*",
+    "@kairos/utils": "*",
+    "bcrypt": "^5.1.1",
+    "drizzle-orm": "^0.38.4",
+    "hono": "^4.7.4",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^8.0.3",
+    "postgres": "^3.4.5",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

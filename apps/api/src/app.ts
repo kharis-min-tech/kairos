@@ -7,6 +7,10 @@ import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
 import { analyticsRouter } from './analytics/router';
+import { db } from './db';
+import { successResponse } from '@kairos/utils';
+import { branches, regions } from '@kairos/database';
+import { eq } from 'drizzle-orm';
 
 export function createApp() {
   const app = new Hono();
@@ -14,12 +18,26 @@ export function createApp() {
   // Global middleware
   app.use('*', honoLogger());
   app.use('*', cors({
-    origin: ['http://localhost:3000'],
+    origin: (origin) => {
+      if (origin && /^http:\/\/localhost:\d+$/.test(origin)) return origin;
+      return 'http://localhost:3000';
+    },
     credentials: true,
   }));
 
   // Health check
   app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+  // Public routes (no auth required)
+  app.get('/api/public/branches', async (c) => {
+    const rows = await db
+      .select({ id: branches.id, branchName: branches.branchName, regionName: regions.regionName })
+      .from(branches)
+      .innerJoin(regions, eq(branches.regionId, regions.id))
+      .where(eq(branches.isActive, true))
+      .orderBy(branches.branchName);
+    return c.json(successResponse(rows));
+  });
 
   // Module routers
   app.route('/api/auth', authRouter);

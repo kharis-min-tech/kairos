@@ -34,9 +34,24 @@ export default function ProfilePage() {
     );
   }
 
+  const initials = ((profile?.firstName?.[0] ?? '') + (profile?.lastName?.[0] ?? '')).toUpperCase() || '?';
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
+      {/* Purple gradient header with avatar */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-8 text-white">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-2xl font-bold">
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {profile?.firstName} {profile?.lastName}
+            </h1>
+            <p className="mt-0.5 text-sm capitalize text-purple-200">{profile?.systemRole}</p>
+          </div>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

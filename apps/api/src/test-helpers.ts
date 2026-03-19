@@ -9,9 +9,10 @@ export function signTestToken(overrides: Partial<AuthContext> = {}): string {
     memberId: '550e8400-e29b-41d4-a716-446655440000',
     email: 'admin@kairos.local',
     systemRole: 'admin',
+    activeRole: 'admin',
     branchId: '660e8400-e29b-41d4-a716-446655440000',
     ...overrides,
-  };
+  } as AuthContext;
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 }
 

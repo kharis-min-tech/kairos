@@ -25,33 +25,43 @@ export default function MemberDetailPage() {
 
   if (error || !member) {
     return (
-      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Member not found or access denied.</p>
+      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <p className="text-sm text-rose-700">Member not found or access denied.</p>
       </div>
     );
   }
 
+  const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
+  const statusCls =
+    member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
+    : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
+    : 'bg-rose-100 text-rose-700';
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/members" className="text-sm text-muted-foreground hover:underline">
-            &larr; Back to Members
-          </Link>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
-            {member.firstName} {member.lastName}
-          </h1>
-          <p className="text-muted-foreground">
-            <span className={
-              member.approvalStatus === 'approved' ? 'text-emerald-600' :
-              member.approvalStatus === 'pending' ? 'text-amber-600' :
-              'text-rose-600'
-            }>
-              {member.approvalStatus}
-            </span>
-            {' \u00b7 '}
-            <span className="capitalize">{member.systemRole}</span>
-          </p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Members
+        </Link>
+        <div className="mt-3 flex items-center gap-4">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-xl font-bold">
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {member.firstName} {member.lastName}
+            </h1>
+            <div className="mt-1 flex items-center gap-2">
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
+                {member.approvalStatus}
+              </span>
+              <span className="text-sm capitalize text-purple-200">{member.systemRole}</span>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -38,7 +38,7 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
 
 authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
-  const result = await login(db, body.email, body.password);
+  const result = await login(db, body.email, body.password, body.activeRole);
   return c.json(successResponse(result, 'Login successful'));
 });
 

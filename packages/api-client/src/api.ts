@@ -3,6 +3,7 @@ import type {
   AuthTokens,
   LoginRequest,
   LoginResponse,
+  MemberProfile,
   SignupRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -53,7 +54,7 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
   return {
     auth: {
       signup: (data: SignupRequest) =>
-        client.post<ApiResponse<{ memberId: string }>>('/api/auth/signup', data),
+        client.post<ApiResponse<{ member: MemberProfile; verificationToken: string }>>('/api/auth/signup', data),
       login: (data: LoginRequest) =>
         client.post<ApiResponse<LoginResponse>>('/api/auth/login', data),
       refresh: (data: RefreshRequest) =>
@@ -67,6 +68,8 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
     },
 
     branches: {
+      listPublic: () =>
+        client.get<ApiResponse<BranchWithRegion[]>>('/api/public/branches'),
       list: () =>
         client.get<ApiResponse<BranchWithRegion[]>>('/api/branches'),
       get: (id: string) =>

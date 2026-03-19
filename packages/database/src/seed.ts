@@ -18,6 +18,7 @@ import {
   fellowships,
   fellowshipMembers,
 } from './schema';
+import { sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 
 const DATABASE_URL =
@@ -28,6 +29,10 @@ async function seed() {
   const password = await bcrypt.hash('Password1!', 10);
 
   console.log('Seeding database...\n');
+
+  // Clean existing data so seed is idempotent
+  await db.execute(sql`TRUNCATE regions, roles CASCADE`);
+  console.log('✓ Cleared existing data');
 
   // ── 1. Regions ──────────────────────────────────────────────
   const [uk, ghana, sl] = await db

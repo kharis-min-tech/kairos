@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
+import { api } from '@/lib/api';
 
 const signupSchema = z.object({
   // Step 1
@@ -42,20 +44,32 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
     <div className="flex items-center justify-between">
       {STEPS.map((label, i) => (
         <div key={label} className="flex items-center">
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-              i <= currentStep
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {i + 1}
+          <div className="flex flex-col items-center gap-1">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                i < currentStep
+                  ? 'bg-emerald-500 text-white'
+                  : i === currentStep
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                    : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {i < currentStep ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                i + 1
+              )}
+            </div>
+            <span className={`hidden text-[10px] font-medium sm:block ${
+              i <= currentStep ? 'text-foreground' : 'text-muted-foreground'
+            }`}>{label}</span>
           </div>
-          <span className="ml-2 hidden text-xs sm:inline">{label}</span>
           {i < STEPS.length - 1 && (
             <div
-              className={`mx-2 h-0.5 w-8 sm:w-12 ${
-                i < currentStep ? 'bg-primary' : 'bg-muted'
+              className={`mx-2 mb-4 h-0.5 w-8 rounded-full transition-colors sm:w-12 ${
+                i < currentStep ? 'bg-emerald-500' : 'bg-muted'
               }`}
             />
           )}
@@ -95,9 +109,18 @@ function PasswordStrength({ password }: { password: string }) {
         {checks.map((check) => (
           <li
             key={check.label}
-            className={`text-xs ${check.met ? 'text-emerald-600' : 'text-muted-foreground'}`}
+            className={`flex items-center gap-1 text-xs ${check.met ? 'text-emerald-600' : 'text-muted-foreground'}`}
           >
-            {check.met ? '✓' : '○'} {check.label}
+            {check.met ? (
+              <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            ) : (
+              <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            )}
+            {check.label}
           </li>
         ))}
       </ul>
@@ -110,12 +133,20 @@ export default function SignupPage() {
   const signupMutation = useSignup();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<{ id: string; branchName: string }[]>([]);
+
+  useEffect(() => {
+    api.branches.listPublic().then((res) => {
+      if (res.data) setBranches(res.data);
+    }).catch(() => {});
+  }, []);
 
   const {
     register,
     handleSubmit,
     trigger,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -141,25 +172,35 @@ export default function SignupPage() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data;
       const result = await signupMutation.mutateAsync(payload);
-      router.push(`/verify-email?memberId=${result.memberId}`);
+      router.push(`/verify-email?memberId=${result.member.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed');
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Account</CardTitle>
-        <CardDescription>Join your church community</CardDescription>
-        <div className="pt-2">
+    <Card className="border-0 shadow-lg">
+      <CardHeader className="space-y-3 pb-2">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription className="mt-1">Join your church community</CardDescription>
+        </div>
+        <div className="pt-3">
           <StepIndicator currentStep={step} />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               {error}
             </div>
           )}
@@ -170,14 +211,14 @@ export default function SignupPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>
-                  <Input id="firstName" {...register('firstName')} />
+                  <Input id="firstName" className="h-11" {...register('firstName')} />
                   {errors.firstName && (
                     <p className="text-xs text-destructive">{errors.firstName.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name *</Label>
-                  <Input id="lastName" {...register('lastName')} />
+                  <Input id="lastName" className="h-11" {...register('lastName')} />
                   {errors.lastName && (
                     <p className="text-xs text-destructive">{errors.lastName.message}</p>
                   )}
@@ -186,12 +227,12 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="middleName">Middle Name</Label>
-                <Input id="middleName" {...register('middleName')} />
+                <Input id="middleName" className="h-11" {...register('middleName')} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
+                <Input id="email" type="email" className="h-11" placeholder="you@example.com" {...register('email')} />
                 {errors.email && (
                   <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
@@ -199,26 +240,35 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" {...register('phone')} />
+                <Input id="phone" type="tel" className="h-11" {...register('phone')} />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+              <div className="space-y-2">
+                <Label>Date of Birth</Label>
+                <Controller
+                  name="dateOfBirth"
+                  control={control}
+                  render={({ field }) => (
+                    <DateSelect
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      maxYear={new Date().getFullYear()}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
                   <select
                     id="gender"
                     {...register('gender')}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <option value="">Select...</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
-                </div>
               </div>
             </>
           )}
@@ -228,27 +278,32 @@ export default function SignupPage() {
             <>
               <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>
-                <Input id="address" {...register('address')} />
+                <Input id="address" className="h-11" {...register('address')} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register('city')} />
+                  <Input id="city" className="h-11" {...register('city')} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input id="postalCode" {...register('postalCode')} />
+                  <Input id="postalCode" className="h-11" {...register('postalCode')} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="homeBranchId">Home Branch *</Label>
-                <Input
+                <select
                   id="homeBranchId"
-                  placeholder="Branch ID (dropdown in production)"
                   {...register('homeBranchId')}
-                />
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Select a branch...</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.branchName}</option>
+                  ))}
+                </select>
                 {errors.homeBranchId && (
                   <p className="text-xs text-destructive">{errors.homeBranchId.message}</p>
                 )}
@@ -256,12 +311,12 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
-                <Input id="emergencyContactName" {...register('emergencyContactName')} />
+                <Input id="emergencyContactName" className="h-11" {...register('emergencyContactName')} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
-                <Input id="emergencyContactPhone" type="tel" {...register('emergencyContactPhone')} />
+                <Input id="emergencyContactPhone" type="tel" className="h-11" {...register('emergencyContactPhone')} />
               </div>
             </>
           )}
@@ -271,7 +326,7 @@ export default function SignupPage() {
             <>
               <div className="space-y-2">
                 <Label htmlFor="password">Password *</Label>
-                <Input id="password" type="password" {...register('password')} />
+                <Input id="password" type="password" className="h-11" {...register('password')} />
                 {errors.password && (
                   <p className="text-xs text-destructive">{errors.password.message}</p>
                 )}
@@ -280,7 +335,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                <Input id="confirmPassword" type="password" {...register('confirmPassword')} />
+                <Input id="confirmPassword" type="password" className="h-11" {...register('confirmPassword')} />
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
                 )}
@@ -289,26 +344,45 @@ export default function SignupPage() {
           )}
 
           {/* Navigation */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             {step > 0 && (
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setStep((s) => s - 1)}>
+              <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setStep((s) => s - 1)}>
                 Back
               </Button>
             )}
             {step < 2 ? (
-              <Button type="button" className="flex-1" onClick={nextStep}>
+              <Button type="button" className="h-11 flex-1" onClick={nextStep}>
                 Continue
               </Button>
             ) : (
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account...' : 'Create Account'}
+              <Button type="submit" className="h-11 flex-1" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Creating account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             )}
           </div>
 
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               Sign in
             </Link>
           </p>

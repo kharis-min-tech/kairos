@@ -34,26 +34,31 @@ export default function MembersPage() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Failed to load members. Please try again.</p>
+      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <p className="text-sm text-rose-700">Failed to load members. Please try again.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Members</h1>
-          <p className="text-muted-foreground">
-            Church member directory{pagination ? ` \u2014 ${pagination.total} total` : ''}
-          </p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Members</h1>
+            <p className="mt-0.5 text-sm text-purple-200">
+              Church member directory{pagination ? ` \u2014 ${pagination.total} total` : ''}
+            </p>
+          </div>
+          {isAdmin && (
+            <Link href="/members/approval">
+              <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+                Approval Queue
+              </button>
+            </Link>
+          )}
         </div>
-        {isAdmin && (
-          <Link href="/members/approval">
-            <Button variant="outline">Approval Queue</Button>
-          </Link>
-        )}
       </div>
 
       {/* Search */}
@@ -65,7 +70,9 @@ export default function MembersPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="max-w-sm"
         />
-        <Button variant="outline" onClick={handleSearch}>Search</Button>
+        <Button onClick={handleSearch} className="bg-purple-600 text-white hover:bg-purple-700">
+          Search
+        </Button>
         {params.search && (
           <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>
             Clear
@@ -82,50 +89,58 @@ export default function MembersPage() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {members.map((member) => (
-              <Link key={member.id} href={`/members/${member.id}`}>
-                <Card className="transition-shadow hover:shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      {member.firstName} {member.lastName}
-                    </CardTitle>
-                    <CardDescription>
-                      {member.branchName} &middot;{' '}
-                      <span className={
-                        member.approvalStatus === 'approved' ? 'text-emerald-600' :
-                        member.approvalStatus === 'pending' ? 'text-amber-600' :
-                        'text-rose-600'
-                      }>
-                        {member.approvalStatus}
-                      </span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <p>{member.email}</p>
-                      {member.phone && <p>{member.phone}</p>}
-                      <p className="capitalize">{member.systemRole}</p>
-                    </div>
-                    {isAdmin && (
-                      <div className="mt-4">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
-                              deactivate.mutate(member.id);
-                            }
-                          }}
-                        >
-                          Deactivate
-                        </Button>
+            {members.map((member) => {
+              const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
+              const statusCls =
+                member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
+                : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
+                : 'bg-rose-100 text-rose-700';
+              return (
+                <Link key={member.id} href={`/members/${member.id}`}>
+                  <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                          {initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="truncate text-base">
+                            {member.firstName} {member.lastName}
+                          </CardTitle>
+                          <CardDescription className="truncate">{member.branchName}</CardDescription>
+                        </div>
+                        <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
+                          {member.approvalStatus}
+                        </span>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <p className="truncate">{member.email}</p>
+                        {member.phone && <p>{member.phone}</p>}
+                        <p className="text-xs capitalize">{member.systemRole}</p>
+                      </div>
+                      {isAdmin && (
+                        <div className="mt-4">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
+                                deactivate.mutate(member.id);
+                              }
+                            }}
+                          >
+                            Deactivate
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Pagination */}

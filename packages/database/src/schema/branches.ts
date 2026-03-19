@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, date, boolean, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, boolean, timestamp, uniqueIndex, jsonb } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { regions } from './regions';
 import { members } from './members';
@@ -16,6 +16,7 @@ export const branches = pgTable('branches', {
   phone: varchar('phone', { length: 20 }),
   email: varchar('email', { length: 100 }),
   establishedDate: date('established_date'),
+  serviceSchedule: jsonb('service_schedule').$type<Array<{ day: string; time: string; type: string }>>(),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

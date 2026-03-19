@@ -9,7 +9,6 @@ import {
   useFellowshipMeetings,
   useRemoveFellowshipMember,
 } from '@/hooks/use-fellowships';
-import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -37,11 +36,14 @@ export default function FellowshipDetailPage() {
   if (error || !fellowship) {
     return (
       <div className="space-y-4">
-        <Link href="/fellowships">
-          <Button variant="ghost">&larr; Back to Fellowships</Button>
+        <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Fellowships
         </Link>
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">Fellowship not found.</p>
+        <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+          <p className="text-sm text-rose-700">Fellowship not found.</p>
         </div>
       </div>
     );
@@ -55,32 +57,34 @@ export default function FellowshipDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/fellowships">
-            <Button variant="ghost" size="sm">&larr; Back</Button>
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight mt-2">
-            {fellowship.fellowshipName}
-          </h1>
-          <p className="text-muted-foreground">
-            {fellowship.fellowshipType} &middot; {fellowship.branchName}
-          </p>
-        </div>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Fellowships
+        </Link>
+        <h1 className="mt-2 text-2xl font-bold">{fellowship.fellowshipName}</h1>
+        <p className="mt-0.5 text-sm text-purple-200">
+          {fellowship.fellowshipType} &middot; {fellowship.branchName}
+        </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b pb-2">
+      {/* Pill Tabs */}
+      <div className="flex gap-2">
         {tabs.map((tab) => (
-          <Button
+          <button
             key={tab.key}
-            variant={activeTab === tab.key ? 'default' : 'ghost'}
-            size="sm"
             onClick={() => setActiveTab(tab.key)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === tab.key
+                ? 'bg-purple-600 text-white'
+                : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-600'
+            }`}
           >
             {tab.label}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -137,37 +141,41 @@ export default function FellowshipDetailPage() {
             </Card>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {members.map((member) => (
-                <Card key={member.id}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">
-                      {member.memberFirstName} {member.memberLastName}
-                    </CardTitle>
-                    <CardDescription>{member.memberEmail}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {member.isActive ? 'Active' : 'Inactive'}
-                      </span>
+              {members.map((member) => {
+                const initials = ((member.memberFirstName?.[0] ?? '') + (member.memberLastName?.[0] ?? '')).toUpperCase() || '?';
+                return (
+                  <Card key={member.id}>
+                    <CardContent className="flex items-center gap-3 py-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">
+                          {member.memberFirstName} {member.memberLastName}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">{member.memberEmail}</p>
+                        <span className={`text-xs font-medium ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {member.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                       {isAdminOrPastor && member.isActive && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-rose-600 hover:text-rose-700"
+                        <button
+                          className="flex-shrink-0 rounded p-1 text-rose-400 hover:bg-rose-50 hover:text-rose-600"
                           onClick={() => {
                             if (confirm(`Remove ${member.memberFirstName} from this fellowship?`)) {
                               removeMember.mutate({ fellowshipId: id, memberId: member.memberId });
                             }
                           }}
                         >
-                          Remove
-                        </Button>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>

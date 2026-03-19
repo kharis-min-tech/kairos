@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Input, Label } from '@kairos/ui';
 import { useForgotPassword } from '@/hooks/use-auth';
 
 const forgotPasswordSchema = z.object({
@@ -29,54 +29,82 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Check Your Email</CardTitle>
-          <CardDescription>
-            If an account exists for that email, we&apos;ve sent password reset instructions.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-2xl bg-white shadow-xl">
+        <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
+            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <h1 className="mt-4 text-xl font-bold">Check Your Email</h1>
+          <p className="mt-1 text-sm text-purple-200">Reset instructions have been sent</p>
+        </div>
+        <div className="px-8 py-6 space-y-4">
+          <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
+            If an account exists for that email address, we&apos;ve sent a password reset link. Check your inbox and spam folder.
+          </div>
+          <p className="text-sm text-muted-foreground">
+            The link will expire in <span className="font-medium text-foreground">1 hour</span>.
+          </p>
           <Link href="/login">
-            <Button variant="outline" className="w-full">Back to Sign In</Button>
+            <Button variant="outline" className="h-11 w-full rounded-xl">
+              Back to Sign In
+            </Button>
           </Link>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Forgot Password</CardTitle>
-        <CardDescription>Enter your email to receive a reset link</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-2xl bg-white shadow-xl">
+      <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
+          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <h1 className="mt-4 text-xl font-bold">Forgot Password?</h1>
+        <p className="mt-1 text-sm text-purple-200">No worries, we&apos;ll send you reset instructions</p>
+      </div>
+
+      <div className="px-8 py-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="you@kharischurch.org"
+              className="h-11 rounded-xl border-muted-foreground/20"
               {...register('email')}
             />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-xs text-rose-600">{errors.email.message}</p>}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="h-11 w-full rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 font-semibold text-white hover:from-rose-700 hover:to-rose-600"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Sending...' : 'Send Reset Link'}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
-            <Link href="/login" className="text-primary hover:underline">
-              Back to Sign In
-            </Link>
-          </p>
+          <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-700">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Sign In
+          </Link>
         </form>
-      </CardContent>
-    </Card>
+
+        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-medium text-amber-800">Need help?</p>
+          <p className="mt-0.5 text-xs text-amber-700">
+            Contact your branch administrator if you continue to have issues accessing your account.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

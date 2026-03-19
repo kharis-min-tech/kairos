@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, count, sql } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, type SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -15,7 +15,11 @@ export async function listMembers(
   auth: AuthContext,
   query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string },
 ) {
-  const conditions = [eq(members.isActive, true)];
+  // Pending members are inactive until approved, so skip isActive filter for pending queries
+  const conditions: SQL[] = [];
+  if (query.approvalStatus !== 'pending') {
+    conditions.push(eq(members.isActive, true));
+  }
 
   // Non-admin can only see their own branch
   if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {

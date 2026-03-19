@@ -6,16 +6,19 @@ import { useAuthStore } from '@/lib/auth-store';
 import type { LoginRequest, SignupRequest } from '@kairos/types';
 
 export function useLogin() {
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setActiveRole } = useAuthStore();
 
   return useMutation({
     mutationFn: async (data: LoginRequest) => {
       const res = await api.auth.login(data);
       return res.data!;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setTokens(data.tokens);
       setUser(data.member as never);
+      if (variables.activeRole) {
+        setActiveRole(variables.activeRole);
+      }
     },
   });
 }

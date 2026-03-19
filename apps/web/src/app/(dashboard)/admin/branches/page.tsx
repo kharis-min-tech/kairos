@@ -22,24 +22,29 @@ export default function BranchesPage() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Failed to load branches. Please try again.</p>
+      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <p className="text-sm text-rose-700">Failed to load branches. Please try again.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Branches</h1>
-          <p className="text-muted-foreground">Manage church branches and locations</p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Branches</h1>
+            <p className="mt-0.5 text-sm text-purple-200">Manage church branches and locations</p>
+          </div>
+          {isAdmin && (
+            <Link href="/admin/branches/new">
+              <button className="rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90">
+                + Create Branch
+              </button>
+            </Link>
+          )}
         </div>
-        {isAdmin && (
-          <Link href="/admin/branches/new">
-            <Button>Create Branch</Button>
-          </Link>
-        )}
       </div>
 
       {!branches || branches.length === 0 ? (
@@ -57,21 +62,24 @@ export default function BranchesPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {branches.map((branch) => (
             <Link key={branch.id} href={`/admin/branches/${branch.id}`}>
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-lg">{branch.branchName}</CardTitle>
-                  <CardDescription>
-                    {branch.regionName ?? 'No region'} &middot; {branch.branchType}
-                  </CardDescription>
+              <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base leading-snug">{branch.branchName}</CardTitle>
+                    <span className="flex-shrink-0 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                      {branch.branchType}
+                    </span>
+                  </div>
+                  <CardDescription>{branch.regionName ?? 'No region'}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <div className="space-y-1 text-sm text-muted-foreground">
                     {branch.city && <p>{branch.city}</p>}
-                    {branch.email && <p>{branch.email}</p>}
+                    {branch.email && <p className="truncate">{branch.email}</p>}
                     {branch.phone && <p>{branch.phone}</p>}
                   </div>
                   {isAdmin && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4">
                       <Button
                         variant="destructive"
                         size="sm"

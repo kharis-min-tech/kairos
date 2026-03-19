@@ -12,12 +12,20 @@ import { FellowshipType } from '@kairos/types';
 
 const FELLOWSHIP_TYPES = [
   { label: 'All', value: '' },
-  { label: 'K-Groups', value: FellowshipType.KGroups },
+  { label: 'Cell Groups', value: FellowshipType.KGroups },
   { label: 'Kharis Express', value: FellowshipType.KharisExpress },
   { label: 'New Breeds', value: FellowshipType.NewBreeds },
   { label: 'KOC', value: FellowshipType.KharisOnCampus },
   { label: 'KOC Colleges', value: FellowshipType.KharisOnCampusColleges },
 ];
+
+const TYPE_BADGE_COLORS: Record<string, string> = {
+  [FellowshipType.KGroups]: 'bg-purple-100 text-purple-700',
+  [FellowshipType.KharisExpress]: 'bg-amber-100 text-amber-700',
+  [FellowshipType.NewBreeds]: 'bg-emerald-100 text-emerald-700',
+  [FellowshipType.KharisOnCampus]: 'bg-sky-100 text-sky-700',
+  [FellowshipType.KharisOnCampusColleges]: 'bg-rose-100 text-rose-700',
+};
 
 function FellowshipsContent() {
   const searchParams = useSearchParams();
@@ -55,24 +63,30 @@ function FellowshipsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Fellowships</h1>
-          <p className="text-muted-foreground">
-            Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
-          </p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Fellowships</h1>
+            <p className="mt-0.5 text-sm text-purple-200">
+              Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
+            </p>
+          </div>
+          {isAdminOrPastor && (
+            <Link href="/fellowships/new">
+              <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+                + New Fellowship
+              </button>
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Type Filter Tabs */}
       <div className="flex flex-wrap gap-2">
         {FELLOWSHIP_TYPES.map((type) => (
-          <Button
+          <button
             key={type.value}
-            variant={
-              (params.fellowshipType || '') === type.value ? 'default' : 'outline'
-            }
-            size="sm"
             onClick={() =>
               setParams((p) => ({
                 ...p,
@@ -80,9 +94,14 @@ function FellowshipsContent() {
                 page: 1,
               }))
             }
+            className={(
+              (params.fellowshipType || '') === type.value
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-700'
+            ) + ' rounded-full px-4 py-1.5 text-sm font-medium transition-colors'}
           >
             {type.label}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -97,20 +116,30 @@ function FellowshipsContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {fellowships.map((fellowship) => (
               <Link key={fellowship.id} href={`/fellowships/${fellowship.id}`}>
-                <Card className="transition-shadow hover:shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      {fellowship.fellowshipName}
-                    </CardTitle>
-                    <CardDescription>
-                      {fellowship.fellowshipType} &middot; {fellowship.branchName}
-                    </CardDescription>
+                <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base leading-snug">
+                        {fellowship.fellowshipName}
+                      </CardTitle>
+                      <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        TYPE_BADGE_COLORS[fellowship.fellowshipType] ?? 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {fellowship.fellowshipType === FellowshipType.KGroups ? 'Cell Groups' : fellowship.fellowshipType}
+                      </span>
+                    </div>
+                    <CardDescription className="truncate">{fellowship.branchName}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <div className="space-y-1 text-sm text-muted-foreground">
-                      {fellowship.description && <p>{fellowship.description}</p>}
+                      {fellowship.description && <p className="line-clamp-2">{fellowship.description}</p>}
                       {fellowship.meetingSchedule && (
-                        <p>Schedule: {fellowship.meetingSchedule}</p>
+                        <p className="flex items-center gap-1 text-xs">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {fellowship.meetingSchedule}
+                        </p>
                       )}
                     </div>
                     {isAdminOrPastor && (

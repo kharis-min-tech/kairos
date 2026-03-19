@@ -124,14 +124,16 @@ describe('login', () => {
     const { login } = await import('./service');
 
     const hashed = await bcrypt.hash('MyPassword1!', 10);
-    const member = { ...baseMember, passwordHash: hashed };
+    const member = { ...baseMember, passwordHash: hashed, lastLoginAt: null };
     setupSelectChain([member]);
+    setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
 
     expect(result.tokens.accessToken).toBeDefined();
     expect(result.tokens.refreshToken).toBeDefined();
     expect(result.member.email).toBe('john@example.com');
+    expect(result.isFirstLogin).toBe(true);
 
     // Verify access token is valid JWT
     const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
@@ -260,7 +262,16 @@ describe('resetPassword', () => {
   it('should update password hash', async () => {
     const { resetPassword } = await import('./service');
 
-    setupSelectChain([{ id: baseMember.id }]);
+    mockSelect.mockReturnValue({ from: mockFrom });
+    mockFrom.mockReturnValue({ where: mockWhere });
+    mockWhere.mockReturnValue({ limit: mockLimit });
+    mockLimit.mockResolvedValue([{
+      id: baseMember.id,
+      passwordResetToken: 'hashed-token-value',
+      passwordResetExpiry: new Date(Date.now() + 3_600_000).toISOString(),
+    }]);
+
+    vi.spyOn(bcrypt, 'compare').mockResolvedValueOnce(true as never);
     setupUpdateChain();
 
     await expect(resetPassword(mockDb, baseMember.id, 'NewPassword123!'))
@@ -268,13 +279,13 @@ describe('resetPassword', () => {
     expect(mockUpdate).toHaveBeenCalled();
   });
 
-  it('should throw NotFoundError for invalid token', async () => {
+  it('should throw UnauthorizedError for invalid token', async () => {
     const { resetPassword } = await import('./service');
 
     setupSelectChain([]);
 
     await expect(resetPassword(mockDb, 'bad-token', 'NewPass'))
-      .rejects.toThrow('not found');
+      .rejects.toThrow('Invalid or expired reset token');
   });
 });
 

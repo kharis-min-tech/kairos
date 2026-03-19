@@ -3,21 +3,56 @@
 import { useAuthStore } from '@/lib/auth-store';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
+
+const CHART_COLORS = ['#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD'];
 
 // ── Stat Card ──────────────────────────────────────────────
 
-function StatCard({ title, value }: { title: string; value: string | number }) {
+function StatCard({
+  title,
+  value,
+  icon,
+  accent = 'purple',
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  accent?: 'purple' | 'gold' | 'emerald' | 'rose';
+}) {
+  const accentClasses = {
+    purple: 'bg-purple-100 text-purple-700',
+    gold: 'bg-amber-100 text-amber-700',
+    emerald: 'bg-emerald-100 text-emerald-700',
+    rose: 'bg-rose-100 text-rose-700',
+  };
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-3xl font-bold">{value}</p>
+    <Card className="border-0 shadow-sm">
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="mt-1 text-3xl font-bold tracking-tight">{value}</p>
+          </div>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accentClasses[accent]}`}>
+            {icon}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+import React from 'react';
 
 // ── Admin Dashboard ────────────────────────────────────────
 
@@ -25,54 +60,101 @@ function AdminDashboard() {
   const { data, isLoading, error } = useAdminDashboard();
 
   if (isLoading) return <DashboardSkeleton />;
-  if (error) return <p className="text-destructive">Failed to load dashboard stats.</p>;
+  if (error) return <p className="text-rose-600 text-sm">Failed to load dashboard stats.</p>;
   if (!data) return null;
+
+  const approvalChartData = data.membersByApproval.map((s) => ({
+    name: s.status.charAt(0).toUpperCase() + s.status.slice(1),
+    count: s.count,
+  }));
+
+  const fellowshipChartData = data.fellowshipsByType.map((f) => ({
+    name: f.type.length > 12 ? f.type.slice(0, 12) + '…' : f.type,
+    count: f.count,
+  }));
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="Total Branches" value={data.totalBranches} />
-        <StatCard title="Total Members" value={data.totalMembers} />
-        <StatCard title="Total Fellowships" value={data.totalFellowships} />
+        <StatCard
+          title="Total Branches"
+          value={data.totalBranches}
+          accent="purple"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18l2.25 2.25m0 0l6-6 6 6 2.25-2.25M12 3.75l6 6v10.5M9.75 21V12h4.5V21" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="Total Members"
+          value={data.totalMembers}
+          accent="emerald"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="Total Fellowships"
+          value={data.totalFellowships}
+          accent="gold"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+          }
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Members by Approval Status</CardTitle>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Members by Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {data.membersByApproval.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No members yet.</p>
+            {approvalChartData.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No members yet.</p>
             ) : (
-              <ul className="space-y-2">
-                {data.membersByApproval.map((s) => (
-                  <li key={s.status} className="flex items-center justify-between text-sm">
-                    <span className="capitalize">{s.status}</span>
-                    <span className="font-semibold">{s.count}</span>
-                  </li>
-                ))}
-              </ul>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={approvalChartData} barSize={36}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {approvalChartData.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Fellowships by Type</CardTitle>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Fellowships by Type</CardTitle>
           </CardHeader>
           <CardContent>
-            {data.fellowshipsByType.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No fellowships yet.</p>
+            {fellowshipChartData.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No fellowships yet.</p>
             ) : (
-              <ul className="space-y-2">
-                {data.fellowshipsByType.map((f) => (
-                  <li key={f.type} className="flex items-center justify-between text-sm">
-                    <span>{f.type}</span>
-                    <span className="font-semibold">{f.count}</span>
-                  </li>
-                ))}
-              </ul>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={fellowshipChartData} barSize={36}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {fellowshipChartData.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
@@ -87,15 +169,51 @@ function BranchDashboard() {
   const { data, isLoading, error } = useBranchDashboard();
 
   if (isLoading) return <DashboardSkeleton />;
-  if (error) return <p className="text-destructive">Failed to load branch stats.</p>;
+  if (error) return <p className="text-rose-600 text-sm">Failed to load branch stats.</p>;
   if (!data) return null;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard title="Branch Members" value={data.totalMembers} />
-      <StatCard title="Fellowships" value={data.totalFellowships} />
-      <StatCard title="Meetings (30 days)" value={data.recentMeetings} />
-      <StatCard title="Pending Approvals" value={data.pendingApprovals} />
+      <StatCard
+        title="Branch Members"
+        value={data.totalMembers}
+        accent="purple"
+        icon={
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        }
+      />
+      <StatCard
+        title="Fellowships"
+        value={data.totalFellowships}
+        accent="gold"
+        icon={
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+          </svg>
+        }
+      />
+      <StatCard
+        title="Meetings (30 days)"
+        value={data.recentMeetings}
+        accent="emerald"
+        icon={
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+          </svg>
+        }
+      />
+      <StatCard
+        title="Pending Approvals"
+        value={data.pendingApprovals}
+        accent="rose"
+        icon={
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        }
+      />
     </div>
   );
 }
@@ -106,28 +224,57 @@ function MemberDashboard() {
   const { data, isLoading, error } = useMemberDashboard();
 
   if (isLoading) return <DashboardSkeleton />;
-  if (error) return <p className="text-destructive">Failed to load your stats.</p>;
+  if (error) return <p className="text-rose-600 text-sm">Failed to load your stats.</p>;
   if (!data) return null;
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="My Fellowships" value={data.fellowshipsJoined} />
-        <StatCard title="Attendance Rate (30 days)" value={`${data.recentAttendance.rate}%`} />
-        <StatCard title="Meetings Attended" value={`${data.recentAttendance.present} / ${data.recentAttendance.total}`} />
+        <StatCard
+          title="My Fellowships"
+          value={data.fellowshipsJoined}
+          accent="gold"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="Attendance Rate (30d)"
+          value={`${data.recentAttendance.rate}%`}
+          accent="emerald"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="Meetings Attended"
+          value={`${data.recentAttendance.present} / ${data.recentAttendance.total}`}
+          accent="purple"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+          }
+        />
       </div>
 
       {data.fellowships.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">My Fellowships</CardTitle>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">My Fellowships</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
+            <ul className="divide-y">
               {data.fellowships.map((f) => (
-                <li key={f.fellowshipId} className="flex items-center justify-between text-sm">
-                  <span>{f.fellowshipName}</span>
-                  <span className="text-muted-foreground">{f.fellowshipType}</span>
+                <li key={f.fellowshipId} className="flex items-center justify-between py-3 text-sm">
+                  <span className="font-medium">{f.fellowshipName}</span>
+                  <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                    {f.fellowshipType}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -161,25 +308,43 @@ function DashboardSkeleton() {
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
 
-  const greeting = user?.firstName ? `Welcome, ${user.firstName}` : 'Dashboard';
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric',
+  });
+
+  const roleLabel = activeRole === 'admin' ? 'Administrator' :
+    activeRole === 'pastor' ? 'Pastor' :
+    activeRole === 'leader' ? 'Fellowship Leader' : 'Member';
+
+  const subtitle = activeRole === 'admin'
+    ? 'Church-wide overview'
+    : activeRole === 'pastor'
+      ? 'Your branch at a glance'
+      : 'Your personal activity';
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{greeting}</h1>
-        <p className="text-muted-foreground">
-          {user?.systemRole === 'admin'
-            ? 'Church-wide overview'
-            : user?.systemRole === 'pastor'
-              ? 'Branch overview'
-              : 'Your activity summary'}
-        </p>
+      {/* Purple gradient header banner */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-purple-300">{today}</p>
+            <h1 className="mt-1 text-2xl font-bold">
+              {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
+            </h1>
+            <p className="mt-0.5 text-sm text-purple-200">{subtitle}</p>
+          </div>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
+            {roleLabel}
+          </span>
+        </div>
       </div>
 
-      {user?.systemRole === 'admin' ? (
+      {activeRole === 'admin' ? (
         <AdminDashboard />
-      ) : user?.systemRole === 'pastor' ? (
+      ) : activeRole === 'pastor' ? (
         <BranchDashboard />
       ) : (
         <MemberDashboard />

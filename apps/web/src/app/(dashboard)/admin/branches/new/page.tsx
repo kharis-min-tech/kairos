@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateBranch, useRegions } from '@/hooks/use-branches';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
+import { useForm, Controller } from 'react-hook-form';
+import { DateSelect } from '@/components/date-select';
 
 const schema = z.object({
   branchName: z.string().min(1, 'Branch name is required'),
@@ -30,6 +31,7 @@ export default function NewBranchPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -53,9 +55,10 @@ export default function NewBranchPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create Branch</h1>
-        <p className="text-muted-foreground">Add a new church branch</p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <h1 className="text-2xl font-bold">Create Branch</h1>
+        <p className="mt-0.5 text-sm text-purple-200">Add a new church branch</p>
       </div>
 
       <Card>
@@ -130,8 +133,14 @@ export default function NewBranchPage() {
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="establishedDate">Established Date</Label>
-                <Input id="establishedDate" type="date" {...register('establishedDate')} />
+                <Label>Established Date</Label>
+                <Controller
+                  name="establishedDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateSelect value={field.value ?? ''} onChange={field.onChange} maxYear={new Date().getFullYear()} />
+                  )}
+                />
               </div>
             </div>
 

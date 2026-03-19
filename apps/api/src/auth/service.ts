@@ -5,12 +5,14 @@ import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members } from '@kairos/database';
 import type { AuthContext, AuthTokens, LoginResponse, MemberProfile } from '@kairos/types';
+import type { SystemRole } from '@kairos/types';
 import {
   NotFoundError,
   ConflictError,
   UnauthorizedError,
   ValidationError,
   logger,
+  sendPasswordResetEmail,
 } from '@kairos/utils';
 
 const SALT_ROUNDS = 10;
@@ -110,6 +112,8 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       address: input.address ?? null,
       city: input.city ?? null,
       postalCode: input.postalCode ?? null,
+      emergencyContactName: input.emergencyContactName ?? null,
+      emergencyContactPhone: input.emergencyContactPhone ?? null,
       homeBranchId: input.homeBranchId,
       passwordHash,
       emailVerified: false,
@@ -136,12 +140,23 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   };
 }
 
-export async function login(db: Database, email: string, password: string): Promise<LoginResponse> {
+/** Role hierarchy: ranks determine what someone can log in as */
+const ROLE_RANK: Record<SystemRole, number> = { admin: 4, pastor: 3, leader: 2, member: 1 };
+
+export async function login(
+  db: Database,
+  email: string,
+  password: string,
+  activeRole: SystemRole = 'member',
+): Promise<LoginResponse> {
   const [member] = await db
     .select()
     .from(members)
     .where(eq(members.email, email))
     .limit(1);
+
+  // Capture before we update so we know if this is their first login
+  const isFirstLogin = member?.lastLoginAt === null;
 
   if (!member) {
     throw new UnauthorizedError('Invalid email or password');
@@ -160,19 +175,31 @@ export async function login(db: Database, email: string, password: string): Prom
     throw new ValidationError('Your account is pending approval by an administrator.');
   }
 
+  const memberRole = member.systemRole as SystemRole;
+  if (ROLE_RANK[memberRole] < ROLE_RANK[activeRole]) {
+    throw new UnauthorizedError(`You don't have ${activeRole} access`);
+  }
+
   const authContext: AuthContext = {
     memberId: member.id,
     email: member.email,
-    systemRole: member.systemRole as AuthContext['systemRole'],
+    systemRole: memberRole,
     branchId: member.homeBranchId,
+    activeRole,
   };
 
   const accessToken = signAccessToken(authContext);
   const refreshToken = signRefreshToken(member.id);
 
+  await db
+    .update(members)
+    .set({ lastLoginAt: new Date() })
+    .where(eq(members.id, member.id));
+
   return {
     tokens: { accessToken, refreshToken },
     member: toMemberProfile(member),
+    isFirstLogin,
   };
 }
 
@@ -199,6 +226,7 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
     email: member.email,
     systemRole: member.systemRole as AuthContext['systemRole'],
     branchId: member.homeBranchId,
+    activeRole: member.systemRole as AuthContext['systemRole'],
   };
 
   return {
@@ -236,7 +264,7 @@ export async function verifyEmail(db: Database, token: string): Promise<void> {
 
 export async function forgotPassword(db: Database, email: string): Promise<{ resetToken: string }> {
   const [member] = await db
-    .select({ id: members.id, email: members.email })
+    .select({ id: members.id, email: members.email, firstName: members.firstName })
     .from(members)
     .where(eq(members.email, email))
     .limit(1);
@@ -247,38 +275,53 @@ export async function forgotPassword(db: Database, email: string): Promise<{ res
     return { resetToken: '' };
   }
 
-  const resetToken = randomBytes(32).toString('hex');
+  const plainToken = randomBytes(32).toString('hex');
+  const tokenHash = await bcrypt.hash(plainToken, SALT_ROUNDS);
+  const expiry = new Date(Date.now() + 3_600_000); // 1 hour
 
-  // In production, store token hash in a password_reset_tokens table with expiry.
-  // For local dev, log the token.
-  logger.info('Password reset token generated', {
-    memberId: member.id,
-    email: member.email,
-    resetToken,
-  });
+  await db
+    .update(members)
+    .set({ passwordResetToken: tokenHash, passwordResetExpiry: expiry })
+    .where(eq(members.id, member.id));
 
-  return { resetToken };
+  const resetLink = `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/reset-password?token=${plainToken}`;
+
+  await sendPasswordResetEmail(member.email, resetLink, member.firstName);
+
+  // Return plain token for local dev easy testing — omit in production
+  return { resetToken: plainToken };
 }
 
 export async function resetPassword(db: Database, token: string, newPassword: string): Promise<void> {
-  // For MVP local dev: accept token as member ID
-  // In production: validate token against stored hash + check expiry
-  const [member] = await db
-    .select({ id: members.id })
+  // Get all members with a non-null reset token that hasn't expired
+  const now = new Date();
+  const candidates = await db
+    .select({ id: members.id, passwordResetToken: members.passwordResetToken, passwordResetExpiry: members.passwordResetExpiry })
     .from(members)
-    .where(eq(members.id, token))
-    .limit(1);
+    .where(eq(members.isActive, true))
+    .limit(100);
 
-  if (!member) {
-    throw new NotFoundError('Invalid or expired reset token');
+  const match = candidates.find((m) => {
+    if (!m.passwordResetToken || !m.passwordResetExpiry) return false;
+    if (new Date(m.passwordResetExpiry) < now) return false;
+    return true; // bcrypt compare done below
+  });
+
+  if (!match) {
+    throw new UnauthorizedError('Invalid or expired reset token');
+  }
+
+  const valid = await bcrypt.compare(token, match.passwordResetToken!);
+  if (!valid) {
+    throw new UnauthorizedError('Invalid or expired reset token');
   }
 
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
   await db
     .update(members)
-    .set({ passwordHash })
-    .where(eq(members.id, member.id));
+    .set({ passwordHash, passwordResetToken: null, passwordResetExpiry: null })
+    .where(eq(members.id, match.id));
 }
 
 export async function getMe(db: Database, memberId: string): Promise<MemberProfile> {

@@ -1,7 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useRegions } from '@/hooks/use-branches';
@@ -34,6 +35,7 @@ export default function BranchDetailPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -74,17 +76,18 @@ export default function BranchDetailPage() {
 
   if (error || !branch) {
     return (
-      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Branch not found or access denied.</p>
+      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <p className="text-sm text-rose-700">Branch not found or access denied.</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{branch.branchName}</h1>
-        <p className="text-muted-foreground">{branch.branchType} branch</p>
+      {/* Purple gradient header */}
+      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
+        <h1 className="text-2xl font-bold">{branch.branchName}</h1>
+        <p className="mt-0.5 text-sm text-purple-200 capitalize">{branch.branchType} branch</p>
       </div>
 
       {/* Edit Form */}
@@ -157,8 +160,14 @@ export default function BranchDetailPage() {
                 <Input id="email" type="email" {...register('email')} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="establishedDate">Established Date</Label>
-                <Input id="establishedDate" type="date" {...register('establishedDate')} />
+                <Label>Established Date</Label>
+                <Controller
+                  name="establishedDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateSelect value={field.value ?? ''} onChange={field.onChange} maxYear={new Date().getFullYear()} />
+                  )}
+                />
               </div>
             </div>
 
@@ -189,28 +198,36 @@ export default function BranchDetailPage() {
             <p className="text-sm text-muted-foreground">No leadership assigned yet.</p>
           ) : (
             <div className="space-y-3">
-              {leadership.map((leader) => (
-                <div key={leader.id} className="flex items-center justify-between rounded-md border p-3">
-                  <div>
-                    <p className="font-medium">
-                      {leader.memberFirstName} {leader.memberLastName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{leader.role}</p>
+              {leadership.map((leader) => {
+                const initials = ((leader.memberFirstName?.[0] ?? '') + (leader.memberLastName?.[0] ?? '')).toUpperCase() || '?';
+                return (
+                  <div key={leader.id} className="flex items-center justify-between rounded-md border p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {leader.memberFirstName} {leader.memberLastName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{leader.role}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      onClick={() => {
+                        if (confirm(`Remove ${leader.role} assignment?`)) {
+                          removeLeadership.mutate({ branchId: id, leadershipId: leader.id });
+                        }
+                      }}
+                    >
+                      Remove
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => {
-                      if (confirm(`Remove ${leader.role} assignment?`)) {
-                        removeLeadership.mutate({ branchId: id, leadershipId: leader.id });
-                      }
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

@@ -28,6 +28,7 @@ export interface SignupRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+  activeRole?: SystemRole;
 }
 
 export interface AuthTokens {
@@ -38,6 +39,7 @@ export interface AuthTokens {
 export interface LoginResponse {
   tokens: AuthTokens;
   member: MemberProfile;
+  isFirstLogin: boolean;
 }
 
 export interface RefreshRequest {
@@ -64,6 +66,7 @@ export interface AuthContext {
   email: string;
   systemRole: SystemRole;
   branchId: string;
+  activeRole?: SystemRole;
 }
 
 // ── Member Profile ─────────────────────────────────────────
