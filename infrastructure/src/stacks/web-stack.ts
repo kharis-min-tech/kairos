@@ -44,6 +44,33 @@ export class WebStack extends cdk.Stack {
       ? acm.Certificate.fromCertificateArn(this, 'WebCert', config.cloudfrontCertArn)
       : undefined;
 
+    // Rewrite clean URLs to static export files.
+    // Example: /fellowships -> /fellowships/index.html
+    const urlRewriteFunction = new cloudfront.Function(this, 'UrlRewriteFunction', {
+      code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+
+  // Keep root request as-is (CloudFront defaultRootObject handles / -> /index.html)
+  if (uri === '/') {
+    return request;
+  }
+
+  // If no file extension, rewrite to folder index
+  if (!uri.includes('.')) {
+    if (uri.endsWith('/')) {
+      request.uri = uri + 'index.html';
+    } else {
+      request.uri = uri + '/index.html';
+    }
+  }
+
+  return request;
+}
+      `),
+    });
+
     // CloudFront distribution
     this.distribution = new cloudfront.Distribution(this, 'WebDistribution', {
       comment: `${config.prefix} web app`,
@@ -54,6 +81,12 @@ export class WebStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        functionAssociations: [
+          {
+            function: urlRewriteFunction,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       defaultRootObject: 'index.html',
       ...(certificate ? {
