@@ -54,24 +54,37 @@ export default function FellowshipsPage() {
     (async () => {
       setLoadingOptions(true);
       try {
-        const [branchRes, memberRes] = await Promise.all([
+        const [branchResult, memberResult] = await Promise.allSettled([
           branches.list({ limit: 100, isActive: true }),
           members.list({ limit: 200, status: 'active' }),
         ]);
+
         if (cancelled) return;
-        setBranchOptions(branchRes.data as unknown as Branch[]);
-        setMemberOptions(memberRes.data as unknown as Member[]);
-        // Pre-select the user's own branch if no branch selected
-        if (!formData.branch_id && user?.branchId) {
-          const myBranch = (branchRes.data as unknown as Branch[]).find(
-            (b) => String(b.branchId) === String(user.branchId)
-          );
-          if (myBranch) {
-            setFormData((prev) => ({ ...prev, branch_id: String(myBranch.branchId) }));
+
+        if (branchResult.status === 'fulfilled') {
+          const loadedBranches = branchResult.value.data as unknown as Branch[];
+          setBranchOptions(loadedBranches);
+
+          // Pre-select the user's own branch if no branch selected
+          if (!formData.branch_id && user?.branchId) {
+            const myBranch = loadedBranches.find(
+              (b) => String(b.branchId) === String(user.branchId)
+            );
+            if (myBranch) {
+              setFormData((prev) => ({ ...prev, branch_id: String(myBranch.branchId) }));
+            }
           }
+        } else {
+          console.error('Failed to load branches', branchResult.reason);
+          setBranchOptions([]);
         }
-      } catch (err) {
-        console.error('Failed to load branch/member options', err);
+
+        if (memberResult.status === 'fulfilled') {
+          setMemberOptions(memberResult.value.data as unknown as Member[]);
+        } else {
+          console.error('Failed to load leaders', memberResult.reason);
+          setMemberOptions([]);
+        }
       } finally {
         if (!cancelled) setLoadingOptions(false);
       }
