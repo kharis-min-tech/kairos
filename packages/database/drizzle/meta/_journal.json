@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1770442193500,
+      "tag": "0000_loving_kid_colt",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770442200000,
+      "tag": "0001_add_tithe_purpose",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771896977944,
+      "tag": "0002_faithful_rafael_vega",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,797 @@
+{
+  "info": {
+    "name": "Kairos Church Management API",
+    "description": "Complete API collection for the Kairos church management platform. Covers members, branches, departments, fellowships, attendance, outreach/souls, donations, forms, notifications, and reports.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "Create Member",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/members", "host": ["{{base_url}}"], "path": ["v1", "members"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+2348012345678\",\n  \"gender\": \"male\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"address\": \"123 Main Street, Lagos\",\n  \"membershipType\": \"full\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/members?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "members"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Get Member",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/members/{{member_id}}", "host": ["{{base_url}}"], "path": ["v1", "members", "{{member_id}}"] }
+          }
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/members/{{member_id}}", "host": ["{{base_url}}"], "path": ["v1", "members", "{{member_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+2348012345679\",\n  \"address\": \"456 New Street, Lagos\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/members/{{member_id}}", "host": ["{{base_url}}"], "path": ["v1", "members", "{{member_id}}"] }
+          }
+        },
+        {
+          "name": "Approve Member",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/members/{{member_id}}/approve", "host": ["{{base_url}}"], "path": ["v1", "members", "{{member_id}}", "approve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Import Members",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/members/import", "host": ["{{base_url}}"], "path": ["v1", "members", "import"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"members\": [\n    { \"firstName\": \"Jane\", \"lastName\": \"Smith\", \"email\": \"jane@example.com\", \"phone\": \"+2348099999999\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Export Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/members/export", "host": ["{{base_url}}"], "path": ["v1", "members", "export"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "Create Branch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/branches", "host": ["{{base_url}}"], "path": ["v1", "branches"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lagos Central\",\n  \"address\": \"10 Church Road, Lagos\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"country\": \"Nigeria\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/branches", "host": ["{{base_url}}"], "path": ["v1", "branches"] }
+          }
+        },
+        {
+          "name": "Get Branch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["v1", "branches", "{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "Update Branch",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["v1", "branches", "{{branch_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lagos Central Updated\",\n  \"address\": \"20 New Church Road, Lagos\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["v1", "branches", "{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "Assign Pastor to Branch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/branches/{{branch_id}}/pastor", "host": ["{{base_url}}"], "path": ["v1", "branches", "{{branch_id}}", "pastor"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Assign Elder to Branch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/branches/{{branch_id}}/elder", "host": ["{{base_url}}"], "path": ["v1", "branches", "{{branch_id}}", "elder"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/departments", "host": ["{{base_url}}"], "path": ["v1", "departments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Choir\",\n  \"description\": \"Music and worship department\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/departments", "host": ["{{base_url}}"], "path": ["v1", "departments"] }
+          }
+        },
+        {
+          "name": "Assign Member to Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/departments/{{department_id}}/members", "host": ["{{base_url}}"], "path": ["v1", "departments", "{{department_id}}", "members"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\",\n  \"role\": \"member\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Approve Department Request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/departments/{{department_id}}/approve", "host": ["{{base_url}}"], "path": ["v1", "departments", "{{department_id}}", "approve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\",\n  \"approved\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Department Follow-up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/departments/{{department_id}}/followups", "host": ["{{base_url}}"], "path": ["v1", "departments", "{{department_id}}", "followups"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\",\n  \"notes\": \"Followed up on attendance\",\n  \"type\": \"phone_call\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Department Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/departments/{{department_id}}/alerts", "host": ["{{base_url}}"], "path": ["v1", "departments", "{{department_id}}", "alerts"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fellowships",
+      "item": [
+        {
+          "name": "Create Fellowship",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/fellowships", "host": ["{{base_url}}"], "path": ["v1", "fellowships"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Young Adults Fellowship\",\n  \"description\": \"Fellowship for ages 18-35\",\n  \"meetingDay\": \"saturday\",\n  \"meetingTime\": \"16:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Fellowships",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/fellowships", "host": ["{{base_url}}"], "path": ["v1", "fellowships"] }
+          }
+        },
+        {
+          "name": "Get Fellowship",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/fellowships/{{fellowship_id}}", "host": ["{{base_url}}"], "path": ["v1", "fellowships", "{{fellowship_id}}"] }
+          }
+        },
+        {
+          "name": "Add Member to Fellowship",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/fellowships/{{fellowship_id}}/members", "host": ["{{base_url}}"], "path": ["v1", "fellowships", "{{fellowship_id}}", "members"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Fellowship Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/fellowships/{{fellowship_id}}/messages", "host": ["{{base_url}}"], "path": ["v1", "fellowships", "{{fellowship_id}}", "messages"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Reminder: Fellowship meeting this Saturday at 4pm\",\n  \"type\": \"announcement\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Record Service Attendance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/attendance/services", "host": ["{{base_url}}"], "path": ["v1", "attendance", "services"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceDate\": \"2026-02-08\",\n  \"serviceType\": \"sunday_service\",\n  \"attendees\": [\"{{member_id}}\"],\n  \"totalCount\": 150,\n  \"notes\": \"Regular Sunday service\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Service Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/attendance/services?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "attendance", "services"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Record Fellowship Attendance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/attendance/fellowships", "host": ["{{base_url}}"], "path": ["v1", "attendance", "fellowships"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fellowshipId\": \"{{fellowship_id}}\",\n  \"meetingDate\": \"2026-02-07\",\n  \"attendees\": [\"{{member_id}}\"],\n  \"totalCount\": 25\n}"
+            }
+          }
+        },
+        {
+          "name": "List Fellowship Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/attendance/fellowships?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "attendance", "fellowships"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Get Attendance Trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/attendance/trends?period=monthly&months=6", "host": ["{{base_url}}"], "path": ["v1", "attendance", "trends"], "query": [{ "key": "period", "value": "monthly" }, { "key": "months", "value": "6" }] }
+          }
+        },
+        {
+          "name": "Get Missing Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/attendance/missing-members?weeks=4", "host": ["{{base_url}}"], "path": ["v1", "attendance", "missing-members"], "query": [{ "key": "weeks", "value": "4" }] }
+          }
+        },
+        {
+          "name": "Export Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/attendance/export?startDate=2026-01-01&endDate=2026-02-10", "host": ["{{base_url}}"], "path": ["v1", "attendance", "export"], "query": [{ "key": "startDate", "value": "2026-01-01" }, { "key": "endDate", "value": "2026-02-10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Outreach & Souls",
+      "item": [
+        {
+          "name": "Create Outreach Program",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/outreach/programs", "host": ["{{base_url}}"], "path": ["v1", "outreach", "programs"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Community Outreach Feb 2026\",\n  \"description\": \"Monthly community evangelism\",\n  \"startDate\": \"2026-02-15\",\n  \"endDate\": \"2026-02-15\",\n  \"location\": \"Lekki Phase 1, Lagos\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Outreach Programs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/outreach/programs", "host": ["{{base_url}}"], "path": ["v1", "outreach", "programs"] }
+          }
+        },
+        {
+          "name": "Register Outreach Worker",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/outreach/programs/{{outreach_id}}/workers", "host": ["{{base_url}}"], "path": ["v1", "outreach", "programs", "{{outreach_id}}", "workers"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{member_id}}\",\n  \"role\": \"evangelist\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Override Branch (Cross-Branch Outreach)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/outreach/override-branch", "host": ["{{base_url}}"], "path": ["v1", "outreach", "override-branch"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"outreachId\": \"{{outreach_id}}\",\n  \"targetBranchId\": \"{{branch_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Capture Soul",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/souls", "host": ["{{base_url}}"], "path": ["v1", "souls"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Grace\",\n  \"lastName\": \"Adeyemi\",\n  \"phone\": \"+2348055555555\",\n  \"address\": \"45 Victoria Island, Lagos\",\n  \"outreachId\": \"{{outreach_id}}\",\n  \"capturedBy\": \"{{member_id}}\",\n  \"notes\": \"Interested in joining the church\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Souls",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/souls?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "souls"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Get Soul",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/souls/{{soul_id}}", "host": ["{{base_url}}"], "path": ["v1", "souls", "{{soul_id}}"] }
+          }
+        },
+        {
+          "name": "Log Soul Follow-up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/souls/{{soul_id}}/followups", "host": ["{{base_url}}"], "path": ["v1", "souls", "{{soul_id}}", "followups"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Called and confirmed interest in attending Sunday service\",\n  \"type\": \"phone_call\",\n  \"followedUpBy\": \"{{member_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Soul Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/souls/{{soul_id}}/status", "host": ["{{base_url}}"], "path": ["v1", "souls", "{{soul_id}}", "status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"first_timer\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reassign Soul",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/souls/{{soul_id}}/reassign", "host": ["{{base_url}}"], "path": ["v1", "souls", "{{soul_id}}", "reassign"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTo\": \"{{member_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Soul Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/souls/alerts", "host": ["{{base_url}}"], "path": ["v1", "souls", "alerts"] }
+          }
+        },
+        {
+          "name": "Get Conversion Funnel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/souls/conversion-funnel", "host": ["{{base_url}}"], "path": ["v1", "souls", "conversion-funnel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donations",
+      "item": [
+        {
+          "name": "Create Online Donation (Stripe)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/donations/online", "host": ["{{base_url}}"], "path": ["v1", "donations", "online"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"currency\": \"NGN\",\n  \"donationType\": \"tithe\",\n  \"memberId\": \"{{member_id}}\",\n  \"paymentMethodId\": \"pm_test_123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Manual Donation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/donations/manual", "host": ["{{base_url}}"], "path": ["v1", "donations", "manual"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10000,\n  \"currency\": \"NGN\",\n  \"donationType\": \"offering\",\n  \"memberId\": \"{{member_id}}\",\n  \"paymentMethod\": \"cash\",\n  \"receivedDate\": \"2026-02-09\",\n  \"notes\": \"Sunday offering\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Donations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/donations?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "donations"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Get Donation Reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/donations/reports?startDate=2026-01-01&endDate=2026-02-10", "host": ["{{base_url}}"], "path": ["v1", "donations", "reports"], "query": [{ "key": "startDate", "value": "2026-01-01" }, { "key": "endDate", "value": "2026-02-10" }] }
+          }
+        },
+        {
+          "name": "Get Member Donation Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/donations/member-summary?memberId={{member_id}}", "host": ["{{base_url}}"], "path": ["v1", "donations", "member-summary"], "query": [{ "key": "memberId", "value": "{{member_id}}" }] }
+          }
+        },
+        {
+          "name": "Export Donations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/donations/export?startDate=2026-01-01&endDate=2026-02-10", "host": ["{{base_url}}"], "path": ["v1", "donations", "export"], "query": [{ "key": "startDate", "value": "2026-01-01" }, { "key": "endDate", "value": "2026-02-10" }] }
+          }
+        },
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Stripe-Signature", "value": "t=1234567890,v1=test_signature" }
+            ],
+            "url": { "raw": "{{base_url}}/v1/donations/webhook", "host": ["{{base_url}}"], "path": ["v1", "donations", "webhook"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test\",\n      \"amount\": 5000,\n      \"currency\": \"ngn\",\n      \"status\": \"succeeded\"\n    }\n  }\n}"
+            },
+            "description": "Stripe webhook endpoint — no auth token needed (uses Stripe signature verification)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forms",
+      "item": [
+        {
+          "name": "Create Form",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/forms", "host": ["{{base_url}}"], "path": ["v1", "forms"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Member Registration\",\n  \"description\": \"Registration form for new church members\",\n  \"fields\": [\n    { \"name\": \"fullName\", \"type\": \"text\", \"required\": true, \"label\": \"Full Name\" },\n    { \"name\": \"email\", \"type\": \"email\", \"required\": true, \"label\": \"Email\" },\n    { \"name\": \"phone\", \"type\": \"phone\", \"required\": true, \"label\": \"Phone\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "List Forms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/forms", "host": ["{{base_url}}"], "path": ["v1", "forms"] }
+          }
+        },
+        {
+          "name": "Get Form",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/forms/{{form_id}}", "host": ["{{base_url}}"], "path": ["v1", "forms", "{{form_id}}"] }
+          }
+        },
+        {
+          "name": "Submit Form",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/forms/{{form_id}}/submit", "host": ["{{base_url}}"], "path": ["v1", "forms", "{{form_id}}", "submit"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": {\n    \"fullName\": \"Grace Adeyemi\",\n    \"email\": \"grace@example.com\",\n    \"phone\": \"+2348055555555\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "List Form Submissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/forms/{{form_id}}/submissions?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "forms", "{{form_id}}", "submissions"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Export Form Submissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/forms/{{form_id}}/submissions/export", "host": ["{{base_url}}"], "path": ["v1", "forms", "{{form_id}}", "submissions", "export"] }
+          }
+        },
+        {
+          "name": "Save Form Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/forms/templates", "host": ["{{base_url}}"], "path": ["v1", "forms", "templates"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Event Registration Template\",\n  \"fields\": [\n    { \"name\": \"fullName\", \"type\": \"text\", \"required\": true, \"label\": \"Full Name\" },\n    { \"name\": \"email\", \"type\": \"email\", \"required\": false, \"label\": \"Email\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Form from Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/forms/from-template", "host": ["{{base_url}}"], "path": ["v1", "forms", "from-template"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"templateId\": \"template-uuid-here\",\n  \"title\": \"March Event Registration\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Prebuilt Form",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/forms/prebuilt/first-timer/submit", "host": ["{{base_url}}"], "path": ["v1", "forms", "prebuilt", "first-timer", "submit"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"New\",\n  \"lastName\": \"Visitor\",\n  \"phone\": \"+2348066666666\",\n  \"howDidYouHear\": \"friend\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/notifications", "host": ["{{base_url}}"], "path": ["v1", "notifications"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{member_id}}\",\n  \"title\": \"Welcome to Kairos\",\n  \"message\": \"Your membership has been approved\",\n  \"type\": \"membership\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/notifications?page=1&limit=20", "host": ["{{base_url}}"], "path": ["v1", "notifications"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Mark Notifications Read",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/notifications/mark-read", "host": ["{{base_url}}"], "path": ["v1", "notifications", "mark-read"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationIds\": [\"notification-uuid-1\", \"notification-uuid-2\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/notifications/unread-count", "host": ["{{base_url}}"], "path": ["v1", "notifications", "unread-count"] }
+          }
+        },
+        {
+          "name": "Send Broadcast",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/notifications/broadcast", "host": ["{{base_url}}"], "path": ["v1", "notifications", "broadcast"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Church Announcement\",\n  \"message\": \"Special service this Friday at 6pm\",\n  \"targetAudience\": \"all\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/dashboard/admin", "host": ["{{base_url}}"], "path": ["v1", "reports", "dashboard", "admin"] }
+          }
+        },
+        {
+          "name": "Pastor Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/dashboard/pastor", "host": ["{{base_url}}"], "path": ["v1", "reports", "dashboard", "pastor"] }
+          }
+        },
+        {
+          "name": "Leader Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/dashboard/leader", "host": ["{{base_url}}"], "path": ["v1", "reports", "dashboard", "leader"] }
+          }
+        },
+        {
+          "name": "Attendance Trends Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/attendance-trends?period=monthly&months=6", "host": ["{{base_url}}"], "path": ["v1", "reports", "attendance-trends"], "query": [{ "key": "period", "value": "monthly" }, { "key": "months", "value": "6" }] }
+          }
+        },
+        {
+          "name": "Donation Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/donation-summary?startDate=2026-01-01&endDate=2026-02-10", "host": ["{{base_url}}"], "path": ["v1", "reports", "donation-summary"], "query": [{ "key": "startDate", "value": "2026-01-01" }, { "key": "endDate", "value": "2026-02-10" }] }
+          }
+        },
+        {
+          "name": "Soul Funnel Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/reports/soul-funnel", "host": ["{{base_url}}"], "path": ["v1", "reports", "soul-funnel"] }
+          }
+        },
+        {
+          "name": "Export Report CSV",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/v1/reports/export", "host": ["{{base_url}}"], "path": ["v1", "reports", "export"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"attendance\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-02-10\",\n  \"format\": \"csv\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
