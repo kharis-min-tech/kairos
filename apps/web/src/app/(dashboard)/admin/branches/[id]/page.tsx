@@ -5,7 +5,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useRegions } from '@/hooks/use-branches';
+import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
+import { useMembers, useMyProfile } from '@/hooks/use-members';
+import { useAuthStore } from '@/lib/auth-store';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 
@@ -26,11 +28,20 @@ type FormValues = z.infer<typeof schema>;
 export default function BranchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { activeRole } = useAuthStore();
+  const { data: myProfile } = useMyProfile();
+  const isAdmin = activeRole === 'admin';
+  const isPastor = activeRole === 'pastor';
+  const canSeeMembers = isAdmin || (isPastor && myProfile?.homeBranchId === id);
   const { data: branch, isLoading, error } = useBranch(id);
   const { data: leadership } = useBranchLeadership(id);
   const { data: regions } = useRegions();
+  const { data: membersData, isLoading: membersLoading } = useMembers(
+    canSeeMembers ? { branchId: id, limit: 100 } : undefined
+  );
   const updateBranch = useUpdateBranch();
   const removeLeadership = useRemoveLeadership();
+  const deleteBranch = useDeleteBranch();
 
   const {
     register,
@@ -182,6 +193,22 @@ export default function BranchDetailPage() {
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>
                 Back
               </Button>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="ml-auto"
+                  onClick={() => {
+                    if (confirm(`Deactivate branch "${branch?.branchName}"? This will affect all associated members and data.`)) {
+                      deleteBranch.mutate(id, {
+                        onSuccess: () => router.push('/admin/branches'),
+                      });
+                    }
+                  }}
+                >
+                  Deactivate Branch
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
@@ -232,6 +259,72 @@ export default function BranchDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Members Section — admin sees all, pastor sees own branch only */}
+      {canSeeMembers && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Members</CardTitle>
+            <CardDescription>
+              {membersData?.meta?.total ?? 0} member{(membersData?.meta?.total ?? 0) !== 1 ? 's' : ''} in this branch
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {membersLoading ? (
+              <p className="text-sm text-muted-foreground">Loading members...</p>
+            ) : !membersData?.data?.length ? (
+              <p className="text-sm text-muted-foreground">No members found for this branch.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 pr-4 font-medium">Name</th>
+                      <th className="pb-2 pr-4 font-medium">Email</th>
+                      <th className="pb-2 pr-4 font-medium">Phone</th>
+                      <th className="pb-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {membersData.data.map((member) => {
+                      const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
+                      return (
+                        <tr
+                          key={member.id}
+                          className="cursor-pointer hover:bg-muted/40"
+                          onClick={() => router.push(`/members/${member.id}`)}
+                        >
+                          <td className="py-2 pr-4">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
+                                {initials}
+                              </div>
+                              <span className="font-medium">{member.firstName} {member.lastName}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 pr-4 text-muted-foreground">{member.email ?? '—'}</td>
+                          <td className="py-2 pr-4 text-muted-foreground">{member.phone ?? '—'}</td>
+                          <td className="py-2">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                              member.approvalStatus === 'approved'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : member.approvalStatus === 'pending'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-rose-100 text-rose-700'
+                            }`}>
+                              {member.approvalStatus}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -28,7 +28,11 @@ const signupSchema = z.object({
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   // Step 3
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -79,12 +83,27 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
   );
 }
 
+function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
+  return (
+    <div className={`flex items-center gap-2 text-xs ${met ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+      <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        {met ? (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        )}
+      </svg>
+      {label}
+    </div>
+  );
+}
+
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
-    { label: '8+ characters', met: password.length >= 8 },
-    { label: 'Uppercase letter', met: /[A-Z]/.test(password) },
-    { label: 'Lowercase letter', met: /[a-z]/.test(password) },
-    { label: 'Number', met: /\d/.test(password) },
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'One number', met: /[0-9]/.test(password) },
+    { label: 'One special character', met: /[^A-Za-z0-9]/.test(password) },
   ];
   const strength = checks.filter((c) => c.met).length;
 
@@ -105,25 +124,11 @@ function PasswordStrength({ password }: { password: string }) {
           />
         ))}
       </div>
-      <ul className="grid grid-cols-2 gap-1">
+      <div className="space-y-1.5">
         {checks.map((check) => (
-          <li
-            key={check.label}
-            className={`flex items-center gap-1 text-xs ${check.met ? 'text-emerald-600' : 'text-muted-foreground'}`}
-          >
-            {check.met ? (
-              <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-            )}
-            {check.label}
-          </li>
+          <PasswordRequirement key={check.label} met={check.met} label={check.label} />
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

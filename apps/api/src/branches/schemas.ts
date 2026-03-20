@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+const serviceScheduleItemSchema = z.object({
+  day: z.string().min(1),
+  time: z.string().min(1),
+  type: z.string().min(1),
+});
+
 export const createBranchSchema = z.object({
   branchName: z.string().min(1, 'Branch name is required').max(150),
   regionId: z.string().uuid('Invalid region ID'),
@@ -10,6 +16,7 @@ export const createBranchSchema = z.object({
   phone: z.string().max(20).optional(),
   email: z.string().email().max(100).optional(),
   establishedDate: z.string().optional(),
+  serviceSchedule: z.array(serviceScheduleItemSchema).optional(),
 });
 
 export const updateBranchSchema = createBranchSchema.partial();

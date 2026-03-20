@@ -17,13 +17,15 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export default function ForgotPasswordPage() {
   const forgotMutation = useForgotPassword();
   const [submitted, setSubmitted] = useState(false);
+  const [devToken, setDevToken] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
   async function onSubmit(data: ForgotPasswordFormData) {
-    await forgotMutation.mutateAsync(data.email);
+    const result = await forgotMutation.mutateAsync(data.email);
+    if (result?.resetToken) setDevToken(result.resetToken);
     setSubmitted(true);
   }
 
@@ -46,6 +48,18 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-muted-foreground">
             The link will expire in <span className="font-medium text-foreground">1 hour</span>.
           </p>
+          {devToken && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
+              <p className="text-xs font-semibold text-amber-800">Dev mode — reset token:</p>
+              <p className="break-all font-mono text-xs text-amber-900">{devToken}</p>
+              <a
+                href={`/reset-password?token=${devToken}`}
+                className="inline-block text-xs font-medium text-purple-700 underline hover:text-purple-900"
+              >
+                Click here to reset your password →
+              </a>
+            </div>
+          )}
           <Link href="/login">
             <Button variant="outline" className="h-11 w-full rounded-xl">
               Back to Sign In

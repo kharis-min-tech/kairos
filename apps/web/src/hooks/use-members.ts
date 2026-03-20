@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams } from '@kairos/types';
+import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams, CreateMemberRequest } from '@kairos/types';
 
 // ── Member queries ─────────────────────────────────────────
 
@@ -64,6 +64,17 @@ export function useDeactivateMember() {
   return useMutation({
     mutationFn: async (id: string) => {
       await api.members.deactivate(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}
+
+export function useCreateMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateMemberRequest) => {
+      const res = await api.members.create(data);
+      return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
   });

@@ -11,6 +11,7 @@ import {
   resendCodeSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  changePasswordSchema,
 } from './schemas';
 import {
   signup,
@@ -20,6 +21,7 @@ import {
   forgotPassword,
   resetPassword,
   getMe,
+  changePassword,
 } from './service';
 
 export const authRouter = new Hono();
@@ -83,4 +85,11 @@ authRouter.get('/me', authMiddleware, async (c) => {
   const auth = getAuth(c);
   const member = await getMe(db, auth.memberId);
   return c.json(successResponse(member));
+});
+
+authRouter.post('/change-password', authMiddleware, zValidator('json', changePasswordSchema), async (c) => {
+  const auth = getAuth(c);
+  const { currentPassword, newPassword } = c.req.valid('json');
+  await changePassword(db, auth, currentPassword, newPassword);
+  return c.json(successResponse(undefined, 'Password changed successfully'));
 });

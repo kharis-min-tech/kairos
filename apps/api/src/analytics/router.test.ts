@@ -99,6 +99,11 @@ describe('GET /api/analytics/branch', () => {
     // pendingCount
     mockDb.select.mockReturnValueOnce(chainTo([{ value: 3 }]));
 
+    // attendanceTrend (weekly stats, last 8 weeks)
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ week: '2024-06-03', total: 20, present: 17 }]),
+    );
+
     const res = await app.request('/api/analytics/branch', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
@@ -109,6 +114,8 @@ describe('GET /api/analytics/branch', () => {
     expect(body.data.totalMembers).toBe(35);
     expect(body.data.totalFellowships).toBe(4);
     expect(body.data.pendingApprovals).toBe(3);
+    expect(body.data.attendanceTrend).toHaveLength(1);
+    expect(body.data.attendanceTrend[0].rate).toBe(85);
   });
 });
 

@@ -1,4 +1,4 @@
-import { eq, and, count, sql } from 'drizzle-orm';
+import { eq, and, count, sql, exists } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   fellowships,
@@ -23,7 +23,7 @@ function enforceBranchScope(auth: AuthContext, branchId?: string) {
 export async function listFellowships(
   db: Database,
   auth: AuthContext,
-  query: { page: number; limit: number; fellowshipType?: string; branchId?: string },
+  query: { page: number; limit: number; fellowshipType?: string; branchId?: string; memberId?: string },
 ) {
   const conditions = [eq(fellowships.isActive, true)];
 
@@ -35,6 +35,23 @@ export async function listFellowships(
 
   if (query.fellowshipType) {
     conditions.push(eq(fellowships.fellowshipType, query.fellowshipType));
+  }
+
+  if (query.memberId) {
+    conditions.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(fellowshipMembers)
+          .where(
+            and(
+              eq(fellowshipMembers.fellowshipId, fellowships.id),
+              eq(fellowshipMembers.memberId, query.memberId),
+              eq(fellowshipMembers.isActive, true),
+            ),
+          ),
+      ),
+    );
   }
 
   const where = and(...conditions);
@@ -50,6 +67,8 @@ export async function listFellowships(
         fellowshipType: fellowships.fellowshipType,
         description: fellowships.description,
         leaderId: fellowships.leaderId,
+        leaderFirstName: members.firstName,
+        leaderLastName: members.lastName,
         coLeaderId: fellowships.coLeaderId,
         meetingSchedule: fellowships.meetingSchedule,
         isActive: fellowships.isActive,
@@ -58,6 +77,7 @@ export async function listFellowships(
       })
       .from(fellowships)
       .leftJoin(branches, eq(fellowships.branchId, branches.id))
+      .leftJoin(members, eq(fellowships.leaderId, members.id))
       .where(where)
       .limit(query.limit)
       .offset(offset),

@@ -51,4 +51,5 @@ export const listFellowshipsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
   fellowshipType: z.enum(fellowshipTypes).optional(),
   branchId: z.string().uuid().optional(),
+  memberId: z.string().uuid().optional(),
 });

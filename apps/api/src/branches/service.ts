@@ -34,6 +34,7 @@ export async function listBranches(db: Database, auth: AuthContext) {
       phone: branches.phone,
       email: branches.email,
       establishedDate: branches.establishedDate,
+      serviceSchedule: branches.serviceSchedule,
       isActive: branches.isActive,
       createdAt: branches.createdAt,
       updatedAt: branches.updatedAt,
@@ -66,6 +67,7 @@ export async function getBranch(db: Database, branchId: string, auth: AuthContex
       phone: branches.phone,
       email: branches.email,
       establishedDate: branches.establishedDate,
+      serviceSchedule: branches.serviceSchedule,
       isActive: branches.isActive,
       createdAt: branches.createdAt,
       updatedAt: branches.updatedAt,
@@ -90,6 +92,7 @@ export async function createBranch(
     phone?: string;
     email?: string;
     establishedDate?: string;
+    serviceSchedule?: { day: string; time: string; type: string }[];
   },
 ) {
   // Verify region exists
@@ -106,6 +109,7 @@ export async function createBranch(
     phone: input.phone ?? null,
     email: input.email ?? null,
     establishedDate: input.establishedDate ?? null,
+    serviceSchedule: input.serviceSchedule ?? null,
   }).returning();
 
   return branch;

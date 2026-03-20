@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members } from '@kairos/database';
@@ -336,4 +336,29 @@ export async function getMe(db: Database, memberId: string): Promise<MemberProfi
   }
 
   return toMemberProfile(member);
+}
+
+export async function changePassword(
+  db: Database,
+  auth: AuthContext,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const [member] = await db
+    .select({ id: members.id, passwordHash: members.passwordHash })
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  const valid = await bcrypt.compare(currentPassword, member.passwordHash);
+  if (!valid) throw new UnauthorizedError('Current password is incorrect');
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  await db
+    .update(members)
+    .set({ passwordHash, updatedAt: sql`NOW()` })
+    .where(eq(members.id, auth.memberId));
 }

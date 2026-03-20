@@ -91,11 +91,37 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       ),
     );
 
+  // Weekly attendance trend (last 8 weeks)
+  const attendanceTrend = await db
+    .select({
+      week: sql<string>`TO_CHAR(DATE_TRUNC('week', ${fellowshipMeetings.meetingDate}), 'YYYY-MM-DD')`,
+      total: count(fellowshipMeetingAttendance.memberId),
+      present: sql<number>`COUNT(CASE WHEN ${fellowshipMeetingAttendance.attendanceStatus} = 'Present' THEN 1 END)`,
+    })
+    .from(fellowshipMeetings)
+    .innerJoin(fellowships, eq(fellowshipMeetings.fellowshipId, fellowships.id))
+    .leftJoin(
+      fellowshipMeetingAttendance,
+      eq(fellowshipMeetings.id, fellowshipMeetingAttendance.meetingId),
+    )
+    .where(
+      and(
+        eq(fellowships.branchId, branchId),
+        gte(fellowshipMeetings.meetingDate, sql`CURRENT_DATE - INTERVAL '56 days'`),
+      ),
+    )
+    .groupBy(sql`DATE_TRUNC('week', ${fellowshipMeetings.meetingDate})`)
+    .orderBy(sql`DATE_TRUNC('week', ${fellowshipMeetings.meetingDate})`);
+
   return {
     totalMembers: memberCount!.value,
     totalFellowships: fellowshipCount!.value,
     recentMeetings: recentMeetingCount!.value,
     pendingApprovals: pendingCount!.value,
+    attendanceTrend: attendanceTrend.map((row) => ({
+      week: row.week,
+      rate: row.total > 0 ? Math.round((Number(row.present) / row.total) * 100) : 0,
+    })),
   };
 }
 

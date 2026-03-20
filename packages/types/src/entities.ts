@@ -28,6 +28,12 @@ export interface Region extends BaseEntity {
 
 // ── Branch ─────────────────────────────────────────────────
 
+export interface ServiceSchedule {
+  day: string;
+  time: string;
+  type: string;
+}
+
 export interface Branch extends BaseEntity {
   branchName: string;
   regionId: string;
@@ -39,6 +45,7 @@ export interface Branch extends BaseEntity {
   email: string | null;
   establishedDate: string | null; // ISO date string
   isActive: boolean;
+  serviceSchedule?: ServiceSchedule[];
 }
 
 export interface BranchWithRegion extends Branch {
@@ -129,6 +136,8 @@ export interface Fellowship extends BaseEntity {
 
 export interface FellowshipWithBranch extends Fellowship {
   branchName: string;
+  leaderFirstName?: string | null;
+  leaderLastName?: string | null;
 }
 
 // ── Fellowship Member ──────────────────────────────────────

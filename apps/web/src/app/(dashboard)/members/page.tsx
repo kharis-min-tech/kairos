@@ -11,8 +11,14 @@ import type { MemberListParams } from '@kairos/types';
 
 export default function MembersPage() {
   const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const [params, setParams] = useState<MemberListParams>({ page: 1, limit: 20 });
+  const isPastor = activeRole === 'pastor';
+  const [params, setParams] = useState<MemberListParams>({
+    page: 1,
+    limit: 20,
+    ...(isPastor && user?.homeBranchId ? { branchId: user.homeBranchId } : {}),
+  });
   const [searchInput, setSearchInput] = useState('');
   const { data: result, isLoading, error } = useMembers(params);
   const deactivate = useDeactivateMember();
@@ -51,13 +57,22 @@ export default function MembersPage() {
               Church member directory{pagination ? ` \u2014 ${pagination.total} total` : ''}
             </p>
           </div>
-          {isAdmin && (
-            <Link href="/members/approval">
-              <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
-                Approval Queue
-              </button>
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {(isAdmin || isPastor) && (
+              <Link href="/members/new">
+                <button className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-50">
+                  + Add Member
+                </button>
+              </Link>
+            )}
+            {isAdmin && (
+              <Link href="/members/approval">
+                <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+                  Approval Queue
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -120,7 +135,7 @@ export default function MembersPage() {
                         {member.phone && <p>{member.phone}</p>}
                         <p className="text-xs capitalize">{member.systemRole}</p>
                       </div>
-                      {isAdmin && (
+                      {(isAdmin || isPastor) && (
                         <div className="mt-4">
                           <Button
                             variant="destructive"

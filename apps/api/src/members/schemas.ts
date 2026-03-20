@@ -25,9 +25,26 @@ export const assignRoleSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const createMemberSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  email: z.string().email('Invalid email address'),
+  homeBranchId: z.string().uuid('Invalid branch ID'),
+  phone: z.string().max(20).optional(),
+  gender: z.enum(['Male', 'Female']).optional(),
+  dateOfBirth: z.string().date().optional(),
+  middleName: z.string().max(100).optional(),
+  address: z.string().optional(),
+  city: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  emergencyContactName: z.string().max(150).optional(),
+  emergencyContactPhone: z.string().max(20).optional(),
+  systemRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional().default('member'),
+});
+
 export const listMembersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(500).default(20),
   search: z.string().optional(),
   branchId: z.string().uuid().optional(),
   approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),

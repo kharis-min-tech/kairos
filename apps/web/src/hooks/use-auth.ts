@@ -43,7 +43,8 @@ export function useVerifyEmail() {
 export function useForgotPassword() {
   return useMutation({
     mutationFn: async (email: string) => {
-      await api.auth.forgotPassword({ email });
+      const res = await api.auth.forgotPassword({ email });
+      return res.data;
     },
   });
 }

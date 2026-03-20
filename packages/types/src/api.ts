@@ -117,6 +117,7 @@ export interface CreateBranchRequest {
   phone?: string;
   email?: string;
   establishedDate?: string;
+  serviceSchedule?: { day: string; time: string; type: string }[];
 }
 
 export interface UpdateBranchRequest extends Partial<CreateBranchRequest> {}
@@ -148,6 +149,35 @@ export interface AssignRoleRequest {
   notes?: string;
 }
 
+export interface CreateMemberRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  homeBranchId: string;
+  phone?: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+  middleName?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  systemRole?: SystemRole;
+}
+
+export interface CreateMemberResponse {
+  member: MemberProfile;
+  generatedPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export type MemberStatsResponse = MemberDashboardStats;
+
 export interface MemberListParams {
   page?: number;
   limit?: number;
@@ -175,6 +205,7 @@ export interface FellowshipListParams {
   limit?: number;
   fellowshipType?: string;
   branchId?: string;
+  memberId?: string;
 }
 
 export interface AddFellowshipMemberRequest {
@@ -234,6 +265,7 @@ export interface BranchDashboardStats {
   totalFellowships: number;
   recentMeetings: number;
   pendingApprovals: number;
+  attendanceTrend: { week: string; rate: number }[];
 }
 
 export interface MemberDashboardStats {
@@ -248,4 +280,22 @@ export interface MemberDashboardStats {
     present: number;
     rate: number;
   };
+}
+
+// ── Reports ────────────────────────────────────────────────
+
+export interface ReportsMemberGrowth {
+  month: string;
+  newSignups: number;
+}
+
+export interface ReportsAttendanceTrend {
+  week: string;
+  rate: number;
+}
+
+export interface ReportsFellowshipActivity {
+  fellowshipName: string;
+  meetingCount: number;
+  avgAttendees: number;
 }

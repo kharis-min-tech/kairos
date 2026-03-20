@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
+import { useMyProfile } from '@/hooks/use-members';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -30,7 +31,10 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
 function FellowshipsContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
-  const isAdminOrPastor = user?.systemRole === 'admin' || user?.systemRole === 'pastor';
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const { data: myProfile } = useMyProfile();
+  const profile = myProfile ?? user;
+
   const initialType = searchParams.get('type') || '';
 
   const [params, setParams] = useState<FellowshipListParams>({
@@ -39,7 +43,12 @@ function FellowshipsContent() {
     fellowshipType: initialType || undefined,
   });
 
-  const { data: result, isLoading, error } = useFellowships(params);
+  // Only admins see all branches; pastors and members are scoped to their branch
+  const fetchParams: FellowshipListParams = activeRole === 'admin'
+    ? params
+    : { ...params, branchId: profile?.homeBranchId };
+
+  const { data: result, isLoading, error } = useFellowships(fetchParams);
   const deleteFellowship = useDeleteFellowship();
 
   const fellowships = result?.data;
@@ -72,7 +81,7 @@ function FellowshipsContent() {
               Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
             </p>
           </div>
-          {isAdminOrPastor && (
+          {(activeRole === 'admin' || activeRole === 'pastor') && (
             <Link href="/fellowships/new">
               <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
                 + New Fellowship
@@ -142,7 +151,7 @@ function FellowshipsContent() {
                         </p>
                       )}
                     </div>
-                    {isAdminOrPastor && (
+                    {(activeRole === 'admin' || activeRole === 'pastor') && (
                       <div className="mt-4">
                         <Button
                           variant="destructive"

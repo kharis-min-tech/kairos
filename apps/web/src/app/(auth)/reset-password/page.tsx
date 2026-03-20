@@ -34,6 +34,41 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
   );
 }
 
+function PasswordStrength({ password }: { password: string }) {
+  const checks = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'One number', met: /[0-9]/.test(password) },
+    { label: 'One special character', met: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const strength = checks.filter((c) => c.met).length;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4].map((level) => (
+          <div
+            key={level}
+            className={`h-1.5 flex-1 rounded-full ${
+              level <= strength
+                ? strength <= 1 ? 'bg-destructive'
+                : strength <= 2 ? 'bg-amber-500'
+                : strength <= 3 ? 'bg-yellow-500'
+                : 'bg-emerald-500'
+                : 'bg-muted'
+            }`}
+          />
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        {checks.map((check) => (
+          <PasswordRequirement key={check.label} met={check.met} label={check.label} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,12 +83,6 @@ function ResetPasswordContent() {
   });
 
   const newPassword = watch('newPassword', '');
-  const requirements = [
-    { met: newPassword.length >= 8, label: 'At least 8 characters' },
-    { met: /[A-Z]/.test(newPassword), label: 'One uppercase letter' },
-    { met: /[0-9]/.test(newPassword), label: 'One number' },
-    { met: /[^A-Za-z0-9]/.test(newPassword), label: 'One special character' },
-  ];
 
   async function onSubmit(data: ResetPasswordFormData) {
     if (!token) return;
@@ -140,12 +169,9 @@ function ResetPasswordContent() {
             {errors.newPassword && <p className="text-xs text-rose-600">{errors.newPassword.message}</p>}
           </div>
 
-          {/* Password requirements checklist */}
           {newPassword.length > 0 && (
-            <div className="rounded-xl bg-muted/30 p-3 space-y-1.5">
-              {requirements.map((req) => (
-                <PasswordRequirement key={req.label} met={req.met} label={req.label} />
-              ))}
+            <div className="rounded-xl bg-muted/30 p-3">
+              <PasswordStrength password={newPassword} />
             </div>
           )}
 

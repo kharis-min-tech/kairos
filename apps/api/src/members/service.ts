@@ -1,4 +1,6 @@
 import { eq, and, or, ilike, count, sql, type SQL } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -313,6 +315,107 @@ export async function deactivateMember(
   const [updated] = await db
     .update(members)
     .set({ isActive: false, updatedAt: sql`NOW()` })
+    .where(eq(members.id, memberId))
+    .returning();
+
+  return updated;
+}
+
+export async function createMember(
+  db: Database,
+  input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    homeBranchId: string;
+    phone?: string;
+    gender?: 'Male' | 'Female';
+    dateOfBirth?: string;
+    middleName?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    systemRole?: string;
+  },
+  auth: AuthContext,
+) {
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    throw new ForbiddenError('Only admins and pastors can create members');
+  }
+
+  // Check for existing email
+  const [existing] = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(eq(members.email, input.email))
+    .limit(1);
+  if (existing) throw new ConflictError('A member with this email already exists');
+
+  // Check for duplicate phone
+  if (input.phone) {
+    const [phoneExists] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(and(eq(members.phone, input.phone), eq(members.isActive, true)))
+      .limit(1);
+    if (phoneExists) throw new ConflictError('A member with this phone number already exists');
+  }
+
+  // Auto-generate password
+  const generatedPassword = randomBytes(8).toString('base64url');
+  const passwordHash = await bcrypt.hash(generatedPassword, 10);
+
+  const [created] = await db
+    .insert(members)
+    .values({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      middleName: input.middleName ?? null,
+      dateOfBirth: input.dateOfBirth ?? null,
+      gender: input.gender ?? null,
+      email: input.email,
+      phone: input.phone ?? null,
+      address: input.address ?? null,
+      city: input.city ?? null,
+      postalCode: input.postalCode ?? null,
+      emergencyContactName: input.emergencyContactName ?? null,
+      emergencyContactPhone: input.emergencyContactPhone ?? null,
+      homeBranchId: input.homeBranchId,
+      passwordHash,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: input.systemRole ?? 'member',
+      isActive: true,
+    })
+    .returning();
+
+  if (!created) throw new Error('Failed to create member');
+
+  return { member: created, generatedPassword };
+}
+
+export async function reactivateMember(
+  db: Database,
+  memberId: string,
+  auth: AuthContext,
+) {
+  if (auth.systemRole !== 'admin') {
+    throw new ForbiddenError('Only admins can reactivate members');
+  }
+
+  const [member] = await db
+    .select({ id: members.id, isActive: members.isActive })
+    .from(members)
+    .where(eq(members.id, memberId));
+
+  if (!member) throw new NotFoundError('Member not found');
+  if (member.isActive) throw new ConflictError('Member is already active');
+
+  const [updated] = await db
+    .update(members)
+    .set({ isActive: true, approvalStatus: 'approved', updatedAt: sql`NOW()` })
     .where(eq(members.id, memberId))
     .returning();
 

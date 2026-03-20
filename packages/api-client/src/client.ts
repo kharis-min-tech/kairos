@@ -3,18 +3,55 @@ import { ApiClientError } from './errors';
 interface ClientConfig {
   baseUrl: string;
   getToken?: () => string | null;
+  getRefreshToken?: () => string | null;
+  onTokenRefreshed?: (accessToken: string, refreshToken: string) => void;
+  onAuthFailure?: () => void;
 }
 
 export class ApiClient {
   private baseUrl: string;
   private getToken: () => string | null;
+  private getRefreshToken: () => string | null;
+  private onTokenRefreshed: ((accessToken: string, refreshToken: string) => void) | undefined;
+  private onAuthFailure: (() => void) | undefined;
+  private refreshPromise: Promise<string> | null = null;
 
   constructor(config: ClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
     this.getToken = config.getToken ?? (() => null);
+    this.getRefreshToken = config.getRefreshToken ?? (() => null);
+    this.onTokenRefreshed = config.onTokenRefreshed;
+    this.onAuthFailure = config.onAuthFailure;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async tryRefresh(): Promise<string> {
+    // Deduplicate concurrent refresh calls
+    if (this.refreshPromise) return this.refreshPromise;
+
+    this.refreshPromise = (async () => {
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) throw new Error('No refresh token');
+
+      const res = await fetch(`${this.baseUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = (await res.json()) as Record<string, unknown>;
+      if (!res.ok) throw new Error('Refresh failed');
+
+      const payload = data.data as { accessToken: string; refreshToken: string };
+      this.onTokenRefreshed?.(payload.accessToken, payload.refreshToken);
+      return payload.accessToken;
+    })().finally(() => {
+      this.refreshPromise = null;
+    });
+
+    return this.refreshPromise;
+  }
+
+  private async request<T>(method: string, path: string, body?: unknown, isRetry = false): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -29,6 +66,17 @@ export class ApiClient {
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
+
+    // Auto-refresh on 401, then retry once
+    if (response.status === 401 && !isRetry) {
+      try {
+        await this.tryRefresh();
+        return this.request<T>(method, path, body, true);
+      } catch {
+        this.onAuthFailure?.();
+        throw new ApiClientError(401, 'Session expired. Please log in again.');
+      }
+    }
 
     const data = (await response.json()) as Record<string, unknown>;
 

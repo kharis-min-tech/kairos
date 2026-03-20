@@ -27,6 +27,12 @@ import type {
   AdminDashboardStats,
   BranchDashboardStats,
   MemberDashboardStats,
+  CreateMemberRequest,
+  CreateMemberResponse,
+  ChangePasswordRequest,
+  ReportsMemberGrowth,
+  ReportsAttendanceTrend,
+  ReportsFellowshipActivity,
 } from '@kairos/types';
 
 import type {
@@ -48,8 +54,16 @@ import type {
 
 import { ApiClient } from './client';
 
-export function createApiClient(baseUrl: string, getToken?: () => string | null) {
-  const client = new ApiClient({ baseUrl, getToken });
+export function createApiClient(
+  baseUrl: string,
+  getToken?: () => string | null,
+  options?: {
+    getRefreshToken?: () => string | null;
+    onTokenRefreshed?: (accessToken: string, refreshToken: string) => void;
+    onAuthFailure?: () => void;
+  },
+) {
+  const client = new ApiClient({ baseUrl, getToken, ...options });
 
   return {
     auth: {
@@ -62,9 +76,11 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
       verifyEmail: (data: VerifyEmailRequest) =>
         client.post<ApiResponse<void>>('/api/auth/verify-email', data),
       forgotPassword: (data: ForgotPasswordRequest) =>
-        client.post<ApiResponse<void>>('/api/auth/forgot-password', data),
+        client.post<ApiResponse<{ resetToken?: string }>>('/api/auth/forgot-password', data),
       resetPassword: (data: ResetPasswordRequest) =>
         client.post<ApiResponse<void>>('/api/auth/reset-password', data),
+      changePassword: (data: ChangePasswordRequest) =>
+        client.post<ApiResponse<void>>('/api/auth/change-password', data),
     },
 
     branches: {
@@ -117,6 +133,12 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/approve`, data),
       deactivate: (id: string) =>
         client.delete<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
+      create: (data: CreateMemberRequest) =>
+        client.post<ApiResponse<CreateMemberResponse>>('/api/members', data),
+      reactivate: (id: string) =>
+        client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/reactivate`, {}),
+      stats: (id: string) =>
+        client.get<ApiResponse<MemberDashboardStats>>(`/api/members/${encodeURIComponent(id)}/stats`),
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
       roles: {
@@ -136,6 +158,7 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         if (params?.limit) qs.set('limit', String(params.limit));
         if (params?.fellowshipType) qs.set('fellowshipType', params.fellowshipType);
         if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.memberId) qs.set('memberId', params.memberId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<FellowshipWithBranch>>>(`/api/fellowships${query ? `?${query}` : ''}`);
       },
@@ -180,6 +203,15 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
         client.get<ApiResponse<BranchDashboardStats>>('/api/analytics/branch'),
       memberStats: () =>
         client.get<ApiResponse<MemberDashboardStats>>('/api/analytics/member'),
+    },
+
+    reports: {
+      memberGrowth: () =>
+        client.get<ApiResponse<ReportsMemberGrowth[]>>('/api/reports/member-growth'),
+      attendanceTrend: () =>
+        client.get<ApiResponse<ReportsAttendanceTrend[]>>('/api/reports/attendance-trend'),
+      fellowshipActivity: () =>
+        client.get<ApiResponse<ReportsFellowshipActivity[]>>('/api/reports/fellowship-activity'),
     },
   };
 }

@@ -1,19 +1,38 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useMember, useMemberRoles, useRemoveRole } from '@/hooks/use-members';
+import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember } from '@/hooks/use-members';
+import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { data: member, isLoading, error } = useMember(id);
   const { data: roles } = useMemberRoles(id);
   const removeRole = useRemoveRole();
+  const deactivate = useDeactivateMember();
+  const approve = useApproveMember();
   const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
+  const isPastor = activeRole === 'pastor';
+  const canManage = isAdmin || isPastor;
+
+  const [selectedFellowshipId, setSelectedFellowshipId] = useState('');
+  const { data: currentFellowshipsData, isLoading: currentFellowshipsLoading } = useFellowships(
+    member ? { branchId: member.homeBranchId, memberId: member.id, limit: 20 } : undefined
+  );
+  const { data: fellowshipsData } = useFellowships(
+    member ? { branchId: member.homeBranchId, limit: 100 } : undefined
+  );
+  const addToFellowship = useAddFellowshipMember();
+  const currentFellowships = currentFellowshipsData?.data ?? [];
+  const alreadyInFellowship = currentFellowships.length > 0;
 
   if (isLoading) {
     return (
@@ -51,7 +70,7 @@ export default function MemberDetailPage() {
           <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-xl font-bold">
             {initials}
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">
               {member.firstName} {member.lastName}
             </h1>
@@ -62,6 +81,38 @@ export default function MemberDetailPage() {
               <span className="text-sm capitalize text-purple-200">{member.systemRole}</span>
             </div>
           </div>
+          {canManage && (
+            <div className="flex gap-2">
+              {member.approvalStatus === 'pending' && (
+                <Button
+                  size="sm"
+                  className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
+                  onClick={() => {
+                    if (confirm(`Approve ${member.firstName} ${member.lastName}?`)) {
+                      approve.mutate({ id, data: { approved: true } });
+                    }
+                  }}
+                >
+                  Approve
+                </Button>
+              )}
+              {member.isActive !== false && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
+                      deactivate.mutate(member.id, {
+                        onSuccess: () => router.push('/members'),
+                      });
+                    }
+                  }}
+                >
+                  Deactivate
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -133,6 +184,87 @@ export default function MemberDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Fellowships */}
+      {canManage && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fellowships</CardTitle>
+            <CardDescription>
+              {alreadyInFellowship
+                ? 'This member\'s fellowship membership'
+                : 'Assign this member to a fellowship in their branch'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {currentFellowshipsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : alreadyInFellowship ? (
+              <div className="space-y-2">
+                {currentFellowships.map((f) => (
+                  <div key={f.id} className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <p className="font-medium">{f.fellowshipName}</p>
+                      <p className="text-sm text-muted-foreground">{f.fellowshipType}</p>
+                    </div>
+                    <a
+                      href={`/fellowships/${f.id}`}
+                      className="text-sm text-purple-700 hover:underline font-medium"
+                    >
+                      View Fellowship →
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {addToFellowship.isSuccess && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                    Member added to fellowship successfully.
+                  </div>
+                )}
+                {addToFellowship.error && (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                    {addToFellowship.error instanceof Error
+                      ? addToFellowship.error.message
+                      : 'Could not add member to fellowship.'}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <select
+                    value={selectedFellowshipId}
+                    onChange={(e) => setSelectedFellowshipId(e.target.value)}
+                    className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select a fellowship…</option>
+                    {(fellowshipsData?.data ?? [])
+                      .filter((f) => f.isActive)
+                      .map((f) => (
+                        <option key={f.id} value={f.id}>{f.fellowshipName}</option>
+                      ))}
+                  </select>
+                  <button
+                    disabled={!selectedFellowshipId || addToFellowship.isPending}
+                    onClick={() => {
+                      if (!selectedFellowshipId) return;
+                      addToFellowship.mutate(
+                        { fellowshipId: selectedFellowshipId, data: { memberId: member.id } },
+                        { onSuccess: () => setSelectedFellowshipId('') }
+                      );
+                    }}
+                    className="inline-flex items-center rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
+                  >
+                    {addToFellowship.isPending ? 'Adding…' : 'Assign'}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  To view or remove fellowship memberships, open the fellowship&apos;s Members tab.
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

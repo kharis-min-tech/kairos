@@ -7,6 +7,7 @@ import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
 import { analyticsRouter } from './analytics/router';
+import { reportsRouter } from './reports/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -45,6 +46,7 @@ export function createApp() {
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
   app.route('/api/analytics', analyticsRouter);
+  app.route('/api/reports', reportsRouter);
 
   // Error handler
   app.onError(errorHandler);

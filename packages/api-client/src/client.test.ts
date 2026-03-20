@@ -166,8 +166,9 @@ describe('ApiClient', () => {
         expect(err).toBeInstanceOf(ApiClientError);
         const apiErr = err as ApiClientError;
         expect(apiErr.status).toBe(401);
-        expect(apiErr.message).toBe('Unauthorized');
-        expect(apiErr.code).toBe('UNAUTHORIZED');
+        // Client intercepts 401 and attempts token refresh; with no onRefresh
+        // handler the refresh fails and yields a user-facing message.
+        expect(apiErr.message).toBe('Session expired. Please log in again.');
       }
     });
 

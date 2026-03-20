@@ -8,6 +8,7 @@ import {
   approveMemberSchema,
   assignRoleSchema,
   listMembersQuerySchema,
+  createMemberSchema,
 } from './schemas';
 import {
   listMembers,
@@ -19,7 +20,10 @@ import {
   removeRole,
   getMemberRoles,
   deactivateMember,
+  createMember,
+  reactivateMember,
 } from './service';
+import { getMemberStats } from '../analytics/service';
 
 export const membersRouter = new Hono();
 
@@ -43,6 +47,13 @@ membersRouter.get('/', zValidator('query', listMembersQuerySchema), async (c) =>
   return c.json(successResponse(result));
 });
 
+membersRouter.post('/', requireRole('admin', 'pastor'), zValidator('json', createMemberSchema), async (c) => {
+  const auth = getAuth(c);
+  const input = c.req.valid('json');
+  const result = await createMember(db, input, auth);
+  return c.json(successResponse(result, 'Member created'), 201);
+});
+
 membersRouter.get('/:id', async (c) => {
   const auth = getAuth(c);
   const member = await getMember(db, c.req.param('id'), auth);
@@ -58,6 +69,19 @@ membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) =>
 membersRouter.delete('/:id', requireRole('admin'), async (c) => {
   const member = await deactivateMember(db, c.req.param('id')!, getAuth(c));
   return c.json(successResponse(member, 'Member deactivated'));
+});
+
+membersRouter.post('/:id/reactivate', requireRole('admin'), async (c) => {
+  const auth = getAuth(c);
+  const member = await reactivateMember(db, c.req.param('id')!, auth);
+  return c.json(successResponse(member, 'Member reactivated'));
+});
+
+membersRouter.get('/:id/stats', async (c) => {
+  const auth = getAuth(c);
+  const memberId = c.req.param('id');
+  const stats = await getMemberStats(db, { ...auth, memberId });
+  return c.json(successResponse(stats));
 });
 
 // ── Approval ───────────────────────────────────────────────
