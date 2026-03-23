@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles } from '@/hooks/use-members';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
@@ -96,7 +97,13 @@ export default function MemberDetailPage() {
                   className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
                   onClick={() => {
                     if (confirm(`Approve ${member.firstName} ${member.lastName}?`)) {
-                      approve.mutate({ id, data: { approved: true } });
+                      approve.mutate(
+                        { id, data: { approved: true } },
+                        {
+                          onSuccess: () => toast.success('Member approved.'),
+                          onError: () => toast.error('Failed to approve. Please try again.'),
+                        },
+                      );
                     }
                   }}
                 >
@@ -111,6 +118,7 @@ export default function MemberDetailPage() {
                     if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
                       deactivate.mutate(member.id, {
                         onSuccess: () => router.push('/members'),
+                        onError: () => toast.error('Failed to deactivate member. Please try again.'),
                       });
                     }
                   }}
@@ -124,7 +132,10 @@ export default function MemberDetailPage() {
                   className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
                   onClick={() => {
                     if (confirm(`Reactivate ${member.firstName} ${member.lastName}?`)) {
-                      reactivate.mutate(member.id);
+                      reactivate.mutate(member.id, {
+                        onSuccess: () => toast.success('Member reactivated.'),
+                        onError: () => toast.error('Failed to reactivate. Please try again.'),
+                      });
                     }
                   }}
                 >
@@ -192,7 +203,13 @@ export default function MemberDetailPage() {
                       className="text-destructive hover:text-destructive"
                       onClick={() => {
                         if (confirm(`Remove role "${role.roleName}"?`)) {
-                          removeRole.mutate({ memberId: id, roleAssignmentId: role.id });
+                          removeRole.mutate(
+                            { memberId: id, roleAssignmentId: role.id },
+                            {
+                              onSuccess: () => toast.success('Role removed.'),
+                              onError: () => toast.error('Failed to remove role. Please try again.'),
+                            },
+                          );
                         }
                       }}
                     >
@@ -240,7 +257,7 @@ export default function MemberDetailPage() {
                       { onSuccess: () => { setSelectedRoleId(''); setSelectedBranchId(''); } }
                     );
                   }}
-                  className="inline-flex items-center rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
+                  className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {assignRole.isPending ? 'Assigning…' : 'Assign'}
                 </button>
@@ -315,7 +332,7 @@ export default function MemberDetailPage() {
                         { onSuccess: () => setSelectedFellowshipId('') }
                       );
                     }}
-                    className="inline-flex items-center rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
+                    className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {addToFellowship.isPending ? 'Adding…' : 'Assign'}
                   </button>

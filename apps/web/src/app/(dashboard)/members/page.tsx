@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
@@ -221,7 +222,10 @@ export default function MembersPage() {
                             onClick={(e) => {
                               e.preventDefault();
                               if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
-                                deactivate.mutate(member.id);
+                              deactivate.mutate(member.id, {
+                                onSuccess: () => toast.success('Member removed from system.'),
+                                onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                              });
                               }
                             }}
                           >

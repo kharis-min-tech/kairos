@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
 
           <Button
             type="submit"
-            className="h-11 w-full rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 font-semibold text-white hover:from-rose-700 hover:to-rose-600"
+            className="h-11 w-full rounded-xl font-semibold"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Sending...' : 'Send Reset Link'}

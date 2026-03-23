@@ -36,8 +36,12 @@ export default function AddMemberPage() {
   }
 
   async function onSubmit(data: CreateMemberRequest) {
-    const res = await createMember.mutateAsync(data);
-    setGeneratedPassword(res.generatedPassword);
+    try {
+      const res = await createMember.mutateAsync(data);
+      setGeneratedPassword(res.generatedPassword);
+    } catch {
+      // error surfaced via createMember.isError in JSX
+    }
   }
 
   // Success state — show generated password
@@ -316,7 +320,7 @@ export default function AddMemberPage() {
           <Button
             type="submit"
             disabled={createMember.isPending}
-            className="rounded-xl bg-purple-600 font-semibold text-white hover:bg-purple-700"
+            className="rounded-xl bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
           >
             {createMember.isPending ? (
               <span className="flex items-center gap-2">

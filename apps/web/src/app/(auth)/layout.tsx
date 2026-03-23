@@ -1,3 +1,5 @@
+import { ThemeToggle } from '@/components/theme-toggle';
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
@@ -28,7 +30,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right content panel */}
-      <div className="flex flex-1 items-center justify-center bg-muted/30 px-4 py-12">
+      <div className="relative flex flex-1 items-center justify-center bg-muted/30 px-4 py-12">
+        {/* Theme toggle — top right */}
+        <div className="absolute right-4 top-4">
+          <ThemeToggle variant="full" />
+        </div>
+
         <div className="w-full max-w-md space-y-6">
           {/* Mobile-only branding */}
           <div className="text-center lg:hidden">

@@ -83,16 +83,20 @@ export default function NewFellowshipPage() {
       if (data.meetingTime) meetingSchedule += ` at ${data.meetingTime}`;
     }
 
-    await createFellowship.mutateAsync({
-      fellowshipName: data.fellowshipName,
-      branchId: data.branchId,
-      fellowshipType: data.fellowshipType,
-      description: data.description || undefined,
-      leaderId: data.leaderId || undefined,
-      coLeaderId: data.coLeaderId || undefined,
-      meetingSchedule,
-    });
-    router.push('/fellowships');
+    try {
+      await createFellowship.mutateAsync({
+        fellowshipName: data.fellowshipName,
+        branchId: data.branchId,
+        fellowshipType: data.fellowshipType,
+        description: data.description || undefined,
+        leaderId: data.leaderId || undefined,
+        coLeaderId: data.coLeaderId || undefined,
+        meetingSchedule,
+      });
+      router.push('/fellowships');
+    } catch {
+      // error surfaced via createFellowship.error in JSX
+    }
   };
 
   const selectClass =
@@ -240,7 +244,7 @@ export default function NewFellowshipPage() {
                   Cancel
                 </Button>
               </Link>
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              <Button type="submit" variant="success" className="flex-1" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -78,7 +78,7 @@ export default function WelcomePage() {
         </div>
 
         <Link href="/dashboard">
-          <Button className="h-11 w-full rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 font-semibold text-white hover:from-rose-700 hover:to-rose-600">
+          <Button className="h-11 w-full rounded-xl font-semibold">
             Go to Dashboard
           </Button>
         </Link>

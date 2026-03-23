@@ -106,19 +106,23 @@ export default function EditFellowshipPage() {
       meetingSchedule = `${data.meetingFrequency} on ${data.meetingDay}`;
       if (data.meetingTime) meetingSchedule += ` at ${data.meetingTime}`;
     }
-    await updateFellowship.mutateAsync({
-      id,
-      data: {
-        fellowshipName: data.fellowshipName,
-        branchId: data.branchId,
-        fellowshipType: data.fellowshipType,
-        description: data.description || undefined,
-        leaderId: data.leaderId || undefined,
-        coLeaderId: data.coLeaderId || undefined,
-        meetingSchedule,
-      },
-    });
-    router.push(`/fellowships/${id}`);
+    try {
+      await updateFellowship.mutateAsync({
+        id,
+        data: {
+          fellowshipName: data.fellowshipName,
+          branchId: data.branchId,
+          fellowshipType: data.fellowshipType,
+          description: data.description || undefined,
+          leaderId: data.leaderId || undefined,
+          coLeaderId: data.coLeaderId || undefined,
+          meetingSchedule,
+        },
+      });
+      router.push(`/fellowships/${id}`);
+    } catch {
+      // error surfaced via updateFellowship.error in JSX
+    }
   };
 
   const selectClass =
@@ -285,8 +289,8 @@ export default function EditFellowshipPage() {
               </Button>
               <Button
                 type="submit"
+                variant="success"
                 disabled={isSubmitting || updateFellowship.isPending}
-                className="bg-purple-700 hover:bg-purple-800"
               >
                 {isSubmitting || updateFellowship.isPending ? 'Saving…' : 'Save Changes'}
               </Button>

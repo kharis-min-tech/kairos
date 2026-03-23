@@ -321,7 +321,7 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="flex gap-3">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" variant="success" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : 'Save Changes'}
             </Button>
             <Button type="button" variant="outline" onClick={cancelEdit}>

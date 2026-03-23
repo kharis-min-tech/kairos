@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { useBranches, useDeleteBranch, useRegions } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
@@ -105,7 +106,10 @@ export default function BranchesPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           if (confirm('Deactivate this branch?')) {
-                            deleteBranch.mutate(branch.id);
+                            deleteBranch.mutate(branch.id, {
+                              onSuccess: () => toast.success('Branch deactivated.'),
+                              onError: () => toast.error('Failed to deactivate branch. Please try again.'),
+                            });
                           }
                         }}
                       >

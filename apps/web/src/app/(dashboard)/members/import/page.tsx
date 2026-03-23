@@ -121,7 +121,7 @@ export default function MembersImportPage() {
           <Button
             onClick={handleImport}
             disabled={!file || isLoading}
-            className="bg-purple-600 text-white hover:bg-purple-700"
+            variant="success"
           >
             {isLoading ? 'Importing…' : 'Import Members'}
           </Button>

@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
 import { useMyProfile } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
@@ -85,7 +86,7 @@ function FellowshipsContent() {
           </div>
           {(activeRole === 'admin' || activeRole === 'pastor') && (
             <Link href="/fellowships/new">
-              <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+              <button className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
                 + New Fellowship
               </button>
             </Link>
@@ -175,7 +176,10 @@ function FellowshipsContent() {
                           onClick={(e) => {
                             e.preventDefault();
                             if (confirm(`Deactivate ${fellowship.fellowshipName}?`)) {
-                              deleteFellowship.mutate(fellowship.id);
+                              deleteFellowship.mutate(fellowship.id, {
+                                onSuccess: () => toast.success('Fellowship deactivated.'),
+                                onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
+                              });
                             }
                           }}
                         >

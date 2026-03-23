@@ -151,7 +151,7 @@ export default function NewBranchPage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" disabled={isSubmitting || createBranch.isPending}>
+              <Button type="submit" variant="success" disabled={isSubmitting || createBranch.isPending}>
                 {createBranch.isPending ? 'Creating...' : 'Create Branch'}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMembers, useApproveMember } from '@/hooks/use-members';
+import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';
 import Link from 'next/link';
@@ -61,7 +62,13 @@ export default function MemberApprovalPage() {
                       disabled={approveMember.isPending}
                       onClick={() => {
                         if (confirm(`Reject ${member.firstName} ${member.lastName}?`)) {
-                          approveMember.mutate({ id: member.id, data: { approved: false } });
+                          approveMember.mutate(
+                            { id: member.id, data: { approved: false } },
+                            {
+                              onSuccess: () => toast.success('Registration rejected.'),
+                              onError: () => toast.error('Failed to reject registration. Please try again.'),
+                            },
+                          );
                         }
                       }}
                     >
@@ -72,7 +79,13 @@ export default function MemberApprovalPage() {
                       className="bg-emerald-600 text-white hover:bg-emerald-700"
                       disabled={approveMember.isPending}
                       onClick={() => {
-                        approveMember.mutate({ id: member.id, data: { approved: true } });
+                        approveMember.mutate(
+                          { id: member.id, data: { approved: true } },
+                          {
+                            onSuccess: () => toast.success('Member approved and notified.'),
+                            onError: () => toast.error('Failed to approve member. Please try again.'),
+                          },
+                        );
                       }}
                     >
                       Approve

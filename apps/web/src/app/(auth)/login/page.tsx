@@ -94,7 +94,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rounded-2xl border-0 bg-white shadow-xl">
+    <div className="rounded-2xl border-0 bg-card shadow-xl">
       {/* Header */}
       <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
         <div className="flex items-center gap-3">
@@ -123,11 +123,11 @@ export default function LoginPage() {
                 onClick={() => setSelectedRole(role.value)}
                 className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all ${
                   selectedRole === role.value
-                    ? 'border-purple-600 bg-purple-50 text-purple-700'
-                    : 'border-transparent bg-muted/50 text-muted-foreground hover:border-purple-200 hover:bg-purple-50/50'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-muted/70 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground'
                 }`}
               >
-                <span className={selectedRole === role.value ? 'text-purple-600' : 'text-muted-foreground'}>
+                <span className={selectedRole === role.value ? 'text-primary' : 'text-muted-foreground'}>
                   {role.icon}
                 </span>
                 <span className="text-xs font-semibold">{role.label}</span>
@@ -141,7 +141,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
               <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -164,7 +164,7 @@ export default function LoginPage() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-              <Link href="/forgot-password" className="text-xs font-medium text-purple-600 hover:text-purple-700 hover:underline">
+              <Link href="/forgot-password" className="text-xs font-medium text-primary hover:text-primary/80 hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -197,7 +197,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="h-11 w-full rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 text-sm font-semibold text-white hover:from-rose-700 hover:to-rose-600"
+            className="h-11 w-full rounded-xl text-sm font-semibold"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -223,7 +223,7 @@ export default function LoginPage() {
               <span className="w-full border-t border-muted-foreground/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground/50">or continue with</span>
+              <span className="bg-card px-2 text-muted-foreground/50">or continue with</span>
             </div>
           </div>
 
@@ -255,7 +255,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-medium text-purple-600 hover:text-purple-700 hover:underline">
+            <Link href="/signup" className="font-medium text-primary hover:text-primary/80 hover:underline">
               Sign up
             </Link>
           </p>

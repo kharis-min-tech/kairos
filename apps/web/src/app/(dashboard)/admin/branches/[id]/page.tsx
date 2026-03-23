@@ -6,6 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
@@ -194,7 +195,7 @@ export default function BranchDetailPage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" disabled={!isDirty || isSubmitting || updateBranch.isPending}>
+              <Button type="submit" variant="success" disabled={!isDirty || isSubmitting || updateBranch.isPending}>
                 {updateBranch.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>
@@ -251,7 +252,7 @@ export default function BranchDetailPage() {
                 </button>
               </label>
               {isAdmin && (
-                <Button size="sm" onClick={() => setShowAssignDialog(true)}>
+                <Button size="sm" variant="success" onClick={() => setShowAssignDialog(true)}>
                   Assign Leader
                 </Button>
               )}
@@ -304,6 +305,7 @@ export default function BranchDetailPage() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  variant="success"
                   disabled={!assignMemberId || assignLeadership.isPending}
                   onClick={() => {
                     if (!assignMemberId) return;
@@ -383,7 +385,13 @@ export default function BranchDetailPage() {
                       className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                       onClick={() => {
                         if (confirm(`Remove ${leader.role} assignment?`)) {
-                          removeLeadership.mutate({ branchId: id, leadershipId: leader.id });
+                          removeLeadership.mutate(
+                            { branchId: id, leadershipId: leader.id },
+                            {
+                              onSuccess: () => toast.success('Leader removed.'),
+                              onError: () => toast.error('Failed to remove leader. Please try again.'),
+                            },
+                          );
                         }
                       }}
                     >

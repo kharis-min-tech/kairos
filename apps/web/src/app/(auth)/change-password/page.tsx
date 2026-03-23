@@ -241,7 +241,8 @@ export default function ChangePasswordPage() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="h-11 w-full rounded-xl bg-purple-600 text-white hover:bg-purple-700"
+            variant="success"
+            className="h-11 w-full rounded-xl"
           >
             {isSubmitting ? 'Updating...' : 'Set New Password'}
           </Button>

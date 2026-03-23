@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   useFellowship,
   useFellowshipMembers,
@@ -121,7 +122,11 @@ export default function FellowshipDetailPage() {
                 onClick={() => {
                   if (confirm(`Deactivate "${fellowship.fellowshipName}"? This cannot be undone.`)) {
                     deleteFellowship.mutate(id, {
-                      onSuccess: () => router.push('/fellowships'),
+                      onSuccess: () => {
+                        toast.success('Fellowship deactivated.');
+                        router.push('/fellowships');
+                      },
+                      onError: () => toast.error('Failed to deactivate. Please try again.'),
                     });
                   }
                 }}
@@ -134,7 +139,22 @@ export default function FellowshipDetailPage() {
           )}
           {showRequestToJoin && (
             <button
-              onClick={() => createJoinRequest.mutate({ fellowshipId: id, data: {} })}
+              onClick={() => createJoinRequest.mutate(
+                { fellowshipId: id, data: {} },
+                {
+                  onSuccess: () => toast.success('Request sent! An admin will review and get back to you.'),
+                  onError: (error) => {
+                    const msg = (error as Error).message;
+                    if (msg.includes('pending join request')) {
+                      toast.info('Your request has already been sent — an admin will get back to you!');
+                    } else if (msg.includes('previously been removed')) {
+                      toast.error('You cannot request to join at this time. Please contact an admin.');
+                    } else {
+                      toast.error('Something went wrong — please try again or contact your admin.');
+                    }
+                  },
+                },
+              )}
               disabled={createJoinRequest.isPending}
               className="shrink-0 self-center rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50"
             >
@@ -228,7 +248,7 @@ export default function FellowshipDetailPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setShowAddMember((v) => !v); setMemberSearch(''); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-purple-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-purple-800"
+                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -276,7 +296,10 @@ export default function FellowshipDetailPage() {
                           onClick={() => {
                             addMember.mutate(
                               { fellowshipId: id, data: { memberId: m.id } },
-                              { onSuccess: () => { setShowAddMember(false); setMemberSearch(''); } }
+                              {
+                                onSuccess: () => { setShowAddMember(false); setMemberSearch(''); },
+                                onError: () => toast.error('Failed to add member. Please try again.'),
+                              }
                             );
                           }}
                           disabled={addMember.isPending}
@@ -333,7 +356,13 @@ export default function FellowshipDetailPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (confirm(`Remove ${member.memberFirstName} from this fellowship?`)) {
-                              removeMember.mutate({ fellowshipId: id, memberId: member.memberId });
+                                removeMember.mutate(
+                                  { fellowshipId: id, memberId: member.memberId },
+                                  {
+                                    onSuccess: () => toast.success('Member removed from system.'),
+                                    onError: () => toast.error('Failed to remove member. Please try again.'),
+                                  },
+                                );
                             }
                           }}
                         >
@@ -358,7 +387,7 @@ export default function FellowshipDetailPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setShowMeetingDialog((v) => !v); setMeetingForm({ meetingDate: '', meetingTitle: '', meetingTopic: '', location: '', durationMinutes: '' }); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-purple-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-purple-800"
+                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -412,10 +441,13 @@ export default function FellowshipDetailPage() {
                             durationMinutes: meetingForm.durationMinutes ? Number(meetingForm.durationMinutes) : undefined,
                           },
                         },
-                        { onSuccess: () => setShowMeetingDialog(false) }
+                        {
+                          onSuccess: () => setShowMeetingDialog(false),
+                          onError: () => toast.error('Failed to create meeting. Please try again.'),
+                        }
                       );
                     }}
-                    className="rounded-md bg-purple-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+                    className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {createMeeting.isPending ? 'Creating...' : 'Create'}
                   </button>
@@ -616,14 +648,26 @@ export default function FellowshipDetailPage() {
                       {req.status === 'pending' ? (
                         <div className="flex shrink-0 gap-2">
                           <button
-                            onClick={() => reviewJoinRequest.mutate({ fellowshipId: id, requestId: req.id, data: { status: 'approved' } })}
+                            onClick={() => reviewJoinRequest.mutate(
+                              { fellowshipId: id, requestId: req.id, data: { status: 'approved' } },
+                              {
+                                onSuccess: () => toast.success('Request approved — member added.'),
+                                onError: () => toast.error('Failed to approve request. Please try again.'),
+                              },
+                            )}
                             disabled={reviewJoinRequest.isPending}
                             className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={() => reviewJoinRequest.mutate({ fellowshipId: id, requestId: req.id, data: { status: 'rejected' } })}
+                            onClick={() => reviewJoinRequest.mutate(
+                              { fellowshipId: id, requestId: req.id, data: { status: 'rejected' } },
+                              {
+                                onSuccess: () => toast.success('Request rejected.'),
+                                onError: () => toast.error('Failed to reject request. Please try again.'),
+                              },
+                            )}
                             disabled={reviewJoinRequest.isPending}
                             className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
                           >
@@ -707,10 +751,13 @@ function AttendanceForm({
                     })),
                   },
                 },
-                { onSuccess: onDone }
+                {
+                  onSuccess: onDone,
+                  onError: () => toast.error('Failed to save attendance. Please try again.'),
+                }
               );
             }}
-            className="rounded-md bg-purple-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+            className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
           </button>

@@ -377,11 +377,11 @@ export default function SignupPage() {
               </Button>
             )}
             {step < 2 ? (
-              <Button type="button" className="h-11 flex-1" onClick={nextStep}>
+              <Button type="button" variant="success" className="h-11 flex-1" onClick={nextStep}>
                 Continue
               </Button>
             ) : (
-              <Button type="submit" className="h-11 flex-1" disabled={isSubmitting}>
+              <Button type="submit" variant="success" className="h-11 flex-1" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -17,10 +17,14 @@ export default function RegionsPage() {
 
   const handleCreate = async () => {
     if (!regionName || !country) return;
-    await createRegion.mutateAsync({ regionName, country });
-    setRegionName('');
-    setCountry('');
-    setShowDialog(false);
+    try {
+      await createRegion.mutateAsync({ regionName, country });
+      setRegionName('');
+      setCountry('');
+      setShowDialog(false);
+    } catch {
+      // error surfaced via createRegion.error in JSX
+    }
   };
 
   return (
@@ -36,7 +40,8 @@ export default function RegionsPage() {
           </div>
           <Button
             size="sm"
-            className="shrink-0 bg-white text-purple-900 hover:bg-purple-50"
+            variant="success"
+            className="shrink-0"
             onClick={() => setShowDialog(true)}
           >
             + New Region
@@ -87,6 +92,7 @@ export default function RegionsPage() {
             )}
             <div className="flex gap-2">
               <Button
+                variant="success"
                 disabled={!regionName || !country || createRegion.isPending}
                 onClick={handleCreate}
               >

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@kairos/ui';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type NavItem = {
   href: string;
@@ -164,6 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </Link>
+          <ThemeToggle className="flex-shrink-0 text-purple-300 hover:bg-white/10 hover:text-white" />
           <button
             onClick={handleLogout}
             className="flex-shrink-0 rounded-md p-1.5 text-purple-300 transition-colors hover:bg-white/10 hover:text-white"
@@ -207,19 +209,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex flex-1 flex-col">
         {/* Mobile header */}
-        <header className="flex h-14 items-center border-b bg-gradient-to-r from-purple-900 to-purple-700 px-4 md:hidden">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="mr-3 rounded p-1.5 text-white hover:bg-white/10"
-            aria-label="Open navigation"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <rect y="3" width="20" height="2" rx="1" />
-              <rect y="9" width="20" height="2" rx="1" />
-              <rect y="15" width="20" height="2" rx="1" />
-            </svg>
-          </button>
-          <span className="text-lg font-bold text-white">Kairos</span>
+        <header className="flex h-14 items-center justify-between border-b bg-gradient-to-r from-purple-900 to-purple-700 px-4 md:hidden">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="rounded p-1.5 text-white hover:bg-white/10"
+              aria-label="Open navigation"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <rect y="3" width="20" height="2" rx="1" />
+                <rect y="9" width="20" height="2" rx="1" />
+                <rect y="15" width="20" height="2" rx="1" />
+              </svg>
+            </button>
+            <span className="text-lg font-bold text-white">Kairos</span>
+          </div>
+          <ThemeToggle className="text-purple-200 hover:bg-white/10 hover:text-white" />
         </header>
 
         <main className="flex-1 overflow-y-auto">

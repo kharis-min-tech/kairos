@@ -108,7 +108,7 @@ function VerifyEmailContent() {
             Your account is now <span className="font-medium text-foreground">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
           </p>
           <Button
-            className="h-11 w-full rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 font-semibold text-white hover:from-rose-700 hover:to-rose-600"
+            className="h-11 w-full rounded-xl font-semibold"
             onClick={() => router.push('/pending-approval')}
           >
             Continue

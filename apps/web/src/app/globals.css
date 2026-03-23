@@ -37,6 +37,39 @@
 
     --radius: 0.5rem;
   }
+
+  .dark {
+    --background: 270 20% 7%;
+    --foreground: 270 10% 94%;
+
+    --card: 270 20% 11%;
+    --card-foreground: 270 10% 94%;
+
+    --popover: 270 20% 9%;
+    --popover-foreground: 270 10% 94%;
+
+    --primary: 263 70% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 20% 18%;
+    --secondary-foreground: 270 10% 88%;
+
+    --muted: 270 20% 16%;
+    --muted-foreground: 270 10% 58%;
+
+    --accent: 38 90% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 347 70% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 70% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 270 20% 20%;
+    --input: 270 20% 20%;
+    --ring: 263 70% 62%;
+  }
 }
 
 @layer base {
@@ -46,5 +79,29 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ── Theme slide transition (View Transitions API) ──────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: 650ms cubic-bezier(0.4, 0, 0.2, 1) both theme-slide-out;
+  }
+  ::view-transition-new(root) {
+    animation: 650ms cubic-bezier(0.4, 0, 0.2, 1) both theme-slide-in;
+  }
+}
+
+@keyframes theme-slide-out {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+@keyframes theme-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
   }
 }

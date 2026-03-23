@@ -527,6 +527,19 @@ export async function createJoinRequest(
     );
   if (activeMembership) throw new ConflictError('You are already a member of this fellowship');
 
+  // Check if previously removed from this fellowship
+  const [previousMembership] = await db
+    .select({ id: fellowshipMembers.id })
+    .from(fellowshipMembers)
+    .where(
+      and(
+        eq(fellowshipMembers.fellowshipId, fellowshipId),
+        eq(fellowshipMembers.memberId, auth.memberId),
+        eq(fellowshipMembers.isActive, false),
+      ),
+    );
+  if (previousMembership) throw new ConflictError('You have previously been removed from this fellowship');
+
   const [pendingRequest] = await db
     .select({ id: fellowshipJoinRequests.id })
     .from(fellowshipJoinRequests)
