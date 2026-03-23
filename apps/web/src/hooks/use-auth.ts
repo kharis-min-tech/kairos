@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import type { LoginRequest, SignupRequest } from '@kairos/types';
 
 export function useLogin() {
-  const { setTokens, setUser, setActiveRole } = useAuthStore();
+  const { setTokens, setUser, setActiveRole, setMustChangePassword } = useAuthStore();
 
   return useMutation({
     mutationFn: async (data: LoginRequest) => {
@@ -16,6 +16,7 @@ export function useLogin() {
     onSuccess: (data, variables) => {
       setTokens(data.tokens);
       setUser(data.member as never);
+      setMustChangePassword(data.member.mustChangePassword);
       if (variables.activeRole) {
         setActiveRole(variables.activeRole);
       }

@@ -1,16 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useBranches, useDeleteBranch } from '@/hooks/use-branches';
+import { useBranches, useDeleteBranch, useRegions } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
 export default function BranchesPage() {
   const { data: branches, isLoading, error } = useBranches();
+  const { data: regions } = useRegions();
   const deleteBranch = useDeleteBranch();
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.systemRole === 'admin';
+  const [regionFilter, setRegionFilter] = useState('');
 
   if (isLoading) {
     return (
@@ -47,6 +50,20 @@ export default function BranchesPage() {
         </div>
       </div>
 
+      {/* Region Filter */}
+      <div className="flex items-center gap-2">
+        <select
+          value={regionFilter}
+          onChange={(e) => setRegionFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">All Regions</option>
+          {(regions ?? []).map((r) => (
+            <option key={r.id} value={r.id}>{r.regionName}</option>
+          ))}
+        </select>
+      </div>
+
       {!branches || branches.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -60,7 +77,9 @@ export default function BranchesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {branches.map((branch) => (
+          {branches
+            .filter((b) => !regionFilter || b.regionId === regionFilter)
+            .map((branch) => (
             <Link key={branch.id} href={`/admin/branches/${branch.id}`}>
               <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
                 <CardHeader className="pb-3">

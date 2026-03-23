@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { CreateBranchRequest, UpdateBranchRequest, CreateRegionRequest, AssignLeadershipRequest } from '@kairos/types';
+import type { CreateBranchRequest, UpdateBranchRequest, CreateRegionRequest, AssignLeadershipRequest, GetLeadershipParams } from '@kairos/types';
 
 // ── Branch queries ─────────────────────────────────────────
 
@@ -84,11 +84,11 @@ export function useCreateRegion() {
 
 // ── Leadership queries ─────────────────────────────────────
 
-export function useBranchLeadership(branchId: string) {
+export function useBranchLeadership(branchId: string, params?: GetLeadershipParams) {
   return useQuery({
-    queryKey: ['leadership', branchId],
+    queryKey: ['leadership', branchId, params],
     queryFn: async () => {
-      const res = await api.leadership.list(branchId);
+      const res = await api.leadership.list(branchId, params);
       return res.data!;
     },
     enabled: !!branchId,

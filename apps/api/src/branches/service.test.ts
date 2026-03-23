@@ -281,6 +281,17 @@ describe('getBranchLeadership', () => {
     expect(result).toEqual([leaderRow]);
   });
 
+  it('should return all leadership including history when includeHistory is true', async () => {
+    const { getBranchLeadership } = await import('./service');
+    const currentLeader = { ...sampleLeadership, memberFirstName: 'John', memberLastName: 'Doe', isCurrent: true };
+    const pastLeader = { ...sampleLeadership, id: 'past-id', memberFirstName: 'Jane', memberLastName: 'Smith', isCurrent: false, endDate: '2023-12-31' };
+    setupSelect([currentLeader, pastLeader]);
+
+    const result = await getBranchLeadership(mockDb, branchId, adminAuth, { includeHistory: true });
+    expect(result).toHaveLength(2);
+    expect(result).toEqual([currentLeader, pastLeader]);
+  });
+
   it('should throw ForbiddenError for member of different branch', async () => {
     const { getBranchLeadership } = await import('./service');
 

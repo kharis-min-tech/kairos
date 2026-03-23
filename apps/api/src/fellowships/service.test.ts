@@ -113,6 +113,9 @@ import {
   recordAttendance,
   getMeetingAttendance,
   getAttendanceSummary,
+  createJoinRequest,
+  listJoinRequests,
+  reviewJoinRequest,
 } from './service';
 
 // ── listFellowships ───────────────────────────────────────
@@ -257,7 +260,8 @@ describe('addFellowshipMember', () => {
   });
 
   it('throws ForbiddenError for regular member', async () => {
-    await expect(addFellowshipMember(mockDb, memberAuth, fellowshipId, { memberId })).rejects.toThrow('Only admins and pastors');
+    setupSelect([sampleFellowship]);
+    await expect(addFellowshipMember(mockDb, memberAuth, fellowshipId, { memberId })).rejects.toThrow('Only fellowship leaders or above');
   });
 
   it('throws NotFoundError if member not found', async () => {
@@ -294,7 +298,8 @@ describe('removeFellowshipMember', () => {
   });
 
   it('throws ForbiddenError for regular member', async () => {
-    await expect(removeFellowshipMember(mockDb, memberAuth, fellowshipId, memberId)).rejects.toThrow('Only admins and pastors');
+    setupSelect([sampleFellowship]);
+    await expect(removeFellowshipMember(mockDb, memberAuth, fellowshipId, memberId)).rejects.toThrow('Only fellowship leaders or above');
   });
 
   it('throws NotFoundError if not active member', async () => {
@@ -328,9 +333,10 @@ describe('createMeeting', () => {
   });
 
   it('throws ForbiddenError for regular member', async () => {
+    setupSelect([sampleFellowship]);
     await expect(
       createMeeting(mockDb, memberAuth, fellowshipId, { meetingDate: '2024-06-15T18:00:00Z' }),
-    ).rejects.toThrow('Only admins and pastors');
+    ).rejects.toThrow('Only fellowship leaders or above');
   });
 });
 
@@ -345,9 +351,10 @@ describe('updateMeeting', () => {
   });
 
   it('throws ForbiddenError for regular member', async () => {
+    setupSelect([sampleFellowship]);
     await expect(
       updateMeeting(mockDb, memberAuth, fellowshipId, meetingId, {}),
-    ).rejects.toThrow('Only admins and pastors');
+    ).rejects.toThrow('Only fellowship leaders or above');
   });
 
   it('throws NotFoundError if meeting not found', async () => {
@@ -374,9 +381,10 @@ describe('recordAttendance', () => {
   });
 
   it('throws ForbiddenError for regular member', async () => {
+    setupSelect([sampleFellowship]);
     await expect(
       recordAttendance(mockDb, memberAuth, fellowshipId, meetingId, []),
-    ).rejects.toThrow('Only admins and pastors');
+    ).rejects.toThrow('Only fellowship leaders or above');
   });
 
   it('throws NotFoundError if meeting not found', async () => {
@@ -408,5 +416,142 @@ describe('getAttendanceSummary', () => {
     setupSelectSequence([sampleFellowship], stats);
     const result = await getAttendanceSummary(mockDb, adminAuth, fellowshipId);
     expect(result[0]!.present).toBe(7);
+  });
+});
+
+// ── createJoinRequest ─────────────────────────────────────
+
+const requestId = '660e8400-0000-0000-0000-000000000006';
+
+const sampleJoinRequest = {
+  id: requestId,
+  fellowshipId,
+  memberId: memberAuth.memberId,
+  status: 'pending',
+  notes: 'I would like to join',
+  reviewedBy: null,
+  reviewedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
+
+describe('createJoinRequest', () => {
+  it('creates a join request for a member', async () => {
+    // 1) getFellowship, 2) active membership check, 3) pending request check, 4) cross-fellowship check
+    setupSelectSequence([sampleFellowship], [], [], []);
+    setupInsert([sampleJoinRequest]);
+    const result = await createJoinRequest(mockDb, memberAuth, fellowshipId, { notes: 'I would like to join' });
+    expect(result).toEqual(sampleJoinRequest);
+  });
+
+  it('throws ConflictError when already a member', async () => {
+    // 1) getFellowship, 2) active membership check → found
+    setupSelectSequence([sampleFellowship], [{ id: 'existing-membership' }]);
+    await expect(
+      createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
+    ).rejects.toThrow('You are already a member of this fellowship');
+  });
+
+  it('throws ConflictError when pending request already exists', async () => {
+    // 1) getFellowship, 2) active membership check → empty, 3) pending request check → found
+    setupSelectSequence([sampleFellowship], [], [sampleJoinRequest]);
+    await expect(
+      createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
+    ).rejects.toThrow('You already have a pending join request');
+  });
+
+  it('throws ConflictError when already in same-type fellowship', async () => {
+    // 1) getFellowship, 2) active membership → empty, 3) pending request → empty, 4) cross-fellowship → found
+    setupSelectSequence([sampleFellowship], [], [], [{ id: 'some-existing' }]);
+    await expect(
+      createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
+    ).rejects.toThrow('You are already in a K-Groups fellowship');
+  });
+});
+
+// ── listJoinRequests ──────────────────────────────────────
+
+describe('listJoinRequests', () => {
+  it('returns pending join requests for leader', async () => {
+    const requests = [{ ...sampleJoinRequest, memberFirstName: 'John', memberLastName: 'Doe', memberEmail: 'john@test.com' }];
+    // 1) getFellowship, 2) list query
+    setupSelectSequence([{ ...sampleFellowship, leaderId: leaderAuth.memberId }], requests);
+    const result = await listJoinRequests(mockDb, leaderAuth, fellowshipId);
+    expect(result).toEqual(requests);
+  });
+
+  it('throws ForbiddenError for regular member', async () => {
+    setupSelect([sampleFellowship]);
+    await expect(
+      listJoinRequests(mockDb, memberAuth, fellowshipId),
+    ).rejects.toThrow('Only fellowship leaders or above can perform this action');
+  });
+});
+
+// ── reviewJoinRequest ─────────────────────────────────────
+
+describe('reviewJoinRequest', () => {
+  it('approves a join request and inserts new fellowship member', async () => {
+    // 1) getFellowship, 2) select pending request, 3) update request (returning),
+    // 4) check existing membership, 5) insert member
+    setupSelectSequence(
+      [sampleFellowship],
+      [sampleJoinRequest],
+      [],
+    );
+    const updatedRequest = { ...sampleJoinRequest, status: 'approved', reviewedBy: adminAuth.memberId, reviewedAt: new Date() };
+    setupUpdate([updatedRequest]);
+    setupInsert([{ fellowshipId, memberId: sampleJoinRequest.memberId }]);
+
+    const result = await reviewJoinRequest(mockDb, adminAuth, fellowshipId, requestId, { status: 'approved' });
+    expect(result.status).toBe('approved');
+    expect(mockDb.insert).toHaveBeenCalled();
+  });
+
+  it('approves and re-activates existing membership record', async () => {
+    // 1) getFellowship, 2) select pending request, 3) check existing membership → found
+    setupSelectSequence(
+      [sampleFellowship],
+      [sampleJoinRequest],
+      [{ id: 'existing-membership-id' }],
+    );
+    const updatedRequest = { ...sampleJoinRequest, status: 'approved', reviewedBy: adminAuth.memberId };
+    setupUpdate([updatedRequest]);
+
+    const result = await reviewJoinRequest(mockDb, adminAuth, fellowshipId, requestId, { status: 'approved' });
+    expect(result.status).toBe('approved');
+    // update called twice: once for request status, once to re-activate membership
+    expect(mockDb.update).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a join request without modifying membership', async () => {
+    // 1) getFellowship, 2) select pending request
+    setupSelectSequence(
+      [sampleFellowship],
+      [sampleJoinRequest],
+    );
+    const updatedRequest = { ...sampleJoinRequest, status: 'rejected', reviewedBy: adminAuth.memberId };
+    setupUpdate([updatedRequest]);
+
+    const result = await reviewJoinRequest(mockDb, adminAuth, fellowshipId, requestId, { status: 'rejected', notes: 'Not eligible' });
+    expect(result.status).toBe('rejected');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('throws ForbiddenError for regular member', async () => {
+    setupSelect([sampleFellowship]);
+    await expect(
+      reviewJoinRequest(mockDb, memberAuth, fellowshipId, requestId, { status: 'approved' }),
+    ).rejects.toThrow('Only fellowship leaders or above can perform this action');
+  });
+
+  it('throws NotFoundError when request not found or already reviewed', async () => {
+    // 1) getFellowship, 2) select pending request → empty
+    setupSelectSequence([sampleFellowship], []);
+    await expect(
+      reviewJoinRequest(mockDb, adminAuth, fellowshipId, requestId, { status: 'approved' }),
+    ).rejects.toThrow('Join request not found or already reviewed');
   });
 });

@@ -101,6 +101,11 @@ import {
   removeRole,
   getMemberRoles,
   deactivateMember,
+  createMember,
+  reactivateMember,
+  importMembers,
+  exportMembersCsv,
+  listRoles,
 } from './service';
 
 // ── listMembers ───────────────────────────────────────────
@@ -337,5 +342,198 @@ describe('deactivateMember', () => {
     setupSelect([]);
     await expect(deactivateMember(mockDb, memberId, adminAuth))
       .rejects.toThrow('Member not found');
+  });
+});
+
+// ── listRoles ─────────────────────────────────────────────
+
+describe('listRoles', () => {
+  it('returns all active roles', async () => {
+    const roles = [
+      { id: roleId, roleName: 'Usher', description: 'Ushering team' },
+      { id: 'role-2', roleName: 'Deacon', description: 'Deacon role' },
+    ];
+    setupSelect(roles);
+    const result = await listRoles(mockDb);
+    expect(result).toEqual(roles);
+    expect(mockDb.select).toHaveBeenCalled();
+  });
+});
+
+// ── createMember ──────────────────────────────────────────
+
+describe('createMember', () => {
+  const createInput = {
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'jane@test.com',
+    homeBranchId: branchId,
+    phone: '999888',
+  };
+
+  const createdMember = {
+    ...sampleMemberFull,
+    id: 'new-member-id',
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'jane@test.com',
+    phone: '999888',
+    approvalStatus: 'approved',
+    emailVerified: true,
+  };
+
+  it('creates a member with generated password for admin', async () => {
+    // 1) email check → empty, 2) phone check → empty
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+    const result = await createMember(mockDb, createInput, adminAuth);
+    expect(result.member).toEqual(createdMember);
+    expect(result.generatedPassword).toBeDefined();
+    expect(typeof result.generatedPassword).toBe('string');
+  });
+
+  it('allows pastor to create members', async () => {
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+    const result = await createMember(mockDb, createInput, pastorAuth);
+    expect(result.member).toEqual(createdMember);
+  });
+
+  it('throws ForbiddenError for regular member', async () => {
+    await expect(createMember(mockDb, createInput, memberAuth))
+      .rejects.toThrow('Only admins and pastors can create members');
+  });
+
+  it('throws ConflictError for duplicate email', async () => {
+    // email check → found
+    setupSelect([{ id: 'existing-id' }]);
+    await expect(createMember(mockDb, createInput, adminAuth))
+      .rejects.toThrow('A member with this email already exists');
+  });
+
+  it('throws ConflictError for duplicate phone', async () => {
+    // 1) email check → empty, 2) phone check → found
+    setupSelectSequence([], [{ id: 'existing-id' }]);
+    await expect(createMember(mockDb, createInput, adminAuth))
+      .rejects.toThrow('A member with this phone number already exists');
+  });
+});
+
+// ── reactivateMember ──────────────────────────────────────
+
+describe('reactivateMember', () => {
+  it('reactivates an inactive member', async () => {
+    setupSelect([{ id: memberId, isActive: false }]);
+    const reactivated = { ...sampleMemberFull, isActive: true, approvalStatus: 'approved' };
+    setupUpdate([reactivated]);
+    const result = await reactivateMember(mockDb, memberId, adminAuth);
+    expect(result).toEqual(reactivated);
+  });
+
+  it('throws ForbiddenError for non-admin', async () => {
+    await expect(reactivateMember(mockDb, memberId, pastorAuth))
+      .rejects.toThrow('Only admins can reactivate members');
+  });
+
+  it('throws NotFoundError for missing member', async () => {
+    setupSelect([]);
+    await expect(reactivateMember(mockDb, memberId, adminAuth))
+      .rejects.toThrow('Member not found');
+  });
+
+  it('throws ConflictError if member is already active', async () => {
+    setupSelect([{ id: memberId, isActive: true }]);
+    await expect(reactivateMember(mockDb, memberId, adminAuth))
+      .rejects.toThrow('Member is already active');
+  });
+});
+
+// ── importMembers ─────────────────────────────────────────
+
+describe('importMembers', () => {
+  it('imports valid CSV rows', async () => {
+    const csv = `firstName,lastName,email\nJane,Doe,jane@test.com\nBob,Lee,bob@test.com`;
+    // Each createMember call: email check → empty, insert → created
+    // No phone provided so no phone check
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+    const result = await importMembers(mockDb, csv, adminAuth);
+    expect(result.imported).toBe(2);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('reports errors for rows missing required fields', async () => {
+    const csv = `firstName,lastName,email\n,Doe,jane@test.com\nBob,Lee,bob@test.com`;
+    // First row missing firstName → error, second row succeeds
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+    const result = await importMembers(mockDb, csv, adminAuth);
+    expect(result.imported).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('Row 2');
+  });
+
+  it('throws ValidationError for CSV with only header', async () => {
+    const csv = `firstName,lastName,email`;
+    await expect(importMembers(mockDb, csv, adminAuth))
+      .rejects.toThrow('CSV must have a header row and at least one data row');
+  });
+
+  it('catches createMember errors per row and continues', async () => {
+    const csv = `firstName,lastName,email\nJane,Doe,existing@test.com\nBob,Lee,bob@test.com`;
+    // First row: email check → conflict, second row: email check → empty + insert
+    let emailCallCount = 0;
+    (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      emailCallCount++;
+      // First call (email check for row 1) returns existing, rest return empty
+      return createChain(emailCallCount === 1 ? [{ id: 'dup' }] : []);
+    });
+    setupInsert([{ id: 'new-1' }]);
+    const result = await importMembers(mockDb, csv, adminAuth);
+    expect(result.imported).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('email already exists');
+  });
+});
+
+// ── exportMembersCsv ──────────────────────────────────────
+
+describe('exportMembersCsv', () => {
+  it('exports CSV with headers and member rows for admin', async () => {
+    const row = {
+      firstName: 'John', lastName: 'Doe', email: 'john@test.com', phone: '123456',
+      gender: 'Male', dateOfBirth: null, address: null, city: 'Lagos',
+      branchName: 'Lagos Branch', membershipDate: '2024-01-01',
+      emergencyContactName: null, emergencyContactPhone: null,
+      emergencyContactRelationship: null, systemRole: 'member', approvalStatus: 'approved',
+    };
+    setupSelect([row]);
+    const csv = await exportMembersCsv(mockDb, adminAuth);
+    const lines = csv.split('\n');
+    expect(lines[0]).toBe('firstName,lastName,email,phone,gender,dateOfBirth,address,city,branchName,membershipDate,emergencyContactName,emergencyContactPhone,emergencyContactRelationship,systemRole,approvalStatus');
+    expect(lines[1]).toContain('John');
+    expect(lines[1]).toContain('Doe');
+    expect(lines).toHaveLength(2);
+  });
+
+  it('escapes CSV values containing commas', async () => {
+    const row = {
+      firstName: 'John', lastName: 'Doe', email: 'john@test.com', phone: '123456',
+      gender: 'Male', dateOfBirth: null, address: '123, Main Street', city: 'Lagos',
+      branchName: 'Lagos Branch', membershipDate: '2024-01-01',
+      emergencyContactName: null, emergencyContactPhone: null,
+      emergencyContactRelationship: null, systemRole: 'member', approvalStatus: 'approved',
+    };
+    setupSelect([row]);
+    const csv = await exportMembersCsv(mockDb, adminAuth);
+    expect(csv).toContain('"123, Main Street"');
+  });
+
+  it('returns only headers when no members found', async () => {
+    setupSelect([]);
+    const csv = await exportMembersCsv(mockDb, adminAuth);
+    const lines = csv.split('\n');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('firstName');
   });
 });

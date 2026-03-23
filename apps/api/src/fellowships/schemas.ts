@@ -21,7 +21,7 @@ export const createFellowshipSchema = z.object({
 export const updateFellowshipSchema = createFellowshipSchema.partial();
 
 export const createMeetingSchema = z.object({
-  meetingDate: z.string().datetime(),
+  meetingDate: z.string().min(1),
   meetingTitle: z.string().max(200).optional(),
   meetingTopic: z.string().max(200).optional(),
   meetingNotes: z.string().optional(),
@@ -52,4 +52,13 @@ export const listFellowshipsQuerySchema = z.object({
   fellowshipType: z.enum(fellowshipTypes).optional(),
   branchId: z.string().uuid().optional(),
   memberId: z.string().uuid().optional(),
+});
+
+export const createJoinRequestSchema = z.object({
+  notes: z.string().max(500).optional(),
+});
+
+export const reviewJoinRequestSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  notes: z.string().max(500).optional(),
 });

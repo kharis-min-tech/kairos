@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
+import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
@@ -33,14 +34,20 @@ export default function BranchDetailPage() {
   const isAdmin = activeRole === 'admin';
   const isPastor = activeRole === 'pastor';
   const canSeeMembers = isAdmin || (isPastor && myProfile?.homeBranchId === id);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [assignRole, setAssignRole] = useState<'Main Pastor' | 'Elder'>('Elder');
+  const [assignMemberId, setAssignMemberId] = useState('');
+  const [assignStartDate, setAssignStartDate] = useState('');
   const { data: branch, isLoading, error } = useBranch(id);
-  const { data: leadership } = useBranchLeadership(id);
+  const { data: leadership } = useBranchLeadership(id, { includeHistory: showHistory });
   const { data: regions } = useRegions();
   const { data: membersData, isLoading: membersLoading } = useMembers(
     canSeeMembers ? { branchId: id, limit: 100 } : undefined
   );
   const updateBranch = useUpdateBranch();
   const removeLeadership = useRemoveLeadership();
+  const assignLeadership = useAssignLeadership();
   const deleteBranch = useDeleteBranch();
 
   const {
@@ -217,12 +224,142 @@ export default function BranchDetailPage() {
       {/* Leadership Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Leadership</CardTitle>
-          <CardDescription>Current branch leadership assignments</CardDescription>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle>Leadership</CardTitle>
+              <CardDescription className="mt-0.5">
+                {showHistory ? 'All leadership assignments (including past)' : 'Current branch leadership assignments'}
+              </CardDescription>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <span>History</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showHistory}
+                  onClick={() => setShowHistory((v) => !v)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    showHistory ? 'bg-purple-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+                      showHistory ? 'translate-x-4' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </label>
+              {isAdmin && (
+                <Button size="sm" onClick={() => setShowAssignDialog(true)}>
+                  Assign Leader
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Assign Leadership Dialog */}
+          {showAssignDialog && (
+            <div className="rounded-md border bg-purple-50 p-4 space-y-3">
+              <p className="text-sm font-medium text-purple-900">Assign New Leader</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Role</label>
+                  <select
+                    value={assignRole}
+                    onChange={(e) => setAssignRole(e.target.value as 'Main Pastor' | 'Elder')}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  >
+                    <option value="Elder">Elder</option>
+                    <option value="Main Pastor">Main Pastor</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Member</label>
+                  <select
+                    value={assignMemberId}
+                    onChange={(e) => setAssignMemberId(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  >
+                    <option value="">Select a member...</option>
+                    {membersData?.data?.map((m) => (
+                      <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Input
+                    type="date"
+                    value={assignStartDate}
+                    onChange={(e) => setAssignStartDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              </div>
+              {assignLeadership.error && (
+                <p className="text-sm text-rose-600">{(assignLeadership.error as Error).message}</p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  disabled={!assignMemberId || assignLeadership.isPending}
+                  onClick={() => {
+                    if (!assignMemberId) return;
+                    assignLeadership.mutate(
+                      { branchId: id, data: { memberId: assignMemberId, role: assignRole, startDate: assignStartDate || undefined } },
+                      {
+                        onSuccess: () => {
+                          setShowAssignDialog(false);
+                          setAssignMemberId('');
+                          setAssignStartDate('');
+                          setAssignRole('Elder');
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {assignLeadership.isPending ? 'Assigning...' : 'Confirm'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowAssignDialog(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+
           {!leadership || leadership.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No leadership assigned yet.</p>
+            <p className="text-sm text-muted-foreground">No leadership {showHistory ? 'records' : 'assigned'} yet.</p>
+          ) : showHistory ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4 font-medium">Name</th>
+                    <th className="pb-2 pr-4 font-medium">Role</th>
+                    <th className="pb-2 pr-4 font-medium">Start Date</th>
+                    <th className="pb-2 pr-4 font-medium">End Date</th>
+                    <th className="pb-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {leadership.map((leader) => (
+                    <tr key={leader.id}>
+                      <td className="py-2 pr-4">{leader.memberFirstName} {leader.memberLastName}</td>
+                      <td className="py-2 pr-4">{leader.role}</td>
+                      <td className="py-2 pr-4">{leader.startDate ? new Date(leader.startDate).toLocaleDateString() : '—'}</td>
+                      <td className="py-2 pr-4">{leader.endDate ? new Date(leader.endDate).toLocaleDateString() : '—'}</td>
+                      <td className="py-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          leader.isCurrent ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {leader.isCurrent ? 'Current' : 'Past'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="space-y-3">
               {leadership.map((leader) => {

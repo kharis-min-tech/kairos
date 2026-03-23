@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember } from '@/hooks/use-members';
+import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles } from '@/hooks/use-members';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
+import { useBranches } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -16,7 +17,9 @@ export default function MemberDetailPage() {
   const { data: roles } = useMemberRoles(id);
   const removeRole = useRemoveRole();
   const deactivate = useDeactivateMember();
+  const reactivate = useReactivateMember();
   const approve = useApproveMember();
+  const assignRole = useAssignRole();
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
@@ -24,6 +27,10 @@ export default function MemberDetailPage() {
   const canManage = isAdmin || isPastor;
 
   const [selectedFellowshipId, setSelectedFellowshipId] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const { data: allRoles } = useAllRoles();
+  const { data: branchesData } = useBranches();
   const { data: currentFellowshipsData, isLoading: currentFellowshipsLoading } = useFellowships(
     member ? { branchId: member.homeBranchId, memberId: member.id, limit: 20 } : undefined
   );
@@ -111,6 +118,19 @@ export default function MemberDetailPage() {
                   Deactivate
                 </Button>
               )}
+              {member.isActive === false && (
+                <Button
+                  size="sm"
+                  className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
+                  onClick={() => {
+                    if (confirm(`Reactivate ${member.firstName} ${member.lastName}?`)) {
+                      reactivate.mutate(member.id);
+                    }
+                  }}
+                >
+                  Reactivate
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -140,6 +160,7 @@ export default function MemberDetailPage() {
             <InfoRow label="City" value={member.city} />
             <InfoRow label="Postal Code" value={member.postalCode} />
             <InfoRow label="Emergency Contact" value={member.emergencyContactName} />
+            <InfoRow label="Relationship" value={member.emergencyContactRelationship} />
             <InfoRow label="Emergency Phone" value={member.emergencyContactPhone} />
           </CardContent>
         </Card>
@@ -182,11 +203,53 @@ export default function MemberDetailPage() {
               ))}
             </div>
           )}
+          {isAdmin && (
+            <div className="mt-4 border-t pt-4">
+              <p className="mb-2 text-sm font-medium">Assign Role</p>
+              {assignRole.error && (
+                <div className="mb-2 rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
+                  {assignRole.error instanceof Error ? assignRole.error.message : 'Failed to assign role.'}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <select
+                  value={selectedRoleId}
+                  onChange={(e) => setSelectedRoleId(e.target.value)}
+                  className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select role…</option>
+                  {(allRoles ?? []).map((r) => (
+                    <option key={r.id} value={r.id}>{r.roleName}</option>
+                  ))}
+                </select>
+                <select
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select branch…</option>
+                  {(branchesData ?? []).map((b) => (
+                    <option key={b.id} value={b.id}>{b.branchName}</option>
+                  ))}
+                </select>
+                <button
+                  disabled={!selectedRoleId || !selectedBranchId || assignRole.isPending}
+                  onClick={() => {
+                    assignRole.mutate(
+                      { memberId: id, data: { roleId: selectedRoleId, branchId: selectedBranchId } },
+                      { onSuccess: () => { setSelectedRoleId(''); setSelectedBranchId(''); } }
+                    );
+                  }}
+                  className="inline-flex items-center rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
+                >
+                  {assignRole.isPending ? 'Assigning…' : 'Assign'}
+                </button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Fellowships */}
-      {canManage && (
+      {(canManage || user?.id === id) && (
         <Card>
           <CardHeader>
             <CardTitle>Fellowships</CardTitle>

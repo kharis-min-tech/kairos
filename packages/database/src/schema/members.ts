@@ -23,6 +23,7 @@ export const members = pgTable('members', {
   photoUrl: varchar('photo_url', { length: 255 }),
   emergencyContactName: varchar('emergency_contact_name', { length: 150 }),
   emergencyContactPhone: varchar('emergency_contact_phone', { length: 20 }),
+  emergencyContactRelationship: varchar('emergency_contact_relationship', { length: 50 }),
   // Auth columns (not in db_release — added for local auth)
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   emailVerified: boolean('email_verified').default(false).notNull(),
@@ -31,6 +32,7 @@ export const members = pgTable('members', {
   passwordResetToken: varchar('password_reset_token', { length: 255 }),
   passwordResetExpiry: timestamp('password_reset_expiry'),
   lastLoginAt: timestamp('last_login_at'),
+  mustChangePassword: boolean('must_change_password').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

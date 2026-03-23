@@ -33,3 +33,7 @@ export const assignLeadershipSchema = z.object({
   role: z.enum(['Main Pastor', 'Elder']),
   startDate: z.string().optional(),
 });
+
+export const getLeadershipQuerySchema = z.object({
+  includeHistory: z.coerce.boolean().optional().default(false),
+});

@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
+import { useFellowships } from '@/hooks/use-fellowships';
+import { useBranches } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { Input } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
 
 export default function MembersPage() {
@@ -20,8 +23,30 @@ export default function MembersPage() {
     ...(isPastor && user?.homeBranchId ? { branchId: user.homeBranchId } : {}),
   });
   const [searchInput, setSearchInput] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
+  const branchIdForFilter = isPastor && user?.homeBranchId ? user.homeBranchId : undefined;
+  const { data: fellowshipsData } = useFellowships(
+    branchIdForFilter ? { branchId: branchIdForFilter, limit: 100 } : { limit: 100 }
+  );
   const { data: result, isLoading, error } = useMembers(params);
   const deactivate = useDeactivateMember();
+  const { data: branches } = useBranches();
+  const { data: pendingResult } = useMembers({ approvalStatus: 'pending', limit: 1 });
+
+  async function handleExport() {
+    setExportLoading(true);
+    try {
+      const blob = await api.members.exportCsv();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'members.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportLoading(false);
+    }
+  }
 
   const members = result?.data;
   const pagination = result?.meta;
@@ -65,10 +90,31 @@ export default function MembersPage() {
                 </button>
               </Link>
             )}
+            {(isAdmin || isPastor) && (
+              <Link href="/members/import">
+                <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+                  Import CSV
+                </button>
+              </Link>
+            )}
+            {(isAdmin || isPastor) && (
+              <button
+                className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+                onClick={handleExport}
+                disabled={exportLoading}
+              >
+                {exportLoading ? 'Exporting…' : 'Export CSV'}
+              </button>
+            )}
             {isAdmin && (
               <Link href="/members/approval">
-                <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
+                <button className="relative rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
                   Approval Queue
+                  {(pendingResult?.meta?.total ?? 0) > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-900">
+                      {pendingResult!.meta!.total}
+                    </span>
+                  )}
                 </button>
               </Link>
             )}
@@ -76,8 +122,8 @@ export default function MembersPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-2">
+      {/* Search + Filters */}
+      <div className="flex flex-wrap gap-2">
         <Input
           placeholder="Search by name or email..."
           value={searchInput}
@@ -93,6 +139,38 @@ export default function MembersPage() {
             Clear
           </Button>
         )}
+        <select
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          value={params.fellowshipId ?? ''}
+          onChange={(e) => setParams((p) => ({ ...p, fellowshipId: e.target.value || undefined, page: 1 }))}
+        >
+          <option value="">All Fellowships</option>
+          {(fellowshipsData?.data ?? []).map((f) => (
+            <option key={f.id} value={f.id}>{f.fellowshipName}</option>
+          ))}
+        </select>
+        {isAdmin && (
+          <select
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            value={params.branchId ?? ''}
+            onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
+          >
+            <option value="">All Branches</option>
+            {(branches ?? []).map((b) => (
+              <option key={b.id} value={b.id}>{b.branchName}</option>
+            ))}
+          </select>
+        )}
+        <select
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          value={params.approvalStatus ?? ''}
+          onChange={(e) => setParams((p) => ({ ...p, approvalStatus: (e.target.value || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
+        >
+          <option value="">All Statuses</option>
+          <option value="approved">Approved</option>
+          <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
 
       {!members || members.length === 0 ? (

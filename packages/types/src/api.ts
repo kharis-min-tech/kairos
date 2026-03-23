@@ -21,6 +21,7 @@ export interface SignupRequest {
   homeBranchId: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   // Step 3: Password
   password: string;
 }
@@ -136,6 +137,7 @@ export interface UpdateMemberRequest {
   postalCode?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   photoUrl?: string;
 }
 
@@ -163,6 +165,7 @@ export interface CreateMemberRequest {
   postalCode?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   systemRole?: SystemRole;
 }
 
@@ -184,6 +187,7 @@ export interface MemberListParams {
   search?: string;
   branchId?: string;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
+  fellowshipId?: string;
 }
 
 // ── Fellowship ─────────────────────────────────────────────
@@ -213,6 +217,15 @@ export interface AddFellowshipMemberRequest {
   notes?: string;
 }
 
+export interface CreateJoinRequestRequest {
+  notes?: string;
+}
+
+export interface ReviewJoinRequestRequest {
+  status: 'approved' | 'rejected';
+  notes?: string;
+}
+
 // ── Fellowship Meeting ─────────────────────────────────────
 
 export interface CreateFellowshipMeetingRequest {
@@ -225,7 +238,6 @@ export interface CreateFellowshipMeetingRequest {
 }
 
 export interface RecordAttendanceRequest {
-  meetingId: string;
   records: {
     memberId: string;
     attendanceStatus: 'Present' | 'Absent' | 'Excused' | 'Late';
@@ -243,6 +255,10 @@ export interface CreateRegionRequest {
 export interface UpdateRegionRequest extends Partial<CreateRegionRequest> {}
 
 // ── Leadership ─────────────────────────────────────────────
+
+export interface GetLeadershipParams {
+  includeHistory?: boolean;
+}
 
 export interface AssignLeadershipRequest {
   memberId: string;

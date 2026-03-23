@@ -12,6 +12,7 @@ import type {
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
+  GetLeadershipParams,
   AssignLeadershipRequest,
   UpdateMemberRequest,
   ApproveMemberRequest,
@@ -23,6 +24,8 @@ import type {
   RecordAttendanceRequest,
   FellowshipListParams,
   AddFellowshipMemberRequest,
+  CreateJoinRequestRequest,
+  ReviewJoinRequestRequest,
   PaginatedResponse,
   AdminDashboardStats,
   BranchDashboardStats,
@@ -50,6 +53,8 @@ import type {
   FellowshipMember,
   FellowshipMemberWithDetails,
   FellowshipMeetingAttendance,
+  FellowshipJoinRequest,
+  FellowshipJoinRequestWithMember,
 } from '@kairos/types';
 
 import { ApiClient } from './client';
@@ -106,8 +111,12 @@ export function createApiClient(
     },
 
     leadership: {
-      list: (branchId: string) =>
-        client.get<ApiResponse<BranchLeadershipWithMember[]>>(`/api/branches/${encodeURIComponent(branchId)}/leadership`),
+      list: (branchId: string, params?: GetLeadershipParams) => {
+        const qs = new URLSearchParams();
+        if (params?.includeHistory) qs.set('includeHistory', 'true');
+        const query = qs.toString();
+        return client.get<ApiResponse<BranchLeadershipWithMember[]>>(`/api/branches/${encodeURIComponent(branchId)}/leadership${query ? `?${query}` : ''}`);
+      },
       assign: (branchId: string, data: AssignLeadershipRequest) =>
         client.post<ApiResponse<BranchLeadershipWithMember>>(`/api/branches/${encodeURIComponent(branchId)}/leadership`, data),
       remove: (branchId: string, leadershipId: string) =>
@@ -122,6 +131,7 @@ export function createApiClient(
         if (params?.search) qs.set('search', params.search);
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<MemberWithBranch>>>(`/api/members${query ? `?${query}` : ''}`);
       },
@@ -135,6 +145,10 @@ export function createApiClient(
         client.delete<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
       create: (data: CreateMemberRequest) =>
         client.post<ApiResponse<CreateMemberResponse>>('/api/members', data),
+      importCsv: (file: File) =>
+        client.postForm<ApiResponse<{ imported: number; errors: string[] }>>('/api/members/import', file),
+      exportCsv: () =>
+        client.getBlob('/api/members/export'),
       reactivate: (id: string) =>
         client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/reactivate`, {}),
       stats: (id: string) =>
@@ -142,6 +156,8 @@ export function createApiClient(
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
       roles: {
+        listAll: () =>
+          client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),
         list: (memberId: string) =>
           client.get<ApiResponse<MemberRoleWithDetails[]>>(`/api/members/${encodeURIComponent(memberId)}/roles`),
         assign: (memberId: string, data: AssignRoleRequest) =>
@@ -177,6 +193,14 @@ export function createApiClient(
           client.post<ApiResponse<FellowshipMember>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members`, data),
         remove: (fellowshipId: string, memberId: string) =>
           client.delete<ApiResponse<FellowshipMember>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members/${encodeURIComponent(memberId)}`),
+      },
+      joinRequests: {
+        create: (fellowshipId: string, data: CreateJoinRequestRequest) =>
+          client.post<ApiResponse<FellowshipJoinRequest>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`, data),
+        list: (fellowshipId: string) =>
+          client.get<ApiResponse<FellowshipJoinRequestWithMember[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`),
+        review: (fellowshipId: string, requestId: string, data: ReviewJoinRequestRequest) =>
+          client.patch<ApiResponse<FellowshipJoinRequest>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests/${encodeURIComponent(requestId)}`, data),
       },
       meetings: {
         list: (fellowshipId: string) =>

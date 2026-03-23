@@ -166,16 +166,17 @@ export default function AddMemberPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="gender">Gender *</Label>
                 <select
                   id="gender"
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  {...register('gender')}
+                  {...register('gender', { required: 'Gender is required' })}
                 >
                   <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+                {errors.gender && <p className="mt-1 text-xs text-rose-600">{errors.gender.message}</p>}
               </div>
               <div>
                 <Label>Date of Birth</Label>
@@ -222,6 +223,25 @@ export default function AddMemberPage() {
               <div>
                 <Label htmlFor="emergencyContactName">Contact Name</Label>
                 <Input id="emergencyContactName" className="mt-1" {...register('emergencyContactName')} />
+              </div>
+              <div>
+                <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                <select
+                  id="emergencyContactRelationship"
+                  {...register('emergencyContactRelationship')}
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select relationship...</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Partner">Partner</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Child">Child</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Grandparent">Grandparent</option>
+                  <option value="Guardian">Guardian</option>
+                  <option value="Friend">Friend</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div>
                 <Label htmlFor="emergencyContactPhone">Contact Phone</Label>

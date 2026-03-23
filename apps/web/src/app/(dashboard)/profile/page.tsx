@@ -49,6 +49,7 @@ export default function ProfilePage() {
       city: (profile as { city?: string | null })?.city ?? '',
       postalCode: (profile as { postalCode?: string | null })?.postalCode ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
+      emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
     },
   });
@@ -67,6 +68,7 @@ export default function ProfilePage() {
       city: (profile as { city?: string | null })?.city ?? '',
       postalCode: (profile as { postalCode?: string | null })?.postalCode ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
+      emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
     });
     setPhotoPreview(null);
@@ -287,6 +289,25 @@ export default function ProfilePage() {
                   <Input id="emergencyContactName" {...register('emergencyContactName')} />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                  <select
+                    id="emergencyContactRelationship"
+                    {...register('emergencyContactRelationship')}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="">Select relationship...</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Child">Child</option>
+                    <option value="Sibling">Sibling</option>
+                    <option value="Grandparent">Grandparent</option>
+                    <option value="Guardian">Guardian</option>
+                    <option value="Friend">Friend</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
                   <Input id="emergencyContactPhone" {...register('emergencyContactPhone')} />
                 </div>
@@ -348,6 +369,7 @@ export default function ProfilePage() {
             <CardContent>
               <dl className="grid gap-4 sm:grid-cols-2">
                 <Field label="Contact Name" value={(profile as { emergencyContactName?: string | null })?.emergencyContactName} />
+                <Field label="Relationship" value={(profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship} />
                 <Field label="Contact Phone" value={(profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone} />
               </dl>
             </CardContent>

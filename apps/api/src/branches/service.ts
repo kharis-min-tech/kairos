@@ -165,8 +165,18 @@ export async function deleteBranch(db: Database, branchId: string) {
 
 // ── Leadership ─────────────────────────────────────────────
 
-export async function getBranchLeadership(db: Database, branchId: string, auth: AuthContext) {
+export async function getBranchLeadership(
+  db: Database,
+  branchId: string,
+  auth: AuthContext,
+  options?: { includeHistory?: boolean },
+) {
   enforceBranchAccess(auth, branchId);
+
+  const conditions = [eq(branchLeadership.branchId, branchId)];
+  if (!options?.includeHistory) {
+    conditions.push(eq(branchLeadership.isCurrent, true));
+  }
 
   return db
     .select({
@@ -182,7 +192,8 @@ export async function getBranchLeadership(db: Database, branchId: string, auth: 
     })
     .from(branchLeadership)
     .innerJoin(members, eq(branchLeadership.memberId, members.id))
-    .where(and(eq(branchLeadership.branchId, branchId), eq(branchLeadership.isCurrent, true)));
+    .where(and(...conditions))
+    .orderBy(branchLeadership.startDate);
 }
 
 export async function assignLeadership(

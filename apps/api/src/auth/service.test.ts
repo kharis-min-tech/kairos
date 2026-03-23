@@ -55,8 +55,10 @@ const baseMember = {
   photoUrl: null,
   emergencyContactName: null,
   emergencyContactPhone: null,
+  emergencyContactRelationship: null,
   passwordHash: '$2b$10$hashedpassword',
   emailVerified: true,
+  mustChangePassword: false,
   approvalStatus: 'approved',
   systemRole: 'member',
   createdAt: new Date(),
@@ -147,7 +149,7 @@ describe('login', () => {
     setupSelectChain([]);
 
     await expect(login(mockDb, 'nope@example.com', 'password'))
-      .rejects.toThrow('Invalid email or password');
+      .rejects.toThrow('No account found with that email');
   });
 
   it('should throw UnauthorizedError for wrong password', async () => {
@@ -157,7 +159,7 @@ describe('login', () => {
     setupSelectChain([{ ...baseMember, passwordHash: hashed }]);
 
     await expect(login(mockDb, 'john@example.com', 'WrongPassword'))
-      .rejects.toThrow('Invalid email or password');
+      .rejects.toThrow('Incorrect password');
   });
 
   it('should throw ValidationError for unverified email', async () => {
@@ -178,6 +180,48 @@ describe('login', () => {
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
       .rejects.toThrow('pending approval');
+  });
+
+  it('should reject admin trying to login as pastor', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'admin' }]);
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', 'pastor'))
+      .rejects.toThrow("You don't have pastor access");
+  });
+
+  it('should reject member trying to login as admin', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'member' }]);
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', 'admin'))
+      .rejects.toThrow("You don't have admin access");
+  });
+
+  it('should allow any role to login as member', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'admin', lastLoginAt: new Date() }]);
+    setupUpdateChain();
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'member');
+    expect(result.tokens.accessToken).toBeDefined();
+  });
+
+  it('should allow exact role match login', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'pastor', lastLoginAt: new Date() }]);
+    setupUpdateChain();
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'pastor');
+    expect(result.tokens.accessToken).toBeDefined();
   });
 });
 

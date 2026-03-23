@@ -67,8 +67,8 @@ export class ApiClient {
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    // Auto-refresh on 401, then retry once
-    if (response.status === 401 && !isRetry) {
+    // Auto-refresh on 401, then retry once (only when a token was sent)
+    if (response.status === 401 && !isRetry && token) {
       try {
         await this.tryRefresh();
         return this.request<T>(method, path, body, true);
@@ -97,6 +97,52 @@ export class ApiClient {
 
   post<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>('POST', path, body);
+  }
+
+  async postForm<T>(path: string, file: File): Promise<T> {
+    const headers: Record<string, string> = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const data = (await response.json()) as Record<string, unknown>;
+    if (!response.ok) {
+      throw new ApiClientError(
+        response.status,
+        (data.message as string) ?? 'Request failed',
+        data.code as string | undefined,
+      );
+    }
+    return data as T;
+  }
+
+  async getBlob(path: string): Promise<Blob> {
+    const headers: Record<string, string> = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const data = (await response.json()) as Record<string, unknown>;
+      throw new ApiClientError(
+        response.status,
+        (data.message as string) ?? 'Request failed',
+        data.code as string | undefined,
+      );
+    }
+    return response.blob();
   }
 
   patch<T>(path: string, body?: unknown): Promise<T> {

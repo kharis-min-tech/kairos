@@ -8,6 +8,7 @@ import {
   updateBranchSchema,
   createRegionSchema,
   assignLeadershipSchema,
+  getLeadershipQuerySchema,
 } from './schemas';
 import {
   listBranches,
@@ -73,9 +74,10 @@ branchesRouter.delete('/:id', requireRole('admin'), async (c) => {
 
 // ── Leadership ─────────────────────────────────────────────
 
-branchesRouter.get('/:id/leadership', async (c) => {
+branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySchema), async (c) => {
   const auth = getAuth(c);
-  const leadership = await getBranchLeadership(db, c.req.param('id'), auth);
+  const { includeHistory } = c.req.valid('query');
+  const leadership = await getBranchLeadership(db, c.req.param('id')!, auth, { includeHistory });
   return c.json(successResponse(leadership));
 });
 

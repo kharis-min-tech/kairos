@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
 import { useMyProfile } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -13,7 +14,7 @@ import { FellowshipType } from '@kairos/types';
 
 const FELLOWSHIP_TYPES = [
   { label: 'All', value: '' },
-  { label: 'Cell Groups', value: FellowshipType.KGroups },
+  { label: 'K-Groups', value: FellowshipType.KGroups },
   { label: 'Kharis Express', value: FellowshipType.KharisExpress },
   { label: 'New Breeds', value: FellowshipType.NewBreeds },
   { label: 'KOC', value: FellowshipType.KharisOnCampus },
@@ -33,6 +34,7 @@ function FellowshipsContent() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const { data: myProfile } = useMyProfile();
+  const { data: branchesResult } = useBranches();
   const profile = myProfile ?? user;
 
   const initialType = searchParams.get('type') || '';
@@ -91,27 +93,41 @@ function FellowshipsContent() {
         </div>
       </div>
 
-      {/* Type Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {FELLOWSHIP_TYPES.map((type) => (
-          <button
-            key={type.value}
-            onClick={() =>
-              setParams((p) => ({
-                ...p,
-                fellowshipType: type.value || undefined,
-                page: 1,
-              }))
-            }
-            className={(
-              (params.fellowshipType || '') === type.value
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-700'
-            ) + ' rounded-full px-4 py-1.5 text-sm font-medium transition-colors'}
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap gap-2">
+          {FELLOWSHIP_TYPES.map((type) => (
+            <button
+              key={type.value}
+              onClick={() =>
+                setParams((p) => ({
+                  ...p,
+                  fellowshipType: type.value || undefined,
+                  page: 1,
+                }))
+              }
+              className={(
+                (params.fellowshipType || '') === type.value
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-700'
+              ) + ' rounded-full px-4 py-1.5 text-sm font-medium transition-colors'}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
+        {activeRole === 'admin' && (
+          <select
+            value={params.branchId ?? ''}
+            onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {type.label}
-          </button>
-        ))}
+            <option value="">All Branches</option>
+            {(branchesResult ?? []).map((b) => (
+              <option key={b.id} value={b.id}>{b.branchName}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {!fellowships || fellowships.length === 0 ? (
@@ -134,7 +150,7 @@ function FellowshipsContent() {
                       <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         TYPE_BADGE_COLORS[fellowship.fellowshipType] ?? 'bg-gray-100 text-gray-600'
                       }`}>
-                        {fellowship.fellowshipType === FellowshipType.KGroups ? 'Cell Groups' : fellowship.fellowshipType}
+                        {fellowship.fellowshipType === FellowshipType.KGroups ? 'K-Groups' : fellowship.fellowshipType}
                       </span>
                     </div>
                     <CardDescription className="truncate">{fellowship.branchName}</CardDescription>

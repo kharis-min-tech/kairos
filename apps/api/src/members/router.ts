@@ -22,6 +22,9 @@ import {
   deactivateMember,
   createMember,
   reactivateMember,
+  importMembers,
+  exportMembersCsv,
+  listRoles,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 
@@ -52,6 +55,36 @@ membersRouter.post('/', requireRole('admin', 'pastor'), zValidator('json', creat
   const input = c.req.valid('json');
   const result = await createMember(db, input, auth);
   return c.json(successResponse(result, 'Member created'), 201);
+});
+
+membersRouter.post('/import', requireRole('admin', 'pastor'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.parseBody();
+  const file = body['file'];
+  if (!file || typeof file === 'string') {
+    return c.json({ success: false, message: 'CSV file is required' }, 400);
+  }
+  const text = await (file as File).text();
+  const result = await importMembers(db, text, auth);
+  return c.json(successResponse(result, 'Import complete'), 201);
+});
+
+membersRouter.get('/export', requireRole('admin', 'pastor'), async (c) => {
+  const auth = getAuth(c);
+  const csv = await exportMembersCsv(db, auth);
+  return new Response(csv, {
+    headers: {
+      'Content-Type': 'text/csv',
+      'Content-Disposition': 'attachment; filename="members.csv"',
+    },
+  });
+});
+
+// ── Roles Catalog ──────────────────────────────────────────
+
+membersRouter.get('/roles', requireRole('admin'), async (c) => {
+  const allRoles = await listRoles(db);
+  return c.json(successResponse(allRoles));
 });
 
 membersRouter.get('/:id', async (c) => {

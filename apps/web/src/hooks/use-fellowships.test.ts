@@ -16,6 +16,9 @@ import {
   useMeetingAttendance,
   useRecordAttendance,
   useAttendanceSummary,
+  useFellowshipJoinRequests,
+  useCreateJoinRequest,
+  useReviewJoinRequest,
 } from './use-fellowships';
 
 vi.mock('@/lib/api', () => ({
@@ -39,6 +42,11 @@ vi.mock('@/lib/api', () => ({
         record: vi.fn(),
         get: vi.fn(),
         summary: vi.fn(),
+      },
+      joinRequests: {
+        list: vi.fn(),
+        create: vi.fn(),
+        review: vi.fn(),
       },
     },
   },
@@ -305,5 +313,59 @@ describe('useAttendanceSummary', () => {
   it('does not fetch when fellowshipId is empty', () => {
     const { result } = renderHook(() => useAttendanceSummary(''), { wrapper: createWrapper() });
     expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+// ── useFellowshipJoinRequests ──────────────────────────────
+
+describe('useFellowshipJoinRequests', () => {
+  it('calls api.fellowships.joinRequests.list with fellowshipId', async () => {
+    const mockRequests = [{ id: 'jr1', memberId: 'm1', status: 'pending' }];
+    vi.mocked(api.fellowships.joinRequests.list).mockResolvedValue({ data: mockRequests } as never);
+
+    const { result } = renderHook(() => useFellowshipJoinRequests('f1'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.joinRequests.list).toHaveBeenCalledWith('f1');
+    expect(result.current.data).toEqual(mockRequests);
+  });
+
+  it('does not fetch when fellowshipId is empty', () => {
+    const { result } = renderHook(() => useFellowshipJoinRequests(''), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+// ── useCreateJoinRequest ───────────────────────────────────
+
+describe('useCreateJoinRequest', () => {
+  it('calls api.fellowships.joinRequests.create', async () => {
+    vi.mocked(api.fellowships.joinRequests.create).mockResolvedValue({ data: { id: 'jr1' } } as never);
+
+    const { result } = renderHook(() => useCreateJoinRequest(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ fellowshipId: 'f1', data: { notes: 'Please add me' } as never });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.joinRequests.create).toHaveBeenCalledWith('f1', { notes: 'Please add me' });
+  });
+});
+
+// ── useReviewJoinRequest ───────────────────────────────────
+
+describe('useReviewJoinRequest', () => {
+  it('calls api.fellowships.joinRequests.review', async () => {
+    vi.mocked(api.fellowships.joinRequests.review).mockResolvedValue({ data: { id: 'jr1', status: 'approved' } } as never);
+
+    const { result } = renderHook(() => useReviewJoinRequest(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ fellowshipId: 'f1', requestId: 'jr1', data: { status: 'approved' } as never });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.joinRequests.review).toHaveBeenCalledWith('f1', 'jr1', { status: 'approved' });
   });
 });

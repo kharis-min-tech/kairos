@@ -5,6 +5,7 @@ import {
   fellowshipMembers,
   fellowshipMeetings,
   fellowshipMeetingAttendance,
+  fellowshipJoinRequests,
   members,
   branches,
 } from '@kairos/database';
@@ -16,6 +17,18 @@ function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (branchId && branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access fellowships in your branch');
   }
+}
+
+function enforceLeaderOrAbove(
+  auth: AuthContext,
+  fellowship: { leaderId: string | null; coLeaderId: string | null },
+) {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (
+    auth.systemRole === 'leader' &&
+    (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId)
+  ) return;
+  throw new ForbiddenError('Only fellowship leaders or above can perform this action');
 }
 
 // ── Fellowship CRUD ────────────────────────────────────────
@@ -250,11 +263,8 @@ export async function addFellowshipMember(
   fellowshipId: string,
   data: { memberId: string; notes?: string },
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can add fellowship members');
-  }
-
   const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
 
   // Validate member exists
   const [member] = await db
@@ -281,6 +291,24 @@ export async function addFellowshipMember(
     );
   if (existing) throw new ConflictError('Member is already in this fellowship');
 
+  // Cross-fellowship type constraint: one fellowship per type per branch
+  const [crossConflict] = await db
+    .select({ id: fellowshipMembers.id })
+    .from(fellowshipMembers)
+    .innerJoin(fellowships, eq(fellowshipMembers.fellowshipId, fellowships.id))
+    .where(
+      and(
+        eq(fellowshipMembers.memberId, data.memberId),
+        eq(fellowshipMembers.isActive, true),
+        eq(fellowships.fellowshipType, fellowship.fellowshipType),
+        eq(fellowships.branchId, fellowship.branchId!),
+      ),
+    )
+    .limit(1);
+  if (crossConflict) {
+    throw new ConflictError(`Member is already in a ${fellowship.fellowshipType} fellowship in this branch`);
+  }
+
   const [record] = await db
     .insert(fellowshipMembers)
     .values({
@@ -299,11 +327,8 @@ export async function removeFellowshipMember(
   fellowshipId: string,
   memberId: string,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can remove fellowship members');
-  }
-
-  await getFellowship(db, auth, fellowshipId);
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
 
   const [record] = await db
     .update(fellowshipMembers)
@@ -346,11 +371,8 @@ export async function createMeeting(
     durationMinutes?: number;
   },
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can create meetings');
-  }
-
   const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
 
   const [meeting] = await db
     .insert(fellowshipMeetings)
@@ -376,11 +398,8 @@ export async function updateMeeting(
   meetingId: string,
   data: Record<string, unknown>,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can update meetings');
-  }
-
-  await getFellowship(db, auth, fellowshipId);
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
 
   const [meeting] = await db
     .update(fellowshipMeetings)
@@ -401,11 +420,8 @@ export async function recordAttendance(
   meetingId: string,
   records: { memberId: string; attendanceStatus: string; notes?: string }[],
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can record attendance');
-  }
-
-  await getFellowship(db, auth, fellowshipId);
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
 
   // Verify the meeting belongs to this fellowship
   const [meeting] = await db
@@ -487,4 +503,154 @@ export async function getAttendanceSummary(
     .orderBy(sql`${fellowshipMeetings.meetingDate} DESC`);
 
   return stats;
+}
+
+// ── Fellowship Join Requests ───────────────────────────────
+
+export async function createJoinRequest(
+  db: Database,
+  auth: AuthContext,
+  fellowshipId: string,
+  data: { notes?: string },
+) {
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+
+  const [activeMembership] = await db
+    .select({ id: fellowshipMembers.id })
+    .from(fellowshipMembers)
+    .where(
+      and(
+        eq(fellowshipMembers.fellowshipId, fellowshipId),
+        eq(fellowshipMembers.memberId, auth.memberId),
+        eq(fellowshipMembers.isActive, true),
+      ),
+    );
+  if (activeMembership) throw new ConflictError('You are already a member of this fellowship');
+
+  const [pendingRequest] = await db
+    .select({ id: fellowshipJoinRequests.id })
+    .from(fellowshipJoinRequests)
+    .where(
+      and(
+        eq(fellowshipJoinRequests.fellowshipId, fellowshipId),
+        eq(fellowshipJoinRequests.memberId, auth.memberId),
+        eq(fellowshipJoinRequests.status, 'pending'),
+      ),
+    );
+  if (pendingRequest) throw new ConflictError('You already have a pending join request for this fellowship');
+
+  // Cross-fellowship type constraint
+  const [crossConflict] = await db
+    .select({ id: fellowshipMembers.id })
+    .from(fellowshipMembers)
+    .innerJoin(fellowships, eq(fellowshipMembers.fellowshipId, fellowships.id))
+    .where(
+      and(
+        eq(fellowshipMembers.memberId, auth.memberId),
+        eq(fellowshipMembers.isActive, true),
+        eq(fellowships.fellowshipType, fellowship.fellowshipType),
+        eq(fellowships.branchId, fellowship.branchId!),
+      ),
+    )
+    .limit(1);
+  if (crossConflict) {
+    throw new ConflictError(`You are already in a ${fellowship.fellowshipType} fellowship in this branch`);
+  }
+
+  const [request] = await db
+    .insert(fellowshipJoinRequests)
+    .values({ fellowshipId, memberId: auth.memberId, notes: data.notes })
+    .returning();
+
+  return request!;
+}
+
+export async function listJoinRequests(db: Database, auth: AuthContext, fellowshipId: string) {
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
+
+  return db
+    .select({
+      id: fellowshipJoinRequests.id,
+      fellowshipId: fellowshipJoinRequests.fellowshipId,
+      memberId: fellowshipJoinRequests.memberId,
+      memberFirstName: members.firstName,
+      memberLastName: members.lastName,
+      memberEmail: members.email,
+      status: fellowshipJoinRequests.status,
+      notes: fellowshipJoinRequests.notes,
+      reviewedBy: fellowshipJoinRequests.reviewedBy,
+      reviewedAt: fellowshipJoinRequests.reviewedAt,
+      createdAt: fellowshipJoinRequests.createdAt,
+      updatedAt: fellowshipJoinRequests.updatedAt,
+    })
+    .from(fellowshipJoinRequests)
+    .innerJoin(members, eq(fellowshipJoinRequests.memberId, members.id))
+    .where(
+      and(
+        eq(fellowshipJoinRequests.fellowshipId, fellowship.id),
+        eq(fellowshipJoinRequests.status, 'pending'),
+      ),
+    )
+    .orderBy(fellowshipJoinRequests.createdAt);
+}
+
+export async function reviewJoinRequest(
+  db: Database,
+  auth: AuthContext,
+  fellowshipId: string,
+  requestId: string,
+  data: { status: 'approved' | 'rejected'; notes?: string },
+) {
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  enforceLeaderOrAbove(auth, fellowship);
+
+  const [request] = await db
+    .select()
+    .from(fellowshipJoinRequests)
+    .where(
+      and(
+        eq(fellowshipJoinRequests.id, requestId),
+        eq(fellowshipJoinRequests.fellowshipId, fellowshipId),
+        eq(fellowshipJoinRequests.status, 'pending'),
+      ),
+    );
+  if (!request) throw new NotFoundError('Join request not found or already reviewed');
+
+  const [updated] = await db
+    .update(fellowshipJoinRequests)
+    .set({
+      status: data.status,
+      notes: data.notes ?? request.notes,
+      reviewedBy: auth.memberId,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(fellowshipJoinRequests.id, requestId))
+    .returning();
+
+  if (data.status === 'approved') {
+    // Check if member already has a record in this fellowship (e.g. previously left)
+    const [existing] = await db
+      .select({ id: fellowshipMembers.id })
+      .from(fellowshipMembers)
+      .where(
+        and(
+          eq(fellowshipMembers.fellowshipId, fellowshipId),
+          eq(fellowshipMembers.memberId, request.memberId),
+        ),
+      );
+    if (existing) {
+      await db
+        .update(fellowshipMembers)
+        .set({ isActive: true, leaveDate: null, updatedAt: new Date() })
+        .where(eq(fellowshipMembers.id, existing.id));
+    } else {
+      await db
+        .insert(fellowshipMembers)
+        .values({ fellowshipId, memberId: request.memberId });
+    }
+  }
+
+  return updated!;
 }

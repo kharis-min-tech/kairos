@@ -175,13 +175,22 @@ describe('useBranchLeadership', () => {
     const { result } = renderHook(() => useBranchLeadership('b1'), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.leadership.list).toHaveBeenCalledWith('b1');
+    expect(api.leadership.list).toHaveBeenCalledWith('b1', undefined);
     expect(result.current.data).toEqual([mockLeader]);
   });
 
   it('does not fetch when branchId is empty', () => {
     const { result } = renderHook(() => useBranchLeadership(''), { wrapper: createWrapper() });
     expect(result.current.fetchStatus).toBe('idle');
+  });
+
+  it('passes params to api.leadership.list', async () => {
+    vi.mocked(api.leadership.list).mockResolvedValue({ data: [mockLeader] } as never);
+
+    const { result } = renderHook(() => useBranchLeadership('b1', { includeHistory: true }), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.leadership.list).toHaveBeenCalledWith('b1', { includeHistory: true });
   });
 });
 

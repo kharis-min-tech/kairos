@@ -11,6 +11,8 @@ import {
   addMemberSchema,
   recordAttendanceSchema,
   listFellowshipsQuerySchema,
+  createJoinRequestSchema,
+  reviewJoinRequestSchema,
 } from './schemas';
 import {
   listFellowships,
@@ -27,6 +29,9 @@ import {
   recordAttendance,
   getMeetingAttendance,
   getAttendanceSummary,
+  createJoinRequest,
+  listJoinRequests,
+  reviewJoinRequest,
 } from './service';
 
 export const fellowshipsRouter = new Hono();
@@ -75,13 +80,13 @@ fellowshipsRouter.get('/:id/members', async (c) => {
   return c.json(successResponse(members));
 });
 
-fellowshipsRouter.post('/:id/members', requireRole('admin', 'pastor'), zValidator('json', addMemberSchema), async (c) => {
+fellowshipsRouter.post('/:id/members', requireRole('admin', 'pastor', 'leader'), zValidator('json', addMemberSchema), async (c) => {
   const auth = getAuth(c);
   const member = await addFellowshipMember(db, auth, c.req.param('id')!, c.req.valid('json'));
   return c.json(successResponse(member), 201);
 });
 
-fellowshipsRouter.delete('/:id/members/:memberId', requireRole('admin', 'pastor'), async (c) => {
+fellowshipsRouter.delete('/:id/members/:memberId', requireRole('admin', 'pastor', 'leader'), async (c) => {
   const auth = getAuth(c);
   const result = await removeFellowshipMember(db, auth, c.req.param('id')!, c.req.param('memberId')!);
   return c.json(successResponse(result, 'Member removed from fellowship'));
@@ -95,13 +100,13 @@ fellowshipsRouter.get('/:id/meetings', async (c) => {
   return c.json(successResponse(meetings));
 });
 
-fellowshipsRouter.post('/:id/meetings', requireRole('admin', 'pastor'), zValidator('json', createMeetingSchema), async (c) => {
+fellowshipsRouter.post('/:id/meetings', requireRole('admin', 'pastor', 'leader'), zValidator('json', createMeetingSchema), async (c) => {
   const auth = getAuth(c);
   const meeting = await createMeeting(db, auth, c.req.param('id')!, c.req.valid('json'));
   return c.json(successResponse(meeting), 201);
 });
 
-fellowshipsRouter.patch('/:id/meetings/:meetingId', requireRole('admin', 'pastor'), zValidator('json', updateMeetingSchema), async (c) => {
+fellowshipsRouter.patch('/:id/meetings/:meetingId', requireRole('admin', 'pastor', 'leader'), zValidator('json', updateMeetingSchema), async (c) => {
   const auth = getAuth(c);
   const meeting = await updateMeeting(db, auth, c.req.param('id')!, c.req.param('meetingId')!, c.req.valid('json'));
   return c.json(successResponse(meeting));
@@ -109,7 +114,7 @@ fellowshipsRouter.patch('/:id/meetings/:meetingId', requireRole('admin', 'pastor
 
 // ── Meeting Attendance ─────────────────────────────────────
 
-fellowshipsRouter.post('/:id/meetings/:meetingId/attendance', requireRole('admin', 'pastor'), zValidator('json', recordAttendanceSchema), async (c) => {
+fellowshipsRouter.post('/:id/meetings/:meetingId/attendance', requireRole('admin', 'pastor', 'leader'), zValidator('json', recordAttendanceSchema), async (c) => {
   const auth = getAuth(c);
   const { records } = c.req.valid('json');
   await recordAttendance(db, auth, c.req.param('id')!, c.req.param('meetingId')!, records);
@@ -126,4 +131,30 @@ fellowshipsRouter.get('/:id/attendance/summary', async (c) => {
   const auth = getAuth(c);
   const summary = await getAttendanceSummary(db, auth, c.req.param('id')!);
   return c.json(successResponse(summary));
+});
+
+// ── Join Requests ──────────────────────────────────────────
+
+fellowshipsRouter.post('/:id/join-requests', zValidator('json', createJoinRequestSchema), async (c) => {
+  const auth = getAuth(c);
+  const request = await createJoinRequest(db, auth, c.req.param('id')!, c.req.valid('json'));
+  return c.json(successResponse(request), 201);
+});
+
+fellowshipsRouter.get('/:id/join-requests', async (c) => {
+  const auth = getAuth(c);
+  const requests = await listJoinRequests(db, auth, c.req.param('id')!);
+  return c.json(successResponse(requests));
+});
+
+fellowshipsRouter.patch('/:id/join-requests/:requestId', zValidator('json', reviewJoinRequestSchema), async (c) => {
+  const auth = getAuth(c);
+  const result = await reviewJoinRequest(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.param('requestId')!,
+    c.req.valid('json'),
+  );
+  return c.json(successResponse(result));
 });

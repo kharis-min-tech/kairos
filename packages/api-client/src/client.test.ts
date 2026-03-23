@@ -156,8 +156,40 @@ describe('ApiClient', () => {
     });
 
     it('includes status, message, and code in the thrown error', async () => {
-      const client = new ApiClient({ baseUrl: 'http://localhost:3001' });
-      mockFailure({ message: 'Unauthorized', code: 'UNAUTHORIZED' }, 401);
+      const client = new ApiClient({
+        baseUrl: 'http://localhost:3001',
+        getToken: () => null,
+      });
+      mockFailure({ message: 'No account found with that email', code: 'UNAUTHORIZED' }, 401);
+
+      try {
+        await client.get('/api/auth/login');
+        expect.fail('Should have thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(ApiClientError);
+        const apiErr = err as ApiClientError;
+        expect(apiErr.status).toBe(401);
+        // Without a token, the client passes through the server error directly
+        expect(apiErr.message).toBe('No account found with that email');
+      }
+    });
+
+    it('attempts refresh and throws session expired on 401 with token', async () => {
+      const client = new ApiClient({
+        baseUrl: 'http://localhost:3001',
+        getToken: () => 'my-token',
+        getRefreshToken: () => 'my-refresh-token',
+      });
+      // First call: 401 on the actual request
+      mockFetch.mockResolvedValueOnce({
+        ok: false, status: 401,
+        json: () => Promise.resolve({ message: 'Invalid or expired token', code: 'UNAUTHORIZED' }),
+      });
+      // Second call: refresh attempt fails
+      mockFetch.mockResolvedValueOnce({
+        ok: false, status: 401,
+        json: () => Promise.resolve({ message: 'Refresh failed' }),
+      });
 
       try {
         await client.get('/api/protected');
@@ -166,8 +198,6 @@ describe('ApiClient', () => {
         expect(err).toBeInstanceOf(ApiClientError);
         const apiErr = err as ApiClientError;
         expect(apiErr.status).toBe(401);
-        // Client intercepts 401 and attempts token refresh; with no onRefresh
-        // handler the refresh fails and yields a user-facing message.
         expect(apiErr.message).toBe('Session expired. Please log in again.');
       }
     });

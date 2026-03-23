@@ -8,9 +8,11 @@ interface AuthState {
   refreshToken: string | null;
   user: Member | null;
   activeRole: SystemRole | null;
+  mustChangePassword: boolean;
   setTokens: (tokens: AuthTokens) => void;
   setUser: (user: Member | null) => void;
   setActiveRole: (role: SystemRole) => void;
+  setMustChangePassword: (val: boolean) => void;
   logout: () => void;
 }
 
@@ -21,11 +23,13 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       user: null,
       activeRole: null,
+      mustChangePassword: false,
       setTokens: (tokens) =>
         set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
       setUser: (user) => set({ user }),
       setActiveRole: (role) => set({ activeRole: role }),
-      logout: () => set({ accessToken: null, refreshToken: null, user: null, activeRole: null }),
+      setMustChangePassword: (val) => set({ mustChangePassword: val }),
+      logout: () => set({ accessToken: null, refreshToken: null, user: null, activeRole: null, mustChangePassword: false }),
     }),
     {
       name: 'kairos-auth',

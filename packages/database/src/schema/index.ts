@@ -8,3 +8,4 @@ export { fellowships, fellowshipsRelations } from './fellowships';
 export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-members';
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
 export { fellowshipMeetingAttendance, fellowshipMeetingAttendanceRelations } from './fellowship-meeting-attendance';
+export { fellowshipJoinRequests, fellowshipJoinRequestsRelations } from './fellowship-join-requests';

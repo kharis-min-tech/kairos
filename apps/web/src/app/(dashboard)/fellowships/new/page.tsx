@@ -7,12 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateFellowship } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
+import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
-  [FellowshipType.KGroups]: 'Cell Groups (K-Groups)',
+  [FellowshipType.KGroups]: 'K-Groups',
   [FellowshipType.KharisExpress]: 'Kharis Express',
   [FellowshipType.NewBreeds]: 'New Breeds',
   [FellowshipType.KharisOnCampus]: 'Kharis on Campus (KOC)',
@@ -42,6 +43,8 @@ const schema = z.object({
   branchId: z.string().uuid('Select a branch'),
   fellowshipType: z.string().min(1, 'Select a fellowship type'),
   description: z.string().optional(),
+  leaderId: z.string().optional(),
+  coLeaderId: z.string().optional(),
   meetingFrequency: z.string().optional(),
   meetingDay: z.string().optional(),
   meetingTime: z.string().optional(),
@@ -62,11 +65,16 @@ export default function NewFellowshipPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { branchId: defaultBranchId },
   });
+
+  const selectedBranchId = watch('branchId') || defaultBranchId;
+  const { data: branchMembersData } = useMembers(selectedBranchId ? { branchId: selectedBranchId, limit: 200 } : undefined);
+  const branchMembers = branchMembersData?.data ?? [];
 
   const onSubmit = async (data: FormValues) => {
     let meetingSchedule: string | undefined;
@@ -80,6 +88,8 @@ export default function NewFellowshipPage() {
       branchId: data.branchId,
       fellowshipType: data.fellowshipType,
       description: data.description || undefined,
+      leaderId: data.leaderId || undefined,
+      coLeaderId: data.coLeaderId || undefined,
       meetingSchedule,
     });
     router.push('/fellowships');
@@ -158,6 +168,27 @@ export default function NewFellowshipPage() {
                 )}
               </div>
             )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="leaderId">Leader</Label>
+                <select id="leaderId" {...register('leaderId')} className={selectClass}>
+                  <option value="">Select leader...</option>
+                  {branchMembers.map((m) => (
+                    <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="coLeaderId">Co-Leader</Label>
+                <select id="coLeaderId" {...register('coLeaderId')} className={selectClass}>
+                  <option value="">Select co-leader...</option>
+                  {branchMembers.map((m) => (
+                    <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label>Meeting Schedule</Label>

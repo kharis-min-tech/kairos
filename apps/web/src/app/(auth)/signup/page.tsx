@@ -26,6 +26,7 @@ const signupSchema = z.object({
   postalCode: z.string().optional(),
   homeBranchId: z.string().min(1, 'Please select a branch'),
   emergencyContactName: z.string().optional(),
+  emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   emergencyContactPhone: z.string().optional(),
   // Step 3
   password: z.string()
@@ -317,6 +318,26 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
                 <Input id="emergencyContactName" className="h-11" {...register('emergencyContactName')} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactRelationship">Relationship to Member</Label>
+                <select
+                  id="emergencyContactRelationship"
+                  {...register('emergencyContactRelationship')}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Select relationship...</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Partner">Partner</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Child">Child</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Grandparent">Grandparent</option>
+                  <option value="Guardian">Guardian</option>
+                  <option value="Friend">Friend</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               <div className="space-y-2">

@@ -12,6 +12,7 @@ export const updateMemberSchema = z.object({
   postalCode: z.string().max(20).optional(),
   emergencyContactName: z.string().max(150).optional(),
   emergencyContactPhone: z.string().max(20).optional(),
+  emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   photoUrl: z.string().url().max(255).optional(),
 });
 
@@ -39,6 +40,7 @@ export const createMemberSchema = z.object({
   postalCode: z.string().max(20).optional(),
   emergencyContactName: z.string().max(150).optional(),
   emergencyContactPhone: z.string().max(20).optional(),
+  emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   systemRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional().default('member'),
 });
 
@@ -48,4 +50,5 @@ export const listMembersQuerySchema = z.object({
   search: z.string().optional(),
   branchId: z.string().uuid().optional(),
   approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
+  fellowshipId: z.string().uuid().optional(),
 });

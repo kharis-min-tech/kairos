@@ -1,21 +1,30 @@
-import { eq, and, or, ilike, count, sql, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
-import { members, memberRoles, roles, branches } from '@kairos/database';
+import { members, memberRoles, roles, branches, fellowshipMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
+  if (auth.systemRole === 'pastor') return;
   if (auth.memberId === memberId) return;
   throw new ForbiddenError('You can only access your own profile');
+}
+
+export async function listRoles(db: Database) {
+  return db
+    .select({ id: roles.id, roleName: roles.roleName, description: roles.description })
+    .from(roles)
+    .where(eq(roles.isActive, true))
+    .orderBy(roles.roleName);
 }
 
 export async function listMembers(
   db: Database,
   auth: AuthContext,
-  query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string },
+  query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string; fellowshipId?: string },
 ) {
   // Pending members are inactive until approved, so skip isActive filter for pending queries
   const conditions: SQL[] = [];
@@ -42,6 +51,23 @@ export async function listMembers(
         ilike(members.lastName, term),
         ilike(members.email, term),
       )!,
+    );
+  }
+
+  if (query.fellowshipId) {
+    conditions.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(fellowshipMembers)
+          .where(
+            and(
+              eq(fellowshipMembers.memberId, members.id),
+              eq(fellowshipMembers.fellowshipId, query.fellowshipId),
+              eq(fellowshipMembers.isActive, true),
+            ),
+          ),
+      ),
     );
   }
 
@@ -108,6 +134,7 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       photoUrl: members.photoUrl,
       emergencyContactName: members.emergencyContactName,
       emergencyContactPhone: members.emergencyContactPhone,
+      emergencyContactRelationship: members.emergencyContactRelationship,
       approvalStatus: members.approvalStatus,
       systemRole: members.systemRole,
       emailVerified: members.emailVerified,
@@ -337,6 +364,7 @@ export async function createMember(
     postalCode?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
+    emergencyContactRelationship?: string;
     systemRole?: string;
   },
   auth: AuthContext,
@@ -382,12 +410,14 @@ export async function createMember(
       postalCode: input.postalCode ?? null,
       emergencyContactName: input.emergencyContactName ?? null,
       emergencyContactPhone: input.emergencyContactPhone ?? null,
+      emergencyContactRelationship: input.emergencyContactRelationship ?? null,
       homeBranchId: input.homeBranchId,
       passwordHash,
       emailVerified: true,
       approvalStatus: 'approved',
       systemRole: input.systemRole ?? 'member',
       isActive: true,
+      mustChangePassword: true,
     })
     .returning();
 
@@ -420,4 +450,135 @@ export async function reactivateMember(
     .returning();
 
   return updated;
+}
+
+// ── CSV Import / Export ────────────────────────────────────
+
+function parseCSVLine(line: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]!;
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      values.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
+
+export async function importMembers(
+  db: Database,
+  csvText: string,
+  auth: AuthContext,
+): Promise<{ imported: number; errors: string[] }> {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) throw new ValidationError('CSV must have a header row and at least one data row');
+
+  const headers = parseCSVLine(lines[0]!);
+  const errors: string[] = [];
+  let imported = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const rawLine = lines[i]!.trim();
+    if (!rawLine) continue;
+
+    try {
+      const values = parseCSVLine(rawLine);
+      const row: Record<string, string> = {};
+      headers.forEach((h, idx) => {
+        row[h] = values[idx] ?? '';
+      });
+
+      if (!row['firstName'] || !row['lastName'] || !row['email']) {
+        errors.push(`Row ${i + 1}: firstName, lastName, and email are required`);
+        continue;
+      }
+
+      await createMember(
+        db,
+        {
+          firstName: row['firstName']!,
+          lastName: row['lastName']!,
+          email: row['email']!,
+          homeBranchId: row['homeBranchId'] || auth.branchId,
+          phone: row['phone'] || undefined,
+          gender: (row['gender'] as 'Male' | 'Female') || undefined,
+          dateOfBirth: row['dateOfBirth'] || undefined,
+          middleName: row['middleName'] || undefined,
+          address: row['address'] || undefined,
+          city: row['city'] || undefined,
+          emergencyContactName: row['emergencyContactName'] || undefined,
+          emergencyContactPhone: row['emergencyContactPhone'] || undefined,
+          emergencyContactRelationship: row['emergencyContactRelationship'] || undefined,
+          systemRole: row['systemRole'] || undefined,
+        },
+        auth,
+      );
+      imported++;
+    } catch (err) {
+      errors.push(`Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }
+
+  return { imported, errors };
+}
+
+function escapeCSV(value: unknown): string {
+  const s = value === null || value === undefined ? '' : String(value);
+  return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+export async function exportMembersCsv(db: Database, auth: AuthContext): Promise<string> {
+  const rows = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      email: members.email,
+      phone: members.phone,
+      gender: members.gender,
+      dateOfBirth: members.dateOfBirth,
+      address: members.address,
+      city: members.city,
+      branchName: branches.branchName,
+      membershipDate: members.membershipDate,
+      emergencyContactName: members.emergencyContactName,
+      emergencyContactPhone: members.emergencyContactPhone,
+      emergencyContactRelationship: members.emergencyContactRelationship,
+      systemRole: members.systemRole,
+      approvalStatus: members.approvalStatus,
+    })
+    .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
+    .where(
+      auth.systemRole === 'admin'
+        ? eq(members.isActive, true)
+        : and(eq(members.isActive, true), eq(members.homeBranchId, auth.branchId)),
+    )
+    .orderBy(members.lastName, members.firstName);
+
+  const headers = [
+    'firstName', 'lastName', 'email', 'phone', 'gender', 'dateOfBirth',
+    'address', 'city', 'branchName', 'membershipDate', 'emergencyContactName',
+    'emergencyContactPhone', 'emergencyContactRelationship', 'systemRole', 'approvalStatus',
+  ];
+
+  const lines = [
+    headers.join(','),
+    ...rows.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
+  ];
+
+  return lines.join('\n');
 }

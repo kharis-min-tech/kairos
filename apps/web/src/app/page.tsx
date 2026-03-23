@@ -13,7 +13,6 @@ import {
   Search,
   MessageSquare,
   FileSpreadsheet,
-  Church,
 } from "lucide-react";
 
 // ─── Style picker ──────────────────────────────────────────────────────────────
@@ -367,7 +366,6 @@ function NexaLanding() {
       {/* Hero — full-bleed photo with oversized text ON TOP */}
       <section className="relative min-h-screen overflow-hidden">
         {/* Background photo */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://picsum.photos/seed/nexa-team/1600/900"
           alt="Church team"
@@ -394,7 +392,6 @@ function NexaLanding() {
           <div className="absolute bottom-12 left-8 md:left-16 bg-black/70 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-4 max-w-xs">
             <div className="flex -space-x-2 shrink-0">
               {[75, 44, 32, 67].map((n, gender) => (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img key={n} src={`https://randomuser.me/api/portraits/${gender % 2 === 0 ? "men" : "women"}/${n}.jpg`} className="w-8 h-8 rounded-full border-2 border-black object-cover" alt="" />
               ))}
             </div>
@@ -411,7 +408,6 @@ function NexaLanding() {
 
       {/* Full-bleed dark photo — second section (like the agencee office shot) */}
       <section id="about" className="relative h-[70vh] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://picsum.photos/seed/nexa-office/1600/700"
           alt="Church leadership"
@@ -472,7 +468,6 @@ function NexaLanding() {
                 </div>
                 <p className="text-sm text-white/60 leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
                 <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover grayscale" />
                   <div>
                     <p className="font-bold text-sm">{t.name}</p>
@@ -545,7 +540,6 @@ function CareonLanding() {
 
       {/* Hero — full-bleed photo with dark overlay, text bottom-left, Careon style */}
       <section className="relative min-h-screen overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://picsum.photos/seed/kairos-congregation/1600/900"
           alt="Church congregation"
@@ -602,7 +596,6 @@ function CareonLanding() {
             </a>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-xl h-72 md:h-96">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://picsum.photos/seed/kairos-about/700/500"
               alt="Church community"
@@ -626,7 +619,6 @@ function CareonLanding() {
           <div className="grid md:grid-cols-3 gap-5">
             {IMPACT_CARDS.map((c) => (
               <div key={c.seed} className="relative h-56 rounded-2xl overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`https://picsum.photos/seed/${c.seed}/600/400`} alt={c.label} className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
                 <div className="relative z-10 flex flex-col justify-end h-full p-5">
@@ -662,7 +654,6 @@ function CareonLanding() {
               const seeds = ["feat-members", "feat-branches", "feat-attendance", "feat-giving", "feat-fellowship", "feat-reports"];
               return (
                 <div key={f.title} className="relative rounded-2xl overflow-hidden h-60 group">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://picsum.photos/seed/${seeds[i]}/600/400`} alt={f.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
                   <div className="relative z-10 flex flex-col justify-end h-full p-5">
@@ -695,7 +686,6 @@ function CareonLanding() {
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
                 <div className="mt-6 flex items-center gap-3 pt-4 border-t border-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
                   <div>
                     <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
@@ -710,7 +700,6 @@ function CareonLanding() {
 
       {/* CTA — full-bleed dark photo (like Careon dark "United, We Transform" section) */}
       <section className="relative py-32 px-8 md:px-16 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://picsum.photos/seed/kairos-cta/1600/600"
           alt=""

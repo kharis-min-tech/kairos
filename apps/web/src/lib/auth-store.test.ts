@@ -20,6 +20,7 @@ const mockMember: Member = {
   photoUrl: null,
   emergencyContactName: null,
   emergencyContactPhone: null,
+  emergencyContactRelationship: null,
   approvalStatus: 'approved',
   systemRole: 'member',
   emailVerified: true,

@@ -40,9 +40,11 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     photoUrl: row.photoUrl,
     emergencyContactName: row.emergencyContactName,
     emergencyContactPhone: row.emergencyContactPhone,
+    emergencyContactRelationship: row.emergencyContactRelationship,
     approvalStatus: row.approvalStatus as MemberProfile['approvalStatus'],
     systemRole: row.systemRole as MemberProfile['systemRole'],
     emailVerified: row.emailVerified,
+    mustChangePassword: row.mustChangePassword,
   };
 }
 
@@ -68,6 +70,7 @@ export interface SignupInput {
   homeBranchId: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   password: string;
 }
 
@@ -114,12 +117,14 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       postalCode: input.postalCode ?? null,
       emergencyContactName: input.emergencyContactName ?? null,
       emergencyContactPhone: input.emergencyContactPhone ?? null,
+      emergencyContactRelationship: input.emergencyContactRelationship ?? null,
       homeBranchId: input.homeBranchId,
       passwordHash,
       emailVerified: false,
       approvalStatus: 'pending',
       systemRole: 'member',
       isActive: false, // Inactive until admin approves
+      mustChangePassword: false,
     })
     .returning();
 
@@ -140,8 +145,7 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   };
 }
 
-/** Role hierarchy: ranks determine what someone can log in as */
-const ROLE_RANK: Record<SystemRole, number> = { admin: 4, pastor: 3, leader: 2, member: 1 };
+/** Strict role check: activeRole must match member's systemRole (or be 'member') */
 
 export async function login(
   db: Database,
@@ -159,12 +163,12 @@ export async function login(
   const isFirstLogin = member?.lastLoginAt === null;
 
   if (!member) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError('No account found with that email');
   }
 
   const valid = await bcrypt.compare(password, member.passwordHash);
   if (!valid) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError('Incorrect password');
   }
 
   if (!member.emailVerified) {
@@ -176,7 +180,7 @@ export async function login(
   }
 
   const memberRole = member.systemRole as SystemRole;
-  if (ROLE_RANK[memberRole] < ROLE_RANK[activeRole]) {
+  if (activeRole !== 'member' && memberRole !== activeRole) {
     throw new UnauthorizedError(`You don't have ${activeRole} access`);
   }
 
@@ -320,7 +324,7 @@ export async function resetPassword(db: Database, token: string, newPassword: st
 
   await db
     .update(members)
-    .set({ passwordHash, passwordResetToken: null, passwordResetExpiry: null })
+    .set({ passwordHash, passwordResetToken: null, passwordResetExpiry: null, mustChangePassword: false })
     .where(eq(members.id, match.id));
 }
 
@@ -359,6 +363,6 @@ export async function changePassword(
 
   await db
     .update(members)
-    .set({ passwordHash, updatedAt: sql`NOW()` })
+    .set({ passwordHash, mustChangePassword: false, updatedAt: sql`NOW()` })
     .where(eq(members.id, auth.memberId));
 }

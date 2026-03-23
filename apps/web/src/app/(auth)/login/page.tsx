@@ -83,7 +83,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const result = await loginMutation.mutateAsync({ ...data, activeRole: selectedRole });
-      router.push(result.isFirstLogin ? '/welcome' : '/dashboard');
+      if (result.member.mustChangePassword) {
+        router.push('/change-password');
+      } else {
+        router.push(result.isFirstLogin ? '/welcome' : '/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     }
@@ -248,6 +252,13 @@ export default function LoginPage() {
               Apple
             </button>
           </div>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="font-medium text-purple-600 hover:text-purple-700 hover:underline">
+              Sign up
+            </Link>
+          </p>
         </form>
       </div>
     </div>

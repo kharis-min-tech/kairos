@@ -71,9 +71,11 @@ export interface Member extends BaseEntity {
   photoUrl: string | null;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
+  emergencyContactRelationship: string | null;
   approvalStatus: MemberApprovalStatus;
   systemRole: SystemRole;
   emailVerified: boolean;
+  mustChangePassword: boolean;
 }
 
 export interface MemberWithBranch extends Member {
@@ -180,4 +182,21 @@ export interface FellowshipMeetingAttendance {
   notes: string | null;
   recordedAt: Date;
   recordedBy: string | null;
+}
+
+// ── Fellowship Join Request ────────────────────────────────
+
+export interface FellowshipJoinRequest extends BaseEntity {
+  fellowshipId: string;
+  memberId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes: string | null;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+}
+
+export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
+  memberFirstName: string;
+  memberLastName: string;
+  memberEmail: string;
 }

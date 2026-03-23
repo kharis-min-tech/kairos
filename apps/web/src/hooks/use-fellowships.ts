@@ -9,6 +9,8 @@ import type {
   AddFellowshipMemberRequest,
   FellowshipListParams,
   RecordAttendanceRequest,
+  CreateJoinRequestRequest,
+  ReviewJoinRequestRequest,
 } from '@kairos/types';
 
 // ── Fellowship queries ─────────────────────────────────────
@@ -155,5 +157,40 @@ export function useAttendanceSummary(fellowshipId: string) {
       return res.data!;
     },
     enabled: !!fellowshipId,
+  });
+}
+
+// ── Join Requests ──────────────────────────────────────────
+
+export function useFellowshipJoinRequests(fellowshipId: string) {
+  return useQuery({
+    queryKey: ['fellowships', fellowshipId, 'join-requests'],
+    queryFn: async () => {
+      const res = await api.fellowships.joinRequests.list(fellowshipId);
+      return res.data!;
+    },
+    enabled: !!fellowshipId,
+  });
+}
+
+export function useCreateJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ fellowshipId, data }: { fellowshipId: string; data: CreateJoinRequestRequest }) => {
+      const res = await api.fellowships.joinRequests.create(fellowshipId, data);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fellowships'] }),
+  });
+}
+
+export function useReviewJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ fellowshipId, requestId, data }: { fellowshipId: string; requestId: string; data: ReviewJoinRequestRequest }) => {
+      const res = await api.fellowships.joinRequests.review(fellowshipId, requestId, data);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fellowships'] }),
   });
 }

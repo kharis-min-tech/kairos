@@ -69,6 +69,17 @@ export function useDeactivateMember() {
   });
 }
 
+export function useReactivateMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.members.reactivate(id);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}
+
 export function useCreateMember() {
   const qc = useQueryClient();
   return useMutation({
@@ -81,6 +92,16 @@ export function useCreateMember() {
 }
 
 // ── Member Roles ───────────────────────────────────────────
+
+export function useAllRoles() {
+  return useQuery({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const res = await api.members.roles.listAll();
+      return res.data!;
+    },
+  });
+}
 
 export function useMemberRoles(memberId: string) {
   return useQuery({
