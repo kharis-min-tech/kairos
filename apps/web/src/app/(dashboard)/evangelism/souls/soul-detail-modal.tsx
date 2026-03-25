@@ -51,7 +51,13 @@ interface SoulDetailModalProps {
 export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailModalProps) {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
-  const [followUpForm, setFollowUpForm] = useState({
+  const [followUpForm, setFollowUpForm] = useState<{
+    contactDate: string;
+    contactTime: string;
+    contactMethod: ContactMethod;
+    contactStatus: ContactStatus;
+    notes: string;
+  }>({
     contactDate: todayStr(),
     contactTime: '',
     contactMethod: CONTACT_METHODS,
@@ -190,8 +196,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
                 <TextInput label="Time" name="contactTime" type="time" value={followUpForm.contactTime} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactTime: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <SelectInput label="Method *" name="contactMethod" options={CONTACT_METHODS} value={followUpForm.contactMethod} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactMethod: e.target.value }))} error={followUpErrors.contactMethod} />
-                <SelectInput label="Status *" name="contactStatus" options={CONTACT_STATUSES} value={followUpForm.contactStatus} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactStatus: e.target.value }))} error={followUpErrors.contactStatus} />
+                <SelectInput label="Method *" name="contactMethod" options={CONTACT_METHODS} value={followUpForm.contactMethod} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactMethod: e.target.value as ContactMethod }))} error={followUpErrors.contactMethod} />
+                <SelectInput label="Status *" name="contactStatus" options={CONTACT_STATUSES} value={followUpForm.contactStatus} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactStatus: e.target.value as ContactStatus }))} error={followUpErrors.contactStatus} />
               </div>
               <Textarea label="Notes" name="notes" value={followUpForm.notes} onChange={(e) => setFollowUpForm((p) => ({ ...p, notes: e.target.value }))} />
               <Button type="submit" size="sm" disabled={submitting}>{submitting ? 'Saving...' : 'Save Follow-up'}</Button>
