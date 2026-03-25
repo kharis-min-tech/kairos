@@ -115,7 +115,7 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     setSubmitting(true);
 
     try {
-      const result = await souls.convert(soul.soulId, {
+      await souls.convert(soul.soulId, {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
         email: formData.email.trim() || undefined,
