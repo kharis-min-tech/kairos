@@ -159,13 +159,16 @@ jobs:
 
       - name: Get auth token via Cognito admin-initiate-auth
         id: auth
+        env:
+          SMOKE_USERNAME: ${{ secrets.SMOKE_TEST_USERNAME }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_TEST_PASSWORD }}
         run: |
           RESULT=$(aws cognito-idp initiate-auth \
             --client-id "$COGNITO_CLIENT_ID" \
             --auth-flow USER_PASSWORD_AUTH \
             --auth-parameters \
-              USERNAME="${{ secrets.SMOKE_TEST_USERNAME }}" \
-              PASSWORD="${{ secrets.SMOKE_TEST_PASSWORD }}")
+              USERNAME="$SMOKE_USERNAME" \
+              PASSWORD="$SMOKE_PASSWORD")
           TOKEN=$(echo "$RESULT" | jq -r '.AuthenticationResult.IdToken')
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
