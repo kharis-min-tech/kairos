@@ -60,7 +60,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
   }>({
     contactDate: todayStr(),
     contactTime: '',
-    contactMethod: CONTACT_METHODS,
+    contactMethod: 'Phone Call',
     contactStatus: 'Successful',
     notes: '',
   });
