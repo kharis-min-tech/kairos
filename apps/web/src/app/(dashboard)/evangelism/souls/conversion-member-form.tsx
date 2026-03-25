@@ -25,7 +25,7 @@ interface ConversionMemberFormProps {
   soul: Soul;
   open: boolean;
   onClose: () => void;
-  onSuccess: (memberId: number) => void;
+  onSuccess: () => void;
 }
 
 export function ConversionMemberForm({ soul, open, onClose, onSuccess }: ConversionMemberFormProps) {
@@ -126,7 +126,7 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
         home_branch_id: Number(formData.homeBranchId),
       });
       
-      onSuccess(result.member.memberId);
+      onSuccess();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('An unexpected error occurred');
       console.error('Soul conversion failed:', err);
