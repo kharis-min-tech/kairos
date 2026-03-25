@@ -165,7 +165,7 @@ export default function ReportsPage() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-purple-600 text-white'
-                : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-600'
+                : 'border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
             }`}
           >
             {tab.label}
@@ -189,10 +189,13 @@ export default function ReportsPage() {
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={attendanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} unit="%" />
-                  <Tooltip formatter={(value) => [`${value}%`, 'Rate']} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
+                  <XAxis dataKey="week" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} unit="%" />
+                  <Tooltip
+                    formatter={(value) => [`${value}%`, 'Rate']}
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem', color: 'hsl(var(--foreground))' }}
+                  />
                   <Line type="monotone" dataKey="rate" stroke="#6D28D9" strokeWidth={2} dot={{ fill: '#6D28D9', r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -223,7 +226,10 @@ export default function ReportsPage() {
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']} />
+                  <Tooltip
+                    formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']}
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem', color: 'hsl(var(--foreground))' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -236,10 +242,13 @@ export default function ReportsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={MOCK_GIVING_MONTHLY} barSize={36}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip
+                    formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']}
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem', color: 'hsl(var(--foreground))' }}
+                  />
                   <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
                     {MOCK_GIVING_MONTHLY.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
@@ -273,10 +282,12 @@ export default function ReportsPage() {
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={growthData} barSize={36}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem', color: 'hsl(var(--foreground))' }}
+                  />
                   <Bar dataKey="newSignups" name="New Members" radius={[4, 4, 0, 0]}>
                     {growthData.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />

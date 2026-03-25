@@ -475,7 +475,7 @@ describe('createJoinRequest', () => {
 
 describe('listJoinRequests', () => {
   it('returns pending join requests for leader', async () => {
-    const requests = [{ ...sampleJoinRequest, memberFirstName: 'John', memberLastName: 'Doe', memberEmail: 'john@test.com' }];
+    const requests = [{ ...sampleJoinRequest, memberFirstName: 'John', memberLastName: 'Doe' }];
     // 1) getFellowship, 2) list query
     setupSelectSequence([{ ...sampleFellowship, leaderId: leaderAuth.memberId }], requests);
     const result = await listJoinRequests(mockDb, leaderAuth, fellowshipId);

@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "concurrently --kill-others-on-fail --prefix-colors \"bgMagenta.bold,bgCyan.bold\" --prefix \"[{name}]\" --names \"api,web\" \"cd apps/api && npm run dev\" \"cd apps/web && npx next dev --port 3000\"",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "concurrently": "^9.2.1",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },

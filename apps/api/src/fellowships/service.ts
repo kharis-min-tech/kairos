@@ -10,7 +10,15 @@ import {
   branches,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ValidationError,
+  sendJoinRequestReceivedEmail,
+  sendJoinRequestApprovedEmail,
+  sendJoinRequestRejectedEmail,
+} from '@kairos/utils';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
@@ -238,6 +246,27 @@ export async function deactivateFellowship(db: Database, auth: AuthContext, id: 
 export async function listFellowshipMembers(db: Database, auth: AuthContext, fellowshipId: string) {
   const fellowship = await getFellowship(db, auth, fellowshipId);
 
+  // Non-admin/pastor/leader members can only see the roster if they are active members themselves
+  const isPrivileged =
+    auth.systemRole === 'admin' ||
+    auth.systemRole === 'pastor' ||
+    (auth.systemRole === 'leader' &&
+      (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId));
+
+  if (!isPrivileged) {
+    const [activeMembership] = await db
+      .select({ id: fellowshipMembers.id })
+      .from(fellowshipMembers)
+      .where(
+        and(
+          eq(fellowshipMembers.fellowshipId, fellowshipId),
+          eq(fellowshipMembers.memberId, auth.memberId),
+          eq(fellowshipMembers.isActive, true),
+        ),
+      );
+    if (!activeMembership) return [];
+  }
+
   return db
     .select({
       id: fellowshipMembers.id,
@@ -245,7 +274,6 @@ export async function listFellowshipMembers(db: Database, auth: AuthContext, fel
       memberId: fellowshipMembers.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
-      memberEmail: members.email,
       joinDate: fellowshipMembers.joinDate,
       isActive: fellowshipMembers.isActive,
       notes: fellowshipMembers.notes,
@@ -527,19 +555,6 @@ export async function createJoinRequest(
     );
   if (activeMembership) throw new ConflictError('You are already a member of this fellowship');
 
-  // Check if previously removed from this fellowship
-  const [previousMembership] = await db
-    .select({ id: fellowshipMembers.id })
-    .from(fellowshipMembers)
-    .where(
-      and(
-        eq(fellowshipMembers.fellowshipId, fellowshipId),
-        eq(fellowshipMembers.memberId, auth.memberId),
-        eq(fellowshipMembers.isActive, false),
-      ),
-    );
-  if (previousMembership) throw new ConflictError('You have previously been removed from this fellowship');
-
   const [pendingRequest] = await db
     .select({ id: fellowshipJoinRequests.id })
     .from(fellowshipJoinRequests)
@@ -575,6 +590,19 @@ export async function createJoinRequest(
     .values({ fellowshipId, memberId: auth.memberId, notes: data.notes })
     .returning();
 
+  // Fire confirmation email — non-blocking
+  const [requester] = await db
+    .select({ email: members.email, firstName: members.firstName })
+    .from(members)
+    .where(eq(members.id, auth.memberId));
+  if (requester?.email) {
+    sendJoinRequestReceivedEmail(
+      requester.email,
+      requester.firstName,
+      fellowship.fellowshipName,
+    ).catch(() => { /* email failure is non-fatal */ });
+  }
+
   return request!;
 }
 
@@ -589,7 +617,6 @@ export async function listJoinRequests(db: Database, auth: AuthContext, fellowsh
       memberId: fellowshipJoinRequests.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
-      memberEmail: members.email,
       status: fellowshipJoinRequests.status,
       notes: fellowshipJoinRequests.notes,
       reviewedBy: fellowshipJoinRequests.reviewedBy,
@@ -663,6 +690,21 @@ export async function reviewJoinRequest(
         .insert(fellowshipMembers)
         .values({ fellowshipId, memberId: request.memberId });
     }
+  }
+
+  // Fire outcome email — non-blocking
+  const [reviewee] = await db
+    .select({ email: members.email, firstName: members.firstName })
+    .from(members)
+    .where(eq(members.id, request.memberId));
+  if (reviewee?.email) {
+    const sendFn =
+      data.status === 'approved'
+        ? sendJoinRequestApprovedEmail
+        : sendJoinRequestRejectedEmail;
+    sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName).catch(() => {
+      /* email failure is non-fatal */
+    });
   }
 
   return updated!;
