@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { Soul, FollowUp  } from '@kairos/types';
+import type { Soul, FollowUp, ContactMethod, ContactStatus } from '@kairos/types';
 import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
