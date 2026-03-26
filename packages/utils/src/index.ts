@@ -2,4 +2,11 @@ export { AppError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictErr
 export { enforceBranchAccess } from './auth';
 export { successResponse, errorResponse, paginatedResponse, parsePagination } from './response';
 export { logger } from './logger';
-export { sendPasswordResetEmail } from './mailer';
+export {
+  sendPasswordResetEmail,
+  sendJoinRequestReceivedEmail,
+  sendJoinRequestApprovedEmail,
+  sendJoinRequestRejectedEmail,
+  sendAccountApprovedEmail,
+  sendAccountRejectedEmail,
+} from './mailer';

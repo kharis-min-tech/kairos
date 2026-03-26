@@ -4,7 +4,14 @@ import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ValidationError,
+  sendAccountApprovedEmail,
+  sendAccountRejectedEmail,
+} from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
@@ -188,7 +195,7 @@ export async function approveMember(
   }
 
   const [member] = await db
-    .select({ id: members.id, approvalStatus: members.approvalStatus })
+    .select({ id: members.id, approvalStatus: members.approvalStatus, email: members.email, firstName: members.firstName })
     .from(members)
     .where(eq(members.id, memberId));
 
@@ -206,6 +213,16 @@ export async function approveMember(
     })
     .where(eq(members.id, memberId))
     .returning();
+
+  // Send approval/rejection email non-blocking
+  if (member.email) {
+    const memberName = member.firstName ?? 'Member';
+    if (approved) {
+      sendAccountApprovedEmail(member.email, memberName).catch(() => {});
+    } else {
+      sendAccountRejectedEmail(member.email, memberName).catch(() => {});
+    }
+  }
 
   return updated;
 }

@@ -37,6 +37,7 @@ export default function FellowshipDetailPage() {
   const [meetingForm, setMeetingForm] = useState({ meetingDate: '', meetingTitle: '', meetingTopic: '', location: '', durationMinutes: '' });
   const [attendanceMeetingId, setAttendanceMeetingId] = useState<string | null>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, string>>({});
+  const [selectedRequestIds, setSelectedRequestIds] = useState<Set<string>>(new Set());
 
   const { data: fellowship, isLoading, error } = useFellowship(id);
   const { data: members } = useFellowshipMembers(id);
@@ -178,7 +179,7 @@ export default function FellowshipDetailPage() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-purple-600 text-white'
-                : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-600'
+                : 'border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
             }`}
           >
             {tab.label}
@@ -324,7 +325,11 @@ export default function FellowshipDetailPage() {
           {!members || members.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No members in this fellowship yet.</p>
+                {!isMemberOfFellowship && !isAdminOrPastor ? (
+                  <p className="text-muted-foreground">Member information is only available to fellowship members.</p>
+                ) : (
+                  <p className="text-muted-foreground">No members in this fellowship yet.</p>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -345,7 +350,6 @@ export default function FellowshipDetailPage() {
                         <p className="truncate font-medium">
                           {member.memberFirstName} {member.memberLastName}
                         </p>
-                        <p className="truncate text-sm text-muted-foreground">{member.memberEmail}</p>
                         <span className={`text-xs font-medium ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {member.isActive ? 'Active' : 'Inactive'}
                         </span>
@@ -624,6 +628,52 @@ export default function FellowshipDetailPage() {
 
       {activeTab === 'join-requests' && isAdminOrPastor && (
         <div className="space-y-4">
+          {selectedRequestIds.size > 0 && (
+            <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 shadow-sm">
+              <span className="text-sm font-medium">{selectedRequestIds.size} selected</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const ids = Array.from(selectedRequestIds);
+                    Promise.all(
+                      ids.map((requestId) =>
+                        reviewJoinRequest.mutateAsync({ fellowshipId: id, requestId, data: { status: 'approved' } }),
+                      ),
+                    )
+                      .then(() => {
+                        toast.success(`${ids.length} request${ids.length > 1 ? 's' : ''} approved.`);
+                        setSelectedRequestIds(new Set());
+                      })
+                      .catch(() => toast.error('Some requests could not be approved. Please try again.'));
+                  }}
+                  disabled={reviewJoinRequest.isPending}
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Approve selected
+                </button>
+                <button
+                  onClick={() => {
+                    const ids = Array.from(selectedRequestIds);
+                    Promise.all(
+                      ids.map((requestId) =>
+                        reviewJoinRequest.mutateAsync({ fellowshipId: id, requestId, data: { status: 'rejected' } }),
+                      ),
+                    )
+                      .then(() => {
+                        toast.success(`${ids.length} request${ids.length > 1 ? 's' : ''} rejected.`);
+                        setSelectedRequestIds(new Set());
+                      })
+                      .catch(() => toast.error('Some requests could not be rejected. Please try again.'));
+                  }}
+                  disabled={reviewJoinRequest.isPending}
+                  className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                >
+                  Reject selected
+                </button>
+              </div>
+            </div>
+          )}
+
           {!joinRequests || joinRequests.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
@@ -634,15 +684,33 @@ export default function FellowshipDetailPage() {
             <div className="space-y-3">
               {joinRequests.map((req) => {
                 const initials = ((req.memberFirstName?.[0] ?? '') + (req.memberLastName?.[0] ?? '')).toUpperCase() || '?';
+                const isSelected = selectedRequestIds.has(req.id);
+                const atLimit = selectedRequestIds.size >= 5 && !isSelected;
                 return (
                   <Card key={req.id}>
                     <CardContent className="flex items-center gap-3 py-4">
+                      {req.status === 'pending' && (
+                        <div className="relative flex-shrink-0" title={atLimit ? 'Maximum 5 at a time' : undefined}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={atLimit}
+                            onChange={(e) => {
+                              setSelectedRequestIds((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(req.id); else next.delete(req.id);
+                                return next;
+                              });
+                            }}
+                            className="h-4 w-4 cursor-pointer accent-purple-600 disabled:cursor-not-allowed disabled:opacity-40"
+                          />
+                        </div>
+                      )}
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
                         {initials}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{req.memberFirstName} {req.memberLastName}</p>
-                        <p className="text-sm text-muted-foreground">{req.memberEmail}</p>
                         {req.notes && <p className="mt-1 text-xs text-muted-foreground">Note: {req.notes}</p>}
                       </div>
                       {req.status === 'pending' ? (
@@ -651,7 +719,10 @@ export default function FellowshipDetailPage() {
                             onClick={() => reviewJoinRequest.mutate(
                               { fellowshipId: id, requestId: req.id, data: { status: 'approved' } },
                               {
-                                onSuccess: () => toast.success('Request approved — member added.'),
+                                onSuccess: () => {
+                                  toast.success('Request approved — member added.');
+                                  setSelectedRequestIds((prev) => { const n = new Set(prev); n.delete(req.id); return n; });
+                                },
                                 onError: () => toast.error('Failed to approve request. Please try again.'),
                               },
                             )}
@@ -664,7 +735,10 @@ export default function FellowshipDetailPage() {
                             onClick={() => reviewJoinRequest.mutate(
                               { fellowshipId: id, requestId: req.id, data: { status: 'rejected' } },
                               {
-                                onSuccess: () => toast.success('Request rejected.'),
+                                onSuccess: () => {
+                                  toast.success('Request rejected.');
+                                  setSelectedRequestIds((prev) => { const n = new Set(prev); n.delete(req.id); return n; });
+                                },
                                 onError: () => toast.error('Failed to reject request. Please try again.'),
                               },
                             )}

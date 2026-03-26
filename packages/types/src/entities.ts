@@ -156,7 +156,6 @@ export interface FellowshipMember extends BaseEntity {
 export interface FellowshipMemberWithDetails extends FellowshipMember {
   memberFirstName: string;
   memberLastName: string;
-  memberEmail: string;
 }
 
 // ── Fellowship Meeting ─────────────────────────────────────
@@ -198,5 +197,4 @@ export interface FellowshipJoinRequest extends BaseEntity {
 export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
   memberFirstName: string;
   memberLastName: string;
-  memberEmail: string;
 }
