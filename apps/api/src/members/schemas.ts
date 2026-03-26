@@ -13,7 +13,10 @@ export const updateMemberSchema = z.object({
   emergencyContactName: z.string().max(150).optional(),
   emergencyContactPhone: z.string().max(20).optional(),
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
-  photoUrl: z.string().url().max(255).optional(),
+  photoUrl: z.string().max(270000).refine(
+    (v) => /^https?:\/\//.test(v) || /^data:image\/(jpeg|png|webp|gif);base64,/.test(v),
+    { message: 'photoUrl must be an http/https URL or a base64 JPEG/PNG/WebP/GIF data URI' }
+  ).optional(),
 });
 
 export const approveMemberSchema = z.object({

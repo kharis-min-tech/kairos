@@ -191,6 +191,34 @@ describe('updateMember', () => {
     await expect(updateMember(mockDb, memberId, { phone: '999' }, adminAuth))
       .rejects.toThrow('Member not found');
   });
+
+  it('converts pg 22001 (value too long) to ValidationError', async () => {
+    setupSelect([{ id: memberId }]);
+    const pgErr = Object.assign(new Error('value too long'), { code: '22001' });
+    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      const chain: Record<string, unknown> = {};
+      const methods = ['set', 'where', 'returning'];
+      for (const m of methods) chain[m] = vi.fn().mockReturnValue(chain);
+      chain['then'] = (_: unknown, reject: (e: unknown) => void) => reject(pgErr);
+      return chain;
+    });
+    await expect(updateMember(mockDb, memberId, { photoUrl: 'x'.repeat(300) }, adminAuth))
+      .rejects.toThrow('One or more values are too long');
+  });
+
+  it('converts pg 23505 (unique violation) to ValidationError', async () => {
+    setupSelect([{ id: memberId }]);
+    const pgErr = Object.assign(new Error('duplicate key value'), { code: '23505' });
+    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      const chain: Record<string, unknown> = {};
+      const methods = ['set', 'where', 'returning'];
+      for (const m of methods) chain[m] = vi.fn().mockReturnValue(chain);
+      chain['then'] = (_: unknown, reject: (e: unknown) => void) => reject(pgErr);
+      return chain;
+    });
+    await expect(updateMember(mockDb, memberId, { phone: '123' }, adminAuth))
+      .rejects.toThrow('A member with this phone number or email already exists');
+  });
 });
 
 // ── approveMember ─────────────────────────────────────────
@@ -335,7 +363,14 @@ describe('deactivateMember', () => {
 
   it('rejects non-admin', async () => {
     await expect(deactivateMember(mockDb, memberId, memberAuth))
-      .rejects.toThrow('Only admins can deactivate members');
+      .rejects.toThrow('Only admins and pastors can deactivate members');
+  });
+
+  it('pastor can deactivate member in same branch', async () => {
+    setupSelect([{ id: memberId }]);
+    setupUpdate([{ ...sampleMemberFull, isActive: false }]);
+    const result = await deactivateMember(mockDb, memberId, pastorAuth);
+    expect(result).toBeDefined();
   });
 
   it('throws NotFoundError for missing member', async () => {
@@ -431,8 +466,16 @@ describe('reactivateMember', () => {
   });
 
   it('throws ForbiddenError for non-admin', async () => {
-    await expect(reactivateMember(mockDb, memberId, pastorAuth))
-      .rejects.toThrow('Only admins can reactivate members');
+    await expect(reactivateMember(mockDb, memberId, memberAuth))
+      .rejects.toThrow('Only admins and pastors can reactivate members');
+  });
+
+  it('pastor can reactivate member in same branch', async () => {
+    setupSelect([{ id: memberId, isActive: false }]);
+    const reactivated = { ...sampleMemberFull, isActive: true, approvalStatus: 'approved' };
+    setupUpdate([reactivated]);
+    const result = await reactivateMember(mockDb, memberId, pastorAuth);
+    expect(result).toEqual(reactivated);
   });
 
   it('throws NotFoundError for missing member', async () => {

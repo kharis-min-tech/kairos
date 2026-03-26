@@ -13,6 +13,8 @@
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate --filter=@kairos/database",
     "db:migrate": "turbo db:migrate --filter=@kairos/database",
+    "db:drop": "turbo db:drop --filter=@kairos/database",
+    "db:fresh": "turbo db:fresh --filter=@kairos/database",
     "db:studio": "turbo db:studio --filter=@kairos/database",
     "db:seed": "turbo db:seed --filter=@kairos/database"
   },

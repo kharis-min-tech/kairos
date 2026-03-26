@@ -99,12 +99,12 @@ membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) =>
   return c.json(successResponse(member));
 });
 
-membersRouter.delete('/:id', requireRole('admin'), async (c) => {
+membersRouter.delete('/:id', requireRole('admin', 'pastor'), async (c) => {
   const member = await deactivateMember(db, c.req.param('id')!, getAuth(c));
   return c.json(successResponse(member, 'Member deactivated'));
 });
 
-membersRouter.post('/:id/reactivate', requireRole('admin'), async (c) => {
+membersRouter.post('/:id/reactivate', requireRole('admin', 'pastor'), async (c) => {
   const auth = getAuth(c);
   const member = await reactivateMember(db, c.req.param('id')!, auth);
   return c.json(successResponse(member, 'Member reactivated'));

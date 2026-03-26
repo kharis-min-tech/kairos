@@ -96,6 +96,7 @@ export interface BranchLeadership extends BaseEntity {
 export interface BranchLeadershipWithMember extends BranchLeadership {
   memberFirstName: string;
   memberLastName: string;
+  memberPhotoUrl?: string | null;
 }
 
 // ── Role ───────────────────────────────────────────────────
@@ -156,6 +157,7 @@ export interface FellowshipMember extends BaseEntity {
 export interface FellowshipMemberWithDetails extends FellowshipMember {
   memberFirstName: string;
   memberLastName: string;
+  memberPhotoUrl?: string | null;
 }
 
 // ── Fellowship Meeting ─────────────────────────────────────
@@ -197,4 +199,5 @@ export interface FellowshipJoinRequest extends BaseEntity {
 export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
   memberFirstName: string;
   memberLastName: string;
+  memberPhotoUrl?: string | null;
 }

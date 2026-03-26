@@ -8,6 +8,20 @@
       "when": 1773870822715,
       "tag": "0000_nifty_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774373512660,
+      "tag": "0001_goofy_talos",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774413845489,
+      "tag": "0002_silly_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

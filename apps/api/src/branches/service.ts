@@ -185,6 +185,7 @@ export async function getBranchLeadership(
       memberId: branchLeadership.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
+      memberPhotoUrl: members.photoUrl,
       role: branchLeadership.role,
       startDate: branchLeadership.startDate,
       endDate: branchLeadership.endDate,

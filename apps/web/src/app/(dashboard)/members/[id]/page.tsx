@@ -10,6 +10,7 @@ import { useBranches } from '@/hooks/use-branches';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { MemberAvatar } from '@/components/member-avatar';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +59,6 @@ export default function MemberDetailPage() {
     );
   }
 
-  const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
   const statusCls =
     member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
     : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
@@ -75,9 +75,13 @@ export default function MemberDetailPage() {
           Back to Members
         </Link>
         <div className="mt-3 flex items-center gap-4">
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-xl font-bold">
-            {initials}
-          </div>
+          <MemberAvatar
+            photoUrl={member.photoUrl}
+            firstName={member.firstName}
+            lastName={member.lastName}
+            size="lg"
+            variant="dark"
+          />
           <div className="flex-1">
             <h1 className="text-2xl font-bold">
               {member.firstName} {member.lastName}

@@ -97,6 +97,7 @@ export async function listMembers(
         systemRole: members.systemRole,
         isActive: members.isActive,
         createdAt: members.createdAt,
+        photoUrl: members.photoUrl,
       })
       .from(members)
       .innerJoin(branches, eq(members.homeBranchId, branches.id))
@@ -175,13 +176,22 @@ export async function updateMember(
 
   if (!existing) throw new NotFoundError('Member not found');
 
-  const [updated] = await db
-    .update(members)
-    .set({ ...input, updatedAt: sql`NOW()` })
-    .where(eq(members.id, memberId))
-    .returning();
+  try {
+    const [updated] = await db
+      .update(members)
+      .set({ ...input, updatedAt: sql`NOW()` })
+      .where(eq(members.id, memberId))
+      .returning();
 
-  return updated;
+    return updated;
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const code = (err as { code: string }).code;
+      if (code === '22001') throw new ValidationError('One or more values are too long. If you uploaded a photo, please try a smaller image.');
+      if (code === '23505') throw new ValidationError('A member with this phone number or email already exists.');
+    }
+    throw err;
+  }
 }
 
 export async function approveMember(
@@ -338,14 +348,19 @@ export async function deactivateMember(
   memberId: string,
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin') {
-    throw new ForbiddenError('Only admins can deactivate members');
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    throw new ForbiddenError('Only admins and pastors can deactivate members');
+  }
+
+  const conditions = [eq(members.id, memberId), eq(members.isActive, true)];
+  if (auth.systemRole === 'pastor') {
+    conditions.push(eq(members.homeBranchId, auth.branchId));
   }
 
   const [member] = await db
     .select({ id: members.id })
     .from(members)
-    .where(and(eq(members.id, memberId), eq(members.isActive, true)));
+    .where(and(...conditions));
 
   if (!member) throw new NotFoundError('Member not found');
 
@@ -448,14 +463,20 @@ export async function reactivateMember(
   memberId: string,
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin') {
-    throw new ForbiddenError('Only admins can reactivate members');
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    throw new ForbiddenError('Only admins and pastors can reactivate members');
   }
 
-  const [member] = await db
+  const query = db
     .select({ id: members.id, isActive: members.isActive })
     .from(members)
-    .where(eq(members.id, memberId));
+    .where(
+      auth.systemRole === 'pastor'
+        ? and(eq(members.id, memberId), eq(members.homeBranchId, auth.branchId))
+        : eq(members.id, memberId),
+    );
+
+  const [member] = await query;
 
   if (!member) throw new NotFoundError('Member not found');
   if (member.isActive) throw new ConflictError('Member is already active');

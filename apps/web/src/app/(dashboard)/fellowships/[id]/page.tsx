@@ -21,6 +21,7 @@ import {
 import { useMembers } from '@/hooks/use-members';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { MemberAvatar } from '@/components/member-avatar';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'join-requests';
@@ -335,7 +336,6 @@ export default function FellowshipDetailPage() {
           ) : (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {members.map((member) => {
-                const initials = ((member.memberFirstName?.[0] ?? '') + (member.memberLastName?.[0] ?? '')).toUpperCase() || '?';
                 return (
                   <Card
                     key={member.id}
@@ -343,9 +343,13 @@ export default function FellowshipDetailPage() {
                     onClick={isAdminOrPastor ? () => router.push(`/members/${member.memberId}`) : undefined}
                   >
                     <CardContent className="flex items-center gap-3 py-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
-                        {initials}
-                      </div>
+                      <MemberAvatar
+                        photoUrl={member.memberPhotoUrl}
+                        firstName={member.memberFirstName}
+                        lastName={member.memberLastName}
+                        size="sm"
+                        variant="light"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium">
                           {member.memberFirstName} {member.memberLastName}
@@ -683,7 +687,6 @@ export default function FellowshipDetailPage() {
           ) : (
             <div className="space-y-3">
               {joinRequests.map((req) => {
-                const initials = ((req.memberFirstName?.[0] ?? '') + (req.memberLastName?.[0] ?? '')).toUpperCase() || '?';
                 const isSelected = selectedRequestIds.has(req.id);
                 const atLimit = selectedRequestIds.size >= 5 && !isSelected;
                 return (
@@ -706,9 +709,13 @@ export default function FellowshipDetailPage() {
                           />
                         </div>
                       )}
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
-                        {initials}
-                      </div>
+                      <MemberAvatar
+                        photoUrl={req.memberPhotoUrl}
+                        firstName={req.memberFirstName}
+                        lastName={req.memberLastName}
+                        size="sm"
+                        variant="light"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{req.memberFirstName} {req.memberLastName}</p>
                         {req.notes && <p className="mt-1 text-xs text-muted-foreground">Note: {req.notes}</p>}

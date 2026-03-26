@@ -274,6 +274,7 @@ export async function listFellowshipMembers(db: Database, auth: AuthContext, fel
       memberId: fellowshipMembers.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
+      memberPhotoUrl: members.photoUrl,
       joinDate: fellowshipMembers.joinDate,
       isActive: fellowshipMembers.isActive,
       notes: fellowshipMembers.notes,
@@ -555,6 +556,19 @@ export async function createJoinRequest(
     );
   if (activeMembership) throw new ConflictError('You are already a member of this fellowship');
 
+  // Check if previously removed from this fellowship
+  const [previousMembership] = await db
+    .select({ id: fellowshipMembers.id })
+    .from(fellowshipMembers)
+    .where(
+      and(
+        eq(fellowshipMembers.fellowshipId, fellowshipId),
+        eq(fellowshipMembers.memberId, auth.memberId),
+        eq(fellowshipMembers.isActive, false),
+      ),
+    );
+  if (previousMembership) throw new ConflictError('You cannot request to join this fellowship at this time, please contact Admin');
+
   const [pendingRequest] = await db
     .select({ id: fellowshipJoinRequests.id })
     .from(fellowshipJoinRequests)
@@ -617,6 +631,7 @@ export async function listJoinRequests(db: Database, auth: AuthContext, fellowsh
       memberId: fellowshipJoinRequests.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
+      memberPhotoUrl: members.photoUrl,
       status: fellowshipJoinRequests.status,
       notes: fellowshipJoinRequests.notes,
       reviewedBy: fellowshipJoinRequests.reviewedBy,

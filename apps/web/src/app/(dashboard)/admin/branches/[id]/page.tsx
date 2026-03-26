@@ -12,6 +12,7 @@ import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
+import { MemberAvatar } from '@/components/member-avatar';
 
 const schema = z.object({
   branchName: z.string().min(1, 'Branch name is required'),
@@ -365,13 +366,16 @@ export default function BranchDetailPage() {
           ) : (
             <div className="space-y-3">
               {leadership.map((leader) => {
-                const initials = ((leader.memberFirstName?.[0] ?? '') + (leader.memberLastName?.[0] ?? '')).toUpperCase() || '?';
                 return (
                   <div key={leader.id} className="flex items-center justify-between rounded-md border p-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
-                        {initials}
-                      </div>
+                      <MemberAvatar
+                        photoUrl={leader.memberPhotoUrl}
+                        firstName={leader.memberFirstName}
+                        lastName={leader.memberLastName}
+                        size="md"
+                        variant="light"
+                      />
                       <div>
                         <p className="font-medium">
                           {leader.memberFirstName} {leader.memberLastName}
@@ -432,7 +436,6 @@ export default function BranchDetailPage() {
                   </thead>
                   <tbody className="divide-y">
                     {membersData.data.map((member) => {
-                      const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
                       return (
                         <tr
                           key={member.id}
@@ -441,9 +444,13 @@ export default function BranchDetailPage() {
                         >
                           <td className="py-2 pr-4">
                             <div className="flex items-center gap-2">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
-                                {initials}
-                              </div>
+                              <MemberAvatar
+                                photoUrl={member.photoUrl}
+                                firstName={member.firstName}
+                                lastName={member.lastName}
+                                size="xs"
+                                variant="light"
+                              />
                               <span className="font-medium">{member.firstName} {member.lastName}</span>
                             </div>
                           </td>

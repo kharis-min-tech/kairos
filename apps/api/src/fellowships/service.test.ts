@@ -459,7 +459,7 @@ describe('createJoinRequest', () => {
     setupSelectSequence([sampleFellowship], [], [sampleJoinRequest]);
     await expect(
       createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
-    ).rejects.toThrow('You already have a pending join request');
+    ).rejects.toThrow('You cannot request to join this fellowship at this time, please contact Admin');
   });
 
   it('throws ConflictError when already in same-type fellowship', async () => {
@@ -467,7 +467,7 @@ describe('createJoinRequest', () => {
     setupSelectSequence([sampleFellowship], [], [], [{ id: 'some-existing' }]);
     await expect(
       createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
-    ).rejects.toThrow('You are already in a K-Groups fellowship');
+    ).rejects.toThrow('You already have a pending join request for this fellowship');
   });
 });
 

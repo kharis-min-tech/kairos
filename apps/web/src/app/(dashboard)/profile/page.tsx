@@ -18,6 +18,35 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
+function resizeImageToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 256;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) {
+          height = Math.round((height * MAX) / width);
+          width = MAX;
+        } else {
+          width = Math.round((width * MAX) / height);
+          height = MAX;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = reject;
+    img.src = objectUrl;
+  });
+}
+
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
   const { data: member, isLoading } = useMyProfile();
@@ -81,16 +110,12 @@ export default function ProfilePage() {
     setIsEditing(false);
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setPhotoPreview(result);
-      setValue('photoUrl', result);
-    };
-    reader.readAsDataURL(file);
+    const resized = await resizeImageToBase64(file);
+    setPhotoPreview(resized);
+    setValue('photoUrl', resized);
   }
 
   async function onSubmit(data: UpdateMemberRequest) {
@@ -101,8 +126,6 @@ export default function ProfilePage() {
     const cleaned: UpdateMemberRequest = {};
     for (const [k, v] of Object.entries(data)) {
       if (v !== '' && v !== null && v !== undefined) {
-        // Skip data URLs — the API only accepts http/https URLs for photoUrl
-        if (k === 'photoUrl' && typeof v === 'string' && v.startsWith('data:')) continue;
         (cleaned as Record<string, unknown>)[k] = v;
       }
     }

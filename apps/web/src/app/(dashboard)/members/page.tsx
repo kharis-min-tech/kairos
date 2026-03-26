@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
@@ -12,6 +12,7 @@ import { Input } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
+import { MemberAvatar } from '@/components/member-avatar';
 
 export default function MembersPage() {
   const user = useAuthStore((s) => s.user);
@@ -25,6 +26,17 @@ export default function MembersPage() {
   });
   const [searchInput, setSearchInput] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+
+  // When the user profile loads after page refresh, apply the branch filter for pastors
+  useEffect(() => {
+    if (isPastor && user?.homeBranchId) {
+      setParams((prev) => {
+        if (prev.branchId === user.homeBranchId) return prev;
+        return { ...prev, branchId: user.homeBranchId, page: 1 };
+      });
+    }
+  }, [isPastor, user?.homeBranchId]);
+
   const branchIdForFilter = isPastor && user?.homeBranchId ? user.homeBranchId : undefined;
   const { data: fellowshipsData } = useFellowships(
     branchIdForFilter ? { branchId: branchIdForFilter, limit: 100 } : { limit: 100 }
@@ -184,7 +196,6 @@ export default function MembersPage() {
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => {
-              const initials = ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
               const statusCls =
                 member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
                 : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
@@ -194,9 +205,13 @@ export default function MembersPage() {
                   <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
-                          {initials}
-                        </div>
+                        <MemberAvatar
+                          photoUrl={member.photoUrl}
+                          firstName={member.firstName}
+                          lastName={member.lastName}
+                          size="sm"
+                          variant="light"
+                        />
                         <div className="min-w-0 flex-1">
                           <CardTitle className="truncate text-base">
                             {member.firstName} {member.lastName}

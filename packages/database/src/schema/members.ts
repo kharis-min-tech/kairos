@@ -20,7 +20,7 @@ export const members = pgTable('members', {
   homeBranchId: uuid('home_branch_id').notNull().references(() => branches.id, { onDelete: 'restrict' }),
   membershipDate: date('membership_date').notNull().defaultNow(),
   isActive: boolean('is_active').default(true).notNull(),
-  photoUrl: varchar('photo_url', { length: 255 }),
+  photoUrl: text('photo_url'),
   emergencyContactName: varchar('emergency_contact_name', { length: 150 }),
   emergencyContactPhone: varchar('emergency_contact_phone', { length: 20 }),
   emergencyContactRelationship: varchar('emergency_contact_relationship', { length: 50 }),

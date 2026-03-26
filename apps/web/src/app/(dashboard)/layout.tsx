@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/auth-store';
+import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { MemberAvatar } from '@/components/member-avatar';
 
 type NavItem = {
   href: string;
@@ -92,8 +95,22 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, activeRole, mustChangePassword } = useAuthStore();
+  const { user, logout, activeRole, mustChangePassword, setUser, accessToken } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Hydrate user profile from API after page refresh (user is not persisted in localStorage)
+  const { data: profileData } = useQuery({
+    queryKey: ['members', 'me'],
+    queryFn: async () => {
+      const res = await api.members.me();
+      return res.data!;
+    },
+    enabled: !!accessToken && !user,
+  });
+
+  useEffect(() => {
+    if (profileData) setUser(profileData);
+  }, [profileData, setUser]);
 
   useEffect(() => {
     if (mustChangePassword) {
@@ -110,7 +127,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     (item) => !item.roles || (activeRole && item.roles.includes(activeRole)),
   );
 
-  const initials = ((user?.firstName?.[0] ?? '') + (user?.lastName?.[0] ?? '')).toUpperCase() || '?';
   const roleLabel = activeRole === 'admin' ? 'Administrator' :
     activeRole === 'pastor' ? 'Pastor' :
     activeRole === 'leader' ? 'Leader' : 'Member';
@@ -145,9 +161,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* User section */}
       <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-semibold text-white">
-            {initials}
-          </div>
+          <MemberAvatar
+            photoUrl={(user as { photoUrl?: string | null })?.photoUrl}
+            firstName={user?.firstName}
+            lastName={user?.lastName}
+            size="md"
+            variant="dark"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">
               {user?.firstName} {user?.lastName}
