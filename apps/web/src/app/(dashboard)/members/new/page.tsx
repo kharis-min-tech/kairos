@@ -164,8 +164,9 @@ export default function AddMemberPage() {
                 {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email.message}</p>}
               </div>
               <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" className="mt-1" {...register('phone')} />
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input id="phone" type="tel" className="mt-1" {...register('phone', { required: 'Phone number is required' })} />
+                {errors.phone && <p className="mt-1 text-xs text-rose-600">{errors.phone.message}</p>}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

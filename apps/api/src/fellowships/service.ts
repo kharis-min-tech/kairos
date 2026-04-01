@@ -297,13 +297,17 @@ export async function addFellowshipMember(
 
   // Validate member exists
   const [member] = await db
-    .select({ id: members.id, homeBranchId: members.homeBranchId })
+    .select({ id: members.id, homeBranchId: members.homeBranchId, secondaryBranchId: members.secondaryBranchId, isAtSecondaryBranch: members.isAtSecondaryBranch })
     .from(members)
     .where(and(eq(members.id, data.memberId), eq(members.isActive, true)));
   if (!member) throw new NotFoundError('Member not found');
 
-  // Check branch consistency
-  if (member.homeBranchId !== fellowship.branchId) {
+  // Check branch consistency — allow home branch or active secondary branch
+  const memberActiveBranchId =
+    member.isAtSecondaryBranch && member.secondaryBranchId != null
+      ? member.secondaryBranchId
+      : member.homeBranchId;
+  if (memberActiveBranchId !== fellowship.branchId) {
     throw new ValidationError('Member must be in the same branch as the fellowship');
   }
 

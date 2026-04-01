@@ -134,3 +134,14 @@ export function useRemoveRole() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
   });
 }
+
+export function useSwitchActiveBranch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const res = await api.members.switchActiveBranch(memberId);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}

@@ -36,6 +36,7 @@ import type {
   ReportsMemberGrowth,
   ReportsAttendanceTrend,
   ReportsFellowshipActivity,
+  SwitchActiveBranchResponse,
 } from '@kairos/types';
 
 import type {
@@ -155,6 +156,8 @@ export function createApiClient(
         client.get<ApiResponse<MemberDashboardStats>>(`/api/members/${encodeURIComponent(id)}/stats`),
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
+      switchActiveBranch: (id: string) =>
+        client.patch<ApiResponse<SwitchActiveBranchResponse>>(`/api/members/${encodeURIComponent(id)}/active-branch`, {}),
       roles: {
         listAll: () =>
           client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),

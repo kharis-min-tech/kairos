@@ -135,10 +135,20 @@ export interface UpdateMemberRequest {
   address?: string;
   city?: string;
   postalCode?: string;
+  secondaryBranchId?: string | null;
+  secondaryAddress?: string;
+  secondaryCity?: string;
+  secondaryPostalCode?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;
   photoUrl?: string;
+}
+
+export interface SwitchActiveBranchResponse {
+  tokens: AuthTokens;
+  isAtSecondaryBranch: boolean;
+  activeBranchId: string;
 }
 
 export interface ApproveMemberRequest {

@@ -27,7 +27,8 @@ export const branches = pgTable('branches', {
 
 export const branchesRelations = relations(branches, ({ one, many }) => ({
   region: one(regions, { fields: [branches.regionId], references: [regions.id] }),
-  members: many(members),
+  members: many(members, { relationName: 'homeBranch' }),
+  secondaryMembers: many(members, { relationName: 'secondaryBranch' }),
   fellowships: many(fellowships),
   leadership: many(branchLeadership),
 }));

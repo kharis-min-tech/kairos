@@ -4,6 +4,8 @@ import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
+import type { SwitchActiveBranchResponse } from '@kairos/types';
+import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import {
   NotFoundError,
   ForbiddenError,
@@ -39,9 +41,17 @@ export async function listMembers(
     conditions.push(eq(members.isActive, true));
   }
 
-  // Non-admin can only see their own branch
+  // Non-admin can only see their own branch (home or active secondary)
   if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    conditions.push(eq(members.homeBranchId, auth.branchId));
+    conditions.push(
+      or(
+        eq(members.homeBranchId, auth.branchId),
+        and(
+          eq(members.secondaryBranchId, auth.branchId),
+          eq(members.isAtSecondaryBranch, true),
+        ),
+      )!,
+    );
   } else if (query.branchId) {
     conditions.push(eq(members.homeBranchId, query.branchId));
   }
@@ -137,6 +147,11 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       postalCode: members.postalCode,
       homeBranchId: members.homeBranchId,
       branchName: branches.branchName,
+      secondaryBranchId: members.secondaryBranchId,
+      isAtSecondaryBranch: members.isAtSecondaryBranch,
+      secondaryAddress: members.secondaryAddress,
+      secondaryCity: members.secondaryCity,
+      secondaryPostalCode: members.secondaryPostalCode,
       membershipDate: members.membershipDate,
       isActive: members.isActive,
       photoUrl: members.photoUrl,
@@ -176,10 +191,16 @@ export async function updateMember(
 
   if (!existing) throw new NotFoundError('Member not found');
 
+  // If secondaryBranchId is being cleared, force isAtSecondaryBranch off
+  const safeInput = { ...input } as Record<string, unknown>;
+  if (safeInput['secondaryBranchId'] === null) {
+    safeInput['isAtSecondaryBranch'] = false;
+  }
+
   try {
     const [updated] = await db
       .update(members)
-      .set({ ...input, updatedAt: sql`NOW()` })
+      .set({ ...safeInput, updatedAt: sql`NOW()` })
       .where(eq(members.id, memberId))
       .returning();
 
@@ -619,4 +640,59 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
   ];
 
   return lines.join('\n');
+}
+
+export async function switchActiveBranch(
+  db: Database,
+  auth: AuthContext,
+  memberId: string,
+): Promise<SwitchActiveBranchResponse> {
+  // Only the member themselves can toggle their active branch
+  if (auth.memberId !== memberId) {
+    throw new ForbiddenError('You can only switch your own active branch');
+  }
+
+  const [member] = await db
+    .select({
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      secondaryBranchId: members.secondaryBranchId,
+      isAtSecondaryBranch: members.isAtSecondaryBranch,
+      systemRole: members.systemRole,
+      email: members.email,
+      activeRole: sql<string>`${auth.activeRole}`,
+    })
+    .from(members)
+    .where(and(eq(members.id, memberId), eq(members.isActive, true)));
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  if (!member.secondaryBranchId) {
+    throw new ValidationError('No secondary branch assigned to this member');
+  }
+
+  const nextIsAtSecondary = !member.isAtSecondaryBranch;
+
+  await db
+    .update(members)
+    .set({ isAtSecondaryBranch: nextIsAtSecondary, updatedAt: sql`NOW()` })
+    .where(eq(members.id, memberId));
+
+  const activeBranchId = getActiveBranchId({
+    homeBranchId: member.homeBranchId,
+    secondaryBranchId: member.secondaryBranchId,
+    isAtSecondaryBranch: nextIsAtSecondary,
+  });
+
+  const authContext: AuthContext = {
+    memberId: member.id,
+    email: member.email,
+    systemRole: member.systemRole as AuthContext['systemRole'],
+    branchId: activeBranchId,
+    activeRole: auth.activeRole,
+  };
+
+  const tokens = generateTokenPair(authContext);
+
+  return { tokens, isAtSecondaryBranch: nextIsAtSecondary, activeBranchId };
 }

@@ -18,6 +18,11 @@ export const members = pgTable('members', {
   city: varchar('city', { length: 100 }),
   postalCode: varchar('postal_code', { length: 20 }),
   homeBranchId: uuid('home_branch_id').notNull().references(() => branches.id, { onDelete: 'restrict' }),
+  secondaryBranchId: uuid('secondary_branch_id').references(() => branches.id, { onDelete: 'set null' }),
+  isAtSecondaryBranch: boolean('is_at_secondary_branch').default(false).notNull(),
+  secondaryAddress: text('secondary_address'),
+  secondaryCity: varchar('secondary_city', { length: 100 }),
+  secondaryPostalCode: varchar('secondary_postal_code', { length: 20 }),
   membershipDate: date('membership_date').notNull().defaultNow(),
   isActive: boolean('is_active').default(true).notNull(),
   photoUrl: text('photo_url'),
@@ -37,6 +42,7 @@ export const members = pgTable('members', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_members_home_branch_id').on(table.homeBranchId),
+  index('idx_members_secondary_branch_id').on(table.secondaryBranchId),
   index('idx_members_is_active').on(table.isActive),
   index('idx_members_name').on(table.lastName, table.firstName),
   uniqueIndex('idx_members_phone_active')
@@ -48,7 +54,8 @@ export const members = pgTable('members', {
 ]);
 
 export const membersRelations = relations(members, ({ one, many }) => ({
-  homeBranch: one(branches, { fields: [members.homeBranchId], references: [branches.id] }),
+  homeBranch: one(branches, { fields: [members.homeBranchId], references: [branches.id], relationName: 'homeBranch' }),
+  secondaryBranch: one(branches, { fields: [members.secondaryBranchId], references: [branches.id], relationName: 'secondaryBranch' }),
   memberRoles: many(memberRoles),
   fellowshipMemberships: many(fellowshipMembers),
   leadershipPositions: many(branchLeadership),

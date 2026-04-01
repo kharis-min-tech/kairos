@@ -19,7 +19,7 @@ const signupSchema = z.object({
   dateOfBirth: z.string().optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   email: z.string().email('Please enter a valid email'),
-  phone: z.string().optional(),
+  phone: z.string().min(1, 'Phone number is required'),
   // Step 2
   address: z.string().optional(),
   city: z.string().optional(),
@@ -51,12 +51,12 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
         <div key={label} className="flex items-center">
           <div className="flex flex-col items-center gap-1">
             <div
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${
                 i < currentStep
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : i === currentStep
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/40'
+                    : 'border-2 border-muted bg-transparent text-muted-foreground'
               }`}
             >
               {i < currentStep ? (
@@ -68,13 +68,13 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               )}
             </div>
             <span className={`hidden text-[10px] font-medium sm:block ${
-              i <= currentStep ? 'text-foreground' : 'text-muted-foreground'
+              i === currentStep ? 'text-primary font-semibold' : i < currentStep ? 'text-foreground' : 'text-muted-foreground'
             }`}>{label}</span>
           </div>
           {i < STEPS.length - 1 && (
             <div
               className={`mx-2 mb-4 h-0.5 w-8 rounded-full transition-colors sm:w-12 ${
-                i < currentStep ? 'bg-emerald-500' : 'bg-muted'
+                i < currentStep ? 'bg-primary' : 'bg-muted'
               }`}
             />
           )}
@@ -245,8 +245,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Phone *</Label>
                 <Input id="phone" type="tel" className="h-11" {...register('phone')} />
+                {errors.phone && <p className="text-xs text-rose-600">{errors.phone.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -377,11 +378,11 @@ export default function SignupPage() {
               </Button>
             )}
             {step < 2 ? (
-              <Button type="button" variant="success" className="h-11 flex-1" onClick={nextStep}>
+              <Button type="button" className="h-11 flex-1 rounded-xl text-sm font-semibold" onClick={nextStep}>
                 Continue
               </Button>
             ) : (
-              <Button type="submit" variant="success" className="h-11 flex-1" disabled={isSubmitting}>
+              <Button type="submit" className="h-11 flex-1 rounded-xl text-sm font-semibold" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

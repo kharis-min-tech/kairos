@@ -135,11 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-full flex-col bg-gradient-to-b from-purple-900 to-purple-800">
       {/* Brand */}
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
-          <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1M4.22 4.22l.707.707m12.728 12.728l.707.707M1 12h1m20 0h1M4.22 19.78l.707-.707M18.364 5.636l.707-.707" />
-          </svg>
-        </div>
+        <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
         <div>
           <p className="text-base font-bold leading-tight text-white">Kairos</p>
           <p className="text-xs text-purple-300">Church Admin</p>

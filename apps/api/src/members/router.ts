@@ -25,6 +25,7 @@ import {
   importMembers,
   exportMembersCsv,
   listRoles,
+  switchActiveBranch,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 
@@ -97,6 +98,12 @@ membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) =>
   const auth = getAuth(c);
   const member = await updateMember(db, c.req.param('id'), c.req.valid('json'), auth);
   return c.json(successResponse(member));
+});
+
+membersRouter.patch('/:id/active-branch', async (c) => {
+  const auth = getAuth(c);
+  const result = await switchActiveBranch(db, auth, c.req.param('id'));
+  return c.json(successResponse(result, 'Active branch updated'));
 });
 
 membersRouter.delete('/:id', requireRole('admin', 'pastor'), async (c) => {

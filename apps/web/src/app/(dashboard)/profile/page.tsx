@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
-import { useMyProfile, useUpdateMember } from '@/hooks/use-members';
+import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
 import { DateSelect } from '@/components/date-select';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
@@ -48,13 +48,15 @@ function resizeImageToBase64(file: File): Promise<string> {
 }
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, setTokens } = useAuthStore();
   const { data: member, isLoading } = useMyProfile();
   const updateMember = useUpdateMember();
+  const switchBranch = useSwitchActiveBranch();
 
   const [isEditing, setIsEditing] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profile = member ?? user;
@@ -77,6 +79,9 @@ export default function ProfilePage() {
       address: (profile as { address?: string | null })?.address ?? '',
       city: (profile as { city?: string | null })?.city ?? '',
       postalCode: (profile as { postalCode?: string | null })?.postalCode ?? '',
+      secondaryAddress: (profile as { secondaryAddress?: string | null })?.secondaryAddress ?? '',
+      secondaryCity: (profile as { secondaryCity?: string | null })?.secondaryCity ?? '',
+      secondaryPostalCode: (profile as { secondaryPostalCode?: string | null })?.secondaryPostalCode ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
       emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
@@ -84,6 +89,16 @@ export default function ProfilePage() {
   });
 
   const dobValue = watch('dateOfBirth') ?? '';
+
+  const fullProfile = profile as {
+    id?: string; firstName?: string; lastName?: string; middleName?: string | null;
+    email?: string; phone?: string | null; gender?: string | null; dateOfBirth?: string | null;
+    address?: string | null; city?: string | null; postalCode?: string | null;
+    secondaryBranchId?: string | null; isAtSecondaryBranch?: boolean;
+    secondaryAddress?: string | null; secondaryCity?: string | null; secondaryPostalCode?: string | null;
+    emergencyContactName?: string | null; emergencyContactRelationship?: string | null; emergencyContactPhone?: string | null;
+    systemRole?: string; photoUrl?: string | null;
+  };
 
   function openEditMode() {
     reset({
@@ -96,6 +111,9 @@ export default function ProfilePage() {
       address: (profile as { address?: string | null })?.address ?? '',
       city: (profile as { city?: string | null })?.city ?? '',
       postalCode: (profile as { postalCode?: string | null })?.postalCode ?? '',
+      secondaryAddress: (profile as { secondaryAddress?: string | null })?.secondaryAddress ?? '',
+      secondaryCity: (profile as { secondaryCity?: string | null })?.secondaryCity ?? '',
+      secondaryPostalCode: (profile as { secondaryPostalCode?: string | null })?.secondaryPostalCode ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
       emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
@@ -107,6 +125,7 @@ export default function ProfilePage() {
   function cancelEdit() {
     setPhotoPreview(null);
     setSaveError(null);
+    setSwitchError(null);
     setIsEditing(false);
   }
 
@@ -116,6 +135,18 @@ export default function ProfilePage() {
     const resized = await resizeImageToBase64(file);
     setPhotoPreview(resized);
     setValue('photoUrl', resized);
+  }
+
+  async function onSwitchBranch() {
+    const memberId = fullProfile?.id;
+    if (!memberId) return;
+    setSwitchError(null);
+    try {
+      const result = await switchBranch.mutateAsync(memberId);
+      setTokens(result.tokens);
+    } catch (err) {
+      setSwitchError(err instanceof Error ? err.message : 'Failed to switch branch');
+    }
   }
 
   async function onSubmit(data: UpdateMemberRequest) {
@@ -301,6 +332,30 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
+          {fullProfile?.secondaryBranchId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Secondary Address</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="secondaryAddress">Street Address</Label>
+                    <Input id="secondaryAddress" {...register('secondaryAddress')} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="secondaryCity">City</Label>
+                    <Input id="secondaryCity" {...register('secondaryCity')} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="secondaryPostalCode">Postal Code</Label>
+                    <Input id="secondaryPostalCode" {...register('secondaryPostalCode')} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Emergency Contact</CardTitle>
@@ -384,6 +439,42 @@ export default function ProfilePage() {
               </dl>
             </CardContent>
           </Card>
+
+          {fullProfile?.secondaryBranchId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Secondary Branch</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Secondary Address" value={fullProfile.secondaryAddress} />
+                  <Field label="Secondary City" value={fullProfile.secondaryCity} />
+                  <Field label="Secondary Postal Code" value={fullProfile.secondaryPostalCode} />
+                </dl>
+                <div className="flex items-center justify-between border-t pt-3">
+                  <div>
+                    <p className="text-sm font-medium">Active Branch</p>
+                    <p className="text-xs text-muted-foreground">
+                      {fullProfile.isAtSecondaryBranch
+                        ? 'Currently at secondary branch'
+                        : 'Currently at home branch'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl"
+                    onClick={onSwitchBranch}
+                    disabled={switchBranch.isPending}
+                  >
+                    {switchBranch.isPending ? 'Switching…' : 'Switch Branch'}
+                  </Button>
+                </div>
+                {switchError && <p className="text-sm text-destructive">{switchError}</p>}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

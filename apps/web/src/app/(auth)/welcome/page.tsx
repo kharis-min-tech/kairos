@@ -9,14 +9,10 @@ export default function WelcomePage() {
   const firstName = user?.firstName ?? 'Friend';
 
   return (
-    <div className="rounded-2xl bg-white shadow-xl overflow-hidden">
+    <div className="rounded-2xl bg-card shadow-xl overflow-hidden">
       {/* Purple gradient header */}
       <div className="bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-10 text-white text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 mb-4">
-          <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-          </svg>
-        </div>
+        <img src="/logo.png" alt="Kharis Church" className="mx-auto h-16 w-16 object-contain mb-4" />
         <h1 className="text-2xl font-bold">Welcome, {firstName}!</h1>
         <p className="mt-2 text-purple-200 text-sm">
           You&apos;re now part of Kharis Church
@@ -70,14 +66,14 @@ export default function WelcomePage() {
         </div>
 
         {/* Gold accent info */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-xs font-medium text-amber-800">Getting Started</p>
-          <p className="mt-0.5 text-xs text-amber-700">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <p className="text-xs font-medium text-amber-500">Getting Started</p>
+          <p className="mt-0.5 text-xs text-amber-500/80">
             Your account has been activated. Reach out to your branch administrator if you need any help navigating the platform.
           </p>
         </div>
 
-        <Link href="/dashboard">
+        <Link href="/dashboard" className="block mt-1">
           <Button className="h-11 w-full rounded-xl font-semibold">
             Go to Dashboard
           </Button>

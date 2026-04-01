@@ -35,6 +35,11 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     city: row.city,
     postalCode: row.postalCode,
     homeBranchId: row.homeBranchId,
+    secondaryBranchId: row.secondaryBranchId,
+    isAtSecondaryBranch: row.isAtSecondaryBranch,
+    secondaryAddress: row.secondaryAddress,
+    secondaryCity: row.secondaryCity,
+    secondaryPostalCode: row.secondaryPostalCode,
     membershipDate: row.membershipDate,
     isActive: row.isActive,
     photoUrl: row.photoUrl,
@@ -48,12 +53,28 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
   };
 }
 
+/** Returns the branch the member is currently active at (secondary if toggled, else home). */
+export function getActiveBranchId(member: { homeBranchId: string; secondaryBranchId: string | null; isAtSecondaryBranch: boolean }): string {
+  if (member.isAtSecondaryBranch && member.secondaryBranchId != null) {
+    return member.secondaryBranchId;
+  }
+  return member.homeBranchId;
+}
+
 function signAccessToken(payload: AuthContext): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
 }
 
 function signRefreshToken(memberId: string): string {
   return jwt.sign({ memberId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+}
+
+/** Generate a fresh access+refresh token pair for a given auth context. */
+export function generateTokenPair(authContext: AuthContext): { accessToken: string; refreshToken: string } {
+  return {
+    accessToken: signAccessToken(authContext),
+    refreshToken: signRefreshToken(authContext.memberId),
+  };
 }
 
 export interface SignupInput {
@@ -188,7 +209,7 @@ export async function login(
     memberId: member.id,
     email: member.email,
     systemRole: memberRole,
-    branchId: member.homeBranchId,
+    branchId: getActiveBranchId(member),
     activeRole,
   };
 
@@ -229,7 +250,7 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
     memberId: member.id,
     email: member.email,
     systemRole: member.systemRole as AuthContext['systemRole'],
-    branchId: member.homeBranchId,
+    branchId: getActiveBranchId(member),
     activeRole: member.systemRole as AuthContext['systemRole'],
   };
 

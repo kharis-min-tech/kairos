@@ -20,7 +20,6 @@ const STYLES = [
   { id: "cryptix", label: "Cryptix" },
   { id: "landio", label: "Landio" },
   { id: "nexa", label: "Nexa" },
-  { id: "careon", label: "Careon" },
   { id: "aset", label: "Aset" },
 ] as const;
 type StyleId = (typeof STYLES)[number]["id"];
@@ -56,6 +55,11 @@ const FEATURES = [
     Icon: Bell,
     title: "Notifications",
     desc: "Broadcast announcements to the whole church, a region, or a specific role.",
+  },
+  {
+    Icon: BarChart2,
+    title: "Church Analytics & AI Insights",
+    desc: "Understand attendance trends, giving patterns, and member engagement with AI-powered reports.",
   },
 ];
 
@@ -505,234 +509,6 @@ function NexaLanding() {
   );
 }
 
-// ─── STYLE 4: Careon — Full-bleed photo hero, nonprofit/community feel ─────────
-function CareonLanding() {
-  const TESTIMONIALS = [
-    { img: "https://randomuser.me/api/portraits/men/75.jpg", name: "Pastor James O.", church: "Grace Chapel, Lagos", quote: "Kairos transformed how we manage our 3 branches. What took hours now takes minutes every Sunday." },
-    { img: "https://randomuser.me/api/portraits/women/44.jpg", name: "Sarah Mensah", church: "New Life Church, Accra", quote: "The attendance and giving reports have made our leadership meetings so much more productive." },
-    { img: "https://randomuser.me/api/portraits/men/32.jpg", name: "Elder David K.", church: "Living Word Ministry", quote: "Finally a system that understands how our fellowships and departments actually work." },
-  ];
-  const IMPACT_CARDS = [
-    { seed: "kairos-worship", stat: "500+", label: "Members Tracked", sub: "Across all branches" },
-    { seed: "kairos-youth", stat: "12+", label: "Branch Types", sub: "Main, satellite, cell & more" },
-    { seed: "kairos-community", stat: "100%", label: "Data Ownership", sub: "Your church, your data" },
-  ];
-  return (
-    <div className="min-h-screen bg-[#f4f4f0] text-gray-900 font-sans">
-      {/* Nav — floating pill, Careon style */}
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 bg-black/80 backdrop-blur-xl rounded-full px-6 py-3 text-sm text-white shadow-xl">
-        <div className="flex items-center gap-2 mr-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-amber-500 flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">K</span>
-          </div>
-          <span className="font-bold text-white text-sm">Kairos</span>
-        </div>
-        <a href="#about" className="text-white/60 hover:text-white transition-colors hidden md:block">About</a>
-        <a href="#impact" className="text-white/60 hover:text-white transition-colors hidden md:block">Impact</a>
-        <a href="#features" className="text-white/60 hover:text-white transition-colors hidden md:block">Features</a>
-        <Link
-          href="/login"
-          className="ml-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white px-5 py-1.5 text-sm font-semibold transition-colors"
-        >
-          Sign In →
-        </Link>
-      </nav>
-
-      {/* Hero — full-bleed photo with dark overlay, text bottom-left, Careon style */}
-      <section className="relative min-h-screen overflow-hidden">
-        <img
-          src="https://picsum.photos/seed/kairos-congregation/1600/900"
-          alt="Church congregation"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
-        {/* Layered overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
-        <div className="absolute inset-0 bg-violet-950/20" />
-
-        {/* Text content — bottom-left, like Careon */}
-        <div className="relative z-10 flex flex-col justify-end min-h-screen px-8 md:px-16 pb-20 max-w-3xl">
-          <p className="text-violet-300 text-sm font-semibold uppercase tracking-[0.2em] mb-4">Together, We Grow</p>
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-[1.0]">
-            Serve.<br />Lead.<br />Transform
-          </h1>
-          <p className="mt-4 text-white/60 text-base leading-relaxed max-w-md">
-            Kairos powers church administration so leaders can focus on people, discipleship, and mission.
-          </p>
-          <div className="mt-8 flex items-center gap-4 flex-wrap">
-            <Link
-              href="/login"
-              className="rounded-full bg-violet-600 hover:bg-violet-500 text-white px-8 py-3.5 font-semibold text-sm transition-colors shadow-lg"
-            >
-              Get Started →
-            </Link>
-            <a
-              href="#about"
-              className="rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white px-8 py-3.5 font-semibold text-sm transition-colors"
-            >
-              Learn About Us
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* About — light bg, text left, photo right (like Careon's About Us section) */}
-      <section id="about" className="py-20 px-8 md:px-16 bg-[#f4f4f0]">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <p className="flex items-center gap-2 text-violet-600 text-sm font-semibold mb-4">
-              <span className="w-2 h-2 rounded-full bg-violet-600 inline-block" />
-              About Kairos
-            </p>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-snug">
-              United Together to<br />Create Enduring Hope
-            </h2>
-            <p className="mt-4 text-gray-500 leading-relaxed">
-              We are a purpose-built platform empowering church leaders with the
-              tools they need — member management, attendance, giving, and fellowship
-              — all in one place.
-            </p>
-            <a href="#features" className="mt-8 inline-flex items-center gap-2 rounded-full border border-gray-900 text-gray-900 px-6 py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition-colors">
-              Learn More →
-            </a>
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-xl h-72 md:h-96">
-            <img
-              src="https://picsum.photos/seed/kairos-about/700/500"
-              alt="Church community"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Impact — stat cards with photo backgrounds (like Careon's "Together for change") */}
-      <section id="impact" className="py-20 px-8 md:px-16 bg-[#f4f4f0]">
-        <div className="max-w-6xl mx-auto">
-          <p className="flex items-center gap-2 text-violet-600 text-sm font-semibold mb-3">
-            <span className="w-2 h-2 rounded-full bg-violet-600 inline-block" />
-            Our Impact
-          </p>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-            <h2 className="text-4xl font-bold text-gray-900">Together for change</h2>
-            <p className="text-gray-400 text-sm max-w-xs leading-relaxed">Connecting members, tracking growth, and empowering every branch of your church.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {IMPACT_CARDS.map((c) => (
-              <div key={c.seed} className="relative h-56 rounded-2xl overflow-hidden">
-                <img src={`https://picsum.photos/seed/${c.seed}/600/400`} alt={c.label} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-                <div className="relative z-10 flex flex-col justify-end h-full p-5">
-                  <p className="text-4xl font-black text-white leading-none">{c.stat}</p>
-                  <p className="text-base font-bold text-white mt-1">{c.label}</p>
-                  <p className="text-sm text-white/60 mt-0.5">{c.sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features — dark section, photo-background cards (like Careon "Causes That Inspire") */}
-      <section id="features" className="py-24 px-8 md:px-16 bg-gray-950 text-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <p className="flex items-center gap-2 text-violet-400 text-sm font-semibold mb-3">
-                <span className="w-2 h-2 rounded-full bg-violet-400 inline-block" />
-                Causes That Inspire
-              </p>
-              <h2 className="text-4xl font-bold leading-tight">
-                Everything Your<br />Church Needs
-              </h2>
-            </div>
-            <Link href="/login" className="shrink-0 rounded-full border border-white/20 hover:border-white/40 text-white px-6 py-2.5 text-sm font-semibold transition-colors">
-              Get Started →
-            </Link>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {FEATURES.map((f, i) => {
-              const seeds = ["feat-members", "feat-branches", "feat-attendance", "feat-giving", "feat-fellowship", "feat-reports"];
-              return (
-                <div key={f.title} className="relative rounded-2xl overflow-hidden h-60 group">
-                  <img src={`https://picsum.photos/seed/${seeds[i]}/600/400`} alt={f.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-                  <div className="relative z-10 flex flex-col justify-end h-full p-5">
-                    <div className="w-9 h-9 rounded-xl bg-violet-600/80 backdrop-blur flex items-center justify-center mb-3">
-                      <f.Icon className="h-4.5 w-4.5 text-white h-4 w-4" />
-                    </div>
-                    <h3 className="font-bold text-white text-base">{f.title}</h3>
-                    <p className="text-white/60 text-xs mt-1 leading-relaxed">{f.desc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 px-8 md:px-16 bg-[#f4f4f0]">
-        <div className="max-w-6xl mx-auto">
-          <p className="flex items-center gap-2 text-violet-600 text-sm font-semibold mb-3">
-            <span className="w-2 h-2 rounded-full bg-violet-600 inline-block" />
-            Stories
-          </p>
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">Voices from the community</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex gap-0.5 mb-4">
-                  {[1,2,3,4,5].map((i) => <span key={i} className="text-amber-400 text-sm">★</span>)}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-6 flex items-center gap-3 pt-4 border-t border-gray-100">
-                  <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.church}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA — full-bleed dark photo (like Careon dark "United, We Transform" section) */}
-      <section className="relative py-32 px-8 md:px-16 overflow-hidden">
-        <img
-          src="https://picsum.photos/seed/kairos-cta/1600/600"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-900/90 via-violet-900/75 to-transparent" />
-        <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-10">
-          <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-              Your church deserves<br />a better system.
-            </h2>
-            <p className="mt-4 text-white/60 text-lg max-w-md">
-              Start managing members, attendance, and giving — all in one place.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-            <Link href="/login" className="rounded-full bg-white text-violet-700 px-8 py-4 font-bold text-sm hover:bg-violet-50 transition-colors text-center">
-              Get Started Today
-            </Link>
-            <a href="#about" className="rounded-full border border-white/30 text-white px-8 py-4 font-semibold text-sm hover:border-white/60 transition-colors text-center">
-              Learn More
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-gray-100 px-8 py-8 flex items-center justify-between text-sm text-gray-400 bg-[#f4f4f0]">
-        <span>© {new Date().getFullYear()} Kairos. Church Administration Platform.</span>
-        <Link href="/login" className="hover:text-gray-600 transition-colors">Sign In →</Link>
-      </footer>
-    </div>
-  );
-}
 
 // ─── STYLE 5: Aset — Dark professional, feature-grid, B2B SaaS feel ──────────
 function AsetLanding() {
@@ -882,7 +658,6 @@ export default function HomePage() {
     cryptix: <CryptixLanding />,
     landio: <LandioLanding />,
     nexa: <NexaLanding />,
-    careon: <CareonLanding />,
     aset: <AsetLanding />,
   };
 

@@ -93,19 +93,15 @@ function VerifyEmailContent() {
 
   if (verified) {
     return (
-      <div className="rounded-2xl bg-white shadow-xl">
-        <div className="rounded-t-2xl bg-gradient-to-br from-emerald-700 to-emerald-600 px-8 py-8 text-white">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+      <div className="rounded-2xl bg-card shadow-xl">
+        <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
+          <img src="/logo.png" alt="Kharis Church" className="h-14 w-14 object-contain" />
           <h1 className="mt-4 text-xl font-bold">Email Verified!</h1>
-          <p className="mt-1 text-sm text-emerald-100">Your email address has been confirmed</p>
+          <p className="mt-1 text-sm text-purple-200">Your email address has been confirmed</p>
         </div>
         <div className="px-8 py-6 space-y-4">
           <p className="text-sm text-muted-foreground">
-            Your account is now <span className="font-medium text-foreground">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
+            Your account is now <span className="font-medium text-amber-500">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
           </p>
           <Button
             className="h-11 w-full rounded-xl font-semibold"
@@ -119,13 +115,9 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="rounded-2xl bg-white shadow-xl">
+    <div className="rounded-2xl bg-card shadow-xl">
       <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-          </svg>
-        </div>
+        <img src="/logo.png" alt="Kharis Church" className="h-14 w-14 object-contain" />
         <h1 className="mt-4 text-xl font-bold">Verify Your Email</h1>
         <p className="mt-1 text-sm text-purple-200">Enter the verification code to continue</p>
       </div>

@@ -22,6 +22,13 @@
       "when": 1774413845489,
       "tag": "0002_silly_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774489236340,
+      "tag": "0003_condemned_komodo",
+      "breakpoints": true
     }
   ]
 }

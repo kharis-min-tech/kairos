@@ -66,6 +66,11 @@ export interface Member extends BaseEntity {
   city: string | null;
   postalCode: string | null;
   homeBranchId: string;
+  secondaryBranchId: string | null;
+  isAtSecondaryBranch: boolean;
+  secondaryAddress: string | null;
+  secondaryCity: string | null;
+  secondaryPostalCode: string | null;
   membershipDate: string; // ISO date string
   isActive: boolean;
   photoUrl: string | null;
