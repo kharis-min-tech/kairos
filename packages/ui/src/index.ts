@@ -11,3 +11,31 @@ export {
   CardDescription,
   CardContent,
 } from './components/card';
+export { Badge, badgeVariants } from './components/badge';
+export type { BadgeProps } from './components/badge';
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from './components/table';
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/select';
+export type { SelectProps } from './components/select';
+export { Textarea } from './components/textarea';
+export type { TextareaProps } from './components/textarea';
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './components/dialog';

@@ -40,7 +40,8 @@ export async function listMembers(
   }
 
   // Non-admin can only see their own branch
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  // Pastor and Leader see their branch, Member sees their branch
+  if (auth.systemRole !== 'admin') {
     conditions.push(eq(members.homeBranchId, auth.branchId));
   } else if (query.branchId) {
     conditions.push(eq(members.homeBranchId, query.branchId));

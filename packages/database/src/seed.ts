@@ -17,6 +17,10 @@ import {
   branchLeadership,
   fellowships,
   fellowshipMembers,
+  outreachPrograms,
+  outreachParticipants,
+  souls,
+  followUps,
 } from './schema';
 import { sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -402,6 +406,261 @@ async function seed() {
     { fellowshipId: newBreedsAccra!.id, memberId: regularMembers[2]!.id },
   ]);
   console.log(`✓ 9 fellowship memberships`);
+
+  // ── 9. Outreach Programs ────────────────────────────────────
+  const [londonOutreach, manchesterOutreach, accraOutreach] = await db
+    .insert(outreachPrograms)
+    .values([
+      {
+        branchId: london!.id,
+        programName: 'London Street Evangelism',
+        programDate: '2025-03-15',
+        location: 'Oxford Street',
+        address: 'Oxford Street',
+        city: 'London',
+        description: 'Street evangelism and community outreach',
+        coordinatorId: leaderSarah!.id,
+        createdBy: pastorLondon!.id,
+        totalSoulsReached: 15,
+        isCompleted: true,
+      },
+      {
+        branchId: manchester!.id,
+        programName: 'Manchester Community Outreach',
+        programDate: '2025-03-20',
+        location: 'Piccadilly Gardens',
+        address: 'Piccadilly Gardens',
+        city: 'Manchester',
+        description: 'Community outreach and prayer ministry',
+        coordinatorId: pastorManchester!.id,
+        createdBy: pastorManchester!.id,
+        totalSoulsReached: 8,
+        isCompleted: false,
+      },
+      {
+        branchId: accra!.id,
+        programName: 'Accra Market Evangelism',
+        programDate: '2025-03-25',
+        location: 'Makola Market',
+        address: 'Makola Market',
+        city: 'Accra',
+        description: 'Market evangelism and soul winning',
+        coordinatorId: leaderDavid!.id,
+        createdBy: leaderDavid!.id,
+        totalSoulsReached: 20,
+        isCompleted: true,
+      },
+    ])
+    .returning();
+  console.log(`✓ 3 outreach programs`);
+
+  // ── 10. Outreach Participants ───────────────────────────────
+  await db.insert(outreachParticipants).values([
+    // London program participants
+    {
+      outreachId: londonOutreach!.id,
+      memberId: leaderSarah!.id,
+      role: 'Coordinator',
+    },
+    {
+      outreachId: londonOutreach!.id,
+      memberId: regularMembers[0]!.id,
+      role: 'Worker',
+    },
+    {
+      outreachId: londonOutreach!.id,
+      memberId: pastorLondon!.id,
+      role: 'Supervisor',
+    },
+    // Manchester program participants
+    {
+      outreachId: manchesterOutreach!.id,
+      memberId: pastorManchester!.id,
+      role: 'Coordinator',
+    },
+    {
+      outreachId: manchesterOutreach!.id,
+      memberId: regularMembers[3]!.id,
+      role: 'Worker',
+    },
+    // Accra program participants
+    {
+      outreachId: accraOutreach!.id,
+      memberId: leaderDavid!.id,
+      role: 'Coordinator',
+    },
+    {
+      outreachId: accraOutreach!.id,
+      memberId: regularMembers[1]!.id,
+      role: 'Worker',
+    },
+    {
+      outreachId: accraOutreach!.id,
+      memberId: regularMembers[2]!.id,
+      role: 'Worker',
+    },
+    {
+      outreachId: accraOutreach!.id,
+      memberId: pastorAccra!.id,
+      role: 'Supervisor',
+    },
+  ]);
+  console.log(`✓ 9 outreach participants`);
+
+  // ── 11. Souls ───────────────────────────────────────────────
+  const soulsData = await db
+    .insert(souls)
+    .values([
+      // London souls
+      {
+        outreachId: londonOutreach!.id,
+        firstName: 'John',
+        lastName: 'Davies',
+        phone: '+447700900001',
+        email: 'john.davies@example.com',
+        city: 'London',
+        gender: 'Male',
+        ageRange: '25-34',
+        status: 'Following Up',
+        assignedMemberId: leaderSarah!.id,
+      },
+      {
+        outreachId: londonOutreach!.id,
+        firstName: 'Mary',
+        lastName: 'Wilson',
+        phone: '+447700900002',
+        city: 'London',
+        gender: 'Female',
+        ageRange: '35-44',
+        status: 'Interested',
+        assignedMemberId: leaderSarah!.id,
+      },
+      {
+        outreachId: londonOutreach!.id,
+        firstName: 'Peter',
+        lastName: 'Brown',
+        phone: '+447700900003',
+        email: 'peter.brown@example.com',
+        city: 'London',
+        gender: 'Male',
+        ageRange: '18-24',
+        status: 'New',
+        assignedMemberId: regularMembers[0]!.id,
+      },
+      // Manchester souls
+      {
+        outreachId: manchesterOutreach!.id,
+        firstName: 'Sarah',
+        lastName: 'Taylor',
+        phone: '+447700900004',
+        city: 'Manchester',
+        gender: 'Female',
+        ageRange: '25-34',
+        status: 'New',
+        assignedMemberId: regularMembers[3]!.id,
+      },
+      {
+        outreachId: manchesterOutreach!.id,
+        firstName: 'David',
+        lastName: 'Anderson',
+        phone: '+447700900005',
+        email: 'david.anderson@example.com',
+        city: 'Manchester',
+        gender: 'Male',
+        ageRange: '45-54',
+        status: 'Following Up',
+        assignedMemberId: pastorManchester!.id,
+      },
+      // Accra souls
+      {
+        outreachId: accraOutreach!.id,
+        firstName: 'Ama',
+        lastName: 'Mensah',
+        phone: '+233201900001',
+        city: 'Accra',
+        gender: 'Female',
+        ageRange: '25-34',
+        status: 'Interested',
+        assignedMemberId: leaderDavid!.id,
+      },
+      {
+        outreachId: accraOutreach!.id,
+        firstName: 'Kwame',
+        lastName: 'Boateng',
+        phone: '+233201900002',
+        email: 'kwame.boateng@example.com',
+        city: 'Accra',
+        gender: 'Male',
+        ageRange: '35-44',
+        status: 'Following Up',
+        assignedMemberId: leaderDavid!.id,
+      },
+      {
+        outreachId: accraOutreach!.id,
+        firstName: 'Akua',
+        lastName: 'Owusu',
+        phone: '+233201900003',
+        city: 'Accra',
+        gender: 'Female',
+        ageRange: '18-24',
+        status: 'New',
+        assignedMemberId: regularMembers[1]!.id,
+      },
+    ])
+    .returning();
+  console.log(`✓ 8 souls`);
+
+  // ── 12. Follow-ups ──────────────────────────────────────────
+  await db.insert(followUps).values([
+    {
+      soulId: soulsData[0]!.id,
+      memberId: leaderSarah!.id,
+      followUpDate: new Date('2025-03-16T10:00:00'),
+      contactMethod: 'Phone Call',
+      contactStatus: 'Successful',
+      durationMinutes: 15,
+      notes: 'Had a good conversation, interested in attending service',
+      nextFollowUpDate: '2025-03-23',
+    },
+    {
+      soulId: soulsData[1]!.id,
+      memberId: leaderSarah!.id,
+      followUpDate: new Date('2025-03-17T14:00:00'),
+      contactMethod: 'WhatsApp',
+      contactStatus: 'Successful',
+      durationMinutes: 10,
+      notes: 'Sent service details and location',
+    },
+    {
+      soulId: soulsData[4]!.id,
+      memberId: pastorManchester!.id,
+      followUpDate: new Date('2025-03-21T11:00:00'),
+      contactMethod: 'Phone Call',
+      contactStatus: 'No Answer',
+      notes: 'Will try again tomorrow',
+      nextFollowUpDate: '2025-03-22',
+    },
+    {
+      soulId: soulsData[5]!.id,
+      memberId: leaderDavid!.id,
+      followUpDate: new Date('2025-03-26T09:00:00'),
+      contactMethod: 'In-Person Visit',
+      contactStatus: 'Successful',
+      durationMinutes: 30,
+      notes: 'Visited at home, prayed together, very receptive',
+      nextFollowUpDate: '2025-04-02',
+    },
+    {
+      soulId: soulsData[6]!.id,
+      memberId: leaderDavid!.id,
+      followUpDate: new Date('2025-03-27T16:00:00'),
+      contactMethod: 'Phone Call',
+      contactStatus: 'Successful',
+      durationMinutes: 20,
+      notes: 'Discussed baptism and membership',
+    },
+  ]);
+  console.log(`✓ 5 follow-ups`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('Test accounts (all passwords: "Password1!"):');

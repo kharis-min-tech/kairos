@@ -55,3 +55,35 @@ export const SystemRole = {
   Member: 'member',
 } as const;
 export type SystemRole = (typeof SystemRole)[keyof typeof SystemRole];
+
+// ── Outreach / Evangelism ──────────────────────────────────
+
+export const SoulStatus = {
+  New: 'New',
+  FollowingUp: 'Following Up',
+  Interested: 'Interested',
+  NotInterested: 'Not Interested',
+  Converted: 'Converted',
+  LostContact: 'Lost Contact',
+} as const;
+export type SoulStatus = (typeof SoulStatus)[keyof typeof SoulStatus];
+
+export const ContactMethod = {
+  PhoneCall: 'Phone Call',
+  TextMessage: 'Text Message',
+  Email: 'Email',
+  WhatsApp: 'WhatsApp',
+  InPersonVisit: 'In-Person Visit',
+  Other: 'Other',
+} as const;
+export type ContactMethod = (typeof ContactMethod)[keyof typeof ContactMethod];
+
+export const ContactStatus = {
+  Successful: 'Successful',
+  NoAnswer: 'No Answer',
+  WrongNumber: 'Wrong Number',
+  CallBackLater: 'Call Back Later',
+  NotInterested: 'Not Interested',
+  Interested: 'Interested',
+} as const;
+export type ContactStatus = (typeof ContactStatus)[keyof typeof ContactStatus];
