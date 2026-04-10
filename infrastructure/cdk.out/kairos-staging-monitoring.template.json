@@ -1,0 +1,380 @@
+{
+ "Description": "Kairos staging - CloudWatch alarms and dashboards",
+ "Resources": {
+  "LambdaErrorRateAlarm35685FAA": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda error rate exceeds 5% across all functions",
+    "AlarmName": "kairos-staging-lambda-error-rate",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "EvaluationPeriods": 3,
+    "Metrics": [
+     {
+      "Expression": "errors / invocations * 100",
+      "Id": "expr_1",
+      "ReturnData": true
+     },
+     {
+      "Id": "errors",
+      "MetricStat": {
+       "Metric": {
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     },
+     {
+      "Id": "invocations",
+      "MetricStat": {
+       "Metric": {
+        "MetricName": "Invocations",
+        "Namespace": "AWS/Lambda"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Threshold": 5,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/LambdaErrorRateAlarm/Resource"
+   }
+  },
+  "LambdaDurationAlarmA8007F1F": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda p99 duration exceeds 10 seconds",
+    "AlarmName": "kairos-staging-lambda-duration-p99",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "EvaluationPeriods": 3,
+    "ExtendedStatistic": "p99",
+    "MetricName": "Duration",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Threshold": 10000,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/LambdaDurationAlarm/Resource"
+   }
+  },
+  "ApiGateway5xxAlarm4F808175": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "API Gateway 5xx error rate exceeds 1%",
+    "AlarmName": "kairos-staging-api-5xx-rate",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "EvaluationPeriods": 3,
+    "Metrics": [
+     {
+      "Expression": "errors5xx / totalRequests * 100",
+      "Id": "expr_1",
+      "ReturnData": true
+     },
+     {
+      "Id": "errors5xx",
+      "MetricStat": {
+       "Metric": {
+        "Dimensions": [
+         {
+          "Name": "ApiId",
+          "Value": {
+           "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+          }
+         }
+        ],
+        "MetricName": "5xx",
+        "Namespace": "AWS/ApiGateway"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     },
+     {
+      "Id": "totalRequests",
+      "MetricStat": {
+       "Metric": {
+        "Dimensions": [
+         {
+          "Name": "ApiId",
+          "Value": {
+           "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+          }
+         }
+        ],
+        "MetricName": "Count",
+        "Namespace": "AWS/ApiGateway"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Threshold": 1,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/ApiGateway5xxAlarm/Resource"
+   }
+  },
+  "AuroraCpuAlarm999C031F": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Aurora CPU utilization exceeds 80%",
+    "AlarmName": "kairos-staging-aurora-cpu",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "DBClusterIdentifier",
+      "Value": {
+       "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraCluster23D869C0CA1C7DB5"
+      }
+     }
+    ],
+    "EvaluationPeriods": 3,
+    "MetricName": "CPUUtilization",
+    "Namespace": "AWS/RDS",
+    "Period": 300,
+    "Statistic": "Average",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Threshold": 80,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/AuroraCpuAlarm/Resource"
+   }
+  },
+  "AuroraConnectionsAlarm320D1F2B": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Aurora connections exceed 80% of max (3200)",
+    "AlarmName": "kairos-staging-aurora-connections",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "DBClusterIdentifier",
+      "Value": {
+       "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraCluster23D869C0CA1C7DB5"
+      }
+     }
+    ],
+    "EvaluationPeriods": 3,
+    "MetricName": "DatabaseConnections",
+    "Namespace": "AWS/RDS",
+    "Period": 300,
+    "Statistic": "Average",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Threshold": 3200,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/AuroraConnectionsAlarm/Resource"
+   }
+  },
+  "KairosDashboard1E2FDBE2": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"start\":\"-PT3H\",\"widgets\":[{\"type\":\"text\",\"width\":24,\"height\":1,\"x\":0,\"y\":0,\"properties\":{\"markdown\":\"# API Performance\"}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":1,\"properties\":{\"view\":\"timeSeries\",\"title\":\"API Latency (ms)\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ApiGateway\",\"Latency\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"p50\",\"stat\":\"p50\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"p90\",\"stat\":\"p90\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"p99\",\"stat\":\"p99\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":1,\"properties\":{\"view\":\"timeSeries\",\"title\":\"API Errors\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ApiGateway\",\"4xx\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"4xx\",\"stat\":\"Sum\"}],[\"AWS/ApiGateway\",\"5xx\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"5xx\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":7,\"properties\":{\"view\":\"timeSeries\",\"title\":\"API Requests\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ApiGateway\",\"Count\",\"ApiId\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD"
+       },
+       "\",{\"label\":\"Total Requests\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"text\",\"width\":24,\"height\":1,\"x\":0,\"y\":13,\"properties\":{\"markdown\":\"# Lambda Performance\"}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":14,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Duration (ms)\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Duration\",{\"label\":\"p50\",\"stat\":\"p50\"}],[\"AWS/Lambda\",\"Duration\",{\"label\":\"p90\",\"stat\":\"p90\"}],[\"AWS/Lambda\",\"Duration\",{\"label\":\"p99\",\"stat\":\"p99\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":14,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Errors & Throttles\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Errors\",{\"label\":\"Errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Throttles\",{\"label\":\"Throttles\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":20,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Invocations\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Invocations\",{\"label\":\"Invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"ConcurrentExecutions\",{\"label\":\"Concurrent Executions\",\"stat\":\"Maximum\"}]],\"yAxis\":{}}},{\"type\":\"text\",\"width\":24,\"height\":1,\"x\":0,\"y\":26,\"properties\":{\"markdown\":\"# Database Performance\"}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":27,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Aurora CPU Utilization (%)\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/RDS\",\"CPUUtilization\",\"DBClusterIdentifier\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraCluster23D869C0CA1C7DB5"
+       },
+       "\",{\"label\":\"CPU %\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":27,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Aurora Database Connections\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/RDS\",\"DatabaseConnections\",\"DBClusterIdentifier\",\"",
+       {
+        "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraCluster23D869C0CA1C7DB5"
+       },
+       "\",{\"label\":\"Connections\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":33,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Aurora Serverless Capacity (ACUs)\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/RDS\",\"ServerlessDatabaseCapacity\",\"DBClusterIdentifier\",\"kairos-staging-aurora-cluster\",{\"label\":\"ACUs\"}]],\"yAxis\":{}}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "kairos-staging-dashboard"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/KairosDashboard/Resource"
+   }
+  },
+  "XRaySamplingRule": {
+   "Type": "AWS::XRay::SamplingRule",
+   "Properties": {
+    "SamplingRule": {
+     "RuleName": "kairos-staging-sampling-rule",
+     "Priority": 1000,
+     "FixedRate": 0.1,
+     "ReservoirSize": 1,
+     "ServiceName": "*",
+     "ServiceType": "*",
+     "Host": "*",
+     "ResourceARN": "*",
+     "HTTPMethod": "*",
+     "URLPath": "*",
+     "Version": 1
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/XRaySamplingRule"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/z2ISw6DIBBAz+IepoSuumzaE+gBzDBgRBESBsrCePfGmLh6Hw36+QLVYWNJdpXBG9iHgrQKbDxSSNU2LDTD/g6YN/GZ4iVf5NkkzPZcdxxn9Y5TzeQOEZN1sPDjpxVoBapb2HuZayx+c9Bf/AO6auophAAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-monitoring/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

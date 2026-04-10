@@ -55,3 +55,15 @@ export const SystemRole = {
   Member: 'member',
 } as const;
 export type SystemRole = (typeof SystemRole)[keyof typeof SystemRole];
+
+export const NewBelieverStage = {
+  Enrolled: 'enrolled',
+  Session1: 'session-1',
+  Session2: 'session-2',
+  Session3: 'session-3',
+  Session4: 'session-4',
+  Completed: 'completed',
+  Integrated: 'integrated',
+} as const;
+export type NewBelieverStageValue = (typeof NewBelieverStage)[keyof typeof NewBelieverStage];
+export const NEW_BELIEVER_STAGES = Object.values(NewBelieverStage) as NewBelieverStageValue[];

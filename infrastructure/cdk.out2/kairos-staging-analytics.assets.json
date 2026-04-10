@@ -1,0 +1,36 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "52a781d6a1b2160b3de78476b3386e3946d70659664fcaa174f37bee1cdc82df": {
+      "displayName": "AnalyticsExportFn/Code",
+      "source": {
+        "path": "asset.52a781d6a1b2160b3de78476b3386e3946d70659664fcaa174f37bee1cdc82df",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-eu-west-2-3dd80d67": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2",
+          "objectKey": "52a781d6a1b2160b3de78476b3386e3946d70659664fcaa174f37bee1cdc82df.zip",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-eu-west-2"
+        }
+      }
+    },
+    "1ed594348f0be6fcb9465d6b1dab0f7f4ffb485e848bbf11ed9b5e05372853f5": {
+      "displayName": "kairos-staging-analytics Template",
+      "source": {
+        "path": "kairos-staging-analytics.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-eu-west-2-9bcfbaf3": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2",
+          "objectKey": "1ed594348f0be6fcb9465d6b1dab0f7f4ffb485e848bbf11ed9b5e05372853f5.json",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-eu-west-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

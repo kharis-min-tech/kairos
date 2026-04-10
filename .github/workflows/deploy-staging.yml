@@ -1,0 +1,203 @@
+name: Deploy to Staging
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: eu-west-2
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ci:
+    name: CI (Build, Lint, Test, Security)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: kairos_test
+          POSTGRES_PASSWORD: kairos_test_password
+          POSTGRES_DB: kairos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U kairos_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://kairos_test:kairos_test_password@localhost:5432/kairos_test
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Apply database schema
+        run: psql "$DATABASE_URL" -f database/schema.sql
+        env:
+          PGPASSWORD: kairos_test_password
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Security audit
+        run: # aws-cdk-lib bundles minimatch with no upstream fix available (GHSA-3ppc-4f35-3m26)
+          npm audit --audit-level=critical
+
+      - name: Build all packages
+        run: npm run build
+        env:
+          NEXT_PUBLIC_AUTH_MOCK: 'false'
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_WS_URL: ''
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: ${{ vars.NEXT_PUBLIC_COGNITO_USER_POOL_ID }}
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: ${{ vars.NEXT_PUBLIC_COGNITO_CLIENT_ID }}
+
+      - name: Upload api artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-dist-${{ github.sha }}
+          path: apps/api/dist/
+          retention-days: 1
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-out-${{ github.sha }}
+          path: apps/web/out/
+          retention-days: 1
+  deploy:
+    name: Deploy CDK Stacks to Staging
+    runs-on: ubuntu-latest
+    needs: [ci]
+    environment: staging
+    outputs:
+      api_url: ${{ steps.stack-outputs.outputs.api_url }}
+      cognito_client_id: ${{ steps.stack-outputs.outputs.cognito_client_id }}
+      cognito_user_pool_id: ${{ steps.stack-outputs.outputs.cognito_user_pool_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download api artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-dist-${{ github.sha }}
+          path: apps/api/dist/
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-out-${{ github.sha }}
+          path: apps/web/out/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_STAGING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy CDK stacks
+        run: npx cdk deploy --all -c env=staging --require-approval never --outputs-file cdk-outputs.json
+        working-directory: infrastructure
+
+      - name: Read CDK stack outputs
+        id: stack-outputs
+        run: |
+          API_URL=$(jq -r '.["kairos-staging-api"].ApiUrl' infrastructure/cdk-outputs.json)
+          CLIENT_ID=$(jq -r '.["kairos-staging-auth"].UserPoolClientId' infrastructure/cdk-outputs.json)
+          USER_POOL_ID=$(jq -r '.["kairos-staging-auth"].UserPoolId' infrastructure/cdk-outputs.json)
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "cognito_client_id=$CLIENT_ID" >> $GITHUB_OUTPUT
+          echo "cognito_user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
+  smoke-tests:
+    name: Smoke Tests (Live API)
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    environment: staging
+    env:
+      API_URL: ${{ needs.deploy.outputs.api_url }}
+      COGNITO_CLIENT_ID: ${{ needs.deploy.outputs.cognito_client_id }}
+      COGNITO_USER_POOL_ID: ${{ needs.deploy.outputs.cognito_user_pool_id }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_STAGING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get auth token via Cognito admin-initiate-auth
+        id: auth
+        run: |
+          RESULT=$(aws cognito-idp initiate-auth \
+            --client-id "$COGNITO_CLIENT_ID" \
+            --auth-flow USER_PASSWORD_AUTH \
+            --auth-parameters \
+              USERNAME="${{ secrets.SMOKE_TEST_USERNAME }}" \
+              PASSWORD="${{ secrets.SMOKE_TEST_PASSWORD }}")
+          TOKEN=$(echo "$RESULT" | jq -r '.AuthenticationResult.IdToken')
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: GET /v1/branches
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/branches")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/branches returned HTTP $STATUS" && exit 1)
+
+      - name: GET /v1/members
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/members")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/members returned HTTP $STATUS" && exit 1)
+
+      - name: GET /v1/departments
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/departments")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/departments returned HTTP $STATUS" && exit 1)
+
+      - name: GET /v1/fellowships
+        run: |
+          STATUS=$(curl -sf -o /tmp/res.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            "$API_URL/v1/fellowships")
+          echo "Response: $(cat /tmp/res.json)"
+          [ "$STATUS" = "200" ] || (echo "FAILED: /v1/fellowships returned HTTP $STATUS" && exit 1)

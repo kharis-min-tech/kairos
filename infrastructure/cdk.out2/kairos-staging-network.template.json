@@ -1,0 +1,649 @@
+{
+ "Description": "Kairos staging - VPC, subnets, security groups, VPC endpoints",
+ "Resources": {
+  "Vpc8378EB38": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-vpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/Resource"
+   }
+  },
+  "VpcprivateisolatedSubnet1Subnet24CE21A9": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "private-isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-network/Vpc/private-isolatedSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet1/Subnet"
+   }
+  },
+  "VpcprivateisolatedSubnet1RouteTableE4679C7E": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-network/Vpc/private-isolatedSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet1/RouteTable"
+   }
+  },
+  "VpcprivateisolatedSubnet1RouteTableAssociation6DF2F129": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcprivateisolatedSubnet1RouteTableE4679C7E"
+    },
+    "SubnetId": {
+     "Ref": "VpcprivateisolatedSubnet1Subnet24CE21A9"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcprivateisolatedSubnet2Subnet14FC6BC3": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "private-isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-network/Vpc/private-isolatedSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet2/Subnet"
+   }
+  },
+  "VpcprivateisolatedSubnet2RouteTableBE55F435": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-network/Vpc/private-isolatedSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet2/RouteTable"
+   }
+  },
+  "VpcprivateisolatedSubnet2RouteTableAssociation32540CC7": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcprivateisolatedSubnet2RouteTableBE55F435"
+    },
+    "SubnetId": {
+     "Ref": "VpcprivateisolatedSubnet2Subnet14FC6BC3"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/private-isolatedSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcS3Endpoint4A3DE4B5": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "RouteTableIds": [
+     {
+      "Ref": "VpcprivateisolatedSubnet1RouteTableE4679C7E"
+     },
+     {
+      "Ref": "VpcprivateisolatedSubnet2RouteTableBE55F435"
+     }
+    ],
+    "ServiceName": {
+     "Fn::Join": [
+      "",
+      [
+       "com.amazonaws.",
+       {
+        "Ref": "AWS::Region"
+       },
+       ".s3"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-vpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcEndpointType": "Gateway",
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/S3Endpoint/Resource"
+   }
+  },
+  "VpcSecretsManagerEndpoint93E49F69": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "secretsmanagerendpointsgEDEFB109",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.eu-west-2.secretsmanager",
+    "SubnetIds": [
+     {
+      "Ref": "VpcprivateisolatedSubnet1Subnet24CE21A9"
+     },
+     {
+      "Ref": "VpcprivateisolatedSubnet2Subnet14FC6BC3"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-vpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/SecretsManagerEndpoint/Resource"
+   }
+  },
+  "VpcSsmEndpointC46DB833": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "PrivateDnsEnabled": true,
+    "SecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "ssmendpointsg8B28B084",
+       "GroupId"
+      ]
+     }
+    ],
+    "ServiceName": "com.amazonaws.eu-west-2.ssm",
+    "SubnetIds": [
+     {
+      "Ref": "VpcprivateisolatedSubnet1Subnet24CE21A9"
+     },
+     {
+      "Ref": "VpcprivateisolatedSubnet2Subnet14FC6BC3"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Name",
+      "Value": "kairos-staging-vpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcEndpointType": "Interface",
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/Vpc/SsmEndpoint/Resource"
+   }
+  },
+  "LambdaSg30A6108C": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for Lambda functions accessing VPC resources",
+    "GroupName": "kairos-staging-lambda-sg",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "10.0.0.0/16",
+      "Description": "Allow Lambda HTTPS to VPC endpoints",
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/LambdaSg/Resource"
+   }
+  },
+  "LambdaSgtokairosstagingnetworkAuroraSg4B035CE75432C14DD045": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Allow Lambda to connect to Aurora PostgreSQL",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AuroraSgFE0A4948",
+      "GroupId"
+     ]
+    },
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "LambdaSg30A6108C",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/LambdaSg/to kairosstagingnetworkAuroraSg4B035CE7:5432"
+   }
+  },
+  "AuroraSgFE0A4948": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for Aurora Serverless v2 cluster",
+    "GroupName": "kairos-staging-aurora-sg",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/AuroraSg/Resource"
+   }
+  },
+  "AuroraSgfromkairosstagingnetworkLambdaSg27AA21D154322316EFF6": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow Lambda to connect to Aurora PostgreSQL",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "AuroraSgFE0A4948",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "LambdaSg30A6108C",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/AuroraSg/from kairosstagingnetworkLambdaSg27AA21D1:5432"
+   }
+  },
+  "secretsmanagerendpointsgEDEFB109": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for secrets-manager VPC endpoint",
+    "GroupName": "kairos-secrets-manager-endpoint-sg",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "Vpc8378EB38",
+        "CidrBlock"
+       ]
+      },
+      "Description": "Allow HTTPS from VPC to secrets-manager endpoint",
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/secrets-manager-endpoint-sg/Resource"
+   }
+  },
+  "ssmendpointsg8B28B084": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for ssm VPC endpoint",
+    "GroupName": "kairos-ssm-endpoint-sg",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "Vpc8378EB38",
+        "CidrBlock"
+       ]
+      },
+      "Description": "Allow HTTPS from VPC to ssm endpoint",
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/ssm-endpoint-sg/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/33OwWrDMAwG4Gfp3fEy97DzKKX0tJKUXIeiqENtJxtLbiil7z6WjWUw2EnSh5D+4MPyyT8uYNQKh1N15t7fWgM8ORj1lTD4W5fQrQ7S7VZul/kCRm3phewT566JxWgP/Zlmn+1ZNSKDcRS3AaMRrl3CtQwpstj3+Z9xK0b5AEi/d1rCktmumxxLmn78C+u3TKp/eCuT311DGkvGKe1LsVTs7iQO5I/6cAm1D7WvF0dlrnIR43fyzVf9ACOiWWkzAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-network/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VpcId": {
+   "Description": "VPC ID",
+   "Value": {
+    "Ref": "Vpc8378EB38"
+   },
+   "Export": {
+    "Name": "kairos-staging-vpc-id"
+   }
+  },
+  "LambdaSecurityGroupId": {
+   "Description": "Lambda Security Group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaSg30A6108C",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-lambda-sg-id"
+   }
+  },
+  "AuroraSecurityGroupId": {
+   "Description": "Aurora Security Group ID",
+   "Value": {
+    "Fn::GetAtt": [
+     "AuroraSgFE0A4948",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-aurora-sg-id"
+   }
+  },
+  "ExportsOutputRefVpcprivateisolatedSubnet1Subnet24CE21A9CBBC011F": {
+   "Value": {
+    "Ref": "VpcprivateisolatedSubnet1Subnet24CE21A9"
+   },
+   "Export": {
+    "Name": "kairos-staging-network:ExportsOutputRefVpcprivateisolatedSubnet1Subnet24CE21A9CBBC011F"
+   }
+  },
+  "ExportsOutputRefVpcprivateisolatedSubnet2Subnet14FC6BC360484DFA": {
+   "Value": {
+    "Ref": "VpcprivateisolatedSubnet2Subnet14FC6BC3"
+   },
+   "Export": {
+    "Name": "kairos-staging-network:ExportsOutputRefVpcprivateisolatedSubnet2Subnet14FC6BC360484DFA"
+   }
+  },
+  "ExportsOutputFnGetAttAuroraSgFE0A4948GroupId3283060E": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AuroraSgFE0A4948",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-network:ExportsOutputFnGetAttAuroraSgFE0A4948GroupId3283060E"
+   }
+  },
+  "ExportsOutputFnGetAttLambdaSg30A6108CGroupId30BB2F0D": {
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaSg30A6108C",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-network:ExportsOutputFnGetAttLambdaSg30A6108CGroupId30BB2F0D"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
