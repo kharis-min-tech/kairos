@@ -329,3 +329,121 @@ export interface ReportsFellowshipActivity {
   meetingCount: number;
   avgAttendees: number;
 }
+
+// ── Outreach / Evangelism ──────────────────────────────────
+
+export interface CreateProgramRequest {
+  branchId?: string; // Required for Admin, auto-set for Pastor
+  programName: string;
+  programDate: string; // ISO date
+  location: string;
+  address?: string;
+  city?: string;
+  description?: string;
+  coordinatorId?: string;
+}
+
+export interface UpdateProgramRequest {
+  programName?: string;
+  location?: string;
+  address?: string;
+  city?: string;
+  description?: string;
+  coordinatorId?: string;
+  notes?: string;
+  isCompleted?: boolean;
+}
+
+export interface ListProgramsParams {
+  page?: number;
+  limit?: number;
+  isCompleted?: 'true' | 'false' | 'all';
+  dateFrom?: string;
+  dateTo?: string;
+  coordinatorId?: string;
+  search?: string;
+}
+
+export interface RegisterWorkerRequest {
+  memberId?: string; // Optional, defaults to current user
+  role?: string;
+  notes?: string;
+}
+
+export interface CaptureSoulRequest {
+  outreachId?: string; // Optional for ad-hoc
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  gender?: 'Male' | 'Female';
+  ageRange?: string;
+  notes?: string;
+}
+
+export interface UpdateSoulStatusRequest {
+  status: 'New' | 'Following Up' | 'Interested' | 'Not Interested' | 'Converted' | 'Lost Contact';
+  convertedToMemberId?: string; // Required if status='Converted'
+}
+
+export interface ReassignSoulRequest {
+  assignedMemberId: string;
+}
+
+export interface LogFollowUpRequest {
+  contactMethod?: 'Phone Call' | 'Text Message' | 'Email' | 'WhatsApp' | 'In-Person Visit' | 'Other';
+  contactStatus: 'Successful' | 'No Answer' | 'Wrong Number' | 'Call Back Later' | 'Not Interested' | 'Interested';
+  durationMinutes?: number;
+  notes?: string;
+  nextFollowUpDate?: string; // ISO date
+}
+
+export interface ListSoulsParams {
+  page?: number;
+  limit?: number;
+  status?: 'New' | 'Following Up' | 'Interested' | 'Not Interested' | 'Converted' | 'Lost Contact';
+  assignedMemberId?: string;
+  outreachId?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  overdueOnly?: 'true' | 'false';
+}
+
+export interface ConversionResult {
+  soul: import('./entities').Soul;
+  member: import('./entities').Member;
+}
+
+export interface ConversionFunnelMetrics {
+  statusCounts: Record<string, number>;
+  conversionRate: number;
+  dropOffRates: Record<string, number>;
+  averageDaysToConversion: number;
+  totalSouls: number;
+}
+
+export interface ConversionFunnelParams {
+  branchId?: string; // Admin only
+  outreachId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface ProgramStatistics {
+  totalWorkers: number;
+  totalSouls: number;
+  statusDistribution: Record<string, number>;
+  averageFollowUpsPerSoul: number;
+  conversionRate: number;
+  averageDaysToConversion: number;
+}
+
+export interface FollowUpStatistics {
+  totalFollowUps: number;
+  lastFollowUpDate?: string;
+  daysSinceLastFollowUp: number;
+  averageDuration: number;
+}

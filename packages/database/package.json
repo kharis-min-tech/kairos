@@ -16,14 +16,16 @@
     "typecheck": "tsc --noEmit",
     "dev": "tsc --watch",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx manual-migrate.ts",
     "db:drop": "tsx src/reset.ts",
-    "db:fresh": "npm run db:drop && drizzle-kit migrate && tsx src/seed.ts",
+    "db:fresh": "npm run db:drop && npm run db:migrate && tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/seed.ts"
+    "db:seed": "tsx src/seed.ts",
+    "db:seed-souls": "tsx src/seed-souls.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.1",
     "drizzle-orm": "^0.38.4",
     "postgres": "^3.4.5",
     "tsx": "^4.21.0"

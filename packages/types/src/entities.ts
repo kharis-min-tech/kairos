@@ -9,6 +9,9 @@ import type {
   FellowshipType,
   MemberApprovalStatus,
   SystemRole,
+  SoulStatus,
+  ContactMethod,
+  ContactStatus,
 } from './enums';
 
 // ── Base ───────────────────────────────────────────────────
@@ -202,6 +205,101 @@ export interface FellowshipJoinRequest extends BaseEntity {
 }
 
 export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
+  memberFirstName: string;
+  memberLastName: string;
+  memberPhotoUrl?: string | null;
+}
+
+// ── Outreach Program ───────────────────────────────────────
+
+export interface OutreachProgram extends BaseEntity {
+  branchId: string;
+  programName: string;
+  programDate: string; // ISO date string
+  location: string;
+  address: string | null;
+  city: string | null;
+  description: string | null;
+  coordinatorId: string | null;
+  coordinatorName?: string | null;
+  createdBy?: string | null;
+  totalSoulsReached: number;
+  notes: string | null;
+  isCompleted: boolean;
+  isOpenToAllBranches?: boolean;
+}
+
+export interface OutreachProgramWithDetails extends OutreachProgram {
+  branchName: string;
+  coordinatorFirstName?: string | null;
+  coordinatorLastName?: string | null;
+  createdByName?: string | null;
+  // For members
+  isRegistered?: boolean;
+  // For leaders/pastors/admin
+  participantCount?: number;
+  totalMembers?: number;
+}
+
+// ── Soul ───────────────────────────────────────────────────
+
+export interface Soul extends BaseEntity {
+  outreachId: string | null;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  gender: Gender | null;
+  ageRange: string | null;
+  assignedMemberId: string | null;
+  convertedToMemberId: string | null;
+  status: SoulStatus;
+  notes: string | null;
+}
+
+export interface SoulWithDetails extends Soul {
+  outreachProgramName?: string | null;
+  assignedMemberFirstName?: string | null;
+  assignedMemberLastName?: string | null;
+  convertedMemberFirstName?: string | null;
+  convertedMemberLastName?: string | null;
+  daysSinceLastFollowUp?: number;
+  isOverdue?: boolean;
+}
+
+// ── Follow Up ──────────────────────────────────────────────
+
+export interface FollowUp extends BaseEntity {
+  soulId: string;
+  memberId: string;
+  followUpDate: Date;
+  contactMethod: ContactMethod | null;
+  contactStatus: ContactStatus;
+  durationMinutes: number | null;
+  notes: string | null;
+  nextFollowUpDate: string | null; // ISO date string
+}
+
+export interface FollowUpWithDetails extends FollowUp {
+  memberFirstName: string;
+  memberLastName: string;
+  soulFirstName: string;
+  soulLastName: string;
+}
+
+// ── Outreach Participant ───────────────────────────────────
+
+export interface OutreachParticipant {
+  outreachId: string;
+  memberId: string;
+  role: string | null;
+  notes: string | null;
+  createdAt: Date;
+}
+
+export interface OutreachParticipantWithMember extends OutreachParticipant {
   memberFirstName: string;
   memberLastName: string;
   memberPhotoUrl?: string | null;
