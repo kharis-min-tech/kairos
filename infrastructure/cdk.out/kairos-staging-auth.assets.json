@@ -1,0 +1,21 @@
+{
+  "version": "50.0.0",
+  "files": {
+    "38badec7dce88fe40c05da22d41779065ce113dbe8e47223bb5b81d9941c010a": {
+      "displayName": "kairos-staging-auth Template",
+      "source": {
+        "path": "kairos-staging-auth.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-eu-west-2-6672044e": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2",
+          "objectKey": "38badec7dce88fe40c05da22d41779065ce113dbe8e47223bb5b81d9941c010a.json",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-eu-west-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

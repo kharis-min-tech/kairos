@@ -1,0 +1,328 @@
+{
+ "Description": "Kairos staging - Analytics nightly export (EventBridge + Lambda)",
+ "Resources": {
+  "AnalyticsExportFnServiceRole4C480396": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/AnalyticsExportFn/ServiceRole/Resource"
+   }
+  },
+  "AnalyticsExportFnServiceRoleDefaultPolicy3BE28AF4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraClusterSecretAttachmentDB8032DAFDEEBE73"
+       }
+      },
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "kairos-staging-storage:ExportsOutputFnGetAttAnalyticsExportsBucket041125DFArn9FCE14AB"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "kairos-staging-storage:ExportsOutputFnGetAttAnalyticsExportsBucket041125DFArn9FCE14AB"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AnalyticsExportFnServiceRoleDefaultPolicy3BE28AF4",
+    "Roles": [
+     {
+      "Ref": "AnalyticsExportFnServiceRole4C480396"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/AnalyticsExportFn/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "AnalyticsExportFn29F17397": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2"
+     },
+     "S3Key": "52a781d6a1b2160b3de78476b3386e3946d70659664fcaa174f37bee1cdc82df.zip"
+    },
+    "Description": "Nightly export of database tables to S3 in Parquet format for Power BI (Req 30)",
+    "Environment": {
+     "Variables": {
+      "DATABASE_SECRET_ARN": {
+       "Fn::ImportValue": "kairos-staging-database:ExportsOutputRefAuroraClusterSecretAttachmentDB8032DAFDEEBE73"
+      },
+      "ANALYTICS_EXPORT_BUCKET": {
+       "Fn::ImportValue": "kairos-staging-storage:ExportsOutputRefAnalyticsExportsBucket041125DF9EC21C1D"
+      },
+      "NODE_OPTIONS": "--enable-source-maps"
+     }
+    },
+    "FunctionName": "kairos-staging-analytics-export-to-s3",
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "AnalyticsExportFnServiceRole4C480396",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Timeout": 300,
+    "TracingConfig": {
+     "Mode": "Active"
+    },
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::ImportValue": "kairos-staging-network:ExportsOutputFnGetAttLambdaSg30A6108CGroupId30BB2F0D"
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Fn::ImportValue": "kairos-staging-network:ExportsOutputRefVpcprivateisolatedSubnet1Subnet24CE21A9CBBC011F"
+      },
+      {
+       "Fn::ImportValue": "kairos-staging-network:ExportsOutputRefVpcprivateisolatedSubnet2Subnet14FC6BC360484DFA"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "AnalyticsExportFnServiceRoleDefaultPolicy3BE28AF4",
+    "AnalyticsExportFnServiceRole4C480396"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/AnalyticsExportFn/Resource",
+    "aws:asset:path": "asset.52a781d6a1b2160b3de78476b3386e3946d70659664fcaa174f37bee1cdc82df",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "NightlyExportRule85A4C270": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Triggers analytics-export-to-s3 Lambda at 2 AM daily (Req 30.3)",
+    "Name": "kairos-staging-analytics-nightly-export",
+    "ScheduleExpression": "cron(0 2 * * ? *)",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "Project",
+      "Value": "kairos"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "AnalyticsExportFn29F17397",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RetryPolicy": {
+       "MaximumRetryAttempts": 2
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/NightlyExportRule/Resource"
+   }
+  },
+  "NightlyExportRuleAllowEventRulekairosstaginganalyticsAnalyticsExportFn89452807699985E2": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnalyticsExportFn29F17397",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "NightlyExportRule85A4C270",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/NightlyExportRule/AllowEventRulekairosstaginganalyticsAnalyticsExportFn89452807"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/z2OQY7CMAxFz8I+NZ12wXpAmuWAygEqkxrkNnUQTkAoyt1HadGs3rclv+8GmnYHXxt8aWWHqXJ8gXQOaCeDL+2Tw/kyYC9+oFHhd8FPFBvYi2GcIXXekTlcZeHJO7bvMq4pG217VKWg8F1gtIV9tBOFPSqZVQ/pcJV/azmmx8yq7CUbepIEhdTFT090lLNZbOeAN5ZbWR9juMeQTfkURt0+mxqaGurNqMzVI0rgmaBb+QdI+W6N9gAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "kairos-staging-analytics/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "AnalyticsExportFunctionArn": {
+   "Description": "Analytics export Lambda function ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "AnalyticsExportFn29F17397",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-analytics-export-fn-arn"
+   }
+  },
+  "NightlyExportRuleArn": {
+   "Description": "EventBridge nightly export rule ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "NightlyExportRule85A4C270",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "kairos-staging-analytics-nightly-export-rule-arn"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

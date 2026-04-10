@@ -37,6 +37,12 @@ import type {
   ReportsAttendanceTrend,
   ReportsFellowshipActivity,
   SwitchActiveBranchResponse,
+  CreateEnrollmentRequest,
+  UpdateEnrollmentRequest,
+  EnrollmentListParams,
+  CreateNewBelieverSessionRequest,
+  RecordNewBelieverAttendanceRequest,
+  SessionListParams,
 } from '@kairos/types';
 
 import type {
@@ -56,6 +62,10 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
+  NewBelieverEnrollment,
+  NewBelieverEnrollmentWithMember,
+  NewBelieverSession,
+  NewBelieverAttendanceWithMember,
 } from '@kairos/types';
 
 import { ApiClient } from './client';
@@ -239,6 +249,44 @@ export function createApiClient(
         client.get<ApiResponse<ReportsAttendanceTrend[]>>('/api/reports/attendance-trend'),
       fellowshipActivity: () =>
         client.get<ApiResponse<ReportsFellowshipActivity[]>>('/api/reports/fellowship-activity'),
+    },
+    newBelievers: {
+      enrollments: {
+        list: (params?: EnrollmentListParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.stage) qs.set('stage', params.stage);
+          if (params?.teacherId) qs.set('teacherId', params.teacherId);
+          if (params?.stale) qs.set('stale', 'true');
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          const q = qs.toString();
+          return client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>(`/api/new-believers/enrollments${q ? `?${q}` : ''}`);
+        },
+        alerts: () =>
+          client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>('/api/new-believers/enrollments/alerts'),
+        get: (id: string) =>
+          client.get<ApiResponse<NewBelieverEnrollmentWithMember>>(`/api/new-believers/enrollments/${id}`),
+        create: (data: CreateEnrollmentRequest) =>
+          client.post<ApiResponse<NewBelieverEnrollment>>('/api/new-believers/enrollments', data),
+        update: (id: string, data: UpdateEnrollmentRequest) =>
+          client.patch<ApiResponse<NewBelieverEnrollment>>(`/api/new-believers/enrollments/${id}`, data),
+      },
+      sessions: {
+        list: (params?: SessionListParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.upcoming) qs.set('upcoming', 'true');
+          const q = qs.toString();
+          return client.get<ApiResponse<NewBelieverSession[]>>(`/api/new-believers/sessions${q ? `?${q}` : ''}`);
+        },
+        create: (data: CreateNewBelieverSessionRequest) =>
+          client.post<ApiResponse<NewBelieverSession>>('/api/new-believers/sessions', data),
+        getAttendance: (sessionId: string) =>
+          client.get<ApiResponse<NewBelieverAttendanceWithMember[]>>(`/api/new-believers/sessions/${sessionId}/attendance`),
+        recordAttendance: (sessionId: string, data: RecordNewBelieverAttendanceRequest) =>
+          client.post<ApiResponse<{ count: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
+      },
     },
   };
 }

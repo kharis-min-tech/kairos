@@ -325,3 +325,44 @@ export interface ReportsFellowshipActivity {
   meetingCount: number;
   avgAttendees: number;
 }
+
+export interface CreateEnrollmentRequest {
+  memberId: string;
+  branchId: string;
+  teacherId?: string;
+  notes?: string;
+}
+
+export interface UpdateEnrollmentRequest {
+  stage?: string;
+  teacherId?: string | null;
+  notes?: string | null;
+  completedAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface EnrollmentListParams {
+  branchId?: string;
+  stage?: string;
+  teacherId?: string;
+  stale?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateNewBelieverSessionRequest {
+  branchId: string;
+  sessionDate: string;
+  topic: string;
+  teacherId?: string;
+  notes?: string;
+}
+
+export interface RecordNewBelieverAttendanceRequest {
+  records: { enrollmentId: string; attended: boolean; notes?: string }[];
+}
+
+export interface SessionListParams {
+  branchId?: string;
+  upcoming?: boolean;
+}

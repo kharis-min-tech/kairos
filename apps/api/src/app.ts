@@ -8,6 +8,9 @@ import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
 import { analyticsRouter } from './analytics/router';
 import { reportsRouter } from './reports/router';
+import { newBelieversRouter } from './new-believers/router';
+import { outreachRouter } from './outreach/router';
+import { formsRouter } from './forms/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -47,6 +50,9 @@ export function createApp() {
   app.route('/api/fellowships', fellowshipsRouter);
   app.route('/api/analytics', analyticsRouter);
   app.route('/api/reports', reportsRouter);
+  app.route('/api/new-believers', newBelieversRouter);
+  app.route('/api/outreach', outreachRouter);
+  app.route('/api/forms', formsRouter);
 
   // Error handler
   app.onError(errorHandler);

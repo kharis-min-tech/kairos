@@ -9,3 +9,45 @@ export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-memb
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
 export { fellowshipMeetingAttendance, fellowshipMeetingAttendanceRelations } from './fellowship-meeting-attendance';
 export { fellowshipJoinRequests, fellowshipJoinRequestsRelations } from './fellowship-join-requests';
+export {
+  newBelieverEnrollments,
+  newBelieverSessions,
+  newBelieverAttendance,
+  newBelieverEnrollmentsRelations,
+  newBelieverSessionsRelations,
+  newBelieverAttendanceRelations,
+} from './new-believers';
+export {
+  outreachPrograms,
+  outreachParticipants,
+  souls,
+  followUps,
+  outreachProgramsRelations,
+  outreachParticipantsRelations,
+  soulsRelations,
+  followUpsRelations,
+} from './outreach';
+export {
+  forms,
+  formSubmissions,
+  formsRelations,
+  formSubmissionsRelations,
+} from './forms';
+export {
+  departments,
+  branchDepartments,
+  departmentMembers,
+  departmentsRelations,
+  branchDepartmentsRelations,
+  departmentMembersRelations,
+} from './departments';
+export {
+  donations,
+  donationsRelations,
+} from './donations';
+export {
+  services,
+  serviceAttendance,
+  servicesRelations,
+  serviceAttendanceRelations,
+} from './attendance';

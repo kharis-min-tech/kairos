@@ -1,0 +1,21 @@
+{
+  "version": "50.0.0",
+  "files": {
+    "0831ccfa6c5ca2d679af71a6927195995965be80d450aa29f2dbe6ddd25f2b33": {
+      "displayName": "kairos-staging-network Template",
+      "source": {
+        "path": "kairos-staging-network.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-eu-west-2-71612865": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-eu-west-2",
+          "objectKey": "0831ccfa6c5ca2d679af71a6927195995965be80d450aa29f2dbe6ddd25f2b33.json",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-eu-west-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

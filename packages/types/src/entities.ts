@@ -206,3 +206,50 @@ export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
   memberLastName: string;
   memberPhotoUrl?: string | null;
 }
+
+export interface NewBelieverEnrollment {
+  id: string;
+  memberId: string;
+  branchId: string;
+  teacherId?: string | null;
+  stage: string;
+  enrolledAt: string;
+  completedAt?: string | null;
+  notes?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewBelieverEnrollmentWithMember extends NewBelieverEnrollment {
+  memberFirstName: string;
+  memberLastName: string;
+  teacherFirstName?: string | null;
+  teacherLastName?: string | null;
+}
+
+export interface NewBelieverSession {
+  id: string;
+  branchId: string;
+  teacherId?: string | null;
+  teacherFirstName?: string | null;
+  teacherLastName?: string | null;
+  sessionDate: string;
+  topic: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewBelieverAttendance {
+  sessionId: string;
+  enrollmentId: string;
+  attended: boolean;
+  notes?: string | null;
+  recordedAt: string;
+}
+
+export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
+  memberFirstName: string;
+  memberLastName: string;
+}
