@@ -126,7 +126,8 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
       if (formData.city.trim()) createData.city = formData.city.trim();
       if (formData.gender) createData.gender = formData.gender;
 
-      const result = await members.create(createData as Parameters<typeof members.create>[0]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await members.create(createData as unknown as Parameters<typeof members.create>[0]);
       const resultData = result as unknown as { data?: { id?: string }; id?: string };
       onSuccess(resultData.data?.id ?? resultData.id ?? '');
     } catch (err: unknown) {
