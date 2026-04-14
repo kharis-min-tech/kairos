@@ -49,7 +49,7 @@ export const handler = async (
 
     // 5. Check for duplicate fellowship name in the same branch
     const existing = await db
-      .select({ fellowshipId: fellowships.fellowshipId })
+      .select({ fellowshipId: fellowships.id })
       .from(fellowships)
       .where(
         and(
@@ -76,24 +76,23 @@ export const handler = async (
         leaderId: input.leader_id,
         coLeaderId: input.co_leader_id,
         meetingSchedule: input.meeting_schedule,
-        location: input.location,
       })
       .returning();
 
     logger.info('Fellowship created', {
-      fellowshipId: created!.fellowshipId,
+      fellowshipId: created!.id,
     });
 
     // 7. Auto-add leader to fellowship_members if assigned
     if (input.leader_id) {
       await db.insert(fellowshipMembers).values({
-        fellowshipId: created!.fellowshipId,
+        fellowshipId: created!.id,
         memberId: input.leader_id,
         notes: 'Auto-added as fellowship leader',
       });
 
       logger.info('Leader auto-added to fellowship members', {
-        fellowshipId: created!.fellowshipId,
+        fellowshipId: created!.id,
         memberId: input.leader_id,
       });
     }
@@ -101,13 +100,13 @@ export const handler = async (
     // 8. Auto-add co-leader to fellowship_members if assigned
     if (input.co_leader_id) {
       await db.insert(fellowshipMembers).values({
-        fellowshipId: created!.fellowshipId,
+        fellowshipId: created!.id,
         memberId: input.co_leader_id,
         notes: 'Auto-added as fellowship co-leader',
       });
 
       logger.info('Co-leader auto-added to fellowship members', {
-        fellowshipId: created!.fellowshipId,
+        fellowshipId: created!.id,
         memberId: input.co_leader_id,
       });
     }

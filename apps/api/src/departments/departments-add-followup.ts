@@ -29,7 +29,7 @@ const logger = createLogger('departments-add-followup');
 
 /** Validation schema for adding a follow-up note */
 const addFollowupSchema = z.object({
-  department_member_id: z.number().int().positive(),
+  department_member_id: z.string().uuid(),
   notes: z.string().trim().min(1, 'Notes are required').max(2000),
   followup_date: z.coerce.date().optional(),
 });
@@ -59,13 +59,13 @@ export const handler = async (
     // Fetch the department member record
     const [memberRecord] = await db
       .select({
-        departmentMemberId: departmentMembers.departmentMemberId,
+        departmentMemberId: departmentMembers.id,
         branchDepartmentId: departmentMembers.branchDepartmentId,
         memberId: departmentMembers.memberId,
         isActive: departmentMembers.isActive,
       })
       .from(departmentMembers)
-      .where(eq(departmentMembers.departmentMemberId, input.department_member_id))
+      .where(eq(departmentMembers.id, input.department_member_id))
       .limit(1);
 
     if (!memberRecord) {
@@ -79,13 +79,13 @@ export const handler = async (
     // Fetch the branch department to check leadership and branch
     const [branchDept] = await db
       .select({
-        branchDepartmentId: branchDepartments.branchDepartmentId,
+        branchDepartmentId: branchDepartments.id,
         branchId: branchDepartments.branchId,
         leadMemberId: branchDepartments.leadMemberId,
         deputyMemberId: branchDepartments.deputyMemberId,
       })
       .from(branchDepartments)
-      .where(eq(branchDepartments.branchDepartmentId, memberRecord.branchDepartmentId))
+      .where(eq(branchDepartments.id, memberRecord.branchDepartmentId))
       .limit(1);
 
     if (!branchDept) {
@@ -110,7 +110,7 @@ export const handler = async (
     const [updated] = await db
       .update(departmentMembers)
       .set({ updatedAt: new Date() })
-      .where(eq(departmentMembers.departmentMemberId, input.department_member_id))
+      .where(eq(departmentMembers.id, input.department_member_id))
       .returning();
 
     // Get the member's name for the response
@@ -120,7 +120,7 @@ export const handler = async (
         lastName: members.lastName,
       })
       .from(members)
-      .where(eq(members.memberId, memberRecord.memberId))
+      .where(eq(members.id, memberRecord.memberId))
       .limit(1);
 
     const followupDate = input.followup_date ?? new Date();

@@ -158,8 +158,8 @@ describe('departments-add-followup Lambda', () => {
   // Test: Department lead can add follow-up notes
   it('should allow department lead to add follow-up note', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5, // lead member
-      branchId: 10,
+      memberId: 'test-member-5', // lead member
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
@@ -169,14 +169,14 @@ describe('departments-add-followup Lambda', () => {
     setupDb({
       select: [
         // department member record
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: true }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
         // branch department
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6 }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6' }],
         // member info
         [{ firstName: 'John', lastName: 'Doe' }],
       ],
       update: [
-        [{ departmentMemberId: 1, updatedAt: now }],
+        [{ departmentMemberId: 'test-dept-member-1', updatedAt: now }],
       ],
     });
 
@@ -191,14 +191,14 @@ describe('departments-add-followup Lambda', () => {
     const body = JSON.parse(result.body);
     expect(body.notes).toBe('Called member, they are doing well.');
     expect(body.member_name).toBe('John Doe');
-    expect(body.added_by).toBe(5);
+    expect(body.added_by).toBe('test-member-5');
   });
 
   // Test: Deputy can also add follow-up notes (collaboration)
   it('should allow department deputy to add follow-up note', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 6, // deputy member
-      branchId: 10,
+      memberId: 'test-member-6', // deputy member
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'deputy@kairos.church',
     });
@@ -207,12 +207,12 @@ describe('departments-add-followup Lambda', () => {
     const now = new Date();
     setupDb({
       select: [
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: true }],
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6 }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6' }],
         [{ firstName: 'Jane', lastName: 'Smith' }],
       ],
       update: [
-        [{ departmentMemberId: 1, updatedAt: now }],
+        [{ departmentMemberId: 'test-dept-member-1', updatedAt: now }],
       ],
     });
 
@@ -225,14 +225,14 @@ describe('departments-add-followup Lambda', () => {
     expect(result.statusCode).toBe(201);
 
     const body = JSON.parse(result.body);
-    expect(body.added_by).toBe(6);
+    expect(body.added_by).toBe('test-member-6');
   });
 
   // Test: Admin can add follow-up notes
   it('should allow admin to add follow-up note', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -241,12 +241,12 @@ describe('departments-add-followup Lambda', () => {
     const now = new Date();
     setupDb({
       select: [
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: true }],
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6 }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6' }],
         [{ firstName: 'John', lastName: 'Doe' }],
       ],
       update: [
-        [{ departmentMemberId: 1, updatedAt: now }],
+        [{ departmentMemberId: 'test-dept-member-1', updatedAt: now }],
       ],
     });
 
@@ -262,8 +262,8 @@ describe('departments-add-followup Lambda', () => {
   // Test: Non-leader, non-admin cannot add follow-up notes
   it('should reject follow-up from non-leader, non-admin member', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 99, // not a leader of this department
-      branchId: 10,
+      memberId: 'test-member-99', // not a leader of this department
+      branchId: 'test-branch-10',
       roles: ['Member'],
       email: 'member@kairos.church',
     });
@@ -271,8 +271,8 @@ describe('departments-add-followup Lambda', () => {
 
     setupDb({
       select: [
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: true }],
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6 }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6' }],
       ],
     });
 
@@ -291,8 +291,8 @@ describe('departments-add-followup Lambda', () => {
   // Test: Cannot add follow-up for inactive department member
   it('should reject follow-up for inactive department member', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
@@ -300,7 +300,7 @@ describe('departments-add-followup Lambda', () => {
 
     setupDb({
       select: [
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: false }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: false }],
       ],
     });
 

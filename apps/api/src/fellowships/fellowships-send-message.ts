@@ -29,12 +29,12 @@ const logger = createLogger('fellowships-send-message');
 
 /** Inline schema for send-message request */
 const sendMessageSchema = z.object({
-  fellowship_id: z.number().int().positive(),
+  fellowship_id: z.string().uuid(),
   title: z.string().trim().min(1).max(200),
   message: z.string().trim().min(1).max(5000),
   priority: z.enum(['Low', 'Normal', 'High', 'Urgent']).default('Normal'),
   /** Optional: send to specific member IDs only. If omitted, sends to all. */
-  member_ids: z.array(z.number().int().positive()).optional(),
+  member_ids: z.array(z.string().uuid()).optional(),
 });
 
 export const handler = async (
@@ -55,7 +55,7 @@ export const handler = async (
     // 3. Verify fellowship exists
     const [fellowship] = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         fellowshipName: fellowships.fellowshipName,
         branchId: fellowships.branchId,
         leaderId: fellowships.leaderId,
@@ -64,7 +64,7 @@ export const handler = async (
       .from(fellowships)
       .where(
         and(
-          eq(fellowships.fellowshipId, input.fellowship_id),
+          eq(fellowships.id, input.fellowship_id),
           eq(fellowships.isActive, true)
         )
       )
@@ -89,7 +89,7 @@ export const handler = async (
     }
 
     // 6. Get target member IDs
-    let targetMemberIds: number[];
+    let targetMemberIds: string[];
 
     if (input.member_ids && input.member_ids.length > 0) {
       // Send to specific subset — verify they are active fellowship members

@@ -48,11 +48,9 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     const db = getDb();
 
-    const branchDepartmentId = event.queryStringParameters?.branch_department_id
-      ? parseInt(event.queryStringParameters.branch_department_id, 10)
-      : undefined;
+    const branchDepartmentId = event.queryStringParameters?.branch_department_id ?? undefined;
 
-    if (!branchDepartmentId || isNaN(branchDepartmentId) || branchDepartmentId <= 0) {
+    if (!branchDepartmentId) {
       throw new BadRequestError('branch_department_id query parameter is required');
     }
 
@@ -67,14 +65,14 @@ export const handler = async (
     // Fetch the branch department
     const [branchDept] = await db
       .select({
-        branchDepartmentId: branchDepartments.branchDepartmentId,
+        branchDepartmentId: branchDepartments.id,
         branchId: branchDepartments.branchId,
         leadMemberId: branchDepartments.leadMemberId,
         deputyMemberId: branchDepartments.deputyMemberId,
         isActive: branchDepartments.isActive,
       })
       .from(branchDepartments)
-      .where(eq(branchDepartments.branchDepartmentId, branchDepartmentId))
+      .where(eq(branchDepartments.id, branchDepartmentId))
       .limit(1);
 
     if (!branchDept) {
@@ -102,7 +100,7 @@ export const handler = async (
     // Query active department members whose last follow-up (updated_at) is past threshold
     const overdueMembers = await db
       .select({
-        departmentMemberId: departmentMembers.departmentMemberId,
+        departmentMemberId: departmentMembers.id,
         memberId: departmentMembers.memberId,
         joinDate: departmentMembers.joinDate,
         lastFollowupAt: departmentMembers.updatedAt,
@@ -112,7 +110,7 @@ export const handler = async (
         phone: members.phone,
       })
       .from(departmentMembers)
-      .innerJoin(members, eq(departmentMembers.memberId, members.memberId))
+      .innerJoin(members, eq(departmentMembers.memberId, members.id))
       .where(
         and(
           eq(departmentMembers.branchDepartmentId, branchDepartmentId),

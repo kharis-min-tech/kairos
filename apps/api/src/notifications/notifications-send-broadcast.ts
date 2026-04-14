@@ -99,19 +99,19 @@ export const handler = async (
         targetFellowshipId: input.target_fellowship_id,
         targetRoleId: input.target_role_id,
         targetLeadershipRole: input.target_leadership_role,
-        scheduledFor: input.scheduled_for,
-        expiresAt: input.expires_at,
+        scheduledFor: input.scheduled_for ?? null,
+        expiresAt: input.expires_at ?? null,
         sentBy: ctx.memberId,
       })
       .returning();
 
     // 5. Resolve target recipients based on scope
-    let targetMemberIds: number[] = [];
+    let targetMemberIds: string[] = [];
 
     switch (input.target_scope) {
       case 'All': {
         const allMembers = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(eq(members.isActive, true));
         targetMemberIds = allMembers.map((m) => m.memberId);
@@ -120,7 +120,7 @@ export const handler = async (
 
       case 'Branch': {
         const branchMembers = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(
             and(

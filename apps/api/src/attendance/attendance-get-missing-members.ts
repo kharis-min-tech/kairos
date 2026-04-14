@@ -28,9 +28,9 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.info('Getting missing members', { userId: ctx.memberId, branchId: ctx.branchId });
 
-    const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
-    const threshold = params.threshold ? parseInt(params.threshold, 10) : CONSECUTIVE_THRESHOLD;
+    const params = (event.queryStringParameters || {}) as Record<string, string>;
+    const branchId = params.branchId || ctx.branchId;
+    const threshold: number = params.threshold ? parseInt(params.threshold, 10) : CONSECUTIVE_THRESHOLD;
 
     // Branch isolation
     if (!isAdmin(ctx)) {
@@ -41,7 +41,7 @@ export const handler = async (
 
     // Get the last N services for this branch (ordered by date desc)
     const recentServices = await db
-      .select({ serviceId: services.serviceId, serviceDate: services.serviceDate })
+      .select({ serviceId: services.id, serviceDate: services.serviceDate })
       .from(services)
       .where(eq(services.branchId, branchId))
       .orderBy(desc(services.serviceDate))
@@ -62,7 +62,7 @@ export const handler = async (
     // Find active members in this branch who were NOT present in any of the last N services
     const missingMembers = await db
       .select({
-        memberId: members.memberId,
+        memberId: members.id,
         firstName: members.firstName,
         lastName: members.lastName,
         email: members.email,
@@ -70,8 +70,8 @@ export const handler = async (
         lastAttendanceDate: sql<string>`(
           SELECT MAX(s.service_date)::text
           FROM service_attendance sa
-          INNER JOIN services s ON s.service_id = sa.service_id
-          WHERE sa.member_id = ${members.memberId}
+          INNER JOIN services s ON s.id = sa.service_id
+          WHERE sa.member_id = ${members.id}
           AND sa.attendance_status = 'Present'
           AND s.branch_id = ${branchId}
         )`.as('last_attendance_date'),
@@ -81,7 +81,7 @@ export const handler = async (
         and(
           eq(members.homeBranchId, branchId),
           eq(members.isActive, true),
-          sql`${members.memberId} NOT IN (
+          sql`${members.id} NOT IN (
             SELECT DISTINCT sa.member_id
             FROM service_attendance sa
             WHERE sa.service_id IN (${sql.join(recentServiceIds.map(id => sql`${id}`), sql`, `)})

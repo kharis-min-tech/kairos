@@ -29,8 +29,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.info('Getting attendance trends', { userId: ctx.memberId, branchId: ctx.branchId });
 
-    const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const params = (event.queryStringParameters || {}) as Record<string, string>;
+    const branchId = params.branchId || ctx.branchId;
 
     // Branch isolation
     if (!isAdmin(ctx)) {
@@ -63,29 +63,29 @@ export const handler = async (
     // Get services with attendance counts in date range
     const trendData = await db
       .select({
-        serviceId: services.serviceId,
+        serviceId: services.id,
         serviceDate: services.serviceDate,
         serviceType: services.serviceType,
         serviceTitle: services.serviceTitle,
         presentCount: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
           AND sa.attendance_status = 'Present'
         )`.as('present_count'),
         virtualCount: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
           AND sa.attendance_status = 'Virtual'
         )`.as('virtual_count'),
         totalRecorded: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
         )`.as('total_recorded'),
       })
       .from(services)
       .where(
         and(
-          eq(services.branchId, branchId),
+            eq(services.branchId, branchId),
           gte(services.serviceDate, dateFrom),
           lte(services.serviceDate, dateTo)
         )

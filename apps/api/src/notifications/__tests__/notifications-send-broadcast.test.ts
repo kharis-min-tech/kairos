@@ -4,7 +4,7 @@
 // **Validates: Requirements 24.1-24.6**
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -78,11 +78,11 @@ import { handler } from '../notifications-send-broadcast';
 
 function createEvent(
   body: unknown,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] }
+  auth?: { memberId?: string; branchId?: string; roles?: string[] }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -135,10 +135,6 @@ function setupDb(opts: {
       (opts.memberIds || [1, 2, 3]).map((id) => ({ memberId: id }))
     ),
   };
-  const batchInsert = {
-    values: vi.fn().mockResolvedValue([]),
-  };
-
   mockGetDb.mockReturnValue({
     insert: vi.fn().mockReturnValue(insertChain),
     select: vi.fn().mockReturnValue(selectChain),
@@ -165,7 +161,7 @@ const branchScopePayload = {
   notification_type: 'Announcement',
   priority: 'Normal',
   target_scope: 'Branch',
-  target_branch_id: 10,
+  target_branch_id: '00000000-0000-4000-8000-000000000010',
 };
 
 const departmentScopePayload = {
@@ -174,7 +170,7 @@ const departmentScopePayload = {
   notification_type: 'Reminder',
   priority: 'Normal',
   target_scope: 'Department',
-  target_department_id: 5,
+  target_department_id: '00000000-0000-4000-8000-000000000005',
 };
 
 const fellowshipScopePayload = {
@@ -183,7 +179,7 @@ const fellowshipScopePayload = {
   notification_type: 'Announcement',
   priority: 'Normal',
   target_scope: 'Fellowship',
-  target_fellowship_id: 3,
+  target_fellowship_id: '00000000-0000-4000-8000-000000000003',
 };
 
 // ---------------------------------------------------------------------------
@@ -326,7 +322,7 @@ describe('notifications-send-broadcast handler', () => {
     setupDb({ insertReturning: [notification], memberIds: [40, 41] });
 
     const event = createEvent(branchScopePayload, {
-      branchId: 10,
+      branchId: '00000000-0000-4000-8000-000000000010',
       roles: ['Pastor', 'Member'],
     });
     const result = await handler(event);
@@ -345,7 +341,7 @@ describe('notifications-send-broadcast handler', () => {
       title: departmentScopePayload.title,
       targetScope: 'Department',
     };
-    const { insertChain } = setupDb({
+    setupDb({
       insertReturning: [notification],
       memberIds: [50, 51, 52, 53],
     });

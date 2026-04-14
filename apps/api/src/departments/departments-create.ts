@@ -72,7 +72,7 @@ export const handler = async (
           })
           .returning();
 
-        departmentId = newDept!.departmentId;
+        departmentId = newDept!.id;
       }
 
       // Validate branch department input
@@ -104,7 +104,7 @@ export const handler = async (
         .returning();
 
       logger.info('Branch department created', {
-        branchDepartmentId: branchDept!.branchDepartmentId,
+        branchDepartmentId: branchDept!.id,
         branchId: branchDept!.branchId,
         departmentId: branchDept!.departmentId,
         createdBy: ctx.memberId,
@@ -129,7 +129,7 @@ export const handler = async (
       .returning();
 
     logger.info('Global department created', {
-      departmentId: newDept!.departmentId,
+      departmentId: newDept!.id,
       departmentName: newDept!.departmentName,
       createdBy: ctx.memberId,
     });
@@ -145,18 +145,18 @@ export const handler = async (
  */
 async function verifyMemberInBranch(
   db: ReturnType<typeof getDb>,
-  memberId: number,
-  branchId: number,
+  memberId: string,
+  branchId: string,
   label: string
 ): Promise<void> {
   const [member] = await db
     .select({
-      memberId: members.memberId,
+      memberId: members.id,
       homeBranchId: members.homeBranchId,
       isActive: members.isActive,
     })
     .from(members)
-    .where(eq(members.memberId, memberId))
+    .where(eq(members.id, memberId))
     .limit(1);
 
   if (!member) {

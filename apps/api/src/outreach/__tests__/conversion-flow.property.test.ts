@@ -113,7 +113,7 @@ describe('Property 5: Converted Status Requires Member Link', () => {
   it('for any status update to Converted with a valid converted_to_member_id, validation should pass', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 100000 }),
+        fc.uuid(),
         (memberId) => {
           const result = soulStatusUpdateSchema.safeParse({
             status: 'Converted',
@@ -164,20 +164,20 @@ describe('Property 5: Converted Status Requires Member Link', () => {
 describe('Property 16: Conversion Preserves Follow-Up History', () => {
   // Simulate a soul with follow-up history going through conversion
   interface FollowUpRecord {
-    followUpId: number;
-    soulId: number;
+    followUpId: string;
+    soulId: string;
     contactMethod: string;
     contactStatus: string;
     notes: string;
   }
 
   interface SoulRecord {
-    soulId: number;
+    soulId: string;
     firstName: string;
     lastName: string;
     status: string;
-    outreachId: number | null;
-    convertedToMemberId: number | null;
+    outreachId: string | null;
+    convertedToMemberId: string | null;
     followUps: FollowUpRecord[];
   }
 
@@ -185,24 +185,24 @@ describe('Property 16: Conversion Preserves Follow-Up History', () => {
   const contactStatuses = ['Successful', 'No Answer', 'Wrong Number', 'Call Back Later', 'Not Interested', 'Interested'];
 
   const followUpArb = fc.record({
-    followUpId: fc.integer({ min: 1, max: 10000 }),
-    soulId: fc.integer({ min: 1, max: 1000 }),
+    followUpId: fc.uuid(),
+    soulId: fc.uuid(),
     contactMethod: fc.constantFrom(...contactMethods),
     contactStatus: fc.constantFrom(...contactStatuses),
     notes: fc.string({ minLength: 0, maxLength: 200 }),
   });
 
   const soulArb = fc.record({
-    soulId: fc.integer({ min: 1, max: 1000 }),
+    soulId: fc.uuid(),
     firstName: fc.string({ minLength: 1, maxLength: 50 }),
     lastName: fc.string({ minLength: 1, maxLength: 50 }),
     status: fc.constant('Interested' as string),
-    outreachId: fc.option(fc.integer({ min: 1, max: 100 }), { nil: null }),
-    convertedToMemberId: fc.constant(null as number | null),
+    outreachId: fc.option(fc.uuid(), { nil: null }),
+    convertedToMemberId: fc.constant(null as string | null),
     followUps: fc.array(followUpArb, { minLength: 0, maxLength: 10 }),
   });
 
-  function convertSoul(soul: SoulRecord, newMemberId: number): SoulRecord {
+  function convertSoul(soul: SoulRecord, newMemberId: string): SoulRecord {
     // Conversion should only update status and member link — follow-ups remain intact
     return {
       ...soul,
@@ -215,7 +215,7 @@ describe('Property 16: Conversion Preserves Follow-Up History', () => {
     fc.assert(
       fc.property(
         soulArb,
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (soul, newMemberId) => {
           const originalFollowUps = [...soul.followUps];
           const converted = convertSoul(soul, newMemberId);
@@ -235,7 +235,7 @@ describe('Property 16: Conversion Preserves Follow-Up History', () => {
     fc.assert(
       fc.property(
         soulArb,
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (soul, newMemberId) => {
           const converted = convertSoul(soul, newMemberId);
 
@@ -258,13 +258,13 @@ describe('Property 16: Conversion Preserves Follow-Up History', () => {
     fc.assert(
       fc.property(
         soulArb,
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (soul, newMemberId) => {
           const converted = convertSoul(soul, newMemberId);
 
           // Each follow-up should still reference the original soul (compare by index since order is preserved)
           for (let i = 0; i < converted.followUps.length; i++) {
-            expect(converted.followUps[i].soulId).toBe(soul.followUps[i].soulId);
+            expect(converted.followUps[i]!.soulId).toBe(soul.followUps[i]!.soulId);
           }
         }
       ),

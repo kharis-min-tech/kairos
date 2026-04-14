@@ -37,9 +37,9 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const ctx = await resolveAuthContext(event);
-    const soulId = parseInt(event.pathParameters?.soulId || '', 10);
+    const soulId = event.pathParameters?.soulId || '';
 
-    if (isNaN(soulId)) {
+    if (!soulId) {
       throw new NotFoundError('Soul');
     }
 
@@ -53,14 +53,14 @@ export const handler = async (
     // Get current soul status — use leftJoin to support ad-hoc souls (null outreach_id)
     const [soul] = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         status: souls.status,
         outreachBranchId: outreachPrograms.branchId,
         assignedMemberId: souls.assignedMemberId,
       })
       .from(souls)
-      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .where(eq(souls.soulId, soulId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .where(eq(souls.id, soulId))
       .limit(1);
 
     if (!soul) {
@@ -73,7 +73,7 @@ export const handler = async (
       const [assignedMember] = await db
         .select({ homeBranchId: members.homeBranchId })
         .from(members)
-        .where(eq(members.memberId, soul.assignedMemberId))
+        .where(eq(members.id, soul.assignedMemberId))
         .limit(1);
       branchId = assignedMember?.homeBranchId ?? null;
     }
@@ -106,7 +106,7 @@ export const handler = async (
     const [updated] = await db
       .update(souls)
       .set(updateValues)
-      .where(eq(souls.soulId, soulId))
+      .where(eq(souls.id, soulId))
       .returning();
 
     logger.info('Soul status updated', {

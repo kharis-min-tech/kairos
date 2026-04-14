@@ -52,7 +52,7 @@ const mockedGetAuthContext = vi.mocked(getAuthContext);
 const mockedGetDb = vi.mocked(getDb);
 const mockedEnforceBranchAccess = vi.mocked(enforceBranchAccess);
 
-function createEvent(body: Record<string, unknown>, auth?: Partial<{ memberId: number; branchId: number; roles: string[] }>): APIGatewayProxyEvent {
+function createEvent(body: Record<string, unknown>, auth?: Partial<{ memberId: string; branchId: string; roles: string[] }>): APIGatewayProxyEvent {
   const ctx = {
     memberId: auth?.memberId ?? 1,
     branchId: auth?.branchId ?? 10,
@@ -84,8 +84,8 @@ describe('attendance-record-service handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -94,8 +94,8 @@ describe('attendance-record-service handler', () => {
 
   it('should create a service and return 201', async () => {
     const createdService = {
-      serviceId: 1,
-      branchId: 10,
+      serviceId: 'test-service-1',
+      branchId: 'test-branch-10',
       serviceDate: new Date('2026-02-08'),
       serviceType: 'Sunday Service',
       serviceTitle: 'Morning Worship',
@@ -126,7 +126,7 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       service_date: '2026-02-08',
       service_type: 'Sunday Service',
       service_title: 'Morning Worship',
@@ -135,7 +135,7 @@ describe('attendance-record-service handler', () => {
     const result = await handler(event);
     expect(result.statusCode).toBe(201);
     const body = JSON.parse(result.body);
-    expect(body.serviceId).toBe(1);
+    expect(body.serviceId).toBe('test-service-1');
   });
 
   it('should record bulk attendance for existing service', async () => {
@@ -148,7 +148,7 @@ describe('attendance-record-service handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -166,8 +166,8 @@ describe('attendance-record-service handler', () => {
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
-            { serviceId: 1, memberId: 100, attendanceStatus: 'Present' },
-            { serviceId: 1, memberId: 101, attendanceStatus: 'Virtual' },
+            { serviceId: 'test-service-1', memberId: 'test-member-100', attendanceStatus: 'Present' },
+            { serviceId: 'test-service-1', memberId: 'test-member-101', attendanceStatus: 'Virtual' },
           ]),
         }),
       }),
@@ -175,10 +175,10 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      service_id: 1,
+      service_id: '00000000-0000-4000-8000-000000000001',
       records: [
-        { member_id: 100, attendance_status: 'Present' },
-        { member_id: 101, attendance_status: 'Virtual' },
+        { member_id: '00000000-0000-4000-8000-000000000100', attendance_status: 'Present' },
+        { member_id: '00000000-0000-4000-8000-000000000101', attendance_status: 'Virtual' },
       ],
     });
 
@@ -197,7 +197,7 @@ describe('attendance-record-service handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -206,7 +206,7 @@ describe('attendance-record-service handler', () => {
           // Existing attendance — member 100 already recorded
           return {
             from: vi.fn().mockReturnValue({
-              where: vi.fn().mockReturnValue([{ memberId: 100 }]),
+              where: vi.fn().mockReturnValue([{ memberId: '00000000-0000-4000-8000-000000000100' }]),
             }),
           };
         }
@@ -216,9 +216,9 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      service_id: 1,
+      service_id: '00000000-0000-4000-8000-000000000001',
       records: [
-        { member_id: 100, attendance_status: 'Present' },
+        { member_id: '00000000-0000-4000-8000-000000000100', attendance_status: 'Present' },
       ],
     });
 
@@ -237,7 +237,7 @@ describe('attendance-record-service handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -248,10 +248,10 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      service_id: 1,
+      service_id: '00000000-0000-4000-8000-000000000001',
       records: [
-        { member_id: 100, attendance_status: 'Present' },
-        { member_id: 100, attendance_status: 'Absent' },
+        { member_id: '00000000-0000-4000-8000-000000000100', attendance_status: 'Present' },
+        { member_id: '00000000-0000-4000-8000-000000000100', attendance_status: 'Absent' },
       ],
     });
 
@@ -261,8 +261,8 @@ describe('attendance-record-service handler', () => {
 
   it('should enforce branch isolation for pastor', async () => {
     mockedGetAuthContext.mockReturnValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Pastor', 'Member'],
       email: 'pastor@kairos.church',
     });
@@ -280,7 +280,7 @@ describe('attendance-record-service handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 20 }]),
+                limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-20' }]),
               }),
             }),
           };
@@ -291,8 +291,8 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      service_id: 1,
-      records: [{ member_id: 100, attendance_status: 'Present' }],
+      service_id: '00000000-0000-4000-8000-000000000001',
+      records: [{ member_id: '00000000-0000-4000-8000-000000000100', attendance_status: 'Present' }],
     });
 
     const result = await handler(event);
@@ -304,7 +304,7 @@ describe('attendance-record-service handler', () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue([{ serviceId: 99 }]),
+            limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-99' }]),
           }),
         }),
       }),
@@ -312,7 +312,7 @@ describe('attendance-record-service handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       service_date: '2026-02-08',
       service_type: 'Sunday Service',
     });
@@ -323,7 +323,7 @@ describe('attendance-record-service handler', () => {
 
   it('should return 422 for invalid service type', async () => {
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       service_date: '2026-02-08',
       service_type: 'Invalid Type',
     });

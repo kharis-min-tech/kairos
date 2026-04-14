@@ -45,8 +45,8 @@ export const handler = async (
       throw new ForbiddenError('Only admins and leaders can save form templates');
     }
 
-    const formId = parseInt(event.pathParameters?.formId || '', 10);
-    if (isNaN(formId)) {
+    const formId = event.pathParameters?.formId || '';
+    if (!formId) {
       throw new NotFoundError('Form', event.pathParameters?.formId);
     }
 
@@ -59,7 +59,7 @@ export const handler = async (
     const [sourceForm] = await db
       .select()
       .from(forms)
-      .where(eq(forms.formId, formId))
+      .where(eq(forms.id, formId))
       .limit(1);
 
     if (!sourceForm) {
@@ -82,7 +82,7 @@ export const handler = async (
       .returning();
 
     logger.info('Form saved as template', {
-      templateId: template!.formId,
+      templateId: template!.id,
       sourceFormId: formId,
       createdBy: ctx.memberId,
     });

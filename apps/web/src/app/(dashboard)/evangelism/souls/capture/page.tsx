@@ -49,8 +49,8 @@ export default function SoulCapturePage() {
   const [apiError, setApiError] = useState('');
 
   useEffect(() => {
-    outreach.listPrograms({ limit: 100 }).then((res: { data: Array<{ outreachId: number; programName: string }> }) => {
-      const items = (res.data || []).map((p: { outreachId: number; programName: string }) => ({
+    outreach.listPrograms({ limit: '100' }).then((res) => {
+      const items = ((res.data as unknown) as Array<{ outreachId: string; programName: string }> || []).map((p) => ({
         value: String(p.outreachId),
         label: p.programName,
       }));
@@ -85,7 +85,7 @@ export default function SoulCapturePage() {
         gender: form.gender || undefined,
         ageRange: form.ageGroup || undefined,
         notes: form.notes || undefined,
-        outreachId: form.source === 'outreach' ? Number(form.outreachId) : undefined,
+        outreachId: form.source === 'outreach' ? form.outreachId : undefined,
       } as Parameters<typeof souls.create>[0]);
 
       // Check for duplicate phone warning in API response

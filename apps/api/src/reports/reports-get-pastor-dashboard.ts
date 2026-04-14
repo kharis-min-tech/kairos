@@ -48,15 +48,16 @@ export const handler = async (
     }
 
     // 3. Determine effective branch
-    const params = event.queryStringParameters || {};
-    const requestedBranchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const params = (event.queryStringParameters || {}) as Record<string, string | undefined>;
+    const requestedBranchId: string | undefined = params.branchId;
+    const branchIdValue: string = requestedBranchId || ctx.branchId;
 
     // 4. Enforce branch isolation for non-admins
-    if (!isAdmin(ctx) && requestedBranchId !== ctx.branchId) {
+    if (!isAdmin(ctx) && branchIdValue !== ctx.branchId) {
       throw new ForbiddenError('You can only view your own branch dashboard');
     }
 
-    const branchId = requestedBranchId;
+    const branchId = branchIdValue;
     const db = getDb();
 
     // 5. Branch member count
@@ -84,7 +85,7 @@ export const handler = async (
     const [soulsCount] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
       .where(
         and(
           eq(outreachPrograms.branchId, branchId),
@@ -103,7 +104,7 @@ export const handler = async (
         totalCount: sql<number>`count(${serviceAttendance.memberId})::int`.as('total_count'),
       })
       .from(services)
-      .innerJoin(serviceAttendance, eq(services.serviceId, serviceAttendance.serviceId))
+      .innerJoin(serviceAttendance, eq(services.id, serviceAttendance.serviceId))
       .where(and(eq(services.branchId, branchId), gte(services.serviceDate, fourWeeksAgo)))
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
@@ -115,7 +116,7 @@ export const handler = async (
     const [overdueCount] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
       .where(
         and(
           eq(outreachPrograms.branchId, branchId),

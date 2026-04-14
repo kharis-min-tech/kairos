@@ -64,10 +64,10 @@ export const handler = async (
     // 6. Verify member exists if provided (non-anonymous)
     if (input.member_id && !input.is_anonymous) {
       const [member] = await db
-        .select({ memberId: members.memberId })
+        .select({ memberId: members.id })
         .from(members)
         .where(
-          and(eq(members.memberId, input.member_id), eq(members.isActive, true))
+          and(eq(members.id, input.member_id), eq(members.isActive, true))
         )
         .limit(1);
 
@@ -97,7 +97,7 @@ export const handler = async (
       .returning();
 
     logger.info('Manual donation created', {
-      donationId: created!.donationId,
+      donationId: created!.id,
       branchId: input.branch_id,
       amount: input.amount,
       paymentMethod: input.payment_method,

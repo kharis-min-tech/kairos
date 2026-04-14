@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Badge, TextInput, SelectInput, DatePicker, Textarea, Alert } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { Soul, FollowUp, ContactMethod, ContactStatus } from '@kairos/types';
+import type { Soul, FollowUp } from '@kairos/types';
 import { ConversionMemberForm } from './conversion-member-form';
 
 const CONTACT_METHODS = [
@@ -46,6 +46,19 @@ interface SoulDetailModalProps {
   onUpdate: () => void;
 }
 
+type SoulWithFollowUps = {
+  followUps?: FollowUp[];
+};
+
+type SoulResponse = {
+  data?: SoulWithFollowUps;
+} & SoulWithFollowUps;
+
+const extractFollowUps = (res: unknown): FollowUp[] => {
+  const response = res as SoulResponse;
+  return response.data?.followUps || response.followUps || [];
+};
+
 export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailModalProps) {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
@@ -64,8 +77,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
 
   useEffect(() => {
     if (open && soul.soulId) {
-      souls.get(soul.soulId).then((res: { followUps: FollowUp[] }) => {
-        setFollowUps(res.followUps || []);
+      souls.get(soul.soulId).then((res) => {
+        setFollowUps(extractFollowUps(res));
       }).catch(() => {});
     }
   }, [open, soul.soulId]);
@@ -88,8 +101,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
     try {
       await souls.addFollowup(soul.soulId, {
         followUpDate: new Date(followUpForm.contactDate),
-        contactMethod: followUpForm.contactMethod as ContactMethod,
-        contactStatus: followUpForm.contactStatus as ContactStatus,
+        contactMethod: followUpForm.contactMethod,
+        contactStatus: followUpForm.contactStatus,
         notes: followUpForm.notes || undefined,
       });
       setShowFollowUpForm(false);
@@ -100,9 +113,8 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
         contactStatus: 'Successful',
         notes: '',
       });
-      // Refresh follow-ups
       const res = await souls.get(soul.soulId);
-      setFollowUps(res.followUps || []);
+      setFollowUps(extractFollowUps(res));
       onUpdate();
     } catch {
       setError('Failed to log follow-up.');
@@ -129,7 +141,7 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
     }
   };
 
-  const handleConversionSuccess = async (memberId: number) => {
+  const handleConversionSuccess = async (memberId: string) => {
     setError('');
     setStatusUpdating(true);
     try {
@@ -154,7 +166,6 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       <div className="space-y-4">
-        {/* Soul Info */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div><span className="text-gray-500">Phone:</span> <span className="font-medium">{soul.phone}</span></div>
           <div><span className="text-gray-500">Email:</span> <span className="font-medium">{soul.email || '—'}</span></div>
@@ -164,7 +175,6 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           {soul.notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="font-medium">{soul.notes}</span></div>}
         </div>
 
-        {/* Status Update */}
         {nextStatuses.length > 0 && (
           <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
             <span className="text-sm text-gray-500">Update status:</span>
@@ -176,7 +186,6 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
           </div>
         )}
 
-        {/* Follow-up History */}
         <div className="border-t border-gray-100 pt-3">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-700">Follow-up History</h3>
@@ -195,41 +204,43 @@ export function SoulDetailModal({ soul, open, onClose, onUpdate }: SoulDetailMod
                 <SelectInput label="Method *" name="contactMethod" options={CONTACT_METHODS} value={followUpForm.contactMethod} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactMethod: e.target.value }))} error={followUpErrors.contactMethod} />
                 <SelectInput label="Status *" name="contactStatus" options={CONTACT_STATUSES} value={followUpForm.contactStatus} onChange={(e) => setFollowUpForm((p) => ({ ...p, contactStatus: e.target.value }))} error={followUpErrors.contactStatus} />
               </div>
-              <Textarea label="Notes" name="notes" value={followUpForm.notes} onChange={(e) => setFollowUpForm((p) => ({ ...p, notes: e.target.value }))} />
-              <Button type="submit" size="sm" disabled={submitting}>{submitting ? 'Saving...' : 'Save Follow-up'}</Button>
+              <Textarea label="Notes" name="notes" value={followUpForm.notes} onChange={(e) => setFollowUpForm((p) => ({ ...p, notes: e.target.value }))} rows={2} />
+              <div className="flex justify-end">
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : 'Save Follow-up'}
+                </Button>
+              </div>
             </form>
           )}
 
-          {followUps.length === 0 ? (
-            <p className="text-sm text-gray-500">No follow-ups recorded yet.</p>
-          ) : (
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {followUps.map((fu) => (
-                <div key={fu.followUpId} className="rounded border border-gray-100 bg-white p-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{fu.contactMethod}</span>
-                    <span className="text-xs text-gray-500">
-                      {fu.followUpDate ? new Date(fu.followUpDate).toLocaleDateString('en-GB') : '—'}
-                    </span>
+          <div className="space-y-2">
+            {followUps.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">No follow-ups recorded yet.</p>
+            ) : (
+              followUps.map((f, idx) => (
+                <div key={idx} className="text-xs border-b border-gray-50 pb-2">
+                  <div className="flex justify-between font-medium">
+                    <span>{new Date(f.followUpDate).toLocaleDateString()} - {f.contactMethod}</span>
+                    <span className={f.contactStatus === 'Successful' ? 'text-emerald-600' : 'text-amber-600'}>{f.contactStatus}</span>
                   </div>
-                  <Badge variant={fu.contactStatus === 'Successful' ? 'active' : fu.contactStatus === 'Not Interested' ? 'error' : 'pending'} className="mt-1">
-                    {fu.contactStatus}
-                  </Badge>
-                  {fu.notes && <p className="mt-1 text-xs text-gray-600">{fu.notes}</p>}
+                  {f.notes && <p className="text-gray-500 mt-1">{f.notes}</p>}
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
-
+      
       {showConversionForm && (
-        <ConversionMemberForm
-          soul={soul}
-          open={showConversionForm}
-          onClose={() => setShowConversionForm(false)}
-          onSuccess={handleConversionSuccess}
-        />
+        <div className="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+          <h3 className="text-lg font-bold mb-4">Register as Member</h3>
+          <ConversionMemberForm 
+            soul={soul} 
+            open={showConversionForm}
+            onSuccess={handleConversionSuccess}
+            onClose={() => setShowConversionForm(false)}
+          />
+        </div>
       )}
     </Modal>
   );

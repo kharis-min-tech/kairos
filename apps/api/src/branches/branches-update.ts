@@ -47,11 +47,8 @@ export const handler = async (
     }
 
     // 3. Parse branch ID from path
-    const branchId = parseInt(
-      event.pathParameters?.branchId || event.pathParameters?.id || '0',
-      10
-    );
-    if (!branchId || isNaN(branchId)) {
+    const branchId = event.pathParameters?.branchId ?? event.pathParameters?.id ?? '';
+    if (!branchId) {
       throw new NotFoundError('Branch');
     }
 
@@ -86,7 +83,7 @@ export const handler = async (
     const [updated] = await db
       .update(branches)
       .set(updateValues)
-      .where(eq(branches.branchId, branchId))
+      .where(eq(branches.id, branchId))
       .returning();
 
     if (!updated) {

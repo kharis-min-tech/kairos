@@ -47,13 +47,13 @@ import { handler } from '../members-create';
 // ---------------------------------------------------------------------------
 
 function createEvent(body: Record<string, unknown>, authContext?: {
-  memberId?: number;
-  branchId?: number;
+  memberId?: string;
+  branchId?: string;
   roles?: string[];
 }): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -99,13 +99,13 @@ function setupDbChain(opts?: { emailExists?: boolean; phoneExists?: boolean }) {
 
   // Email check result
   if (opts?.emailExists) {
-    selectResults.push([{ memberId: 99 }]);
+    selectResults.push([{ memberId: 'test-member-99' }]);
   } else {
     selectResults.push([]);
   }
   // Phone check result
   if (opts?.phoneExists) {
-    selectResults.push([{ memberId: 88 }]);
+    selectResults.push([{ memberId: 'test-member-88' }]);
   } else {
     selectResults.push([]);
   }
@@ -151,7 +151,7 @@ const emailArb = fc.emailAddress();
 const phoneArb = fc.stringMatching(/^\+\d{10,15}$/);
 
 /** Generate a valid branch ID */
-const branchIdArb = fc.integer({ min: 1, max: 100 });
+const branchIdArb = fc.uuid();
 
 /** Generate a valid gender */
 const genderArb = fc.constantFrom('Male', 'Female');
@@ -200,7 +200,7 @@ describe('Property-Based Tests: Members Create', () => {
           });
 
           mockReturning.mockResolvedValue([{
-            memberId: 1,
+            memberId: 'test-member-1',
             firstName: input.first_name,
             lastName: input.last_name,
             isActive: false,
@@ -208,7 +208,7 @@ describe('Property-Based Tests: Members Create', () => {
           }]);
 
           const event = createEvent(input, {
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId: input.home_branch_id,
             roles: ['Admin', 'Member'],
           });
@@ -238,7 +238,7 @@ describe('Property-Based Tests: Members Create', () => {
           setupDbChain({ emailExists: true });
 
           const event = createEvent(input, {
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId: input.home_branch_id,
             roles: ['Admin', 'Member'],
           });
@@ -259,7 +259,7 @@ describe('Property-Based Tests: Members Create', () => {
           setupDbChain({ emailExists: false, phoneExists: true });
 
           const event = createEvent(input, {
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId: input.home_branch_id,
             roles: ['Admin', 'Member'],
           });

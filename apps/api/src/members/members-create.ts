@@ -50,7 +50,7 @@ export const handler = async (
     // 4. Check for duplicate email among active members
     if (input.email) {
       const existingEmail = await db
-        .select({ memberId: members.memberId })
+        .select({ memberId: members.id })
         .from(members)
         .where(and(eq(members.email, input.email), eq(members.isActive, true)))
         .limit(1);
@@ -65,7 +65,7 @@ export const handler = async (
     // Check for duplicate phone among active members
     if (input.phone) {
       const existingPhone = await db
-        .select({ memberId: members.memberId })
+        .select({ memberId: members.id })
         .from(members)
         .where(and(eq(members.phone, input.phone), eq(members.isActive, true)))
         .limit(1);
@@ -84,15 +84,16 @@ export const handler = async (
         firstName: input.first_name,
         lastName: input.last_name,
         middleName: input.middle_name,
-        email: input.email,
-        phone: input.phone,
-        dateOfBirth: input.date_of_birth ? input.date_of_birth.toISOString().split('T')[0] : undefined,
-        gender: input.gender,
-        address: input.address,
-        city: input.city,
-        postalCode: input.postal_code,
+        email: input.email ?? '',
+        phone: input.phone ?? null,
+        dateOfBirth: input.date_of_birth ? input.date_of_birth.toISOString().split('T')[0] : null,
+        gender: input.gender ?? null,
+        address: input.address ?? null,
+        city: input.city ?? null,
+        postalCode: input.postal_code ?? null,
         homeBranchId: input.home_branch_id,
         isActive: false, // Pending status — awaiting approval
+        passwordHash: 'PENDING', // Placeholder — set when member activates account
         photoUrl: input.photo_url,
         emergencyContactName: input.emergency_contact_name,
         emergencyContactPhone: input.emergency_contact_phone,
@@ -100,7 +101,7 @@ export const handler = async (
       .returning();
 
     logger.info('Member created successfully', {
-      memberId: created!.memberId,
+      memberId: created!.id,
       branchId: created!.homeBranchId,
       status: 'pending',
     });

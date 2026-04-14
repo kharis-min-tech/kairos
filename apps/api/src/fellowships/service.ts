@@ -304,7 +304,7 @@ export async function addFellowshipMember(
 
   // Check branch consistency — allow home branch or active secondary branch
   const memberActiveBranchId =
-    member.isAtSecondaryBranch && member.secondaryBranchId != null
+    member.isAtSecondaryBranch && member.secondaryBranchId !== null
       ? member.secondaryBranchId
       : member.homeBranchId;
   if (memberActiveBranchId !== fellowship.branchId) {

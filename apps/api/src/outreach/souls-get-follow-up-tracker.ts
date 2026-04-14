@@ -97,8 +97,8 @@ export const handler = async (
     // Query follow-ups joined with souls and members
     const rows = await db
       .select({
-        followUpId: followUps.followUpId,
-        soulId: souls.soulId,
+        followUpId: followUps.id,
+        soulId: souls.id,
         soulFirstName: souls.firstName,
         soulLastName: souls.lastName,
         workerFirstName: members.firstName,
@@ -110,8 +110,8 @@ export const handler = async (
         createdAt: followUps.createdAt,
       })
       .from(followUps)
-      .innerJoin(souls, eq(followUps.soulId, souls.soulId))
-      .innerJoin(members, eq(followUps.memberId, members.memberId))
+      .innerJoin(souls, eq(followUps.soulId, souls.id))
+      .innerJoin(members, eq(followUps.memberId, members.id))
       .where(whereClause)
       .orderBy(sql`${followUps.followUpDate} DESC`);
 

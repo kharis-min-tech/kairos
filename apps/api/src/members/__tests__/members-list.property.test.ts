@@ -53,14 +53,14 @@ import { handler } from '../members-list';
 function createEvent(
   queryParams?: Record<string, string>,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -130,7 +130,7 @@ function setupDbChain(data: unknown[] = [], total = 0) {
 const pageArb = fc.integer({ min: 1, max: 100 });
 const limitArb = fc.integer({ min: 1, max: 200 });
 const totalArb = fc.integer({ min: 0, max: 10000 });
-const branchIdArb = fc.integer({ min: 1, max: 100 });
+const branchIdArb = fc.uuid();
 
 // ---------------------------------------------------------------------------
 // Property Tests
@@ -218,13 +218,13 @@ describe('Property-Based Tests: Members List', () => {
         fc.asyncProperty(branchIdArb, async (branchId) => {
           vi.clearAllMocks();
           const branchMembers = [
-            { memberId: 1, firstName: 'A', lastName: 'B', homeBranchId: branchId, isActive: true },
+            { memberId: 'test-member-1', firstName: 'A', lastName: 'B', homeBranchId: branchId, isActive: true },
           ];
           setupDbChain(branchMembers, 1);
 
           const event = createEvent(
             {},
-            { memberId: 10, branchId, roles: ['Pastor', 'Member'] }
+            { memberId: 'test-member-10', branchId, roles: ['Pastor', 'Member'] }
           );
           const result = await handler(event);
 

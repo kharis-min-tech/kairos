@@ -4,7 +4,7 @@
 // **Validates: Requirements 24.1-24.6**
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -75,11 +75,11 @@ import { handler } from '../notifications-get-unread-count';
 // ---------------------------------------------------------------------------
 
 function createEvent(
-  auth?: { memberId?: number; branchId?: number; roles?: string[] }
+  auth?: { memberId?: string; branchId?: string; roles?: string[] }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Member'],
   };
   return {
@@ -142,7 +142,7 @@ describe('notifications-get-unread-count handler', () => {
   it('should return the correct unread count', async () => {
     setupDb(15);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -157,7 +157,7 @@ describe('notifications-get-unread-count handler', () => {
   it('should return "99+" display when count exceeds 99', async () => {
     setupDb(150);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -172,7 +172,7 @@ describe('notifications-get-unread-count handler', () => {
   it('should return 0 when there are no unread notifications', async () => {
     setupDb(0);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -188,7 +188,7 @@ describe('notifications-get-unread-count handler', () => {
     // The DB mock returns count=5, meaning the query already filters out dismissed
     setupDb(5);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -207,7 +207,7 @@ describe('notifications-get-unread-count handler', () => {
     // The DB mock returns count=3, meaning the query already filters out expired
     setupDb(3);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -225,7 +225,7 @@ describe('notifications-get-unread-count handler', () => {
   it('should return "99" display when count is exactly 99', async () => {
     setupDb(99);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
@@ -240,7 +240,7 @@ describe('notifications-get-unread-count handler', () => {
   it('should return "99+" display when count is exactly 100', async () => {
     setupDb(100);
 
-    const event = createEvent({ memberId: 1 });
+    const event = createEvent({ memberId: 'test-member-1' });
     const result = await handler(event);
     const body = JSON.parse(result.body);
 

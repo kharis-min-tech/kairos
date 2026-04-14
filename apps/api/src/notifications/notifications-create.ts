@@ -89,13 +89,13 @@ export const handler = async (
     });
 
     // 5. Populate notification_recipients based on target scope
-    let recipientMemberIds: number[] = [];
+    let recipientMemberIds: string[] = [];
 
     switch (input.target_scope) {
       case 'All': {
         // Query all active members
         const activeMembers = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(eq(members.isActive, true));
         recipientMemberIds = activeMembers.map((m) => m.memberId);
@@ -105,7 +105,7 @@ export const handler = async (
       case 'Branch': {
         // Query members in the target branch
         const branchMembers = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(
             and(

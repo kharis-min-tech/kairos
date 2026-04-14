@@ -2,7 +2,7 @@ import {
   CognitoUserPool,
   CognitoUser,
   AuthenticationDetails,
-  CognitoUserSession,
+  type CognitoUserSession,
 } from 'amazon-cognito-identity-js';
 
 const POOL_CONFIG = {

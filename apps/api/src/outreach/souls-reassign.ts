@@ -26,9 +26,9 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const ctx = await resolveAuthContext(event);
-    const soulId = parseInt(event.pathParameters?.soulId || '', 10);
+    const soulId = event.pathParameters?.soulId || '';
 
-    if (isNaN(soulId)) {
+    if (!soulId) {
       throw new NotFoundError('Soul');
     }
 
@@ -42,12 +42,12 @@ export const handler = async (
     // Verify soul exists
     const [soul] = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         branchId: outreachPrograms.branchId,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .where(eq(souls.soulId, soulId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .where(eq(souls.id, soulId))
       .limit(1);
 
     if (!soul) {
@@ -60,9 +60,9 @@ export const handler = async (
 
     // Verify new assigned member exists
     const [member] = await db
-      .select({ memberId: members.memberId })
+      .select({ memberId: members.id })
       .from(members)
-      .where(eq(members.memberId, input.assigned_member_id))
+      .where(eq(members.id, input.assigned_member_id))
       .limit(1);
 
     if (!member) {
@@ -76,7 +76,7 @@ export const handler = async (
         assignedMemberId: input.assigned_member_id,
         updatedAt: sql`NOW()`,
       })
-      .where(eq(souls.soulId, soulId))
+      .where(eq(souls.id, soulId))
       .returning();
 
     logger.info('Soul reassigned', { soulId, newAssignedMemberId: input.assigned_member_id });

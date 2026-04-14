@@ -43,9 +43,9 @@ export const handler = async (
   try {
     // 1. Extract auth context
     const ctx = await resolveAuthContext(event);
-    const targetMemberId = parseInt(event.pathParameters?.memberId || '', 10);
+    const targetMemberId = event.pathParameters?.memberId || '';
 
-    if (isNaN(targetMemberId)) {
+    if (!targetMemberId) {
       throw new NotFoundError('Member', event.pathParameters?.memberId);
     }
 
@@ -57,7 +57,7 @@ export const handler = async (
     const [member] = await db
       .select()
       .from(members)
-      .where(eq(members.memberId, targetMemberId))
+      .where(eq(members.id, targetMemberId))
       .limit(1);
 
     if (!member) {
@@ -80,7 +80,7 @@ export const handler = async (
     // 4. Fetch department assignments
     const departmentAssignments = await db
       .select({
-        departmentMemberId: departmentMembers.departmentMemberId,
+        departmentMemberId: departmentMembers.id,
         departmentName: departments.departmentName,
         branchDepartmentId: departmentMembers.branchDepartmentId,
         joinDate: departmentMembers.joinDate,
@@ -89,11 +89,11 @@ export const handler = async (
       .from(departmentMembers)
       .innerJoin(
         branchDepartments,
-        eq(departmentMembers.branchDepartmentId, branchDepartments.branchDepartmentId)
+        eq(departmentMembers.branchDepartmentId, branchDepartments.id)
       )
       .innerJoin(
         departments,
-        eq(branchDepartments.departmentId, departments.departmentId)
+        eq(branchDepartments.departmentId, departments.id)
       )
       .where(
         and(
@@ -105,7 +105,7 @@ export const handler = async (
     // 5. Fetch fellowship membership
     const fellowshipMembership = await db
       .select({
-        fellowshipMemberId: fellowshipMembers.fellowshipMemberId,
+        fellowshipMemberId: fellowshipMembers.id,
         fellowshipName: fellowships.fellowshipName,
         fellowshipId: fellowshipMembers.fellowshipId,
         joinDate: fellowshipMembers.joinDate,
@@ -114,7 +114,7 @@ export const handler = async (
       .from(fellowshipMembers)
       .innerJoin(
         fellowships,
-        eq(fellowshipMembers.fellowshipId, fellowships.fellowshipId)
+        eq(fellowshipMembers.fellowshipId, fellowships.id)
       )
       .where(
         and(

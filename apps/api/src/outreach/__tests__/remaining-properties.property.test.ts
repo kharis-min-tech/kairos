@@ -42,7 +42,7 @@ describe('Property 14: Follow-Up Contact Method and Status Validation', () => {
       fc.property(
         fc.constantFrom(...VALID_CONTACT_METHODS),
         fc.constantFrom(...VALID_CONTACT_STATUSES),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (method, status, soulId) => {
           const result = followUpCreateSchema.safeParse({
             soul_id: soulId,
@@ -73,7 +73,7 @@ describe('Property 14: Follow-Up Contact Method and Status Validation', () => {
       fc.property(
         fc.constantFrom(...invalidMethods),
         fc.constantFrom(...VALID_CONTACT_STATUSES),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (invalidMethod, status, soulId) => {
           const result = followUpCreateSchema.safeParse({
             soul_id: soulId,
@@ -104,7 +104,7 @@ describe('Property 14: Follow-Up Contact Method and Status Validation', () => {
       fc.property(
         fc.constantFrom(...VALID_CONTACT_METHODS),
         fc.constantFrom(...invalidStatuses),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (method, invalidStatus, soulId) => {
           const result = followUpCreateSchema.safeParse({
             soul_id: soulId,
@@ -128,7 +128,7 @@ describe('Property 14: Follow-Up Contact Method and Status Validation', () => {
         fc.string({ minLength: 1, maxLength: 50 }).filter(
           (s) => !(VALID_CONTACT_STATUSES as readonly string[]).includes(s)
         ),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         (randomMethod, randomStatus, soulId) => {
           const result = followUpCreateSchema.safeParse({
             soul_id: soulId,
@@ -252,9 +252,9 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
   it('for any follow-up logged, the soul updatedAt should be refreshed via db.update', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 1000 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...VALID_CONTACT_METHODS),
         fc.constantFrom(...VALID_CONTACT_STATUSES),
         async (memberId, branchId, soulId, method, status) => {
@@ -277,7 +277,6 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
           });
 
           let updateCalled = false;
-          let updateTargetSoulId: number | undefined;
 
           const mockDb = {
             select: vi.fn().mockReturnValue({
@@ -285,7 +284,7 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
                 innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     limit: vi.fn().mockReturnValue([
-                      { soulId, outreachId: 1, branchId },
+                      { soulId, outreachId: 'test-outreach-1', branchId },
                     ]),
                   }),
                 }),
@@ -294,7 +293,7 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
             insert: vi.fn().mockReturnValue({
               values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([
-                  { followUpId: 1, soulId, memberId },
+                  { followUpId: 'test-followup-1', soulId, memberId },
                 ]),
               }),
             }),
@@ -303,7 +302,6 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
               return {
                 set: vi.fn().mockReturnValue({
                   where: vi.fn().mockImplementation(() => {
-                    updateTargetSoulId = soulId;
                     return Promise.resolve(undefined);
                   }),
                 }),
@@ -335,8 +333,8 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
     // Even unsuccessful contact attempts should refresh the timestamp
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 1000 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...VALID_CONTACT_STATUSES),
         async (memberId, soulId, contactStatus) => {
           vi.clearAllMocks();
@@ -345,7 +343,7 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
 
           mockedResolveAuthContext.mockResolvedValue({
             memberId,
-            branchId: 10,
+            branchId: 'test-branch-10',
             roles: ['Member'],
             email: `member${memberId}@kairos.church`,
           });
@@ -365,7 +363,7 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
                 innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
                     limit: vi.fn().mockReturnValue([
-                      { soulId, outreachId: 1, branchId: 10 },
+                      { soulId, outreachId: 'test-outreach-1', branchId: 'test-branch-10' },
                     ]),
                   }),
                 }),
@@ -374,7 +372,7 @@ describe('Property 10: Follow-Up Refreshes Soul Activity Timestamp', () => {
             insert: vi.fn().mockReturnValue({
               values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([
-                  { followUpId: 1, soulId },
+                  { followUpId: 'test-followup-1', soulId },
                 ]),
               }),
             }),
@@ -455,8 +453,8 @@ describe('Property 9: Conversion Funnel Count Consistency', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         statusCountsArb,
         async (memberId, branchId, statusCounts) => {
           vi.clearAllMocks();
@@ -514,8 +512,8 @@ describe('Property 9: Conversion Funnel Count Consistency', () => {
     // prevents double-counting since each soul has exactly one status
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.array(fc.constantFrom(...ALL_SOUL_STATUSES), { minLength: 1, maxLength: 50 }),
         async (memberId, branchId, soulStatuses) => {
           vi.clearAllMocks();
@@ -582,7 +580,7 @@ describe('Property 9: Conversion Funnel Count Consistency', () => {
 // ============================================================================
 
 function createReassignEvent(
-  soulId: number,
+  soulId: string,
   body: Record<string, unknown>
 ): APIGatewayProxyEvent {
   return {
@@ -607,7 +605,7 @@ function createReassignEvent(
  * Generates two distinct branch IDs to simulate cross-branch access.
  */
 const distinctBranchesArb = fc
-  .tuple(fc.integer({ min: 1, max: 500 }), fc.integer({ min: 1, max: 500 }))
+  .tuple(fc.uuid(), fc.uuid())
   .filter(([a, b]) => a !== b);
 
 describe('Property 13: Cross-Branch Reassignment Prevention', () => {
@@ -620,10 +618,10 @@ describe('Property 13: Cross-Branch Reassignment Prevention', () => {
   it('for any reassignment where the new worker belongs to the same branch, it should succeed', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (pastorId, branchId, soulId, newWorkerId) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});
@@ -700,10 +698,10 @@ describe('Property 13: Cross-Branch Reassignment Prevention', () => {
   it('for any reassignment where the new worker is from a different branch, it should reject with 403', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
-        fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
+        fc.uuid(),
         async (pastorId, [soulBranchId, workerBranchId], soulId, newWorkerId) => {
           vi.clearAllMocks();
           // Use real enforceBranchAccess for this test — it should throw on mismatch
@@ -756,7 +754,7 @@ describe('Property 13: Cross-Branch Reassignment Prevention', () => {
   it('for any reassignment, the soulReassignSchema should require a positive integer assigned_member_id', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 100000 }),
+        fc.uuid(),
         (validMemberId) => {
           const result = soulReassignSchema.safeParse({
             assigned_member_id: validMemberId,

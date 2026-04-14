@@ -60,14 +60,14 @@ let memberIdCounter = 100;
 function createEvent(
   body: Record<string, unknown>,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -112,7 +112,7 @@ function setupDbChain() {
   mockWhere.mockReturnValue({ limit: mockLimit });
   mockLimit.mockResolvedValue([]); // No duplicates by default
 
-  // insert chain: insert().values().returning()
+  // insert chain: insert().values( as any).returning()
   mockInsert.mockReturnValue({ values: mockValues });
   mockValues.mockReturnValue({ returning: mockReturning });
   mockReturning.mockImplementation(() => {
@@ -144,7 +144,7 @@ describe('Members Import Lambda', () => {
       ['Jane', 'Smith', '1', 'jane@example.com'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -164,7 +164,7 @@ describe('Members Import Lambda', () => {
       ['Bob', '', '1', 'bob@example.com'],               // Row 4: missing last_name
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -185,7 +185,7 @@ describe('Members Import Lambda', () => {
       ['', 'Doe', '1'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -201,7 +201,7 @@ describe('Members Import Lambda', () => {
       ['John', '', '1'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -218,7 +218,7 @@ describe('Members Import Lambda', () => {
       ['john@example.com', '+447700900001'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -230,7 +230,7 @@ describe('Members Import Lambda', () => {
   it('should return 400 for empty CSV', async () => {
     const csv = 'first_name,last_name,home_branch_id\n';
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -238,7 +238,7 @@ describe('Members Import Lambda', () => {
 
   // Test: Missing CSV content
   it('should return 400 when csv field is missing', async () => {
-    const event = createEvent({ branchId: 1 });
+    const event = createEvent({ branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -264,7 +264,7 @@ describe('Members Import Lambda', () => {
       ['John', 'Doe', '1', 'not-an-email'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -280,7 +280,7 @@ describe('Members Import Lambda', () => {
       ['John', 'Doe', '1', 'Other'],
     ]);
 
-    const event = createEvent({ csv, branchId: 1 });
+    const event = createEvent({ csv, branchId: 'test-branch-1' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -297,8 +297,8 @@ describe('Members Import Lambda', () => {
     ]);
 
     const event = createEvent(
-      { csv, branchId: 1 },
-      { memberId: 10, branchId: 1, roles: ['Member'] }
+      { csv, branchId: 'test-branch-1' },
+      { memberId: 'test-member-10', branchId: 'test-branch-1', roles: ['Member'] }
     );
     const result = await handler(event);
 
@@ -313,8 +313,8 @@ describe('Members Import Lambda', () => {
     ]);
 
     const event = createEvent(
-      { csv, branchId: 99 },
-      { memberId: 5, branchId: 1, roles: ['Pastor', 'Member'] }
+      { csv, branchId: 'test-branch-99' },
+      { memberId: 'test-member-5', branchId: 'test-branch-1', roles: ['Pastor', 'Member'] }
     );
     const result = await handler(event);
 

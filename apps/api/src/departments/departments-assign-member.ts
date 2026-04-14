@@ -29,8 +29,8 @@ const logger = createLogger('departments-assign-member');
 
 /** Validation schema for assigning a member to a department */
 const assignMemberSchema = z.object({
-  branch_department_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  branch_department_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   admin_override: z.boolean().default(false),
 });
 
@@ -58,14 +58,14 @@ export const handler = async (
     // Fetch the branch department to verify it exists and get branch_id
     const [branchDept] = await db
       .select({
-        branchDepartmentId: branchDepartments.branchDepartmentId,
+        branchDepartmentId: branchDepartments.id,
         branchId: branchDepartments.branchId,
         leadMemberId: branchDepartments.leadMemberId,
         deputyMemberId: branchDepartments.deputyMemberId,
         isActive: branchDepartments.isActive,
       })
       .from(branchDepartments)
-      .where(eq(branchDepartments.branchDepartmentId, input.branch_department_id))
+      .where(eq(branchDepartments.id, input.branch_department_id))
       .limit(1);
 
     if (!branchDept) {
@@ -82,12 +82,12 @@ export const handler = async (
     // Verify the member exists and is active
     const [member] = await db
       .select({
-        memberId: members.memberId,
+        memberId: members.id,
         homeBranchId: members.homeBranchId,
         isActive: members.isActive,
       })
       .from(members)
-      .where(eq(members.memberId, input.member_id))
+      .where(eq(members.id, input.member_id))
       .limit(1);
 
     if (!member) {
@@ -109,7 +109,7 @@ export const handler = async (
 
     // Check if member is already in this department
     const [existingAssignment] = await db
-      .select({ departmentMemberId: departmentMembers.departmentMemberId })
+      .select({ departmentMemberId: departmentMembers.id })
       .from(departmentMembers)
       .where(
         and(
@@ -161,7 +161,7 @@ export const handler = async (
       .returning();
 
     logger.info('Member assigned to department', {
-      departmentMemberId: assignment!.departmentMemberId,
+      departmentMemberId: assignment!.id,
       branchDepartmentId: input.branch_department_id,
       memberId: input.member_id,
       currentDeptCount: currentDeptCount + 1,

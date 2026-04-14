@@ -47,7 +47,7 @@ import { handler } from '../branches-delete';
 // ============================================================
 
 function createEvent(
-  branchId: number,
+  branchId: string,
   role: string = 'Admin'
 ): APIGatewayProxyEvent {
   return {
@@ -130,7 +130,7 @@ describe('branches-delete handler', () => {
   });
 
   it('should return 403 when non-admin tries to delete branch', async () => {
-    const event = createEvent(1, 'Member');
+    const event = createEvent('test-branch-1', 'Member');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(403);
@@ -143,7 +143,7 @@ describe('branches-delete handler', () => {
       [], // branch not found
     ]);
 
-    const event = createEvent(999);
+    const event = createEvent('test-branch-999');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(404);
@@ -151,10 +151,10 @@ describe('branches-delete handler', () => {
 
   it('should return 400 when branch is already inactive', async () => {
     setupDb([
-      [{ branchId: 1, isActive: false }], // branch exists but inactive
+      [{ branchId: 'test-branch-1', isActive: false }], // branch exists but inactive
     ]);
 
-    const event = createEvent(1);
+    const event = createEvent('test-branch-1');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -164,11 +164,11 @@ describe('branches-delete handler', () => {
 
   it('should return 400 when branch has active members', async () => {
     setupDb([
-      [{ branchId: 1, isActive: true }], // branch exists
+      [{ branchId: 'test-branch-1', isActive: true }], // branch exists
       [{ count: 5 }],                     // 5 active members
     ]);
 
-    const event = createEvent(1);
+    const event = createEvent('test-branch-1');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -180,13 +180,13 @@ describe('branches-delete handler', () => {
   it('should soft-delete branch when no active members', async () => {
     setupDb(
       [
-        [{ branchId: 1, isActive: true }], // branch exists
+        [{ branchId: 'test-branch-1', isActive: true }], // branch exists
         [{ count: 0 }],                     // no active members
       ],
-      [{ branchId: 1, isActive: false }]    // update result
+      [{ branchId: 'test-branch-1', isActive: false }]    // update result
     );
 
-    const event = createEvent(1);
+    const event = createEvent('test-branch-1');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -212,7 +212,7 @@ describe('Property 13: Referential Integrity for Branch Deletion', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          branchId: fc.integer({ min: 1, max: 100 }),
+          branchId: fc.uuid(),
           activeMemberCount: fc.integer({ min: 1, max: 500 }),
         }),
         async ({ branchId, activeMemberCount }) => {
@@ -245,7 +245,7 @@ describe('Property 13: Referential Integrity for Branch Deletion', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
         async (branchId) => {
           vi.clearAllMocks();
 

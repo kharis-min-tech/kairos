@@ -42,7 +42,7 @@ export const handler = async (
 
     // 2. Parse query parameters
     const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId ?? ctx.branchId;
 
     // 3. Branch isolation: non-admins see only their branch
     if (!isAdmin(ctx)) {
@@ -80,7 +80,7 @@ export const handler = async (
         totalCount: sql<number>`count(*)::int`.as('total_count'),
       })
       .from(serviceAttendance)
-      .innerJoin(services, eq(serviceAttendance.serviceId, services.serviceId))
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
       .where(whereClause)
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);

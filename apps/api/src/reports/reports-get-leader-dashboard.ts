@@ -46,9 +46,9 @@ export const handler = async (
     }
 
     // 3. Parse query parameters
-    const params = event.queryStringParameters || {};
-    const departmentId = params.departmentId ? parseInt(params.departmentId, 10) : undefined;
-    const fellowshipId = params.fellowshipId ? parseInt(params.fellowshipId, 10) : undefined;
+    const params = (event.queryStringParameters || {}) as Record<string, string | undefined>;
+    const departmentId: string | undefined = params.departmentId;
+    const fellowshipId: string | undefined = params.fellowshipId;
 
     if (!departmentId && !fellowshipId) {
       return {
@@ -70,7 +70,7 @@ export const handler = async (
         const [dept] = await db
           .select({ leadMemberId: branchDepartments.leadMemberId })
           .from(branchDepartments)
-          .where(eq(branchDepartments.branchDepartmentId, departmentId));
+          .where(eq(branchDepartments.id, departmentId));
 
         if (!dept || dept.leadMemberId !== ctx.memberId) {
           throw new ForbiddenError('You can only view your own department dashboard');
@@ -83,7 +83,7 @@ export const handler = async (
         .from(departmentMembers)
         .where(
           and(
-            eq(departmentMembers.branchDepartmentId, departmentId),
+            eq(departmentMembers.id, departmentId),
             eq(departmentMembers.isActive, true)
           )
         );
@@ -92,21 +92,21 @@ export const handler = async (
       const [deptInfo] = await db
         .select({ branchId: branchDepartments.branchId })
         .from(branchDepartments)
-        .where(eq(branchDepartments.branchDepartmentId, departmentId));
+        .where(eq(branchDepartments.id, departmentId));
 
-      let recentAttendance: { serviceId: number; serviceDate: unknown; presentCount: number; totalCount: number }[] = [];
+      let recentAttendance: { id: string; serviceDate: unknown; presentCount: number; totalCount: number }[] = [];
       if (deptInfo) {
         recentAttendance = await db
           .select({
-            serviceId: services.serviceId,
+            id: services.id,
             serviceDate: services.serviceDate,
             presentCount: sql<number>`count(CASE WHEN ${serviceAttendance.attendanceStatus} = 'Present' THEN 1 END)::int`.as('present_count'),
             totalCount: sql<number>`count(${serviceAttendance.memberId})::int`.as('total_count'),
           })
           .from(services)
-          .innerJoin(serviceAttendance, eq(services.serviceId, serviceAttendance.serviceId))
+          .innerJoin(serviceAttendance, eq(services.id, serviceAttendance.serviceId))
           .where(eq(services.branchId, deptInfo.branchId))
-          .groupBy(services.serviceId, services.serviceDate)
+          .groupBy(services.id, services.serviceDate)
           .orderBy(desc(services.serviceDate))
           .limit(4);
       }
@@ -117,7 +117,7 @@ export const handler = async (
         .from(departmentMembers)
         .where(
           and(
-            eq(departmentMembers.branchDepartmentId, departmentId),
+            eq(departmentMembers.id, departmentId),
             eq(departmentMembers.isActive, false),
             sql`${departmentMembers.leaveDate} IS NULL`
           )
@@ -132,7 +132,7 @@ export const handler = async (
         .from(departmentMembers)
         .where(
           and(
-            eq(departmentMembers.branchDepartmentId, departmentId),
+            eq(departmentMembers.id, departmentId),
             eq(departmentMembers.isActive, true),
             lt(departmentMembers.updatedAt, sevenDaysAgo)
           )
@@ -145,7 +145,7 @@ export const handler = async (
         departmentId,
         groupMemberCount: memberCount?.count ?? 0,
         recentAttendance: recentAttendance.map((row) => ({
-          serviceId: row.serviceId,
+          id: row.id,
           serviceDate: row.serviceDate,
           presentCount: row.presentCount ?? 0,
           totalCount: row.totalCount ?? 0,
@@ -189,14 +189,14 @@ export const handler = async (
       // 6b. Recent attendance (last 4 services — simplified for MVP)
       const recentAttendance = await db
         .select({
-          serviceId: services.serviceId,
+          id: services.id,
           serviceDate: services.serviceDate,
           presentCount: sql<number>`count(CASE WHEN ${serviceAttendance.attendanceStatus} = 'Present' THEN 1 END)::int`.as('present_count'),
           totalCount: sql<number>`count(${serviceAttendance.memberId})::int`.as('total_count'),
         })
         .from(services)
-        .innerJoin(serviceAttendance, eq(services.serviceId, serviceAttendance.serviceId))
-        .groupBy(services.serviceId, services.serviceDate)
+        .innerJoin(serviceAttendance, eq(services.id, serviceAttendance.serviceId))
+        .groupBy(services.id, services.serviceDate)
         .orderBy(desc(services.serviceDate))
         .limit(4);
 
@@ -207,7 +207,7 @@ export const handler = async (
         fellowshipId,
         groupMemberCount: memberCount?.count ?? 0,
         recentAttendance: recentAttendance.map((row) => ({
-          serviceId: row.serviceId,
+          id: row.id,
           serviceDate: row.serviceDate,
           presentCount: row.presentCount ?? 0,
           totalCount: row.totalCount ?? 0,

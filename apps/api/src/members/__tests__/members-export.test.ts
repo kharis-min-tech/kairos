@@ -70,7 +70,7 @@ vi.mock('@kairos/database', () => ({
 }));
 
 vi.mock('csv-stringify/sync', () => ({
-  stringify: vi.fn((rows: unknown[], opts: unknown) => {
+  stringify: vi.fn((rows: unknown[], _opts: unknown) => {
     // Simple CSV mock: header + rows
     if (!Array.isArray(rows) || rows.length === 0) return '';
     const headers = Object.keys(rows[0] as Record<string, unknown>);
@@ -91,11 +91,11 @@ import { handler } from '../members-export';
 
 function createEvent(
   queryParams?: Record<string, string>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] }
+  auth?: { memberId?: string; branchId?: string; roles?: string[] }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -134,7 +134,7 @@ function createEvent(
 
 const sampleMembers = [
   {
-    memberId: 1,
+    memberId: 'test-member-1',
     firstName: 'John',
     lastName: 'Doe',
     middleName: null,
@@ -145,7 +145,7 @@ const sampleMembers = [
     address: '123 Main St',
     city: 'London',
     postalCode: 'SW1A 1AA',
-    homeBranchId: 10,
+    homeBranchId: 'test-branch-10',
     membershipDate: '2024-01-15',
     isActive: true,
     photoUrl: null,
@@ -153,7 +153,7 @@ const sampleMembers = [
     emergencyContactPhone: '+447700900002',
   },
   {
-    memberId: 2,
+    memberId: 'test-member-2',
     firstName: 'Sarah',
     lastName: 'Smith',
     middleName: 'Ann',
@@ -164,7 +164,7 @@ const sampleMembers = [
     address: null,
     city: null,
     postalCode: null,
-    homeBranchId: 10,
+    homeBranchId: 'test-branch-10',
     membershipDate: '2024-03-01',
     isActive: true,
     photoUrl: null,
@@ -249,8 +249,8 @@ describe('members-export Lambda', () => {
     const chain = setupDb(sampleMembers);
 
     const event = createEvent({}, {
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Pastor', 'Member'],
     });
     const result = await handler(event);

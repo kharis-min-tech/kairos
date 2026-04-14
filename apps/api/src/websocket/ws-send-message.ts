@@ -18,7 +18,7 @@ const logger = createLogger('ws-send-message');
 /** Payload shape for the internal invocation */
 export interface WsSendMessagePayload {
   /** Target member IDs to push the message to */
-  memberIds: number[];
+  memberIds: string[];
   /** The notification data to send */
   notification: {
     notificationId: number;

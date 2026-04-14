@@ -25,9 +25,9 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const ctx = await resolveAuthContext(event);
-    const outreachId = parseInt(event.pathParameters?.outreachId || '', 10);
+    const outreachId = event.pathParameters?.outreachId || '';
 
-    if (isNaN(outreachId)) {
+    if (!outreachId) {
       throw new NotFoundError('Outreach program');
     }
 
@@ -38,7 +38,7 @@ export const handler = async (
     // Get program with coordinator info
     const [program] = await db
       .select({
-        outreachId: outreachPrograms.outreachId,
+        outreachId: outreachPrograms.id,
         branchId: outreachPrograms.branchId,
         programName: outreachPrograms.programName,
         programDate: outreachPrograms.programDate,
@@ -56,8 +56,8 @@ export const handler = async (
         updatedAt: outreachPrograms.updatedAt,
       })
       .from(outreachPrograms)
-      .leftJoin(members, eq(outreachPrograms.coordinatorId, members.memberId))
-      .where(eq(outreachPrograms.outreachId, outreachId))
+      .leftJoin(members, eq(outreachPrograms.coordinatorId, members.id))
+      .where(eq(outreachPrograms.id, outreachId))
       .limit(1);
 
     if (!program) {
@@ -80,13 +80,13 @@ export const handler = async (
         lastName: members.lastName,
       })
       .from(outreachParticipants)
-      .leftJoin(members, eq(outreachParticipants.memberId, members.memberId))
+      .leftJoin(members, eq(outreachParticipants.memberId, members.id))
       .where(eq(outreachParticipants.outreachId, outreachId));
 
     // Get souls linked to the program with follow-up outcome summaries
     const programSouls = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         firstName: souls.firstName,
         lastName: souls.lastName,
         phone: souls.phone,
@@ -99,15 +99,15 @@ export const handler = async (
         updatedAt: souls.updatedAt,
         followUpCount: sql<number>`(
           SELECT COUNT(*)::int FROM follow_ups f
-          WHERE f.soul_id = ${souls.soulId}
+          WHERE f.soul_id = ${souls.id}
         )`.as('follow_up_count'),
         lastFollowUpDate: sql<string | null>`(
           SELECT MAX(f.follow_up_date)::text FROM follow_ups f
-          WHERE f.soul_id = ${souls.soulId}
+          WHERE f.soul_id = ${souls.id}
         )`.as('last_follow_up_date'),
       })
       .from(souls)
-      .leftJoin(members, eq(souls.assignedMemberId, members.memberId))
+      .leftJoin(members, eq(souls.assignedMemberId, members.id))
       .where(eq(souls.outreachId, outreachId))
       .orderBy(desc(souls.createdAt));
 
@@ -127,7 +127,7 @@ export const handler = async (
       .groupBy(followUps.soulId, followUps.contactStatus);
 
     // Build follow-up outcome map per soul
-    const outcomeBySoul = new Map<number, Record<string, number>>();
+    const outcomeBySoul = new Map<string, Record<string, number>>();
     for (const row of followUpSummaries) {
       if (!outcomeBySoul.has(row.soulId)) {
         outcomeBySoul.set(row.soulId, {});

@@ -5,12 +5,12 @@ import { Breadcrumbs } from '@/components/layout';
 import { Button, SelectInput, DatePicker, Textarea, Alert, Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { attendance, fellowships } from '@kairos/api-client';
-import type { Fellowship } from '@kairos/types';
+import type { FellowshipWithBranch } from '@kairos/types';
 
 type FellowshipStatus = 'Present' | 'Absent' | 'Excused' | 'Late';
 
 interface MemberRow {
-  memberId: number;
+  memberId: string;
   name: string;
   status: FellowshipStatus;
 }
@@ -26,7 +26,7 @@ export default function FellowshipAttendancePage() {
   const { user } = useAuth();
   const [meetingDate, setMeetingDate] = useState('');
   const [selectedFellowship, setSelectedFellowship] = useState<string>('');
-  const [fellowshipList, setFellowshipList] = useState<Fellowship[]>([]);
+  const [fellowshipList, setFellowshipList] = useState<FellowshipWithBranch[]>([]);
   const [memberRows, setMemberRows] = useState<MemberRow[]>([]);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,19 +35,19 @@ export default function FellowshipAttendancePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const branchId = user?.branchId ? Number(user.branchId) : undefined;
+  const branchId = user?.branchId ?? undefined;
 
   useEffect(() => {
     if (!branchId) return;
     setLoading(true);
     fellowships
       .list({ branchId, limit: 100 })
-      .then((res) => setFellowshipList(res.data))
+      .then((res) => setFellowshipList(res.data?.data ?? []))
       .catch(() => setError('Failed to load fellowships.'))
       .finally(() => setLoading(false));
   }, [branchId]);
 
-  const loadFellowshipMembers = useCallback(async (fellowshipId: number) => {
+  const loadFellowshipMembers = useCallback(async (fellowshipId: string) => {
     setLoadingMembers(true);
     setError(null);
     try {
@@ -56,11 +56,10 @@ export default function FellowshipAttendancePage() {
       const membersRes = await apiClient.members.list({
         fellowshipId,
         limit: 500,
-        status: 'active',
       });
       setMemberRows(
-        membersRes.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
-          memberId: m.memberId,
+        (membersRes.data?.data ?? []).map((m: { id: string; firstName: string; lastName: string }) => ({
+          memberId: m.id,
           name: `${m.firstName} ${m.lastName}`,
           status: 'Absent' as FellowshipStatus,
         }))
@@ -74,13 +73,13 @@ export default function FellowshipAttendancePage() {
 
   useEffect(() => {
     if (selectedFellowship) {
-      loadFellowshipMembers(Number(selectedFellowship));
+      loadFellowshipMembers(selectedFellowship);
     } else {
       setMemberRows([]);
     }
   }, [selectedFellowship, loadFellowshipMembers]);
 
-  const updateStatus = (memberId: number, status: FellowshipStatus) => {
+  const updateStatus = (memberId: string, status: FellowshipStatus) => {
     setMemberRows((prev) =>
       prev.map((r) => (r.memberId === memberId ? { ...r, status } : r))
     );
@@ -97,7 +96,7 @@ export default function FellowshipAttendancePage() {
     try {
       await attendance.recordFellowship({
         meetingDate,
-        fellowshipId: Number(selectedFellowship),
+        fellowshipId: selectedFellowship,
         location: '',
         notes: notes || undefined,
         records: memberRows.map((r) => ({ memberId: r.memberId, status: r.status })),
@@ -111,7 +110,7 @@ export default function FellowshipAttendancePage() {
   };
 
   const fellowshipOptions = fellowshipList.map((f) => ({
-    value: String(f.fellowshipId),
+    value: String(f.id),
     label: f.fellowshipName,
   }));
 

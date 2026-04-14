@@ -25,7 +25,7 @@ interface ConversionMemberFormProps {
   soul: Soul;
   open: boolean;
   onClose: () => void;
-  onSuccess: (memberId: number) => void;
+  onSuccess: (memberId: string) => void;
 }
 
 export function ConversionMemberForm({ soul, open, onClose, onSuccess }: ConversionMemberFormProps) {
@@ -50,10 +50,10 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     let cancelled = false;
     (async () => {
       try {
-        const res = await branches.list({ limit: 100, isActive: true });
+        const res = await branches.list();
         if (cancelled) return;
         const options = (res.data as Branch[]).map((b) => ({
-          value: String(b.branchId),
+          value: String(b.id),
           label: b.branchName,
         }));
         setBranchOptions(options);
@@ -115,17 +115,20 @@ export function ConversionMemberForm({ soul, open, onClose, onSuccess }: Convers
     setSubmitting(true);
 
     try {
-      const result = await members.create({
+      const createData: Record<string, string> = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        email: formData.email.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        address: formData.address.trim() || undefined,
-        city: formData.city.trim() || undefined,
-        gender: formData.gender as 'Male' | 'Female' || undefined,
-        homeBranchId: Number(formData.homeBranchId),
-      });
-      onSuccess(result.memberId);
+        homeBranchId: formData.homeBranchId,
+      };
+      if (formData.email.trim()) createData.email = formData.email.trim();
+      if (formData.phone.trim()) createData.phone = formData.phone.trim();
+      if (formData.address.trim()) createData.address = formData.address.trim();
+      if (formData.city.trim()) createData.city = formData.city.trim();
+      if (formData.gender) createData.gender = formData.gender;
+
+      const result = await members.create(createData as Parameters<typeof members.create>[0]);
+      const resultData = result as unknown as { data?: { id?: string }; id?: string };
+      onSuccess(resultData.data?.id ?? resultData.id ?? '');
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setSubmitError(err.message || 'Failed to create member registration.');

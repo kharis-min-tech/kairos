@@ -5,11 +5,11 @@ import { Breadcrumbs } from '@/components/layout';
 import { SelectInput, DatePicker, Alert, Spinner, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { donations, branches } from '@kairos/api-client';
-import type { Branch } from '@kairos/types';
+import type { BranchWithRegion } from '@kairos/types';
 
 interface PurposeSummary { purpose: string; total: number; count: number; }
-interface BranchSummary { branchId: number; branchName: string; total: number; count: number; }
-interface TopDonor { memberId: number | null; name: string; total: number; isAnonymous: boolean; }
+interface BranchSummary { branchId: string; branchName: string; total: number; count: number; }
+interface TopDonor { memberId: string | null; name: string; total: number; isAnonymous: boolean; }
 
 const formatGBP = (amount: number) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount);
@@ -17,7 +17,7 @@ const formatGBP = (amount: number) =>
 export default function DonationReportsPage() {
   const { user } = useAuth();
   const isPastor = user?.role === 'Pastor';
-  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [branchList, setBranchList] = useState<BranchWithRegion[]>([]);
   const [branchFilter, setBranchFilter] = useState(isPastor && user?.branchId ? user.branchId : '');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -31,7 +31,7 @@ export default function DonationReportsPage() {
 
   useEffect(() => {
     if (!isPastor) {
-      branches.list({ limit: 100 }).then((res: { data: Branch[] }) => setBranchList(res.data)).catch(() => {});
+      branches.list().then((res) => setBranchList(res.data ?? [])).catch(() => {});
     }
   }, [isPastor]);
 
@@ -44,20 +44,21 @@ export default function DonationReportsPage() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await donations.getReports(params);
-      const purposeEntries = Object.entries(res.totalByPurpose ?? {}).map(([purpose, total]) => ({
+      const data = (res.data ?? {}) as Record<string, unknown>;
+      const purposeEntries = Object.entries((data.totalByPurpose as Record<string, number>) ?? {}).map(([purpose, total]) => ({
         purpose,
         total: total as number,
         count: 0,
       }));
-      const branchEntries = Object.entries(res.totalByBranch ?? {}).map(([branchName, total]) => ({
-        branchId: 0,
+      const branchEntries = Object.entries(data.totalByBranch ?? {}).map(([branchName, total]) => ({
+        branchId: '',
         branchName,
         total: total as number,
         count: 0,
       }));
       setByPurpose(purposeEntries);
       setByBranch(branchEntries);
-      setTopDonors((res.topDonors ?? []).map((d) => ({
+      setTopDonors(((data.topDonors ?? []) as { name: string; total: number }[]).map((d) => ({
         memberId: null,
         name: d.name,
         total: d.total,
@@ -88,7 +89,7 @@ export default function DonationReportsPage() {
         <CardBody>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {!isPastor && (
-              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={String(branchFilter)} onChange={(e) => setBranchFilter(e.target.value)} />
+              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: String(b.id), label: b.branchName }))} placeholder="All Branches" value={String(branchFilter)} onChange={(e) => setBranchFilter(e.target.value)} />
             )}
             <DatePicker label="Start Date" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <DatePicker label="End Date" name="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />

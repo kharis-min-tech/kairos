@@ -106,8 +106,8 @@ describe('ws-connect handler', () => {
       token_use: 'access',
     });
     mockLookupMember.mockResolvedValue({
-      memberId: 42,
-      branchId: 10,
+      memberId: 'test-member-42',
+      branchId: 'test-branch-10',
       roles: ['Member'],
       email: 'test@kairos.church',
     });
@@ -119,7 +119,7 @@ describe('ws-connect handler', () => {
     expect(mockInsert).toHaveBeenCalled();
     expect(mockValues).toHaveBeenCalledWith({
       connectionId: 'conn-abc123',
-      memberId: 42,
+      memberId: 'test-member-42',
     });
   });
 

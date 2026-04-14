@@ -10,7 +10,7 @@ type ServiceType = 'Sunday Service' | 'Midweek Service' | 'Special Service';
 type AttendanceStatus = 'Present' | 'Absent' | 'Virtual';
 
 interface MemberRow {
-  memberId: number;
+  memberId: string;
   name: string;
   status: AttendanceStatus;
   selected: boolean;
@@ -39,17 +39,17 @@ export default function ServiceAttendancePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [allSelected, setAllSelected] = useState(false);
 
-  const branchId = user?.branchId ? Number(user.branchId) : undefined;
+  const branchId = user?.branchId ?? undefined;
 
   const loadMembers = useCallback(async () => {
     if (!branchId) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await members.list({ branchId, limit: 500, status: 'active' });
+      const res = await members.list({ branchId, limit: 500 });
       setMemberRows(
-        res.data.map((m: { memberId: number; firstName: string; lastName: string }) => ({
-          memberId: m.memberId,
+        (res.data?.data ?? []).map((m: { id: string; firstName: string; lastName: string }) => ({
+          memberId: m.id,
           name: `${m.firstName} ${m.lastName}`,
           status: 'Absent' as AttendanceStatus,
           selected: false,
@@ -78,7 +78,7 @@ export default function ServiceAttendancePage() {
     );
   };
 
-  const toggleMember = (memberId: number) => {
+  const toggleMember = (memberId: string) => {
     setMemberRows((prev) =>
       prev.map((r) =>
         r.memberId === memberId
@@ -88,7 +88,7 @@ export default function ServiceAttendancePage() {
     );
   };
 
-  const updateStatus = (memberId: number, status: AttendanceStatus) => {
+  const updateStatus = (memberId: string, status: AttendanceStatus) => {
     setMemberRows((prev) =>
       prev.map((r) =>
         r.memberId === memberId

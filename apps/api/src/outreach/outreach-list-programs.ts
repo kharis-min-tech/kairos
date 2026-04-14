@@ -30,7 +30,7 @@ export const handler = async (
     const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10) || 50));
     const offset = (page - 1) * limit;
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId ?? ctx.branchId;
 
     if (!isAdmin(ctx)) {
       enforceBranchAccess(ctx, branchId);
@@ -40,7 +40,7 @@ export const handler = async (
 
     const data = await db
       .select({
-        outreachId: outreachPrograms.outreachId,
+        outreachId: outreachPrograms.id,
         branchId: outreachPrograms.branchId,
         programName: outreachPrograms.programName,
         programDate: outreachPrograms.programDate,
@@ -54,15 +54,15 @@ export const handler = async (
         createdAt: outreachPrograms.createdAt,
         workerCount: sql<number>`(
           SELECT COUNT(*)::int FROM outreach_participants op
-          WHERE op.outreach_id = ${outreachPrograms.outreachId}
+          WHERE op.outreach_id = ${outreachPrograms.id}
         )`.as('worker_count'),
         soulsCaptured: sql<number>`(
           SELECT COUNT(*)::int FROM souls s
-          WHERE s.outreach_id = ${outreachPrograms.outreachId}
+          WHERE s.outreach_id = ${outreachPrograms.id}
         )`.as('souls_captured'),
       })
       .from(outreachPrograms)
-      .leftJoin(members, eq(outreachPrograms.coordinatorId, members.memberId))
+      .leftJoin(members, eq(outreachPrograms.coordinatorId, members.id))
       .where(eq(outreachPrograms.branchId, branchId))
       .orderBy(desc(outreachPrograms.programDate))
       .limit(limit)

@@ -61,7 +61,7 @@ async function getWebhookSecret(): Promise<string> {
   }
 
   webhookSecret = secret;
-  return webhookSecret;
+  return secret;
 }
 
 export const handler = async (
@@ -106,7 +106,7 @@ export const handler = async (
             updatedAt: sql`NOW()`,
           })
           .where(eq(donations.stripePaymentId, paymentIntent.id))
-          .returning({ donationId: donations.donationId });
+          .returning({ donationId: donations.id });
 
         if (updated) {
           logger.info('Donation marked as completed', {
@@ -131,7 +131,7 @@ export const handler = async (
             updatedAt: sql`NOW()`,
           })
           .where(eq(donations.stripePaymentId, paymentIntent.id))
-          .returning({ donationId: donations.donationId });
+          .returning({ donationId: donations.id });
 
         if (updated) {
           logger.info('Donation marked as failed', {

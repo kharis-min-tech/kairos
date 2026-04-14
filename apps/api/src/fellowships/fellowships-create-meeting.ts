@@ -20,7 +20,7 @@ import { eq, and } from 'drizzle-orm';
 const logger = createLogger('fellowships-create-meeting');
 
 const createMeetingSchema = z.object({
-  fellowship_id: z.number().int().positive(),
+  fellowship_id: z.string().uuid(),
   meeting_date: z.string().datetime(),
   meeting_title: z.string().trim().max(200).optional(),
   meeting_topic: z.string().trim().max(200).optional(),
@@ -47,7 +47,7 @@ export const handler = async (
       .from(fellowships)
       .where(
         and(
-          eq(fellowships.fellowshipId, input.fellowship_id),
+          eq(fellowships.id, input.fellowship_id),
           eq(fellowships.isActive, true)
         )
       )
@@ -61,7 +61,7 @@ export const handler = async (
 
     // Check for duplicate meeting on same date
     const [existing] = await db
-      .select({ meetingId: fellowshipMeetings.meetingId })
+      .select({ meetingId: fellowshipMeetings.id })
       .from(fellowshipMeetings)
       .where(
         and(
@@ -93,7 +93,7 @@ export const handler = async (
       .returning();
 
     logger.info('Fellowship meeting created', {
-      meetingId: created!.meetingId,
+      meetingId: created!.id,
       fellowshipId: input.fellowship_id,
     });
 

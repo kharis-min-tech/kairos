@@ -253,3 +253,144 @@ export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
   memberFirstName: string;
   memberLastName: string;
 }
+
+// ── Department ─────────────────────────────────────────────
+
+export interface Department {
+  id: string;
+  departmentName: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Service ───────────────────────────────────────────────
+
+export interface Service {
+  id: string;
+  branchId: string;
+  serviceDate: Date;
+  serviceType: string;
+  serviceTitle: string | null;
+  preacherId: string | null;
+  topic: string | null;
+  notes: string | null;
+  expectedAttendance: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Donation ──────────────────────────────────────────────
+
+export interface Donation {
+  id: string;
+  memberId: string;
+  branchId: string;
+  donationDate: string;
+  amount: number;
+  currency: string;
+  donationPurpose: string;
+  description: string | null;
+  paymentMethod: string | null;
+  referenceNumber: string | null;
+  isAnonymous: boolean;
+  notes: string | null;
+  recordedBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Notification ──────────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  notificationType: string;
+  priority: string;
+  targetScope: string;
+  targetBranchId: string | null;
+  targetRegionId: string | null;
+  targetDepartmentId: string | null;
+  targetFellowshipId: string | null;
+  targetRoleId: string | null;
+  targetLeadershipRole: string | null;
+  sentBy: string;
+  sentAt: Date;
+  scheduledFor: Date | null;
+  expiresAt: Date | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Form ──────────────────────────────────────────────────
+
+export interface Form {
+  id: string;
+  formType: string;
+  branchId: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Outreach Program ──────────────────────────────────────
+
+export interface OutreachProgram {
+  id: string;
+  outreachId: string;
+  branchId: string;
+  programName: string;
+  programDate: string;
+  location: string;
+  address: string | null;
+  city: string | null;
+  description: string | null;
+  coordinatorId: string | null;
+  totalSoulsReached: number;
+  notes: string | null;
+  isCompleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Soul ──────────────────────────────────────────────────
+
+export interface Soul {
+  id: string;
+  soulId: string;
+  outreachId: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  gender: Gender | null;
+  ageRange: string | null;
+  assignedMemberId: string | null;
+  convertedToMemberId: string | null;
+  status: 'New' | 'Following Up' | 'Interested' | 'Not Interested' | 'Converted' | 'Lost Contact';
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Follow Up ─────────────────────────────────────────────
+
+export interface FollowUp {
+  id: string;
+  followUpId: string;
+  soulId: string;
+  memberId: string;
+  followUpDate: Date;
+  contactMethod: string | null;
+  contactStatus: string;
+  durationMinutes: number | null;
+  notes: string | null;
+  nextFollowUpDate: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

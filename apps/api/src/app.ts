@@ -12,7 +12,7 @@ import { newBelieversRouter } from './new-believers/router';
 import { outreachRouter } from './outreach/router';
 import { formsRouter } from './forms/router';
 import { db } from './db';
-import { successResponse } from '@kairos/utils';
+import { successResponse } from './lib/response';
 import { branches, regions } from '@kairos/database';
 import { eq } from 'drizzle-orm';
 

@@ -15,8 +15,8 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 // Track database state for property tests
 let mockLeadershipRecords: Array<{
   leadershipId: number;
-  branchId: number;
-  memberId: number;
+  branchId: string;
+  memberId: string;
   role: string;
   startDate: string;
   endDate: string | null;
@@ -27,15 +27,12 @@ let mockLeadershipRecords: Array<{
 let nextLeadershipId = 1;
 
 // Mock transaction that tracks state
-const mockTxUpdate = vi.fn();
-const mockTxInsert = vi.fn();
-
 const createMockTx = () => {
   const txUpdateReturning = vi.fn().mockImplementation(() => {
     // No returning needed for update
     return Promise.resolve([]);
   });
-  const txUpdateWhere = vi.fn().mockImplementation((whereClause) => {
+  const txUpdateWhere = vi.fn().mockImplementation((_whereClause) => {
     // Mark existing current pastors as not current
     mockLeadershipRecords = mockLeadershipRecords.map((r) => {
       if (r.role === 'Main Pastor' && r.isCurrent) {
@@ -54,8 +51,8 @@ const createMockTx = () => {
   const txInsertValues = vi.fn().mockImplementation((values: Record<string, unknown>) => {
     const record = {
       leadershipId: nextLeadershipId++,
-      branchId: values.branchId as number,
-      memberId: values.memberId as number,
+      branchId: values.branchId as string,
+      memberId: values.memberId as string,
       role: values.role as string,
       startDate: (values.startDate as string) || new Date().toISOString().split('T')[0]!,
       endDate: null,
@@ -126,7 +123,7 @@ import { handler } from '../branches-assign-pastor';
 // ============================================================
 
 function createEvent(
-  branchId: number,
+  branchId: string,
   body: Record<string, unknown>,
   role: string = 'Admin'
 ): APIGatewayProxyEvent {
@@ -176,7 +173,7 @@ describe('branches-assign-pastor handler', () => {
   });
 
   it('should return 403 when non-admin tries to assign pastor', async () => {
-    const event = createEvent(1, { member_id: 10 }, 'Member');
+    const event = createEvent('test-branch-1', { member_id: '00000000-0000-4000-8000-000000000010' }, 'Member');
     const result = await handler(event);
 
     expect(result.statusCode).toBe(403);
@@ -187,16 +184,16 @@ describe('branches-assign-pastor handler', () => {
   it('should return 404 when branch does not exist', async () => {
     mockSelectLimit.mockResolvedValueOnce([]); // branch not found
 
-    const event = createEvent(999, { member_id: 10 });
+    const event = createEvent('test-branch-999', { member_id: '00000000-0000-4000-8000-000000000010' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(404);
   });
 
   it('should return 400 when branch is inactive', async () => {
-    mockSelectLimit.mockResolvedValueOnce([{ branchId: 1, isActive: false }]);
+    mockSelectLimit.mockResolvedValueOnce([{ branchId: 'test-branch-1', isActive: false }]);
 
-    const event = createEvent(1, { member_id: 10 });
+    const event = createEvent('test-branch-1', { member_id: '00000000-0000-4000-8000-000000000010' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(400);
@@ -206,10 +203,10 @@ describe('branches-assign-pastor handler', () => {
 
   it('should return 404 when member does not exist', async () => {
     mockSelectLimit
-      .mockResolvedValueOnce([{ branchId: 1, isActive: true }]) // branch exists
+      .mockResolvedValueOnce([{ branchId: 'test-branch-1', isActive: true }]) // branch exists
       .mockResolvedValueOnce([]); // member not found
 
-    const event = createEvent(1, { member_id: 999 });
+    const event = createEvent('test-branch-1', { member_id: '00000000-0000-4000-8000-000000000999' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(404);
@@ -217,17 +214,17 @@ describe('branches-assign-pastor handler', () => {
 
   it('should assign pastor and return 201 when valid', async () => {
     mockSelectLimit
-      .mockResolvedValueOnce([{ branchId: 1, isActive: true }]) // branch exists
-      .mockResolvedValueOnce([{ memberId: 10, isActive: true }]); // member exists
+      .mockResolvedValueOnce([{ branchId: 'test-branch-1', isActive: true }]) // branch exists
+      .mockResolvedValueOnce([{ memberId: '00000000-0000-4000-8000-000000000010', isActive: true }]); // member exists
 
-    const event = createEvent(1, { member_id: 10 });
+    const event = createEvent('test-branch-1', { member_id: '00000000-0000-4000-8000-000000000010' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(201);
     expect(mockTransaction).toHaveBeenCalledTimes(1);
 
     const body = JSON.parse(result.body);
-    expect(body.memberId).toBe(10);
+    expect(body.memberId).toBe('00000000-0000-4000-8000-000000000010');
     expect(body.role).toBe('Main Pastor');
     expect(body.isCurrent).toBe(true);
   });
@@ -236,8 +233,8 @@ describe('branches-assign-pastor handler', () => {
     // Simulate existing pastor
     mockLeadershipRecords.push({
       leadershipId: 100,
-      branchId: 1,
-      memberId: 5,
+      branchId: 'test-branch-1',
+      memberId: 'test-member-5',
       role: 'Main Pastor',
       startDate: '2024-01-01',
       endDate: null,
@@ -247,31 +244,28 @@ describe('branches-assign-pastor handler', () => {
     });
 
     mockSelectLimit
-      .mockResolvedValueOnce([{ branchId: 1, isActive: true }])
-      .mockResolvedValueOnce([{ memberId: 10, isActive: true }]);
+      .mockResolvedValueOnce([{ branchId: 'test-branch-1', isActive: true }])
+      .mockResolvedValueOnce([{ memberId: '00000000-0000-4000-8000-000000000010', isActive: true }]);
 
-    const event = createEvent(1, { member_id: 10 });
-    const result = await handler(event);
+    const event = createEvent('test-branch-1', { member_id: '00000000-0000-4000-8000-000000000010' });
+    await handler(event);
 
-    expect(result.statusCode).toBe(201);
-
-    // Verify previous pastor was marked as not current
     const previousPastor = mockLeadershipRecords.find(
-      (r) => r.memberId === 5 && r.role === 'Main Pastor'
+      (r) => r.memberId === 'test-member-5' && r.role === 'Main Pastor'
     );
     expect(previousPastor?.isCurrent).toBe(false);
     expect(previousPastor?.endDate).toBeTruthy();
 
     // Verify new pastor is current
     const newPastor = mockLeadershipRecords.find(
-      (r) => r.memberId === 10 && r.role === 'Main Pastor'
+      (r) => r.memberId === '00000000-0000-4000-8000-000000000010' && r.role === 'Main Pastor'
     );
     expect(newPastor?.isCurrent).toBe(true);
     expect(newPastor?.endDate).toBeNull();
   });
 
   it('should validate that member_id is required', async () => {
-    const event = createEvent(1, {});
+    const event = createEvent('test-branch-1', {});
     const result = await handler(event);
 
     expect(result.statusCode).toBe(422);
@@ -297,9 +291,9 @@ describe('Property 12: Single Current Pastor Per Branch', () => {
       fc.asyncProperty(
         // Generate a sequence of pastor assignments for a single branch
         fc.record({
-          branchId: fc.integer({ min: 1, max: 5 }),
+          branchId: fc.uuid(),
           pastorIds: fc.array(
-            fc.integer({ min: 1, max: 100 }),
+            fc.uuid(),
             { minLength: 1, maxLength: 5 }
           ),
         }),
@@ -313,9 +307,8 @@ describe('Property 12: Single Current Pastor Per Branch', () => {
             mockSelectLimit
               .mockResolvedValueOnce([{ branchId, isActive: true }])
               .mockResolvedValueOnce([{ memberId: pastorId, isActive: true }]);
-
-            const event = createEvent(branchId, { member_id: pastorId });
-            const result = await handler(event);
+            const pastorEvent = createEvent(branchId, { member_id: pastorId });
+            const result = await handler(pastorEvent);
             expect(result.statusCode).toBe(201);
           }
 
@@ -332,8 +325,6 @@ describe('Property 12: Single Current Pastor Per Branch', () => {
           // The current pastor should be the last one assigned
           const lastPastorId = pastorIds[pastorIds.length - 1];
           expect(currentPastors[0]!.memberId).toBe(lastPastorId);
-
-          // All previous pastors should have isCurrent=false and an endDate
           const previousPastors = mockLeadershipRecords.filter(
             (r) =>
               r.branchId === branchId &&

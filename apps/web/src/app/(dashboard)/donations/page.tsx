@@ -59,9 +59,9 @@ export default function DonationHistoryPage() {
       if (endDate) params.endDate = endDate;
 
       const res = await donations.list(params);
-      const items = res.data ?? [];
-      setData(items);
-      setTotalGiving(items.reduce((sum: number, d: { amount: number }) => sum + d.amount, 0));
+      const items = (res.data ?? []) as unknown[];
+      setData(items as Donation[]);
+      setTotalGiving(items.reduce((sum: number, d: unknown) => sum + ((d as Record<string, unknown>)?.amount as number || 0), 0));
     } catch {
       setData([]);
       setTotalGiving(0);
@@ -81,7 +81,8 @@ export default function DonationHistoryPage() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await donations.export(params);
-      if (res.url) window.open(res.url, '_blank');
+      const exportData = res.data as Record<string, unknown> | undefined;
+      if (exportData?.url) window.open(exportData.url as string, '_blank');
     } catch {
       // silently fail export
     } finally {

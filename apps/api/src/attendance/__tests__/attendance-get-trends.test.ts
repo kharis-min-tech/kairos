@@ -36,7 +36,7 @@ import { resolveAuthContext, getDb } from '@kairos/utils';
 const mockedResolveAuthContext = vi.mocked(resolveAuthContext);
 const mockedGetDb = vi.mocked(getDb);
 
-function createEvent(queryParams?: Record<string, string>, auth?: Partial<{ memberId: number; branchId: number; roles: string[] }>): APIGatewayProxyEvent {
+function createEvent(queryParams?: Record<string, string>, auth?: Partial<{ memberId: string; branchId: string; roles: string[] }>): APIGatewayProxyEvent {
   return {
     body: null,
     headers: {},
@@ -63,8 +63,8 @@ describe('attendance-get-trends handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -89,8 +89,8 @@ describe('attendance-get-trends handler', () => {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
                 orderBy: vi.fn().mockReturnValue([
-                  { serviceId: 1, serviceDate: '2026-01-04', serviceType: 'Sunday Service', presentCount: 40, virtualCount: 5, totalRecorded: 50 },
-                  { serviceId: 2, serviceDate: '2026-01-11', serviceType: 'Sunday Service', presentCount: 35, virtualCount: 3, totalRecorded: 45 },
+                  { serviceId: 'test-service-1', serviceDate: '2026-01-04', serviceType: 'Sunday Service', presentCount: 40, virtualCount: 5, totalRecorded: 50 },
+                  { serviceId: 'test-service-2', serviceDate: '2026-01-11', serviceType: 'Sunday Service', presentCount: 35, virtualCount: 3, totalRecorded: 45 },
                 ]),
               }),
             }),
@@ -115,8 +115,8 @@ describe('attendance-get-trends handler', () => {
 
   it('should enforce branch isolation for pastor', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Pastor', 'Member'],
       email: 'pastor@kairos.church',
     });
@@ -129,8 +129,8 @@ describe('attendance-get-trends handler', () => {
 
   it('should allow pastor to see their own branch trends', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Pastor', 'Member'],
       email: 'pastor@kairos.church',
     });
@@ -157,7 +157,7 @@ describe('attendance-get-trends handler', () => {
     };
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
-    const event = createEvent({ branchId: '10' });
+    const event = createEvent({ branchId: 'test-branch-10' });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(200);
@@ -179,7 +179,7 @@ describe('attendance-get-trends handler', () => {
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockReturnValue({
               orderBy: vi.fn().mockReturnValue([
-                { serviceId: 1, serviceDate: '2026-01-04', serviceType: 'Sunday Service', presentCount: 0, virtualCount: 0, totalRecorded: 0 },
+                { serviceId: 'test-service-1', serviceDate: '2026-01-04', serviceType: 'Sunday Service', presentCount: 0, virtualCount: 0, totalRecorded: 0 },
               ]),
             }),
           }),

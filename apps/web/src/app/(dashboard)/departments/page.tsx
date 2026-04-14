@@ -3,18 +3,26 @@
 import { useEffect, useState } from 'react';
 import { Layers, Plus } from 'lucide-react';
 import { departments } from '@kairos/api-client';
-import type { BranchDepartment } from '@kairos/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 
+interface Department {
+  branchDepartmentId: string;
+  departmentId: string;
+  branchId: string;
+  leadMemberId: string;
+  deputyMemberId?: string;
+  isActive: boolean;
+}
+
 export default function DepartmentsPage() {
-  const [data, setData] = useState<BranchDepartment[]>([]);
+  const [data, setData] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     departments.list({ limit: 100 })
-      .then((res) => setData(res.data))
+      .then((res) => setData((res.data ?? []) as Department[]))
       .catch(() => setError('Failed to load departments'))
       .finally(() => setLoading(false));
   }, []);

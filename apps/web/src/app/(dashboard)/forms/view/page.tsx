@@ -19,7 +19,7 @@ interface FormFieldDef {
 }
 
 interface FormData {
-  formId: number;
+  formId: string;
   formName: string;
   formDescription?: string;
   formDefinition: { fields: FormFieldDef[] };
@@ -41,14 +41,16 @@ function FormSubmissionContent() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await forms.get(Number(formId));
-        const definition = (res.formDefinition ?? {}) as { fields?: FormFieldDef[] };
+        const res = await forms.get(formId);
+        type RawFormData = { formId?: string; formName?: string; formDescription?: string; formDefinition?: { fields?: FormFieldDef[] }; scope?: string };
+        const raw = res.data as unknown as RawFormData ?? {};
+        const definition = (raw.formDefinition ?? {}) as { fields?: FormFieldDef[] };
         setFormDef({
-          formId: res.formId,
-          formName: res.formName,
-          formDescription: res.formDescription ?? undefined,
+          formId: raw.formId ?? '',
+          formName: raw.formName ?? '',
+          formDescription: raw.formDescription ?? undefined,
           formDefinition: { fields: definition.fields ?? [] },
-          scope: res.scope,
+          scope: raw.scope ?? '',
         });
         // Auto-populate from member profile
         const autoValues: Record<string, string> = {};
@@ -91,7 +93,7 @@ function FormSubmissionContent() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await forms.submit(Number(formId), { data: values });
+      await forms.submit(formId, { data: values });
       setSubmitted(true);
     } catch {
       setErrors({ _form: 'Failed to submit form. Please try again.' });

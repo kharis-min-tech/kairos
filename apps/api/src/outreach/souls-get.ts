@@ -24,9 +24,9 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const ctx = await resolveAuthContext(event);
-    const soulId = parseInt(event.pathParameters?.soulId || '', 10);
+    const soulId = event.pathParameters?.soulId || '';
 
-    if (isNaN(soulId)) {
+    if (!soulId) {
       throw new NotFoundError('Soul');
     }
 
@@ -37,7 +37,7 @@ export const handler = async (
     // Get soul with outreach program info
     const [soul] = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         firstName: souls.firstName,
         lastName: souls.lastName,
         phone: souls.phone,
@@ -57,8 +57,8 @@ export const handler = async (
         programBranchId: outreachPrograms.branchId,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .where(eq(souls.soulId, soulId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .where(eq(souls.id, soulId))
       .limit(1);
 
     if (!soul) {
@@ -73,7 +73,7 @@ export const handler = async (
     // Get follow-up history
     const followUpHistory = await db
       .select({
-        followUpId: followUps.followUpId,
+        followUpId: followUps.id,
         followUpDate: followUps.followUpDate,
         contactMethod: followUps.contactMethod,
         contactStatus: followUps.contactStatus,
@@ -85,7 +85,7 @@ export const handler = async (
         createdAt: followUps.createdAt,
       })
       .from(followUps)
-      .leftJoin(members, eq(followUps.memberId, members.memberId))
+      .leftJoin(members, eq(followUps.memberId, members.id))
       .where(eq(followUps.soulId, soulId))
       .orderBy(desc(followUps.followUpDate));
 

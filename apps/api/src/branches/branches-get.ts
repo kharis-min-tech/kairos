@@ -25,11 +25,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
 
     // 2. Parse branch ID from path
-    const branchId = parseInt(
-      event.pathParameters?.branchId || event.pathParameters?.id || '0',
-      10
-    );
-    if (!branchId || isNaN(branchId)) {
+    const branchId = event.pathParameters?.branchId ?? event.pathParameters?.id ?? '';
+    if (!branchId) {
       throw new NotFoundError('Branch');
     }
 
@@ -43,7 +40,7 @@ export const handler = async (
 
     const [branchResult] = await db
       .select({
-        branchId: branches.branchId,
+        branchId: branches.id,
         branchName: branches.branchName,
         regionId: branches.regionId,
         regionName: regions.regionName,
@@ -59,8 +56,8 @@ export const handler = async (
         updatedAt: branches.updatedAt,
       })
       .from(branches)
-      .leftJoin(regions, eq(branches.regionId, regions.regionId))
-      .where(eq(branches.branchId, branchId))
+      .leftJoin(regions, eq(branches.regionId, regions.id))
+      .where(eq(branches.id, branchId))
       .limit(1);
 
     if (!branchResult) {
@@ -70,14 +67,14 @@ export const handler = async (
     // 5. Get current pastor (role='Main Pastor', is_current=TRUE)
     const currentPastor = await db
       .select({
-        leadershipId: branchLeadership.leadershipId,
+        leadershipId: branchLeadership.id,
         memberId: branchLeadership.memberId,
         firstName: members.firstName,
         lastName: members.lastName,
         startDate: branchLeadership.startDate,
       })
       .from(branchLeadership)
-      .innerJoin(members, eq(branchLeadership.memberId, members.memberId))
+      .innerJoin(members, eq(branchLeadership.memberId, members.id))
       .where(
         and(
           eq(branchLeadership.branchId, branchId),
@@ -90,14 +87,14 @@ export const handler = async (
     // 6. Get current elders
     const currentElders = await db
       .select({
-        leadershipId: branchLeadership.leadershipId,
+        leadershipId: branchLeadership.id,
         memberId: branchLeadership.memberId,
         firstName: members.firstName,
         lastName: members.lastName,
         startDate: branchLeadership.startDate,
       })
       .from(branchLeadership)
-      .innerJoin(members, eq(branchLeadership.memberId, members.memberId))
+      .innerJoin(members, eq(branchLeadership.memberId, members.id))
       .where(
         and(
           eq(branchLeadership.branchId, branchId),

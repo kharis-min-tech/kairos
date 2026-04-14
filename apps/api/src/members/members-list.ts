@@ -49,7 +49,7 @@ export const handler = async (
     const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10) || 50));
     const search = params.search?.trim();
-    const branchIdFilter = params.branchId ? parseInt(params.branchId, 10) : undefined;
+    const branchIdFilter = params.branchId ?? undefined;
     const status = params.status || 'active';
     const sortBy = params.sortBy || 'lastName';
     const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';

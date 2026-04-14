@@ -79,11 +79,11 @@ import { handler } from '../notifications-send-broadcast';
 
 function createEvent(
   body: unknown,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] }
+  auth?: { memberId?: string; branchId?: string; roles?: string[] }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? '00000000-0000-4000-8000-000000000001',
+    branchId: auth?.branchId ?? '00000000-0000-4000-8000-000000000010',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -120,17 +120,21 @@ function createEvent(
   } as unknown as APIGatewayProxyEvent;
 }
 
-function setupDb(opts?: { insertReturning?: unknown[]; memberIds?: number[] }) {
+function setupDb(opts?: { insertReturning?: unknown[]; memberIds?: string[] }) {
   const insertChain = {
     values: vi.fn().mockReturnThis(),
     returning: vi.fn().mockResolvedValue(
-      opts?.insertReturning || [{ notificationId: 1 }]
+      opts?.insertReturning || [{ notificationId: '00000000-0000-4000-8000-000000000099' }]
     ),
   };
   const selectChain = {
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockResolvedValue(
-      (opts?.memberIds || [1, 2, 3]).map((id) => ({ memberId: id }))
+      (opts?.memberIds || [
+        '00000000-0000-4000-8000-000000000001',
+        '00000000-0000-4000-8000-000000000002',
+        '00000000-0000-4000-8000-000000000003',
+      ]).map((id) => ({ memberId: id }))
     ),
   };
 
@@ -175,8 +179,8 @@ const titleArb = fc.string({ minLength: 1, maxLength: 100 }).filter((s) => s.tri
 /** Generate a non-empty message (1-5000 chars) */
 const messageArb = fc.string({ minLength: 1, maxLength: 200 }).filter((s) => s.trim().length > 0);
 
-/** Positive integer IDs */
-const idArb = fc.integer({ min: 1, max: 100_000 });
+/** Valid UUID IDs */
+const idArb = fc.uuid();
 
 // ---------------------------------------------------------------------------
 // Property Tests
@@ -252,11 +256,11 @@ describe('Property: Broadcast Message Authorization', () => {
           vi.clearAllMocks();
 
           const notification = {
-            notificationId: 1,
+            notificationId: '00000000-0000-4000-8000-000000000099',
             title,
             targetScope: scope,
           };
-          setupDb({ insertReturning: [notification], memberIds: [1, 2, 3] });
+          setupDb({ insertReturning: [notification] });
 
           const payload: Record<string, unknown> = {
             title,

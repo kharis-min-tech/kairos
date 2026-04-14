@@ -31,7 +31,7 @@ export const handler = async (
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10)));
     const offset = (page - 1) * limit;
     const search = params.search?.trim();
-    const regionId = params.region_id ? parseInt(params.region_id, 10) : undefined;
+    const regionId = params.region_id ?? undefined;
     const branchType = params.branch_type;
     const activeOnly = params.is_active !== 'false'; // default to active only
 
@@ -40,7 +40,7 @@ export const handler = async (
 
     // Pastors see only their assigned branch
     if (!isAdmin(ctx)) {
-      conditions.push(eq(branches.branchId, ctx.branchId));
+      conditions.push(eq(branches.id, ctx.branchId));
     }
 
     if (activeOnly) {
@@ -67,7 +67,7 @@ export const handler = async (
     const [branchList, countResult] = await Promise.all([
       db
         .select({
-          branchId: branches.branchId,
+          branchId: branches.id,
           branchName: branches.branchName,
           regionId: branches.regionId,
           regionName: regions.regionName,
@@ -83,7 +83,7 @@ export const handler = async (
           updatedAt: branches.updatedAt,
         })
         .from(branches)
-        .leftJoin(regions, eq(branches.regionId, regions.regionId))
+        .leftJoin(regions, eq(branches.regionId, regions.id))
         .where(whereClause)
         .orderBy(branches.branchName)
         .limit(limit)

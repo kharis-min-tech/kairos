@@ -22,8 +22,8 @@ const logger = createLogger('fellowships-add-member');
 
 /** Inline schema for add-member request */
 const addMemberSchema = z.object({
-  fellowship_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  fellowship_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -45,12 +45,12 @@ export const handler = async (
     // 3. Verify fellowship exists and is active
     const [fellowship] = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         branchId: fellowships.branchId,
         isActive: fellowships.isActive,
       })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, input.fellowship_id))
+      .where(eq(fellowships.id, input.fellowship_id))
       .limit(1);
 
     if (!fellowship) {
@@ -63,7 +63,7 @@ export const handler = async (
     // 5. CRITICAL: Check if member is already in another active fellowship
     const existingMembership = await db
       .select({
-        fellowshipMemberId: fellowshipMembers.fellowshipMemberId,
+        fellowshipMemberId: fellowshipMembers.id,
         fellowshipId: fellowshipMembers.fellowshipId,
       })
       .from(fellowshipMembers)
@@ -100,7 +100,7 @@ export const handler = async (
     logger.info('Member added to fellowship', {
       fellowshipId: input.fellowship_id,
       memberId: input.member_id,
-      fellowshipMemberId: created!.fellowshipMemberId,
+      fellowshipMemberId: created!.id,
     });
 
     return createdResponse(created!);

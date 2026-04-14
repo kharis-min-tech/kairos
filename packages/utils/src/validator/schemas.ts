@@ -12,14 +12,14 @@ export const memberCreateSchema = z.object({
   first_name: nonEmptyString.max(100),
   last_name: nonEmptyString.max(100),
   middle_name: z.string().trim().max(100).optional(),
-  email: z.email('Invalid email format').optional(),
+  email: z.string().email('Invalid email format').optional(),
   phone: phoneSchema.optional(),
   date_of_birth: z.coerce.date().max(new Date(), 'Date of birth cannot be in the future').optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   address: z.string().trim().max(500).optional(),
   city: z.string().trim().max(100).optional(),
   postal_code: z.string().trim().max(20).optional(),
-  home_branch_id: z.number().int().positive(),
+  home_branch_id: z.string().uuid(),
   photo_url: z.string().url().optional(),
   emergency_contact_name: z.string().trim().max(200).optional(),
   emergency_contact_phone: phoneSchema.optional(),
@@ -30,7 +30,7 @@ export const memberUpdateSchema = z.object({
   first_name: nonEmptyString.max(100).optional(),
   last_name: nonEmptyString.max(100).optional(),
   middle_name: z.string().trim().max(100).optional(),
-  email: z.email('Invalid email format').optional(),
+  email: z.string().email('Invalid email format').optional(),
   phone: phoneSchema.optional(),
   date_of_birth: z.coerce.date().max(new Date(), 'Date of birth cannot be in the future').optional(),
   gender: z.enum(['Male', 'Female']).optional(),
@@ -49,13 +49,13 @@ export const memberUpdateSchema = z.object({
 /** Schema for creating a branch */
 export const branchCreateSchema = z.object({
   branch_name: nonEmptyString.max(200),
-  region_id: z.number().int().positive(),
+  region_id: z.string().uuid(),
   branch_type: z.enum(['Main', 'Satellite', 'Cell', 'Campus', 'Online']),
   address: z.string().trim().max(500).optional(),
   city: z.string().trim().max(100).optional(),
   postal_code: z.string().trim().max(20).optional(),
   phone: phoneSchema.optional(),
-  email: z.email('Invalid email format').optional(),
+  email: z.string().email('Invalid email format').optional(),
   established_date: z.coerce.date().optional(),
 });
 
@@ -71,10 +71,10 @@ export const departmentCreateSchema = z.object({
 
 /** Schema for creating a branch department instance */
 export const branchDepartmentCreateSchema = z.object({
-  branch_id: z.number().int().positive(),
-  department_id: z.number().int().positive(),
-  lead_member_id: z.number().int().positive(),
-  deputy_member_id: z.number().int().positive().optional(),
+  branch_id: z.string().uuid(),
+  department_id: z.string().uuid(),
+  lead_member_id: z.string().uuid(),
+  deputy_member_id: z.string().uuid().optional(),
 }).refine(
   (data) => !data.deputy_member_id || data.lead_member_id !== data.deputy_member_id,
   {
@@ -90,7 +90,7 @@ export const branchDepartmentCreateSchema = z.object({
 /** Schema for creating a fellowship */
 export const fellowshipCreateSchema = z.object({
   fellowship_name: nonEmptyString.max(200),
-  branch_id: z.number().int().positive(),
+  branch_id: z.string().uuid(),
   fellowship_type: z.enum([
     'K-Groups',
     'Kharis Express',
@@ -99,8 +99,8 @@ export const fellowshipCreateSchema = z.object({
     'Kharis on Campus Colleges',
   ]),
   description: z.string().trim().max(1000).optional(),
-  leader_id: z.number().int().positive().optional(),
-  co_leader_id: z.number().int().positive().optional(),
+  leader_id: z.string().uuid().optional(),
+  co_leader_id: z.string().uuid().optional(),
   meeting_schedule: z.string().trim().max(500).optional(),
   location: z.string().trim().max(500).optional(),
 });
@@ -111,11 +111,11 @@ export const fellowshipCreateSchema = z.object({
 
 /** Schema for creating a service */
 export const serviceCreateSchema = z.object({
-  branch_id: z.number().int().positive(),
+  branch_id: z.string().uuid(),
   service_date: z.coerce.date(),
   service_type: z.enum(['Sunday Service', 'Midweek Service', 'Special Service', 'Prayer Meeting', 'Other']),
   service_title: z.string().trim().max(200).optional(),
-  preacher_id: z.number().int().positive().optional(),
+  preacher_id: z.string().uuid().optional(),
   topic: z.string().trim().max(200).optional(),
   notes: z.string().trim().max(2000).optional(),
   expected_attendance: z.number().int().nonnegative().optional(),
@@ -123,9 +123,9 @@ export const serviceCreateSchema = z.object({
 
 /** Schema for recording service attendance (bulk) */
 export const serviceAttendanceBulkSchema = z.object({
-  service_id: z.number().int().positive(),
+  service_id: z.string().uuid(),
   records: z.array(z.object({
-    member_id: z.number().int().positive(),
+    member_id: z.string().uuid(),
     attendance_status: z.enum(['Present', 'Absent', 'Virtual']),
     is_first_time_visitor: z.boolean().default(false),
     notes: z.string().trim().max(500).optional(),
@@ -134,8 +134,8 @@ export const serviceAttendanceBulkSchema = z.object({
 
 /** Schema for recording service attendance */
 export const attendanceRecordSchema = z.object({
-  service_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  service_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   attendance_status: z.enum(['Present', 'Absent', 'Virtual']),
   is_first_time: z.boolean().default(false),
   notes: z.string().trim().max(500).optional(),
@@ -143,7 +143,7 @@ export const attendanceRecordSchema = z.object({
 
 /** Schema for creating a fellowship meeting */
 export const fellowshipMeetingCreateSchema = z.object({
-  fellowship_id: z.number().int().positive(),
+  fellowship_id: z.string().uuid(),
   meeting_date: z.coerce.date(),
   meeting_title: z.string().trim().max(200).optional(),
   meeting_topic: z.string().trim().max(200).optional(),
@@ -154,9 +154,9 @@ export const fellowshipMeetingCreateSchema = z.object({
 
 /** Schema for recording fellowship meeting attendance (bulk) */
 export const fellowshipAttendanceBulkSchema = z.object({
-  meeting_id: z.number().int().positive(),
+  meeting_id: z.string().uuid(),
   records: z.array(z.object({
-    member_id: z.number().int().positive(),
+    member_id: z.string().uuid(),
     attendance_status: z.enum(['Present', 'Absent', 'Excused', 'Late']),
     notes: z.string().trim().max(500).optional(),
   })).min(1, 'At least one attendance record is required'),
@@ -164,8 +164,8 @@ export const fellowshipAttendanceBulkSchema = z.object({
 
 /** Schema for recording fellowship meeting attendance */
 export const fellowshipAttendanceRecordSchema = z.object({
-  meeting_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  meeting_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   attendance_status: z.enum(['Present', 'Absent', 'Excused', 'Late']),
   notes: z.string().trim().max(500).optional(),
 });
@@ -180,21 +180,21 @@ export const fellowshipAttendanceRecordSchema = z.object({
 
 /** Schema for creating an outreach program */
 export const outreachProgramCreateSchema = z.object({
-  branch_id: z.number().int().positive(),
+  branch_id: z.string().uuid(),
   program_name: nonEmptyString.max(200),
   program_date: z.coerce.date(),
   location: nonEmptyString.max(300),
   address: z.string().trim().max(500).optional(),
   city: z.string().trim().max(100).optional(),
   description: z.string().trim().max(2000).optional(),
-  coordinator_id: z.number().int().positive().optional(),
+  coordinator_id: z.string().uuid().optional(),
   notes: z.string().trim().max(2000).optional(),
 });
 
 /** Schema for registering a worker for an outreach program */
 export const outreachWorkerRegisterSchema = z.object({
-  outreach_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  outreach_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   role: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(500).optional(),
 });
@@ -207,18 +207,18 @@ export const soulCaptureSchema = z.object({
   first_name: nonEmptyString.max(100),
   last_name: nonEmptyString.max(100),
   phone: phoneSchema,
-  email: z.email('Invalid email format').optional(),
+  email: z.string().email('Invalid email format').optional(),
   address: z.string().trim().max(500).optional(),
   city: z.string().trim().max(100).optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   age_range: z.string().trim().max(20).optional(),
-  outreach_id: z.number().int().positive().optional(),
+  outreach_id: z.string().uuid().optional(),
   notes: z.string().trim().max(2000).optional(),
 });
 
 /** Schema for logging a follow-up */
 export const followUpCreateSchema = z.object({
-  soul_id: z.number().int().positive(),
+  soul_id: z.string().uuid(),
   contact_date: z.coerce.date(),
   contact_method: z.enum([
     'Phone Call',
@@ -244,7 +244,7 @@ export const followUpCreateSchema = z.object({
 /** Schema for updating soul status */
 export const soulStatusUpdateSchema = z.object({
   status: z.enum(['New', 'Following Up', 'Interested', 'Converted', 'Not Interested']),
-  converted_to_member_id: z.number().int().positive().optional(),
+  converted_to_member_id: z.string().uuid().optional(),
 }).refine(
   (data) => data.status !== 'Converted' || data.converted_to_member_id !== undefined,
   {
@@ -255,7 +255,7 @@ export const soulStatusUpdateSchema = z.object({
 
 /** Schema for reassigning a soul */
 export const soulReassignSchema = z.object({
-  assigned_member_id: z.number().int().positive(),
+  assigned_member_id: z.string().uuid(),
 });
 
 // ============================================================
@@ -265,8 +265,8 @@ export const soulReassignSchema = z.object({
 /** Schema for creating an online donation */
 export const donationCreateSchema = z
   .object({
-    member_id: z.number().int().positive().optional(),
-    branch_id: z.number().int().positive(),
+    member_id: z.string().uuid().optional(),
+    branch_id: z.string().uuid(),
     amount: positiveAmount,
     currency: z.literal('GBP').default('GBP'),
     donation_date: z.coerce.date(),
@@ -305,7 +305,7 @@ export const formCreateSchema = z
     form_description: z.string().trim().max(1000).optional(),
     form_definition: z.record(z.string(), z.unknown()),
     scope: z.enum(['Church-wide', 'Branch-specific']),
-    target_branch_id: z.number().int().positive().optional(),
+    target_branch_id: z.string().uuid().optional(),
   })
   .refine(
     (data) =>
@@ -318,7 +318,7 @@ export const formCreateSchema = z
 
 /** Schema for submitting a form */
 export const formSubmitSchema = z.object({
-  form_id: z.number().int().positive(),
+  form_id: z.string().uuid(),
   submission_data: z.record(z.string(), z.unknown()),
 });
 
@@ -348,10 +348,10 @@ export const notificationCreateSchema = z
       'Role',
       'Leadership',
     ]),
-    target_branch_id: z.number().int().positive().optional(),
+    target_branch_id: z.string().uuid().optional(),
     target_region_id: z.number().int().positive().optional(),
-    target_department_id: z.number().int().positive().optional(),
-    target_fellowship_id: z.number().int().positive().optional(),
+    target_department_id: z.string().uuid().optional(),
+    target_fellowship_id: z.string().uuid().optional(),
     target_role_id: z.number().int().positive().optional(),
     target_leadership_role: z.string().trim().optional(),
     scheduled_for: z.coerce.date().optional(),

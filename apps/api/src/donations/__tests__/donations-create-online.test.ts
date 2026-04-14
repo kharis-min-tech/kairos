@@ -173,7 +173,7 @@ describe('donations-create-online Lambda', () => {
 
   it('should reject donation with amount <= 0 (validation error)', async () => {
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       amount: 0,
       donation_date: '2025-06-01',
       donation_purpose: 'Offering',
@@ -188,7 +188,7 @@ describe('donations-create-online Lambda', () => {
 
   it('should reject donation with negative amount', async () => {
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       amount: -50,
       donation_date: '2025-06-01',
       donation_purpose: 'Tithe',
@@ -203,7 +203,7 @@ describe('donations-create-online Lambda', () => {
 
   it('should reject purpose "Other" without description', async () => {
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       amount: 25,
       donation_date: '2025-06-01',
       donation_purpose: 'Other',
@@ -218,8 +218,8 @@ describe('donations-create-online Lambda', () => {
 
   it('should create a valid donation with stripe_payment_id', async () => {
     const createdDonation = {
-      donationId: 42,
-      branchId: 10,
+      donationId: 'test-donation-42',
+      branchId: 'test-branch-10',
       amount: '50.00',
       currency: 'GBP',
       donationPurpose: 'Offering',
@@ -228,7 +228,7 @@ describe('donations-create-online Lambda', () => {
     };
 
     setupDb({
-      selectResult: [{ memberId: 1, homeBranchId: 10 }],
+      selectResult: [{ memberId: 'test-member-1', homeBranchId: 'test-branch-10' }],
       insertResult: [createdDonation],
     });
 
@@ -238,8 +238,8 @@ describe('donations-create-online Lambda', () => {
     });
 
     const event = createEvent({
-      branch_id: 10,
-      member_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000010',
+      member_id: '00000000-0000-4000-8000-000000000001',
       amount: 50,
       donation_date: '2025-06-01',
       donation_purpose: 'Offering',
@@ -264,8 +264,8 @@ describe('donations-create-online Lambda', () => {
 
   it('should always use GBP currency', async () => {
     const createdDonation = {
-      donationId: 43,
-      branchId: 10,
+      donationId: 'test-donation-43',
+      branchId: 'test-branch-10',
       amount: '100.00',
       currency: 'GBP',
       donationPurpose: 'Tithe',
@@ -274,7 +274,7 @@ describe('donations-create-online Lambda', () => {
     };
 
     setupDb({
-      selectResult: [{ memberId: 1, homeBranchId: 10 }],
+      selectResult: [{ memberId: 'test-member-1', homeBranchId: 'test-branch-10' }],
       insertResult: [createdDonation],
     });
 
@@ -285,8 +285,8 @@ describe('donations-create-online Lambda', () => {
 
     // Attempt to pass a different currency — schema enforces GBP literal
     const event = createEvent({
-      branch_id: 10,
-      member_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000010',
+      member_id: '00000000-0000-4000-8000-000000000001',
       amount: 100,
       currency: 'USD',
       donation_date: '2025-06-01',

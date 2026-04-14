@@ -77,7 +77,7 @@ export const handler = async (
       .returning();
 
     logger.info('Form created successfully', {
-      formId: created!.formId,
+      formId: created!.id,
       scope: created!.scope,
       createdBy: ctx.memberId,
     });

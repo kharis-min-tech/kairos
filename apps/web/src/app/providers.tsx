@@ -12,7 +12,7 @@ function ApiClientInitializer({ children }: { children: React.ReactNode }) {
     if (process.env.NEXT_PUBLIC_API_URL) {
       configureClient({
         baseUrl: process.env.NEXT_PUBLIC_API_URL ?? '',
-        getToken,
+        getToken: getToken as unknown as () => string | null,
       });
     }
   }, [getToken]);

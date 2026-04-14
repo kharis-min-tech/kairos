@@ -71,7 +71,7 @@ function KanbanColumn({
 }: {
   status: ColumnStatus;
   soulsList: Soul[];
-  onDrop: (soulId: number, fromStatus: string, toStatus: string) => void;
+  onDrop: (soulId: string, fromStatus: string, toStatus: string) => void;
   onCardClick: (soul: Soul) => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
@@ -84,7 +84,7 @@ function KanbanColumn({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const soulId = Number(e.dataTransfer.getData('soulId'));
+    const soulId = e.dataTransfer.getData('soulId');
     const fromStatus = e.dataTransfer.getData('currentStatus');
     if (fromStatus !== status) {
       onDrop(soulId, fromStatus, status);
@@ -131,8 +131,8 @@ export default function SoulsKanbanPage() {
 
   const fetchSouls = useCallback(async () => {
     try {
-      const res = await souls.list({ limit: 200 });
-      setAllSouls(res.data || []);
+      const res = await souls.list({ limit: '200' });
+      setAllSouls((res.data as Soul[]) || []);
     } catch {
       // silent
     } finally {
@@ -142,7 +142,7 @@ export default function SoulsKanbanPage() {
 
   useEffect(() => { fetchSouls(); }, [fetchSouls]);
 
-  const handleDrop = async (soulId: number, fromStatus: string, toStatus: string) => {
+  const handleDrop = async (soulId: string, fromStatus: string, toStatus: string) => {
     const allowed = VALID_TRANSITIONS[fromStatus] || [];
     if (!allowed.includes(toStatus)) return;
 
@@ -168,7 +168,7 @@ export default function SoulsKanbanPage() {
     }
   };
 
-  const handleConversionSuccess = async (memberId: number) => {
+  const handleConversionSuccess = async (memberId: string) => {
     if (!conversionSoul) return;
     try {
       await souls.updateStatus(conversionSoul.soulId, {

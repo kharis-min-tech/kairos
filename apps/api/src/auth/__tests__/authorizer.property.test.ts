@@ -47,10 +47,11 @@ function createEvent(
     type: 'REQUEST',
     routeArn:
       'arn:aws:execute-api:eu-west-2:123456789:abc123/staging/GET/v1/members',
-    identitySource: authHeader ?? '',
+    identitySource: authHeader ? [authHeader] : [],
     routeKey: 'GET /v1/members',
     rawPath: '/v1/members',
     rawQueryString: '',
+    cookies: [],
     headers: authHeader ? { authorization: authHeader } : {},
     requestContext: {
       accountId: '123456789',

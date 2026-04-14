@@ -39,9 +39,9 @@ const mockedEnforceBranchAccess = vi.mocked(enforceBranchAccess);
 // ---------------------------------------------------------------------------
 
 /** Generate a valid positive integer for IDs */
-const memberIdArb = fc.integer({ min: 1, max: 100_000 });
-const fellowshipIdArb = fc.integer({ min: 1, max: 10_000 });
-const branchIdArb = fc.integer({ min: 1, max: 500 });
+const memberIdArb = fc.uuid();
+const fellowshipIdArb = fc.uuid();
+const branchIdArb = fc.uuid();
 
 /** Generate a pair of distinct fellowship IDs */
 const distinctFellowshipPairArb = fc
@@ -80,8 +80,8 @@ describe('Property 18: Single Fellowship Membership', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 1,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-1',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -101,7 +101,7 @@ describe('Property 18: Single Fellowship Membership', () => {
         async (memberId, { fellowship1Id, fellowship2Id }, branchId) => {
           vi.clearAllMocks();
           mockedGetAuthContext.mockReturnValue({
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId,
             roles: ['Admin', 'Member'],
             email: 'admin@kairos.church',
@@ -117,7 +117,7 @@ describe('Property 18: Single Fellowship Membership', () => {
               return [{ fellowshipId: fellowship2Id, branchId, isActive: true }];
             }
             // Member already in fellowship1
-            return [{ fellowshipMemberId: 99, fellowshipId: fellowship1Id }];
+            return [{ fellowshipMemberId: 'test-fm-99', fellowshipId: fellowship1Id }];
           });
 
           const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit });
@@ -162,7 +162,7 @@ describe('Property 18: Single Fellowship Membership', () => {
         async (memberId, fellowshipId, branchId) => {
           vi.clearAllMocks();
           mockedGetAuthContext.mockReturnValue({
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId,
             roles: ['Admin', 'Member'],
             email: 'admin@kairos.church',
@@ -187,7 +187,7 @@ describe('Property 18: Single Fellowship Membership', () => {
 
           const mockReturning = vi.fn().mockResolvedValue([
             {
-              fellowshipMemberId: 1,
+              fellowshipMemberId: 'test-fm-1',
               fellowshipId,
               memberId,
               joinDate: '2025-01-01',

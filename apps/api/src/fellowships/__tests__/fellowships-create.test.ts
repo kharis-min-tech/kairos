@@ -62,8 +62,8 @@ describe('fellowships-create handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 1,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-1',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -72,9 +72,9 @@ describe('fellowships-create handler', () => {
 
   it('should create a fellowship and return 201', async () => {
     const createdFellowship = {
-      fellowshipId: 1,
+      fellowshipId: 'test-fellowship-1',
       fellowshipName: 'K-Group Alpha',
-      branchId: 1,
+      branchId: 'test-branch-1',
       description: null,
       leaderId: null,
       coLeaderId: null,
@@ -99,7 +99,7 @@ describe('fellowships-create handler', () => {
 
     const event = createEvent({
       fellowship_name: 'K-Group Alpha',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'K-Groups',
       meeting_schedule: 'Every Wednesday 7pm',
     });
@@ -113,10 +113,10 @@ describe('fellowships-create handler', () => {
 
   it('should auto-add leader to fellowship_members when leader_id is provided', async () => {
     const createdFellowship = {
-      fellowshipId: 5,
+      fellowshipId: 'test-fellowship-5',
       fellowshipName: 'New Breeds Youth',
-      branchId: 1,
-      leaderId: 10,
+      branchId: 'test-branch-1',
+      leaderId: 'test-member-10',
       coLeaderId: null,
     };
 
@@ -134,9 +134,9 @@ describe('fellowships-create handler', () => {
 
     const event = createEvent({
       fellowship_name: 'New Breeds Youth',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'New Breeds',
-      leader_id: 10,
+      leader_id: '00000000-0000-4000-8000-000000000010',
     });
 
     const result = await handler(event);
@@ -148,11 +148,11 @@ describe('fellowships-create handler', () => {
 
   it('should auto-add both leader and co-leader to fellowship_members', async () => {
     const createdFellowship = {
-      fellowshipId: 5,
+      fellowshipId: 'test-fellowship-5',
       fellowshipName: 'Kharis Express',
-      branchId: 1,
-      leaderId: 10,
-      coLeaderId: 20,
+      branchId: 'test-branch-1',
+      leaderId: 'test-member-10',
+      coLeaderId: 'test-member-20',
     };
 
     const mockLimit = vi.fn().mockReturnValue([]);
@@ -169,10 +169,10 @@ describe('fellowships-create handler', () => {
 
     const event = createEvent({
       fellowship_name: 'Kharis Express',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'Kharis Express',
-      leader_id: 10,
-      co_leader_id: 20,
+      leader_id: '00000000-0000-4000-8000-000000000010',
+      co_leader_id: '00000000-0000-4000-8000-000000000020',
     });
 
     const result = await handler(event);
@@ -185,10 +185,10 @@ describe('fellowships-create handler', () => {
   it('should return 400 when leader and co-leader are the same member', async () => {
     const event = createEvent({
       fellowship_name: 'Test Fellowship',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'K-Groups',
-      leader_id: 10,
-      co_leader_id: 10,
+      leader_id: '00000000-0000-4000-8000-000000000010',
+      co_leader_id: '00000000-0000-4000-8000-000000000010',
     });
 
     const result = await handler(event);
@@ -201,7 +201,7 @@ describe('fellowships-create handler', () => {
   });
 
   it('should return 409 when fellowship name already exists in the branch', async () => {
-    const mockLimit = vi.fn().mockReturnValue([{ fellowshipId: 99 }]);
+    const mockLimit = vi.fn().mockReturnValue([{ fellowshipId: 'test-fellowship-99' }]);
     const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit });
     const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
     const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
@@ -211,7 +211,7 @@ describe('fellowships-create handler', () => {
 
     const event = createEvent({
       fellowship_name: 'Existing Fellowship',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'K-Groups',
     });
 
@@ -225,7 +225,7 @@ describe('fellowships-create handler', () => {
   it('should return 422 for invalid fellowship type', async () => {
     const event = createEvent({
       fellowship_name: 'Test',
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'Invalid Type',
     });
 
@@ -236,7 +236,7 @@ describe('fellowships-create handler', () => {
 
   it('should return 422 when fellowship_name is missing', async () => {
     const event = createEvent({
-      branch_id: 1,
+      branch_id: '00000000-0000-4000-8000-000000000001',
       fellowship_type: 'K-Groups',
     });
 

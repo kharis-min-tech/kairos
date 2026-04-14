@@ -62,14 +62,13 @@ export function MemberEditModal({ open, onClose, member, onSaved }: MemberEditMo
     setSaving(true);
     setApiError('');
     try {
-      await members.update(member.memberId, {
+      await members.update(member.id, {
         firstName: form.firstName,
         lastName: form.lastName,
         middleName: form.middleName || undefined,
-        email: form.email || undefined,
         phone: form.phone || undefined,
         gender: (form.gender as 'Male' | 'Female') || undefined,
-        dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth) : undefined,
+        dateOfBirth: form.dateOfBirth || undefined,
         address: form.address || undefined,
         city: form.city || undefined,
         postalCode: form.postalCode || undefined,

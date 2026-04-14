@@ -79,8 +79,8 @@ describe('souls-log-followup handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 42,
-      branchId: 10,
+      memberId: 'test-member-42',
+      branchId: 'test-branch-10',
       roles: ['Member'],
       email: 'worker@kairos.church',
     });
@@ -89,9 +89,9 @@ describe('souls-log-followup handler', () => {
 
   it('should log follow-up and update soul updatedAt', async () => {
     const createdFollowUp = {
-      followUpId: 1,
-      soulId: 5,
-      memberId: 42,
+      followUpId: 'test-followup-1',
+      soulId: 'test-soul-5',
+      memberId: 'test-member-42',
       contactMethod: 'Phone Call',
       contactStatus: 'Successful',
     };
@@ -112,7 +112,7 @@ describe('souls-log-followup handler', () => {
             from: vi.fn().mockReturnValue({
               innerJoin: vi.fn().mockReturnValue({
                 where: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue([{ soulId: 5, outreachId: 1, branchId: 10 }]),
+                  limit: vi.fn().mockReturnValue([{ soulId: 'test-soul-5', outreachId: 'test-outreach-1', branchId: 'test-branch-10' }]),
                 }),
               }),
             }),
@@ -130,7 +130,7 @@ describe('souls-log-followup handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      soul_id: 5,
+      soul_id: '00000000-0000-4000-8000-000000000005',
       contact_date: '2026-02-10',
       contact_method: 'Phone Call',
       contact_status: 'Successful',
@@ -159,7 +159,7 @@ describe('souls-log-followup handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      soul_id: 999,
+      soul_id: '00000000-0000-4000-8000-000000000999',
       contact_date: '2026-02-10',
       contact_method: 'Phone Call',
       contact_status: 'Successful',
@@ -171,7 +171,7 @@ describe('souls-log-followup handler', () => {
 
   it('should return 422 for invalid contact method', async () => {
     const event = createEvent({
-      soul_id: 5,
+      soul_id: '00000000-0000-4000-8000-000000000005',
       contact_date: '2026-02-10',
       contact_method: 'Carrier Pigeon',
       contact_status: 'Successful',

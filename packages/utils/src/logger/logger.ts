@@ -15,9 +15,9 @@ const LOG_LEVEL_SEVERITY: Record<LogLevel, number> = {
 /** Context included in all log entries */
 export interface LogContext {
   /** The authenticated user's member ID */
-  userId?: number;
+  userId?: string;
   /** The branch ID for the current operation */
-  branchId?: number;
+  branchId?: string;
   /** The operation being performed (e.g., 'members-create') */
   operation?: string;
   /** Additional context fields */
@@ -30,8 +30,8 @@ interface LogEntry {
   message: string;
   timestamp: string;
   service: string;
-  userId?: number;
-  branchId?: number;
+  userId?: string;
+  branchId?: string;
   operation?: string;
   [key: string]: unknown;
 }

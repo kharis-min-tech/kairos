@@ -36,7 +36,7 @@ export const handler = async (
 
     // Check for duplicate program
     const [existing] = await db
-      .select({ outreachId: outreachPrograms.outreachId })
+      .select({ outreachId: outreachPrograms.id })
       .from(outreachPrograms)
       .where(
         and(
@@ -67,7 +67,7 @@ export const handler = async (
       })
       .returning();
 
-    logger.info('Outreach program created', { outreachId: created!.outreachId });
+    logger.info('Outreach program created', { outreachId: created!.id });
     return createdResponse(created!);
   } catch (error) {
     return handleError(error);

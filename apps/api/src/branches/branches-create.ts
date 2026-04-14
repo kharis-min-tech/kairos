@@ -56,7 +56,7 @@ export const handler = async (
       .returning();
 
     logger.info('Branch created', {
-      branchId: branch!.branchId,
+      branchId: branch!.id,
       branchName: branch!.branchName,
     });
 

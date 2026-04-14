@@ -24,8 +24,8 @@ describe('getAuthContext', () => {
     });
 
     const ctx = getAuthContext(event);
-    expect(ctx.memberId).toBe(42);
-    expect(ctx.branchId).toBe(5);
+    expect(ctx.memberId).toBe('42');
+    expect(ctx.branchId).toBe('5');
     expect(ctx.roles).toEqual(['Admin', 'Pastor']);
     expect(ctx.email).toBe('admin@kairos.church');
   });
@@ -38,8 +38,8 @@ describe('getAuthContext', () => {
     });
 
     const ctx = getAuthContext(event);
-    expect(ctx.memberId).toBe(42);
-    expect(ctx.branchId).toBe(5);
+    expect(ctx.memberId).toBe('42');
+    expect(ctx.branchId).toBe('5');
   });
 
   it('should handle comma-separated roles', () => {
@@ -72,8 +72,8 @@ describe('getAuthContext', () => {
     });
 
     const ctx = getAuthContext(event);
-    expect(ctx.memberId).toBe(10);
-    expect(ctx.branchId).toBe(3);
+    expect(ctx.memberId).toBe('10');
+    expect(ctx.branchId).toBe('3');
     expect(ctx.roles).toEqual(['Leader']);
   });
 

@@ -100,11 +100,11 @@ import { handler } from '../forms-create';
 
 function createEvent(
   body?: Record<string, unknown>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] },
+  auth?: { memberId?: string; branchId?: string; roles?: string[] },
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -186,7 +186,7 @@ const formNameArb = fc.string({ minLength: 1, maxLength: 100 })
   .filter((s) => s.trim().length > 0);
 
 /** Generate a valid branch ID */
-const branchIdArb = fc.integer({ min: 1, max: 100 });
+const branchIdArb = fc.uuid();
 
 /** Generate a valid form definition object */
 const formDefinitionArb = fc.record({
@@ -242,7 +242,7 @@ describe('Property-Based Tests: Form Scope and Access Control', () => {
                 scope: 'Branch-specific',
                 target_branch_id: branchId,
               },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] },
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] },
             );
             const result = await handler(event);
 
@@ -275,7 +275,7 @@ describe('Property-Based Tests: Form Scope and Access Control', () => {
                 scope: 'Branch-specific',
                 // target_branch_id intentionally omitted
               },
-              { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] },
+              { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] },
             );
             const result = await handler(event);
 
@@ -320,7 +320,7 @@ describe('Property-Based Tests: Form Scope and Access Control', () => {
                 form_definition: formDefinition,
                 scope: 'Church-wide',
               },
-              { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] },
+              { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] },
             );
             const result = await handler(event);
 

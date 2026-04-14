@@ -5,9 +5,10 @@ import { Save, Plus, Copy } from 'lucide-react';
 import { Breadcrumbs } from '@/components/layout';
 import { Button, Card, CardHeader, CardBody, TextInput, SelectInput, Checkbox, Textarea, Modal, Alert } from '@/components/ui';
 import { forms } from '@kairos/api-client';
-import type { FormFieldType } from '@kairos/types';
 
 // ─── Types ───────────────────────────────────────────────────────
+
+type FormFieldType = 'Text' | 'Number' | 'Email' | 'Phone' | 'Date' | 'Dropdown' | 'Checkbox' | 'Radio' | 'Textarea';
 
 export interface FormField {
   id: string;
@@ -23,11 +24,11 @@ interface FormDefinition {
   name: string;
   description: string;
   scope: 'Church-wide' | 'Branch-specific';
-  targetBranchId?: number;
+  targetBranchId?: string;
   fields: FormField[];
 }
 
-interface FormTemplate { id: number; name: string; description?: string; }
+interface FormTemplate { id: string; name: string; description?: string; }
 
 // ─── Field type palette ──────────────────────────────────────────
 
@@ -178,7 +179,8 @@ export default function FormBuilderPage() {
     setLoadingTemplates(true);
     try {
       const res = await forms.listTemplates();
-      setTemplates((res.data ?? []).map((t: { formId: number; formName: string; formDescription?: string }) => ({
+      type RawTemplate = { formId: string; formName: string; formDescription?: string };
+      setTemplates(((res.data ?? []) as unknown as RawTemplate[]).map((t) => ({
         id: t.formId,
         name: t.formName,
         description: t.formDescription,
@@ -191,12 +193,14 @@ export default function FormBuilderPage() {
     }
   };
 
-  const loadFromTemplate = async (templateId: number) => {
+  const loadFromTemplate = async (templateId: string) => {
     try {
       const res = await forms.get(templateId);
-      const definition = res.formDefinition as { fields?: FormField[] };
+      type RawForm = { formDefinition?: { fields?: FormField[] }; formName?: string; formDescription?: string };
+      const raw = res.data as unknown as RawForm;
+      const definition = raw?.formDefinition;
       if (definition?.fields) {
-        setForm((prev) => ({ ...prev, name: res.formName || prev.name, description: res.formDescription || prev.description, fields: definition.fields! }));
+        setForm((prev) => ({ ...prev, name: raw.formName || prev.name, description: raw.formDescription || prev.description, fields: definition.fields! }));
       }
       setShowTemplates(false);
       setSuccess('Template loaded!');
@@ -228,7 +232,7 @@ export default function FormBuilderPage() {
             <Textarea label="Description" name="formDesc" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Optional description" />
             <SelectInput label="Scope" name="scope" options={[{ value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} value={form.scope} onChange={(e) => setForm((p) => ({ ...p, scope: e.target.value as FormDefinition['scope'] }))} />
             {form.scope === 'Branch-specific' && (
-              <TextInput label="Target Branch ID" name="branchId" type="number" value={form.targetBranchId?.toString() || ''} onChange={(e) => setForm((p) => ({ ...p, targetBranchId: e.target.value ? Number(e.target.value) : undefined }))} />
+              <TextInput label="Target Branch ID" name="branchId" type="number" value={form.targetBranchId?.toString() || ''} onChange={(e) => setForm((p) => ({ ...p, targetBranchId: e.target.value || undefined }))} />
             )}
           </div>
         </CardBody>

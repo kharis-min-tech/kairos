@@ -6,8 +6,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Build a mock database that simulates Drizzle's select().from().where().limit() chain
 // We need separate mock data stores for each table query
 let memberRows: Array<{
-  memberId: number;
-  homeBranchId: number;
+  memberId: string;
+  homeBranchId: string;
   email: string | null;
   isActive: boolean | null;
 }> = [];
@@ -15,20 +15,14 @@ let memberRows: Array<{
 let leadershipRows: Array<{ role: string }> = [];
 
 let departmentRows: Array<{
-  leadMemberId: number;
-  deputyMemberId: number | null;
+  leadMemberId: string;
+  deputyMemberId: string | null;
 }> = [];
 
 let fellowshipRows: Array<{
-  leaderId: number | null;
-  coLeaderId: number | null;
+  leaderId: string | null;
+  coLeaderId: string | null;
 }> = [];
-
-// Track which table is being queried to return the right data
-const mockSelect = vi.fn();
-const mockFrom = vi.fn();
-const mockWhere = vi.fn();
-const mockLimit = vi.fn();
 
 // Create a chainable mock that returns different data based on the table queried
 function createChainableMock() {
@@ -119,7 +113,7 @@ describe('lookupMember', () => {
   // Test 1: Active member with no leadership returns ['Member']
   it('should return ["Member"] for an active member with no leadership roles', async () => {
     memberRows = [
-      { memberId: 10, homeBranchId: 1, email: 'member@kairos.church', isActive: true },
+      { memberId: 'test-member-10', homeBranchId: 'test-branch-1', email: 'member@kairos.church', isActive: true },
     ];
     leadershipRows = [];
     departmentRows = [];
@@ -128,8 +122,8 @@ describe('lookupMember', () => {
     const result = await lookupMember('member@kairos.church');
 
     expect(result).toEqual({
-      memberId: 10,
-      branchId: 1,
+      memberId: 'test-member-10',
+      branchId: 'test-branch-1',
       email: 'member@kairos.church',
       roles: ['Member'],
     });
@@ -138,7 +132,7 @@ describe('lookupMember', () => {
   // Test 2: Active member who is Main Pastor returns ['Pastor', 'Member']
   it('should return ["Pastor", "Member"] for a Main Pastor', async () => {
     memberRows = [
-      { memberId: 20, homeBranchId: 2, email: 'pastor@kairos.church', isActive: true },
+      { memberId: 'test-member-20', homeBranchId: 'test-branch-2', email: 'pastor@kairos.church', isActive: true },
     ];
     leadershipRows = [{ role: 'Main Pastor' }];
     departmentRows = [];
@@ -147,14 +141,14 @@ describe('lookupMember', () => {
     const result = await lookupMember('pastor@kairos.church');
 
     expect(result.roles).toEqual(['Pastor', 'Member']);
-    expect(result.memberId).toBe(20);
-    expect(result.branchId).toBe(2);
+    expect(result.memberId).toBe('test-member-20');
+    expect(result.branchId).toBe('test-branch-2');
   });
 
   // Test 3: Active member who is Elder returns ['Pastor', 'Member']
   it('should return ["Pastor", "Member"] for an Elder (treated as Pastor-level)', async () => {
     memberRows = [
-      { memberId: 30, homeBranchId: 3, email: 'elder@kairos.church', isActive: true },
+      { memberId: 'test-member-30', homeBranchId: 'test-branch-3', email: 'elder@kairos.church', isActive: true },
     ];
     leadershipRows = [{ role: 'Elder' }];
     departmentRows = [];
@@ -168,10 +162,10 @@ describe('lookupMember', () => {
   // Test 4: Active member who is department lead returns ['Leader', 'Member']
   it('should return ["Leader", "Member"] for a department lead', async () => {
     memberRows = [
-      { memberId: 40, homeBranchId: 4, email: 'deptlead@kairos.church', isActive: true },
+      { memberId: 'test-member-40', homeBranchId: 'test-branch-4', email: 'deptlead@kairos.church', isActive: true },
     ];
     leadershipRows = [];
-    departmentRows = [{ leadMemberId: 40, deputyMemberId: null }];
+    departmentRows = [{ leadMemberId: 'test-member-40', deputyMemberId: null }];
     fellowshipRows = [];
 
     const result = await lookupMember('deptlead@kairos.church');
@@ -182,11 +176,11 @@ describe('lookupMember', () => {
   // Test 5: Active member who is fellowship leader returns ['Leader', 'Member']
   it('should return ["Leader", "Member"] for a fellowship leader', async () => {
     memberRows = [
-      { memberId: 50, homeBranchId: 5, email: 'fellowlead@kairos.church', isActive: true },
+      { memberId: 'test-member-50', homeBranchId: 'test-branch-5', email: 'fellowlead@kairos.church', isActive: true },
     ];
     leadershipRows = [];
     departmentRows = [];
-    fellowshipRows = [{ leaderId: 50, coLeaderId: null }];
+    fellowshipRows = [{ leaderId: 'test-member-50', coLeaderId: null }];
 
     const result = await lookupMember('fellowlead@kairos.church');
 
@@ -196,7 +190,7 @@ describe('lookupMember', () => {
   // Test 6: Admin from Cognito returns ['Admin', 'Member']
   it('should return ["Admin", "Member"] when cognitoRole is Admin', async () => {
     memberRows = [
-      { memberId: 60, homeBranchId: 1, email: 'admin@kairos.church', isActive: true },
+      { memberId: 'test-member-60', homeBranchId: 'test-branch-1', email: 'admin@kairos.church', isActive: true },
     ];
     leadershipRows = [];
     departmentRows = [];
@@ -210,7 +204,7 @@ describe('lookupMember', () => {
   // Test 7: Inactive member throws error
   it('should throw an error for an inactive member', async () => {
     memberRows = [
-      { memberId: 70, homeBranchId: 1, email: 'inactive@kairos.church', isActive: false },
+      { memberId: 'test-member-70', homeBranchId: 'test-branch-1', email: 'inactive@kairos.church', isActive: false },
     ];
 
     await expect(
@@ -230,10 +224,10 @@ describe('lookupMember', () => {
   // Test: Department deputy also gets Leader role
   it('should return ["Leader", "Member"] for a department deputy', async () => {
     memberRows = [
-      { memberId: 80, homeBranchId: 1, email: 'deputy@kairos.church', isActive: true },
+      { memberId: 'test-member-80', homeBranchId: 'test-branch-1', email: 'deputy@kairos.church', isActive: true },
     ];
     leadershipRows = [];
-    departmentRows = [{ leadMemberId: 99, deputyMemberId: 80 }];
+    departmentRows = [{ leadMemberId: 'test-member-99', deputyMemberId: 'test-member-80' }];
     fellowshipRows = [];
 
     const result = await lookupMember('deputy@kairos.church');
@@ -244,11 +238,11 @@ describe('lookupMember', () => {
   // Test: Fellowship co-leader also gets Leader role
   it('should return ["Leader", "Member"] for a fellowship co-leader', async () => {
     memberRows = [
-      { memberId: 90, homeBranchId: 1, email: 'coleader@kairos.church', isActive: true },
+      { memberId: 'test-member-90', homeBranchId: 'test-branch-1', email: 'coleader@kairos.church', isActive: true },
     ];
     leadershipRows = [];
     departmentRows = [];
-    fellowshipRows = [{ leaderId: 99, coLeaderId: 90 }];
+    fellowshipRows = [{ leaderId: 'test-member-99', coLeaderId: 'test-member-90' }];
 
     const result = await lookupMember('coleader@kairos.church');
 
@@ -258,7 +252,7 @@ describe('lookupMember', () => {
   // Test: Roles are deduplicated (e.g., both Main Pastor and Elder)
   it('should deduplicate roles when member has multiple Pastor-level roles', async () => {
     memberRows = [
-      { memberId: 100, homeBranchId: 1, email: 'multi@kairos.church', isActive: true },
+      { memberId: 'test-member-100', homeBranchId: 'test-branch-1', email: 'multi@kairos.church', isActive: true },
     ];
     leadershipRows = [{ role: 'Main Pastor' }, { role: 'Elder' }];
     departmentRows = [];

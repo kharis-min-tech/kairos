@@ -42,8 +42,8 @@ export const handler = async (
     });
 
     // 2. Parse path parameter
-    const memberId = parseInt(event.pathParameters?.memberId || '', 10);
-    if (isNaN(memberId)) {
+    const memberId = event.pathParameters?.memberId || '';
+    if (!memberId) {
       throw new NotFoundError('Member', event.pathParameters?.memberId || 'unknown');
     }
 
@@ -56,13 +56,13 @@ export const handler = async (
     // 4. Verify member exists and get their branch
     const [member] = await db
       .select({
-        memberId: members.memberId,
+        memberId: members.id,
         firstName: members.firstName,
         lastName: members.lastName,
         homeBranchId: members.homeBranchId,
       })
       .from(members)
-      .where(and(eq(members.memberId, memberId), eq(members.isActive, true)))
+      .where(and(eq(members.id, memberId), eq(members.isActive, true)))
       .limit(1);
 
     if (!member) {

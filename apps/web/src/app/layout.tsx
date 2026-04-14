@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import { AuthProvider } from '@/lib/auth/auth-context'; // Added import
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -24,7 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
+        {/* AuthProvider must wrap everything that uses useAuth */}
+        <AuthProvider>
+          <Providers>{children}</Providers>
+        </AuthProvider>
+        
         <Toaster
           richColors
           position="top-right"

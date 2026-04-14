@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 
 interface BranchItem {
-  branchId: number;
+  id: string;
   branchName: string;
   branchType: string;
   isActive: boolean;
-  contactEmail?: string;
-  contactPhone?: string;
+  email?: string;
+  phone?: string;
 }
 
 export default function BranchesPage() {
@@ -21,8 +21,8 @@ export default function BranchesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    branches.list({ limit: 100 })
-      .then((res) => setData(res.data as BranchItem[]))
+    branches.list()
+      .then((res) => setData((res.data ?? []) as BranchItem[]))
       .catch(() => setError('Failed to load branches'))
       .finally(() => setLoading(false));
   }, []);
@@ -56,7 +56,7 @@ export default function BranchesPage() {
             <p className="text-sm text-gray-500 col-span-full text-center py-12">No branches found.</p>
           ) : (
             data.map((branch) => (
-              <Card key={branch.branchId}>
+              <Card key={branch.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -70,11 +70,11 @@ export default function BranchesPage() {
                 </CardHeader>
                 <CardBody>
                   <p className="text-xs text-gray-500">Type: {branch.branchType}</p>
-                  {branch.contactEmail && (
-                    <p className="text-xs text-gray-500 mt-1">{branch.contactEmail}</p>
+                  {branch.email && (
+                    <p className="text-xs text-gray-500 mt-1">{branch.email}</p>
                   )}
-                  {branch.contactPhone && (
-                    <p className="text-xs text-gray-500 mt-1">{branch.contactPhone}</p>
+                  {branch.phone && (
+                    <p className="text-xs text-gray-500 mt-1">{branch.phone}</p>
                   )}
                 </CardBody>
               </Card>

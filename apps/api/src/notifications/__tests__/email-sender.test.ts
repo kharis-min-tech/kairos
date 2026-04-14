@@ -54,7 +54,7 @@ const FROM_ADDRESS = 'noreply@kairos.church';
 
 /** Extract the params passed to the SendEmailCommand constructor */
 function getSentEmailParams(): Record<string, unknown> {
-  const call = mockSend.mock.calls[0][0];
+  const call = mockSend.mock.calls[0]![0];
   return call.params as Record<string, unknown>;
 }
 
@@ -321,7 +321,7 @@ describe('email-sender', () => {
 
       // Verify each call used the correct FROM address
       for (let i = 0; i < 5; i++) {
-        const call = mockSend.mock.calls[i][0];
+        const call = mockSend.mock.calls[i]![0];
         const params = call.params as Record<string, unknown>;
         expect(params.FromEmailAddress).toBe(FROM_ADDRESS);
       }

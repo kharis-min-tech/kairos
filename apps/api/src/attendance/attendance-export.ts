@@ -41,8 +41,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.info('Exporting attendance', { userId: ctx.memberId, branchId: ctx.branchId });
 
-    const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const params = (event.queryStringParameters || {}) as Record<string, string>;
+    const branchId = params.branchId || ctx.branchId;
     const serviceType = params.serviceType;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
@@ -73,7 +73,7 @@ export const handler = async (
         serviceDate: services.serviceDate,
         serviceType: services.serviceType,
         serviceTitle: services.serviceTitle,
-        memberId: members.memberId,
+        memberId: members.id,
         firstName: members.firstName,
         lastName: members.lastName,
         attendanceStatus: serviceAttendance.attendanceStatus,
@@ -81,8 +81,8 @@ export const handler = async (
         notes: serviceAttendance.notes,
       })
       .from(serviceAttendance)
-      .innerJoin(services, eq(serviceAttendance.serviceId, services.serviceId))
-      .innerJoin(members, eq(serviceAttendance.memberId, members.memberId))
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+      .innerJoin(members, eq(serviceAttendance.memberId, members.id))
       .where(and(...conditions))
       .orderBy(asc(services.serviceDate));
 

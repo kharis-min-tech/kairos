@@ -40,7 +40,7 @@ export const handler = async (
 
     // 2. Parse query parameters
     const params = event.queryStringParameters || {};
-    const branchIdFilter = params.branchId ? parseInt(params.branchId, 10) : undefined;
+    const branchIdFilter = params.branchId ?? undefined;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
     const topN = Math.min(50, Math.max(1, parseInt(params.topN || '10', 10) || 10));
@@ -83,7 +83,7 @@ export const handler = async (
       .orderBy(desc(sum(donations.amount)));
 
     // 6. Total donations by branch (admin only — shows all branches)
-    let byBranch: { branchId: number; totalAmount: string | null; donationCount: number }[] = [];
+    let byBranch: { branchId: string; totalAmount: string | null; donationCount: number }[] = [];
     if (isAdmin(ctx) && !effectiveBranchId) {
       byBranch = await db
         .select({
@@ -117,7 +117,7 @@ export const handler = async (
         donationCount: count(),
       })
       .from(donations)
-      .leftJoin(members, eq(donations.memberId, members.memberId))
+      .leftJoin(members, eq(donations.memberId, members.id))
       .where(baseWhere)
       .groupBy(
         donations.memberId,

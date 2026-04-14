@@ -207,9 +207,9 @@ describe('Forms Handle Pre-built Lambda', () => {
     setupPrebuiltDb({
       insertResults: [
         // First insert: departmentMembers record
-        [{ departmentMemberId: 1, branchDepartmentId: 5, memberId: 1, isActive: false }],
+        [{ id: 'test-dept-member-1', departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-5', memberId: 'test-member-1', isActive: false }],
         // Second insert: formSubmissions record
-        [{ submissionId: 100, formId: null, memberId: 1, submittedAt: '2025-01-15' }],
+        [{ submissionId: 100, formId: null, memberId: 'test-member-1', submittedAt: '2025-01-15' }],
       ],
     });
 
@@ -226,7 +226,7 @@ describe('Forms Handle Pre-built Lambda', () => {
     expect(body.formType).toBe('department-signup');
     expect(body.integration.type).toBe('department-signup');
     expect(body.integration.status).toBe('pending');
-    expect(body.integration.departmentMemberId).toBe(1);
+    expect(body.integration.departmentMemberId).toBe('test-dept-member-1');
   });
 
   // =========================================================================
@@ -236,12 +236,12 @@ describe('Forms Handle Pre-built Lambda', () => {
   it('should create a soul record assigned to submitter with status New for soul-capture', async () => {
     setupPrebuiltDb({
       // Select: outreach program lookup
-      selectResults: [[{ outreachId: 3 }]],
+      selectResults: [[{ outreachId: 'test-outreach-3' }]],
       insertResults: [
         // First insert: souls record
-        [{ soulId: 10, outreachId: 3, assignedMemberId: 1, status: 'New' }],
+        [{ id: 'test-soul-10', soulId: 'test-soul-10', outreachId: 'test-outreach-3', assignedMemberId: 1, status: 'New' }],
         // Second insert: formSubmissions record
-        [{ submissionId: 101, formId: null, memberId: 1, submittedAt: '2025-01-15' }],
+        [{ submissionId: 101, formId: null, memberId: 'test-member-1', submittedAt: '2025-01-15' }],
       ],
     });
 
@@ -260,9 +260,9 @@ describe('Forms Handle Pre-built Lambda', () => {
     const body = JSON.parse(result.body);
     expect(body.formType).toBe('soul-capture');
     expect(body.integration.type).toBe('soul-capture');
-    expect(body.integration.assignedTo).toBe(1);
+    expect(body.integration.assignedTo).toBe('1');
     expect(body.integration.status).toBe('New');
-    expect(body.integration.soulId).toBe(10);
+    expect(body.integration.soulId).toBe('test-soul-10');
   });
 
   // =========================================================================

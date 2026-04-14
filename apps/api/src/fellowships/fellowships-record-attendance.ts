@@ -19,10 +19,10 @@ import { eq } from 'drizzle-orm';
 const logger = createLogger('fellowships-record-attendance');
 
 const recordAttendanceSchema = z.object({
-  meeting_id: z.number().int().positive(),
+  meeting_id: z.string().uuid(),
   attendance: z.array(
     z.object({
-      member_id: z.number().int().positive(),
+      member_id: z.string().uuid(),
       attendance_status: z.enum(['Present', 'Absent', 'Excused', 'Late']),
       arrival_time: z.string().datetime().optional(),
       notes: z.string().trim().max(500).optional(),
@@ -45,11 +45,11 @@ export const handler = async (
     // Verify meeting exists and get fellowship
     const [meeting] = await db
       .select({
-        meetingId: fellowshipMeetings.meetingId,
+        meetingId: fellowshipMeetings.id,
         fellowshipId: fellowshipMeetings.fellowshipId,
       })
       .from(fellowshipMeetings)
-      .where(eq(fellowshipMeetings.meetingId, input.meeting_id))
+      .where(eq(fellowshipMeetings.id, input.meeting_id))
       .limit(1);
 
     if (!meeting) {
@@ -60,7 +60,7 @@ export const handler = async (
     const [fellowship] = await db
       .select({ branchId: fellowships.branchId })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, meeting.fellowshipId))
+      .where(eq(fellowships.id, meeting.fellowshipId))
       .limit(1);
 
     if (!fellowship) {

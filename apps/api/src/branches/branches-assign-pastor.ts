@@ -26,7 +26,7 @@ const logger = createLogger('branches-assign-pastor');
 
 /** Schema for assigning a pastor */
 const assignPastorSchema = z.object({
-  member_id: z.number().int().positive('member_id must be a positive integer'),
+  member_id: z.string().uuid(),
   start_date: z.coerce.date().optional(),
 });
 
@@ -43,11 +43,8 @@ export const handler = async (
     }
 
     // 3. Parse branch ID from path
-    const branchId = parseInt(
-      event.pathParameters?.branchId || event.pathParameters?.id || '0',
-      10
-    );
-    if (!branchId || isNaN(branchId)) {
+    const branchId = event.pathParameters?.branchId ?? event.pathParameters?.id ?? '';
+    if (!branchId) {
       throw new NotFoundError('Branch');
     }
 
@@ -65,9 +62,9 @@ export const handler = async (
 
     // 5. Verify branch exists and is active
     const [branch] = await db
-      .select({ branchId: branches.branchId, isActive: branches.isActive })
+      .select({ branchId: branches.id, isActive: branches.isActive })
       .from(branches)
-      .where(eq(branches.branchId, branchId))
+      .where(eq(branches.id, branchId))
       .limit(1);
 
     if (!branch) {
@@ -79,9 +76,9 @@ export const handler = async (
 
     // 6. Verify member exists and is active
     const [member] = await db
-      .select({ memberId: members.memberId, isActive: members.isActive })
+      .select({ memberId: members.id, isActive: members.isActive })
       .from(members)
-      .where(eq(members.memberId, input.member_id))
+      .where(eq(members.id, input.member_id))
       .limit(1);
 
     if (!member) {
@@ -130,7 +127,7 @@ export const handler = async (
     logger.info('Pastor assigned', {
       branchId,
       memberId: input.member_id,
-      leadershipId: result!.leadershipId,
+      leadershipId: result!.id,
     });
 
     return createdResponse(result);

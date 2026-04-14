@@ -96,9 +96,9 @@ const mockedGetDb = vi.mocked(getDb);
 // Smart Generators
 // ============================================================================
 
-const memberIdArb = fc.integer({ min: 1, max: 10_000 });
-const branchIdArb = fc.integer({ min: 1, max: 500 });
-const branchDeptIdArb = fc.integer({ min: 1, max: 10_000 });
+const memberIdArb = fc.uuid();
+const branchIdArb = fc.uuid();
+const branchDeptIdArb = fc.uuid();
 const deptCountArb = fc.integer({ min: 0, max: 10 });
 
 function createEvent(body: Record<string, unknown>): APIGatewayProxyEvent {
@@ -240,7 +240,7 @@ describe('Property-Based Tests: Department Assignment', () => {
             fc.pre(memberId !== leadId && memberId !== deputyId && leadId !== deputyId);
 
             mockedResolveAuthContext.mockResolvedValue({
-              memberId: 1,
+              memberId: 'test-member-1',
               branchId,
               roles: ['Admin', 'Member'],
               email: 'admin@kairos.church',
@@ -255,7 +255,7 @@ describe('Property-Based Tests: Department Assignment', () => {
                 [{ count: currentDeptCount }],
               ],
               insert: [
-                [{ departmentMemberId: 999, branchDepartmentId: branchDeptId, memberId, isActive: true }],
+                [{ departmentMemberId: 'test-dept-member-999', branchDepartmentId: branchDeptId, memberId, isActive: true }],
               ],
             });
 
@@ -305,7 +305,7 @@ describe('Property-Based Tests: Department Assignment', () => {
                 [{ count: currentDeptCount }],
               ],
               insert: [
-                [{ departmentMemberId: 999, branchDepartmentId: branchDeptId, memberId, isActive: true }],
+                [{ departmentMemberId: 'test-dept-member-999', branchDepartmentId: branchDeptId, memberId, isActive: true }],
               ],
             });
 
@@ -341,7 +341,7 @@ describe('Property-Based Tests: Department Assignment', () => {
         fc.property(
           memberIdArb,
           branchIdArb,
-          fc.integer({ min: 1, max: 10_000 }),
+          fc.uuid(),
           (memberId, branchId, departmentId) => {
             // When lead and deputy are the same member
             const result = branchDepartmentCreateSchema.safeParse({
@@ -367,7 +367,7 @@ describe('Property-Based Tests: Department Assignment', () => {
           memberIdArb,
           memberIdArb,
           branchIdArb,
-          fc.integer({ min: 1, max: 10_000 }),
+          fc.uuid(),
           (leadId, deputyId, branchId, departmentId) => {
             // Ensure they are different
             fc.pre(leadId !== deputyId);

@@ -103,7 +103,7 @@ export const handler = async (
         totalCount: sql<number>`count(${serviceAttendance.memberId})::int`.as('total_count'),
       })
       .from(services)
-      .innerJoin(serviceAttendance, eq(services.serviceId, serviceAttendance.serviceId))
+      .innerJoin(serviceAttendance, eq(services.id, serviceAttendance.serviceId))
       .where(gte(services.serviceDate, fourWeeksAgo))
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
@@ -119,7 +119,7 @@ export const handler = async (
         totalCount: sql<number>`count(${serviceAttendance.memberId})::int`.as('total_count'),
       })
       .from(services)
-      .innerJoin(serviceAttendance, eq(services.serviceId, serviceAttendance.serviceId))
+      .innerJoin(serviceAttendance, eq(services.id, serviceAttendance.serviceId))
       .where(gte(services.serviceDate, eightWeeksAgo))
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);

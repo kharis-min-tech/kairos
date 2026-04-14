@@ -76,8 +76,8 @@ function createEvent(body: Record<string, unknown>): APIGatewayProxyEvent {
 
 function setupMocks() {
   mockedGetAuthContext.mockReturnValue({
-    memberId: 1,
-    branchId: 10,
+    memberId: 'test-member-1',
+    branchId: 'test-branch-10',
     roles: ['Admin', 'Member'],
     email: 'admin@kairos.church',
   });
@@ -93,7 +93,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
   it('should always reject requests with duplicate member_ids in the same batch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 1000 }),
+        fc.uuid(),
         fc.array(fc.constantFrom('Present', 'Absent', 'Virtual'), { minLength: 2, maxLength: 5 }),
         async (memberId, statuses) => {
           vi.clearAllMocks();
@@ -107,7 +107,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
                 return {
                   from: vi.fn().mockReturnValue({
                     where: vi.fn().mockReturnValue({
-                      limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 10 }]),
+                      limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-10' }]),
                     }),
                   }),
                 };
@@ -122,7 +122,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
             attendance_status: s,
           }));
 
-          const event = createEvent({ service_id: 1, records });
+          const event = createEvent({ service_id: '00000000-0000-4000-8000-000000000001', records });
           const result = await handler(event);
           expect(result.statusCode).toBe(409);
         }
@@ -134,7 +134,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
   it('should always accept requests with unique member_ids when no DB duplicates exist', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.uniqueArray(fc.integer({ min: 1, max: 10000 }), { minLength: 1, maxLength: 5 }),
+        fc.uniqueArray(fc.uuid(), { minLength: 1, maxLength: 5 }),
         async (memberIds) => {
           vi.clearAllMocks();
           setupMocks();
@@ -147,7 +147,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
                 return {
                   from: vi.fn().mockReturnValue({
                     where: vi.fn().mockReturnValue({
-                      limit: vi.fn().mockReturnValue([{ serviceId: 1, branchId: 10 }]),
+                      limit: vi.fn().mockReturnValue([{ serviceId: 'test-service-1', branchId: 'test-branch-10' }]),
                     }),
                   }),
                 };
@@ -161,7 +161,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
             insert: vi.fn().mockReturnValue({
               values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue(
-                  memberIds.map(id => ({ serviceId: 1, memberId: id, attendanceStatus: 'Present' }))
+                  memberIds.map(id => ({ serviceId: 'test-service-1', memberId: id, attendanceStatus: 'Present' }))
                 ),
               }),
             }),
@@ -173,7 +173,7 @@ describe('Duplicate Attendance Prevention (Property)', () => {
             attendance_status: 'Present',
           }));
 
-          const event = createEvent({ service_id: 1, records });
+          const event = createEvent({ service_id: '00000000-0000-4000-8000-000000000001', records });
           const result = await handler(event);
           expect(result.statusCode).toBe(201);
         }

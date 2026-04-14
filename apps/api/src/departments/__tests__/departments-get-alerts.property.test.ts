@@ -88,9 +88,9 @@ const mockedGetDb = vi.mocked(getDb);
 // Smart Generators
 // ============================================================================
 
-const branchDeptIdArb = fc.integer({ min: 1, max: 10_000 });
-const branchIdArb = fc.integer({ min: 1, max: 500 });
-const memberIdArb = fc.integer({ min: 1, max: 10_000 });
+const branchDeptIdArb = fc.uuid();
+const branchIdArb = fc.uuid();
+const memberIdArb = fc.uuid();
 const thresholdDaysArb = fc.integer({ min: 1, max: 90 });
 const daysSinceFollowupArb = fc.integer({ min: 0, max: 365 });
 
@@ -228,7 +228,7 @@ describe('Property-Based Tests: Follow-up Alerts', () => {
               select: [
                 [{ branchDepartmentId: branchDeptId, branchId, leadMemberId: leadId, deputyMemberId: null, isActive: true }],
                 [{
-                  departmentMemberId: 1,
+                  departmentMemberId: 'test-dept-member-1',
                   memberId,
                   joinDate: '2025-01-01',
                   lastFollowupAt: lastFollowup,

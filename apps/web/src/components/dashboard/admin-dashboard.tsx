@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react';
 import { StatCard, Card, CardHeader, CardBody, Skeleton } from '@/components/ui';
 import { AttendanceChart } from './attendance-chart';
 import { dashboard } from '@kairos/api-client';
-import type { AdminDashboard as AdminDashboardData } from '@kairos/api-client';
+
+interface AdminDashboardData {
+  totalMembers?: number;
+  totalBranches?: number;
+  donationsLast30Days?: number;
+  soulsLast30Days?: number;
+  attendanceTrends?: { week: string; percentage: number }[];
+  recentActivity: { action: string; timestamp: string; actor: string }[];
+}
 
 const formatGBP = (amount: number) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount);
@@ -24,7 +32,7 @@ export function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dashboard.getAdmin().then(setData).catch(() => setError('Failed to load dashboard'));
+    dashboard.getAdmin().then((d) => setData(d as unknown as AdminDashboardData)).catch(() => setError('Failed to load dashboard'));
   }, []);
 
   if (error) {
@@ -59,7 +67,7 @@ export function AdminDashboard() {
             <h2 className="text-sm font-medium text-gray-700">Attendance Trends (8 weeks)</h2>
           </CardHeader>
           <CardBody>
-            <AttendanceChart data={data.attendanceTrends} />
+            <AttendanceChart data={data.attendanceTrends ?? []} />
           </CardBody>
         </Card>
 

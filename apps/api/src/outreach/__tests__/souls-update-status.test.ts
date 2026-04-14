@@ -47,7 +47,7 @@ import { getAuthContext, getDb, enforceBranchAccess } from '@kairos/utils';
 
 const mockedGetAuthContext = vi.mocked(getAuthContext);
 const mockedGetDb = vi.mocked(getDb);
-const mockedEnforceBranchAccess = vi.mocked(enforceBranchAccess);
+vi.mocked(enforceBranchAccess);
 
 function createEvent(soulId: string, body: Record<string, unknown>): APIGatewayProxyEvent {
   return {
@@ -77,7 +77,7 @@ function setupDbWithSoul(currentStatus: string) {
     set: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
         returning: vi.fn().mockResolvedValue([{
-          soulId: 1,
+          soulId: 'test-soul-1',
           status: 'updated',
         }]),
       }),
@@ -90,7 +90,7 @@ function setupDbWithSoul(currentStatus: string) {
         leftJoin: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue([{
-              soulId: 1,
+              soulId: 'test-soul-1',
               status: currentStatus,
               outreachBranchId: 10,
               assignedMemberId: 1,
@@ -109,8 +109,8 @@ describe('souls-update-status handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -140,14 +140,14 @@ describe('souls-update-status handler', () => {
 
   it('should accept valid transition: Interested → Converted with member_id', async () => {
     setupDbWithSoul('Interested');
-    const event = createEvent('1', { status: 'Converted', converted_to_member_id: 100 });
+    const event = createEvent('1', { status: 'Converted', converted_to_member_id: '00000000-0000-4000-8000-000000000100' });
     const result = await handler(event);
     expect(result.statusCode).toBe(200);
   });
 
   it('should reject invalid transition: New → Converted', async () => {
     setupDbWithSoul('New');
-    const event = createEvent('1', { status: 'Converted', converted_to_member_id: 100 });
+    const event = createEvent('1', { status: 'Converted', converted_to_member_id: '00000000-0000-4000-8000-000000000100' });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
     const body = JSON.parse(result.body);
