@@ -20,13 +20,13 @@ const STAGES: { value: NewBelieverStageValue; label: string }[] = [
 ];
 
 const STAGE_COLORS: Record<NewBelieverStageValue, string> = {
-  enrolled: 'bg-slate-100 text-slate-700 border-slate-200',
-  'session-1': 'bg-blue-100 text-blue-700 border-blue-200',
-  'session-2': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  'session-3': 'bg-purple-100 text-purple-700 border-purple-200',
-  'session-4': 'bg-violet-100 text-violet-700 border-violet-200',
-  completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  integrated: 'bg-amber-100 text-amber-700 border-amber-200',
+  enrolled: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  'session-1': 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
+  'session-2': 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800',
+  'session-3': 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800',
+  'session-4': 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:border-violet-800',
+  completed: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800',
+  integrated: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800',
 };
 
 function StageColumn({
@@ -49,7 +49,7 @@ function StageColumn({
     <div className="flex min-w-[220px] flex-col gap-2">
       <div className={`rounded-lg border px-3 py-2 text-sm font-semibold ${colorClass}`}>
         {stage.label}
-        <span className="ml-2 rounded-full bg-white/60 px-1.5 py-0.5 text-xs font-bold">
+        <span className="ml-2 rounded-full bg-black/10 px-1.5 py-0.5 text-xs font-bold dark:bg-white/20">
           {enrollments.length}
         </span>
       </div>
@@ -216,7 +216,7 @@ function NewBelieversContent() {
           className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
             filterStage === ''
               ? 'bg-purple-700 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
           }`}
         >
           All
@@ -228,7 +228,7 @@ function NewBelieversContent() {
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               filterStage === s.value
                 ? 'bg-purple-700 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
           >
             {s.label}
@@ -274,14 +274,14 @@ function NewBelieversContent() {
       {/* Enrol Member Dialog */}
       {showEnrollDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
             <h2 className="mb-4 text-lg font-semibold">Enrol Member in New Believers</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium">Search Member</label>
                 <input
-                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                   placeholder="Type name to search…"
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
@@ -291,7 +291,7 @@ function NewBelieversContent() {
               <div>
                 <label className="mb-1 block text-sm font-medium">Select Member</label>
                 <select
-                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   value={enrollForm.memberId}
                   onChange={(e) => setEnrollForm((f) => ({ ...f, memberId: e.target.value }))}
                 >
@@ -307,7 +307,7 @@ function NewBelieversContent() {
               <div>
                 <label className="mb-1 block text-sm font-medium">Assign Teacher (optional)</label>
                 <select
-                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   value={enrollForm.teacherId}
                   onChange={(e) => setEnrollForm((f) => ({ ...f, teacherId: e.target.value }))}
                 >
@@ -323,7 +323,7 @@ function NewBelieversContent() {
               <div>
                 <label className="mb-1 block text-sm font-medium">Notes (optional)</label>
                 <textarea
-                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   rows={2}
                   value={enrollForm.notes}
                   onChange={(e) => setEnrollForm((f) => ({ ...f, notes: e.target.value }))}
@@ -334,7 +334,7 @@ function NewBelieversContent() {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowEnrollDialog(false)}
-                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>

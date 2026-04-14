@@ -31,7 +31,7 @@ export const listEnrollmentsQuerySchema = z.object({
   teacherId: z.string().uuid().optional(),
   stale: z.coerce.boolean().optional(), // only enrollments with no update in N days
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
+  limit: z.coerce.number().int().positive().max(500).default(20),
 });
 
 export const createSessionSchema = z.object({
