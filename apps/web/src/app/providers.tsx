@@ -1,31 +1,21 @@
 'use client';
 
-import { useMemo } from 'react';
-import { AuthProvider, useAuth } from '@/lib/auth';
+import { AuthProvider } from '@/lib/auth';
 import { NotificationProvider } from '@/lib/ws';
 import { configureClient } from '@kairos/api-client';
+import { useAuthStore } from '@/lib/auth-store';
 
-function ApiClientInitializer({ children }: { children: React.ReactNode }) {
-  const { getToken } = useAuth();
-
-  useMemo(() => {
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      configureClient({
-        baseUrl: process.env.NEXT_PUBLIC_API_URL ?? '',
-        getToken: getToken as unknown as () => string | null,
-      });
-    }
-  }, [getToken]);
-
-  return <>{children}</>;
-}
+// Configure at module level so it survives HMR — getToken reads lazily from
+// the Zustand store at call time, so no React lifecycle is needed.
+configureClient({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001',
+  getToken: () => useAuthStore.getState().accessToken,
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <ApiClientInitializer>
-        <NotificationProvider>{children}</NotificationProvider>
-      </ApiClientInitializer>
+      <NotificationProvider>{children}</NotificationProvider>
     </AuthProvider>
   );
 }
