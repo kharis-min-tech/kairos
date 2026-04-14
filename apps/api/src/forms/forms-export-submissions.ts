@@ -64,7 +64,7 @@ export const handler = async (
 
     // 3. Parse query parameters
     const params = event.queryStringParameters || {};
-    const formId = params.formId ? parseInt(params.formId, 10) : undefined;
+    const formId = params.formId ?? undefined;
     const startDate = params.startDate;
     const endDate = params.endDate;
 
@@ -78,7 +78,7 @@ export const handler = async (
     const [form] = await db
       .select()
       .from(forms)
-      .where(eq(forms.formId, formId))
+      .where(eq(forms.id, formId))
       .limit(1);
 
     if (!form) {
@@ -114,7 +114,7 @@ export const handler = async (
     // 7. Fetch all matching submissions
     const data = await db
       .select({
-        submissionId: formSubmissions.submissionId,
+        submissionId: formSubmissions.id,
         memberId: formSubmissions.memberId,
         memberFirstName: members.firstName,
         memberLastName: members.lastName,
@@ -123,7 +123,7 @@ export const handler = async (
         submittedAt: formSubmissions.submittedAt,
       })
       .from(formSubmissions)
-      .leftJoin(members, eq(formSubmissions.memberId, members.memberId))
+      .leftJoin(members, eq(formSubmissions.memberId, members.id))
       .where(whereClause)
       .orderBy(desc(formSubmissions.submittedAt));
 

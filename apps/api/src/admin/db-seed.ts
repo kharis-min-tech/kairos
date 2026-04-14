@@ -241,7 +241,7 @@ export const handler: Handler = async (event) => {
     const londonDeptLeads = [2, 3, 4, 5, 6, 7];
     const londonDeptDeputies = [8, 9, null, null, null, null]; // Some have deputies
     for (let i = 0; i < deptIds.length; i++) {
-      const deputy = londonDeptDeputies[i] != null ? memberIds[londonDeptDeputies[i]!] : null;
+      const deputy = londonDeptDeputies[i] !== null ? memberIds[londonDeptDeputies[i]!] : null;
       const [row] = await sql`
         INSERT INTO branch_departments (branch_id, department_id, lead_member_id, deputy_member_id, is_active, start_date)
         VALUES (${branchIds[0]!}, ${deptIds[i]!}, ${memberIds[londonDeptLeads[i]!]!}, ${deputy}, true, ${daysAgo(150)})
@@ -658,7 +658,7 @@ export const handler: Handler = async (event) => {
     for (const f of formData) {
       const [row] = await sql`
         INSERT INTO forms (form_name, form_description, form_definition, scope, target_branch_id, is_active, created_by)
-        VALUES (${f.name}, ${f.desc}, ${JSON.stringify(f.definition)}, ${f.scope}, ${f.branchIdx != null ? branchIds[f.branchIdx]! : null}, true, ${memberIds[0]!})
+        VALUES (${f.name}, ${f.desc}, ${JSON.stringify(f.definition)}, ${f.scope}, ${f.branchIdx !== null ? branchIds[f.branchIdx]! : null}, true, ${memberIds[0]!})
         RETURNING form_id
       `;
       formIds.push(row!.form_id);
@@ -676,7 +676,7 @@ export const handler: Handler = async (event) => {
     for (const s of submissionData) {
       await sql`
         INSERT INTO form_submissions (form_id, member_id, submission_data)
-        VALUES (${formIds[s.formIdx]!}, ${s.memberIdx != null ? memberIds[s.memberIdx]! : null}, ${JSON.stringify(s.data)})
+        VALUES (${formIds[s.formIdx]!}, ${s.memberIdx !== null ? memberIds[s.memberIdx]! : null}, ${JSON.stringify(s.data)})
       `;
     }
     console.log('Forms and submissions seeded.');

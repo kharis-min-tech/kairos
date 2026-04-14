@@ -32,10 +32,10 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.info('Listing fellowship attendance', { userId: ctx.memberId, branchId: ctx.branchId });
 
-    const params = event.queryStringParameters || {};
-    const fellowshipId = params.fellowshipId ? parseInt(params.fellowshipId, 10) : undefined;
+    const params = (event.queryStringParameters || {}) as Record<string, string>;
+    const fellowshipId: string | undefined = params.fellowshipId;
 
-    if (!fellowshipId || isNaN(fellowshipId)) {
+    if (!fellowshipId) {
       throw new BadRequestError('fellowshipId query parameter is required');
     }
 
@@ -48,12 +48,12 @@ export const handler = async (
     // Verify fellowship exists and get branch
     const [fellowship] = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         branchId: fellowships.branchId,
         fellowshipName: fellowships.fellowshipName,
       })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, fellowshipId))
+      .where(eq(fellowships.id, fellowshipId))
       .limit(1);
 
     if (!fellowship) {
@@ -65,19 +65,19 @@ export const handler = async (
     // Get meetings list
     const meetings = await db
       .select({
-        meetingId: fellowshipMeetings.meetingId,
+        meetingId: fellowshipMeetings.id,
         meetingDate: fellowshipMeetings.meetingDate,
         meetingTitle: fellowshipMeetings.meetingTitle,
         meetingTopic: fellowshipMeetings.meetingTopic,
         location: fellowshipMeetings.location,
         presentCount: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_meeting_attendance fma
-          WHERE fma.meeting_id = ${fellowshipMeetings.meetingId}
+          WHERE fma.meeting_id = ${fellowshipMeetings.id}
           AND fma.attendance_status = 'Present'
         )`.as('present_count'),
         totalRecords: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_meeting_attendance fma
-          WHERE fma.meeting_id = ${fellowshipMeetings.meetingId}
+          WHERE fma.meeting_id = ${fellowshipMeetings.id}
         )`.as('total_records'),
       })
       .from(fellowshipMeetings)
@@ -102,14 +102,14 @@ export const handler = async (
         lastName: members.lastName,
         presentCount: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_meeting_attendance fma
-          INNER JOIN fellowship_meetings fm ON fm.meeting_id = fma.meeting_id
+          INNER JOIN fellowship_meetings fm ON fm.id = fma.meeting_id
           WHERE fma.member_id = ${fellowshipMembers.memberId}
           AND fm.fellowship_id = ${fellowshipId}
           AND fma.attendance_status = 'Present'
         )`.as('present_count'),
       })
       .from(fellowshipMembers)
-      .innerJoin(members, eq(fellowshipMembers.memberId, members.memberId))
+      .innerJoin(members, eq(fellowshipMembers.memberId, members.id))
       .where(
         and(
           eq(fellowshipMembers.fellowshipId, fellowshipId),

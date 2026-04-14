@@ -81,7 +81,7 @@ export const handler = async (
       );
     }
 
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId ?? ctx.branchId;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
 
@@ -166,7 +166,7 @@ export const handler = async (
 /** Export members as CSV */
 async function exportMembers(
   db: ReturnType<typeof getDb>,
-  branchId: number,
+  branchId: string,
   admin: boolean
 ): Promise<{ csv: string; count: number }> {
   const conditions = [eq(members.isActive, true)];
@@ -184,7 +184,7 @@ async function exportMembers(
     .orderBy(asc(members.lastName), asc(members.firstName));
 
   const csvRows = data.map((m) => ({
-    member_id: m.memberId,
+    member_id: m.id,
     first_name: m.firstName,
     last_name: m.lastName,
     middle_name: m.middleName || '',
@@ -212,7 +212,7 @@ async function exportMembers(
 /** Export donations as CSV with member names */
 async function exportDonations(
   db: ReturnType<typeof getDb>,
-  branchId: number,
+  branchId: string,
   admin: boolean,
   dateFrom?: string,
   dateTo?: string
@@ -235,7 +235,7 @@ async function exportDonations(
 
   const data = await db
     .select({
-      donationId: donations.donationId,
+      donationId: donations.id,
       memberId: donations.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
@@ -253,7 +253,7 @@ async function exportDonations(
       createdAt: donations.createdAt,
     })
     .from(donations)
-    .leftJoin(members, eq(donations.memberId, members.memberId))
+    .leftJoin(members, eq(donations.memberId, members.id))
     .where(and(...conditions))
     .orderBy(desc(donations.donationDate));
 
@@ -288,7 +288,7 @@ async function exportDonations(
 /** Export attendance records as CSV */
 async function exportAttendance(
   db: ReturnType<typeof getDb>,
-  branchId: number,
+  branchId: string,
   dateFrom?: string,
   dateTo?: string
 ): Promise<{ csv: string; count: number }> {
@@ -306,7 +306,7 @@ async function exportAttendance(
       serviceDate: services.serviceDate,
       serviceType: services.serviceType,
       serviceTitle: services.serviceTitle,
-      memberId: members.memberId,
+      memberId: members.id,
       firstName: members.firstName,
       lastName: members.lastName,
       attendanceStatus: serviceAttendance.attendanceStatus,
@@ -314,8 +314,8 @@ async function exportAttendance(
       notes: serviceAttendance.notes,
     })
     .from(serviceAttendance)
-    .innerJoin(services, eq(serviceAttendance.serviceId, services.serviceId))
-    .innerJoin(members, eq(serviceAttendance.memberId, members.memberId))
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .innerJoin(members, eq(serviceAttendance.memberId, members.id))
     .where(and(...conditions))
     .orderBy(asc(services.serviceDate));
 
@@ -340,7 +340,7 @@ async function exportAttendance(
 /** Export souls as CSV */
 async function exportSouls(
   db: ReturnType<typeof getDb>,
-  branchId: number,
+  branchId: string,
   dateFrom?: string,
   dateTo?: string
 ): Promise<{ csv: string; count: number }> {
@@ -355,7 +355,7 @@ async function exportSouls(
 
   const data = await db
     .select({
-      soulId: souls.soulId,
+      soulId: souls.id,
       firstName: souls.firstName,
       lastName: souls.lastName,
       phone: souls.phone,
@@ -371,7 +371,7 @@ async function exportSouls(
       createdAt: souls.createdAt,
     })
     .from(souls)
-    .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+    .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .where(and(...conditions))
     .orderBy(desc(souls.createdAt));
 

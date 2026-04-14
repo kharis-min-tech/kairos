@@ -13,9 +13,9 @@ import {
 /** Result of a member lookup with resolved roles */
 export interface MemberLookupResult {
   /** The member's database ID */
-  memberId: number;
+  memberId: string;
   /** The member's home branch ID */
-  branchId: number;
+  branchId: string;
   /** The member's email address */
   email: string;
   /** Effective roles determined from Cognito attributes and database records */
@@ -47,7 +47,7 @@ export async function lookupMember(
   // 1. Look up member by email
   const memberRecords = await db
     .select({
-      memberId: members.memberId,
+      memberId: members.id,
       homeBranchId: members.homeBranchId,
       email: members.email,
       isActive: members.isActive,
@@ -70,12 +70,12 @@ export async function lookupMember(
   // 3. Determine effective roles
   const roles = await determineRoles(
     db,
-    member.memberId,
+    member.memberId as string,
     cognitoRole
   );
 
   return {
-    memberId: member.memberId,
+    memberId: member.memberId as string,
     branchId: member.homeBranchId,
     email: member.email ?? email,
     roles,
@@ -93,7 +93,7 @@ export async function lookupMember(
  */
 async function determineRoles(
   db: ReturnType<typeof getDb>,
-  memberId: number,
+  memberId: string,
   cognitoRole?: string
 ): Promise<string[]> {
   const roles: string[] = [];
@@ -137,7 +137,7 @@ async function determineRoles(
 
   const isDepartmentLeader = departmentLeadRecords.some(
     (dept) =>
-      dept.leadMemberId === memberId || dept.deputyMemberId === memberId
+      (dept.leadMemberId as unknown as string) === memberId || (dept.deputyMemberId as unknown as string) === memberId
   );
 
   // Check fellowship leadership (Leader or Co-Leader)
@@ -150,7 +150,7 @@ async function determineRoles(
     .where(eq(fellowships.isActive, true));
 
   const isFellowshipLeader = fellowshipLeadRecords.some(
-    (f) => f.leaderId === memberId || f.coLeaderId === memberId
+    (f) => (f.leaderId as unknown as string) === memberId || (f.coLeaderId as unknown as string) === memberId
   );
 
   if (isDepartmentLeader || isFellowshipLeader) {

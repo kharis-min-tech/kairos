@@ -66,11 +66,11 @@ import { handler } from '../donations-create-manual';
 
 function createEvent(
   body?: Record<string, unknown>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] },
+  auth?: { memberId?: string; branchId?: string; roles?: string[] },
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -158,10 +158,10 @@ const purposeArb = fc.constantFrom('Offering', 'Tithe', 'Building Fund');
 const paymentMethodArb = fc.constantFrom('Cash', 'Check', 'Bank Transfer', 'Mobile Money');
 
 /** Generate a valid branch ID */
-const branchIdArb = fc.integer({ min: 1, max: 100 });
+const branchIdArb = fc.uuid();
 
 /** Generate a valid member ID */
-const memberIdArb = fc.integer({ min: 1, max: 1000 });
+const memberIdArb = fc.uuid();
 
 // ---------------------------------------------------------------------------
 // Property Tests
@@ -189,7 +189,7 @@ describe('Property-Based Tests: Anonymous Donation Handling', () => {
             vi.clearAllMocks();
 
             const createdDonation = {
-              donationId: 1,
+              donationId: 'test-donation-1',
               memberId: null,
               branchId,
               amount: String(amount),
@@ -212,7 +212,7 @@ describe('Property-Based Tests: Anonymous Donation Handling', () => {
                 payment_method: paymentMethod,
                 is_anonymous: true,
               },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] },
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] },
             );
             const result = await handler(event);
 
@@ -246,7 +246,7 @@ describe('Property-Based Tests: Anonymous Donation Handling', () => {
             vi.clearAllMocks();
 
             const createdDonation = {
-              donationId: 1,
+              donationId: 'test-donation-1',
               memberId,
               branchId,
               amount: String(amount),
@@ -274,7 +274,7 @@ describe('Property-Based Tests: Anonymous Donation Handling', () => {
                 is_anonymous: false,
                 member_id: memberId,
               },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] },
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] },
             );
             const result = await handler(event);
 

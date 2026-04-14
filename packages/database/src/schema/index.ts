@@ -51,3 +51,10 @@ export {
   servicesRelations,
   serviceAttendanceRelations,
 } from './attendance';
+export {
+  websocketConnections,
+} from './websocket';
+export {
+  notifications,
+  notificationRecipients,
+} from './notifications';

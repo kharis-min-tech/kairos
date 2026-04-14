@@ -9,9 +9,12 @@ import {
   index,
   check,
   primaryKey,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { branches, regions, members } from './core';
+import { branches } from './branches';
+import { regions } from './core';
+import { members } from './members';
 import { departments } from './departments';
 import { fellowships } from './fellowships';
 
@@ -47,18 +50,18 @@ export const notifications = pgTable(
 
     // Target audience
     targetScope: varchar('target_scope', { length: 30 }).notNull(),
-    targetBranchId: integer('target_branch_id').references(() => branches.branchId, {
+    targetBranchId: uuid('target_branch_id').references(() => branches.id, {
       onDelete: 'cascade',
     }),
     targetRegionId: integer('target_region_id').references(() => regions.regionId, {
       onDelete: 'cascade',
     }),
-    targetDepartmentId: integer('target_department_id').references(
-      () => departments.departmentId,
+    targetDepartmentId: uuid('target_department_id').references(
+      () => departments.id,
       { onDelete: 'cascade' }
     ),
-    targetFellowshipId: integer('target_fellowship_id').references(
-      () => fellowships.fellowshipId,
+    targetFellowshipId: uuid('target_fellowship_id').references(
+      () => fellowships.id,
       { onDelete: 'cascade' }
     ),
     targetRoleId: integer('target_role_id').references(() => roles.roleId, {
@@ -67,9 +70,9 @@ export const notifications = pgTable(
     targetLeadershipRole: varchar('target_leadership_role', { length: 50 }),
 
     // Sender info
-    sentBy: integer('sent_by')
+    sentBy: uuid('sent_by')
       .notNull()
-      .references(() => members.memberId, { onDelete: 'restrict' }),
+      .references(() => members.id, { onDelete: 'restrict' }),
     sentAt: timestamp('sent_at').notNull().defaultNow(),
 
     // Scheduling
@@ -124,9 +127,9 @@ export const notificationRecipients = pgTable(
     notificationId: integer('notification_id')
       .notNull()
       .references(() => notifications.notificationId, { onDelete: 'cascade' }),
-    memberId: integer('member_id')
+    memberId: uuid('member_id')
       .notNull()
-      .references(() => members.memberId, { onDelete: 'cascade' }),
+      .references(() => members.id, { onDelete: 'cascade' }),
     isRead: boolean('is_read').default(false),
     readAt: timestamp('read_at'),
     isDismissed: boolean('is_dismissed').default(false),

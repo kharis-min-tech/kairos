@@ -42,9 +42,9 @@ export const handler = async (
 
       // Verify service exists and belongs to the correct branch
       const [service] = await db
-        .select({ serviceId: services.serviceId, branchId: services.branchId })
+        .select({ serviceId: services.id, branchId: services.branchId })
         .from(services)
-        .where(eq(services.serviceId, input.service_id))
+        .where(eq(services.id, input.service_id))
         .limit(1);
 
       if (!service) {
@@ -54,7 +54,7 @@ export const handler = async (
       enforceBranchAccess(ctx, service.branchId);
 
       // Check for duplicate records
-      const existingMemberIds = new Set<number>();
+      const existingMemberIds = new Set<string>();
       for (const record of input.records) {
         if (existingMemberIds.has(record.member_id)) {
           throw new ConflictError(`Duplicate member_id ${record.member_id} in request`);
@@ -82,8 +82,8 @@ export const handler = async (
         .insert(serviceAttendance)
         .values(
           input.records.map(r => ({
-            serviceId: input.service_id,
-            memberId: r.member_id,
+            serviceId: input.service_id as string,
+            memberId: r.member_id as string,
             attendanceStatus: r.attendance_status,
             isFirstTimeVisitor: r.is_first_time_visitor,
             notes: r.notes,
@@ -108,7 +108,7 @@ export const handler = async (
 
     // Check for duplicate service
     const [existing] = await db
-      .select({ serviceId: services.serviceId })
+      .select({ serviceId: services.id })
       .from(services)
       .where(
         and(
@@ -140,7 +140,7 @@ export const handler = async (
     // If attendance records are included, insert them
     if (body.records && Array.isArray(body.records) && body.records.length > 0) {
       const attendanceInput = validateOrThrow(serviceAttendanceBulkSchema, {
-        service_id: created!.serviceId,
+        service_id: created!.id,
         records: body.records,
       });
 
@@ -148,7 +148,7 @@ export const handler = async (
         .insert(serviceAttendance)
         .values(
           attendanceInput.records.map(r => ({
-            serviceId: created!.serviceId,
+            serviceId: created!.id,
             memberId: r.member_id,
             attendanceStatus: r.attendance_status,
             isFirstTimeVisitor: r.is_first_time_visitor,
@@ -158,7 +158,7 @@ export const handler = async (
         );
     }
 
-    logger.info('Service created', { serviceId: created!.serviceId });
+    logger.info('Service created', { serviceId: created!.id });
     return createdResponse(created!);
   } catch (error) {
     return handleError(error);

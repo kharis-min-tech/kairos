@@ -33,7 +33,7 @@ export const handler = async (
     const thresholdDays = params.thresholdDays
       ? parseInt(params.thresholdDays, 10)
       : DEFAULT_THRESHOLD_DAYS;
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId ?? ctx.branchId;
 
     if (!isAdmin(ctx)) {
       enforceBranchAccess(ctx, branchId);
@@ -66,7 +66,7 @@ export const handler = async (
 
     const overdueRows = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         firstName: souls.firstName,
         lastName: souls.lastName,
         phone: souls.phone,
@@ -88,9 +88,9 @@ export const handler = async (
         `.as('days_since_activity'),
       })
       .from(souls)
-      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .leftJoin(assignedMember, eq(souls.assignedMemberId, assignedMember.memberId))
-      .leftJoin(latestFollowUp, eq(souls.soulId, latestFollowUp.soulId))
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .leftJoin(assignedMember, eq(souls.assignedMemberId, assignedMember.id))
+      .leftJoin(latestFollowUp, eq(souls.id, latestFollowUp.soulId))
       .where(
         and(
           // Active statuses only

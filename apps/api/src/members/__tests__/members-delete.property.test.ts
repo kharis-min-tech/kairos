@@ -60,14 +60,14 @@ import { handler } from '../members-delete';
 function createEvent(
   memberId: string,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -109,8 +109,8 @@ function createEvent(
 // Smart Generators
 // ---------------------------------------------------------------------------
 
-const memberIdArb = fc.integer({ min: 1, max: 100_000 });
-const branchIdArb = fc.integer({ min: 1, max: 500 });
+const memberIdArb = fc.uuid();
+const branchIdArb = fc.uuid();
 const nameArb = fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0);
 const emailArb = fc.emailAddress();
 
@@ -160,7 +160,7 @@ describe('Property-Based Tests: Members Delete (Soft Delete)', () => {
           mockReturning.mockResolvedValue([{ ...member, isActive: false }]);
 
           const event = createEvent(String(member.memberId), {
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId: member.homeBranchId,
             roles: ['Admin', 'Member'],
           });
@@ -201,7 +201,7 @@ describe('Property-Based Tests: Members Delete (Soft Delete)', () => {
           mockReturning.mockResolvedValue([deactivatedMember]);
 
           const event = createEvent(String(member.memberId), {
-            memberId: 1,
+            memberId: 'test-member-1',
             branchId: member.homeBranchId,
             roles: ['Admin', 'Member'],
           });

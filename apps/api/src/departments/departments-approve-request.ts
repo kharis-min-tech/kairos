@@ -23,7 +23,7 @@ const logger = createLogger('departments-approve-request');
 
 /** Validation schema for approving a department member request */
 const approveRequestSchema = z.object({
-  department_member_id: z.number().int().positive(),
+  department_member_id: z.string().uuid(),
 });
 
 /**
@@ -48,13 +48,13 @@ export const handler = async (
     // Fetch the department member record
     const [memberRecord] = await db
       .select({
-        departmentMemberId: departmentMembers.departmentMemberId,
+        departmentMemberId: departmentMembers.id,
         branchDepartmentId: departmentMembers.branchDepartmentId,
         memberId: departmentMembers.memberId,
         isActive: departmentMembers.isActive,
       })
       .from(departmentMembers)
-      .where(eq(departmentMembers.departmentMemberId, input.department_member_id))
+      .where(eq(departmentMembers.id, input.department_member_id))
       .limit(1);
 
     if (!memberRecord) {
@@ -68,13 +68,13 @@ export const handler = async (
     // Fetch the branch department to check leadership
     const [branchDept] = await db
       .select({
-        branchDepartmentId: branchDepartments.branchDepartmentId,
+        branchDepartmentId: branchDepartments.id,
         branchId: branchDepartments.branchId,
         leadMemberId: branchDepartments.leadMemberId,
         deputyMemberId: branchDepartments.deputyMemberId,
       })
       .from(branchDepartments)
-      .where(eq(branchDepartments.branchDepartmentId, memberRecord.branchDepartmentId))
+      .where(eq(branchDepartments.id, memberRecord.branchDepartmentId))
       .limit(1);
 
     if (!branchDept) {
@@ -99,12 +99,12 @@ export const handler = async (
     const [updated] = await db
       .update(departmentMembers)
       .set({ isActive: true })
-      .where(eq(departmentMembers.departmentMemberId, input.department_member_id))
+      .where(eq(departmentMembers.id, input.department_member_id))
       .returning();
 
     // Stub notification for MVP — log it
     logger.info('Department join request approved — notification stub', {
-      departmentMemberId: updated!.departmentMemberId,
+      departmentMemberId: updated!.id,
       memberId: updated!.memberId,
       branchDepartmentId: updated!.branchDepartmentId,
       approvedBy: ctx.memberId,

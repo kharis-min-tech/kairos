@@ -26,15 +26,15 @@ export default function OutreachProgramsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [registeringProgram, setRegisteringProgram] = useState<number | null>(null);
-  const [completingProgram, setCompletingProgram] = useState<number | null>(null);
+  const [registeringProgram, setRegisteringProgram] = useState<string | null>(null);
+  const [completingProgram, setCompletingProgram] = useState<string | null>(null);
   const [overrideForm, setOverrideForm] = useState({ memberId: '', newBranchId: '' });
   const [overrideErrors, setOverrideErrors] = useState<Record<string, string>>({});
 
   const fetchPrograms = useCallback(async () => {
     try {
-      const res = await outreach.listPrograms({ limit: 100 });
-      setPrograms(res.data || []);
+      const res = await outreach.listPrograms({ limit: '100' });
+      setPrograms((res.data as OutreachProgram[]) || []);
     } catch {
       // silent
     } finally {
@@ -69,7 +69,7 @@ export default function OutreachProgramsPage() {
         programDate: new Date(createForm.programDate),
         location: createForm.location,
         description: createForm.description || undefined,
-        branchId: user?.branchId ? Number(user.branchId) : undefined,
+        branchId: user?.branchId ?? undefined,
       });
       setShowCreate(false);
       setCreateForm({ programName: '', programDate: '', location: '', description: '' });
@@ -82,7 +82,7 @@ export default function OutreachProgramsPage() {
     }
   };
 
-  const handleRegisterWorker = async (programId: number) => {
+  const handleRegisterWorker = async (programId: string) => {
     setRegisteringProgram(programId);
     setError('');
     try {
@@ -96,7 +96,7 @@ export default function OutreachProgramsPage() {
     }
   };
 
-  const handleCompleteProgram = async (programId: number) => {
+  const handleCompleteProgram = async (programId: string) => {
     setCompletingProgram(programId);
     setError('');
     try {
@@ -120,8 +120,8 @@ export default function OutreachProgramsPage() {
     setSubmitting(true);
     try {
       await outreach.overrideBranch({
-        memberId: Number(overrideForm.memberId),
-        newBranchId: Number(overrideForm.newBranchId),
+        memberId: overrideForm.memberId,
+        newBranchId: overrideForm.newBranchId,
       });
       setShowOverride(false);
       setOverrideForm({ memberId: '', newBranchId: '' });

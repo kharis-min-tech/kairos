@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { db } from '../db';
 import { authMiddleware, getAuth } from '../middleware/auth';
-import { successResponse } from '@kairos/utils';
+import { successResponse } from '../lib/response';
 import {
   signupSchema,
   loginSchema,

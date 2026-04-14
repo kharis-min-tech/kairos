@@ -125,7 +125,7 @@ function createEvent(
  * Generates two distinct branch IDs to simulate cross-branch access.
  */
 const distinctBranchesArb = fc
-  .tuple(fc.integer({ min: 1, max: 500 }), fc.integer({ min: 1, max: 500 }))
+  .tuple(fc.uuid(), fc.uuid())
   .filter(([a, b]) => a !== b);
 
 // ============================================================================
@@ -146,8 +146,8 @@ describe('Branch Isolation — List Programs (GET /v1/outreach/programs)', () =>
   it('should only return programs for the user\'s branch (non-admin)', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, userBranchId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -162,7 +162,7 @@ describe('Branch Isolation — List Programs (GET /v1/outreach/programs)', () =>
           // Mock DB: returns programs filtered by branch
           const branchPrograms = [
             {
-              outreachId: 1,
+              outreachId: 'test-outreach-1',
               branchId: userBranchId,
               programName: 'Program A',
               coordinatorFirstName: null,
@@ -222,7 +222,7 @@ describe('Branch Isolation — List Programs (GET /v1/outreach/programs)', () =>
   it('should reject non-admin requesting a different branch via query param', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
         async (memberId, [userBranchId, otherBranchId]) => {
           vi.clearAllMocks();
@@ -263,9 +263,9 @@ describe('Branch Isolation — Get Program Detail (GET /v1/outreach/programs/{id
   it('should reject with 403 when non-admin accesses a program from a different branch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
         async (memberId, [userBranchId, programBranchId], outreachId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -326,9 +326,9 @@ describe('Branch Isolation — Complete Program (PUT /v1/outreach/programs/{id}/
   it('should reject with 403 when non-admin completes a program from a different branch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
         async (memberId, [userBranchId, programBranchId], outreachId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -389,9 +389,9 @@ describe('Branch Isolation — Register Worker (POST /v1/outreach/programs/{id}/
   it('should reject with 403 when member registers for a program in a different branch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
         async (memberId, [memberBranchId, programBranchId], outreachId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -471,9 +471,9 @@ describe('Branch Isolation — Soul Capture (POST /v1/souls)', () => {
   it('should reject with 403 when capturing a soul for a program in a different branch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
         async (memberId, [userBranchId, programBranchId], outreachId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -539,7 +539,7 @@ describe('Branch Isolation — Follow-Up Alerts (GET /v1/souls/alerts)', () => {
   it('should reject non-admin requesting alerts for a different branch', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
+        fc.uuid(),
         distinctBranchesArb,
         async (memberId, [userBranchId, otherBranchId]) => {
           vi.clearAllMocks();
@@ -569,8 +569,8 @@ describe('Branch Isolation — Follow-Up Alerts (GET /v1/souls/alerts)', () => {
   it('should return alerts filtered to user\'s branch when no branchId param', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, userBranchId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);

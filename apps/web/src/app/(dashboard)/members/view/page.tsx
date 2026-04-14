@@ -28,8 +28,8 @@ function MemberDetailContent() {
   const fetchMember = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await members.get(Number(id));
-      setMember(data);
+      const data = await members.get(id);
+      setMember(data.data ?? null);
     } catch {
       setError('Failed to load member details.');
     } finally {
@@ -45,7 +45,7 @@ function MemberDetailContent() {
     if (!member || !confirm('Are you sure you want to deactivate this member?')) return;
     setDeactivating(true);
     try {
-      await members.delete(member.memberId);
+      await members.delete(member.id);
       router.push('/members');
     } catch {
       setError('Failed to deactivate member.');

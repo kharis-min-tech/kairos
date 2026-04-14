@@ -175,7 +175,7 @@ describe('Dashboard Data Authorization (Property)', () => {
 
           expect(result.statusCode).toBe(200);
           const body = JSON.parse(result.body);
-          expect(body.branchId).toBe(branchId);
+          expect(body.branchId).toBe(String(branchId));
         }
       ),
       { numRuns: 50 }
@@ -222,7 +222,7 @@ describe('Dashboard Data Authorization (Property)', () => {
 
           expect(result.statusCode).toBe(200);
           const body = JSON.parse(result.body);
-          expect(body.branchId).toBe(targetBranchId);
+          expect(body.branchId).toBe(String(targetBranchId));
         }
       ),
       { numRuns: 50 }

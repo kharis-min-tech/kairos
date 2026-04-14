@@ -37,7 +37,7 @@ export const handler = async (
 
     const db = getDb();
 
-    let outreachId: number | null = null;
+    let outreachId: string | null = null;
     let duplicateWarning: string | undefined;
 
     if (input.outreach_id) {
@@ -46,11 +46,11 @@ export const handler = async (
 
       const [program] = await db
         .select({
-          outreachId: outreachPrograms.outreachId,
+          outreachId: outreachPrograms.id,
           branchId: outreachPrograms.branchId,
         })
         .from(outreachPrograms)
-        .where(eq(outreachPrograms.outreachId, outreachId))
+        .where(eq(outreachPrograms.id, outreachId))
         .limit(1);
 
       if (!program) {
@@ -62,7 +62,7 @@ export const handler = async (
       // Check for duplicate phone in same outreach (warn but allow)
       if (input.phone) {
         const [existingPhone] = await db
-          .select({ soulId: souls.soulId, firstName: souls.firstName, lastName: souls.lastName })
+          .select({ soulId: souls.id, firstName: souls.firstName, lastName: souls.lastName })
           .from(souls)
           .where(
             and(
@@ -104,7 +104,7 @@ export const handler = async (
       .returning();
 
     logger.info('Soul captured', {
-      soulId: created!.soulId,
+      soulId: created!.id,
       assignedTo: ctx.memberId,
       adHoc: !input.outreach_id,
     });

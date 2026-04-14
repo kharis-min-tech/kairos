@@ -10,7 +10,6 @@ import {
   successResponse,
   createLogger,
   getDb,
-  BadRequestError,
 } from '@kairos/utils';
 import { fellowships, members } from '@kairos/database';
 import { eq, and, sql, count } from 'drizzle-orm';
@@ -32,13 +31,7 @@ export const handler = async (
     const page = Math.max(1, parseInt(params.page || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10)));
     const offset = (page - 1) * limit;
-    const branchId = params.branchId
-      ? parseInt(params.branchId, 10)
-      : ctx.branchId;
-
-    if (isNaN(branchId)) {
-      throw new BadRequestError('Invalid branchId parameter');
-    }
+    const branchId = params.branchId ?? ctx.branchId;
 
     // 3. Enforce branch isolation
     enforceBranchAccess(ctx, branchId);
@@ -52,14 +45,13 @@ export const handler = async (
     // 5. Query fellowships with leader/co-leader names and member count
     const fellowshipRows = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         fellowshipName: fellowships.fellowshipName,
         branchId: fellowships.branchId,
         description: fellowships.description,
         leaderId: fellowships.leaderId,
         coLeaderId: fellowships.coLeaderId,
         meetingSchedule: fellowships.meetingSchedule,
-        location: fellowships.location,
         isActive: fellowships.isActive,
         createdAt: fellowships.createdAt,
         updatedAt: fellowships.updatedAt,
@@ -69,15 +61,15 @@ export const handler = async (
         coLeaderLastName: coLeaderMember.lastName,
         memberCount: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_members fm
-          WHERE fm.fellowship_id = ${fellowships.fellowshipId}
+          WHERE fm.fellowship_id = ${fellowships.id}
           AND fm.is_active = TRUE
         )`.as('member_count'),
       })
       .from(fellowships)
-      .leftJoin(leaderMember, eq(fellowships.leaderId, leaderMember.memberId))
+      .leftJoin(leaderMember, eq(fellowships.leaderId, leaderMember.id))
       .leftJoin(
         coLeaderMember,
-        eq(fellowships.coLeaderId, coLeaderMember.memberId)
+        eq(fellowships.coLeaderId, coLeaderMember.id)
       )
       .where(
         and(
@@ -111,7 +103,6 @@ export const handler = async (
       leaderId: row.leaderId,
       coLeaderId: row.coLeaderId,
       meetingSchedule: row.meetingSchedule,
-      location: row.location,
       isActive: row.isActive,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

@@ -105,7 +105,7 @@ export const handler = async (
     const [form] = await db
       .select()
       .from(forms)
-      .where(eq(forms.formId, input.form_id))
+      .where(eq(forms.id, input.form_id))
       .limit(1);
 
     if (!form) {
@@ -150,14 +150,14 @@ export const handler = async (
       .returning();
 
     logger.info('Form submitted successfully', {
-      submissionId: submission!.submissionId,
+      submissionId: submission!.id,
       formId: input.form_id,
       memberId: ctx.memberId,
     });
 
     // 7. Return submission confirmation
     return createdResponse({
-      submissionId: submission!.submissionId,
+      submissionId: submission!.id,
       formId: submission!.formId,
       submittedAt: submission!.submittedAt,
       message: 'Form submitted successfully',

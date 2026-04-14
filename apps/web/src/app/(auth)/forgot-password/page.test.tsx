@@ -128,7 +128,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/password must contain/i)).toBeInTheDocument();
+      expect(screen.getByText(/password must contain at least/i)).toBeInTheDocument();
     });
     expect(mockConfirmPassword).not.toHaveBeenCalled();
   });

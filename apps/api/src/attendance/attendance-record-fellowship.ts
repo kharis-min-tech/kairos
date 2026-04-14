@@ -48,11 +48,11 @@ export const handler = async (
       // Verify meeting exists
       const [meeting] = await db
         .select({
-          meetingId: fellowshipMeetings.meetingId,
+          meetingId: fellowshipMeetings.id,
           fellowshipId: fellowshipMeetings.fellowshipId,
         })
         .from(fellowshipMeetings)
-        .where(eq(fellowshipMeetings.meetingId, input.meeting_id))
+        .where(eq(fellowshipMeetings.id, input.meeting_id))
         .limit(1);
 
       if (!meeting) {
@@ -62,13 +62,13 @@ export const handler = async (
       // Verify fellowship and branch access
       const [fellowship] = await db
         .select({
-          fellowshipId: fellowships.fellowshipId,
+          fellowshipId: fellowships.id,
           branchId: fellowships.branchId,
           leaderId: fellowships.leaderId,
           coLeaderId: fellowships.coLeaderId,
         })
         .from(fellowships)
-        .where(eq(fellowships.fellowshipId, meeting.fellowshipId))
+        .where(eq(fellowships.id, meeting.fellowshipId))
         .limit(1);
 
       if (!fellowship) {
@@ -78,11 +78,11 @@ export const handler = async (
       enforceBranchAccess(ctx, fellowship.branchId);
 
       // Check leader/delegate permission (admin, pastor, or fellowship leader/co-leader)
+      const isLeader = fellowship.leaderId === ctx.memberId || fellowship.coLeaderId === ctx.memberId;
       if (
         !isAdmin(ctx) &&
         !ctx.roles.includes('Pastor') &&
-        ctx.memberId !== fellowship.leaderId &&
-        ctx.memberId !== fellowship.coLeaderId
+        !isLeader
       ) {
         throw new ForbiddenError('Only fellowship leader, co-leader, pastor, or admin can record attendance');
       }
@@ -130,13 +130,13 @@ export const handler = async (
     // Verify fellowship exists and get branch
     const [fellowship] = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         branchId: fellowships.branchId,
         leaderId: fellowships.leaderId,
         coLeaderId: fellowships.coLeaderId,
       })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, meetingInput.fellowship_id))
+      .where(eq(fellowships.id, meetingInput.fellowship_id))
       .limit(1);
 
     if (!fellowship) {
@@ -146,18 +146,18 @@ export const handler = async (
     enforceBranchAccess(ctx, fellowship.branchId);
 
     // Check leader/delegate permission
+    const isLeader2 = fellowship.leaderId === ctx.memberId || fellowship.coLeaderId === ctx.memberId;
     if (
       !isAdmin(ctx) &&
       !ctx.roles.includes('Pastor') &&
-      ctx.memberId !== fellowship.leaderId &&
-      ctx.memberId !== fellowship.coLeaderId
+      !isLeader2
     ) {
       throw new ForbiddenError('Only fellowship leader, co-leader, pastor, or admin can record attendance');
     }
 
     // Check for duplicate meeting
     const [existingMeeting] = await db
-      .select({ meetingId: fellowshipMeetings.meetingId })
+      .select({ meetingId: fellowshipMeetings.id })
       .from(fellowshipMeetings)
       .where(
         and(
@@ -188,7 +188,7 @@ export const handler = async (
     // If attendance records are included, insert them
     if (body.records && Array.isArray(body.records) && body.records.length > 0) {
       const attendanceInput = validateOrThrow(fellowshipAttendanceBulkSchema, {
-        meeting_id: created!.meetingId,
+        meeting_id: created!.id,
         records: body.records,
       });
 
@@ -196,7 +196,7 @@ export const handler = async (
         .insert(fellowshipMeetingAttendance)
         .values(
           attendanceInput.records.map(r => ({
-            meetingId: created!.meetingId,
+            meetingId: created!.id,
             memberId: r.member_id,
             attendanceStatus: r.attendance_status,
             notes: r.notes,
@@ -205,7 +205,7 @@ export const handler = async (
         );
     }
 
-    logger.info('Fellowship meeting created', { meetingId: created!.meetingId });
+    logger.info('Fellowship meeting created', { meetingId: created!.id });
     return createdResponse(created!);
   } catch (error) {
     return handleError(error);

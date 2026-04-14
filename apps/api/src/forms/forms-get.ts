@@ -39,9 +39,9 @@ export const handler = async (
   try {
     // 1. Extract auth context
     const ctx = await resolveAuthContext(event);
-    const formId = parseInt(event.pathParameters?.formId || '', 10);
+    const formId = event.pathParameters?.formId || '';
 
-    if (isNaN(formId)) {
+    if (!formId) {
       throw new NotFoundError('Form', event.pathParameters?.formId);
     }
 
@@ -53,7 +53,7 @@ export const handler = async (
     const [form] = await db
       .select()
       .from(forms)
-      .where(eq(forms.formId, formId))
+      .where(eq(forms.id, formId))
       .limit(1);
 
     if (!form) {
@@ -86,7 +86,7 @@ export const handler = async (
           postalCode: members.postalCode,
         })
         .from(members)
-        .where(eq(members.memberId, ctx.memberId))
+        .where(eq(members.id, ctx.memberId))
         .limit(1);
 
       if (member) {

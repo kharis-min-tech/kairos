@@ -68,8 +68,8 @@ describe('Follow-up Date Update (Property)', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1, max: 1000 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...contactMethods),
         fc.constantFrom(...contactStatuses),
         async (memberId, soulId, method, status) => {
@@ -78,7 +78,7 @@ describe('Follow-up Date Update (Property)', () => {
 
           mockedGetAuthContext.mockReturnValue({
             memberId,
-            branchId: 10,
+            branchId: 'test-branch-10',
             roles: ['Member'],
             email: `member${memberId}@kairos.church`,
           });
@@ -96,14 +96,14 @@ describe('Follow-up Date Update (Property)', () => {
               from: vi.fn().mockReturnValue({
                 innerJoin: vi.fn().mockReturnValue({
                   where: vi.fn().mockReturnValue({
-                    limit: vi.fn().mockReturnValue([{ soulId, outreachId: 1, branchId: 10 }]),
+                    limit: vi.fn().mockReturnValue([{ soulId, outreachId: 'test-outreach-1', branchId: 'test-branch-10' }]),
                   }),
                 }),
               }),
             }),
             insert: vi.fn().mockReturnValue({
               values: vi.fn().mockReturnValue({
-                returning: vi.fn().mockResolvedValue([{ followUpId: 1, soulId }]),
+                returning: vi.fn().mockResolvedValue([{ followUpId: 'test-followup-1', soulId }]),
               }),
             }),
             update: vi.fn().mockImplementation(() => {

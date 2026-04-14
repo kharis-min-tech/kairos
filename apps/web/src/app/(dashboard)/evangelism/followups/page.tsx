@@ -5,13 +5,12 @@ import { Clock, CheckCircle, Search, AlertTriangle, Phone, Mail, MessageSquare, 
 import { Breadcrumbs } from '@/components/layout';
 import { Button, TextInput, SelectInput, Textarea, Modal, Badge, Alert, Spinner, Card, CardHeader, CardBody, StatCard } from '@/components/ui';
 import { souls } from '@kairos/api-client';
-import type { ContactMethod, ContactStatus } from '@kairos/types';
 
 type Tab = 'all' | 'pending' | 'overdue';
 
 interface FollowUpItem {
-  followUpId: number;
-  soulId: number;
+  followUpId: string;
+  soulId: string;
   soulName: string;
   assignedWorker: string;
   dueDate: string | null;
@@ -79,7 +78,7 @@ export default function FollowUpTrackerPage() {
 
   // Log Follow-Up modal state
   const [showLogModal, setShowLogModal] = useState(false);
-  const [logSoulId, setLogSoulId] = useState<number | null>(null);
+  const [logSoulId, setLogSoulId] = useState<string | null>(null);
   const [logSoulName, setLogSoulName] = useState('');
   const [logForm, setLogForm] = useState({ contactMethod: '', contactStatus: '', notes: '', nextFollowUpDate: '', durationMinutes: '' });
   const [logErrors, setLogErrors] = useState<Record<string, string>>({});
@@ -87,12 +86,11 @@ export default function FollowUpTrackerPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await souls.getFollowUpTracker({
-        tab: activeTab,
-        search: search || undefined,
-        status: filterStatus || undefined,
-        contactMethod: filterMethod || undefined,
-      });
+      const params: Record<string, string> = { tab: activeTab };
+      if (search) params.search = search;
+      if (filterStatus) params.status = filterStatus;
+      if (filterMethod) params.contactMethod = filterMethod;
+      const res = await souls.getFollowUpTracker(params);
       const data = res as unknown as { pending: number; completed: number; items: FollowUpItem[] };
       setItems(data.items || []);
       setPendingCount(data.pending ?? 0);
@@ -126,7 +124,7 @@ export default function FollowUpTrackerPage() {
     return true;
   });
 
-  const openLogModal = (soulId: number, soulName: string) => {
+  const openLogModal = (soulId: string, soulName: string) => {
     setLogSoulId(soulId);
     setLogSoulName(soulName);
     setLogForm({ contactMethod: '', contactStatus: '', notes: '', nextFollowUpDate: '', durationMinutes: '' });
@@ -149,8 +147,8 @@ export default function FollowUpTrackerPage() {
     setSubmitting(true);
     try {
       await souls.addFollowup(logSoulId, {
-        contactMethod: logForm.contactMethod as ContactMethod,
-        contactStatus: logForm.contactStatus as ContactStatus,
+        contactMethod: logForm.contactMethod,
+        contactStatus: logForm.contactStatus,
         notes: logForm.notes || undefined,
         nextFollowUpDate: logForm.nextFollowUpDate ? new Date(logForm.nextFollowUpDate) : undefined,
         durationMinutes: logForm.durationMinutes ? Number(logForm.durationMinutes) : undefined,

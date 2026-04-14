@@ -42,9 +42,9 @@ type PrebuiltFormType = (typeof VALID_FORM_TYPES)[number];
 async function handleDepartmentSignup(
   db: ReturnType<typeof getDb>,
   submissionData: Record<string, unknown>,
-  memberId: number
+  memberId: string
 ): Promise<Record<string, unknown>> {
-  const branchDepartmentId = submissionData.branch_department_id as number;
+  const branchDepartmentId = submissionData.branch_department_id as string;
 
   if (!branchDepartmentId) {
     throw new BadRequestError('branch_department_id is required for department signup');
@@ -62,7 +62,7 @@ async function handleDepartmentSignup(
 
   return {
     type: 'department-signup',
-    departmentMemberId: departmentMember!.departmentMemberId,
+    departmentMemberId: departmentMember!.id,
     status: 'pending',
   };
 }
@@ -73,9 +73,9 @@ async function handleDepartmentSignup(
 async function handleSoulCapture(
   db: ReturnType<typeof getDb>,
   submissionData: Record<string, unknown>,
-  memberId: number
+  memberId: string
 ): Promise<Record<string, unknown>> {
-  const outreachId = submissionData.outreach_id as number;
+  const outreachId = submissionData.outreach_id as string;
 
   if (!outreachId) {
     throw new BadRequestError('outreach_id is required for soul capture');
@@ -83,9 +83,9 @@ async function handleSoulCapture(
 
   // Verify outreach program exists
   const [outreach] = await db
-    .select({ outreachId: outreachPrograms.outreachId })
+    .select({ outreachId: outreachPrograms.id })
     .from(outreachPrograms)
-    .where(eq(outreachPrograms.outreachId, outreachId))
+    .where(eq(outreachPrograms.id, outreachId))
     .limit(1);
 
   if (!outreach) {
@@ -118,11 +118,11 @@ async function handleSoulCapture(
       totalSoulsReached: sql`${outreachPrograms.totalSoulsReached} + 1`,
       updatedAt: sql`NOW()`,
     })
-    .where(eq(outreachPrograms.outreachId, outreachId));
+    .where(eq(outreachPrograms.id, outreachId));
 
   return {
     type: 'soul-capture',
-    soulId: soul!.soulId,
+    soulId: soul!.id,
     assignedTo: memberId,
     status: 'New',
   };
@@ -219,14 +219,14 @@ export const handler = async (
       .returning();
 
     logger.info('Pre-built form submitted', {
-      submissionId: submission!.submissionId,
+      submissionId: submission!.id,
       formType,
       memberId: ctx.memberId,
     });
 
     // 5. Return result
     return createdResponse({
-      submissionId: submission!.submissionId,
+      submissionId: submission!.id,
       formType,
       submittedAt: submission!.submittedAt,
       integration: integrationResult,

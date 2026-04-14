@@ -92,9 +92,9 @@ describe('Soul Auto-Assignment to Capturing Member (Property 2)', () => {
   it('should always assign soul to the capturing member for program-linked captures', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (capturingMemberId, branchId, outreachId) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});
@@ -141,7 +141,7 @@ describe('Soul Auto-Assignment to Capturing Member (Property 2)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     assignedMemberId: capturingMemberId,
                     status: 'New',
                   }]),
@@ -171,8 +171,8 @@ describe('Soul Auto-Assignment to Capturing Member (Property 2)', () => {
   it('should always assign soul to the capturing member for ad-hoc captures (no outreach_id)', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         async (capturingMemberId, branchId, firstName, lastName) => {
@@ -201,7 +201,7 @@ describe('Soul Auto-Assignment to Capturing Member (Property 2)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     firstName,
                     lastName,
                     assignedMemberId: capturingMemberId,
@@ -246,9 +246,9 @@ describe('Duplicate Phone Warning Without Rejection (Property 15)', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         phoneArb,
         fc.integer({ min: 1, max: 9999 }),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
@@ -367,9 +367,9 @@ describe('Soul Initial Status is New (Property 3)', () => {
   it('should always set status to "New" for program-linked captures', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         async (memberId, branchId, outreachId, firstName, lastName) => {
@@ -418,7 +418,7 @@ describe('Soul Initial Status is New (Property 3)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     firstName,
                     lastName,
                     assignedMemberId: memberId,
@@ -449,8 +449,8 @@ describe('Soul Initial Status is New (Property 3)', () => {
   it('should always set status to "New" for ad-hoc captures (no outreach_id)', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         async (memberId, branchId, firstName, lastName) => {
@@ -479,7 +479,7 @@ describe('Soul Initial Status is New (Property 3)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     firstName,
                     lastName,
                     assignedMemberId: memberId,
@@ -521,8 +521,8 @@ describe('Ad-Hoc Soul Branch Derivation (Property 12)', () => {
   it('should set outreachId to null for ad-hoc captures, deriving branch from capturing member', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         async (memberId, branchId, firstName, lastName) => {
@@ -551,7 +551,7 @@ describe('Ad-Hoc Soul Branch Derivation (Property 12)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     firstName,
                     lastName,
                     assignedMemberId: memberId,
@@ -591,9 +591,9 @@ describe('Ad-Hoc Soul Branch Derivation (Property 12)', () => {
   it('should NOT set outreachId to null for program-linked captures', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, branchId, outreachId) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});
@@ -639,7 +639,7 @@ describe('Ad-Hoc Soul Branch Derivation (Property 12)', () => {
                 insertedValues = vals;
                 return {
                   returning: vi.fn().mockResolvedValue([{
-                    soulId: 1,
+                    soulId: 'test-soul-1',
                     assignedMemberId: memberId,
                     outreachId,
                     status: 'New',

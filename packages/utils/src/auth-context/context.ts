@@ -13,9 +13,9 @@ export type UserRole = 'Admin' | 'Pastor' | 'Leader' | 'Member';
 /** Auth context extracted from the Custom Authorizer Lambda */
 export interface AuthContext {
   /** The authenticated member's ID */
-  memberId: number;
+  memberId: string;
   /** The member's home branch ID */
-  branchId: number;
+  branchId: string;
   /** The member's roles (can have multiple) */
   roles: UserRole[];
   /** The member's email address */
@@ -40,14 +40,14 @@ export function getAuthContext(event: APIGatewayProxyEvent): AuthContext {
   }
 
   // Try full-context mode first (authorizer provided member_id + branch_id)
-  const memberId = parseNumericField(authorizer, 'member_id') ??
-    parseNumericField(authorizer, 'memberId') ??
-    parseNumericField(authorizer, 'userId');
+  const memberId = getStringField(authorizer, 'member_id') ??
+    getStringField(authorizer, 'memberId') ??
+    getStringField(authorizer, 'userId');
 
-  const branchId = parseNumericField(authorizer, 'branch_id') ??
-    parseNumericField(authorizer, 'branchId');
+  const branchId = getStringField(authorizer, 'branch_id') ??
+    getStringField(authorizer, 'branchId');
 
-  if (memberId !== undefined && branchId !== undefined) {
+  if (memberId && branchId) {
     const roles = parseRoles(authorizer);
     if (roles.length === 0) roles.push('Member');
     return { memberId, branchId, roles, email: getStringField(authorizer, 'email') };
@@ -83,14 +83,14 @@ export async function resolveAuthContext(event: APIGatewayProxyEvent): Promise<A
   }
 
   // Already have full context? Return immediately.
-  const memberId = parseNumericField(authorizer, 'member_id') ??
-    parseNumericField(authorizer, 'memberId') ??
-    parseNumericField(authorizer, 'userId');
+  const memberId = getStringField(authorizer, 'member_id') ??
+    getStringField(authorizer, 'memberId') ??
+    getStringField(authorizer, 'userId');
 
-  const branchId = parseNumericField(authorizer, 'branch_id') ??
-    parseNumericField(authorizer, 'branchId');
+  const branchId = getStringField(authorizer, 'branch_id') ??
+    getStringField(authorizer, 'branchId');
 
-  if (memberId !== undefined && branchId !== undefined) {
+  if (memberId && branchId) {
     const roles = parseRoles(authorizer);
     if (roles.length === 0) roles.push('Member');
     const ctx: AuthContext = { memberId, branchId, roles, email: getStringField(authorizer, 'email') };
@@ -114,7 +114,7 @@ export async function resolveAuthContext(event: APIGatewayProxyEvent): Promise<A
   let result: any;
   try {
     result = await db.execute(
-      sql`SELECT member_id, home_branch_id, is_active FROM members WHERE email = ${email} LIMIT 1`
+      sql`SELECT id, home_branch_id, is_active FROM members WHERE email = ${email} LIMIT 1`
     );
   } catch (dbError: any) {
     const detail = dbError?.message ?? dbError?.cause?.message ?? JSON.stringify(dbError);
@@ -134,7 +134,7 @@ export async function resolveAuthContext(event: APIGatewayProxyEvent): Promise<A
   const roles = buildRoles(cognitoRole);
 
   const ctx: AuthContext = {
-    memberId: row.member_id,
+    memberId: row.id,
     branchId: row.home_branch_id,
     roles,
     email,
@@ -156,16 +156,6 @@ function buildRoles(cognitoRole: string | undefined): UserRole[] {
   if (cognitoRole === 'Leader' || cognitoRole === 'leader') roles.push('Leader');
   if (!roles.includes('Member')) roles.push('Member');
   return roles;
-}
-
-function parseNumericField(
-  authorizer: Record<string, unknown>,
-  field: string
-): number | undefined {
-  const value = authorizer[field];
-  if (value === undefined || value === null || value === '') return undefined;
-  const num = typeof value === 'number' ? value : parseInt(String(value), 10);
-  return isNaN(num) ? undefined : num;
 }
 
 function parseRoles(authorizer: Record<string, unknown>): UserRole[] {

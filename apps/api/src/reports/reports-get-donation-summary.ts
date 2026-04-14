@@ -38,15 +38,16 @@ export const handler = async (
     logger.info('Getting donation summary', { userId: ctx.memberId, branchId: ctx.branchId });
 
     // 2. Parse query parameters
-    const params = event.queryStringParameters || {};
-    const branchIdFilter = params.branchId ? parseInt(params.branchId, 10) : undefined;
+    const params = (event.queryStringParameters || {}) as Record<string, string | undefined>;
+    const branchIdFilter: string | undefined = params.branchId;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
 
     const db = getDb();
 
     // 3. Determine effective branch filter
-    const effectiveBranchId = isAdmin(ctx) ? branchIdFilter : ctx.branchId;
+    const branchIdFilterStr: string | undefined = typeof branchIdFilter === 'string' ? branchIdFilter : undefined;
+    const effectiveBranchId: string = isAdmin(ctx) ? (branchIdFilterStr || ctx.branchId) : ctx.branchId;
 
     // 4. Build base conditions (only completed donations)
     const baseConditions = [eq(donations.status, 'completed')];
@@ -81,7 +82,7 @@ export const handler = async (
       .orderBy(desc(sql`sum(${donations.amount})`));
 
     // 6. Group by branch (admin only — shows all branches when no filter)
-    let byBranch: { branchId: number; total: string; count: number }[] = [];
+    let byBranch: { branchId: string; total: string; count: number }[] = [];
     if (isAdmin(ctx) && !effectiveBranchId) {
       byBranch = await db
         .select({

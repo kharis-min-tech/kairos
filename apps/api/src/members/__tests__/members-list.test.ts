@@ -11,11 +11,6 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 // ---------------------------------------------------------------------------
 
 const mockSelect = vi.fn();
-const mockFrom = vi.fn();
-const mockWhere = vi.fn();
-const mockOrderBy = vi.fn();
-const mockLimit = vi.fn();
-const mockOffset = vi.fn();
 
 const mockDb = {
   select: mockSelect,
@@ -57,14 +52,14 @@ import { handler } from '../members-list';
 function createEvent(
   queryParams?: Record<string, string>,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -103,9 +98,9 @@ function createEvent(
 }
 
 const sampleMembers = [
-  { memberId: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com', homeBranchId: 1, isActive: true },
-  { memberId: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', homeBranchId: 1, isActive: true },
-  { memberId: 3, firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', homeBranchId: 2, isActive: true },
+  { memberId: 'test-member-1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', homeBranchId: 'test-branch-1', isActive: true },
+  { memberId: 'test-member-2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', homeBranchId: 'test-branch-1', isActive: true },
+  { memberId: 'test-member-3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', homeBranchId: 'test-branch-2', isActive: true },
 ];
 
 function setupDbChain(data: unknown[] = sampleMembers, total = 3) {
@@ -180,12 +175,12 @@ describe('Members List Lambda', () => {
   // Test: Pastor sees only their branch members (branch isolation)
   it('should enforce branch isolation for pastors', async () => {
     // Pastor in branch 1 should only see branch 1 members
-    const branch1Members = sampleMembers.filter((m) => m.homeBranchId === 1);
+    const branch1Members = sampleMembers.filter((m) => m.homeBranchId === 'test-branch-1');
     setupDbChain(branch1Members, branch1Members.length);
 
     const event = createEvent(
       {},
-      { memberId: 5, branchId: 1, roles: ['Pastor', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-1', roles: ['Pastor', 'Member'] }
     );
     const result = await handler(event);
 
@@ -193,7 +188,7 @@ describe('Members List Lambda', () => {
     const body = JSON.parse(result.body);
     // All returned members should be from branch 1
     for (const member of body.data) {
-      expect(member.homeBranchId).toBe(1);
+      expect(member.homeBranchId).toBe('test-branch-1');
     }
   });
 
@@ -203,7 +198,7 @@ describe('Members List Lambda', () => {
 
     const event = createEvent(
       {},
-      { memberId: 1, branchId: 1, roles: ['Admin', 'Member'] }
+      { memberId: 'test-member-1', branchId: 'test-branch-1', roles: ['Admin', 'Member'] }
     );
     const result = await handler(event);
 

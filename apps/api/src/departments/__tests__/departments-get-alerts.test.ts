@@ -126,9 +126,7 @@ function setupDb(queryResults: { select: unknown[][] }) {
   };
 
   // For the overdue members query (no .limit() call)
-  let overdueQueryCalled = false;
-  const originalWhere = chainableSelect.where;
-  chainableSelect.where.mockImplementation((...args: unknown[]) => {
+  chainableSelect.where.mockImplementation((..._args: unknown[]) => {
     // After the first select (branch dept lookup with limit), subsequent selects
     // that use innerJoin are the overdue members query
     return chainableSelect;
@@ -164,8 +162,8 @@ describe('departments-get-alerts Lambda', () => {
   // Test: Members past 7-day threshold appear in alerts
   it('should return members past the default 7-day threshold', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
@@ -177,12 +175,12 @@ describe('departments-get-alerts Lambda', () => {
     setupDb({
       select: [
         // branch department lookup
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6', isActive: true }],
         // overdue members
         [
           {
-            departmentMemberId: 1,
-            memberId: 42,
+            departmentMemberId: 'test-dept-member-1',
+            memberId: 'test-member-42',
             joinDate: '2025-01-01',
             lastFollowupAt: tenDaysAgo,
             firstName: 'John',
@@ -211,8 +209,8 @@ describe('departments-get-alerts Lambda', () => {
   // Test: Custom threshold respected when configured
   it('should respect custom threshold_days parameter', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
@@ -220,7 +218,7 @@ describe('departments-get-alerts Lambda', () => {
 
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6', isActive: true }],
         [], // no overdue members with 14-day threshold
       ],
     });
@@ -241,8 +239,8 @@ describe('departments-get-alerts Lambda', () => {
   // Test: Missing branch_department_id returns 400
   it('should return 400 when branch_department_id is missing', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
@@ -256,8 +254,8 @@ describe('departments-get-alerts Lambda', () => {
   // Test: Non-leader, non-admin cannot view alerts
   it('should reject alerts request from non-leader, non-admin', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 99,
-      branchId: 10,
+      memberId: 'test-member-99',
+      branchId: 'test-branch-10',
       roles: ['Member'],
       email: 'member@kairos.church',
     });
@@ -265,7 +263,7 @@ describe('departments-get-alerts Lambda', () => {
 
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 'test-member-5', deputyMemberId: 'test-member-6', isActive: true }],
       ],
     });
 
@@ -280,8 +278,8 @@ describe('departments-get-alerts Lambda', () => {
   // Test: Non-existent branch department returns 404
   it('should return 404 for non-existent branch department', async () => {
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });

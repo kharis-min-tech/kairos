@@ -40,11 +40,9 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     const db = getDb();
 
-    const branchId = event.queryStringParameters?.branch_id
-      ? parseInt(event.queryStringParameters.branch_id, 10)
-      : ctx.branchId;
+    const branchId = event.queryStringParameters?.branch_id ?? ctx.branchId;
 
-    if (isNaN(branchId) || branchId <= 0) {
+    if (!branchId) {
       throw new BadRequestError('Invalid branch_id parameter');
     }
 
@@ -54,7 +52,7 @@ export const handler = async (
     // Query branch departments with department info
     const branchDepts = await db
       .select({
-        branchDepartmentId: branchDepartments.branchDepartmentId,
+        branchDepartmentId: branchDepartments.id,
         branchId: branchDepartments.branchId,
         departmentId: branchDepartments.departmentId,
         departmentName: departments.departmentName,
@@ -66,7 +64,7 @@ export const handler = async (
         isActive: branchDepartments.isActive,
       })
       .from(branchDepartments)
-      .innerJoin(departments, eq(branchDepartments.departmentId, departments.departmentId))
+      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
       .where(
         and(
           eq(branchDepartments.branchId, branchId),
@@ -84,7 +82,7 @@ export const handler = async (
             lastName: members.lastName,
           })
           .from(members)
-          .where(eq(members.memberId, dept.leadMemberId))
+          .where(eq(members.id, dept.leadMemberId))
           .limit(1);
 
         // Get deputy member name if assigned
@@ -96,7 +94,7 @@ export const handler = async (
               lastName: members.lastName,
             })
             .from(members)
-            .where(eq(members.memberId, dept.deputyMemberId))
+            .where(eq(members.id, dept.deputyMemberId))
             .limit(1);
           deputy = dep ?? null;
         }

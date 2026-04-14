@@ -117,7 +117,7 @@ describe('OutreachProgramDetailPage', () => {
   it('calls getProgram with the correct ID from search params', async () => {
     render(<OutreachProgramDetailPage />);
     await waitForLoaded();
-    expect(mockGetProgram).toHaveBeenCalledWith(1);
+    expect(mockGetProgram).toHaveBeenCalledWith('1');
   });
 
   it('renders program name in heading and active status badge', async () => {

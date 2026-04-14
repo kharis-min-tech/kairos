@@ -98,13 +98,13 @@ import { handler } from '../forms-create';
 
 function createEvent(
   body?: Record<string, unknown>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] },
+  auth?: { memberId?: string; branchId?: string; roles?: string[] },
   pathParams?: Record<string, string>,
   queryParams?: Record<string, string>,
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -196,7 +196,7 @@ const validBranchSpecificForm = {
   form_description: 'Sign up for branch events',
   form_definition: validFormDefinition,
   scope: 'Branch-specific',
-  target_branch_id: 10,
+  target_branch_id: '00000000-0000-4000-8000-000000000010',
 };
 
 // ---------------------------------------------------------------------------
@@ -288,7 +288,7 @@ describe('Forms Create Lambda', () => {
 
     const event = createEvent(
       validChurchWideForm,
-      { memberId: 99, branchId: 10, roles: ['Member'] },
+      { memberId: 'test-member-99', branchId: 'test-branch-10', roles: ['Member'] },
     );
     const result = await handler(event);
 
@@ -310,7 +310,7 @@ describe('Forms Create Lambda', () => {
 
     const event = createEvent(
       validChurchWideForm,
-      { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] },
+      { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] },
     );
     const result = await handler(event);
 
@@ -330,7 +330,7 @@ describe('Forms Create Lambda', () => {
 
     const event = createEvent(
       validChurchWideForm,
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] },
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] },
     );
     const result = await handler(event);
 

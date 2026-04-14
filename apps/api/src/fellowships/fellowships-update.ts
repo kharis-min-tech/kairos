@@ -23,8 +23,8 @@ const logger = createLogger('fellowships-update');
 const updateSchema = z.object({
   fellowship_name: z.string().trim().min(1).max(150).optional(),
   description: z.string().trim().max(1000).optional().nullable(),
-  leader_id: z.number().int().positive().optional().nullable(),
-  co_leader_id: z.number().int().positive().optional().nullable(),
+  leader_id: z.string().uuid().optional().nullable(),
+  co_leader_id: z.string().uuid().optional().nullable(),
   meeting_schedule: z.string().trim().max(200).optional().nullable(),
   is_active: z.boolean().optional(),
 });
@@ -36,8 +36,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.setContext({ userId: ctx.memberId, branchId: ctx.branchId });
 
-    const fellowshipId = parseInt(event.pathParameters?.fellowshipId || '', 10);
-    if (isNaN(fellowshipId)) {
+    const fellowshipId = event.pathParameters?.fellowshipId || '';
+    if (!fellowshipId) {
       throw new BadRequestError('Invalid fellowship ID');
     }
 
@@ -59,7 +59,7 @@ export const handler = async (
     const [existing] = await db
       .select()
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, fellowshipId))
+      .where(eq(fellowships.id, fellowshipId))
       .limit(1);
 
     if (!existing) {
@@ -71,7 +71,7 @@ export const handler = async (
     // Check for duplicate name if changing name
     if (input.fellowship_name && input.fellowship_name !== existing.fellowshipName) {
       const [duplicate] = await db
-        .select({ fellowshipId: fellowships.fellowshipId })
+        .select({ fellowshipId: fellowships.id })
         .from(fellowships)
         .where(
           and(
@@ -100,7 +100,7 @@ export const handler = async (
         ...(input.is_active !== undefined && { isActive: input.is_active }),
         updatedAt: new Date(),
       })
-      .where(eq(fellowships.fellowshipId, fellowshipId))
+      .where(eq(fellowships.id, fellowshipId))
       .returning();
 
     // Auto-add new leader to fellowship_members if changed

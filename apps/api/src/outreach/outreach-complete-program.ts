@@ -27,9 +27,9 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const ctx = await resolveAuthContext(event);
-    const outreachId = parseInt(event.pathParameters?.outreachId || '', 10);
+    const outreachId = event.pathParameters?.outreachId || '';
 
-    if (isNaN(outreachId)) {
+    if (!outreachId) {
       throw new NotFoundError('Outreach program');
     }
 
@@ -40,12 +40,12 @@ export const handler = async (
     // Verify program exists
     const [program] = await db
       .select({
-        outreachId: outreachPrograms.outreachId,
+        outreachId: outreachPrograms.id,
         branchId: outreachPrograms.branchId,
         isCompleted: outreachPrograms.isCompleted,
       })
       .from(outreachPrograms)
-      .where(eq(outreachPrograms.outreachId, outreachId))
+      .where(eq(outreachPrograms.id, outreachId))
       .limit(1);
 
     if (!program) {
@@ -78,7 +78,7 @@ export const handler = async (
         totalSoulsReached,
         updatedAt: new Date(),
       })
-      .where(eq(outreachPrograms.outreachId, outreachId))
+      .where(eq(outreachPrograms.id, outreachId))
       .returning();
 
     logger.info('Outreach program completed', {

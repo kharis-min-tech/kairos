@@ -64,13 +64,13 @@ import { handler } from '../donations-create-manual';
 
 function createEvent(
   body?: Record<string, unknown>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] },
+  auth?: { memberId?: string; branchId?: string; roles?: string[] },
   pathParams?: Record<string, string>,
   queryParams?: Record<string, string>,
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -144,14 +144,14 @@ function setupDb(options: {
 }
 
 const validDonationInput = {
-  branch_id: 10,
+  branch_id: '00000000-0000-4000-8000-000000000010',
   amount: 50,
   currency: 'GBP',
   donation_date: '2025-01-15',
   donation_purpose: 'Offering',
   payment_method: 'Cash',
   is_anonymous: false,
-  member_id: 5,
+  member_id: '00000000-0000-4000-8000-000000000005',
 };
 
 // ---------------------------------------------------------------------------
@@ -168,9 +168,9 @@ describe('Donations Create Manual Lambda', () => {
   // =========================================================================
   it('should create anonymous donation with is_anonymous=TRUE and null member_id', async () => {
     const createdDonation = {
-      donationId: 1,
+      donationId: 'test-donation-1',
       memberId: null,
-      branchId: 10,
+      branchId: 'test-branch-10',
       amount: '100',
       currency: 'GBP',
       donationPurpose: 'Offering',
@@ -201,9 +201,9 @@ describe('Donations Create Manual Lambda', () => {
   // =========================================================================
   it('should store anonymous donation with null memberId for report display', async () => {
     const createdDonation = {
-      donationId: 2,
+      donationId: 'test-donation-2',
       memberId: null,
-      branchId: 10,
+      branchId: 'test-branch-10',
       amount: '200',
       currency: 'GBP',
       donationPurpose: 'Tithe',
@@ -215,7 +215,7 @@ describe('Donations Create Manual Lambda', () => {
     setupDb({ insertResult: [createdDonation] });
 
     const event = createEvent({
-      branch_id: 10,
+      branch_id: '00000000-0000-4000-8000-000000000010',
       amount: 200,
       currency: 'GBP',
       donation_date: '2025-01-15',
@@ -237,9 +237,9 @@ describe('Donations Create Manual Lambda', () => {
   // =========================================================================
   it('should link non-anonymous donation to the specified member', async () => {
     const createdDonation = {
-      donationId: 3,
-      memberId: 5,
-      branchId: 10,
+      donationId: 'test-donation-3',
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       amount: '75',
       currency: 'GBP',
       donationPurpose: 'Offering',
@@ -250,20 +250,20 @@ describe('Donations Create Manual Lambda', () => {
     };
     // Member lookup returns existing member
     setupDb({
-      selectResult: [{ memberId: 5 }],
+      selectResult: [{ memberId: 'test-member-5' }],
       insertResult: [createdDonation],
     });
 
     const event = createEvent({
       ...validDonationInput,
       is_anonymous: false,
-      member_id: 5,
+      member_id: '00000000-0000-4000-8000-000000000005',
     });
     const result = await handler(event);
 
     expect(result.statusCode).toBe(201);
     const body = JSON.parse(result.body);
-    expect(body.memberId).toBe(5);
+    expect(body.memberId).toBe('test-member-5');
     expect(body.isAnonymous).toBe(false);
   });
 
@@ -275,7 +275,7 @@ describe('Donations Create Manual Lambda', () => {
 
     const event = createEvent(
       validDonationInput,
-      { memberId: 99, branchId: 10, roles: ['Member'] },
+      { memberId: 'test-member-99', branchId: 'test-branch-10', roles: ['Member'] },
     );
     const result = await handler(event);
 
@@ -286,21 +286,21 @@ describe('Donations Create Manual Lambda', () => {
 
   it('should allow Admin to record a manual donation', async () => {
     const createdDonation = {
-      donationId: 4,
-      memberId: 5,
-      branchId: 10,
+      donationId: 'test-donation-4',
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       amount: '50',
       isAnonymous: false,
       status: 'completed',
     };
     setupDb({
-      selectResult: [{ memberId: 5 }],
+      selectResult: [{ memberId: 'test-member-5' }],
       insertResult: [createdDonation],
     });
 
     const event = createEvent(
       validDonationInput,
-      { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] },
+      { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] },
     );
     const result = await handler(event);
 
@@ -309,21 +309,21 @@ describe('Donations Create Manual Lambda', () => {
 
   it('should allow Pastor to record a manual donation', async () => {
     const createdDonation = {
-      donationId: 5,
-      memberId: 5,
-      branchId: 10,
+      donationId: 'test-donation-5',
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       amount: '50',
       isAnonymous: false,
       status: 'completed',
     };
     setupDb({
-      selectResult: [{ memberId: 5 }],
+      selectResult: [{ memberId: 'test-member-5' }],
       insertResult: [createdDonation],
     });
 
     const event = createEvent(
       validDonationInput,
-      { memberId: 2, branchId: 10, roles: ['Pastor', 'Member'] },
+      { memberId: 'test-member-2', branchId: '00000000-0000-4000-8000-000000000010', roles: ['Pastor', 'Member'] },
     );
     const result = await handler(event);
 

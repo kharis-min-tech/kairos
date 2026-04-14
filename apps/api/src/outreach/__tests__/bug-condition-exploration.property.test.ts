@@ -44,15 +44,15 @@ function extractInterfaceFields(source: string, interfaceName: string): string[]
   let fields: string[] = [];
 
   if (extendsMatch) {
-    const parentName = extendsMatch[1];
-    const body = extendsMatch[2];
+    const parentName = extendsMatch[1]!;
+    const body = extendsMatch[2]!;
     // Recursively get parent fields
     fields = extractInterfaceFields(source, parentName);
     // Extract own fields
     const fieldRegex = /^\s+(\w+)\??:/gm;
     let fieldMatch;
     while ((fieldMatch = fieldRegex.exec(body)) !== null) {
-      fields.push(fieldMatch[1]);
+      fields.push(fieldMatch[1]!);
     }
   } else {
     // Try without extends
@@ -62,11 +62,11 @@ function extractInterfaceFields(source: string, interfaceName: string): string[]
     );
     const simpleMatch = source.match(simpleRegex);
     if (!simpleMatch) return [];
-    const body = simpleMatch[1];
+    const body = simpleMatch[1]!;
     const fieldRegex = /^\s+(\w+)\??:/gm;
     let fieldMatch;
     while ((fieldMatch = fieldRegex.exec(body)) !== null) {
-      fields.push(fieldMatch[1]);
+      fields.push(fieldMatch[1]!);
     }
   }
 
@@ -116,8 +116,8 @@ describe('Condition A: Field Name Mismatch — OutreachProgram type vs Drizzle o
   it('URL construction with OutreachProgram ID should produce valid paths', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 100000 }),
-        fc.integer({ min: 1, max: 1000 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
         fc.boolean(),
         fc.integer({ min: 0, max: 5000 }),
@@ -147,9 +147,9 @@ describe('Condition A: Field Name Mismatch — OutreachProgram type vs Drizzle o
 
           // On UNFIXED code: idFieldName is 'outreach_id' but drizzleOutput
           // has 'outreachId' → idValue is undefined → URL contains 'undefined'
-          // On FIXED code: idFieldName is 'outreachId' → idValue is the number
+          // On FIXED code: idFieldName is 'outreachId' → idValue is a UUID string
           expect(idValue).not.toBeUndefined();
-          expect(typeof idValue).toBe('number');
+          expect(typeof idValue).toBe('string');
 
           const url = `/v1/outreach/programs/${idValue}/complete`;
           expect(url).not.toContain('undefined');
@@ -197,7 +197,7 @@ describe('Condition A: Field Name Mismatch — Soul type vs Drizzle output', () 
   it('URL construction with Soul ID should produce valid paths', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 100000 }),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
         fc.constantFrom('New', 'Following Up', 'Interested', 'Not Interested', 'Converted'),
@@ -219,7 +219,7 @@ describe('Condition A: Field Name Mismatch — Soul type vs Drizzle output', () 
 
           const idValue = drizzleOutput[idFieldName!];
           expect(idValue).not.toBeUndefined();
-          expect(typeof idValue).toBe('number');
+          expect(typeof idValue).toBe('string');
 
           const url = `/v1/souls/${idValue}/status`;
           expect(url).not.toContain('undefined');

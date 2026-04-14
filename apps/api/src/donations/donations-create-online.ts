@@ -73,10 +73,10 @@ export const handler = async (
     // 4. Verify member exists if provided (non-anonymous)
     if (input.member_id) {
       const [member] = await db
-        .select({ memberId: members.memberId, homeBranchId: members.homeBranchId })
+        .select({ memberId: members.id, homeBranchId: members.homeBranchId })
         .from(members)
         .where(
-          and(eq(members.memberId, input.member_id), eq(members.isActive, true))
+          and(eq(members.id, input.member_id), eq(members.isActive, true))
         )
         .limit(1);
 
@@ -120,7 +120,7 @@ export const handler = async (
       .returning();
 
     logger.info('Online donation created', {
-      donationId: created!.donationId,
+      donationId: created!.id,
       stripePaymentId: paymentIntent.id,
       amount: input.amount,
     });

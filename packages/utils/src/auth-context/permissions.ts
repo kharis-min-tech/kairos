@@ -57,7 +57,7 @@ export function hasRole(ctx: AuthContext, role: UserRole): boolean {
  */
 export function canAccessBranch(
   ctx: AuthContext,
-  targetBranchId: number
+  targetBranchId: string
 ): boolean {
   // Admins can access all branches
   if (isAdmin(ctx)) {
@@ -79,7 +79,7 @@ export function canAccessBranch(
  */
 export function enforceBranchAccess(
   ctx: AuthContext,
-  targetBranchId: number
+  targetBranchId: string
 ): void {
   if (!canAccessBranch(ctx, targetBranchId)) {
     throw new ForbiddenError(

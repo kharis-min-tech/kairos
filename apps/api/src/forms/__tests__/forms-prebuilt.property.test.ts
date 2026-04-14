@@ -100,11 +100,11 @@ import { handler } from '../forms-handle-prebuilt';
 
 function createEvent(
   body?: Record<string, unknown>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] },
+  auth?: { memberId?: string; branchId?: string; roles?: string[] },
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -195,13 +195,13 @@ function setupPrebuiltDb(options: {
 // ---------------------------------------------------------------------------
 
 /** Generate a valid member ID */
-const memberIdArb = fc.integer({ min: 1, max: 1000 });
+const memberIdArb = fc.uuid();
 
 /** Generate a valid outreach ID */
-const outreachIdArb = fc.integer({ min: 1, max: 500 });
+const outreachIdArb = fc.uuid();
 
 /** Generate a valid branch department ID */
-const branchDepartmentIdArb = fc.integer({ min: 1, max: 200 });
+const branchDepartmentIdArb = fc.uuid();
 
 /** Generate a valid soul first name */
 const firstNameArb = fc.string({ minLength: 1, maxLength: 50 })
@@ -246,7 +246,7 @@ describe('Property-Based Tests: Pre-built Form Submission Integrations', () => {
               insertResults: [
                 // First insert: souls record — assigned to submitter
                 [{
-                  soulId: 10,
+                  soulId: 'test-soul-10',
                   outreachId,
                   firstName,
                   lastName,
@@ -268,7 +268,7 @@ describe('Property-Based Tests: Pre-built Form Submission Integrations', () => {
                   phone,
                 },
               },
-              { memberId, branchId: 10, roles: ['Member'] },
+              { memberId, branchId: 'test-branch-10', roles: ['Member'] },
             );
             const result = await handler(event);
 
@@ -302,7 +302,7 @@ describe('Property-Based Tests: Pre-built Form Submission Integrations', () => {
               insertResults: [
                 // First insert: departmentMembers record with isActive=false
                 [{
-                  departmentMemberId: 1,
+                  departmentMemberId: 'test-dept-member-1',
                   branchDepartmentId,
                   memberId,
                   isActive: false,
@@ -319,7 +319,7 @@ describe('Property-Based Tests: Pre-built Form Submission Integrations', () => {
                   branch_department_id: branchDepartmentId,
                 },
               },
-              { memberId, branchId: 10, roles: ['Member'] },
+              { memberId, branchId: 'test-branch-10', roles: ['Member'] },
             );
             const result = await handler(event);
 

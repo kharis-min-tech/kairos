@@ -17,7 +17,7 @@ describe('memberCreateSchema', () => {
     last_name: 'Doe',
     email: 'john@example.com',
     phone: '+447700900000',
-    home_branch_id: 1,
+    home_branch_id: '10000000-0000-4000-8000-000000000001',
   };
 
   it('should accept valid member data', () => {
@@ -88,7 +88,7 @@ describe('memberUpdateSchema', () => {
 describe('branchCreateSchema', () => {
   const validBranch = {
     branch_name: 'London Main',
-    region_id: 1,
+    region_id: '20000000-0000-4000-8000-000000000001',
     branch_type: 'Main' as const,
   };
 
@@ -130,29 +130,29 @@ describe('departmentCreateSchema', () => {
 describe('branchDepartmentCreateSchema', () => {
   it('should accept valid branch department data', () => {
     const result = branchDepartmentCreateSchema.safeParse({
-      branch_id: 1,
-      department_id: 1,
-      lead_member_id: 10,
-      deputy_member_id: 20,
+      branch_id: '10000000-0000-4000-8000-000000000001',
+      department_id: '40000000-0000-4000-8000-000000000001',
+      lead_member_id: '30000000-0000-4000-8000-000000000001',
+      deputy_member_id: '30000000-0000-4000-8000-000000000002',
     });
     expect(result.success).toBe(true);
   });
 
   it('should reject same lead and deputy', () => {
     const result = branchDepartmentCreateSchema.safeParse({
-      branch_id: 1,
-      department_id: 1,
-      lead_member_id: 10,
-      deputy_member_id: 10,
+      branch_id: '10000000-0000-4000-8000-000000000001',
+      department_id: '40000000-0000-4000-8000-000000000001',
+      lead_member_id: '30000000-0000-4000-8000-000000000001',
+      deputy_member_id: '30000000-0000-4000-8000-000000000001',
     });
     expect(result.success).toBe(false);
   });
 
   it('should allow no deputy', () => {
     const result = branchDepartmentCreateSchema.safeParse({
-      branch_id: 1,
-      department_id: 1,
-      lead_member_id: 10,
+      branch_id: '10000000-0000-4000-8000-000000000001',
+      department_id: '40000000-0000-4000-8000-000000000001',
+      lead_member_id: '30000000-0000-4000-8000-000000000001',
     });
     expect(result.success).toBe(true);
   });
@@ -160,7 +160,7 @@ describe('branchDepartmentCreateSchema', () => {
 
 describe('donationCreateSchema', () => {
   const validDonation = {
-    branch_id: 1,
+    branch_id: '10000000-0000-4000-8000-000000000001',
     amount: 50.0,
     donation_date: new Date(),
     donation_purpose: 'Tithe' as const,
@@ -221,7 +221,7 @@ describe('formCreateSchema', () => {
     const result = formCreateSchema.safeParse({
       ...validForm,
       scope: 'Branch-specific',
-      target_branch_id: 1,
+      target_branch_id: '10000000-0000-4000-8000-000000000001',
     });
     expect(result.success).toBe(true);
   });
@@ -253,7 +253,7 @@ describe('notificationCreateSchema', () => {
     const result = notificationCreateSchema.safeParse({
       ...validNotification,
       target_scope: 'Branch',
-      target_branch_id: 1,
+      target_branch_id: '10000000-0000-4000-8000-000000000001',
     });
     expect(result.success).toBe(true);
   });
@@ -291,7 +291,7 @@ describe('soulCaptureSchema', () => {
 
   it('should allow optional outreach_id', () => {
     expect(
-      soulCaptureSchema.safeParse({ ...validSoul, outreach_id: 5 }).success
+      soulCaptureSchema.safeParse({ ...validSoul, outreach_id: '50000000-0000-4000-8000-000000000001' }).success
     ).toBe(true);
   });
 });

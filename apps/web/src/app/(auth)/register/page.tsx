@@ -93,7 +93,7 @@ export default function RegisterPage() {
         const res = await branches.list({ limit: 100, isActive: true });
         if (cancelled) return;
         const options = (res.data as Branch[]).map((b) => ({
-          value: String(b.branchId),
+          value: String(b.id),
           label: b.branchName,
         }));
         setBranchOptions(options);
@@ -133,10 +133,10 @@ export default function RegisterPage() {
         lastName: formData.lastName.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        dateOfBirth: new Date(formData.dateOfBirth),
+        dateOfBirth: formData.dateOfBirth || undefined,
         gender: formData.gender as 'Male' | 'Female',
         address: formData.address.trim(),
-        homeBranchId: Number(formData.homeBranchId),
+        homeBranchId: formData.homeBranchId,
       });
       setSubmitted(true);
     } catch (err: unknown) {

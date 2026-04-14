@@ -101,8 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { user } = await cognitoSignIn(email, password);
         setState({ user, isAuthenticated: true, isLoading: false });
         startRefreshTimer();
-      } catch (error: any) {
-        if (error?.code === 'NEW_PASSWORD_REQUIRED') {
+      } catch (error: unknown) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'NEW_PASSWORD_REQUIRED'
+        ) {
           // Re-throw with cognitoUser attached so the login page can handle it
           throw error;
         }

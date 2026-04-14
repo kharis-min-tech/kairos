@@ -27,11 +27,8 @@ export const handler = async (
     logger.setContext({ userId: ctx.memberId, branchId: ctx.branchId });
 
     // 2. Extract fellowship ID from path parameters
-    const fellowshipId = parseInt(
-      event.pathParameters?.fellowshipId || '',
-      10
-    );
-    if (isNaN(fellowshipId)) {
+    const fellowshipId = event.pathParameters?.fellowshipId ?? '';
+    if (!fellowshipId) {
       throw new BadRequestError('Invalid fellowship ID');
     }
 
@@ -46,14 +43,13 @@ export const handler = async (
     // 4. Fetch fellowship with leader and co-leader details
     const [fellowship] = await db
       .select({
-        fellowshipId: fellowships.fellowshipId,
+        fellowshipId: fellowships.id,
         fellowshipName: fellowships.fellowshipName,
         branchId: fellowships.branchId,
         description: fellowships.description,
         leaderId: fellowships.leaderId,
         coLeaderId: fellowships.coLeaderId,
         meetingSchedule: fellowships.meetingSchedule,
-        location: fellowships.location,
         isActive: fellowships.isActive,
         createdAt: fellowships.createdAt,
         updatedAt: fellowships.updatedAt,
@@ -65,12 +61,12 @@ export const handler = async (
         coLeaderEmail: coLeaderMember.email,
       })
       .from(fellowships)
-      .leftJoin(leaderMember, eq(fellowships.leaderId, leaderMember.memberId))
+      .leftJoin(leaderMember, eq(fellowships.leaderId, leaderMember.id))
       .leftJoin(
         coLeaderMember,
-        eq(fellowships.coLeaderId, coLeaderMember.memberId)
+        eq(fellowships.coLeaderId, coLeaderMember.id)
       )
-      .where(eq(fellowships.fellowshipId, fellowshipId))
+      .where(eq(fellowships.id, fellowshipId))
       .limit(1);
 
     if (!fellowship) {
@@ -83,7 +79,7 @@ export const handler = async (
     // 6. Fetch all current (active) members of this fellowship
     const memberRows = await db
       .select({
-        fellowshipMemberId: fellowshipMembers.fellowshipMemberId,
+        fellowshipMemberId: fellowshipMembers.id,
         memberId: fellowshipMembers.memberId,
         joinDate: fellowshipMembers.joinDate,
         notes: fellowshipMembers.notes,
@@ -93,7 +89,7 @@ export const handler = async (
         phone: members.phone,
       })
       .from(fellowshipMembers)
-      .innerJoin(members, eq(fellowshipMembers.memberId, members.memberId))
+      .innerJoin(members, eq(fellowshipMembers.memberId, members.id))
       .where(
         and(
           eq(fellowshipMembers.fellowshipId, fellowshipId),
@@ -110,7 +106,6 @@ export const handler = async (
       leaderId: fellowship.leaderId,
       coLeaderId: fellowship.coLeaderId,
       meetingSchedule: fellowship.meetingSchedule,
-      location: fellowship.location,
       isActive: fellowship.isActive,
       createdAt: fellowship.createdAt,
       updatedAt: fellowship.updatedAt,

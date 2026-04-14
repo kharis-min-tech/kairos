@@ -37,11 +37,11 @@ export const handler = async (
     // Verify program exists
     const [program] = await db
       .select({
-        outreachId: outreachPrograms.outreachId,
+        outreachId: outreachPrograms.id,
         branchId: outreachPrograms.branchId,
       })
       .from(outreachPrograms)
-      .where(eq(outreachPrograms.outreachId, input.outreach_id))
+      .where(eq(outreachPrograms.id, input.outreach_id))
       .limit(1);
 
     if (!program) {
@@ -51,11 +51,11 @@ export const handler = async (
     // Verify member exists and get their branch
     const [member] = await db
       .select({
-        memberId: members.memberId,
+        memberId: members.id,
         homeBranchId: members.homeBranchId,
       })
       .from(members)
-      .where(eq(members.memberId, input.member_id))
+      .where(eq(members.id, input.member_id))
       .limit(1);
 
     if (!member) {

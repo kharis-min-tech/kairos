@@ -13,15 +13,15 @@ const formatDate = (date: Date | string) =>
 export default function PendingApprovalsPage() {
   const [pending, setPending] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState<Member | null>(null);
 
   const fetchPending = useCallback(async () => {
     try {
-      const res = await members.list({ status: 'pending', limit: 100 });
-      setPending(res.data ?? []);
+      const res = await members.list({ approvalStatus: 'pending', limit: 100 });
+      setPending((res.data?.data as Member[]) ?? []);
     } catch {
       setError('Failed to load pending members.');
     } finally {
@@ -31,12 +31,12 @@ export default function PendingApprovalsPage() {
 
   useEffect(() => { fetchPending(); }, [fetchPending]);
 
-  const handleApprove = async (id: number) => {
+  const handleApprove = async (id: string) => {
     setActionLoading(id);
     setError('');
     try {
-      await members.approve(id);
-      setPending((prev) => prev.filter((m) => m.memberId !== id));
+      await members.approve(id, { approved: true });
+      setPending((prev) => prev.filter((m) => m.id !== id));
       setSuccess('Member approved successfully.');
     } catch {
       setError('Failed to approve member.');
@@ -45,12 +45,12 @@ export default function PendingApprovalsPage() {
     }
   };
 
-  const handleReject = async (id: number) => {
+  const handleReject = async (id: string) => {
     setActionLoading(id);
     setError('');
     try {
       await members.delete(id);
-      setPending((prev) => prev.filter((m) => m.memberId !== id));
+      setPending((prev) => prev.filter((m) => m.id !== id));
       setSuccess('Member rejected.');
     } catch {
       setError('Failed to reject member.');
@@ -74,7 +74,7 @@ export default function PendingApprovalsPage() {
       ) : (
         <div className="space-y-3">
           {pending.map((member) => (
-            <Card key={member.memberId}>
+            <Card key={member.id}>
               <CardBody>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="min-w-0">
@@ -98,15 +98,15 @@ export default function PendingApprovalsPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleReject(member.memberId)}
-                      disabled={actionLoading === member.memberId}
+                      onClick={() => handleReject(member.id)}
+                      disabled={actionLoading === member.id}
                     >
                       <XCircle size={16} className="mr-1" /> Reject
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => handleApprove(member.memberId)}
-                      disabled={actionLoading === member.memberId}
+                      onClick={() => handleApprove(member.id)}
+                      disabled={actionLoading === member.id}
                     >
                       <CheckCircle size={16} className="mr-1" /> Approve
                     </Button>
@@ -133,10 +133,10 @@ export default function PendingApprovalsPage() {
               <div><span className="text-gray-500">Branch ID:</span> {preview.homeBranchId}</div>
             </div>
             <div className="flex gap-2 pt-4 border-t">
-              <Button variant="secondary" size="sm" onClick={() => { handleReject(preview.memberId); setPreview(null); }}>
+              <Button variant="secondary" size="sm" onClick={() => { handleReject(preview.id); setPreview(null); }}>
                 Reject
               </Button>
-              <Button size="sm" onClick={() => { handleApprove(preview.memberId); setPreview(null); }}>
+              <Button size="sm" onClick={() => { handleApprove(preview.id); setPreview(null); }}>
                 Approve
               </Button>
             </div>

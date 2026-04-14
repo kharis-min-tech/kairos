@@ -45,11 +45,11 @@ import { handler as leaderDashboardHandler } from '../reports-get-leader-dashboa
 
 function createEvent(
   queryParams?: Record<string, string>,
-  auth?: { memberId?: number; branchId?: number; roles?: string[] }
+  auth?: { memberId?: string; branchId?: string; roles?: string[] }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: auth?.memberId ?? 1,
-    branchId: auth?.branchId ?? 10,
+    memberId: auth?.memberId ?? 'test-member-1',
+    branchId: auth?.branchId ?? 'test-branch-10',
     roles: auth?.roles ?? ['Admin', 'Member'],
   };
   return {
@@ -189,13 +189,13 @@ describe('reports-get-pastor-dashboard handler', () => {
 
     mockGetDb.mockReturnValue({ select: selectMock });
 
-    const event = createEvent(undefined, { memberId: 5, branchId: 10, roles: ['Pastor', 'Member'] });
+    const event = createEvent(undefined, { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Pastor', 'Member'] });
     const result = await pastorDashboardHandler(event);
 
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
 
-    expect(body.branchId).toBe(10);
+    expect(body.branchId).toBe('test-branch-10');
     expect(body.branchMemberCount).toBe(80);
     expect(body.branchDonationsLast30Days).toBe('5000.00');
     expect(body.branchSoulsCapturedLast30Days).toBe(12);
@@ -206,7 +206,7 @@ describe('reports-get-pastor-dashboard handler', () => {
   it('should return 403 when pastor tries to view another branch', async () => {
     const event = createEvent(
       { branchId: '20' },
-      { memberId: 5, branchId: 10, roles: ['Pastor', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Pastor', 'Member'] }
     );
     const result = await pastorDashboardHandler(event);
 
@@ -225,13 +225,13 @@ describe('reports-get-pastor-dashboard handler', () => {
 
     const event = createEvent(
       { branchId: '99' },
-      { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] }
+      { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] }
     );
     const result = await pastorDashboardHandler(event);
 
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
-    expect(body.branchId).toBe(99);
+    expect(body.branchId).toBe('99');
   });
 
   it('should return 403 for regular members', async () => {
@@ -250,15 +250,15 @@ describe('reports-get-leader-dashboard handler', () => {
   it('should return department dashboard data for leader (200)', async () => {
     const selectMock = vi.fn()
       // 1st call: verify leader access (branchDepartments lookup)
-      .mockReturnValueOnce(chain([{ leadMemberId: 5 }]))
+      .mockReturnValueOnce(chain([{ leadMemberId: 'test-member-5' }]))
       // 2nd call: groupMemberCount
       .mockReturnValueOnce(chain([{ count: 15 }]))
       // 3rd call: get branchId for department
-      .mockReturnValueOnce(chain([{ branchId: 10 }]))
+      .mockReturnValueOnce(chain([{ branchId: 'test-branch-10' }]))
       // 4th call: recentAttendance
       .mockReturnValueOnce(chain([
-        { serviceId: 1, serviceDate: '2026-03-01', presentCount: 40, totalCount: 50 },
-        { serviceId: 2, serviceDate: '2026-02-22', presentCount: 38, totalCount: 48 },
+        { serviceId: 'test-service-1', serviceDate: '2026-03-01', presentCount: 40, totalCount: 50 },
+        { serviceId: 'test-service-2', serviceDate: '2026-02-22', presentCount: 38, totalCount: 48 },
       ]))
       // 5th call: pendingJoinRequests
       .mockReturnValueOnce(chain([{ count: 2 }]))
@@ -269,7 +269,7 @@ describe('reports-get-leader-dashboard handler', () => {
 
     const event = createEvent(
       { departmentId: '3' },
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 
@@ -277,7 +277,7 @@ describe('reports-get-leader-dashboard handler', () => {
     const body = JSON.parse(result.body);
 
     expect(body.type).toBe('department');
-    expect(body.departmentId).toBe(3);
+    expect(body.departmentId).toBe('3');
     expect(body.groupMemberCount).toBe(15);
     expect(body.recentAttendance).toHaveLength(2);
     expect(body.pendingJoinRequests).toBe(2);
@@ -287,19 +287,19 @@ describe('reports-get-leader-dashboard handler', () => {
   it('should return fellowship dashboard data for leader (200)', async () => {
     const selectMock = vi.fn()
       // 1st call: verify leader access (fellowshipMembers lookup)
-      .mockReturnValueOnce(chain([{ memberId: 5 }]))
+      .mockReturnValueOnce(chain([{ memberId: 'test-member-5' }]))
       // 2nd call: groupMemberCount
       .mockReturnValueOnce(chain([{ count: 8 }]))
       // 3rd call: recentAttendance
       .mockReturnValueOnce(chain([
-        { serviceId: 10, serviceDate: '2026-03-01', presentCount: 6, totalCount: 8 },
+        { serviceId: 'test-service-10', serviceDate: '2026-03-01', presentCount: 6, totalCount: 8 },
       ]));
 
     mockGetDb.mockReturnValue({ select: selectMock });
 
     const event = createEvent(
       { fellowshipId: '7' },
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 
@@ -307,7 +307,7 @@ describe('reports-get-leader-dashboard handler', () => {
     const body = JSON.parse(result.body);
 
     expect(body.type).toBe('fellowship');
-    expect(body.fellowshipId).toBe(7);
+    expect(body.fellowshipId).toBe('7');
     expect(body.groupMemberCount).toBe(8);
     expect(body.recentAttendance).toHaveLength(1);
   });
@@ -321,7 +321,7 @@ describe('reports-get-leader-dashboard handler', () => {
 
     const event = createEvent(
       { departmentId: '3' },
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 
@@ -337,7 +337,7 @@ describe('reports-get-leader-dashboard handler', () => {
 
     const event = createEvent(
       { fellowshipId: '7' },
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 
@@ -349,7 +349,7 @@ describe('reports-get-leader-dashboard handler', () => {
       // Admin skips leader check, goes straight to member count
       .mockReturnValueOnce(chain([{ count: 25 }]))
       // branchId lookup
-      .mockReturnValueOnce(chain([{ branchId: 10 }]))
+      .mockReturnValueOnce(chain([{ branchId: 'test-branch-10' }]))
       // recentAttendance
       .mockReturnValueOnce(chain([]))
       // pendingJoinRequests
@@ -361,7 +361,7 @@ describe('reports-get-leader-dashboard handler', () => {
 
     const event = createEvent(
       { departmentId: '99' },
-      { memberId: 1, branchId: 10, roles: ['Admin', 'Member'] }
+      { memberId: 'test-member-1', branchId: 'test-branch-10', roles: ['Admin', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 
@@ -374,7 +374,7 @@ describe('reports-get-leader-dashboard handler', () => {
   it('should return 400 when neither departmentId nor fellowshipId provided', async () => {
     const event = createEvent(
       undefined,
-      { memberId: 5, branchId: 10, roles: ['Leader', 'Member'] }
+      { memberId: 'test-member-5', branchId: 'test-branch-10', roles: ['Leader', 'Member'] }
     );
     const result = await leaderDashboardHandler(event);
 

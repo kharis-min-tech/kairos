@@ -38,9 +38,9 @@ export const handler = async (
   try {
     // 1. Extract auth context
     const ctx = await resolveAuthContext(event);
-    const targetMemberId = parseInt(event.pathParameters?.memberId || '', 10);
+    const targetMemberId = event.pathParameters?.memberId || '';
 
-    if (isNaN(targetMemberId)) {
+    if (!targetMemberId) {
       throw new NotFoundError('Member', event.pathParameters?.memberId);
     }
 
@@ -57,7 +57,7 @@ export const handler = async (
     const [existing] = await db
       .select()
       .from(members)
-      .where(eq(members.memberId, targetMemberId))
+      .where(eq(members.id, targetMemberId))
       .limit(1);
 
     if (!existing) {
@@ -80,7 +80,7 @@ export const handler = async (
     const [approved] = await db
       .update(members)
       .set({ isActive: true })
-      .where(eq(members.memberId, targetMemberId))
+      .where(eq(members.id, targetMemberId))
       .returning();
 
     // 7. Send welcome email via SES (stubbed for now)

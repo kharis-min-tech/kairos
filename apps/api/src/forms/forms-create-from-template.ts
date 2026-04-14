@@ -53,8 +53,8 @@ export const handler = async (
       throw new ForbiddenError('Only admins and leaders can create forms from templates');
     }
 
-    const templateId = parseInt(event.pathParameters?.templateId || '', 10);
-    if (isNaN(templateId)) {
+    const templateId = event.pathParameters?.templateId || '';
+    if (!templateId) {
       throw new NotFoundError('Template', event.pathParameters?.templateId);
     }
 
@@ -83,7 +83,7 @@ export const handler = async (
     const [template] = await db
       .select()
       .from(forms)
-      .where(and(eq(forms.formId, templateId), eq(forms.isTemplate, true)))
+      .where(and(eq(forms.id, templateId), eq(forms.isTemplate, true)))
       .limit(1);
 
     if (!template) {
@@ -106,7 +106,7 @@ export const handler = async (
       .returning();
 
     logger.info('Form created from template', {
-      formId: created!.formId,
+      formId: created!.id,
       templateId,
       scope,
       createdBy: ctx.memberId,

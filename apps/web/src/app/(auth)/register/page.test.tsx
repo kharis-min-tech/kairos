@@ -34,8 +34,8 @@ import RegisterPage from './page';
 
 const MOCK_BRANCHES = {
   data: [
-    { branchId: 1, branchName: 'London Main', isActive: true },
-    { branchId: 2, branchName: 'Manchester Branch', isActive: true },
+    { id: '1', branchName: 'London Main', isActive: true },
+    { id: '2', branchName: 'Manchester Branch', isActive: true },
   ],
   pagination: { page: 1, limit: 100, total: 2, totalPages: 1 },
 };
@@ -163,7 +163,7 @@ describe('RegisterPage', () => {
         phone: '+44 7700 900000',
         gender: 'Male',
         address: '123 Church Lane',
-        homeBranchId: 1,
+        homeBranchId: '1',
       }),
     );
   });

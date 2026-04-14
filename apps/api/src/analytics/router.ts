@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
-import { successResponse } from '@kairos/utils';
+import { successResponse } from '../lib/response';
 import { getAdminStats, getBranchStats, getMemberStats } from './service';
 
 export const analyticsRouter = new Hono();

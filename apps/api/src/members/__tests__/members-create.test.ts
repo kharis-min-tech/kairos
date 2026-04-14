@@ -56,13 +56,13 @@ import { handler } from '../members-create';
 // ---------------------------------------------------------------------------
 
 function createEvent(body: Record<string, unknown>, authContext?: {
-  memberId?: number;
-  branchId?: number;
+  memberId?: string;
+  branchId?: string;
   roles?: string[];
 }): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -107,7 +107,7 @@ function setupDbChain() {
   mockWhere.mockReturnValue({ limit: mockLimit });
   mockLimit.mockResolvedValue([]);
 
-  // insert chain: insert().values().returning()
+  // insert chain: insert().values( as any).returning()
   mockInsert.mockReturnValue({ values: mockValues });
   mockValues.mockReturnValue({ returning: mockReturning });
 }
@@ -117,7 +117,7 @@ const validMemberInput = {
   last_name: 'Doe',
   email: 'john.doe@example.com',
   phone: '+447700900001',
-  home_branch_id: 1,
+  home_branch_id: '00000000-0000-4000-8000-000000000001',
   gender: 'Male',
 };
 
@@ -134,12 +134,12 @@ describe('Members Create Lambda', () => {
   // Test: Valid registration creates pending member
   it('should create a pending member with is_active=false for valid input', async () => {
     const createdMember = {
-      memberId: 42,
+      memberId: 'test-member-42',
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe@example.com',
       phone: '+447700900001',
-      homeBranchId: 1,
+      homeBranchId: 'test-branch-1',
       isActive: false,
     };
     mockReturning.mockResolvedValue([createdMember]);
@@ -150,13 +150,13 @@ describe('Members Create Lambda', () => {
     expect(result.statusCode).toBe(201);
     const body = JSON.parse(result.body);
     expect(body.isActive).toBe(false);
-    expect(body.memberId).toBe(42);
+    expect(body.memberId).toBe('test-member-42');
   });
 
   // Test: Duplicate email among active members is rejected
   it('should reject duplicate email among active members with 409', async () => {
     // First select (email check) returns an existing member
-    mockLimit.mockResolvedValueOnce([{ memberId: 99 }]);
+    mockLimit.mockResolvedValueOnce([{ memberId: 'test-member-99' }]);
 
     const event = createEvent(validMemberInput);
     const result = await handler(event);
@@ -172,7 +172,7 @@ describe('Members Create Lambda', () => {
     // First select (email check) returns empty
     mockLimit.mockResolvedValueOnce([]);
     // Second select (phone check) returns an existing member
-    mockLimit.mockResolvedValueOnce([{ memberId: 88 }]);
+    mockLimit.mockResolvedValueOnce([{ memberId: 'test-member-88' }]);
 
     const event = createEvent(validMemberInput);
     const result = await handler(event);
@@ -217,8 +217,8 @@ describe('Members Create Lambda', () => {
   // Test: Pastor cannot create member in another branch
   it('should return 403 when pastor tries to create member in another branch', async () => {
     const event = createEvent(
-      { ...validMemberInput, home_branch_id: 99 },
-      { memberId: 5, branchId: 1, roles: ['Pastor', 'Member'] }
+      { ...validMemberInput, home_branch_id: '00000000-0000-4000-8000-000000000099' },
+      { memberId: 'test-member-5', branchId: 'test-branch-1', roles: ['Pastor', 'Member'] }
     );
     const result = await handler(event);
 
@@ -228,17 +228,17 @@ describe('Members Create Lambda', () => {
   // Test: Admin can create member in any branch
   it('should allow admin to create member in any branch', async () => {
     const createdMember = {
-      memberId: 50,
+      memberId: 'test-member-50',
       firstName: 'Jane',
       lastName: 'Smith',
-      homeBranchId: 99,
+      homeBranchId: 'test-branch-99',
       isActive: false,
     };
     mockReturning.mockResolvedValue([createdMember]);
 
     const event = createEvent(
-      { ...validMemberInput, home_branch_id: 99 },
-      { memberId: 1, branchId: 1, roles: ['Admin', 'Member'] }
+      { ...validMemberInput, home_branch_id: '00000000-0000-4000-8000-000000000099' },
+      { memberId: 'test-member-1', branchId: 'test-branch-1', roles: ['Admin', 'Member'] }
     );
     const result = await handler(event);
 

@@ -12,22 +12,33 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.1029.0",
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/client-sesv2": "^3.1029.0",
+    "@aws-sdk/client-ssm": "^3.1029.0",
+    "@aws-sdk/s3-request-presigner": "^3.1029.0",
     "@hono/node-server": "^1.13.8",
     "@hono/zod-validator": "^0.4.3",
     "@kairos/database": "*",
     "@kairos/types": "*",
     "@kairos/utils": "*",
     "bcrypt": "^5.1.1",
+    "csv-parse": "^6.2.1",
+    "csv-stringify": "^6.7.0",
     "drizzle-orm": "^0.38.4",
+    "fast-check": "^4.6.0",
     "hono": "^4.7.4",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^8.0.3",
     "postgres": "^3.4.5",
+    "stripe": "^22.0.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/stripe": "^8.0.416",
+    "aws-jwt-verify": "^5.1.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"

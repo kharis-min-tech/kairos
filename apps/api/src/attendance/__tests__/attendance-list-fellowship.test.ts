@@ -64,8 +64,8 @@ describe('attendance-list-fellowship handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -89,8 +89,8 @@ describe('attendance-list-fellowship handler', () => {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
                 limit: vi.fn().mockReturnValue([{
-                  fellowshipId: 1,
-                  branchId: 10,
+                  fellowshipId: 'test-fellowship-1',
+                  branchId: 'test-branch-10',
                   fellowshipName: 'K-Group Alpha',
                 }]),
               }),
@@ -105,8 +105,8 @@ describe('attendance-list-fellowship handler', () => {
                 orderBy: vi.fn().mockReturnValue({
                   limit: vi.fn().mockReturnValue({
                     offset: vi.fn().mockReturnValue([
-                      { meetingId: 1, meetingDate: '2026-02-01', presentCount: 3, totalRecords: 5 },
-                      { meetingId: 2, meetingDate: '2026-02-08', presentCount: 4, totalRecords: 5 },
+                      { meetingId: 'test-meeting-1', meetingDate: '2026-02-01', presentCount: 3, totalRecords: 5 },
+                      { meetingId: 'test-meeting-2', meetingDate: '2026-02-08', presentCount: 4, totalRecords: 5 },
                     ]),
                   }),
                 }),
@@ -128,8 +128,8 @@ describe('attendance-list-fellowship handler', () => {
             from: vi.fn().mockReturnValue({
               innerJoin: vi.fn().mockReturnValue({
                 where: vi.fn().mockReturnValue([
-                  { memberId: 100, firstName: 'John', lastName: 'Doe', presentCount: 2 },
-                  { memberId: 101, firstName: 'Jane', lastName: 'Smith', presentCount: 1 },
+                  { memberId: 'test-member-100', firstName: 'John', lastName: 'Doe', presentCount: 2 },
+                  { memberId: 'test-member-101', firstName: 'Jane', lastName: 'Smith', presentCount: 1 },
                 ]),
               }),
             }),
@@ -151,11 +151,11 @@ describe('attendance-list-fellowship handler', () => {
     expect(body.memberAttendance).toHaveLength(2);
 
     // John: 2/2 = 100%
-    const john = body.memberAttendance.find((m: { memberId: number }) => m.memberId === 100);
+    const john = body.memberAttendance.find((m: { memberId: string }) => m.memberId === 'test-member-100');
     expect(john.attendancePercentage).toBe(100);
 
     // Jane: 1/2 = 50%
-    const jane = body.memberAttendance.find((m: { memberId: number }) => m.memberId === 101);
+    const jane = body.memberAttendance.find((m: { memberId: string }) => m.memberId === 'test-member-101');
     expect(jane.attendancePercentage).toBe(50);
   });
 
@@ -169,8 +169,8 @@ describe('attendance-list-fellowship handler', () => {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
                 limit: vi.fn().mockReturnValue([{
-                  fellowshipId: 1,
-                  branchId: 10,
+                  fellowshipId: 'test-fellowship-1',
+                  branchId: 'test-branch-10',
                   fellowshipName: 'K-Group Alpha',
                 }]),
               }),
@@ -202,7 +202,7 @@ describe('attendance-list-fellowship handler', () => {
             from: vi.fn().mockReturnValue({
               innerJoin: vi.fn().mockReturnValue({
                 where: vi.fn().mockReturnValue([
-                  { memberId: 100, firstName: 'John', lastName: 'Doe', presentCount: 0 },
+                  { memberId: 'test-member-100', firstName: 'John', lastName: 'Doe', presentCount: 0 },
                 ]),
               }),
             }),

@@ -62,8 +62,8 @@ describe('attendance-get-missing-members handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -82,10 +82,10 @@ describe('attendance-get-missing-members handler', () => {
               where: vi.fn().mockReturnValue({
                 orderBy: vi.fn().mockReturnValue({
                   limit: vi.fn().mockReturnValue([
-                    { serviceId: 4, serviceDate: '2026-02-08' },
-                    { serviceId: 3, serviceDate: '2026-02-01' },
-                    { serviceId: 2, serviceDate: '2026-01-25' },
-                    { serviceId: 1, serviceDate: '2026-01-18' },
+                    { serviceId: 'test-service-4', serviceDate: '2026-02-08' },
+                    { serviceId: 'test-service-3', serviceDate: '2026-02-01' },
+                    { serviceId: 'test-service-2', serviceDate: '2026-01-25' },
+                    { serviceId: 'test-service-1', serviceDate: '2026-01-18' },
                   ]),
                 }),
               }),
@@ -97,7 +97,7 @@ describe('attendance-get-missing-members handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue([
-                { memberId: 200, firstName: 'Missing', lastName: 'Member', email: 'missing@test.com', phone: '+447700900001', lastAttendanceDate: '2025-12-28' },
+                { memberId: 'test-member-200', firstName: 'Missing', lastName: 'Member', email: 'missing@test.com', phone: '+447700900001', lastAttendanceDate: '2025-12-28' },
               ]),
             }),
           };
@@ -113,7 +113,7 @@ describe('attendance-get-missing-members handler', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
     expect(body.missingMembers).toHaveLength(1);
-    expect(body.missingMembers[0].memberId).toBe(200);
+    expect(body.missingMembers[0].memberId).toBe('test-member-200');
     expect(body.missingMembers[0].lastAttendanceDate).toBe('2025-12-28');
   });
 
@@ -124,8 +124,8 @@ describe('attendance-get-missing-members handler', () => {
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
               limit: vi.fn().mockReturnValue([
-                { serviceId: 1, serviceDate: '2026-02-08' },
-                { serviceId: 2, serviceDate: '2026-02-01' },
+                { serviceId: 'test-service-1', serviceDate: '2026-02-08' },
+                { serviceId: 'test-service-2', serviceDate: '2026-02-01' },
               ]),
             }),
           }),
@@ -155,10 +155,10 @@ describe('attendance-get-missing-members handler', () => {
               where: vi.fn().mockReturnValue({
                 orderBy: vi.fn().mockReturnValue({
                   limit: vi.fn().mockReturnValue([
-                    { serviceId: 4, serviceDate: '2026-02-08' },
-                    { serviceId: 3, serviceDate: '2026-02-01' },
-                    { serviceId: 2, serviceDate: '2026-01-25' },
-                    { serviceId: 1, serviceDate: '2026-01-18' },
+                    { serviceId: 'test-service-4', serviceDate: '2026-02-08' },
+                    { serviceId: 'test-service-3', serviceDate: '2026-02-01' },
+                    { serviceId: 'test-service-2', serviceDate: '2026-01-25' },
+                    { serviceId: 'test-service-1', serviceDate: '2026-01-18' },
                   ]),
                 }),
               }),

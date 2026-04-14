@@ -43,9 +43,9 @@ export const handler = async (
   try {
     // 1. Extract auth context
     const ctx = await resolveAuthContext(event);
-    const targetMemberId = parseInt(event.pathParameters?.memberId || '', 10);
+    const targetMemberId = event.pathParameters?.memberId || '';
 
-    if (isNaN(targetMemberId)) {
+    if (!targetMemberId) {
       throw new NotFoundError('Member', event.pathParameters?.memberId);
     }
 
@@ -73,7 +73,7 @@ export const handler = async (
     const [existing] = await db
       .select()
       .from(members)
-      .where(eq(members.memberId, targetMemberId))
+      .where(eq(members.id, targetMemberId))
       .limit(1);
 
     if (!existing) {
@@ -94,13 +94,13 @@ export const handler = async (
     // 5. Check email uniqueness among active members
     if (input.email && input.email !== existing.email) {
       const existingEmail = await db
-        .select({ memberId: members.memberId })
+        .select({ memberId: members.id })
         .from(members)
         .where(
           and(
             eq(members.email, input.email),
             eq(members.isActive, true),
-            ne(members.memberId, targetMemberId)
+            ne(members.id, targetMemberId)
           )
         )
         .limit(1);
@@ -115,13 +115,13 @@ export const handler = async (
     // 6. Check phone uniqueness among active members
     if (input.phone && input.phone !== existing.phone) {
       const existingPhone = await db
-        .select({ memberId: members.memberId })
+        .select({ memberId: members.id })
         .from(members)
         .where(
           and(
             eq(members.phone, input.phone),
             eq(members.isActive, true),
-            ne(members.memberId, targetMemberId)
+            ne(members.id, targetMemberId)
           )
         )
         .limit(1);
@@ -163,7 +163,7 @@ export const handler = async (
     const [updated] = await db
       .update(members)
       .set(updateValues)
-      .where(eq(members.memberId, targetMemberId))
+      .where(eq(members.id, targetMemberId))
       .returning();
 
     logger.info('Member updated successfully', {

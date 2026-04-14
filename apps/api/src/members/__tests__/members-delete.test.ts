@@ -59,14 +59,14 @@ import { handler } from '../members-delete';
 function createEvent(
   memberId: string,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -105,12 +105,12 @@ function createEvent(
 }
 
 const activeMember = {
-  memberId: 42,
+  memberId: 'test-member-42',
   firstName: 'John',
   lastName: 'Doe',
   email: 'john@example.com',
   phone: '+447700900001',
-  homeBranchId: 1,
+  homeBranchId: 'test-branch-1',
   isActive: true,
 };
 
@@ -179,7 +179,7 @@ describe('Members Delete Lambda', () => {
 
     // The member record is returned (not deleted)
     const body = JSON.parse(result.body);
-    expect(body.member.memberId).toBe(42);
+    expect(body.member.memberId).toBe('test-member-42');
     expect(body.member.firstName).toBe('John');
     expect(body.member.email).toBe('john@example.com');
   });
@@ -199,8 +199,8 @@ describe('Members Delete Lambda', () => {
     setupDbChain(activeMember);
 
     const event = createEvent('42', {
-      memberId: 10,
-      branchId: 1,
+      memberId: 'test-member-10',
+      branchId: 'test-branch-1',
       roles: ['Member'],
     });
     const result = await handler(event);
@@ -210,12 +210,12 @@ describe('Members Delete Lambda', () => {
 
   // Test: Pastor can only deactivate members in their branch
   it('should return 403 when pastor tries to deactivate member in another branch', async () => {
-    const otherBranchMember = { ...activeMember, homeBranchId: 2 };
+    const otherBranchMember = { ...activeMember, homeBranchId: 'test-branch-2' };
     setupDbChain(otherBranchMember);
 
     const event = createEvent('42', {
-      memberId: 5,
-      branchId: 1,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-1',
       roles: ['Pastor', 'Member'],
     });
     const result = await handler(event);
@@ -225,13 +225,13 @@ describe('Members Delete Lambda', () => {
 
   // Test: Admin can deactivate any member
   it('should allow admin to deactivate member in any branch', async () => {
-    const otherBranchMember = { ...activeMember, homeBranchId: 99 };
+    const otherBranchMember = { ...activeMember, homeBranchId: 'test-branch-99' };
     setupDbChain(otherBranchMember);
     mockReturning.mockResolvedValue([{ ...otherBranchMember, isActive: false }]);
 
     const event = createEvent('42', {
-      memberId: 1,
-      branchId: 1,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-1',
       roles: ['Admin', 'Member'],
     });
     const result = await handler(event);
@@ -241,6 +241,7 @@ describe('Members Delete Lambda', () => {
 
   // Test: Invalid memberId returns 404
   it('should return 404 for invalid memberId path parameter', async () => {
+    setupDbChain(null);
     const event = createEvent('abc');
     const result = await handler(event);
 

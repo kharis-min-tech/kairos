@@ -52,7 +52,7 @@ export const handler = async (
 
     const params = event.queryStringParameters || {};
     const search = params.search?.trim();
-    const branchIdFilter = params.branchId ? parseInt(params.branchId, 10) : undefined;
+    const branchIdFilter = params.branchId ?? undefined;
     const status = params.status || 'active';
     const sortBy = params.sortBy || 'lastName';
     const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
@@ -98,7 +98,7 @@ export const handler = async (
 
     // Build CSV rows
     const csvRows = data.map((m) => ({
-      member_id: m.memberId,
+      member_id: m.id,
       first_name: m.firstName,
       last_name: m.lastName,
       middle_name: m.middleName || '',

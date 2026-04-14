@@ -1,12 +1,12 @@
 import {
   pgTable,
   varchar,
-  integer,
   timestamp,
   index,
   primaryKey,
+  uuid,
 } from 'drizzle-orm/pg-core';
-import { members } from './core';
+import { members } from './members';
 
 // ============================================================================
 // WEBSOCKET_CONNECTIONS
@@ -16,9 +16,9 @@ export const websocketConnections = pgTable(
   'websocket_connections',
   {
     connectionId: varchar('connection_id', { length: 128 }).notNull(),
-    memberId: integer('member_id')
+    memberId: uuid('member_id')
       .notNull()
-      .references(() => members.memberId, { onDelete: 'cascade' }),
+      .references(() => members.id, { onDelete: 'cascade' }),
     connectedAt: timestamp('connected_at').notNull().defaultNow(),
   },
   (table) => [

@@ -4,13 +4,19 @@ import { useEffect, useState } from 'react';
 import { Users, AlertTriangle, UserPlus, Calendar } from 'lucide-react';
 import { StatCard, Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 import { dashboard } from '@kairos/api-client';
-import type { LeaderDashboard as LeaderDashboardData } from '@kairos/api-client';
+
+interface LeaderDashboardData {
+  groupMemberCount?: number;
+  membersNeedingFollowup?: FollowUpMember[] | number;
+  pendingJoinRequests?: number;
+  recentAttendance?: RecentAttendance[];
+}
 
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-interface FollowUpMember { memberId: number; memberName: string; lastFollowUp: string | null; daysSince: number; }
-interface JoinRequest { requestId: number; memberName: string; requestDate: string; }
+interface FollowUpMember { memberId: string; memberName: string; lastFollowUp: string | null; daysSince: number; }
+interface JoinRequest { requestId: string; memberName: string; requestDate: string; }
 interface RecentAttendance { date: string; present: number; total: number; }
 
 export function LeaderDashboard() {
@@ -18,7 +24,7 @@ export function LeaderDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dashboard.getLeader().then(setData).catch(() => setError('Failed to load dashboard'));
+    dashboard.getLeader().then((d) => setData(d as unknown as LeaderDashboardData)).catch(() => setError('Failed to load dashboard'));
   }, []);
 
   if (error) return <p className="text-red-600 text-sm">{error}</p>;

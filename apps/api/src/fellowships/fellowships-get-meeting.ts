@@ -29,8 +29,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.setContext({ userId: ctx.memberId, branchId: ctx.branchId });
 
-    const meetingId = parseInt(event.pathParameters?.meetingId || '', 10);
-    if (isNaN(meetingId)) {
+    const meetingId = event.pathParameters?.meetingId || '';
+    if (!meetingId) {
       throw new BadRequestError('Invalid meeting ID');
     }
 
@@ -40,7 +40,7 @@ export const handler = async (
     const [meeting] = await db
       .select()
       .from(fellowshipMeetings)
-      .where(eq(fellowshipMeetings.meetingId, meetingId))
+      .where(eq(fellowshipMeetings.id, meetingId))
       .limit(1);
 
     if (!meeting) {
@@ -51,7 +51,7 @@ export const handler = async (
     const [fellowship] = await db
       .select({ branchId: fellowships.branchId })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, meeting.fellowshipId))
+      .where(eq(fellowships.id, meeting.fellowshipId))
       .limit(1);
 
     if (!fellowship) {
@@ -76,7 +76,7 @@ export const handler = async (
       .from(fellowshipMeetingAttendance)
       .innerJoin(
         members,
-        eq(fellowshipMeetingAttendance.memberId, members.memberId)
+        eq(fellowshipMeetingAttendance.memberId, members.id)
       )
       .where(eq(fellowshipMeetingAttendance.meetingId, meetingId));
 

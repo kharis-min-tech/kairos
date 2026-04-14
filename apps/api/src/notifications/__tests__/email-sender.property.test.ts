@@ -115,7 +115,7 @@ describe('email-sender property tests', () => {
 
           expect(mockSend).toHaveBeenCalledOnce();
 
-          const params = mockSend.mock.calls[0][0].params as Record<string, unknown>;
+          const params = mockSend.mock.calls[0]![0].params as Record<string, unknown>;
           expect(params.Destination).toEqual({ ToAddresses: [email] });
 
           const content = params.Content as Record<string, unknown>;
@@ -154,7 +154,7 @@ describe('email-sender property tests', () => {
 
           expect(mockSend).toHaveBeenCalledOnce();
 
-          const params = mockSend.mock.calls[0][0].params as Record<string, unknown>;
+          const params = mockSend.mock.calls[0]![0].params as Record<string, unknown>;
           const content = params.Content as Record<string, unknown>;
           const simple = content.Simple as Record<string, unknown>;
           const body = simple.Body as Record<string, unknown>;
@@ -188,7 +188,7 @@ describe('email-sender property tests', () => {
 
           expect(mockSend).toHaveBeenCalledOnce();
 
-          const params = mockSend.mock.calls[0][0].params as Record<string, unknown>;
+          const params = mockSend.mock.calls[0]![0].params as Record<string, unknown>;
           const content = params.Content as Record<string, unknown>;
           const simple = content.Simple as Record<string, unknown>;
           const body = simple.Body as Record<string, unknown>;
@@ -221,7 +221,7 @@ describe('email-sender property tests', () => {
 
           expect(mockSend).toHaveBeenCalledOnce();
 
-          const params = mockSend.mock.calls[0][0].params as Record<string, unknown>;
+          const params = mockSend.mock.calls[0]![0].params as Record<string, unknown>;
           const content = params.Content as Record<string, unknown>;
           const simple = content.Simple as Record<string, unknown>;
           const body = simple.Body as Record<string, unknown>;

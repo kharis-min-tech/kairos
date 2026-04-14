@@ -177,7 +177,7 @@ describe('donations-webhook Lambda', () => {
     mockStripeConstructEvent.mockReturnValue(stripeEvent);
 
     const { updateChain } = setupDb({
-      updateResult: [{ donationId: 42 }],
+      updateResult: [{ donationId: 'test-donation-42' }],
     });
 
     const rawBody = JSON.stringify(stripeEvent);
@@ -218,7 +218,7 @@ describe('donations-webhook Lambda', () => {
     mockStripeConstructEvent.mockReturnValue(stripeEvent);
 
     const { updateChain } = setupDb({
-      updateResult: [{ donationId: 43 }],
+      updateResult: [{ donationId: 'test-donation-43' }],
     });
 
     const rawBody = JSON.stringify(stripeEvent);
@@ -279,7 +279,7 @@ describe('donations-webhook Lambda', () => {
     mockStripeConstructEvent.mockReturnValue(stripeEvent);
 
     const { updateChain } = setupDb({
-      updateResult: [{ donationId: 99 }],
+      updateResult: [{ donationId: 'test-donation-99' }],
     });
 
     const rawBody = JSON.stringify(stripeEvent);

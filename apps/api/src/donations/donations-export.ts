@@ -61,8 +61,8 @@ export const handler = async (
     logger.info('Exporting donations', { userId: ctx.memberId, branchId: ctx.branchId });
 
     const params = event.queryStringParameters || {};
-    const branchIdFilter = params.branchId ? parseInt(params.branchId, 10) : undefined;
-    const memberId = params.memberId ? parseInt(params.memberId, 10) : undefined;
+    const branchIdFilter = params.branchId ?? undefined;
+    const memberId = params.memberId ?? undefined;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
     const purpose = params.purpose;
@@ -105,7 +105,7 @@ export const handler = async (
     // Get all matching donations with member names
     const data = await db
       .select({
-        donationId: donations.donationId,
+        donationId: donations.id,
         memberId: donations.memberId,
         memberFirstName: members.firstName,
         memberLastName: members.lastName,
@@ -124,7 +124,7 @@ export const handler = async (
         createdAt: donations.createdAt,
       })
       .from(donations)
-      .leftJoin(members, eq(donations.memberId, members.memberId))
+      .leftJoin(members, eq(donations.memberId, members.id))
       .where(whereClause)
       .orderBy(desc(donations.donationDate));
 

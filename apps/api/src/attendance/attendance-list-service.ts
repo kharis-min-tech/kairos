@@ -25,11 +25,11 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.info('Listing service attendance', { userId: ctx.memberId, branchId: ctx.branchId });
 
-    const params = event.queryStringParameters || {};
+    const params = (event.queryStringParameters || {}) as Record<string, string>;
     const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10) || 50));
     const offset = (page - 1) * limit;
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId || ctx.branchId;
     const serviceType = params.serviceType;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
@@ -63,7 +63,7 @@ export const handler = async (
     // Get services with attendance counts
     const data = await db
       .select({
-        serviceId: services.serviceId,
+        serviceId: services.id,
         branchId: services.branchId,
         serviceDate: services.serviceDate,
         serviceType: services.serviceType,
@@ -72,22 +72,22 @@ export const handler = async (
         expectedAttendance: services.expectedAttendance,
         presentCount: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
           AND sa.attendance_status = 'Present'
         )`.as('present_count'),
         virtualCount: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
           AND sa.attendance_status = 'Virtual'
         )`.as('virtual_count'),
         absentCount: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
           AND sa.attendance_status = 'Absent'
         )`.as('absent_count'),
         totalRecords: sql<number>`(
           SELECT COUNT(*)::int FROM service_attendance sa
-          WHERE sa.service_id = ${services.serviceId}
+          WHERE sa.service_id = ${services.id}
         )`.as('total_records'),
       })
       .from(services)

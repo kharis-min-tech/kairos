@@ -7,15 +7,15 @@ import { Button, SelectInput, DatePicker, Alert, Spinner, Card, CardHeader, Card
 import { AttendanceChart } from '@/components/dashboard/attendance-chart';
 import { useAuth } from '@/lib/auth';
 import { attendance, branches } from '@kairos/api-client';
-import type { Branch } from '@kairos/types';
+import type { BranchWithRegion } from '@kairos/types';
 
 interface TrendPoint { week: string; percentage: number; }
-interface MissingMember { memberId: number; memberName: string; lastAttendanceDate: string | null; missedCount: number; }
+interface MissingMember { memberId: string; memberName: string; lastAttendanceDate: string | null; missedCount: number; }
 
 export default function AttendanceReportsPage() {
   const { user } = useAuth();
   const isPastor = user?.role === 'Pastor';
-  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [branchList, setBranchList] = useState<BranchWithRegion[]>([]);
   const [branchFilter, setBranchFilter] = useState(isPastor && user?.branchId ? user.branchId : '');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -27,7 +27,7 @@ export default function AttendanceReportsPage() {
 
   useEffect(() => {
     if (!isPastor) {
-      branches.list({ limit: 100 }).then((res: { data: Branch[] }) => setBranchList(res.data)).catch(() => {});
+      branches.list().then((res) => setBranchList(res.data ?? [])).catch(() => {});
     }
   }, [isPastor]);
 
@@ -44,8 +44,8 @@ export default function AttendanceReportsPage() {
         attendance.getTrends(params),
         attendance.getMissingMembers(params),
       ]);
-      setTrends(trendsRes ?? []);
-      setMissingMembers((missingRes ?? []) as unknown as MissingMember[]);
+      setTrends((trendsRes.data as TrendPoint[]) ?? []);
+      setMissingMembers((missingRes.data as MissingMember[]) ?? []);
     } catch {
       setError('Failed to load attendance reports.');
     } finally {
@@ -63,7 +63,7 @@ export default function AttendanceReportsPage() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await attendance.export(params);
-      if (res.url) window.open(res.url, '_blank');
+      if (res.data?.url) window.open(res.data.url, '_blank');
     } catch {
       // silent
     } finally {
@@ -97,7 +97,7 @@ export default function AttendanceReportsPage() {
               <SelectInput
                 label="Branch"
                 name="branchFilter"
-                options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))}
+                options={branchList.map((b) => ({ value: String(b.id), label: b.branchName }))}
                 placeholder="All Branches"
                 value={String(branchFilter)}
                 onChange={(e) => setBranchFilter(e.target.value)}

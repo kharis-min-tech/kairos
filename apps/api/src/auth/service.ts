@@ -55,7 +55,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
 
 /** Returns the branch the member is currently active at (secondary if toggled, else home). */
 export function getActiveBranchId(member: { homeBranchId: string; secondaryBranchId: string | null; isAtSecondaryBranch: boolean }): string {
-  if (member.isAtSecondaryBranch && member.secondaryBranchId != null) {
+  if (member.isAtSecondaryBranch && member.secondaryBranchId !== null) {
     return member.secondaryBranchId;
   }
   return member.homeBranchId;

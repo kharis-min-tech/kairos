@@ -26,7 +26,7 @@ export const handler = async (
     logger.info('Getting conversion funnel', { userId: ctx.memberId, branchId: ctx.branchId });
 
     const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const branchId = params.branchId ?? ctx.branchId;
 
     if (!isAdmin(ctx)) {
       enforceBranchAccess(ctx, branchId);
@@ -41,7 +41,7 @@ export const handler = async (
         count: sql<number>`count(*)::int`.as('count'),
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
       .where(eq(outreachPrograms.branchId, branchId))
       .groupBy(souls.status);
 

@@ -24,11 +24,8 @@ export const handler = async (
     const ctx = await resolveAuthContext(event);
     logger.setContext({ userId: ctx.memberId, branchId: ctx.branchId });
 
-    const fellowshipId = parseInt(
-      event.pathParameters?.fellowshipId || '',
-      10
-    );
-    if (isNaN(fellowshipId)) {
+    const fellowshipId = event.pathParameters?.fellowshipId ?? '';
+    if (!fellowshipId) {
       throw new BadRequestError('Invalid fellowship ID');
     }
 
@@ -38,7 +35,7 @@ export const handler = async (
     const [fellowship] = await db
       .select({ branchId: fellowships.branchId })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, fellowshipId))
+      .where(eq(fellowships.id, fellowshipId))
       .limit(1);
 
     if (!fellowship) {
@@ -50,7 +47,7 @@ export const handler = async (
     // Get meetings with attendance summary
     const meetings = await db
       .select({
-        meetingId: fellowshipMeetings.meetingId,
+        meetingId: fellowshipMeetings.id,
         fellowshipId: fellowshipMeetings.fellowshipId,
         meetingDate: fellowshipMeetings.meetingDate,
         meetingTitle: fellowshipMeetings.meetingTitle,
@@ -62,12 +59,12 @@ export const handler = async (
         createdAt: fellowshipMeetings.createdAt,
         presentCount: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_meeting_attendance fma
-          WHERE fma.meeting_id = ${fellowshipMeetings.meetingId}
+          WHERE fma.meeting_id = ${fellowshipMeetings.id}
           AND fma.attendance_status = 'Present'
         )`.as('present_count'),
         totalCount: sql<number>`(
           SELECT COUNT(*)::int FROM fellowship_meeting_attendance fma
-          WHERE fma.meeting_id = ${fellowshipMeetings.meetingId}
+          WHERE fma.meeting_id = ${fellowshipMeetings.id}
         )`.as('total_count'),
       })
       .from(fellowshipMeetings)

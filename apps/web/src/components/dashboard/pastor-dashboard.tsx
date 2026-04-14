@@ -5,7 +5,14 @@ import { AlertTriangle } from 'lucide-react';
 import { StatCard, Card, CardHeader, CardBody, Skeleton, Badge } from '@/components/ui';
 import { AttendanceChart } from './attendance-chart';
 import { dashboard } from '@kairos/api-client';
-import type { PastorDashboard as PastorDashboardData } from '@kairos/api-client';
+
+interface PastorDashboardData {
+  branchMemberCount?: number;
+  branchDonationsLast30Days?: number;
+  branchSouls?: number;
+  overdueFollowUps?: OverdueFollowUp[];
+  branchAttendanceTrends?: { week: string; percentage: number }[];
+}
 
 const formatGBP = (amount: number) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount);
@@ -14,7 +21,7 @@ const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 interface OverdueFollowUp {
-  memberId: number;
+  memberId: string;
   memberName: string;
   type: string;
   lastFollowUp: string | null;
@@ -26,7 +33,7 @@ export function PastorDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dashboard.getPastor().then(setData).catch(() => setError('Failed to load dashboard'));
+    dashboard.getPastor().then((d) => setData(d as unknown as PastorDashboardData)).catch(() => setError('Failed to load dashboard'));
   }, []);
 
   if (error) return <p className="text-red-600 text-sm">{error}</p>;
@@ -42,7 +49,7 @@ export function PastorDashboard() {
     );
   }
 
-  const overdueFollowUps: OverdueFollowUp[] = (data.overdueFollowups as unknown as OverdueFollowUp[]) ?? [];
+  const overdueFollowUps: OverdueFollowUp[] = (data.overdueFollowUps as OverdueFollowUp[]) ?? [];
 
   return (
     <div className="space-y-6">

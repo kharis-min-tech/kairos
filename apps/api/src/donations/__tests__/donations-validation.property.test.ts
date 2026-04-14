@@ -127,7 +127,7 @@ function createEvent(
   };
 }
 
-function setupDb(options: {
+function _setupDb(options: {
   selectResult?: unknown[];
   insertResult?: unknown[];
   updateResult?: unknown[];
@@ -162,6 +162,7 @@ function setupDb(options: {
   });
   return { chainable, insertChain, updateChain };
 }
+void _setupDb;
 
 // ============================================================================
 // Property-Based Tests

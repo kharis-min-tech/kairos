@@ -8,7 +8,7 @@ import { Button, Badge, Card, CardHeader, CardBody, StatCard, Spinner, Alert } f
 import { outreach } from '@kairos/api-client';
 
 interface Participant {
-  memberId: number;
+  memberId: string;
   firstName: string;
   lastName: string;
   role: string | null;
@@ -17,13 +17,13 @@ interface Participant {
 }
 
 interface SoulEntry {
-  soulId: number;
+  soulId: string;
   firstName: string;
   lastName: string;
   phone: string | null;
   email: string | null;
   status: string;
-  assignedWorker: { memberId: number; firstName: string; lastName: string } | null;
+  assignedWorker: { memberId: string; firstName: string; lastName: string } | null;
   followUpCount: number;
   lastFollowUpDate: string | null;
   followUpOutcomes: Record<string, number>;
@@ -32,8 +32,8 @@ interface SoulEntry {
 }
 
 interface ProgramDetail {
-  outreachId: number;
-  branchId: number;
+  outreachId: string;
+  branchId: string;
   programName: string;
   programDate: string;
   location: string;
@@ -43,7 +43,7 @@ interface ProgramDetail {
   totalSoulsReached: number;
   notes: string | null;
   isCompleted: boolean;
-  coordinator: { memberId: number; firstName: string; lastName: string } | null;
+  coordinator: { memberId: string; firstName: string; lastName: string } | null;
   participants: Participant[];
   souls: SoulEntry[];
   createdAt: string;
@@ -64,7 +64,7 @@ const formatDate = (d: string | Date) =>
 export default function OutreachProgramDetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const id = Number(searchParams.get('id') ?? '0');
+  const id = searchParams.get('id') ?? '';
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);

@@ -19,8 +19,8 @@ import { eq, and, sql } from 'drizzle-orm';
 const logger = createLogger('fellowships-remove-member');
 
 const removeMemberSchema = z.object({
-  fellowship_id: z.number().int().positive(),
-  member_id: z.number().int().positive(),
+  fellowship_id: z.string().uuid(),
+  member_id: z.string().uuid(),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -40,7 +40,7 @@ export const handler = async (
     const [fellowship] = await db
       .select({ branchId: fellowships.branchId })
       .from(fellowships)
-      .where(eq(fellowships.fellowshipId, input.fellowship_id))
+      .where(eq(fellowships.id, input.fellowship_id))
       .limit(1);
 
     if (!fellowship) {
@@ -78,7 +78,7 @@ export const handler = async (
         notes: input.notes || membership.notes,
         updatedAt: new Date(),
       })
-      .where(eq(fellowshipMembers.fellowshipMemberId, membership.fellowshipMemberId))
+      .where(eq(fellowshipMembers.id, membership.id))
       .returning();
 
     logger.info('Member removed from fellowship', {

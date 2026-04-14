@@ -23,13 +23,13 @@ describe('Logger', () => {
   it('should include context in log entries', () => {
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const logger = new Logger('test-service');
-    logger.setContext({ userId: 42, branchId: 5, operation: 'members-create' });
+    logger.setContext({ userId: 'user-42', branchId: 'branch-5', operation: 'members-create' });
 
     logger.info('Member created');
 
     const logEntry = JSON.parse(spy.mock.calls[0]![0] as string);
-    expect(logEntry.userId).toBe(42);
-    expect(logEntry.branchId).toBe(5);
+    expect(logEntry.userId).toBe('user-42');
+    expect(logEntry.branchId).toBe('branch-5');
     expect(logEntry.operation).toBe('members-create');
   });
 
@@ -91,13 +91,13 @@ describe('Logger', () => {
   it('should create child logger with inherited context', () => {
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const parent = new Logger('test');
-    parent.setContext({ userId: 1 });
+    parent.setContext({ userId: 'user-1' });
 
     const child = parent.child({ operation: 'child-op' });
     child.info('Child log');
 
     const logEntry = JSON.parse(spy.mock.calls[0]![0] as string);
-    expect(logEntry.userId).toBe(1);
+    expect(logEntry.userId).toBe('user-1');
     expect(logEntry.operation).toBe('child-op');
   });
 });
@@ -118,12 +118,12 @@ describe('createLogger', () => {
   it('should create a logger with initial context', () => {
     vi.restoreAllMocks();
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
-    const log = createLogger('my-lambda', { branchId: 3 });
+    const log = createLogger('my-lambda', { branchId: 'branch-3' });
 
     log.info('Hello');
 
     expect(spy).toHaveBeenCalledOnce();
     const logEntry = JSON.parse(spy.mock.calls[0]![0] as string);
-    expect(logEntry.branchId).toBe(3);
+    expect(logEntry.branchId).toBe('branch-3');
   });
 });

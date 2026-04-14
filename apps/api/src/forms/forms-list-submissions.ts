@@ -51,7 +51,7 @@ export const handler = async (
     const params = event.queryStringParameters || {};
     const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10) || 50));
-    const formIdFilter = params.formId ? parseInt(params.formId, 10) : undefined;
+    const formIdFilter = params.formId ?? undefined;
     const startDate = params.startDate;
     const endDate = params.endDate;
 
@@ -92,7 +92,7 @@ export const handler = async (
     const [countResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(formSubmissions)
-      .innerJoin(forms, eq(formSubmissions.formId, forms.formId))
+      .innerJoin(forms, eq(formSubmissions.formId, forms.id))
       .where(whereClause);
 
     const total = countResult?.count ?? 0;
@@ -101,7 +101,7 @@ export const handler = async (
     // 6. Get paginated results with form name and member info
     const data = await db
       .select({
-        submissionId: formSubmissions.submissionId,
+        submissionId: formSubmissions.id,
         formId: formSubmissions.formId,
         formName: forms.formName,
         memberId: formSubmissions.memberId,
@@ -111,8 +111,8 @@ export const handler = async (
         submittedAt: formSubmissions.submittedAt,
       })
       .from(formSubmissions)
-      .innerJoin(forms, eq(formSubmissions.formId, forms.formId))
-      .leftJoin(members, eq(formSubmissions.memberId, members.memberId))
+      .innerJoin(forms, eq(formSubmissions.formId, forms.id))
+      .leftJoin(members, eq(formSubmissions.memberId, members.id))
       .where(whereClause)
       .orderBy(desc(formSubmissions.submittedAt))
       .limit(limit)

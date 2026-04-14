@@ -84,8 +84,8 @@ describe('fellowships-add-member handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 1,
-      branchId: 1,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-1',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -103,17 +103,17 @@ describe('fellowships-add-member handler', () => {
         selectCallCount++;
         if (selectCallCount === 1) {
           // Fellowship exists
-          return [{ fellowshipId: 10, branchId: 1, isActive: true }];
+          return [{ fellowshipId: 'test-fellowship-10', branchId: 'test-branch-1', isActive: true }];
         }
         // Member already in fellowship
-        return [{ fellowshipMemberId: 99, fellowshipId: 5 }];
+        return [{ fellowshipMemberId: 'test-fm-99', fellowshipId: 'test-fellowship-5' }];
       });
 
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      fellowship_id: 10,
-      member_id: 42,
+      fellowship_id: '00000000-0000-4000-8000-000000000010',
+      member_id: '00000000-0000-4000-8000-000000000042',
     });
 
     const result = await handler(event);
@@ -133,7 +133,7 @@ describe('fellowships-add-member handler', () => {
         selectCallCount++;
         if (selectCallCount === 1) {
           // Fellowship exists
-          return [{ fellowshipId: 10, branchId: 1, isActive: true }];
+          return [{ fellowshipId: 'test-fellowship-10', branchId: 'test-branch-1', isActive: true }];
         }
         // No existing membership
         return [];
@@ -141,9 +141,9 @@ describe('fellowships-add-member handler', () => {
 
     mockDb.mockReturning.mockResolvedValue([
       {
-        fellowshipMemberId: 1,
-        fellowshipId: 10,
-        memberId: 42,
+        fellowshipMemberId: 'test-fm-1',
+        fellowshipId: 'test-fellowship-10',
+        memberId: 'test-member-42',
         joinDate: '2025-01-01',
         isActive: true,
         notes: null,
@@ -153,16 +153,16 @@ describe('fellowships-add-member handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      fellowship_id: 10,
-      member_id: 42,
+      fellowship_id: '00000000-0000-4000-8000-000000000010',
+      member_id: '00000000-0000-4000-8000-000000000042',
     });
 
     const result = await handler(event);
     const body = JSON.parse(result.body);
 
     expect(result.statusCode).toBe(201);
-    expect(body.fellowshipId).toBe(10);
-    expect(body.memberId).toBe(42);
+    expect(body.fellowshipId).toBe('test-fellowship-10');
+    expect(body.memberId).toBe('test-member-42');
   });
 
   it('should return 404 when fellowship does not exist', async () => {
@@ -173,8 +173,8 @@ describe('fellowships-add-member handler', () => {
     mockedGetDb.mockReturnValue(mockDb as unknown as ReturnType<typeof getDb>);
 
     const event = createEvent({
-      fellowship_id: 999,
-      member_id: 42,
+      fellowship_id: '00000000-0000-4000-8000-000000000999',
+      member_id: '00000000-0000-4000-8000-000000000042',
     });
 
     const result = await handler(event);

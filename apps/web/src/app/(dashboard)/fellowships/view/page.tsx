@@ -14,7 +14,7 @@ function FellowshipDetailContent() {
   const searchParams = useSearchParams();
   const fellowshipIdParam = searchParams.get('id');
   const router = useRouter();
-  const fellowshipId = fellowshipIdParam ? parseInt(fellowshipIdParam, 10) : 0;
+  const fellowshipId = fellowshipIdParam ?? '';
 
   const [fellowship, setFellowship] = useState<Fellowship | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ function FellowshipDetailContent() {
     try {
       setLoading(true);
       const data = await fellowships.get(fellowshipId);
-      setFellowship(data);
+      setFellowship((data.data as Fellowship) || null);
     } catch (err) {
       console.error('Failed to load fellowship', err);
     } finally {
@@ -59,6 +59,8 @@ function FellowshipDetailContent() {
     );
   }
 
+  const fellowshipLocation = (fellowship as Fellowship & { location?: string }).location;
+
   return (
     <section aria-label="Fellowship details">
       {/* Header */}
@@ -80,7 +82,7 @@ function FellowshipDetailContent() {
             )}
             <div className="flex gap-4 mt-2 text-sm text-gray-600">
               {fellowship.meetingSchedule && <span>📅 {fellowship.meetingSchedule}</span>}
-              {fellowship.location && <span>📍 {fellowship.location}</span>}
+              {fellowshipLocation && <span>📍 {fellowshipLocation}</span>}
             </div>
           </div>
           <Badge variant={fellowship.isActive ? 'active' : 'inactive'}>
@@ -172,8 +174,16 @@ export default function FellowshipDetailPage() {
   );
 }
 
-function MembersTab({ fellowshipId }: { fellowshipId: number }) {
-  const [members, setMembers] = useState<any[]>([]);
+// TODO: Replace with shared type from @kairos/types once getMembers API is implemented
+interface FellowshipMemberItem {
+  member_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+function MembersTab({ fellowshipId }: { fellowshipId: string }) {
+  const [members, setMembers] = useState<FellowshipMemberItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [memberId, setMemberId] = useState('');
@@ -199,7 +209,7 @@ function MembersTab({ fellowshipId }: { fellowshipId: number }) {
     if (!memberId) return;
     try {
       setSubmitting(true);
-      await fellowships.addMember(fellowshipId, { memberId: parseInt(memberId) });
+      await fellowships.members.add(fellowshipId, { memberId });
       setShowAddModal(false);
       setMemberId('');
       loadMembers();
@@ -211,10 +221,10 @@ function MembersTab({ fellowshipId }: { fellowshipId: number }) {
     }
   };
 
-  const handleRemoveMember = async (memberIdToRemove: number) => {
+  const handleRemoveMember = async (memberIdToRemove: string) => {
     if (!confirm('Remove this member from the fellowship?')) return;
     try {
-      await fellowships.removeMember(fellowshipId, { fellowshipId, memberId: memberIdToRemove });
+      await fellowships.members.remove(fellowshipId, memberIdToRemove);
       loadMembers();
     } catch (err) {
       console.error('Failed to remove member', err);
@@ -277,8 +287,19 @@ function MembersTab({ fellowshipId }: { fellowshipId: number }) {
   );
 }
 
-function MeetingsTab({ fellowshipId }: { fellowshipId: number }) {
-  const [meetings, setMeetings] = useState<any[]>([]);
+interface MeetingWithStats {
+  meetingId: string;
+  meetingTitle: string | null;
+  meetingTopic: string | null;
+  meetingDate: string;
+  location: string | null;
+  presentCount: number;
+  totalCount: number;
+  attendancePercentage: number;
+}
+
+function MeetingsTab({ fellowshipId }: { fellowshipId: string }) {
+  const [meetings, setMeetings] = useState<MeetingWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -296,8 +317,8 @@ function MeetingsTab({ fellowshipId }: { fellowshipId: number }) {
   const loadMeetings = async () => {
     try {
       setLoading(true);
-      const data = await fellowships.listMeetings(fellowshipId);
-      setMeetings(data.meetings || []);
+      const data = await fellowships.meetings.list(fellowshipId);
+      setMeetings((data.data as unknown as MeetingWithStats[]) || []);
     } catch (err) {
       console.error('Failed to load meetings', err);
     } finally {
@@ -312,8 +333,7 @@ function MeetingsTab({ fellowshipId }: { fellowshipId: number }) {
     }
     try {
       setSubmitting(true);
-      await fellowships.createMeeting(fellowshipId, {
-        fellowshipId,
+      await fellowships.meetings.create(fellowshipId, {
         meetingDate: new Date(formData.meeting_date).toISOString(),
         meetingTitle: formData.meeting_title,
         meetingTopic: formData.meeting_topic,
@@ -408,7 +428,7 @@ function MeetingsTab({ fellowshipId }: { fellowshipId: number }) {
   );
 }
 
-function MessagesTab({ fellowshipId }: { fellowshipId: number }) {
+function MessagesTab({ fellowshipId }: { fellowshipId: string }) {
   const [message, setMessage] = useState({ title: '', body: '' });
   const [sending, setSending] = useState(false);
 

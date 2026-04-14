@@ -7,8 +7,16 @@ import { Breadcrumbs } from '@/components/layout';
 import { Button, Badge, SelectInput, Spinner, Card, CardBody, DataTable } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { forms, branches } from '@kairos/api-client';
-import type { Form, Branch } from '@kairos/types';
+import type { Branch } from '@kairos/types';
 import type { ColumnDef } from '@tanstack/react-table';
+
+interface FormListItem {
+  formId: string;
+  formName: string;
+  scope: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 const formatDate = (d: Date | string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -16,7 +24,7 @@ const formatDate = (d: Date | string) =>
 export default function FormsListPage() {
   const { user } = useAuth();
   const isPastor = user?.role === 'Pastor';
-  const [formList, setFormList] = useState<Form[]>([]);
+  const [formList, setFormList] = useState<FormListItem[]>([]);
   const [branchList, setBranchList] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [scopeFilter, setScopeFilter] = useState('');
@@ -24,7 +32,7 @@ export default function FormsListPage() {
 
   useEffect(() => {
     if (!isPastor) {
-      branches.list({ limit: 100 }).then((res: { data: Branch[] }) => setBranchList(res.data)).catch(() => {});
+      branches.list().then((res) => setBranchList((res.data as unknown as Branch[]) ?? [])).catch(() => {});
     }
   }, [isPastor]);
 
@@ -35,7 +43,7 @@ export default function FormsListPage() {
       if (scopeFilter) params.scope = scopeFilter;
       if (branchFilter) params.branchId = branchFilter;
       const res = await forms.list(params);
-      setFormList(res.data ?? []);
+      setFormList((res.data as unknown as FormListItem[]) ?? []);
     } catch {
       setFormList([]);
     } finally {
@@ -45,7 +53,7 @@ export default function FormsListPage() {
 
   useEffect(() => { fetchForms(); }, [fetchForms]);
 
-  const columns: ColumnDef<Form, unknown>[] = [
+  const columns: ColumnDef<FormListItem, unknown>[] = [
     {
       accessorKey: 'formName',
       header: 'Form Name',
@@ -110,7 +118,7 @@ export default function FormsListPage() {
           <div className="flex flex-wrap gap-4">
             <SelectInput name="scopeFilter" options={[{ value: 'Church-wide', label: 'Church-wide' }, { value: 'Branch-specific', label: 'Branch-specific' }]} placeholder="All Scopes" value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} aria-label="Filter by scope" />
             {!isPastor && (
-              <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
+              <SelectInput name="branchFilter" options={branchList.map((b) => ({ value: b.id, label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label="Filter by branch" />
             )}
           </div>
         </CardBody>

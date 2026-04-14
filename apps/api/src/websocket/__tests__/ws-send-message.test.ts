@@ -74,7 +74,7 @@ function setupConnections(connections: { connectionId: string }[]) {
   mockDeleteWhere.mockResolvedValue(undefined);
 }
 
-function createPayload(memberIds: number[]): WsSendMessagePayload {
+function createPayload(memberIds: string[]): WsSendMessagePayload {
   return {
     memberIds,
     notification: {
@@ -101,7 +101,7 @@ describe('ws-send-message handler', () => {
     setupConnections([{ connectionId: 'conn-1' }, { connectionId: 'conn-2' }]);
     mockSend.mockResolvedValue({});
 
-    const payload = createPayload([42]);
+    const payload = createPayload(['test-member-42']);
     const result = await handler(payload);
     const body = JSON.parse(result.body);
 
@@ -116,7 +116,7 @@ describe('ws-send-message handler', () => {
     goneError.name = 'GoneException';
     mockSend.mockRejectedValue(goneError);
 
-    const payload = createPayload([42]);
+    const payload = createPayload(['test-member-42']);
     const result = await handler(payload);
     const body = JSON.parse(result.body);
 
@@ -128,7 +128,7 @@ describe('ws-send-message handler', () => {
 
   it('should handle members with no active connections', async () => {
     setupConnections([]);
-    const payload = createPayload([99]);
+    const payload = createPayload(['test-member-99']);
     const result = await handler(payload);
     const body = JSON.parse(result.body);
 

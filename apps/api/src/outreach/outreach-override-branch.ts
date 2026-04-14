@@ -25,10 +25,10 @@ import { z } from 'zod';
 const logger = createLogger('outreach-override-branch');
 
 const overrideSchema = z.object({
-  member_id: z.number().int().positive(),
-  target_branch_id: z.number().int().positive(),
+  member_id: z.string().uuid(),
+  target_branch_id: z.string().uuid(),
   restore: z.boolean().default(false),
-  original_branch_id: z.number().int().positive().optional(),
+  original_branch_id: z.string().uuid().optional(),
 });
 
 export const handler = async (
@@ -51,11 +51,11 @@ export const handler = async (
     // Verify member exists
     const [member] = await db
       .select({
-        memberId: members.memberId,
+        memberId: members.id,
         homeBranchId: members.homeBranchId,
       })
       .from(members)
-      .where(eq(members.memberId, input.member_id))
+      .where(eq(members.id, input.member_id))
       .limit(1);
 
     if (!member) {
@@ -74,7 +74,7 @@ export const handler = async (
           homeBranchId: input.original_branch_id,
           updatedAt: sql`NOW()`,
         })
-        .where(eq(members.memberId, input.member_id))
+        .where(eq(members.id, input.member_id))
         .returning();
 
       logger.info('Branch restored', {
@@ -97,7 +97,7 @@ export const handler = async (
         homeBranchId: input.target_branch_id,
         updatedAt: sql`NOW()`,
       })
-      .where(eq(members.memberId, input.member_id))
+      .where(eq(members.id, input.member_id))
       .returning();
 
     logger.info('Branch overridden', {

@@ -39,8 +39,9 @@ export const handler = async (
     logger.info('Getting soul funnel', { userId: ctx.memberId, branchId: ctx.branchId });
 
     // 2. Parse query parameters
-    const params = event.queryStringParameters || {};
-    const branchId = params.branchId ? parseInt(params.branchId, 10) : ctx.branchId;
+    const params = (event.queryStringParameters || {}) as Record<string, string | undefined>;
+    const requestedBranchId: string | undefined = params.branchId;
+    const branchId: string = requestedBranchId || ctx.branchId;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
 
@@ -71,7 +72,7 @@ export const handler = async (
         count: sql<number>`count(*)::int`.as('count'),
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
       .where(whereClause)
       .groupBy(souls.status);
 

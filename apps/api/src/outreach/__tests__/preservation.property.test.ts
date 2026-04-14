@@ -122,12 +122,12 @@ function extractInterfaceFields(source: string, interfaceName: string): string[]
   const match = source.match(interfaceRegex);
   if (!match) return [];
 
-  const body = match[1];
+  const body = match[1]!;
   const fieldRegex = /^\s+(\w+)\??:/gm;
   const fields: string[] = [];
   let fieldMatch;
   while ((fieldMatch = fieldRegex.exec(body)) !== null) {
-    fields.push(fieldMatch[1]);
+    fields.push(fieldMatch[1]!);
   }
   return fields;
 }
@@ -214,6 +214,8 @@ describe('Preservation: Entity interfaces exist and have required fields', () =>
 // ============================================================================
 
 // Import directly from the api-client package source (no alias configured for api app)
+// NOTE: outreach & souls convenience exports are not yet implemented in api-client
+// These tests document the expected API surface for when they are added.
 import { outreach, souls } from '../../../../../packages/api-client/src/api';
 
 describe('Preservation: API client methods exist', () => {

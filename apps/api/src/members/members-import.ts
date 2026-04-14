@@ -35,7 +35,7 @@ interface ImportResult {
   successCount: number;
   errorCount: number;
   errors: ImportError[];
-  createdMemberIds: number[];
+  createdMemberIds: string[];
 }
 
 /**
@@ -64,13 +64,13 @@ export const handler = async (
     // 3. Parse request body
     const body = JSON.parse(event.body || '{}');
     const csvContent = body.csv;
-    const targetBranchId = body.branchId ? parseInt(String(body.branchId), 10) : undefined;
+    const targetBranchId = body.branchId ? String(body.branchId) : undefined;
 
     if (!csvContent || typeof csvContent !== 'string') {
       throw new BadRequestError('CSV content is required');
     }
 
-    if (!targetBranchId || isNaN(targetBranchId)) {
+    if (!targetBranchId) {
       throw new BadRequestError('branchId is required');
     }
 
@@ -180,7 +180,7 @@ export const handler = async (
       const email = data.email?.trim();
       if (email) {
         const existing = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(and(eq(members.email, email), eq(members.isActive, true)))
           .limit(1);
@@ -196,7 +196,7 @@ export const handler = async (
       const phone = data.phone?.trim();
       if (phone) {
         const existing = await db
-          .select({ memberId: members.memberId })
+          .select({ memberId: members.id })
           .from(members)
           .where(and(eq(members.phone, phone), eq(members.isActive, true)))
           .limit(1);
@@ -217,7 +217,7 @@ export const handler = async (
     );
 
     // 10. Bulk insert valid rows
-    const createdMemberIds: number[] = [];
+    const createdMemberIds: string[] = [];
 
     for (const { data } of finalValidRows) {
       try {
@@ -226,22 +226,23 @@ export const handler = async (
           .values({
             firstName: data.first_name!.trim(),
             lastName: data.last_name!.trim(),
-            middleName: data.middle_name?.trim() || undefined,
-            email: data.email?.trim() || undefined,
-            phone: data.phone?.trim() || undefined,
-            dateOfBirth: data.date_of_birth?.trim() || undefined,
-            gender: data.gender?.trim() || undefined,
-            address: data.address?.trim() || undefined,
-            city: data.city?.trim() || undefined,
-            postalCode: data.postal_code?.trim() || undefined,
+            middleName: data.middle_name?.trim() || null,
+            email: data.email?.trim() || '',
+            phone: data.phone?.trim() || null,
+            dateOfBirth: data.date_of_birth?.trim() || null,
+            gender: data.gender?.trim() || null,
+            address: data.address?.trim() || null,
+            city: data.city?.trim() || null,
+            postalCode: data.postal_code?.trim() || null,
             homeBranchId: targetBranchId,
             isActive: false, // Imported members start as pending
-            emergencyContactName: data.emergency_contact_name?.trim() || undefined,
-            emergencyContactPhone: data.emergency_contact_phone?.trim() || undefined,
+            passwordHash: 'PENDING', // Placeholder — set when member activates account
+            emergencyContactName: data.emergency_contact_name?.trim() || null,
+            emergencyContactPhone: data.emergency_contact_phone?.trim() || null,
           })
           .returning();
 
-        createdMemberIds.push(created!.memberId);
+        createdMemberIds.push(created!.id);
       } catch (err) {
         const rowNum = validRows.indexOf(
           validRows.find((v) => v.data === data)!

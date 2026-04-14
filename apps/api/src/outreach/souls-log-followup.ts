@@ -37,13 +37,13 @@ export const handler = async (
     // Verify soul exists and get branch
     const [soul] = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         outreachId: souls.outreachId,
         branchId: outreachPrograms.branchId,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .where(eq(souls.soulId, input.soul_id))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .where(eq(souls.id, input.soul_id))
       .limit(1);
 
     if (!soul) {
@@ -72,9 +72,9 @@ export const handler = async (
     await db
       .update(souls)
       .set({ updatedAt: sql`NOW()` })
-      .where(eq(souls.soulId, input.soul_id));
+      .where(eq(souls.id, input.soul_id));
 
-    logger.info('Follow-up logged', { followUpId: created!.followUpId, soulId: input.soul_id });
+    logger.info('Follow-up logged', { followUpId: created!.id, soulId: input.soul_id });
 
     return createdResponse(created!);
   } catch (error) {

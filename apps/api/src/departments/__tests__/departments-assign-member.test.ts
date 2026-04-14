@@ -10,16 +10,6 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 // Mocks
 // ============================================================================
 
-// Mock database operations
-const mockSelect = vi.fn();
-const mockFrom = vi.fn();
-const mockWhere = vi.fn();
-const mockLimit = vi.fn();
-const mockInsert = vi.fn();
-const mockValues = vi.fn();
-const mockReturning = vi.fn();
-const mockInnerJoin = vi.fn();
-
 vi.mock('@kairos/database', () => ({
   branchDepartments: { branchDepartmentId: 'branch_department_id', branchId: 'branch_id', leadMemberId: 'lead_member_id', deputyMemberId: 'deputy_member_id', isActive: 'is_active' },
   departmentMembers: { departmentMemberId: 'department_member_id', branchDepartmentId: 'branch_department_id', memberId: 'member_id', isActive: 'is_active' },
@@ -84,7 +74,7 @@ vi.mock('@kairos/utils', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })),
-    validateOrThrow: vi.fn((schema: unknown, data: unknown) => data),
+    validateOrThrow: vi.fn((_schema: unknown, data: unknown) => data),
     createLogger: () => ({
       info: vi.fn(),
       warn: vi.fn(),
@@ -100,7 +90,7 @@ vi.mock('@kairos/utils', () => {
 });
 
 import { handler } from '../departments-assign-member';
-import { resolveAuthContext, enforceBranchAccess, isAdmin, getDb } from '@kairos/utils';
+import { resolveAuthContext, isAdmin, getDb } from '@kairos/utils';
 
 const mockedResolveAuthContext = vi.mocked(resolveAuthContext);
 const mockedIsAdmin = vi.mocked(isAdmin);
@@ -183,8 +173,8 @@ describe('departments-assign-member Lambda', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 1,
-      branchId: 10,
+      memberId: 'test-member-1',
+      branchId: 'test-branch-10',
       roles: ['Admin', 'Member'],
       email: 'admin@kairos.church',
     });
@@ -196,9 +186,9 @@ describe('departments-assign-member Lambda', () => {
     setupDb({
       select: [
         // branchDept lookup
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 5, deputyMemberId: 6, isActive: true }],
         // member lookup
-        [{ memberId: 42, homeBranchId: 10, isActive: true }],
+        [{ memberId: 'test-member-42', homeBranchId: 'test-branch-10', isActive: true }],
         // existing assignment check (none)
         [],
         // dept count
@@ -206,7 +196,7 @@ describe('departments-assign-member Lambda', () => {
       ],
       insert: [
         // new assignment
-        [{ departmentMemberId: 1, branchDepartmentId: 100, memberId: 42, isActive: true }],
+        [{ departmentMemberId: 'test-dept-member-1', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
       ],
     });
 
@@ -219,8 +209,8 @@ describe('departments-assign-member Lambda', () => {
     expect(result.statusCode).toBe(201);
 
     const body = JSON.parse(result.body);
-    expect(body.departmentMemberId).toBe(1);
-    expect(body.memberId).toBe(42);
+    expect(body.departmentMemberId).toBe('test-dept-member-1');
+    expect(body.memberId).toBe('test-member-42');
   });
 
   // Test: Warning at 3rd department, admin can override
@@ -229,13 +219,13 @@ describe('departments-assign-member Lambda', () => {
 
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
-        [{ memberId: 42, homeBranchId: 10, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ memberId: 'test-member-42', homeBranchId: 'test-branch-10', isActive: true }],
         [],
         [{ count: 2 }], // already in 2 departments
       ],
       insert: [
-        [{ departmentMemberId: 3, branchDepartmentId: 100, memberId: 42, isActive: true }],
+        [{ departmentMemberId: 'test-dept-member-3', branchDepartmentId: 'test-branch-dept-100', memberId: 'test-member-42', isActive: true }],
       ],
     });
 
@@ -256,16 +246,16 @@ describe('departments-assign-member Lambda', () => {
   it('should reject 3rd department for non-admin without override', async () => {
     mockedIsAdmin.mockReturnValue(false);
     mockedResolveAuthContext.mockResolvedValue({
-      memberId: 5,
-      branchId: 10,
+      memberId: 'test-member-5',
+      branchId: 'test-branch-10',
       roles: ['Leader', 'Member'],
       email: 'leader@kairos.church',
     });
 
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
-        [{ memberId: 42, homeBranchId: 10, isActive: true }],
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ memberId: 'test-member-42', homeBranchId: 'test-branch-10', isActive: true }],
         [],
         [{ count: 2 }], // already in 2 departments
       ],
@@ -287,9 +277,9 @@ describe('departments-assign-member Lambda', () => {
   it('should reject duplicate department assignment', async () => {
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
-        [{ memberId: 42, homeBranchId: 10, isActive: true }],
-        [{ departmentMemberId: 99 }], // already assigned
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ memberId: 'test-member-42', homeBranchId: 'test-branch-10', isActive: true }],
+        [{ departmentMemberId: 'test-dept-member-99' }], // already assigned
       ],
     });
 
@@ -309,8 +299,8 @@ describe('departments-assign-member Lambda', () => {
   it('should reject assignment of inactive member', async () => {
     setupDb({
       select: [
-        [{ branchDepartmentId: 100, branchId: 10, leadMemberId: 5, deputyMemberId: 6, isActive: true }],
-        [{ memberId: 42, homeBranchId: 10, isActive: false }], // inactive
+        [{ branchDepartmentId: 'test-branch-dept-100', branchId: 'test-branch-10', leadMemberId: 5, deputyMemberId: 6, isActive: true }],
+        [{ memberId: 'test-member-42', homeBranchId: 'test-branch-10', isActive: false }], // inactive
       ],
     });
 

@@ -78,8 +78,8 @@ describe('souls-capture handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetAuthContext.mockReturnValue({
-      memberId: 42,
-      branchId: 10,
+      memberId: 'test-member-42',
+      branchId: 'test-branch-10',
       roles: ['Member'],
       email: 'worker@kairos.church',
     });
@@ -88,13 +88,13 @@ describe('souls-capture handler', () => {
 
   it('should automatically assign soul to capturing member', async () => {
     const createdSoul = {
-      soulId: 1,
+      soulId: 'test-soul-1',
       firstName: 'John',
       lastName: 'Doe',
       phone: '+447700900001',
       assignedMemberId: 42,
       status: 'New',
-      outreachId: 1,
+      outreachId: 'test-outreach-1',
     };
 
     let selectCallCount = 0;
@@ -106,7 +106,7 @@ describe('souls-capture handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ outreachId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ outreachId: 'test-outreach-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -135,7 +135,7 @@ describe('souls-capture handler', () => {
       first_name: 'John',
       last_name: 'Doe',
       phone: '+447700900001',
-      outreach_id: 1,
+      outreach_id: '00000000-0000-4000-8000-000000000001',
     });
 
     const result = await handler(event);
@@ -148,12 +148,12 @@ describe('souls-capture handler', () => {
 
   it('should set initial status to "New"', async () => {
     const createdSoul = {
-      soulId: 2,
+      soulId: 'test-soul-2',
       firstName: 'Jane',
       lastName: 'Smith',
       status: 'New',
       assignedMemberId: 42,
-      outreachId: 1,
+      outreachId: 'test-outreach-1',
     };
 
     let selectCallCount = 0;
@@ -164,7 +164,7 @@ describe('souls-capture handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ outreachId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ outreachId: 'test-outreach-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -192,7 +192,7 @@ describe('souls-capture handler', () => {
       first_name: 'Jane',
       last_name: 'Smith',
       phone: '+447700900002',
-      outreach_id: 1,
+      outreach_id: '00000000-0000-4000-8000-000000000001',
     });
 
     const result = await handler(event);
@@ -203,13 +203,13 @@ describe('souls-capture handler', () => {
 
   it('should allow duplicate phone with warning', async () => {
     const createdSoul = {
-      soulId: 3,
+      soulId: 'test-soul-3',
       firstName: 'Bob',
       lastName: 'Doe',
       phone: '+447700900001',
       assignedMemberId: 42,
       status: 'New',
-      outreachId: 1,
+      outreachId: 'test-outreach-1',
     };
 
     let selectCallCount = 0;
@@ -220,7 +220,7 @@ describe('souls-capture handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ outreachId: 1, branchId: 10 }]),
+                limit: vi.fn().mockReturnValue([{ outreachId: 'test-outreach-1', branchId: 'test-branch-10' }]),
               }),
             }),
           };
@@ -230,7 +230,7 @@ describe('souls-capture handler', () => {
           return {
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue([{ soulId: 1, firstName: 'John', lastName: 'Doe' }]),
+                limit: vi.fn().mockReturnValue([{ soulId: 'test-soul-1', firstName: 'John', lastName: 'Doe' }]),
               }),
             }),
           };
@@ -249,7 +249,7 @@ describe('souls-capture handler', () => {
       first_name: 'Bob',
       last_name: 'Doe',
       phone: '+447700900001',
-      outreach_id: 1,
+      outreach_id: '00000000-0000-4000-8000-000000000001',
     });
 
     const result = await handler(event);
@@ -276,7 +276,7 @@ describe('souls-capture handler', () => {
       first_name: 'Test',
       last_name: 'Soul',
       phone: '+447700900099',
-      outreach_id: 999,
+      outreach_id: '00000000-0000-4000-8000-000000000999',
     });
 
     const result = await handler(event);

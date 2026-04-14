@@ -33,11 +33,8 @@ export const handler = async (
     }
 
     // 3. Parse branch ID from path
-    const branchId = parseInt(
-      event.pathParameters?.branchId || event.pathParameters?.id || '0',
-      10
-    );
-    if (!branchId || isNaN(branchId)) {
+    const branchId = event.pathParameters?.branchId ?? event.pathParameters?.id ?? '';
+    if (!branchId) {
       throw new NotFoundError('Branch');
     }
 
@@ -47,9 +44,9 @@ export const handler = async (
 
     // 4. Verify branch exists
     const [branch] = await db
-      .select({ branchId: branches.branchId, isActive: branches.isActive })
+      .select({ branchId: branches.id, isActive: branches.isActive })
       .from(branches)
-      .where(eq(branches.branchId, branchId))
+      .where(eq(branches.id, branchId))
       .limit(1);
 
     if (!branch) {
@@ -81,7 +78,7 @@ export const handler = async (
     const [updated] = await db
       .update(branches)
       .set({ isActive: false })
-      .where(eq(branches.branchId, branchId))
+      .where(eq(branches.id, branchId))
       .returning();
 
     logger.info('Branch soft-deleted', { branchId });

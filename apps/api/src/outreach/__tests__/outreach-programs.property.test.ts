@@ -133,8 +133,8 @@ describe('Duplicate Program Detection (Property 6)', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         programNameArb,
         locationArb,
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
@@ -161,7 +161,7 @@ describe('Duplicate Program Detection (Property 6)', () => {
             select: vi.fn().mockReturnValue({
               from: vi.fn().mockReturnValue({
                 where: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue([{ outreachId: 999 }]),
+                  limit: vi.fn().mockReturnValue([{ outreachId: 'test-outreach-999' }]),
                 }),
               }),
             }),
@@ -195,8 +195,8 @@ describe('Duplicate Program Detection (Property 6)', () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         programNameArb,
         locationArb,
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
@@ -231,7 +231,7 @@ describe('Duplicate Program Detection (Property 6)', () => {
               values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([
                   {
-                    outreachId: 1,
+                    outreachId: 'test-outreach-1',
                     branchId,
                     programName,
                     programDate: programDate.toISOString().split('T')[0],
@@ -274,9 +274,9 @@ describe('Worker Registration Idempotence Guard (Property 7)', () => {
   it('should reject with 409 Conflict when a member is already registered for the program', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, branchId, outreachId) => {
           vi.clearAllMocks();
 
@@ -352,9 +352,9 @@ describe('Worker Registration Idempotence Guard (Property 7)', () => {
   it('should accept registration when member is not already registered', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, branchId, outreachId) => {
           vi.clearAllMocks();
 
@@ -451,9 +451,9 @@ describe('Program Completion Updates Soul Count (Property 11)', () => {
   it('should set total_souls_reached to the actual count of soul records linked to the program', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         fc.integer({ min: 0, max: 200 }),
         async (memberId, branchId, outreachId, actualSoulCount) => {
           vi.clearAllMocks();
@@ -537,9 +537,9 @@ describe('Program Completion Updates Soul Count (Property 11)', () => {
   it('should reject with 400 Bad Request when program is already completed', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
-        fc.integer({ min: 1, max: 500 }),
+        fc.uuid(),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, branchId, outreachId) => {
           vi.clearAllMocks();
           vi.mocked(enforceBranchAccess).mockImplementation(() => {});

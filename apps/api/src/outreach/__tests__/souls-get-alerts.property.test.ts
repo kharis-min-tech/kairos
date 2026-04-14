@@ -143,8 +143,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should return overdue souls in active statuses when next_follow_up_date is in the past', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...ACTIVE_STATUSES),
         fc.integer({ min: 1, max: 30 }),
         async (memberId, branchId, activeStatus, daysOverdue) => {
@@ -160,7 +160,7 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
 
           const overdueRows = [
             {
-              soulId: 1,
+              soulId: 'test-soul-1',
               firstName: 'John',
               lastName: 'Doe',
               phone: '+447700900001',
@@ -187,7 +187,7 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
           expect(result.statusCode).toBe(200);
           expect(body.overdueSouls).toHaveLength(1);
           expect(body.overdueSouls[0].status).toBe(activeStatus);
-          expect(body.overdueSouls[0].soulId).toBe(1);
+          expect(body.overdueSouls[0].soulId).toBe('test-soul-1');
         }
       ),
       { numRuns: 30 }
@@ -197,8 +197,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should return overdue souls when no next_follow_up_date and days since last follow-up exceeds threshold', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...ACTIVE_STATUSES),
         fc.integer({ min: 3, max: 30 }),
         async (memberId, branchId, activeStatus, daysSinceLastFollowUp) => {
@@ -214,7 +214,7 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
 
           const overdueRows = [
             {
-              soulId: 2,
+              soulId: 'test-soul-2',
               firstName: 'Jane',
               lastName: 'Smith',
               phone: '+447700900002',
@@ -251,8 +251,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should return overdue souls when no follow-ups exist and days since creation exceeds threshold', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...ACTIVE_STATUSES),
         fc.integer({ min: 3, max: 60 }),
         async (memberId, branchId, activeStatus, daysSinceCreation) => {
@@ -268,7 +268,7 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
 
           const overdueRows = [
             {
-              soulId: 3,
+              soulId: 'test-soul-3',
               firstName: 'New',
               lastName: 'Soul',
               phone: null,
@@ -304,10 +304,10 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should never return souls in terminal statuses (Converted, Not Interested)', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.constantFrom(...TERMINAL_STATUSES),
-        async (memberId, branchId, terminalStatus) => {
+        async (memberId, branchId, _terminalStatus) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
 
@@ -340,8 +340,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should use default threshold of 2 days when no thresholdDays param is provided', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         async (memberId, branchId) => {
           vi.clearAllMocks();
           mockedIsAdmin.mockReturnValue(false);
@@ -371,8 +371,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should accept configurable thresholdDays parameter', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.integer({ min: 1, max: 14 }),
         async (memberId, branchId, customThreshold) => {
           vi.clearAllMocks();
@@ -403,8 +403,8 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
   it('should include assigned worker info in overdue soul response', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 10000 }),
-        fc.integer({ min: 1, max: 100 }),
+        fc.uuid(),
+        fc.uuid(),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0),
         async (memberId, branchId, workerFirstName, workerLastName) => {
@@ -422,7 +422,7 @@ describe('Follow-Up Overdue Alert Correctness (Property 8)', () => {
 
           const overdueRows = [
             {
-              soulId: 10,
+              soulId: 'test-soul-10',
               firstName: 'Soul',
               lastName: 'Name',
               phone: '+447700900010',

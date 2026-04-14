@@ -61,14 +61,14 @@ let memberIdCounter = 100;
 function createEvent(
   body: Record<string, unknown>,
   authContext?: {
-    memberId?: number;
-    branchId?: number;
+    memberId?: string;
+    branchId?: string;
     roles?: string[];
   }
 ): APIGatewayProxyEvent {
   const ctx = {
-    memberId: authContext?.memberId ?? 1,
-    branchId: authContext?.branchId ?? 1,
+    memberId: authContext?.memberId ?? 'test-member-1',
+    branchId: authContext?.branchId ?? 'test-branch-1',
     roles: authContext?.roles ?? ['Admin', 'Member'],
   };
 
@@ -142,7 +142,7 @@ const emailArb = fc.emailAddress()
   .filter((e) => !/[,"\n\r]/.test(e));
 
 /** Generate a valid branch ID */
-const branchIdArb = fc.integer({ min: 1, max: 100 });
+const branchIdArb = fc.uuid();
 
 /** Generate a valid CSV row (first_name, last_name, email) */
 const validCsvRowArb = fc.record({
@@ -196,7 +196,7 @@ describe('Property-Based Tests: Members Import', () => {
 
             const event = createEvent(
               { csv, branchId },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] }
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] }
             );
             const result = await handler(event);
 
@@ -231,7 +231,7 @@ describe('Property-Based Tests: Members Import', () => {
 
             const event = createEvent(
               { csv, branchId },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] }
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] }
             );
             const result = await handler(event);
 
@@ -271,7 +271,7 @@ describe('Property-Based Tests: Members Import', () => {
 
             const event = createEvent(
               { csv, branchId },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] }
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] }
             );
             const result = await handler(event);
 
@@ -311,7 +311,7 @@ describe('Property-Based Tests: Members Import', () => {
 
             const event = createEvent(
               { csv, branchId },
-              { memberId: 1, branchId, roles: ['Admin', 'Member'] }
+              { memberId: 'test-member-1', branchId, roles: ['Admin', 'Member'] }
             );
             const result = await handler(event);
 

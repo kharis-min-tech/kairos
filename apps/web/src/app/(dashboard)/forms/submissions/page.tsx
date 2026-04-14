@@ -6,8 +6,11 @@ import { Breadcrumbs } from '@/components/layout';
 import { Button, SelectInput, DatePicker, Spinner, Alert, Card, CardHeader, CardBody, DataTable } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { forms, branches } from '@kairos/api-client';
-import type { FormSubmission, Form, Branch } from '@kairos/types';
+import type { Branch } from '@kairos/types';
 import type { ColumnDef } from '@tanstack/react-table';
+
+interface FormListItem { id: string; formId: string; formName: string; }
+interface FormSubmission { submissionId: string; formId: string; memberId: string | null; submittedAt: string; }
 
 const formatDate = (d: Date | string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -16,7 +19,7 @@ export default function FormSubmissionsPage() {
   const { user } = useAuth();
   const isPastor = user?.role === 'Pastor';
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
-  const [formList, setFormList] = useState<Form[]>([]);
+  const [formList, setFormList] = useState<FormListItem[]>([]);
   const [branchList, setBranchList] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -29,10 +32,10 @@ export default function FormSubmissionsPage() {
   useEffect(() => {
     Promise.all([
       forms.list({ limit: 100 }),
-      !isPastor ? branches.list({ limit: 100 }) : Promise.resolve({ data: [] }),
+      !isPastor ? branches.list() : Promise.resolve({ data: [] }),
     ]).then(([fRes, bRes]) => {
-      setFormList(fRes.data ?? []);
-      setBranchList((bRes.data ?? []) as unknown as Branch[]);
+      setFormList((fRes.data as unknown as FormListItem[]) ?? []);
+      setBranchList((bRes.data as unknown as Branch[]) ?? []);
     }).catch(() => {});
   }, [isPastor]);
 
@@ -46,7 +49,7 @@ export default function FormSubmissionsPage() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await forms.listSubmissions(params);
-      setSubmissions(res.data ?? []);
+      setSubmissions((res.data as unknown as FormSubmission[]) ?? []);
     } catch {
       setError('Failed to load submissions.');
     } finally {
@@ -65,7 +68,8 @@ export default function FormSubmissionsPage() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await forms.exportSubmissions(params);
-      if (res.url) window.open(res.url, '_blank');
+      const exportData = res as unknown as { url?: string };
+      if (exportData.url) window.open(exportData.url, '_blank');
     } catch {
       // silent
     } finally {
@@ -99,9 +103,9 @@ export default function FormSubmissionsPage() {
         <CardHeader><h2 className="text-sm font-medium text-gray-700">Filters</h2></CardHeader>
         <CardBody>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SelectInput label="Form" name="formFilter" options={formList.map((f) => ({ value: String(f.formId), label: f.formName }))} placeholder="All Forms" value={formFilter} onChange={(e) => setFormFilter(e.target.value)} />
+            <SelectInput label="Form" name="formFilter" options={formList.map((f) => ({ value: f.formId, label: f.formName }))} placeholder="All Forms" value={formFilter} onChange={(e) => setFormFilter(e.target.value)} />
             {!isPastor && (
-              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: String(b.branchId), label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} />
+              <SelectInput label="Branch" name="branchFilter" options={branchList.map((b) => ({ value: b.id, label: b.branchName }))} placeholder="All Branches" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} />
             )}
             <DatePicker label="Start Date" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <DatePicker label="End Date" name="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />

@@ -32,7 +32,7 @@ export const handler = async (
     const limit = Math.min(100, Math.max(1, parseInt(params.limit || '50', 10) || 50));
     const offset = (page - 1) * limit;
     const status = params.status;
-    const assignedMemberId = params.assignedMemberId ? parseInt(params.assignedMemberId, 10) : undefined;
+    const assignedMemberId = params.assignedMemberId ?? undefined;
     const dateFrom = params.dateFrom;
     const dateTo = params.dateTo;
 
@@ -70,7 +70,7 @@ export const handler = async (
 
     const data = await db
       .select({
-        soulId: souls.soulId,
+        soulId: souls.id,
         firstName: souls.firstName,
         lastName: souls.lastName,
         phone: souls.phone,
@@ -85,8 +85,8 @@ export const handler = async (
         updatedAt: souls.updatedAt,
       })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
-      .leftJoin(members, eq(souls.assignedMemberId, members.memberId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .leftJoin(members, eq(souls.assignedMemberId, members.id))
       .where(whereClause)
       .orderBy(desc(souls.createdAt))
       .limit(limit)
@@ -95,7 +95,7 @@ export const handler = async (
     const [countResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(souls)
-      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.outreachId))
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
       .where(whereClause);
 
     const total = countResult?.count ?? 0;
