@@ -215,6 +215,10 @@ export interface NewBelieverEnrollment {
   stage: string;
   enrolledAt: string;
   completedAt?: string | null;
+  /** Map of stage key → ISO timestamp when that stage was marked complete, e.g. {"session-1":"2026-04-17T..."} */
+  sessionCompletedAt?: Record<string, string> | null;
+  /** Branch department the member joined when reaching the integrated stage */
+  joinedDepartmentId?: string | null;
   notes?: string | null;
   isActive: boolean;
   createdAt: string;

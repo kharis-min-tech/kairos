@@ -339,6 +339,10 @@ export interface UpdateEnrollmentRequest {
   notes?: string | null;
   completedAt?: string | null;
   isActive?: boolean;
+  /** Merged into the existing sessionCompletedAt map — pass {"session-1": "<ISO>"} to mark a stage done */
+  sessionCompletedAt?: Record<string, string> | null;
+  /** Branch department joined when reaching integrated stage */
+  joinedDepartmentId?: string | null;
 }
 
 export interface EnrollmentListParams {

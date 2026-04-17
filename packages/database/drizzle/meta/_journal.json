@@ -43,6 +43,13 @@
       "when": 1775849865042,
       "tag": "0005_sloppy_loners",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776643200000,
+      "tag": "0006_new_believers_enhancements",
+      "breakpoints": true
     }
   ]
 }

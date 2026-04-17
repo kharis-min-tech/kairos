@@ -294,6 +294,12 @@ export function createApiClient(
           client.post<ApiResponse<{ count: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
       },
     },
+    departments: {
+      list: (params?: { branchId?: string }) => {
+        const qs = params?.branchId ? `?branchId=${encodeURIComponent(params.branchId)}` : '';
+        return client.get<ApiResponse<{ id: string; branchId: string; departmentId: string; departmentName: string; description: string | null }[]>>(`/api/departments${qs}`);
+      },
+    },
   };
 }
 

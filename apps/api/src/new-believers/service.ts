@@ -95,6 +95,8 @@ export async function listEnrollments(
         stage: newBelieverEnrollments.stage,
         enrolledAt: newBelieverEnrollments.enrolledAt,
         completedAt: newBelieverEnrollments.completedAt,
+        sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+        joinedDepartmentId: newBelieverEnrollments.joinedDepartmentId,
         notes: newBelieverEnrollments.notes,
         isActive: newBelieverEnrollments.isActive,
         createdAt: newBelieverEnrollments.createdAt,
@@ -141,6 +143,8 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
       stage: newBelieverEnrollments.stage,
       enrolledAt: newBelieverEnrollments.enrolledAt,
       completedAt: newBelieverEnrollments.completedAt,
+      sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+      joinedDepartmentId: newBelieverEnrollments.joinedDepartmentId,
       notes: newBelieverEnrollments.notes,
       isActive: newBelieverEnrollments.isActive,
       createdAt: newBelieverEnrollments.createdAt,
@@ -185,6 +189,12 @@ export async function createEnrollment(
   enforceAdminOrPastor(auth);
   enforceBranchScope(auth, data.branchId);
 
+  // Block enrolling a teacher as a student in the same branch
+  const memberIsTeacher = await isNewBelieverTeacher(db, data.memberId, data.branchId);
+  if (memberIsTeacher) {
+    throw new ForbiddenError('This member is a New Believers Teacher in this branch and cannot be enrolled as a student');
+  }
+
   // Prevent duplicate active enrollment for same member in same branch
   const [existing] = await db
     .select({ id: newBelieverEnrollments.id })
@@ -223,10 +233,16 @@ export async function updateEnrollment(
     notes?: string | null;
     completedAt?: string | null;
     isActive?: boolean;
+    sessionCompletedAt?: Record<string, string> | null;
+    joinedDepartmentId?: string | null;
   }
 ) {
   const [existing] = await db
-    .select({ branchId: newBelieverEnrollments.branchId })
+    .select({
+      branchId: newBelieverEnrollments.branchId,
+      stage: newBelieverEnrollments.stage,
+      sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+    })
     .from(newBelieverEnrollments)
     .where(eq(newBelieverEnrollments.id, enrollmentId))
     .limit(1);
@@ -235,6 +251,18 @@ export async function updateEnrollment(
   await enforceTeacherOrAbove(db, auth, existing.branchId);
   enforceBranchScope(auth, existing.branchId);
 
+  // Block advancing stage unless current stage has been marked complete
+  // (sessions-only stages: session-1 through session-4)
+  const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
+  if (data.stage && data.stage !== existing.stage && SESSION_STAGES.has(existing.stage)) {
+    const completedMap = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
+    if (!completedMap[existing.stage]) {
+      throw new ForbiddenError(
+        `Cannot advance from ${existing.stage} until it has been marked complete. Use "Mark Complete" first.`
+      );
+    }
+  }
+
   const updateValues: Record<string, unknown> = {
     updatedAt: sql`NOW()`,
   };
@@ -242,8 +270,14 @@ export async function updateEnrollment(
   if (data.teacherId !== undefined) updateValues.teacherId = data.teacherId;
   if (data.notes !== undefined) updateValues.notes = data.notes;
   if (data.isActive !== undefined) updateValues.isActive = data.isActive;
+  if (data.joinedDepartmentId !== undefined) updateValues.joinedDepartmentId = data.joinedDepartmentId;
   if (data.completedAt !== undefined) {
     updateValues.completedAt = data.completedAt ? new Date(data.completedAt) : null;
+  }
+  // Merge sessionCompletedAt into the existing map
+  if (data.sessionCompletedAt !== undefined && data.sessionCompletedAt !== null) {
+    const existing_map = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
+    updateValues.sessionCompletedAt = { ...existing_map, ...data.sessionCompletedAt };
   }
   // Auto-set completedAt when stage reaches completed/integrated
   if ((data.stage === 'completed' || data.stage === 'integrated') && data.completedAt === undefined) {

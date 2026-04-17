@@ -34,7 +34,7 @@ jobs:
         run: npm run lint
 
       - name: Run type checking
-        run: npm run type-check
+        run: npm run typecheck
   security:
     name: Security Scan
     runs-on: ubuntu-latest

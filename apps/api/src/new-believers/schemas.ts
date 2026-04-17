@@ -23,6 +23,10 @@ export const updateEnrollmentSchema = z.object({
   notes: z.string().max(1000).nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional(),
+  /** Merged into existing sessionCompletedAt map */
+  sessionCompletedAt: z.record(z.string(), z.string()).nullable().optional(),
+  /** Branch department joined at the integrated stage */
+  joinedDepartmentId: z.string().uuid().nullable().optional(),
 });
 
 export const listEnrollmentsQuerySchema = z.object({

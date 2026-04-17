@@ -11,6 +11,7 @@ import { reportsRouter } from './reports/router';
 import { newBelieversRouter } from './new-believers/router';
 import { outreachRouter } from './outreach/router';
 import { formsRouter } from './forms/router';
+import { departmentsRouter } from './departments/router';
 import { db } from './db';
 import { successResponse } from './lib/response';
 import { branches, regions } from '@kairos/database';
@@ -53,6 +54,7 @@ export function createApp() {
   app.route('/api/new-believers', newBelieversRouter);
   app.route('/api/outreach', outreachRouter);
   app.route('/api/forms', formsRouter);
+  app.route('/api/departments', departmentsRouter);
 
   // Error handler
   app.onError(errorHandler);

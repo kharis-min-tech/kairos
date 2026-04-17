@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
 
@@ -17,7 +19,7 @@ const STAGES: { value: NewBelieverStageValue; label: string }[] = [
   { value: 'session-3', label: 'Session 3' },
   { value: 'session-4', label: 'Session 4' },
   { value: 'completed', label: 'Completed' },
-  { value: 'integrated', label: 'Integrated' },
+  { value: 'integrated', label: 'Joined a Department' },
 ];
 
 const STAGE_COLORS: Record<NewBelieverStageValue, string> = {
@@ -30,6 +32,8 @@ const STAGE_COLORS: Record<NewBelieverStageValue, string> = {
   integrated: 'bg-amber-100 text-amber-700',
 };
 
+const SESSION_STAGES: NewBelieverStageValue[] = ['session-1', 'session-2', 'session-3', 'session-4'];
+
 export default function EnrollmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -41,12 +45,27 @@ export default function EnrollmentDetailPage() {
   const updateEnrollment = useUpdateEnrollment();
 
   const { data: memberData } = useMembers(
-    user?.homeBranchId ? { branchId: user.homeBranchId, limit: 200 } : undefined
+    user?.homeBranchId ? { branchId: user.homeBranchId, limit: 200 } : undefined,
   );
   const branchMembers = memberData?.data ?? [];
 
+  // Fetch branch departments for the "Joined a Department" picker
+  const { data: deptData } = useQuery({
+    queryKey: ['departments', user?.homeBranchId],
+    queryFn: async () => {
+      const res = await api.departments.list({ branchId: user!.homeBranchId! });
+      return res.data ?? [];
+    },
+    enabled: !!user?.homeBranchId,
+  });
+  const branchDepartments = deptData ?? [];
+
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<UpdateEnrollmentRequest>({});
+
+  // State for "Joined a Department" advance modal
+  const [showJoinDeptModal, setShowJoinDeptModal] = useState(false);
+  const [joinDeptId, setJoinDeptId] = useState('');
 
   function startEdit() {
     if (!enrollment) return;
@@ -68,14 +87,55 @@ export default function EnrollmentDetailPage() {
     }
   }
 
+  async function handleMarkComplete() {
+    if (!enrollment || !SESSION_STAGES.includes(enrollment.stage as NewBelieverStageValue)) return;
+    const currentStage = enrollment.stage;
+    const existing = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+    try {
+      await updateEnrollment.mutateAsync({
+        id,
+        data: {
+          sessionCompletedAt: { ...existing, [currentStage]: new Date().toISOString() },
+        },
+      });
+      toast.success('Session marked as completed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to mark session complete');
+    }
+  }
+
   async function handleAdvanceStage() {
     if (!enrollment) return;
     const currentIdx = STAGES.findIndex((s) => s.value === enrollment.stage);
     const nextStage = STAGES[currentIdx + 1];
     if (!nextStage) return;
+
+    // If advancing to 'integrated', show the department picker modal
+    if (nextStage.value === 'integrated') {
+      setJoinDeptId('');
+      setShowJoinDeptModal(true);
+      return;
+    }
+
     try {
       await updateEnrollment.mutateAsync({ id, data: { stage: nextStage.value } });
       toast.success(`Stage advanced to ${nextStage.label}`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
+    }
+  }
+
+  async function handleConfirmJoinDept() {
+    try {
+      await updateEnrollment.mutateAsync({
+        id,
+        data: {
+          stage: 'integrated',
+          joinedDepartmentId: joinDeptId || null,
+        },
+      });
+      toast.success('Stage advanced to Joined a Department');
+      setShowJoinDeptModal(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
     }
@@ -95,7 +155,7 @@ export default function EnrollmentDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading enrollment…</p>
+        <p className="text-muted-foreground">Loading enrollment\u2026</p>
       </div>
     );
   }
@@ -105,7 +165,7 @@ export default function EnrollmentDetailPage() {
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
         <p className="text-sm text-destructive">Enrollment not found.</p>
         <Link href="/new-believers" className="mt-2 inline-block text-sm text-purple-700 hover:underline">
-          ← Back to New Believers
+          \u2190 Back to New Believers
         </Link>
       </div>
     );
@@ -114,6 +174,10 @@ export default function EnrollmentDetailPage() {
   const currentStageIdx = STAGES.findIndex((s) => s.value === enrollment.stage);
   const canAdvance = currentStageIdx < STAGES.length - 1;
   const stageColor = STAGE_COLORS[enrollment.stage as NewBelieverStageValue] ?? 'bg-gray-100 text-gray-700';
+
+  const isSessionStage = SESSION_STAGES.includes(enrollment.stage as NewBelieverStageValue);
+  const sessionCompletedAt = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+  const currentSessionDone = isSessionStage && !!sessionCompletedAt[enrollment.stage];
 
   type AttendanceHistoryItem = {
     sessionId: string;
@@ -129,19 +193,28 @@ export default function EnrollmentDetailPage() {
     <div className="space-y-6">
       {/* Purple header */}
       <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link
-          href="/new-believers"
-          className="mb-3 inline-block text-sm text-purple-200 hover:text-white"
-        >
-          ← New Believers
+        <Link href="/new-believers" className="mb-3 inline-block text-sm text-purple-200 hover:text-white">
+          \u2190 New Believers
         </Link>
         <h1 className="text-2xl font-bold">
           {enrollment.memberFirstName} {enrollment.memberLastName}
         </h1>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stageColor}`}>
             {STAGES.find((s) => s.value === enrollment.stage)?.label ?? enrollment.stage}
           </span>
+          {/* Session completion status pill */}
+          {isSessionStage && (
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                currentSessionDone
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-amber-100 text-amber-700'
+              }`}
+            >
+              {currentSessionDone ? '\u2713 Completed' : 'In Progress'}
+            </span>
+          )}
           {enrollment.teacherFirstName && (
             <span className="text-sm text-purple-200">
               Teacher: {enrollment.teacherFirstName} {enrollment.teacherLastName}
@@ -164,25 +237,34 @@ export default function EnrollmentDetailPage() {
       </div>
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>Enrolled</span>
-        <span>Integrated</span>
+        <span>Joined a Department</span>
       </div>
 
       {/* Action buttons */}
       {canEdit && !isEditing && (
         <div className="flex flex-wrap gap-2">
+          {/* Mark Complete — only for session stages not yet marked */}
+          {isSessionStage && !currentSessionDone && (
+            <button
+              onClick={handleMarkComplete}
+              disabled={updateEnrollment.isPending}
+              className="rounded-lg border border-emerald-600 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+            >
+              \u2713 Mark Session Complete
+            </button>
+          )}
           {canAdvance && enrollment.stage !== 'integrated' && (
             <button
               onClick={handleAdvanceStage}
               disabled={updateEnrollment.isPending}
               className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
             >
-              Advance to{' '}
-              {STAGES[currentStageIdx + 1]?.label}
+              Advance to {STAGES[currentStageIdx + 1]?.label}
             </button>
           )}
           <button
             onClick={startEdit}
-            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
             Edit
           </button>
@@ -199,7 +281,7 @@ export default function EnrollmentDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Details card */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4 lg:col-span-2">
           {isEditing ? (
             <Card>
               <CardHeader>
@@ -209,7 +291,7 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Stage</label>
                   <select
-                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
                     value={editForm.stage ?? enrollment.stage}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, stage: e.target.value as NewBelieverStageValue }))
@@ -226,13 +308,13 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Assign Teacher</label>
                   <select
-                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
                     value={editForm.teacherId ?? ''}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, teacherId: e.target.value || null }))
                     }
                   >
-                    <option value="">— unassigned —</option>
+                    <option value="">\u2014 unassigned \u2014</option>
                     {branchMembers.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.firstName} {m.lastName}
@@ -244,7 +326,7 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Notes</label>
                   <textarea
-                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
                     rows={3}
                     value={editForm.notes ?? ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
@@ -254,7 +336,7 @@ export default function EnrollmentDetailPage() {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
                     Cancel
                   </button>
@@ -263,7 +345,7 @@ export default function EnrollmentDetailPage() {
                     disabled={updateEnrollment.isPending}
                     className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
                   >
-                    {updateEnrollment.isPending ? 'Saving…' : 'Save Changes'}
+                    {updateEnrollment.isPending ? 'Saving\u2026' : 'Save Changes'}
                   </button>
                 </div>
               </CardContent>
@@ -277,7 +359,7 @@ export default function EnrollmentDetailPage() {
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div>
                     <dt className="text-muted-foreground">Stage</dt>
-                    <dd className="font-medium capitalize">
+                    <dd className="font-medium">
                       {STAGES.find((s) => s.value === enrollment.stage)?.label}
                     </dd>
                   </div>
@@ -292,7 +374,7 @@ export default function EnrollmentDetailPage() {
                     <dd className="font-medium">
                       {enrollment.teacherFirstName
                         ? `${enrollment.teacherFirstName} ${enrollment.teacherLastName}`
-                        : '—'}
+                        : '\u2014'}
                     </dd>
                   </div>
                   <div>
@@ -300,9 +382,17 @@ export default function EnrollmentDetailPage() {
                     <dd className="font-medium">
                       {enrollment.completedAt
                         ? new Date(enrollment.completedAt).toLocaleDateString()
-                        : '—'}
+                        : '\u2014'}
                     </dd>
                   </div>
+                  {enrollment.joinedDepartmentId && (
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Department Joined</dt>
+                      <dd className="font-medium">
+                        {branchDepartments.find((d) => d.id === enrollment.joinedDepartmentId)?.departmentName ?? enrollment.joinedDepartmentId}
+                      </dd>
+                    </div>
+                  )}
                   {enrollment.notes && (
                     <div className="col-span-2">
                       <dt className="text-muted-foreground">Notes</dt>
@@ -350,7 +440,7 @@ export default function EnrollmentDetailPage() {
           )}
         </div>
 
-        {/* Sidebar — stage journey */}
+        {/* Sidebar \u2014 stage journey */}
         <div>
           <Card>
             <CardHeader>
@@ -361,6 +451,7 @@ export default function EnrollmentDetailPage() {
                 {STAGES.map((s, idx) => {
                   const isDone = idx < currentStageIdx;
                   const isCurrent = idx === currentStageIdx;
+                  const sessionDone = SESSION_STAGES.includes(s.value) && !!sessionCompletedAt[s.value];
                   return (
                     <li key={s.value} className="flex items-start gap-3">
                       <div
@@ -372,13 +463,26 @@ export default function EnrollmentDetailPage() {
                               : 'bg-gray-200 text-gray-500'
                         }`}
                       >
-                        {isDone ? '✓' : idx + 1}
+                        {isDone ? '\u2713' : idx + 1}
                       </div>
-                      <span
-                        className={`text-sm ${isCurrent ? 'font-semibold text-purple-700' : isDone ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}
-                      >
-                        {s.label}
-                      </span>
+                      <div className="flex flex-1 items-center justify-between">
+                        <span
+                          className={`text-sm ${isCurrent ? 'font-semibold text-purple-700' : isDone ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}
+                        >
+                          {s.label}
+                        </span>
+                        {isCurrent && SESSION_STAGES.includes(s.value) && (
+                          <span
+                            className={`ml-2 rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                              sessionDone
+                                ? 'bg-emerald-100 text-emerald-600'
+                                : 'bg-amber-100 text-amber-600'
+                            }`}
+                          >
+                            {sessionDone ? 'Done' : 'Active'}
+                          </span>
+                        )}
+                      </div>
                     </li>
                   );
                 })}
@@ -387,6 +491,52 @@ export default function EnrollmentDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* "Joined a Department" advance modal */}
+      {showJoinDeptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
+            <h2 className="mb-1 text-lg font-semibold">Joined a Department</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Optionally link this member to a department. You can skip this step.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium">Department</label>
+                <select
+                  className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  value={joinDeptId}
+                  onChange={(e) => setJoinDeptId(e.target.value)}
+                >
+                  <option value="">\u2014 skip / not specified \u2014</option>
+                  {branchDepartments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.departmentName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setShowJoinDeptModal(false)}
+                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmJoinDept}
+                disabled={updateEnrollment.isPending}
+                className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+              >
+                {updateEnrollment.isPending ? 'Saving\u2026' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

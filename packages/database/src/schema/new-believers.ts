@@ -5,6 +5,7 @@ import {
   text,
   boolean,
   timestamp,
+  jsonb,
   index,
   primaryKey,
   unique,
@@ -28,6 +29,10 @@ export const newBelieverEnrollments = pgTable(
     stage: varchar('stage', { length: 30 }).notNull().default('enrolled'),
     enrolledAt: timestamp('enrolled_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
+    // JSONB map of stage → ISO completion timestamp, e.g. {"session-1":"2026-04-17T..."}
+    sessionCompletedAt: jsonb('session_completed_at').$type<Record<string, string>>(),
+    // Set when member joins a department at the integrated stage
+    joinedDepartmentId: uuid('joined_department_id'),
     notes: text('notes'),
     isActive: boolean('is_active').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
