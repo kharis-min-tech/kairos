@@ -8,7 +8,6 @@ import {
   jsonb,
   index,
   primaryKey,
-  unique,
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { members } from './members';
@@ -44,8 +43,8 @@ export const newBelieverEnrollments = pgTable(
     index('idx_nb_enrollments_teacher_id').on(table.teacherId),
     index('idx_nb_enrollments_stage').on(table.stage),
     index('idx_nb_enrollments_is_active').on(table.isActive),
-    // Only one active enrollment per member per branch at a time
-    unique('uq_nb_enrollments_active_member_branch').on(table.memberId, table.branchId),
+    // Partial unique index: only one ACTIVE enrollment per member per branch at a time
+    // (enforced via raw migration 0007 — Drizzle unique() can't express WHERE clauses)
     sql`CHECK (stage IN ('enrolled', 'session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'))`,
   ]
 );

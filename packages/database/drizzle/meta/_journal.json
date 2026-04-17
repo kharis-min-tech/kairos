@@ -50,6 +50,13 @@
       "when": 1776643200000,
       "tag": "0006_new_believers_enhancements",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776729600000,
+      "tag": "0007_fix_enrollment_unique_constraint",
+      "breakpoints": true
     }
   ]
 }
