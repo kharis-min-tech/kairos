@@ -33,7 +33,7 @@ function MemberCombobox({
   members,
   value,
   onChange,
-  placeholder = 'Search members\u2026',
+  placeholder = 'Search members…',
   id,
 }: {
   members: { id: string; firstName: string; lastName: string }[];
@@ -86,7 +86,7 @@ function MemberCombobox({
             <li key={m.id}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                className="w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-purple-50 dark:text-gray-100 dark:hover:bg-purple-900/30"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(m)}
               >
@@ -318,7 +318,7 @@ function NewBelieversContent() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading pipeline\u2026</p>
+          <p className="text-muted-foreground">Loading pipeline…</p>
         </div>
       ) : filterStage ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -367,21 +367,20 @@ function NewBelieversContent() {
                   members={branchMembers}
                   value={enrollForm.memberId}
                   onChange={(id, name) => setEnrollForm((f) => ({ ...f, memberId: id, memberName: name }))}
-                  placeholder="Type name to search\u2026"
+                  placeholder="Type name to search…"
                 />
               </div>
 
               <div>
                 <label htmlFor="enrol-teacher" className="mb-1 block text-sm font-medium">
-                  Assign Teacher{' '}
-                  <span className="font-normal text-muted-foreground">(optional)</span>
+                  Assign Teacher
                 </label>
                 <MemberCombobox
                   id="enrol-teacher"
                   members={branchMembers}
                   value={enrollForm.teacherId}
                   onChange={(id, name) => setEnrollForm((f) => ({ ...f, teacherId: id, teacherName: name }))}
-                  placeholder="Search teacher\u2026"
+                  placeholder="Search teacher…"
                 />
               </div>
 
@@ -410,7 +409,7 @@ function NewBelieversContent() {
                 Cancel
               </button>
               <button
-                disabled={!enrollForm.memberId || createEnrollment.isPending}
+                disabled={!enrollForm.memberId || !enrollForm.teacherId || createEnrollment.isPending}
                 onClick={handleEnroll}
                 className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
               >
@@ -429,7 +428,7 @@ export default function NewBelieversPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading\u2026</p>
+          <p className="text-muted-foreground">Loading…</p>
         </div>
       }
     >

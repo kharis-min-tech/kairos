@@ -155,7 +155,7 @@ export default function EnrollmentDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading enrollment\u2026</p>
+        <p className="text-muted-foreground">Loading enrollment…</p>
       </div>
     );
   }
@@ -165,7 +165,7 @@ export default function EnrollmentDetailPage() {
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
         <p className="text-sm text-destructive">Enrollment not found.</p>
         <Link href="/new-believers" className="mt-2 inline-block text-sm text-purple-700 hover:underline">
-          \u2190 Back to New Believers
+          ← Back to New Believers
         </Link>
       </div>
     );
@@ -194,7 +194,7 @@ export default function EnrollmentDetailPage() {
       {/* Purple header */}
       <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
         <Link href="/new-believers" className="mb-3 inline-block text-sm text-purple-200 hover:text-white">
-          \u2190 New Believers
+          ← New Believers
         </Link>
         <h1 className="text-2xl font-bold">
           {enrollment.memberFirstName} {enrollment.memberLastName}
@@ -208,8 +208,8 @@ export default function EnrollmentDetailPage() {
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                 currentSessionDone
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-amber-100 text-amber-700'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
               }`}
             >
               {currentSessionDone ? '\u2713 Completed' : 'In Progress'}
@@ -229,7 +229,7 @@ export default function EnrollmentDetailPage() {
           <div
             key={s.value}
             className={`h-2 flex-1 rounded-full transition-colors ${
-              idx <= currentStageIdx ? 'bg-purple-600' : 'bg-gray-200'
+              idx <= currentStageIdx ? 'bg-purple-600' : 'bg-gray-200 dark:bg-gray-700'
             }`}
             title={s.label}
           />
@@ -250,7 +250,7 @@ export default function EnrollmentDetailPage() {
               disabled={updateEnrollment.isPending}
               className="rounded-lg border border-emerald-600 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
             >
-              \u2713 Mark Session Complete
+              ✓ Mark Session Complete
             </button>
           )}
           {canAdvance && enrollment.stage !== 'integrated' && (
@@ -291,7 +291,7 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Stage</label>
                   <select
-                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     value={editForm.stage ?? enrollment.stage}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, stage: e.target.value as NewBelieverStageValue }))
@@ -308,13 +308,13 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Assign Teacher</label>
                   <select
-                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     value={editForm.teacherId ?? ''}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, teacherId: e.target.value || null }))
                     }
                   >
-                    <option value="">\u2014 unassigned \u2014</option>
+                    <option value="">— unassigned —</option>
                     {branchMembers.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.firstName} {m.lastName}
@@ -326,7 +326,7 @@ export default function EnrollmentDetailPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">Notes</label>
                   <textarea
-                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     rows={3}
                     value={editForm.notes ?? ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
@@ -426,8 +426,8 @@ export default function EnrollmentDetailPage() {
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           a.attended
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-rose-100 text-rose-700'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300'
                         }`}
                       >
                         {a.attended ? 'Present' : 'Absent'}
@@ -460,7 +460,7 @@ export default function EnrollmentDetailPage() {
                             ? 'bg-emerald-500 text-white'
                             : isCurrent
                               ? 'bg-purple-700 text-white'
-                              : 'bg-gray-200 text-gray-500'
+                              : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                         }`}
                       >
                         {isDone ? '\u2713' : idx + 1}
@@ -475,8 +475,8 @@ export default function EnrollmentDetailPage() {
                           <span
                             className={`ml-2 rounded-full px-1.5 py-0.5 text-xs font-medium ${
                               sessionDone
-                                ? 'bg-emerald-100 text-emerald-600'
-                                : 'bg-amber-100 text-amber-600'
+                                ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                : 'bg-amber-100 text-amber-600 dark:bg-amber-900/60 dark:text-amber-300'
                             }`}
                           >
                             {sessionDone ? 'Done' : 'Active'}
@@ -505,11 +505,11 @@ export default function EnrollmentDetailPage() {
               <div>
                 <label className="mb-1 block text-sm font-medium">Department</label>
                 <select
-                  className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   value={joinDeptId}
                   onChange={(e) => setJoinDeptId(e.target.value)}
                 >
-                  <option value="">\u2014 skip / not specified \u2014</option>
+                  <option value="">— skip / not specified —</option>
                   {branchDepartments.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.departmentName}
