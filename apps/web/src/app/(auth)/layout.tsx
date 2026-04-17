@@ -30,7 +30,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right content panel */}
-      <div className="relative flex flex-1 items-center justify-center bg-muted/30 px-4 py-12">
+      <div className="relative flex flex-1 items-center justify-center bg-muted/30 px-4 py-12 dark:bg-background">
         {/* Theme toggle — top right */}
         <div className="absolute right-4 top-4">
           <ThemeToggle variant="full" />

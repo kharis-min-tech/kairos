@@ -94,7 +94,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rounded-2xl border-0 bg-card shadow-xl">
+    <div className="rounded-2xl border-0 bg-card shadow-xl dark:ring-1 dark:ring-white/8 dark:shadow-2xl dark:shadow-black/60">
       {/* Header */}
       <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
         <div className="flex items-center gap-3">
