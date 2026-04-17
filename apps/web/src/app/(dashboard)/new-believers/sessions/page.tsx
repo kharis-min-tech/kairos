@@ -128,8 +128,8 @@ function SessionRow({
                       }
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
                         getAttended(r.enrollmentId)
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-gray-100 text-gray-500'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                       }`}
                     >
                       {getAttended(r.enrollmentId) ? '✓ Present' : 'Absent'}
@@ -190,7 +190,7 @@ function CreateSessionDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100"
       >
         <h2 className="mb-4 text-lg font-semibold">New Session</h2>
 
@@ -200,7 +200,7 @@ function CreateSessionDialog({
             <input
               type="date"
               required
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               value={form.sessionDate}
               onChange={(e) => setForm((f) => ({ ...f, sessionDate: e.target.value }))}
             />
@@ -212,7 +212,7 @@ function CreateSessionDialog({
               type="text"
               required
               placeholder="e.g. Foundations of Faith"
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
               value={form.topic}
               onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
             />
@@ -222,7 +222,7 @@ function CreateSessionDialog({
             <label className="mb-1 block text-sm font-medium">Notes (optional)</label>
             <textarea
               rows={2}
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               value={form.notes ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || undefined }))}
             />
@@ -233,7 +233,7 @@ function CreateSessionDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
