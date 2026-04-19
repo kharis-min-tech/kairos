@@ -6,8 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Button, Input, Label } from '@kairos/ui';
+import { Input } from '@kairos/ui';
 import { useResetPassword } from '@/hooks/use-auth';
+import { KharisCardHeader } from '../kharis-logo';
 
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, 'Password must be at least 8 characters'),
@@ -97,42 +98,31 @@ function ResetPasswordContent() {
 
   if (!token) {
     return (
-      <div className="rounded-2xl bg-white shadow-xl">
-        <div className="rounded-t-2xl bg-gradient-to-br from-rose-700 to-rose-600 px-8 py-8 text-white">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-          </div>
-          <h1 className="mt-4 text-xl font-bold">Invalid Reset Link</h1>
-          <p className="mt-1 text-sm text-rose-100">This link is invalid or has expired</p>
-        </div>
-        <div className="px-8 py-6">
-          <p className="mb-4 text-sm text-muted-foreground">Please request a new password reset link.</p>
+      <>
+        {/* Heading — outside card */}
+        <KharisCardHeader heading="Invalid reset link" subtitle="This link is invalid or has expired" />
+
+        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+          <p className="mb-5 text-sm text-muted-foreground">Please request a new password reset link.</p>
           <Link href="/forgot-password">
-            <Button className="h-11 w-full rounded-xl">Request New Link</Button>
+            <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">
+              Request New Link
+            </button>
           </Link>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white shadow-xl">
-      <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-          </svg>
-        </div>
-        <h1 className="mt-4 text-xl font-bold">Reset Password</h1>
-        <p className="mt-1 text-sm text-purple-200">Create a new secure password for your account</p>
-      </div>
+    <>
+      {/* Heading — outside card */}
+      <KharisCardHeader heading="Reset password" subtitle="Create a new secure password for your account" />
 
-      <div className="px-8 py-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -141,12 +131,14 @@ function ResetPasswordContent() {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              New Password
+            </label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNew ? 'text' : 'password'}
-                className="h-11 rounded-xl border-muted-foreground/20 pr-10"
+                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
                 {...register('newPassword')}
               />
               <button
@@ -154,7 +146,7 @@ function ResetPasswordContent() {
                 onClick={() => setShowNew(!showNew)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   {showNew ? (
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                   ) : (
@@ -166,22 +158,24 @@ function ResetPasswordContent() {
                 </svg>
               </button>
             </div>
-            {errors.newPassword && <p className="text-xs text-rose-600">{errors.newPassword.message}</p>}
+            {errors.newPassword && <p className="text-xs text-destructive">{errors.newPassword.message}</p>}
           </div>
 
           {newPassword.length > 0 && (
-            <div className="rounded-xl bg-muted/30 p-3">
+            <div className="rounded-lg bg-muted/30 p-3">
               <PasswordStrength password={newPassword} />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Confirm Password
+            </label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirm ? 'text' : 'password'}
-                className="h-11 rounded-xl border-muted-foreground/20 pr-10"
+                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
                 {...register('confirmPassword')}
               />
               <button
@@ -189,7 +183,7 @@ function ResetPasswordContent() {
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   {showConfirm ? (
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                   ) : (
@@ -201,18 +195,18 @@ function ResetPasswordContent() {
                 </svg>
               </button>
             </div>
-            {errors.confirmPassword && <p className="text-xs text-rose-600">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
           </div>
 
-          <Button
+          <button
             type="submit"
-            className="h-11 w-full rounded-xl font-semibold"
             disabled={isSubmitting}
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
-          </Button>
+          </button>
 
-          <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-700">
+          <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
@@ -220,7 +214,7 @@ function ResetPasswordContent() {
           </Link>
         </form>
       </div>
-    </div>
+    </>
   );
 }
 

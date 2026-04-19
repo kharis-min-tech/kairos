@@ -82,8 +82,8 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         isActive
-          ? 'bg-white/15 text-white'
-          : 'text-purple-200 hover:bg-white/10 hover:text-white',
+          ? 'border-l-2 border-violet-500 bg-primary/10 pl-[10px] text-foreground font-semibold'
+          : 'border-l-2 border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
       )}
     >
       {NAV_ICONS[item.href]}
@@ -132,13 +132,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     activeRole === 'leader' ? 'Leader' : 'Member';
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-gradient-to-b from-purple-900 to-purple-800">
+    <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
       {/* Brand */}
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
         <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
         <div>
-          <p className="text-base font-bold leading-tight text-white">Kairos</p>
-          <p className="text-xs text-purple-300">Church Admin</p>
+          <p className="text-base font-bold leading-tight text-foreground">Kairos</p>
+          <p className="text-xs text-muted-foreground">Church Admin</p>
         </div>
       </Link>
 
@@ -155,24 +155,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* User section */}
-      <div className="border-t border-white/10 p-4">
+      <div className="p-4">
         <div className="flex items-center gap-3">
           <MemberAvatar
             photoUrl={(user as { photoUrl?: string | null })?.photoUrl}
             firstName={user?.firstName}
             lastName={user?.lastName}
             size="md"
-            variant="dark"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
+            <p className="truncate text-sm font-medium text-foreground">
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="truncate text-xs text-purple-300">{roleLabel}</p>
+            <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
           </div>
           <Link
             href="/profile/settings"
-            className="flex-shrink-0 rounded-md p-1.5 text-purple-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             aria-label="Settings"
             title="Settings"
           >
@@ -181,10 +180,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </Link>
-          <ThemeToggle className="flex-shrink-0 text-purple-300 hover:bg-white/10 hover:text-white" />
+          <ThemeToggle className="flex-shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
           <button
             onClick={handleLogout}
-            className="flex-shrink-0 rounded-md p-1.5 text-purple-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             aria-label="Sign out"
             title="Sign out"
           >
@@ -225,11 +224,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex flex-1 flex-col">
         {/* Mobile header */}
-        <header className="flex h-14 items-center justify-between border-b bg-gradient-to-r from-purple-900 to-purple-700 px-4 md:hidden">
+        <header className="flex h-14 items-center justify-between bg-white/80 backdrop-blur-[20px] px-4 dark:bg-[#0f0f12]/80 md:hidden">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded p-1.5 text-white hover:bg-white/10"
+              className="rounded-lg p-1.5 text-foreground hover:bg-foreground/5"
               aria-label="Open navigation"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -238,9 +237,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <rect y="15" width="20" height="2" rx="1" />
               </svg>
             </button>
-            <span className="text-lg font-bold text-white">Kairos</span>
+            <span className="text-lg font-bold text-foreground">Kairos</span>
           </div>
-          <ThemeToggle className="text-purple-200 hover:bg-white/10 hover:text-white" />
+          <ThemeToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
         </header>
 
         <main className="flex-1 overflow-y-auto">

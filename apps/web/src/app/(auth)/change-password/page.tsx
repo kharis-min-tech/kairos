@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label } from '@kairos/ui';
+import { Input } from '@kairos/ui';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { KharisCardHeader } from '../kharis-logo';
 
 const changePasswordSchema = z
   .object({
@@ -112,29 +113,17 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="rounded-2xl border-0 bg-white shadow-xl overflow-hidden">
-      {/* Header */}
-      <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-purple-200">Security Required</p>
-            <h1 className="text-xl font-bold">Change Your Password</h1>
-          </div>
-        </div>
-        <p className="mt-3 text-sm text-purple-200">
-          Hi {user?.firstName ?? 'there'}, your account was created with a temporary password. Please set a new password to continue.
-        </p>
-      </div>
+    <>
+      {/* Heading — outside card */}
+      <KharisCardHeader
+        heading="Change your password"
+        subtitle={<>Hi {user?.firstName ?? 'there'} — your account has a temporary password. Set a new one to continue.</>}
+      />
 
-      <div className="px-8 py-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -142,21 +131,21 @@ export default function ChangePasswordPage() {
             </div>
           )}
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-xs font-medium text-amber-800">
+          <div className="rounded-lg bg-amber-500/10 p-3">
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
               Enter the temporary password you received, then choose a new secure password.
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="currentPassword" className="text-sm font-medium">
-              Temporary Password <span className="text-rose-500">*</span>
-            </Label>
+            <label htmlFor="currentPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Temporary Password
+            </label>
             <div className="relative">
               <Input
                 id="currentPassword"
                 type={showCurrentPassword ? 'text' : 'password'}
-                className="h-11 rounded-xl border-muted-foreground/20 pr-10"
+                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
                 placeholder="Enter temporary password"
                 {...register('currentPassword')}
               />
@@ -178,19 +167,19 @@ export default function ChangePasswordPage() {
               </button>
             </div>
             {errors.currentPassword && (
-              <p className="text-xs text-rose-600">{errors.currentPassword.message}</p>
+              <p className="text-xs text-destructive">{errors.currentPassword.message}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="newPassword" className="text-sm font-medium">
-              New Password <span className="text-rose-500">*</span>
-            </Label>
+            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              New Password
+            </label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
-                className="h-11 rounded-xl border-muted-foreground/20 pr-10"
+                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
                 placeholder="Choose a strong password"
                 {...register('newPassword')}
               />
@@ -212,42 +201,41 @@ export default function ChangePasswordPage() {
               </button>
             </div>
             {errors.newPassword && (
-              <p className="text-xs text-rose-600">{errors.newPassword.message}</p>
+              <p className="text-xs text-destructive">{errors.newPassword.message}</p>
             )}
           </div>
 
           {newPassword.length > 0 && (
-            <div className="rounded-xl bg-muted/30 p-3">
+            <div className="rounded-lg bg-muted/30 p-3">
               <PasswordStrength password={newPassword} />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="confirmPassword" className="text-sm font-medium">
-              Confirm New Password <span className="text-rose-500">*</span>
-            </Label>
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Confirm New Password
+            </label>
             <Input
               id="confirmPassword"
               type="password"
-              className="h-11 rounded-xl border-muted-foreground/20"
+              className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
               placeholder="Re-enter new password"
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-rose-600">{errors.confirmPassword.message}</p>
+              <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
             )}
           </div>
 
-          <Button
+          <button
             type="submit"
             disabled={isSubmitting}
-            variant="success"
-            className="h-11 w-full rounded-xl"
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isSubmitting ? 'Updating...' : 'Set New Password'}
-          </Button>
+          </button>
         </form>
       </div>
-    </div>
+    </>
   );
 }

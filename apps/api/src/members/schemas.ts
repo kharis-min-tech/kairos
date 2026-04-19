@@ -48,6 +48,10 @@ export const createMemberSchema = z.object({
   emergencyContactName: z.string().max(150).optional(),
   emergencyContactPhone: z.string().max(20).optional(),
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
+  secondaryBranchId: z.string().uuid('Invalid branch ID').nullable().optional(),
+  secondaryAddress: z.string().optional(),
+  secondaryCity: z.string().max(100).optional(),
+  secondaryPostalCode: z.string().max(20).optional(),
   systemRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional().default('member'),
 });
 

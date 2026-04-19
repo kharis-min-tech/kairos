@@ -20,7 +20,7 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        checked ? 'bg-purple-600' : 'bg-gray-200'
+        checked ? 'bg-primary' : 'bg-muted-foreground/30'
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
     >
       <span
@@ -101,18 +101,20 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <h1 className="text-2xl font-bold">App Settings</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Manage your notification preferences and app data</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">App Settings</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Manage your notification preferences and app data</p>
+        </div>
       </div>
 
       {/* Notification Preferences */}
-      <Card className="border-0 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle>Notification Preferences</CardTitle>
         </CardHeader>
-        <CardContent className="divide-y">
+        <CardContent className="space-y-6">
           {toggles.map((t) => (
             <div key={t.key} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
               <div>
@@ -126,7 +128,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Data Management */}
-      <Card className="border-0 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle>Data Management</CardTitle>
         </CardHeader>
@@ -136,7 +138,7 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">Clear Cache</p>
               <p className="text-xs text-muted-foreground">Remove cached data to free up space (keeps your login)</p>
             </div>
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={handleClearCache}>
+            <Button variant="outline" size="sm" className="rounded-lg" onClick={handleClearCache}>
               {cacheCleared ? 'Cleared!' : 'Clear'}
             </Button>
           </div>
@@ -145,7 +147,7 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">Export Data</p>
               <p className="text-xs text-muted-foreground">Download a copy of your personal data</p>
             </div>
-            <Button variant="outline" size="sm" className="rounded-xl" disabled>
+            <Button variant="outline" size="sm" className="rounded-lg" disabled>
               Coming Soon
             </Button>
           </div>
@@ -153,7 +155,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Storage */}
-      <Card className="border-0 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle>Storage</CardTitle>
         </CardHeader>
@@ -162,9 +164,9 @@ export default function SettingsPage() {
             <span className="text-muted-foreground">Local storage used</span>
             <span className="font-medium">{usedKB} KB / {totalMB} MB</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-purple-600 transition-all"
+              className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${usagePercent}%` }}
             />
           </div>
@@ -172,7 +174,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Preferences (disabled for now) */}
-      <Card className="border-0 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle>Preferences</CardTitle>
         </CardHeader>
@@ -184,7 +186,7 @@ export default function SettingsPage() {
             </div>
             <select
               disabled
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm opacity-50"
+              className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm opacity-50"
             >
               <option>English</option>
             </select>
@@ -196,7 +198,7 @@ export default function SettingsPage() {
             </div>
             <select
               disabled
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm opacity-50"
+              className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm opacity-50"
             >
               <option>Light</option>
             </select>
@@ -206,7 +208,7 @@ export default function SettingsPage() {
 
       {/* Log Out */}
       <Button
-        className="h-11 w-full rounded-xl bg-rose-600 font-semibold text-white hover:bg-rose-700"
+        className="h-11 w-full rounded-lg bg-rose-600 font-semibold text-white hover:bg-rose-700"
         onClick={handleLogout}
       >
         Log Out

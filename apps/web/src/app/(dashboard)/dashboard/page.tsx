@@ -14,7 +14,7 @@ import {
   Cell,
 } from 'recharts';
 
-const CHART_COLORS = ['#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD'];
+const CHART_COLORS = ['#7c3aed', '#d97706', '#059669', '#e11d48', '#0ea5e9'];
 
 // ── Stat Card ──────────────────────────────────────────────
 
@@ -30,20 +30,20 @@ function StatCard({
   accent?: 'purple' | 'gold' | 'emerald' | 'rose';
 }) {
   const accentClasses = {
-    purple: 'bg-purple-100 text-purple-700',
-    gold: 'bg-amber-100 text-amber-700',
-    emerald: 'bg-emerald-100 text-emerald-700',
-    rose: 'bg-rose-100 text-rose-700',
+    purple: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+    gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   };
   return (
-    <Card className="border-0 shadow-sm">
+    <Card>
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <p className="mt-1 text-3xl font-bold tracking-tight">{value}</p>
           </div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accentClasses[accent]}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accentClasses[accent]}`}>
             {icon}
           </div>
         </div>
@@ -109,7 +109,7 @@ function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Members by Status</CardTitle>
           </CardHeader>
@@ -136,7 +136,7 @@ function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Fellowships by Type</CardTitle>
           </CardHeader>
@@ -267,16 +267,16 @@ function MemberDashboard() {
       </div>
 
       {data.fellowships.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">My Fellowships</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="divide-y">
+            <ul className="space-y-3">
               {data.fellowships.map((f) => (
                 <li key={f.fellowshipId} className="flex items-center justify-between py-3 text-sm">
                   <span className="font-medium">{f.fellowshipName}</span>
-                  <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                  <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-400">
                     {f.fellowshipType}
                   </span>
                 </li>
@@ -330,20 +330,18 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header banner */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-purple-300">{today}</p>
-            <h1 className="mt-1 text-2xl font-bold">
-              {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
-            </h1>
-            <p className="mt-0.5 text-sm text-purple-200">{subtitle}</p>
-          </div>
-          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-            {roleLabel}
-          </span>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">{today}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">
+            {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         </div>
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+          {roleLabel}
+        </span>
       </div>
 
       {activeRole === 'admin' ? (

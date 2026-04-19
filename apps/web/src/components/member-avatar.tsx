@@ -22,7 +22,7 @@ const sizeClasses: Record<AvatarSize, string> = {
 
 const variantClasses: Record<AvatarVariant, string> = {
   dark: 'bg-white/20 text-white font-semibold',
-  light: 'bg-purple-100 text-purple-700 font-bold',
+  light: 'bg-violet-500/15 text-violet-600 dark:text-violet-400 font-bold',
 };
 
 export function MemberAvatar({

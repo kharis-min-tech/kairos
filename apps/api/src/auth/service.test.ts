@@ -61,6 +61,11 @@ const baseMember = {
   mustChangePassword: false,
   approvalStatus: 'approved',
   systemRole: 'member',
+  secondaryBranchId: null,
+  secondaryAddress: null,
+  secondaryCity: null,
+  secondaryPostalCode: null,
+  isAtSecondaryBranch: false,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -104,6 +109,38 @@ describe('signup', () => {
     expect(result.verificationToken).toBeDefined();
     expect(result.verificationToken.length).toBeGreaterThan(0);
     expect(mockInsert).toHaveBeenCalled();
+  });
+
+  it('persists secondary branch fields when provided', async () => {
+    const { signup } = await import('./service');
+
+    mockSelect.mockReturnValueOnce({ from: mockFrom });
+    mockFrom.mockReturnValueOnce({ where: mockWhere });
+    mockWhere.mockReturnValueOnce({ limit: mockLimit });
+    mockLimit.mockReturnValueOnce(Promise.resolve([])); // no existing email
+
+    const created = { ...baseMember, isActive: false, approvalStatus: 'pending', emailVerified: false, secondaryBranchId: '660e8400-e29b-41d4-a716-000000000099', secondaryAddress: '10 Side St', secondaryCity: 'Manchester', secondaryPostalCode: 'M1 1AA' };
+    setupInsertChain([created]);
+
+    const result = await signup(mockDb, {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
+      password: 'StrongPass123!',
+      secondaryBranchId: '660e8400-e29b-41d4-a716-000000000099',
+      secondaryAddress: '10 Side St',
+      secondaryCity: 'Manchester',
+      secondaryPostalCode: 'M1 1AA',
+    });
+
+    expect(result.member).toBeDefined();
+    expect(mockValues).toHaveBeenCalledWith(expect.objectContaining({
+      secondaryBranchId: '660e8400-e29b-41d4-a716-000000000099',
+      secondaryAddress: '10 Side St',
+      secondaryCity: 'Manchester',
+      secondaryPostalCode: 'M1 1AA',
+    }));
   });
 
   it('should throw ConflictError for duplicate email', async () => {
@@ -223,6 +260,19 @@ describe('login', () => {
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'pastor');
     expect(result.tokens.accessToken).toBeDefined();
   });
+
+  it('JWT branchId is secondaryBranchId when member is at secondary branch', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const secondaryBranchId = '770e8400-e29b-41d4-a716-000000000077';
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, secondaryBranchId, isAtSecondaryBranch: true, lastLoginAt: null }]);
+    setupUpdateChain();
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    expect(decoded['branchId']).toBe(secondaryBranchId);
+  });
 });
 
 describe('refreshAccessToken', () => {
@@ -330,6 +380,26 @@ describe('resetPassword', () => {
 
     await expect(resetPassword(mockDb, 'bad-token', 'NewPass'))
       .rejects.toThrow('Invalid or expired reset token');
+  });
+});
+
+describe('getActiveBranchId', () => {
+  it('returns homeBranchId when isAtSecondaryBranch is false', async () => {
+    const { getActiveBranchId } = await import('./service');
+    const result = getActiveBranchId({ homeBranchId: 'home-1', secondaryBranchId: 'secondary-1', isAtSecondaryBranch: false });
+    expect(result).toBe('home-1');
+  });
+
+  it('returns secondaryBranchId when isAtSecondaryBranch is true', async () => {
+    const { getActiveBranchId } = await import('./service');
+    const result = getActiveBranchId({ homeBranchId: 'home-1', secondaryBranchId: 'secondary-1', isAtSecondaryBranch: true });
+    expect(result).toBe('secondary-1');
+  });
+
+  it('returns homeBranchId when isAtSecondaryBranch is true but secondaryBranchId is null', async () => {
+    const { getActiveBranchId } = await import('./service');
+    const result = getActiveBranchId({ homeBranchId: 'home-1', secondaryBranchId: null, isAtSecondaryBranch: true });
+    expect(result).toBe('home-1');
   });
 });
 

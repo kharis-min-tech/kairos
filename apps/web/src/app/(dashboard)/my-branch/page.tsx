@@ -5,6 +5,7 @@ import { useBranch, useBranchLeadership } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button } from '@kairos/ui';
 
 export default function MyBranchPage() {
   const { user, activeRole } = useAuthStore();
@@ -17,7 +18,7 @@ export default function MyBranchPage() {
 
   if (!branchId) {
     return (
-      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+      <div className="rounded-lg bg-amber-50 p-4">
         <p className="text-sm text-amber-700">No home branch assigned to your account.</p>
       </div>
     );
@@ -29,7 +30,7 @@ export default function MyBranchPage() {
 
   if (!branch) {
     return (
-      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+      <div className="rounded-lg bg-rose-50 p-4">
         <p className="text-sm text-rose-700">Branch not found.</p>
       </div>
     );
@@ -37,23 +38,18 @@ export default function MyBranchPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-purple-300">My Branch</p>
-            <h1 className="mt-1 text-2xl font-bold">{branch.branchName}</h1>
-            <p className="mt-0.5 text-sm text-purple-200">{branch.branchType}</p>
-          </div>
-          {isAdminOrPastor && (
-            <Link
-              href={`/admin/branches/${branchId}`}
-              className="mt-5 shrink-0 rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20"
-            >
-              Manage
-            </Link>
-          )}
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">My Branch</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">{branch.branchName}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground capitalize">{branch.branchType}</p>
         </div>
+        {isAdminOrPastor && (
+          <Link href={`/admin/branches/${branchId}`}>
+            <Button variant="outline" size="sm">Manage</Button>
+          </Link>
+        )}
       </div>
 
       {/* Branch Info */}
@@ -93,7 +89,7 @@ export default function MyBranchPage() {
           <div>
             <p className="text-sm font-medium text-muted-foreground">Status</p>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              branch.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+              branch.isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
             }`}>
               {branch.isActive ? 'Active' : 'Inactive'}
             </span>
@@ -117,8 +113,8 @@ export default function MyBranchPage() {
               {leadership.map((leader) => {
                 const initials = ((leader.memberFirstName?.[0] ?? '') + (leader.memberLastName?.[0] ?? '')).toUpperCase() || '?';
                 return (
-                  <div key={leader.id} className="flex items-center gap-3 rounded-md border p-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                  <div key={leader.id} className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-sm font-bold text-violet-600 dark:text-violet-400">
                       {initials}
                     </div>
                     <div>
@@ -142,19 +138,19 @@ export default function MyBranchPage() {
           <CardContent className="flex flex-wrap gap-3">
             <Link
               href="/members"
-              className="inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               View Members
             </Link>
             <Link
               href="/fellowships"
-              className="inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               View Fellowships
             </Link>
             <Link
               href="/reports"
-              className="inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               Reports
             </Link>

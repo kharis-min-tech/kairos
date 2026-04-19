@@ -100,23 +100,22 @@ export default function NewFellowshipPage() {
   };
 
   const selectClass =
-    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+    'flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20';
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link
-          href="/fellowships"
-          className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Fellowships
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">New Fellowship</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Create a new fellowship group</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Fellowships
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">New Fellowship</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Create a new fellowship group</p>
+        </div>
       </div>
 
       <Card>
@@ -128,7 +127,7 @@ export default function NewFellowshipPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
             {createFellowship.error && (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                 {createFellowship.error instanceof Error
                   ? createFellowship.error.message
                   : 'Failed to create fellowship. Please try again.'}
@@ -234,7 +233,7 @@ export default function NewFellowshipPage() {
                 {...register('description')}
                 rows={3}
                 placeholder="Brief description of this fellowship group..."
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                className="flex w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 resize-none"
               />
             </div>
 
@@ -244,7 +243,7 @@ export default function NewFellowshipPage() {
                   Cancel
                 </Button>
               </Link>
-              <Button type="submit" variant="success" className="flex-1" disabled={isSubmitting}>
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -192,9 +192,9 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header with avatar */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-8 text-white">
-        <div className="flex items-center gap-4">
+      {/* Profile header */}
+      <div className="flex items-start justify-between pb-6">
+        <div className="flex items-center gap-4 flex-1">
           <div className="relative">
             {avatarUrl ? (
               <img
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-2xl font-bold">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/15 text-2xl font-bold text-violet-600 dark:text-violet-400">
                 {initials}
               </div>
             )}
@@ -231,10 +231,10 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold tracking-tight">
               {profile?.firstName} {profile?.lastName}
             </h1>
-            <p className="mt-0.5 text-sm capitalize text-purple-200">{profile?.systemRole}</p>
+            <p className="mt-0.5 text-sm capitalize text-muted-foreground">{profile?.systemRole}</p>
           </div>
           {!isEditing && (
             <div className="flex items-center gap-2">
@@ -243,7 +243,6 @@ export default function ProfilePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
                 >
                   Settings
                 </Button>
@@ -253,7 +252,6 @@ export default function ProfilePage() {
                 variant="outline"
                 size="sm"
                 onClick={openEditMode}
-                className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
               >
                 Edit Profile
               </Button>
@@ -292,7 +290,7 @@ export default function ProfilePage() {
                   <Label>Gender</Label>
                   <select
                     {...register('gender')}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/20"
                   >
                     <option value="">Select gender</option>
                     <option value="Male">Male</option>
@@ -371,7 +369,7 @@ export default function ProfilePage() {
                   <select
                     id="emergencyContactRelationship"
                     {...register('emergencyContactRelationship')}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/20"
                   >
                     <option value="">Select relationship...</option>
                     <option value="Spouse">Spouse</option>
@@ -464,7 +462,7 @@ export default function ProfilePage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-xl"
+                    className="rounded-lg"
                     onClick={onSwitchBranch}
                     disabled={switchBranch.isPending}
                   >

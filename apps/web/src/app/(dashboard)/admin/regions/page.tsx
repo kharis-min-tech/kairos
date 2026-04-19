@@ -29,24 +29,21 @@ export default function RegionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Regions</h1>
-            <p className="mt-0.5 text-sm text-purple-200">
-              Manage geographic regions{regions ? ` — ${regions.length} total` : ''}
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="success"
-            className="shrink-0"
-            onClick={() => setShowDialog(true)}
-          >
-            + New Region
-          </Button>
+      {/* Page header */}
+      <div className="flex items-center justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Regions</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Manage geographic regions{regions ? ` — ${regions.length} total` : ''}
+          </p>
         </div>
+        <Button
+          size="sm"
+          className="shrink-0"
+          onClick={() => setShowDialog(true)}
+        >
+          + New Region
+        </Button>
       </div>
 
       {/* Create dialog */}
@@ -63,7 +60,7 @@ export default function RegionsPage() {
                   id="regionName"
                   value={regionName}
                   onChange={(e) => { setRegionName(e.target.value); setCountry(''); }}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 >
                   <option value="">Select continent…</option>
                   {CONTINENTS.map((c) => (
@@ -78,7 +75,7 @@ export default function RegionsPage() {
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   disabled={!regionName}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:opacity-50"
                 >
                   <option value="">Select country…</option>
                   {availableCountries.map((c) => (
@@ -92,7 +89,6 @@ export default function RegionsPage() {
             )}
             <div className="flex gap-2">
               <Button
-                variant="success"
                 disabled={!regionName || !country || createRegion.isPending}
                 onClick={handleCreate}
               >
@@ -124,7 +120,7 @@ export default function RegionsPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base leading-snug">{region.regionName}</CardTitle>
-                  <span className="flex-shrink-0 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                  <span className="flex-shrink-0 rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-400">
                     Region
                   </span>
                 </div>

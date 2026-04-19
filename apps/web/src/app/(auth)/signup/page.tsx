@@ -7,9 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Input, Label, Card, CardContent, CardHeader } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
+import { KharisCardHeader } from '../kharis-logo';
 
 const signupSchema = z.object({
   // Step 1
@@ -25,6 +26,10 @@ const signupSchema = z.object({
   city: z.string().optional(),
   postalCode: z.string().optional(),
   homeBranchId: z.string().min(1, 'Please select a branch'),
+  secondaryBranchId: z.string().optional(),
+  secondaryAddress: z.string().optional(),
+  secondaryCity: z.string().optional(),
+  secondaryPostalCode: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   emergencyContactPhone: z.string().optional(),
@@ -160,6 +165,7 @@ export default function SignupPage() {
   });
 
   const password = watch('password', '');
+  const secondaryBranchId = watch('secondaryBranchId', '');
 
   const stepFields: (keyof SignupFormData)[][] = [
     ['firstName', 'lastName', 'email'],
@@ -185,21 +191,14 @@ export default function SignupPage() {
   }
 
   return (
-    <Card className="border-0 shadow-lg">
-      <CardHeader className="space-y-3 pb-2">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-          </svg>
-        </div>
-        <div className="text-center">
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription className="mt-1">Join your church community</CardDescription>
-        </div>
-        <div className="pt-3">
+    <>
+      {/* Heading — outside card */}
+      <KharisCardHeader heading="Create account" subtitle="Join your church community" />
+
+      <Card className="border-0 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <CardHeader className="pb-4 pt-6">
           <StepIndicator currentStep={step} />
-        </div>
-      </CardHeader>
+        </CardHeader>
       <CardContent className="pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
@@ -317,6 +316,41 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
+                <p className="text-xs text-muted-foreground">Optional — e.g. if you also attend a branch near your university or workplace</p>
+                <select
+                  id="secondaryBranchId"
+                  {...register('secondaryBranchId')}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">None</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.branchName}</option>
+                  ))}
+                </select>
+              </div>
+
+              {secondaryBranchId && (
+                <div className="space-y-3 rounded-lg bg-muted/40 p-4">
+                  <p className="text-xs font-medium text-muted-foreground">Secondary Branch Address <span className="font-normal">(optional)</span></p>
+                  <div className="space-y-2">
+                    <Label htmlFor="secondaryAddress">Street Address</Label>
+                    <Input id="secondaryAddress" className="h-11" {...register('secondaryAddress')} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryCity">City</Label>
+                      <Input id="secondaryCity" className="h-11" {...register('secondaryCity')} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryPostalCode">Postal Code</Label>
+                      <Input id="secondaryPostalCode" className="h-11" {...register('secondaryPostalCode')} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
                 <Input id="emergencyContactName" className="h-11" {...register('emergencyContactName')} />
               </div>
@@ -373,19 +407,19 @@ export default function SignupPage() {
           {/* Navigation */}
           <div className="flex gap-3 pt-2">
             {step > 0 && (
-              <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setStep((s) => s - 1)}>
+              <Button type="button" variant="outline" className="h-11 flex-1 rounded-lg" onClick={() => setStep((s) => s - 1)}>
                 Back
               </Button>
             )}
             {step < 2 ? (
-              <Button type="button" className="h-11 flex-1 rounded-xl text-sm font-semibold" onClick={nextStep}>
+              <button type="button" className="flex h-11 flex-1 items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90" onClick={nextStep}>
                 Continue
-              </Button>
+              </button>
             ) : (
-              <Button type="submit" className="h-11 flex-1 rounded-xl text-sm font-semibold" disabled={isSubmitting}>
+              <button type="submit" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
@@ -394,13 +428,13 @@ export default function SignupPage() {
                 ) : (
                   'Create Account'
                 )}
-              </Button>
+              </button>
             )}
           </div>
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-muted-foreground/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">or</span>
@@ -409,12 +443,13 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
               Sign in
             </Link>
           </p>
         </form>
       </CardContent>
-    </Card>
+      </Card>
+    </>
   );
 }

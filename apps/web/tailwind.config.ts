@@ -96,6 +96,10 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      boxShadow: {
+        ambient: '0 8px 24px rgba(26, 28, 28, 0.06)',
+        'ambient-lg': '0 8px 40px rgba(26, 28, 28, 0.06)',
+      },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],

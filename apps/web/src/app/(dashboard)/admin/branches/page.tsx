@@ -26,7 +26,7 @@ export default function BranchesPage() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+      <div className="rounded-lg bg-rose-50 p-4">
         <p className="text-sm text-rose-700">Failed to load branches. Please try again.</p>
       </div>
     );
@@ -34,21 +34,17 @@ export default function BranchesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Branches</h1>
-            <p className="mt-0.5 text-sm text-purple-200">Manage church branches and locations</p>
-          </div>
-          {isAdmin && (
-            <Link href="/admin/branches/new">
-              <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
-                + New Branch
-              </button>
-            </Link>
-          )}
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Branches</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Manage church branches and locations</p>
         </div>
+        {isAdmin && (
+          <Link href="/admin/branches/new">
+            <Button size="sm">+ New Branch</Button>
+          </Link>
+        )}
       </div>
 
       {/* Region Filter */}
@@ -56,7 +52,7 @@ export default function BranchesPage() {
         <select
           value={regionFilter}
           onChange={(e) => setRegionFilter(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
         >
           <option value="">All Regions</option>
           {(regions ?? []).map((r) => (
@@ -86,7 +82,7 @@ export default function BranchesPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base leading-snug">{branch.branchName}</CardTitle>
-                    <span className="flex-shrink-0 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                    <span className="flex-shrink-0 rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-400">
                       {branch.branchType}
                     </span>
                   </div>

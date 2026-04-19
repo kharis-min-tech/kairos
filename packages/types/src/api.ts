@@ -173,6 +173,10 @@ export interface CreateMemberRequest {
   address?: string;
   city?: string;
   postalCode?: string;
+  secondaryBranchId?: string | null;
+  secondaryAddress?: string;
+  secondaryCity?: string;
+  secondaryPostalCode?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;

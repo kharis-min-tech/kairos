@@ -55,10 +55,12 @@ export default function NewBranchPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <h1 className="text-2xl font-bold">Create Branch</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Add a new church branch</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Create Branch</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Add a new church branch</p>
+        </div>
       </div>
 
       <Card>
@@ -79,7 +81,7 @@ export default function NewBranchPage() {
               <select
                 id="regionId"
                 {...register('regionId')}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
               >
                 <option value="">
                   {regionsLoading ? 'Loading regions...' : 'Select a region'}
@@ -96,7 +98,7 @@ export default function NewBranchPage() {
               <select
                 id="branchType"
                 {...register('branchType')}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
               >
                 {Object.values(BranchType).map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -151,7 +153,7 @@ export default function NewBranchPage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" variant="success" disabled={isSubmitting || createBranch.isPending}>
+              <Button type="submit" disabled={isSubmitting || createBranch.isPending}>
                 {createBranch.isPending ? 'Creating...' : 'Create Branch'}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>

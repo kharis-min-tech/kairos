@@ -80,9 +80,9 @@ const STATS = [
 // ─── STYLE 1: Cryptix — Dark, gradient-heavy, violet/amber palette ─────────────
 function CryptixLanding() {
   return (
-    <div className="min-h-screen bg-[#0a0614] text-white font-sans">
+    <div className="min-h-screen bg-[#080808] text-white font-sans">
       {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a0614]/80 backdrop-blur border-b border-violet-900/40">
+      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#080808]/80 backdrop-blur border-b border-white/[0.06]">
         <span className="text-xl font-bold tracking-tight">
           <span className="text-violet-400">K</span>airos
         </span>
@@ -101,13 +101,13 @@ function CryptixLanding() {
       {/* Hero */}
       <section className="relative pt-40 pb-32 px-6 text-center overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-violet-700/25 blur-[120px]" />
-          <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] rounded-full bg-amber-600/15 blur-[100px]" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-violet-700/10 blur-[120px]" />
+          <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] rounded-full bg-amber-600/10 blur-[100px]" />
         </div>
 
         <div className="relative max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-600/40 bg-violet-700/15 px-4 py-1.5 text-xs text-violet-300 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-4 py-1.5 text-xs text-white/50 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
             Built for growing churches
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
@@ -138,8 +138,8 @@ function CryptixLanding() {
 
         <div className="relative mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
           {STATS.map((s) => (
-            <div key={s.label} className="rounded-2xl border border-violet-800/30 bg-violet-900/20 backdrop-blur p-5">
-              <div className="text-3xl font-black text-violet-400">{s.value}</div>
+            <div key={s.label} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur p-5">
+              <div className="text-3xl font-black text-amber-400">{s.value}</div>
               <div className="text-xs text-white/40 mt-1">{s.label}</div>
             </div>
           ))}
@@ -159,7 +159,7 @@ function CryptixLanding() {
           </div>
           <div className="space-y-4">
             {PAIN_POINTS.map((p) => (
-              <div key={p.text} className="flex items-start gap-4 rounded-xl border border-violet-800/30 bg-violet-900/10 p-4">
+              <div key={p.text} className="flex items-start gap-4 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
                 <p.Icon className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
                 <span className="text-sm text-white/60 leading-relaxed">{p.text}</span>
               </div>
@@ -177,10 +177,10 @@ function CryptixLanding() {
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="group rounded-2xl border border-violet-800/30 bg-violet-900/10 p-6 hover:border-violet-600/40 hover:bg-violet-700/15 transition-all"
+                className="group rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 hover:border-violet-600/40 hover:bg-white/[0.04] transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-violet-700/30 border border-violet-600/30 flex items-center justify-center mb-4">
-                  <f.Icon className="h-5 w-5 text-violet-300" />
+                <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/[0.1] flex items-center justify-center mb-4">
+                  <f.Icon className="h-5 w-5 text-violet-400" />
                 </div>
                 <h3 className="mt-2 font-semibold text-base">{f.title}</h3>
                 <p className="mt-2 text-sm text-white/50 leading-relaxed">{f.desc}</p>
@@ -193,7 +193,7 @@ function CryptixLanding() {
       {/* CTA */}
       <section className="py-32 px-6 text-center relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-violet-700/25 blur-[100px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-violet-700/10 blur-[100px]" />
         </div>
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-5xl font-extrabold leading-tight">
@@ -212,7 +212,7 @@ function CryptixLanding() {
         </div>
       </section>
 
-      <footer className="border-t border-violet-900/30 px-8 py-8 flex items-center justify-between text-xs text-white/30">
+      <footer className="border-t border-white/[0.06] px-8 py-8 flex items-center justify-between text-xs text-white/30">
         <span>© {new Date().getFullYear()} Kairos. Church Administration Platform.</span>
         <Link href="/login" className="hover:text-white/60 transition-colors">Sign In →</Link>
       </footer>
@@ -223,9 +223,9 @@ function CryptixLanding() {
 // ─── STYLE 2: Landio — Dark monochromatic, clean SaaS, violet/amber accents ───
 function LandioLanding() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
+    <div className="min-h-screen bg-[#080808] text-white font-sans">
       {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a0a0a]/90 backdrop-blur border-b border-white/[0.06]">
+      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#080808]/80 backdrop-blur border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-violet-600 flex items-center justify-center">
             <span className="text-white text-xs font-black">K</span>
@@ -513,9 +513,9 @@ function NexaLanding() {
 // ─── STYLE 5: Aset — Dark professional, feature-grid, B2B SaaS feel ──────────
 function AsetLanding() {
   return (
-    <div className="min-h-screen bg-[#06080f] text-white font-sans">
+    <div className="min-h-screen bg-[#080808] text-white font-sans">
       {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#06080f]/95 backdrop-blur border-b border-white/[0.04]">
+      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4 bg-[#080808]/95 backdrop-blur border-b border-white/[0.04]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center">
             <span className="text-white text-xs font-black">K</span>
@@ -573,7 +573,7 @@ function AsetLanding() {
         <div className="max-w-5xl mx-auto mt-20 flex flex-wrap justify-center gap-px">
           {STATS.map((s, i) => (
             <div key={s.label} className={`flex-1 min-w-[140px] px-8 py-6 text-center ${i < STATS.length - 1 ? "border-r border-white/[0.04]" : ""}`}>
-              <div className="text-4xl font-bold text-violet-400">{s.value}</div>
+              <div className="text-4xl font-bold text-amber-400">{s.value}</div>
               <div className="text-xs text-white/25 mt-2">{s.label}</div>
             </div>
           ))}
@@ -615,7 +615,7 @@ function AsetLanding() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => (
               <div key={f.title} className="group rounded-xl border border-white/[0.05] bg-white/[0.015] p-6 hover:border-violet-500/20 hover:bg-violet-500/5 transition-all duration-200">
-                <div className="w-10 h-10 rounded-lg bg-violet-700/20 border border-violet-600/20 flex items-center justify-center mb-5">
+                <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center mb-5">
                   <f.Icon className="h-5 w-5 text-violet-400" />
                 </div>
                 <h3 className="font-semibold text-sm text-white/80">{f.title}</h3>
@@ -628,7 +628,7 @@ function AsetLanding() {
 
       {/* CTA */}
       <section className="py-24 px-6 border-t border-white/[0.04]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 rounded-2xl border border-violet-800/30 bg-violet-900/10 p-10">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-10">
           <div>
             <h2 className="text-2xl font-bold text-white/90">Ready to modernise your church's operations?</h2>
             <p className="mt-2 text-sm text-white/35">Sign in to access your dashboard across all branches.</p>

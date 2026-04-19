@@ -46,7 +46,7 @@ async function seed() {
   console.log(`✓ 3 regions`);
 
   // ── 2. Branches ─────────────────────────────────────────────
-  const [london, manchester, accra, _kumasi, freetown] = await db
+  const [london, manchester, accra, kumasi, freetown] = await db
     .insert(branches)
     .values([
       {
@@ -180,6 +180,24 @@ async function seed() {
     })
     .returning();
 
+  const [pastorKumasi] = await db
+    .insert(members)
+    .values({
+      firstName: 'Yaw',
+      lastName: 'Kwarteng',
+      email: 'yaw.kwarteng@kairos.local',
+      phone: '+233551234569',
+      gender: 'Male',
+      dateOfBirth: '1982-07-14',
+      homeBranchId: kumasi!.id,
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'pastor',
+      membershipDate: '2018-09-01',
+    })
+    .returning();
+
   // Leaders (fellowship leaders, elders)
   const [leaderSarah] = await db
     .insert(members)
@@ -214,6 +232,76 @@ async function seed() {
       approvalStatus: 'approved',
       systemRole: 'leader',
       membershipDate: '2013-06-15',
+    })
+    .returning();
+
+  // Multi-branch test members
+  await db
+    .insert(members)
+    .values({
+      firstName: 'Alex',
+      lastName: 'Johnson',
+      email: 'alex.johnson@kairos.local',
+      phone: '+447700000010',
+      gender: 'Male',
+      dateOfBirth: '1994-03-12',
+      address: '10 Baker Street',
+      city: 'London',
+      postalCode: 'W1U 5BD',
+      homeBranchId: london!.id,
+      secondaryBranchId: manchester!.id,
+      isAtSecondaryBranch: false,
+      secondaryAddress: '22 Oxford Road',
+      secondaryCity: 'Manchester',
+      secondaryPostalCode: 'M2 4WU',
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+      membershipDate: '2021-04-01',
+    })
+    .returning();
+
+  const [amaBoateng] = await db
+    .insert(members)
+    .values({
+      firstName: 'Ama',
+      lastName: 'Boateng',
+      email: 'ama.boateng@kairos.local',
+      phone: '+233201234580',
+      gender: 'Female',
+      dateOfBirth: '1996-08-25',
+      address: '5 Ring Road East',
+      city: 'Accra',
+      homeBranchId: accra!.id,
+      secondaryBranchId: kumasi!.id,
+      isAtSecondaryBranch: true,
+      secondaryAddress: '14 Harper Road',
+      secondaryCity: 'Kumasi',
+      secondaryPostalCode: 'AK-039',
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+      membershipDate: '2022-01-15',
+    })
+    .returning();
+
+  const [abenaOsei] = await db
+    .insert(members)
+    .values({
+      firstName: 'Abena',
+      lastName: 'Osei',
+      email: 'abena.osei@kairos.local',
+      phone: '+233551234570',
+      gender: 'Female',
+      dateOfBirth: '1998-05-03',
+      homeBranchId: kumasi!.id,
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+      membershipDate: '2019-03-20',
     })
     .returning();
 
@@ -316,7 +404,7 @@ async function seed() {
       },
     ])
     .returning();
-  console.log(`✓ 13 members (1 admin, 3 pastors, 2 leaders, 5 regular, 1 pending, 1 unverified)`);
+  console.log(`✓ 17 members (1 admin, 4 pastors, 2 leaders, 5 regular, 3 multi-branch, 1 pending, 1 unverified)`);  // alexJohnson, amaBoateng, abenaOsei
 
   // ── 4. Roles ────────────────────────────────────────────────
   const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole] = await db
@@ -346,11 +434,12 @@ async function seed() {
     { branchId: manchester!.id, memberId: pastorManchester!.id, role: 'Main Pastor', isCurrent: true },
     { branchId: accra!.id, memberId: pastorAccra!.id, role: 'Main Pastor', isCurrent: true },
     { branchId: accra!.id, memberId: leaderDavid!.id, role: 'Elder', isCurrent: true },
+    { branchId: kumasi!.id, memberId: pastorKumasi!.id, role: 'Main Pastor', isCurrent: true },
   ]);
-  console.log(`✓ 5 leadership assignments`);
+  console.log(`✓ 6 leadership assignments`);
 
   // ── 7. Fellowships ──────────────────────────────────────────
-  const [kGroupLondon, expressLondon, kGroupAccra, newBreedsAccra] = await db
+  const [kGroupLondon, expressLondon, kGroupAccra, newBreedsAccra, kGroupKumasi] = await db
     .insert(fellowships)
     .values([
       {
@@ -385,9 +474,17 @@ async function seed() {
         leaderId: pastorAccra!.id,
         meetingSchedule: 'Every Saturday, 10:00 AM',
       },
+      {
+        fellowshipName: 'Kumasi K-Group',
+        branchId: kumasi!.id,
+        fellowshipType: 'K-Groups',
+        description: 'Tuesday evening small group fellowship',
+        leaderId: pastorKumasi!.id,
+        meetingSchedule: 'Every Tuesday, 6:30 PM',
+      },
     ])
     .returning();
-  console.log(`✓ 4 fellowships`);
+  console.log(`✓ 5 fellowships`);
 
   // ── 8. Fellowship Members ───────────────────────────────────
   await db.insert(fellowshipMembers).values([
@@ -400,8 +497,11 @@ async function seed() {
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[1]!.id },
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[2]!.id },
     { fellowshipId: newBreedsAccra!.id, memberId: regularMembers[2]!.id },
+    { fellowshipId: kGroupKumasi!.id, memberId: pastorKumasi!.id },
+    { fellowshipId: kGroupKumasi!.id, memberId: abenaOsei!.id },
+    { fellowshipId: kGroupKumasi!.id, memberId: amaBoateng!.id },
   ]);
-  console.log(`✓ 9 fellowship memberships`);
+  console.log(`✓ 12 fellowship memberships`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('Test accounts (all passwords: "Password1!"):');
@@ -412,6 +512,9 @@ async function seed() {
   console.log('  Leader:  sarah.williams@kairos.local  (London)');
   console.log('  Leader:  david.appiah@kairos.local    (Accra)');
   console.log('  Member:  emma.thompson@kairos.local   (London)');
+  console.log('  Member:  alex.johnson@kairos.local    (home=London, secondary=Manchester, isAtSecondaryBranch=false)');
+  console.log('  Member:  ama.boateng@kairos.local     (home=Accra, secondary=Kumasi,     isAtSecondaryBranch=true)');
+  console.log('  Pastor:  yaw.kwarteng@kairos.local    (Kumasi)');
   console.log('  Pending: new.applicant@kairos.local   (London)');
   console.log('  Unverified: unverified@kairos.local   (London)');
 

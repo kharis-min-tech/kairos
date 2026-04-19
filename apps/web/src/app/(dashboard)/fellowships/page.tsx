@@ -23,11 +23,11 @@ const FELLOWSHIP_TYPES = [
 ];
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  [FellowshipType.KGroups]: 'bg-purple-100 text-purple-700',
-  [FellowshipType.KharisExpress]: 'bg-amber-100 text-amber-700',
-  [FellowshipType.NewBreeds]: 'bg-emerald-100 text-emerald-700',
-  [FellowshipType.KharisOnCampus]: 'bg-sky-100 text-sky-700',
-  [FellowshipType.KharisOnCampusColleges]: 'bg-rose-100 text-rose-700',
+  [FellowshipType.KGroups]: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [FellowshipType.KharisExpress]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+  [FellowshipType.NewBreeds]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [FellowshipType.KharisOnCampus]: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
+  [FellowshipType.KharisOnCampusColleges]: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
 };
 
 function FellowshipsContent() {
@@ -67,7 +67,7 @@ function FellowshipsContent() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
+      <div className="rounded-lg bg-destructive/10 p-4">
         <p className="text-sm text-destructive">Failed to load fellowships. Please try again.</p>
       </div>
     );
@@ -75,23 +75,19 @@ function FellowshipsContent() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Fellowships</h1>
-            <p className="mt-0.5 text-sm text-purple-200">
-              Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
-            </p>
-          </div>
-          {(activeRole === 'admin' || activeRole === 'pastor') && (
-            <Link href="/fellowships/new">
-              <button className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
-                + New Fellowship
-              </button>
-            </Link>
-          )}
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Fellowships</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
+          </p>
         </div>
+        {(activeRole === 'admin' || activeRole === 'pastor') && (
+          <Link href="/fellowships/new">
+            <Button size="sm">+ New Fellowship</Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -109,8 +105,8 @@ function FellowshipsContent() {
               }
               className={(
                 (params.fellowshipType || '') === type.value
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'border border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-700'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'border border-input/15 bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
               ) + ' rounded-full px-4 py-1.5 text-sm font-medium transition-colors'}
             >
               {type.label}
@@ -121,7 +117,7 @@ function FellowshipsContent() {
           <select
             value={params.branchId ?? ''}
             onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
           >
             <option value="">All Branches</option>
             {(branchesResult ?? []).map((b) => (

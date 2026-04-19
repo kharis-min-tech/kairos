@@ -55,6 +55,7 @@ function setupUpdate(result: unknown = undefined) {
 // ── Fixtures ──────────────────────────────────────────────
 
 const branchId = '220e8400-0000-0000-0000-000000000002';
+const secondaryBranchId = '220e8400-0000-0000-0000-000000000099';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 const roleId = '550e8400-0000-0000-0000-000000000005';
 const roleAssignmentId = '660e8400-0000-0000-0000-000000000006';
@@ -74,7 +75,8 @@ const sampleMember = {
 const sampleMemberFull = {
   ...sampleMember, middleName: null, dateOfBirth: null,
   address: null, city: null, postalCode: null,
-  photoUrl: null, emergencyContactName: null, emergencyContactPhone: null,
+  secondaryBranchId: null, secondaryAddress: null, secondaryCity: null, secondaryPostalCode: null,
+  isAtSecondaryBranch: false, photoUrl: null, emergencyContactName: null, emergencyContactPhone: null,
   emailVerified: true, updatedAt: new Date(),
 };
 
@@ -106,6 +108,7 @@ import {
   importMembers,
   exportMembersCsv,
   listRoles,
+  switchActiveBranch,
 } from './service';
 
 // ── listMembers ───────────────────────────────────────────
@@ -190,6 +193,14 @@ describe('updateMember', () => {
     setupSelect([]);
     await expect(updateMember(mockDb, memberId, { phone: '999' }, adminAuth))
       .rejects.toThrow('Member not found');
+  });
+
+  it('forces isAtSecondaryBranch to false when secondaryBranchId is cleared', async () => {
+    setupSelect([{ id: memberId }]);
+    setupUpdate([{ ...sampleMemberFull, secondaryBranchId: null, isAtSecondaryBranch: false }]);
+    const result = await updateMember(mockDb, memberId, { secondaryBranchId: null }, adminAuth);
+    expect(result).toBeDefined();
+    expect(mockDb.update).toHaveBeenCalled();
   });
 
   it('converts pg 22001 (value too long) to ValidationError', async () => {
@@ -434,6 +445,23 @@ describe('createMember', () => {
     expect(result.member).toEqual(createdMember);
   });
 
+  it('creates a member with secondary branch fields', async () => {
+    setupSelectSequence([], []);
+    const createdWithSecondary = {
+      ...createdMember,
+      secondaryBranchId,
+      secondaryAddress: '10 Side St',
+      secondaryCity: 'Manchester',
+      secondaryPostalCode: 'M1 1AA',
+    };
+    setupInsert([createdWithSecondary]);
+    const result = await createMember(mockDb, { ...createInput, secondaryBranchId, secondaryAddress: '10 Side St', secondaryCity: 'Manchester', secondaryPostalCode: 'M1 1AA' }, adminAuth);
+    expect(result.member.secondaryBranchId).toBe(secondaryBranchId);
+    expect(result.member.secondaryAddress).toBe('10 Side St');
+    expect(result.member.secondaryCity).toBe('Manchester');
+    expect(result.member.secondaryPostalCode).toBe('M1 1AA');
+  });
+
   it('throws ForbiddenError for regular member', async () => {
     await expect(createMember(mockDb, createInput, memberAuth))
       .rejects.toThrow('Only admins and pastors can create members');
@@ -578,5 +606,53 @@ describe('exportMembersCsv', () => {
     const lines = csv.split('\n');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toContain('firstName');
+  });
+});
+
+// ── switchActiveBranch ────────────────────────────────────
+
+describe('switchActiveBranch', () => {
+  const sampleMemberForSwitch = {
+    id: memberId,
+    homeBranchId: branchId,
+    secondaryBranchId,
+    isAtSecondaryBranch: false,
+    systemRole: 'member',
+    email: 'member@test.com',
+    activeRole: 'member',
+  };
+
+  it('toggles from home to secondary, returns secondaryBranchId as activeBranchId', async () => {
+    setupSelect([sampleMemberForSwitch]);
+    setupUpdate([]);
+    const result = await switchActiveBranch(mockDb, memberAuth, memberId);
+    expect(result.isAtSecondaryBranch).toBe(true);
+    expect(result.activeBranchId).toBe(secondaryBranchId);
+    expect(result.tokens.accessToken).toBeDefined();
+  });
+
+  it('toggles from secondary to home, returns homeBranchId as activeBranchId', async () => {
+    setupSelect([{ ...sampleMemberForSwitch, isAtSecondaryBranch: true }]);
+    setupUpdate([]);
+    const result = await switchActiveBranch(mockDb, memberAuth, memberId);
+    expect(result.isAtSecondaryBranch).toBe(false);
+    expect(result.activeBranchId).toBe(branchId);
+  });
+
+  it('throws ForbiddenError when switching another member\'s branch', async () => {
+    await expect(switchActiveBranch(mockDb, otherAuth, memberId))
+      .rejects.toThrow('You can only switch your own active branch');
+  });
+
+  it('throws ValidationError when member has no secondaryBranchId', async () => {
+    setupSelect([{ ...sampleMemberForSwitch, secondaryBranchId: null }]);
+    await expect(switchActiveBranch(mockDb, memberAuth, memberId))
+      .rejects.toThrow('No secondary branch assigned');
+  });
+
+  it('throws NotFoundError when member does not exist', async () => {
+    setupSelect([]);
+    await expect(switchActiveBranch(mockDb, memberAuth, memberId))
+      .rejects.toThrow('Member not found');
   });
 });

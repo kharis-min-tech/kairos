@@ -78,60 +78,50 @@ export default function MembersPage() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Failed to load members. Please try again.</p>
+      <div className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm text-destructive">Failed to load members. Please try again.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Members</h1>
-            <p className="mt-0.5 text-sm text-purple-200">
-              Church member directory{pagination ? ` \u2014 ${pagination.total} total` : ''}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {(isAdmin || isPastor) && (
-              <Link href="/members/new">
-                <button className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-50">
-                  + Add Member
-                </button>
-              </Link>
-            )}
-            {(isAdmin || isPastor) && (
-              <Link href="/members/import">
-                <button className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
-                  Import CSV
-                </button>
-              </Link>
-            )}
-            {(isAdmin || isPastor) && (
-              <button
-                className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:opacity-50"
-                onClick={handleExport}
-                disabled={exportLoading}
-              >
-                {exportLoading ? 'Exporting…' : 'Export CSV'}
-              </button>
-            )}
-            {isAdmin && (
-              <Link href="/members/approval">
-                <button className="relative rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20">
-                  Approval Queue
-                  {(pendingResult?.meta?.total ?? 0) > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-900">
-                      {pendingResult!.meta!.total}
-                    </span>
-                  )}
-                </button>
-              </Link>
-            )}
-          </div>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Members</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Church member directory{pagination ? ` — ${pagination.total} total` : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(isAdmin || isPastor) && (
+            <Link href="/members/new">
+              <Button size="sm">+ Add Member</Button>
+            </Link>
+          )}
+          {(isAdmin || isPastor) && (
+            <Link href="/members/import">
+              <Button variant="outline" size="sm">Import CSV</Button>
+            </Link>
+          )}
+          {(isAdmin || isPastor) && (
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={exportLoading}>
+              {exportLoading ? 'Exporting…' : 'Export CSV'}
+            </Button>
+          )}
+          {isAdmin && (
+            <Link href="/members/approval">
+              <Button variant="outline" size="sm" className="relative">
+                Approval Queue
+                {(pendingResult?.meta?.total ?? 0) > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-900">
+                    {pendingResult!.meta!.total}
+                  </span>
+                )}
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -144,16 +134,14 @@ export default function MembersPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="max-w-sm"
         />
-        <Button onClick={handleSearch} className="bg-purple-600 text-white hover:bg-purple-700">
-          Search
-        </Button>
+        <Button onClick={handleSearch}>Search</Button>
         {params.search && (
           <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>
             Clear
           </Button>
         )}
         <select
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
           value={params.fellowshipId ?? ''}
           onChange={(e) => setParams((p) => ({ ...p, fellowshipId: e.target.value || undefined, page: 1 }))}
         >
@@ -164,7 +152,7 @@ export default function MembersPage() {
         </select>
         {isAdmin && (
           <select
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
             value={params.branchId ?? ''}
             onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
           >
@@ -175,7 +163,7 @@ export default function MembersPage() {
           </select>
         )}
         <select
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
           value={params.approvalStatus ?? ''}
           onChange={(e) => setParams((p) => ({ ...p, approvalStatus: (e.target.value || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
         >
@@ -197,9 +185,9 @@ export default function MembersPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => {
               const statusCls =
-                member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
-                : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
-                : 'bg-rose-100 text-rose-700';
+                member.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : member.approvalStatus === 'pending' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                : 'bg-rose-500/15 text-rose-600 dark:text-rose-400';
               return (
                 <Link key={member.id} href={`/members/${member.id}`}>
                   <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">

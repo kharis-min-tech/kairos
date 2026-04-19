@@ -51,20 +51,20 @@ function StatCard({
   accent?: 'purple' | 'gold' | 'emerald' | 'rose';
 }) {
   const accentClasses = {
-    purple: 'bg-purple-100 text-purple-700',
-    gold: 'bg-amber-100 text-amber-700',
-    emerald: 'bg-emerald-100 text-emerald-700',
-    rose: 'bg-rose-100 text-rose-700',
+    purple: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+    gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   };
   return (
-    <Card className="border-0 shadow-sm">
+    <Card>
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <p className="mt-1 text-3xl font-bold tracking-tight">{value}</p>
           </div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accentClasses[accent]}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accentClasses[accent]}`}>
             {icon}
           </div>
         </div>
@@ -106,10 +106,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Track church growth, attendance trends, and giving</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Reports & Analytics</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Track church growth, attendance trends, and giving</p>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -164,8 +166,8 @@ export default function ReportsPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'bg-purple-600 text-white'
-                : 'border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-input/15 bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
             }`}
           >
             {tab.label}
@@ -175,7 +177,7 @@ export default function ReportsPage() {
 
       {/* Tab content */}
       {activeTab === 'attendance' && (
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Weekly Attendance Rate</CardTitle>
           </CardHeader>
@@ -206,7 +208,7 @@ export default function ReportsPage() {
 
       {activeTab === 'giving' && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="border-0 shadow-sm">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Giving by Category</CardTitle>
             </CardHeader>
@@ -235,7 +237,7 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Monthly Giving Trend</CardTitle>
             </CardHeader>
@@ -268,7 +270,7 @@ export default function ReportsPage() {
       )}
 
       {activeTab === 'growth' && (
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Monthly Member Signups</CardTitle>
           </CardHeader>

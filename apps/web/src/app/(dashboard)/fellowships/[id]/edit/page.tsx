@@ -126,7 +126,7 @@ export default function EditFellowshipPage() {
   };
 
   const selectClass =
-    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+    'flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20';
 
   if (fellowshipLoading) {
     return (
@@ -138,7 +138,7 @@ export default function EditFellowshipPage() {
 
   if (!fellowship) {
     return (
-      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+      <div className="rounded-lg bg-rose-50 p-4">
         <p className="text-sm text-rose-700">Fellowship not found.</p>
       </div>
     );
@@ -146,19 +146,18 @@ export default function EditFellowshipPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link
-          href={`/fellowships/${id}`}
-          className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Fellowship
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">Edit Fellowship</h1>
-        <p className="mt-0.5 text-sm text-purple-200">{fellowship.fellowshipName}</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <Link href={`/fellowships/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Fellowship
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Edit Fellowship</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{fellowship.fellowshipName}</p>
+        </div>
       </div>
 
       <Card>
@@ -169,7 +168,7 @@ export default function EditFellowshipPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {updateFellowship.error && (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                 {updateFellowship.error instanceof Error
                   ? updateFellowship.error.message
                   : 'Failed to update fellowship. Please try again.'}
@@ -221,7 +220,7 @@ export default function EditFellowshipPage() {
                 {...register('description')}
                 placeholder="Brief description of this fellowship..."
                 rows={3}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-h-[80px] w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
               />
             </div>
 

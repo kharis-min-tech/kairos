@@ -285,6 +285,28 @@ describe('addFellowshipMember', () => {
     );
     await expect(addFellowshipMember(mockDb, adminAuth, fellowshipId, { memberId })).rejects.toThrow('already in this fellowship');
   });
+
+  it('succeeds when member is at secondary branch matching fellowship branch', async () => {
+    // Member's home branch differs but secondary branch matches the fellowship
+    setupSelectSequence(
+      [sampleFellowship],
+      [{ id: memberId, homeBranchId: 'other-branch-id', secondaryBranchId: branchId, isAtSecondaryBranch: true }],
+      [], // no duplicate
+      [], // no cross-type conflict
+    );
+    setupInsert([{ id: 'fm-new', fellowshipId, memberId }]);
+    const result = await addFellowshipMember(mockDb, adminAuth, fellowshipId, { memberId });
+    expect(result.memberId).toBe(memberId);
+  });
+
+  it('throws ValidationError when member at secondary branch does not match fellowship branch', async () => {
+    // Member is at secondary branch, but secondary != fellowship.branchId
+    setupSelectSequence(
+      [sampleFellowship],
+      [{ id: memberId, homeBranchId: 'home-branch-id', secondaryBranchId: 'yet-another-branch', isAtSecondaryBranch: true }],
+    );
+    await expect(addFellowshipMember(mockDb, adminAuth, fellowshipId, { memberId })).rejects.toThrow('same branch');
+  });
 });
 
 // ── removeFellowshipMember ────────────────────────────────

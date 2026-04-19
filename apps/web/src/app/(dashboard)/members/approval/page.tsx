@@ -14,16 +14,18 @@ export default function MemberApprovalPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Members
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">Approval Queue</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Review and approve pending member registrations</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Members
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Approval Queue</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Review and approve pending member registrations</p>
+        </div>
       </div>
 
       {isLoading ? (

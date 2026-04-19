@@ -28,6 +28,7 @@ export default function AddMemberPage() {
   } = useForm<CreateMemberRequest>();
 
   const dobValue = watch('dateOfBirth') ?? '';
+  const secondaryBranchId = watch('secondaryBranchId');
 
   // Route guard
   if (activeRole === 'member') {
@@ -58,7 +59,7 @@ export default function AddMemberPage() {
           <p className="mt-0.5 text-sm text-emerald-100">The new member account has been set up</p>
         </div>
 
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Temporary Password</CardTitle>
           </CardHeader>
@@ -66,8 +67,8 @@ export default function AddMemberPage() {
             <p className="text-sm text-muted-foreground">
               Share this temporary password with the new member. They will be required to change it on first login.
             </p>
-            <div className="rounded-xl bg-purple-50 border border-purple-200 p-4">
-              <p className="text-center font-mono text-lg font-bold text-purple-700">{generatedPassword}</p>
+            <div className="rounded-lg bg-muted p-4">
+              <p className="text-center font-mono text-lg font-bold text-foreground">{generatedPassword}</p>
             </div>
             <p className="text-xs text-muted-foreground">
               This password will not be shown again. Make sure to save or share it now.
@@ -77,14 +78,14 @@ export default function AddMemberPage() {
 
         <div className="flex gap-3">
           <Button
-            className="rounded-xl bg-purple-600 font-semibold text-white hover:bg-purple-700"
+            className="rounded-lg font-semibold"
             onClick={() => router.push('/members')}
           >
             Back to Members
           </Button>
           <Button
             variant="outline"
-            className="rounded-xl"
+            className="rounded-lg"
             onClick={() => {
               setGeneratedPassword(null);
               createMember.reset();
@@ -99,22 +100,24 @@ export default function AddMemberPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Members
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">Add New Member</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Create a new member account for your church</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Members
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Add New Member</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Create a new member account for your church</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Error banner */}
         {createMember.isError && (
-          <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">
+          <div className="flex items-center gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -123,7 +126,7 @@ export default function AddMemberPage() {
         )}
 
         {/* Section 1: Personal Information */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
           </CardHeader>
@@ -174,7 +177,7 @@ export default function AddMemberPage() {
                 <Label htmlFor="gender">Gender *</Label>
                 <select
                   id="gender"
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                   {...register('gender', { required: 'Gender is required' })}
                 >
                   <option value="">Select gender</option>
@@ -196,7 +199,7 @@ export default function AddMemberPage() {
         </Card>
 
         {/* Section 2: Address */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Address</CardTitle>
           </CardHeader>
@@ -219,7 +222,7 @@ export default function AddMemberPage() {
         </Card>
 
         {/* Section 3: Emergency Contact */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Emergency Contact</CardTitle>
           </CardHeader>
@@ -234,7 +237,7 @@ export default function AddMemberPage() {
                 <select
                   id="emergencyContactRelationship"
                   {...register('emergencyContactRelationship')}
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 >
                   <option value="">Select relationship...</option>
                   <option value="Spouse">Spouse</option>
@@ -257,7 +260,7 @@ export default function AddMemberPage() {
         </Card>
 
         {/* Section 4: Church Info */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Church Information</CardTitle>
           </CardHeader>
@@ -267,7 +270,7 @@ export default function AddMemberPage() {
                 <Label htmlFor="homeBranchId">Home Branch *</Label>
                 <select
                   id="homeBranchId"
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                   {...register('homeBranchId', { required: 'Branch is required' })}
                 >
                   <option value="">Select a branch</option>
@@ -283,7 +286,7 @@ export default function AddMemberPage() {
                 <Label htmlFor="systemRole">System Role</Label>
                 <select
                   id="systemRole"
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                   {...register('systemRole')}
                 >
                   <option value="member">Member</option>
@@ -292,17 +295,49 @@ export default function AddMemberPage() {
                 </select>
               </div>
             </div>
+            {/* Secondary branch */}
+            <div>
+              <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
+              <p className="mb-1 text-xs text-muted-foreground">Optional — e.g. a branch near their university or workplace</p>
+              <select
+                id="secondaryBranchId"
+                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                {...register('secondaryBranchId')}
+              >
+                <option value="">None</option>
+                {branches?.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.branchName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {secondaryBranchId && (
+              <div className="grid gap-4 sm:grid-cols-3 rounded-lg border border-dashed border-input/15 bg-muted/30 p-4">
+                <p className="col-span-full text-xs font-medium text-muted-foreground">Secondary Branch Address <span className="font-normal">(optional)</span></p>
+                <div className="sm:col-span-3">
+                  <Label htmlFor="secondaryAddress">Street Address</Label>
+                  <Input id="secondaryAddress" className="mt-1" {...register('secondaryAddress')} />
+                </div>
+                <div>
+                  <Label htmlFor="secondaryCity">City</Label>
+                  <Input id="secondaryCity" className="mt-1" {...register('secondaryCity')} />
+                </div>
+                <div>
+                  <Label htmlFor="secondaryPostalCode">Postal Code</Label>
+                  <Input id="secondaryPostalCode" className="mt-1" {...register('secondaryPostalCode')} />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Section 5: Photo placeholder */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Profile Photo</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-purple-100 text-purple-700">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400">
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
@@ -321,7 +356,7 @@ export default function AddMemberPage() {
           <Button
             type="submit"
             disabled={createMember.isPending}
-            className="rounded-xl bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
+            className="rounded-lg"
           >
             {createMember.isPending ? (
               <span className="flex items-center gap-2">
@@ -335,7 +370,7 @@ export default function AddMemberPage() {
               'Create Member'
             )}
           </Button>
-          <Button type="button" variant="outline" className="rounded-xl" onClick={() => router.push('/members')}>
+          <Button type="button" variant="outline" className="rounded-lg" onClick={() => router.push('/members')}>
             Cancel
           </Button>
         </div>

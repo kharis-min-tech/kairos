@@ -53,7 +53,7 @@ export default function MemberDetailPage() {
 
   if (error || !member) {
     return (
-      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+      <div className="rounded-lg bg-rose-50 p-4">
         <p className="text-sm text-rose-700">Member not found or access denied.</p>
       </div>
     );
@@ -66,39 +66,41 @@ export default function MemberDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Members
-        </Link>
-        <div className="mt-3 flex items-center gap-4">
-          <MemberAvatar
-            photoUrl={member.photoUrl}
-            firstName={member.firstName}
-            lastName={member.lastName}
-            size="lg"
-            variant="dark"
-          />
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">
-              {member.firstName} {member.lastName}
-            </h1>
-            <div className="mt-1 flex items-center gap-2">
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
-                {member.approvalStatus}
-              </span>
-              <span className="text-sm capitalize text-purple-200">{member.systemRole}</span>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div className="flex-1">
+          <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Members
+          </Link>
+          <div className="mt-2 flex items-center gap-4">
+            <MemberAvatar
+              photoUrl={member.photoUrl}
+              firstName={member.firstName}
+              lastName={member.lastName}
+              size="lg"
+            />
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold tracking-tight">
+                {member.firstName} {member.lastName}
+              </h1>
+              <div className="mt-1 flex items-center gap-2">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
+                  {member.approvalStatus}
+                </span>
+                <span className="text-sm capitalize text-muted-foreground">{member.systemRole}</span>
+              </div>
             </div>
           </div>
-          {canManage && (
-            <div className="flex gap-2">
+        </div>
+        {canManage && (
+          <div className="flex gap-2">
               {member.approvalStatus === 'pending' && (
                 <Button
                   size="sm"
-                  className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
                   onClick={() => {
                     if (confirm(`Approve ${member.firstName} ${member.lastName}?`)) {
                       approve.mutate(
@@ -133,7 +135,7 @@ export default function MemberDetailPage() {
               {member.isActive === false && (
                 <Button
                   size="sm"
-                  className="border-white/30 bg-emerald-500/80 text-white hover:bg-emerald-600"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
                   onClick={() => {
                     if (confirm(`Reactivate ${member.firstName} ${member.lastName}?`)) {
                       reactivate.mutate(member.id, {
@@ -148,7 +150,6 @@ export default function MemberDetailPage() {
               )}
             </div>
           )}
-        </div>
       </div>
 
       {/* Profile Info */}
@@ -193,7 +194,7 @@ export default function MemberDetailPage() {
           ) : (
             <div className="space-y-3">
               {roles.map((role) => (
-                <div key={role.id} className="flex items-center justify-between rounded-md border p-3">
+                <div key={role.id} className="flex items-center justify-between rounded-lg bg-muted p-3">
                   <div>
                     <p className="font-medium">{role.roleName}</p>
                     <p className="text-sm text-muted-foreground">
@@ -236,7 +237,7 @@ export default function MemberDetailPage() {
                 <select
                   value={selectedRoleId}
                   onChange={(e) => setSelectedRoleId(e.target.value)}
-                  className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 >
                   <option value="">Select role…</option>
                   {(allRoles ?? []).map((r) => (
@@ -246,7 +247,7 @@ export default function MemberDetailPage() {
                 <select
                   value={selectedBranchId}
                   onChange={(e) => setSelectedBranchId(e.target.value)}
-                  className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 >
                   <option value="">Select branch…</option>
                   {(branchesData ?? []).map((b) => (
@@ -261,7 +262,7 @@ export default function MemberDetailPage() {
                       { onSuccess: () => { setSelectedRoleId(''); setSelectedBranchId(''); } }
                     );
                   }}
-                  className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {assignRole.isPending ? 'Assigning…' : 'Assign'}
                 </button>
@@ -286,14 +287,14 @@ export default function MemberDetailPage() {
             ) : alreadyInFellowship ? (
               <div className="space-y-2">
                 {currentFellowships.map((f) => (
-                  <div key={f.id} className="flex items-center justify-between rounded-md border p-3">
+                  <div key={f.id} className="flex items-center justify-between rounded-lg bg-muted p-3">
                     <div>
                       <p className="font-medium">{f.fellowshipName}</p>
                       <p className="text-sm text-muted-foreground">{f.fellowshipType}</p>
                     </div>
                     <a
                       href={`/fellowships/${f.id}`}
-                      className="text-sm text-purple-700 hover:underline font-medium"
+                      className="text-sm text-primary hover:underline font-medium"
                     >
                       View Fellowship →
                     </a>
@@ -318,7 +319,7 @@ export default function MemberDetailPage() {
                   <select
                     value={selectedFellowshipId}
                     onChange={(e) => setSelectedFellowshipId(e.target.value)}
-                    className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                   >
                     <option value="">Select a fellowship…</option>
                     {(fellowshipsData?.data ?? [])
@@ -336,7 +337,7 @@ export default function MemberDetailPage() {
                         { onSuccess: () => setSelectedFellowshipId('') }
                       );
                     }}
-                    className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                    className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {addToFellowship.isPending ? 'Adding…' : 'Assign'}
                   </button>

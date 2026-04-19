@@ -50,16 +50,18 @@ export default function MembersImportPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <Link href="/members" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Members
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">Import Members</h1>
-        <p className="mt-0.5 text-sm text-purple-200">Upload a CSV file to bulk-import church members</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div>
+          <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Members
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Import Members</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Upload a CSV file to bulk-import church members</p>
+        </div>
       </div>
 
       {/* Template download */}
@@ -71,7 +73,7 @@ export default function MembersImportPage() {
         <CardContent>
           <button
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-100"
+            className="inline-flex items-center gap-2 rounded-lg border border-input/15 bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -92,14 +94,14 @@ export default function MembersImportPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-200 bg-purple-50/50 p-8 transition-colors hover:border-purple-400 hover:bg-purple-50"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 transition-colors hover:border-primary/50 hover:bg-muted/50"
             onClick={() => fileInputRef.current?.click()}
           >
-            <svg className="h-10 w-10 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
             {file ? (
-              <p className="mt-2 text-sm font-medium text-purple-700">{file.name}</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">Click to select a CSV file</p>
             )}
@@ -113,7 +115,7 @@ export default function MembersImportPage() {
           </div>
 
           {error && (
-            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
               {error}
             </div>
           )}
@@ -135,7 +137,7 @@ export default function MembersImportPage() {
             <CardTitle>Import Complete</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-3 rounded-md bg-emerald-50 p-3">
+            <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-3">
               <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -144,7 +146,7 @@ export default function MembersImportPage() {
             {result.errors.length > 0 && (
               <div className="space-y-1">
                 <p className="text-sm font-medium text-rose-700">Errors ({result.errors.length} rows skipped):</p>
-                <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-md border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+                <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg bg-rose-50 p-3 text-xs text-rose-700">
                   {result.errors.map((e, i) => (
                     <li key={i}>{e}</li>
                   ))}

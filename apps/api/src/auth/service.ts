@@ -55,7 +55,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
 
 /** Returns the branch the member is currently active at (secondary if toggled, else home). */
 export function getActiveBranchId(member: { homeBranchId: string; secondaryBranchId: string | null; isAtSecondaryBranch: boolean }): string {
-  if (member.isAtSecondaryBranch && member.secondaryBranchId != null) {
+  if (member.isAtSecondaryBranch && member.secondaryBranchId !== null) {
     return member.secondaryBranchId;
   }
   return member.homeBranchId;
@@ -88,6 +88,10 @@ export interface SignupInput {
   address?: string;
   city?: string;
   postalCode?: string;
+  secondaryBranchId?: string | null;
+  secondaryAddress?: string;
+  secondaryCity?: string;
+  secondaryPostalCode?: string;
   homeBranchId: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -136,6 +140,10 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       address: input.address ?? null,
       city: input.city ?? null,
       postalCode: input.postalCode ?? null,
+      secondaryBranchId: input.secondaryBranchId ?? null,
+      secondaryAddress: input.secondaryAddress ?? null,
+      secondaryCity: input.secondaryCity ?? null,
+      secondaryPostalCode: input.secondaryPostalCode ?? null,
       emergencyContactName: input.emergencyContactName ?? null,
       emergencyContactPhone: input.emergencyContactPhone ?? null,
       emergencyContactRelationship: input.emergencyContactRelationship ?? null,

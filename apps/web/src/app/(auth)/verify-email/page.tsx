@@ -3,8 +3,9 @@
 import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@kairos/ui';
+
 import { useVerifyEmail } from '@/hooks/use-auth';
+import { KharisCardHeader } from '../kharis-logo';
 
 const OTP_LENGTH = 6;
 
@@ -93,108 +94,107 @@ function VerifyEmailContent() {
 
   if (verified) {
     return (
-      <div className="rounded-2xl bg-card shadow-xl">
-        <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
-          <img src="/logo.png" alt="Kharis Church" className="h-14 w-14 object-contain" />
-          <h1 className="mt-4 text-xl font-bold">Email Verified!</h1>
-          <p className="mt-1 text-sm text-purple-200">Your email address has been confirmed</p>
+      <>
+        {/* Heading — outside card */}
+        <KharisCardHeader heading="Email verified!" subtitle="Your email address has been confirmed" />
+
+        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+          <div className="space-y-5">
+            <p className="text-sm text-muted-foreground">
+              Your account is now <span className="font-medium text-amber-500">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
+            </p>
+            <button
+              className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90"
+              onClick={() => router.push('/pending-approval')}
+            >
+              Continue
+            </button>
+          </div>
         </div>
-        <div className="px-8 py-6 space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Your account is now <span className="font-medium text-amber-500">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
-          </p>
-          <Button
-            className="h-11 w-full rounded-xl font-semibold"
-            onClick={() => router.push('/pending-approval')}
-          >
-            Continue
-          </Button>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-card shadow-xl">
-      <div className="rounded-t-2xl bg-gradient-to-br from-purple-900 to-purple-800 px-8 py-8 text-white">
-        <img src="/logo.png" alt="Kharis Church" className="h-14 w-14 object-contain" />
-        <h1 className="mt-4 text-xl font-bold">Verify Your Email</h1>
-        <p className="mt-1 text-sm text-purple-200">Enter the verification code to continue</p>
-      </div>
+    <>
+      {/* Heading — outside card */}
+      <KharisCardHeader heading="Verify your email" subtitle="Enter the verification code to continue" />
 
-      <div className="px-8 py-6 space-y-5">
-        {error && (
-          <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
-            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-          </div>
-        )}
-
-        {!memberId ? (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
-            <p className="text-sm font-medium text-amber-800">Verification link missing</p>
-            <p className="mt-0.5 text-xs text-amber-700">
-              Please check your email for the verification link and click it to activate your account.
-            </p>
-          </div>
-        ) : (
-          <>
-            <p className="text-center text-sm text-muted-foreground">
-              Enter the 6-character code from your verification email
-            </p>
-
-            {/* OTP Boxes */}
-            <div className="flex justify-center gap-2" onPaste={handlePaste}>
-              {digits.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="h-12 w-12 rounded-xl border-2 border-gray-200 bg-white text-center text-lg font-bold text-purple-700 outline-none transition-colors focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  disabled={verifyMutation.isPending}
-                />
-              ))}
+      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="space-y-5">
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
             </div>
+          )}
 
-            {verifyMutation.isPending && (
-              <div className="flex items-center justify-center gap-2 text-sm text-purple-600">
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Verifying...
+          {!memberId ? (
+            <div className="rounded-lg bg-amber-500/10 p-4">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Verification link missing</p>
+              <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400/80">
+                Please check your email for the verification link and click it to activate your account.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-center text-sm text-muted-foreground">
+                Enter the 6-character code from your verification email
+              </p>
+
+              {/* OTP Boxes */}
+              <div className="flex justify-center gap-2" onPaste={handlePaste}>
+                {digits.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { inputRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i, e)}
+                    className="h-12 w-12 rounded-lg border border-muted-foreground/15 bg-background text-center text-lg font-bold text-foreground outline-none transition-colors focus:border-[#5D3FD3] focus:ring-1 focus:ring-[#5D3FD3]/20"
+                    disabled={verifyMutation.isPending}
+                  />
+                ))}
               </div>
-            )}
 
-            {/* Resend */}
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={countdown > 0 || verifyMutation.isPending}
-                className="text-sm font-medium text-purple-600 hover:text-purple-700 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend verification code'}
-              </button>
-            </div>
-          </>
-        )}
+              {verifyMutation.isPending && (
+                <div className="flex items-center justify-center gap-2 text-sm text-[#5D3FD3]">
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Verifying...
+                </div>
+              )}
 
-        <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-700">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          Back to Sign In
-        </Link>
+              {/* Resend */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={countdown > 0 || verifyMutation.isPending}
+                  className="text-sm font-medium text-[#5D3FD3] hover:opacity-80 disabled:cursor-not-allowed disabled:text-muted-foreground/50"
+                >
+                  {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend verification code'}
+                </button>
+              </div>
+            </>
+          )}
+
+          <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Sign In
+          </Link>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

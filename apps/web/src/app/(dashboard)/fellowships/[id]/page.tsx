@@ -19,7 +19,7 @@ import {
   useReviewJoinRequest,
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -80,7 +80,7 @@ export default function FellowshipDetailPage() {
           </svg>
           Back to Fellowships
         </Link>
-        <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <div className="rounded-lg bg-rose-50 p-4">
           <p className="text-sm text-rose-700">Fellowship not found.</p>
         </div>
       </div>
@@ -97,78 +97,74 @@ export default function FellowshipDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Purple gradient header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-purple-200 hover:text-white">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Fellowships
-            </Link>
-            <h1 className="mt-2 text-2xl font-bold">{fellowship.fellowshipName}</h1>
-            <p className="mt-0.5 text-sm text-purple-200">
-              {fellowship.fellowshipType} &middot; {fellowship.branchName}
-            </p>
-          </div>
-          {isAdminOrPastor && (
-            <div className="flex shrink-0 gap-2 pt-5">
-              <Link
-                href={`/fellowships/${id}/edit`}
-                className="rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => {
-                  if (confirm(`Deactivate "${fellowship.fellowshipName}"? This cannot be undone.`)) {
-                    deleteFellowship.mutate(id, {
-                      onSuccess: () => {
-                        toast.success('Fellowship deactivated.');
-                        router.push('/fellowships');
-                      },
-                      onError: () => toast.error('Failed to deactivate. Please try again.'),
-                    });
-                  }
-                }}
-                disabled={deleteFellowship.isPending}
-                className="rounded-md bg-rose-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
-              >
-                {deleteFellowship.isPending ? 'Deactivating…' : 'Deactivate'}
-              </button>
-            </div>
-          )}
-          {showRequestToJoin && (
-            <button
-              onClick={() => createJoinRequest.mutate(
-                { fellowshipId: id, data: {} },
-                {
-                  onSuccess: () => toast.success('Request sent! An admin will review and get back to you.'),
-                  onError: (error) => {
-                    const msg = (error as Error).message;
-                    if (msg.includes('pending join request')) {
-                      toast.info('Your request has already been sent — an admin will get back to you!');
-                    } else if (msg.includes('previously been removed')) {
-                      toast.error('You cannot request to join at this time. Please contact an admin.');
-                    } else {
-                      toast.error('Something went wrong — please try again or contact your admin.');
-                    }
-                  },
-                },
-              )}
-              disabled={createJoinRequest.isPending}
-              className="shrink-0 self-center rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50"
-            >
-              {createJoinRequest.isPending ? 'Requesting…' : 'Request to Join'}
-            </button>
-          )}
-          {hasPendingRequest && (
-            <span className="shrink-0 self-center rounded-full bg-amber-400/20 px-3 py-1.5 text-xs font-medium text-amber-200">
-              Request Pending
-            </span>
-          )}
+      {/* Page header */}
+      <div className="flex items-start justify-between pb-6">
+        <div className="min-w-0 flex-1">
+          <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Fellowships
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">{fellowship.fellowshipName}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {fellowship.fellowshipType} &middot; {fellowship.branchName}
+          </p>
         </div>
+        {isAdminOrPastor && (
+          <div className="flex shrink-0 gap-2">
+            <Link href={`/fellowships/${id}/edit`}>
+              <Button variant="outline" size="sm">Edit</Button>
+            </Link>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm(`Deactivate "${fellowship.fellowshipName}"? This cannot be undone.`)) {
+                  deleteFellowship.mutate(id, {
+                    onSuccess: () => {
+                      toast.success('Fellowship deactivated.');
+                      router.push('/fellowships');
+                    },
+                    onError: () => toast.error('Failed to deactivate. Please try again.'),
+                  });
+                }
+              }}
+              disabled={deleteFellowship.isPending}
+            >
+              {deleteFellowship.isPending ? 'Deactivating…' : 'Deactivate'}
+            </Button>
+          </div>
+        )}
+        {showRequestToJoin && (
+          <Button
+            size="sm"
+            onClick={() => createJoinRequest.mutate(
+              { fellowshipId: id, data: {} },
+              {
+                onSuccess: () => toast.success('Request sent! An admin will review and get back to you.'),
+                onError: (error) => {
+                  const msg = (error as Error).message;
+                  if (msg.includes('pending join request')) {
+                    toast.info('Your request has already been sent — an admin will get back to you!');
+                  } else if (msg.includes('previously been removed')) {
+                    toast.error('You cannot request to join at this time. Please contact an admin.');
+                  } else {
+                    toast.error('Something went wrong — please try again or contact your admin.');
+                  }
+                },
+              },
+            )}
+            disabled={createJoinRequest.isPending}
+          >
+            {createJoinRequest.isPending ? 'Requesting…' : 'Request to Join'}
+          </Button>
+        )}
+        {hasPendingRequest && (
+          <span className="shrink-0 self-center rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            Request Pending
+          </span>
+        )}
       </div>
 
       {/* Pill Tabs */}
@@ -179,8 +175,8 @@ export default function FellowshipDetailPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'bg-purple-600 text-white'
-                : 'border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-input/15 bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
             }`}
           >
             {tab.label}
@@ -248,15 +244,15 @@ export default function FellowshipDetailPage() {
           {/* Add Member Panel */}
           {isAdminOrPastor && (
             <div className="flex justify-end">
-              <button
+              <Button
+                size="sm"
                 onClick={() => { setShowAddMember((v) => !v); setMemberSearch(''); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 Add Member
-              </button>
+              </Button>
             </div>
           )}
 
@@ -269,7 +265,7 @@ export default function FellowshipDetailPage() {
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                   placeholder="Type a name or email..."
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 />
 {(() => {
                   if (branchMembersLoading) {
@@ -305,9 +301,8 @@ export default function FellowshipDetailPage() {
                             );
                           }}
                           disabled={addMember.isPending}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-purple-50 disabled:opacity-50"
-                        >
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-muted disabled:opacity-50">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-xs font-bold text-violet-600 dark:text-violet-400">
                             {((m.firstName?.[0] ?? '') + (m.lastName?.[0] ?? '')).toUpperCase() || '?'}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -395,7 +390,7 @@ export default function FellowshipDetailPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setShowMeetingDialog((v) => !v); setMeetingForm({ meetingDate: '', meetingTitle: '', meetingTopic: '', location: '', durationMinutes: '' }); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -414,27 +409,27 @@ export default function FellowshipDetailPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Date *</label>
-                    <input type="date" value={meetingForm.meetingDate} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingDate: e.target.value }))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input type="date" value={meetingForm.meetingDate} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingDate: e.target.value }))} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Title</label>
-                    <input type="text" value={meetingForm.meetingTitle} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTitle: e.target.value }))} placeholder="e.g. Weekly meeting" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input type="text" value={meetingForm.meetingTitle} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTitle: e.target.value }))} placeholder="e.g. Weekly meeting" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Topic</label>
-                    <input type="text" value={meetingForm.meetingTopic} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTopic: e.target.value }))} placeholder="Discussion topic..." className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input type="text" value={meetingForm.meetingTopic} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTopic: e.target.value }))} placeholder="Discussion topic..." className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Location</label>
-                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder="e.g. Fellowship center" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder="e.g. Fellowship center" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Duration (mins)</label>
-                    <input type="number" value={meetingForm.durationMinutes} onChange={(e) => setMeetingForm((f) => ({ ...f, durationMinutes: e.target.value }))} placeholder="60" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input type="number" value={meetingForm.durationMinutes} onChange={(e) => setMeetingForm((f) => ({ ...f, durationMinutes: e.target.value }))} placeholder="60" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setShowMeetingDialog(false)} className="rounded-md border px-3 py-1.5 text-sm">Cancel</button>
+                  <button onClick={() => setShowMeetingDialog(false)} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">Cancel</button>
                   <button
                     disabled={!meetingForm.meetingDate || createMeeting.isPending}
                     onClick={() => {
@@ -455,7 +450,7 @@ export default function FellowshipDetailPage() {
                         }
                       );
                     }}
-                    className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {createMeeting.isPending ? 'Creating...' : 'Create'}
                   </button>
@@ -498,7 +493,7 @@ export default function FellowshipDetailPage() {
                               setAttendanceRecords(records);
                             }
                           }}
-                          className="rounded-md border px-2.5 py-1 text-xs font-medium text-purple-700 hover:bg-purple-50"
+                          className="rounded-lg border border-input/15 px-2.5 py-1 text-xs font-medium text-primary hover:bg-muted"
                         >
                           {attendanceMeetingId === meeting.id ? 'Close' : 'Record Attendance'}
                         </button>
@@ -564,7 +559,7 @@ export default function FellowshipDetailPage() {
                   <Card>
                     <CardContent className="py-4">
                       <p className="text-sm font-medium text-muted-foreground">Total Meetings</p>
-                      <p className="mt-1 text-2xl font-bold text-purple-700">{totalMeetings}</p>
+                      <p className="mt-1 text-2xl font-bold text-violet-600 dark:text-violet-400">{totalMeetings}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -616,8 +611,8 @@ export default function FellowshipDetailPage() {
                             <span className="font-medium">{new Date(s.meetingDate).toLocaleDateString()}</span>
                             <span className="text-muted-foreground">{s.present}/{s.total} ({pct}%)</span>
                           </div>
-                          <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-100">
-                            <div className="h-full rounded-full bg-purple-500 transition-all" style={{ width: `${pct}%` }} />
+                          <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                       );
@@ -633,7 +628,7 @@ export default function FellowshipDetailPage() {
       {activeTab === 'join-requests' && isAdminOrPastor && (
         <div className="space-y-4">
           {selectedRequestIds.size > 0 && (
-            <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 shadow-sm">
+            <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-card px-4 py-2.5 shadow-ambient">
               <span className="text-sm font-medium">{selectedRequestIds.size} selected</span>
               <div className="flex gap-2">
                 <button
@@ -651,7 +646,7 @@ export default function FellowshipDetailPage() {
                       .catch(() => toast.error('Some requests could not be approved. Please try again.'));
                   }}
                   disabled={reviewJoinRequest.isPending}
-                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                   Approve selected
                 </button>
@@ -670,7 +665,7 @@ export default function FellowshipDetailPage() {
                       .catch(() => toast.error('Some requests could not be rejected. Please try again.'));
                   }}
                   disabled={reviewJoinRequest.isPending}
-                  className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
                 >
                   Reject selected
                 </button>
@@ -705,7 +700,7 @@ export default function FellowshipDetailPage() {
                                 return next;
                               });
                             }}
-                            className="h-4 w-4 cursor-pointer accent-purple-600 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
                           />
                         </div>
                       )}
@@ -734,7 +729,7 @@ export default function FellowshipDetailPage() {
                               },
                             )}
                             disabled={reviewJoinRequest.isPending}
-                            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                           >
                             Approve
                           </button>
@@ -750,7 +745,7 @@ export default function FellowshipDetailPage() {
                               },
                             )}
                             disabled={reviewJoinRequest.isPending}
-                            className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
                           >
                             Reject
                           </button>
@@ -800,12 +795,12 @@ function AttendanceForm({
       <p className="text-sm font-medium">Mark attendance for each member</p>
       <div className="max-h-64 space-y-2 overflow-y-auto">
         {members.map((m) => (
-          <div key={m.memberId} className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+          <div key={m.memberId} className="flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
             <span className="min-w-0 truncate text-sm font-medium">{m.memberFirstName} {m.memberLastName}</span>
             <select
               value={attendanceRecords[m.memberId] ?? 'Present'}
               onChange={(e) => setAttendanceRecords((prev) => ({ ...prev, [m.memberId]: e.target.value }))}
-              className="rounded-md border px-2 py-1 text-sm"
+              className="rounded-lg border border-input/15 px-2 py-1 text-sm"
             >
               {statuses.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -817,7 +812,7 @@ function AttendanceForm({
       {members.length === 0 && <p className="text-sm text-muted-foreground">Add members to the fellowship first.</p>}
       {members.length > 0 && (
         <div className="flex justify-end gap-2">
-          <button onClick={onDone} className="rounded-md border px-3 py-1.5 text-sm">Cancel</button>
+          <button onClick={onDone} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">Cancel</button>
           <button
             disabled={recordAttendance.isPending}
             onClick={() => {
@@ -838,7 +833,7 @@ function AttendanceForm({
                 }
               );
             }}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
           </button>

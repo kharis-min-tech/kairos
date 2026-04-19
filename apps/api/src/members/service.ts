@@ -415,6 +415,10 @@ export async function createMember(
     address?: string;
     city?: string;
     postalCode?: string;
+    secondaryBranchId?: string | null;
+    secondaryAddress?: string;
+    secondaryCity?: string;
+    secondaryPostalCode?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     emergencyContactRelationship?: string;
@@ -461,6 +465,10 @@ export async function createMember(
       address: input.address ?? null,
       city: input.city ?? null,
       postalCode: input.postalCode ?? null,
+      secondaryBranchId: input.secondaryBranchId ?? null,
+      secondaryAddress: input.secondaryAddress ?? null,
+      secondaryCity: input.secondaryCity ?? null,
+      secondaryPostalCode: input.secondaryPostalCode ?? null,
       emergencyContactName: input.emergencyContactName ?? null,
       emergencyContactPhone: input.emergencyContactPhone ?? null,
       emergencyContactRelationship: input.emergencyContactRelationship ?? null,
