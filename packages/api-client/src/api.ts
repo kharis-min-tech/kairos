@@ -240,6 +240,138 @@ export function createApiClient(
       fellowshipActivity: () =>
         client.get<ApiResponse<ReportsFellowshipActivity[]>>('/api/reports/fellowship-activity'),
     },
+
+    outreach: {
+      programs: {
+        list: (params?: {
+          page?: number;
+          limit?: number;
+          search?: string;
+          branchId?: string;
+          isCompleted?: boolean;
+          coordinatorId?: string;
+          startDate?: string;
+          endDate?: string;
+        }) => {
+          const qs = new URLSearchParams();
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          if (params?.search) qs.set('search', params.search);
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.isCompleted !== undefined) qs.set('isCompleted', String(params.isCompleted));
+          if (params?.coordinatorId) qs.set('coordinatorId', params.coordinatorId);
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/programs${query ? `?${query}` : ''}`);
+        },
+        get: (id: string) =>
+          client.get<ApiResponse<any>>(`/api/outreach/programs/${encodeURIComponent(id)}`),
+        create: (data: any) =>
+          client.post<ApiResponse<any>>('/api/outreach/programs', data),
+        update: (id: string, data: any) =>
+          client.put<ApiResponse<any>>(`/api/outreach/programs/${encodeURIComponent(id)}`, data),
+        registerWorker: (programId: string, data: { memberId: string; role?: string; notes?: string }) =>
+          client.post<ApiResponse<any>>(`/api/outreach/programs/${encodeURIComponent(programId)}/participants`, data),
+      },
+      reports: {
+        conversionFunnel: (params?: {
+          branchId?: string;
+          outreachId?: string;
+          startDate?: string;
+          endDate?: string;
+        }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.outreachId) qs.set('outreachId', params.outreachId);
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<any>>(`/api/outreach/reports/conversion-funnel${query ? `?${query}` : ''}`);
+        },
+      },
+    },
+
+    souls: {
+      list: (params?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        status?: string;
+        assignedMemberId?: string;
+        outreachId?: string;
+        overdueOnly?: boolean;
+      }) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.search) qs.set('search', params.search);
+        if (params?.status) qs.set('status', params.status);
+        if (params?.assignedMemberId) qs.set('assignedMemberId', params.assignedMemberId);
+        if (params?.outreachId) qs.set('outreachId', params.outreachId);
+        if (params?.overdueOnly !== undefined) qs.set('overdueOnly', String(params.overdueOnly));
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/souls${query ? `?${query}` : ''}`);
+      },
+      get: (id: string) =>
+        client.get<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}`),
+      capture: (data: any) =>
+        client.post<ApiResponse<any>>('/api/souls', data),
+      updateStatus: (id: string, data: { status: string; convertedToMemberId?: string }) =>
+        client.put<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/status`, data),
+      reassign: (id: string, data: { assignedMemberId: string }) =>
+        client.put<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/assign`, data),
+      bulkReassign: (data: { soulIds: string[]; assignedMemberId: string }) =>
+        client.post<ApiResponse<{ reassignedCount: number; soulIds: string[] }>>('/api/souls/bulk-assign', data),
+      logFollowUp: (id: string, data: any) =>
+        client.post<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/follow-ups`, data),
+      getFollowUps: (id: string, params?: { page?: number; limit?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/follow-ups${query ? `?${query}` : ''}`);
+      },
+      convert: (id: string) =>
+        client.post<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/convert`, {}),
+      exportCsv: () =>
+        client.getBlob('/api/souls/export'),
+    },
+
+    dashboard: {
+      overview: () =>
+        client.get<ApiResponse<any>>('/api/outreach/dashboard/overview'),
+      analytics: () =>
+        client.get<ApiResponse<any>>('/api/outreach/dashboard/analytics'),
+      souls: (params?: {
+        ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+        status?: string;
+        page?: number;
+        limit?: number;
+      }) => {
+        const qs = new URLSearchParams();
+        if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
+        if (params?.status) qs.set('status', params.status);
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/souls${query ? `?${query}` : ''}`);
+      },
+      followUpsOverview: () =>
+        client.get<ApiResponse<any>>('/api/outreach/dashboard/follow-ups/overview'),
+      followUps: (params?: {
+        ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+        page?: number;
+        limit?: number;
+      }) => {
+        const qs = new URLSearchParams();
+        if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/follow-ups${query ? `?${query}` : ''}`);
+      },
+    },
   };
 }
 

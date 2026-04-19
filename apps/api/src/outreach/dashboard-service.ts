@@ -1,0 +1,597 @@
+import { eq, or, sql } from 'drizzle-orm';
+import type { Database } from '@kairos/database';
+import { souls, followUps, members, outreachPrograms } from '@kairos/database';
+import type { AuthContext } from '@kairos/types';
+
+/**
+ * RAG Status Calculation for Souls Pipeline
+ * 
+ * Souls Pipeline RAG:
+ * 🔴 RED - Critical (Intervention Required):
+ *   - No follow-up logged yet
+ *   - New/Following Up status: 3+ days since last contact
+ *   - Interested status: 5+ days since last contact
+ * 
+ * 🟡 AMBER - Monitor (Monitoring Required):
+ *   - New/Following Up status: 2 days since last contact
+ *   - Interested status: 3-4 days since last contact
+ * 
+ * 🟢 GREEN - All Good:
+ *   - New/Following Up status: < 2 days since last contact
+ *   - Interested status: < 3 days since last contact
+ *   - Converted/Not Interested/Lost Contact (no follow-up needed)
+ */
+
+type RAGStatus = 'RED' | 'AMBER' | 'GREEN';
+
+interface SoulWithRAG {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  status: string;
+  assignedMemberId: string | null;
+  assignedMemberName: string | null;
+  assignedMemberBranchName: string | null;
+  outreachName: string | null;
+  lastFollowUpDate: Date | null;
+  daysSinceLastFollowUp: number | null;
+  ragStatus: RAGStatus;
+  ragReason: string;
+  createdAt: Date;
+}
+
+interface FollowUpWithRAG {
+  id: string;
+  soulId: string;
+  soulName: string;
+  contactStatus: string;
+  followUpDate: Date;
+  memberName: string | null;
+  ragStatus: RAGStatus;
+  ragReason: string;
+}
+
+function calculateSoulRAGStatus(
+  status: string,
+  daysSinceLastFollowUp: number | null,
+  hasFollowUp: boolean,
+): { ragStatus: RAGStatus; ragReason: string } {
+  // No follow-up needed statuses
+  const noFollowUpNeeded = ['Converted', 'Not Interested', 'Lost Contact'];
+  if (noFollowUpNeeded.includes(status)) {
+    return { ragStatus: 'GREEN', ragReason: 'No follow-up needed' };
+  }
+
+  // No follow-up logged yet
+  if (!hasFollowUp || daysSinceLastFollowUp === null) {
+    return { ragStatus: 'RED', ragReason: 'No follow-up logged yet' };
+  }
+
+  // New or Following Up status
+  if (status === 'New' || status === 'Following Up') {
+    if (daysSinceLastFollowUp >= 3) {
+      return { ragStatus: 'RED', ragReason: `${daysSinceLastFollowUp} days since last contact` };
+    }
+    if (daysSinceLastFollowUp === 2) {
+      return { ragStatus: 'AMBER', ragReason: '2 days since last contact' };
+    }
+    return { ragStatus: 'GREEN', ragReason: 'Recent contact' };
+  }
+
+  // Interested status
+  if (status === 'Interested') {
+    if (daysSinceLastFollowUp >= 5) {
+      return { ragStatus: 'RED', ragReason: `${daysSinceLastFollowUp} days since last contact` };
+    }
+    if (daysSinceLastFollowUp >= 3) {
+      return { ragStatus: 'AMBER', ragReason: `${daysSinceLastFollowUp} days since last contact` };
+    }
+    return { ragStatus: 'GREEN', ragReason: 'Recent contact' };
+  }
+
+  return { ragStatus: 'GREEN', ragReason: 'On track' };
+}
+
+function calculateFollowUpRAGStatus(contactStatus: string): { ragStatus: RAGStatus; ragReason: string } {
+  const redStatuses = ['Wrong Number', 'Declined'];
+  const amberStatuses = ['No Answer', 'Busy'];
+  const greenStatuses = ['Successful', 'Scheduled', 'Completed'];
+
+  if (redStatuses.includes(contactStatus)) {
+    return { ragStatus: 'RED', ragReason: contactStatus };
+  }
+  if (amberStatuses.includes(contactStatus)) {
+    return { ragStatus: 'AMBER', ragReason: contactStatus };
+  }
+  if (greenStatuses.includes(contactStatus)) {
+    return { ragStatus: 'GREEN', ragReason: contactStatus };
+  }
+  return { ragStatus: 'AMBER', ragReason: 'Unknown status' };
+}
+
+/**
+ * Get dashboard overview with RAG status counts
+ */
+export async function getDashboardOverview(db: Database, auth: AuthContext) {
+  const branchFilter = getBranchFilter(auth);
+
+  const soulsData = await db
+    .select({
+      id: souls.id,
+      status: souls.status,
+      assignedMemberId: souls.assignedMemberId,
+      branchId: outreachPrograms.branchId,
+      assignedMemberBranchId: members.homeBranchId,
+      lastFollowUpDate: sql<Date>`(
+        SELECT MAX(follow_up_date) 
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      daysSinceLastFollowUp: sql<number>`(
+        SELECT EXTRACT(DAY FROM NOW() - MAX(follow_up_date))::integer
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      hasFollowUp: sql<boolean>`(
+        SELECT COUNT(*) > 0
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+    })
+    .from(souls)
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .leftJoin(members, eq(souls.assignedMemberId, members.id))
+    .where(branchFilter);
+
+  // Calculate RAG for each soul
+  const ragCounts = { RED: 0, AMBER: 0, GREEN: 0 };
+  const statusCounts: Record<string, number> = {};
+
+  soulsData.forEach((soul) => {
+    const { ragStatus } = calculateSoulRAGStatus(
+      soul.status,
+      soul.daysSinceLastFollowUp,
+      soul.hasFollowUp,
+    );
+    ragCounts[ragStatus]++;
+    statusCounts[soul.status] = (statusCounts[soul.status] || 0) + 1;
+  });
+
+  return {
+    totalSouls: soulsData.length,
+    ragCounts,
+    statusCounts,
+    criticalCount: ragCounts.RED,
+    monitorCount: ragCounts.AMBER,
+    allGoodCount: ragCounts.GREEN,
+  };
+}
+
+/**
+ * Get detailed souls list with RAG status
+ */
+export async function getSoulsWithRAGStatus(
+  db: Database,
+  auth: AuthContext,
+  filters?: {
+    ragStatus?: RAGStatus;
+    status?: string;
+    page?: number;
+    limit?: number;
+  },
+): Promise<{ data: SoulWithRAG[]; pagination: any }> {
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 50;
+  const offset = (page - 1) * limit;
+  const branchFilter = getBranchFilter(auth);
+
+  const soulsData = await db
+    .select({
+      id: souls.id,
+      firstName: souls.firstName,
+      lastName: souls.lastName,
+      phone: souls.phone,
+      email: souls.email,
+      status: souls.status,
+      assignedMemberId: souls.assignedMemberId,
+      assignedMemberName: sql<string>`CONCAT(${members.firstName}, ' ', ${members.lastName})`,
+      assignedMemberBranchName: sql<string>`(
+        SELECT b.branch_name 
+        FROM branches b 
+        WHERE b.id = ${members.homeBranchId}
+      )`,
+      outreachName: outreachPrograms.programName,
+      branchId: outreachPrograms.branchId,
+      assignedMemberBranchId: members.homeBranchId,
+      lastFollowUpDate: sql<Date>`(
+        SELECT MAX(follow_up_date) 
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      daysSinceLastFollowUp: sql<number>`(
+        SELECT EXTRACT(DAY FROM NOW() - MAX(follow_up_date))::integer
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      hasFollowUp: sql<boolean>`(
+        SELECT COUNT(*) > 0
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      createdAt: souls.createdAt,
+    })
+    .from(souls)
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .leftJoin(members, eq(souls.assignedMemberId, members.id))
+    .where(branchFilter)
+    .orderBy(souls.createdAt);
+
+  // Calculate RAG and filter
+  let filteredSouls = soulsData.map((soul) => {
+    const { ragStatus, ragReason } = calculateSoulRAGStatus(
+      soul.status,
+      soul.daysSinceLastFollowUp,
+      soul.hasFollowUp,
+    );
+
+    return {
+      id: soul.id,
+      firstName: soul.firstName,
+      lastName: soul.lastName,
+      phone: soul.phone,
+      email: soul.email,
+      status: soul.status,
+      assignedMemberId: soul.assignedMemberId,
+      assignedMemberName: soul.assignedMemberName,
+      assignedMemberBranchName: soul.assignedMemberBranchName,
+      outreachName: soul.outreachName,
+      lastFollowUpDate: soul.lastFollowUpDate,
+      daysSinceLastFollowUp: soul.daysSinceLastFollowUp,
+      ragStatus,
+      ragReason,
+      createdAt: soul.createdAt,
+    };
+  });
+
+  // Apply filters
+  if (filters?.ragStatus) {
+    filteredSouls = filteredSouls.filter((s) => s.ragStatus === filters.ragStatus);
+  }
+  if (filters?.status) {
+    filteredSouls = filteredSouls.filter((s) => s.status === filters.status);
+  }
+
+  const total = filteredSouls.length;
+  const paginatedData = filteredSouls.slice(offset, offset + limit);
+
+  return {
+    data: paginatedData,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+/**
+ * Get follow-ups with RAG status
+ */
+export async function getFollowUpsWithRAGStatus(
+  db: Database,
+  auth: AuthContext,
+  filters?: {
+    ragStatus?: RAGStatus;
+    page?: number;
+    limit?: number;
+  },
+): Promise<{ data: FollowUpWithRAG[]; pagination: any }> {
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 50;
+  const offset = (page - 1) * limit;
+  const branchFilter = getBranchFilter(auth);
+
+  const followUpsData = await db
+    .select({
+      id: followUps.id,
+      soulId: followUps.soulId,
+      soulFirstName: souls.firstName,
+      soulLastName: souls.lastName,
+      contactStatus: followUps.contactStatus,
+      followUpDate: followUps.followUpDate,
+      memberName: sql<string>`CONCAT(${members.firstName}, ' ', ${members.lastName})`,
+      branchId: outreachPrograms.branchId,
+      assignedMemberBranchId: members.homeBranchId,
+    })
+    .from(followUps)
+    .innerJoin(souls, eq(followUps.soulId, souls.id))
+    .leftJoin(members, eq(followUps.memberId, members.id))
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .where(branchFilter)
+    .orderBy(sql`${followUps.followUpDate} DESC`)
+    .limit(1000);
+
+  // Calculate RAG and filter
+  let filteredFollowUps = followUpsData.map((fu) => {
+    const { ragStatus, ragReason } = calculateFollowUpRAGStatus(fu.contactStatus);
+
+    return {
+      id: fu.id,
+      soulId: fu.soulId,
+      soulName: `${fu.soulFirstName} ${fu.soulLastName}`,
+      contactStatus: fu.contactStatus,
+      followUpDate: fu.followUpDate,
+      memberName: fu.memberName,
+      ragStatus,
+      ragReason,
+    };
+  });
+
+  // Apply filters
+  if (filters?.ragStatus) {
+    filteredFollowUps = filteredFollowUps.filter((f) => f.ragStatus === filters.ragStatus);
+  }
+
+  const total = filteredFollowUps.length;
+  const paginatedData = filteredFollowUps.slice(offset, offset + limit);
+
+  return {
+    data: paginatedData,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+/**
+ * Get follow-up RAG overview
+ */
+export async function getFollowUpRAGOverview(db: Database, auth: AuthContext) {
+  const branchFilter = getBranchFilter(auth);
+
+  const followUpsData = await db
+    .select({
+      contactStatus: followUps.contactStatus,
+    })
+    .from(followUps)
+    .innerJoin(souls, eq(followUps.soulId, souls.id))
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .leftJoin(members, eq(souls.assignedMemberId, members.id))
+    .where(branchFilter);
+
+  const ragCounts = { RED: 0, AMBER: 0, GREEN: 0 };
+
+  followUpsData.forEach((fu) => {
+    const { ragStatus } = calculateFollowUpRAGStatus(fu.contactStatus);
+    ragCounts[ragStatus]++;
+  });
+
+  return {
+    totalFollowUps: followUpsData.length,
+    ragCounts,
+    criticalCount: ragCounts.RED,
+    monitorCount: ragCounts.AMBER,
+    successfulCount: ragCounts.GREEN,
+  };
+}
+
+/**
+ * Get comprehensive analytics for dashboard
+ */
+export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
+  const branchFilter = getBranchFilter(auth);
+
+  // Get all souls with RAG status
+  const soulsData = await db
+    .select({
+      id: souls.id,
+      status: souls.status,
+      createdAt: souls.createdAt,
+      assignedMemberId: souls.assignedMemberId,
+      branchId: outreachPrograms.branchId,
+      assignedMemberBranchId: members.homeBranchId,
+      lastFollowUpDate: sql<Date>`(
+        SELECT MAX(follow_up_date) 
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      daysSinceLastFollowUp: sql<number>`(
+        SELECT EXTRACT(DAY FROM NOW() - MAX(follow_up_date))::integer
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+      hasFollowUp: sql<boolean>`(
+        SELECT COUNT(*) > 0
+        FROM follow_ups 
+        WHERE follow_ups.soul_id = ${souls.id}
+      )`,
+    })
+    .from(souls)
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .leftJoin(members, eq(souls.assignedMemberId, members.id))
+    .where(branchFilter);
+
+  // Calculate RAG for each soul
+  const ragByStatus: Record<string, { RED: number; AMBER: number; GREEN: number }> = {};
+  const ragTrend: Array<{ date: string; RED: number; AMBER: number; GREEN: number }> = [];
+  const statusDistribution: Record<string, number> = {};
+  const conversionFunnel = {
+    New: 0,
+    'Following Up': 0,
+    Interested: 0,
+    Converted: 0,
+    'Not Interested': 0,
+    'Lost Contact': 0,
+  };
+
+  // Group by date for trend analysis (last 30 days)
+  const last30Days: string[] = [];
+  for (let i = 0; i < 30; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - (29 - i));
+    const dateStr = date.toISOString().split('T')[0];
+    if (dateStr) {
+      last30Days.push(dateStr);
+    }
+  }
+
+  const trendMap: Record<string, { RED: number; AMBER: number; GREEN: number }> = {};
+  last30Days.forEach((date) => {
+    trendMap[date] = { RED: 0, AMBER: 0, GREEN: 0 };
+  });
+
+  soulsData.forEach((soul) => {
+    const { ragStatus } = calculateSoulRAGStatus(
+      soul.status,
+      soul.daysSinceLastFollowUp,
+      soul.hasFollowUp,
+    );
+
+    // RAG by status
+    if (!ragByStatus[soul.status]) {
+      ragByStatus[soul.status] = { RED: 0, AMBER: 0, GREEN: 0 };
+    }
+    const statusRag = ragByStatus[soul.status];
+    if (statusRag) {
+      statusRag[ragStatus]++;
+    }
+
+    // Status distribution
+    statusDistribution[soul.status] = (statusDistribution[soul.status] || 0) + 1;
+
+    // Conversion funnel
+    if (soul.status in conversionFunnel) {
+      const statusKey = soul.status as keyof typeof conversionFunnel;
+      conversionFunnel[statusKey]++;
+    }
+
+    // Trend analysis - count souls by their creation date
+    const soulDateParts = new Date(soul.createdAt).toISOString().split('T');
+    const soulDate = soulDateParts[0];
+    if (soulDate) {
+      const trendEntry = trendMap[soulDate];
+      if (trendEntry) {
+        trendEntry[ragStatus]++;
+      }
+    }
+  });
+
+  // Convert trend map to array
+  Object.entries(trendMap).forEach(([date, counts]) => {
+    ragTrend.push({ date, ...counts });
+  });
+
+  // Calculate predictive metrics
+  const totalSouls = soulsData.length;
+  const converted = conversionFunnel.Converted;
+  const conversionRate = totalSouls > 0 ? (converted / totalSouls) * 100 : 0;
+
+  // Average days to conversion
+  const convertedSouls = soulsData.filter((s) => s.status === 'Converted');
+  const avgDaysToConversion =
+    convertedSouls.length > 0
+      ? convertedSouls.reduce((sum, s) => {
+          const days = Math.floor(
+            (new Date().getTime() - new Date(s.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+          );
+          return sum + days;
+        }, 0) / convertedSouls.length
+      : 0;
+
+  // Predict conversions for next 30 days based on current rate
+  const last30DaysSouls = soulsData.filter((s) => {
+    const daysAgo = Math.floor(
+      (new Date().getTime() - new Date(s.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return daysAgo <= 30;
+  });
+  const recentConversionRate =
+    last30DaysSouls.length > 0
+      ? (last30DaysSouls.filter((s) => s.status === 'Converted').length / last30DaysSouls.length) * 100
+      : 0;
+  const predictedConversions = Math.round((last30DaysSouls.length * recentConversionRate) / 100);
+
+  // Response rate by contact method
+  const followUpsData = await db
+    .select({
+      contactMethod: followUps.contactMethod,
+      contactStatus: followUps.contactStatus,
+    })
+    .from(followUps)
+    .innerJoin(souls, eq(followUps.soulId, souls.id))
+    .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+    .leftJoin(members, eq(souls.assignedMemberId, members.id))
+    .where(branchFilter);
+
+  const responseRateByMethod: Record<string, { total: number; successful: number }> = {};
+  followUpsData.forEach((fu) => {
+    const method = fu.contactMethod || 'Unknown';
+    if (!responseRateByMethod[method]) {
+      responseRateByMethod[method] = { total: 0, successful: 0 };
+    }
+    responseRateByMethod[method].total++;
+    if (fu.contactStatus === 'Successful') {
+      responseRateByMethod[method].successful++;
+    }
+  });
+
+  const responseRates = Object.entries(responseRateByMethod).map(([method, data]) => ({
+    method,
+    rate: data.total > 0 ? (data.successful / data.total) * 100 : 0,
+    total: data.total,
+  }));
+
+  return {
+    overview: {
+      totalSouls,
+      converted,
+      conversionRate: Math.round(conversionRate * 10) / 10,
+      avgDaysToConversion: Math.round(avgDaysToConversion),
+      activeFollowUps: soulsData.filter((s) =>
+        ['New', 'Following Up', 'Interested'].includes(s.status),
+      ).length,
+    },
+    ragByStatus,
+    ragTrend,
+    statusDistribution,
+    conversionFunnel,
+    predictive: {
+      predictedConversions,
+      recentConversionRate: Math.round(recentConversionRate * 10) / 10,
+      trendDirection: recentConversionRate > conversionRate ? 'up' : 'down',
+    },
+    responseRates,
+  };
+}
+
+/**
+ * Helper to get branch filter based on auth context
+ */
+function getBranchFilter(auth: AuthContext) {
+  // Members can only see souls assigned to them
+  if (auth.systemRole === 'member') {
+    return eq(souls.assignedMemberId, auth.memberId);
+  }
+  
+  // Pastors and Leaders can only see souls where BOTH:
+  // 1. The outreach program is in their branch OR the soul has no outreach program
+  // 2. The assigned member (if any) is from their branch
+  // This ensures strict branch isolation
+  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+    return or(
+      // Souls from outreach programs in their branch with members from their branch
+      sql`(${outreachPrograms.branchId} = ${auth.branchId} AND (${members.homeBranchId} = ${auth.branchId} OR ${members.homeBranchId} IS NULL))`,
+      // Souls without outreach program but assigned to members in their branch
+      sql`(${souls.outreachId} IS NULL AND ${members.homeBranchId} = ${auth.branchId})`,
+    );
+  }
+  
+  // Admin sees all souls across all branches
+  return undefined;
+}

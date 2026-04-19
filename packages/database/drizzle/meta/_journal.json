@@ -29,6 +29,13 @@
       "when": 1774489236340,
       "tag": "0003_condemned_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1774894991852,
+      "tag": "0003_open_spot",
+      "breakpoints": true
     }
   ]
 }

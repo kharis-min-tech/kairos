@@ -9,3 +9,7 @@ export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-memb
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
 export { fellowshipMeetingAttendance, fellowshipMeetingAttendanceRelations } from './fellowship-meeting-attendance';
 export { fellowshipJoinRequests, fellowshipJoinRequestsRelations } from './fellowship-join-requests';
+export { outreachPrograms, outreachProgramsRelations } from './outreach-programs';
+export { souls, soulsRelations } from './souls';
+export { followUps, followUpsRelations } from './follow-ups';
+export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
