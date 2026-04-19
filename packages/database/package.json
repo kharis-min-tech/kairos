@@ -16,9 +16,9 @@
     "typecheck": "tsc --noEmit",
     "dev": "tsc --watch",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx manual-migrate.ts",
+    "db:migrate": "drizzle-kit migrate",
     "db:drop": "tsx src/reset.ts",
-    "db:fresh": "npm run db:drop && npm run db:migrate && tsx src/seed.ts",
+    "db:fresh": "npm run db:drop && drizzle-kit migrate && tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/seed.ts",
     "db:seed-souls": "tsx src/seed-souls.ts"
