@@ -20,8 +20,10 @@ import {
   Radar,
 } from 'recharts';
 
+import type { DashboardAnalytics, RagCounts } from './types';
+
 interface AnalyticalDashboardProps {
-  analytics: any;
+  analytics: DashboardAnalytics | null;
 }
 
 const RAG_COLORS = {
@@ -43,19 +45,22 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
   ];
 
   // Prepare response rate data
-  const responseRateData = analytics?.responseRates?.map((item: any) => ({
+  const responseRateData = analytics?.responseRates?.map((item) => ({
     method: item.method,
     rate: Math.round(item.rate * 10) / 10,
     total: item.total,
   })) || [];
 
   // Prepare radar chart data for RAG distribution
-  const radarData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, any]) => ({
-    status: status.substring(0, 10),
-    RED: counts.RED || 0,
-    AMBER: counts.AMBER || 0,
-    GREEN: counts.GREEN || 0,
-  }));
+  const radarData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, unknown]) => {
+    const c = counts as RagCounts;
+    return {
+      status: status.substring(0, 10),
+      RED: c.RED || 0,
+      AMBER: c.AMBER || 0,
+      GREEN: c.GREEN || 0,
+    };
+  });
 
   return (
     <div className="space-y-6">

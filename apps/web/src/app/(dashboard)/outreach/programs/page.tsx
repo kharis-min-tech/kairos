@@ -102,10 +102,10 @@ export default function OutreachProgramsPage() {
 
       // Refresh programs list to update registration status
       await fetchPrograms(api);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Registration failed',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -114,7 +114,7 @@ export default function OutreachProgramsPage() {
   };
 
   // Apply client-side filtering to ensure correct programs show in each tab
-  const filteredPrograms = programs.filter((program: any) => {
+  const filteredPrograms = programs.filter((program) => {
     if (activeTab === 'active') {
       return program.isCompleted === false;
     } else {
@@ -123,11 +123,11 @@ export default function OutreachProgramsPage() {
   });
 
   // Count programs for each tab from ALL programs (not just filtered)
-  const activeCount = programs.filter((p: any) => p.isCompleted === false).length;
-  const completedCount = programs.filter((p: any) => p.isCompleted === true).length;
+  const activeCount = programs.filter((p) => p.isCompleted === false).length;
+  const completedCount = programs.filter((p) => p.isCompleted === true).length;
 
   console.log('Programs page - Tab:', activeTab, 'Total programs:', programs.length, 'Active count:', activeCount, 'Completed count:', completedCount, 'Filtered:', filteredPrograms.length);
-  console.log('Programs in list:', programs.map((p: any) => ({ name: p.programName, isCompleted: p.isCompleted })));
+  console.log('Programs in list:', programs.map((p) => ({ name: p.programName, isCompleted: p.isCompleted })));
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -145,35 +145,33 @@ export default function OutreachProgramsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b">
-        <div className="flex gap-4">
-          <button
-            onClick={() => handleTabChange('active')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'active'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Active Programs
-            <Badge variant={activeTab === 'active' ? 'default' : 'secondary'} className="ml-1">
-              {activeCount}
-            </Badge>
-          </button>
-          <button
-            onClick={() => handleTabChange('completed')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'completed'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Past Programs
-            <Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="ml-1">
-              {completedCount}
-            </Badge>
-          </button>
-        </div>
+      <div className="bg-muted rounded-lg p-1 inline-flex gap-1">
+        <button
+          onClick={() => handleTabChange('active')}
+          className={`px-4 py-2 font-medium transition-colors rounded-lg flex items-center gap-2 ${
+            activeTab === 'active'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Active Programs
+          <Badge variant={activeTab === 'active' ? 'default' : 'secondary'} className="ml-1">
+            {activeCount}
+          </Badge>
+        </button>
+        <button
+          onClick={() => handleTabChange('completed')}
+          className={`px-4 py-2 font-medium transition-colors rounded-lg flex items-center gap-2 ${
+            activeTab === 'completed'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Past Programs
+          <Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="ml-1">
+            {completedCount}
+          </Badge>
+        </button>
       </div>
 
       <div className="flex gap-4">
@@ -189,12 +187,12 @@ export default function OutreachProgramsPage() {
       </div>
 
       {error && (
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md">
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
-      <div className="border rounded-lg">
+      <div className="rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -225,7 +223,7 @@ export default function OutreachProgramsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPrograms.map((program: any) => {
+              filteredPrograms.map((program) => {
                 // Registration logic:
                 // 1. Members: Can always register for programs in their branch
                 // 2. Pastor/Leader: Can ONLY register if:
@@ -273,7 +271,7 @@ export default function OutreachProgramsPage() {
                           e.stopPropagation();
                           handleViewProgram(program.id, 'participants');
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-accent font-semibold text-sm transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-muted font-semibold text-sm transition-colors"
                       >
                         <Users className="h-3.5 w-3.5" />
                         {program.participantCount || 0} / {program.totalMembers || 0}

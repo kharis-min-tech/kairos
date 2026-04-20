@@ -98,7 +98,7 @@ export function FollowUpRAGView() {
               setFollowUps([]);
             }}
             variant="ghost"
-            className="text-slate-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             Clear Filter
           </Button>
@@ -108,7 +108,7 @@ export function FollowUpRAGView() {
       {/* Follow-ups List */}
       {loading && (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 
@@ -117,13 +117,13 @@ export function FollowUpRAGView() {
           {followUps.map((followUp) => (
             <Card
               key={followUp.id}
-              className="bg-slate-900/50 border-slate-700 p-4 hover:border-emerald-500/50 transition-all cursor-pointer"
+              className="bg-card p-4 hover:shadow-ambient transition-all cursor-pointer"
               onClick={() => setSelectedFollowUp(followUp)}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-white">{followUp.soulName}</h3>
+                    <h3 className="font-semibold text-foreground">{followUp.soulName}</h3>
                     <Badge variant="outline" className="mt-1 text-xs">
                       {followUp.contactStatus}
                     </Badge>
@@ -133,7 +133,7 @@ export function FollowUpRAGView() {
                   </Badge>
                 </div>
 
-                <div className="space-y-1 text-sm text-slate-400">
+                <div className="space-y-1 text-sm text-muted-foreground">
                   {followUp.memberName && (
                     <div className="flex items-center gap-2">
                       <User className="h-3 w-3" />
@@ -146,7 +146,7 @@ export function FollowUpRAGView() {
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-500 border-t border-slate-700 pt-2">
+                <div className="text-xs text-muted-foreground border-t border-border pt-2">
                   {followUp.ragReason}
                 </div>
               </div>
@@ -156,14 +156,14 @@ export function FollowUpRAGView() {
       )}
 
       {!loading && selectedRAG && followUps.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-700 p-12 text-center">
-          <p className="text-slate-400">No follow-ups found with {selectedRAG} status</p>
+        <Card className="bg-card p-12 text-center">
+          <p className="text-muted-foreground">No follow-ups found with {selectedRAG} status</p>
         </Card>
       )}
 
       {/* Follow-up Detail Dialog */}
       <Dialog open={!!selectedFollowUp} onOpenChange={() => setSelectedFollowUp(null)}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl">
+        <DialogContent className="bg-card max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">Follow-up Details</DialogTitle>
           </DialogHeader>
@@ -178,30 +178,30 @@ export function FollowUpRAGView() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-slate-400">Soul Name</div>
+                  <div className="text-muted-foreground">Soul Name</div>
                   <div className="font-medium">{selectedFollowUp.soulName}</div>
                 </div>
                 {selectedFollowUp.memberName && (
                   <div>
-                    <div className="text-slate-400">Follow-up By</div>
+                    <div className="text-muted-foreground">Follow-up By</div>
                     <div className="font-medium">{selectedFollowUp.memberName}</div>
                   </div>
                 )}
                 <div>
-                  <div className="text-slate-400">Follow-up Date</div>
+                  <div className="text-muted-foreground">Follow-up Date</div>
                   <div className="font-medium">
                     {new Date(selectedFollowUp.followUpDate).toLocaleString()}
                   </div>
                 </div>
                 <div>
-                  <div className="text-slate-400">Contact Status</div>
+                  <div className="text-muted-foreground">Contact Status</div>
                   <div className="font-medium">{selectedFollowUp.contactStatus}</div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 p-4 rounded-lg">
-                <div className="text-sm text-slate-400 mb-1">Status Reason</div>
-                <div className="text-white">{selectedFollowUp.ragReason}</div>
+              <div className="bg-muted p-4 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Status Reason</div>
+                <div className="text-foreground">{selectedFollowUp.ragReason}</div>
               </div>
 
               <Button
@@ -209,7 +209,7 @@ export function FollowUpRAGView() {
                   // Navigate to soul detail
                   window.location.href = `/souls/${selectedFollowUp.soulId}`;
                 }}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] hover:from-[#3a17a0] hover:to-[#4f35b8] text-white"
               >
                 View Soul Details
               </Button>

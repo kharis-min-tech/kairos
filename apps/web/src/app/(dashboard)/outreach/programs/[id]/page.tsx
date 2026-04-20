@@ -9,6 +9,56 @@ import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 
+interface ProgramParticipant {
+  memberId: string;
+  memberName: string;
+  branchName?: string;
+  role?: string;
+}
+
+interface ProgramSoul {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  status: string;
+  assignedMemberId?: string;
+}
+
+interface ProgramDetail {
+  id: string;
+  programName: string;
+  branchId: string;
+  branchName: string;
+  programDate: string;
+  location: string;
+  city?: string;
+  address?: string;
+  coordinatorName?: string;
+  description?: string;
+  totalSoulsReached?: number;
+  isCompleted: boolean;
+  isOpenToAllBranches?: boolean;
+  createdBy?: string;
+  creatorRole?: string;
+  participants?: ProgramParticipant[];
+  souls?: ProgramSoul[];
+  statistics?: {
+    totalWorkers?: number;
+    soulsByStatus?: Record<string, number>;
+    conversionRate?: number;
+  };
+}
+
+interface UnregisteredMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  branchName?: string;
+  homeBranchId?: string;
+  isActive: boolean;
+}
+
 export default function ProgramDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -17,10 +67,10 @@ export default function ProgramDetailPage() {
   const { toast } = useToast();
   const { activeRole, user } = useAuthStore();
 
-  const [program, setProgram] = useState<any>(null);
+  const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [unregisteredMembers, setUnregisteredMembers] = useState<any[]>([]);
+  const [unregisteredMembers, setUnregisteredMembers] = useState<UnregisteredMember[]>([]);
   const [highlightSection, setHighlightSection] = useState<string | null>(null);
 
   const isMember = activeRole === 'member';
@@ -76,7 +126,7 @@ export default function ProgramDetailPage() {
         // Check if current user is already registered
         if (user?.id && response.data.participants) {
           const registered = response.data.participants.some(
-            (p: any) => p.memberId === user.id
+            (p: ProgramParticipant) => p.memberId === user.id
           );
           setIsRegistered(registered);
         }
@@ -90,10 +140,10 @@ export default function ProgramDetailPage() {
           );
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to load program',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -101,7 +151,7 @@ export default function ProgramDetailPage() {
     }
   };
 
-  const fetchUnregisteredMembers = async (branchId: string, participants: any[], isOpenToAllBranches: boolean) => {
+  const fetchUnregisteredMembers = async (branchId: string, participants: ProgramParticipant[], isOpenToAllBranches: boolean) => {
     if (!api) return;
     try {
       // Fetch all members - use max limit of 500 (API constraint)
@@ -109,12 +159,12 @@ export default function ProgramDetailPage() {
       if (response.success && response.data) {
         // Extract members from paginated response
         const allMembers = response.data.data || [];
-        const registeredIds = new Set(participants.map((p: any) => p.memberId));
+        const registeredIds = new Set(participants.map((p: ProgramParticipant) => p.memberId));
         
         // For open-to-all-branches programs: show all active members
         // For branch-specific programs: show only members from that branch
         const unregistered = allMembers.filter(
-          (member: any) => {
+          (member: UnregisteredMember) => {
             const isActive = member.isActive;
             const notRegistered = !registeredIds.has(member.id);
             const branchMatch = isOpenToAllBranches || member.homeBranchId === branchId;
@@ -132,7 +182,7 @@ export default function ProgramDetailPage() {
         
         setUnregisteredMembers(unregistered);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch unregistered members:', error);
       // Silently fail - just show empty list
       setUnregisteredMembers([]);
@@ -151,10 +201,10 @@ export default function ProgramDetailPage() {
         title: 'Program marked as completed',
       });
       await fetchProgram();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to update program',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -175,10 +225,10 @@ export default function ProgramDetailPage() {
         description: 'You have been registered for this program',
       });
       await fetchProgram();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to register',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -267,7 +317,7 @@ export default function ProgramDetailPage() {
               <span>Coordinator: {program.coordinatorName}</span>
             </div>
             {!isMember && program.totalSoulsReached !== undefined && (
-              <div className="pt-2 border-t">
+              <div className="pt-2 mt-2">
                 <p className="text-sm text-muted-foreground">Souls Reached</p>
                 <p className="text-2xl font-bold">{program.totalSoulsReached}</p>
               </div>
@@ -290,7 +340,7 @@ export default function ProgramDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Souls by Status</p>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                      {program.statistics.soulsByStatus && Object.entries(program.statistics.soulsByStatus).map(([status, count]: [string, any]) => (
+                      {program.statistics.soulsByStatus && Object.entries(program.statistics.soulsByStatus).map(([status, count]: [string, number]) => (
                         <div key={status} className="flex justify-between text-sm">
                           <span>{status}:</span>
                           <span className="font-medium">{count}</span>
@@ -382,10 +432,10 @@ export default function ProgramDetailPage() {
             <CardContent className="pt-4">
               {program.participants && program.participants.length > 0 ? (
                 <div className="space-y-2">
-                  {program.participants.map((participant: any) => (
+                  {program.participants.map((participant: ProgramParticipant) => (
                     <div 
                       key={participant.memberId} 
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-foreground/5 transition-colors"
                     >
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
@@ -424,10 +474,10 @@ export default function ProgramDetailPage() {
             <CardContent className="pt-4">
               {unregisteredMembers.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {unregisteredMembers.map((member: any) => (
+                  {unregisteredMembers.map((member: UnregisteredMember) => (
                     <div 
                       key={member.id} 
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-foreground/5 transition-colors"
                     >
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">
@@ -466,11 +516,11 @@ export default function ProgramDetailPage() {
           {program.souls && program.souls.length > 0 ? (
             <div className="space-y-2">
               {program.souls
-                .filter((soul: any) => !isMember || soul.assignedMemberId === user?.id)
+                .filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id)
                 .slice(0, 5)
-                .map((soul: any) => (
+                .map((soul: ProgramSoul) => (
                   <Link key={soul.id} href={`/souls/${soul.id}`}>
-                    <div className="flex items-center justify-between p-2 border rounded hover:bg-accent cursor-pointer">
+                    <div className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-foreground/5 cursor-pointer">
                       <div>
                         <p className="font-medium">{soul.firstName} {soul.lastName}</p>
                         <p className="text-sm text-muted-foreground">{soul.phone}</p>
@@ -479,12 +529,12 @@ export default function ProgramDetailPage() {
                     </div>
                   </Link>
                 ))}
-              {program.souls.filter((soul: any) => !isMember || soul.assignedMemberId === user?.id).length > 5 && (
+              {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length > 5 && (
                 <p className="text-sm text-muted-foreground text-center pt-2">
-                  And {program.souls.filter((soul: any) => !isMember || soul.assignedMemberId === user?.id).length - 5} more...
+                  And {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length - 5} more...
                 </p>
               )}
-              {isMember && program.souls.filter((soul: any) => soul.assignedMemberId === user?.id).length === 0 && (
+              {isMember && program.souls.filter((soul: ProgramSoul) => soul.assignedMemberId === user?.id).length === 0 && (
                 <p className="text-sm text-muted-foreground">You haven't captured any souls in this program yet</p>
               )}
             </div>

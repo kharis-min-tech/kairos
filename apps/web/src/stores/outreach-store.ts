@@ -15,6 +15,7 @@ interface OutreachProgram {
   coordinatorName?: string;
   createdBy?: string;
   createdByName?: string;
+  creatorRole?: string;
   totalSoulsReached: number;
   isCompleted: boolean;
   isOpenToAllBranches?: boolean;
@@ -53,8 +54,8 @@ interface OutreachState {
   // Actions
   fetchPrograms: (api: KairosApi) => Promise<void>;
   fetchProgram: (api: KairosApi, id: string) => Promise<void>;
-  createProgram: (api: KairosApi, data: any) => Promise<OutreachProgram>;
-  updateProgram: (api: KairosApi, id: string, data: any) => Promise<OutreachProgram>;
+  createProgram: (api: KairosApi, data: Partial<OutreachProgram>) => Promise<OutreachProgram>;
+  updateProgram: (api: KairosApi, id: string, data: Partial<OutreachProgram>) => Promise<OutreachProgram>;
   setFilters: (filters: Partial<ProgramFilters>) => void;
   setPage: (page: number) => void;
   clearError: () => void;
@@ -89,9 +90,11 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         ...filters,
       });
 
-      if (response.success) {
-        console.log('Store fetchPrograms - received:', response.data.length, 'programs');
-        console.log('Store fetchPrograms - programs:', response.data.map((p: any) => ({ 
+      if (response.success && response.data) {
+        const programs = response.data.data ?? [];
+        const meta = response.data.meta;
+        console.log('Store fetchPrograms - received:', Array.isArray(programs) ? programs.length : 0, 'programs');
+        console.log('Store fetchPrograms - programs:', (Array.isArray(programs) ? programs : []).map((p: OutreachProgram) => ({ 
           id: p.id, 
           name: p.programName, 
           isCompleted: p.isCompleted,
@@ -101,14 +104,14 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
           createdByName: p.createdByName
         })));
         set({
-          programs: response.data,
-          pagination: response.pagination,
+          programs: Array.isArray(programs) ? programs : [],
+          pagination: meta ?? get().pagination,
           loading: false,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Store fetchPrograms - error:', error);
-      set({ error: error.message || 'Failed to fetch programs', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch programs', loading: false });
     }
   },
 
@@ -119,8 +122,8 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
       if (response.success) {
         set({ currentProgram: response.data, loading: false });
       }
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch program', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch program', loading: false });
     }
   },
 
@@ -133,8 +136,8 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         return response.data;
       }
       throw new Error('Failed to create program');
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to create program', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to create program', loading: false });
       throw error;
     }
   },
@@ -148,8 +151,8 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         return response.data;
       }
       throw new Error('Failed to update program');
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to update program', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to update program', loading: false });
       throw error;
     }
   },

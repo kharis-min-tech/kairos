@@ -5,6 +5,14 @@ import { useApi } from '@/hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle, Label, Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
+interface ConversionMetrics {
+  totalSouls: number;
+  conversionRate?: number;
+  avgDaysToConversion?: number | null;
+  statusCounts?: Record<string, number>;
+  dropOffRates?: Record<string, number>;
+}
+
 export default function OutreachReportsPage() {
   const api = useApi();
   const { activeRole } = useAuthStore();
@@ -16,10 +24,10 @@ export default function OutreachReportsPage() {
     branchId: '',
   });
 
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<ConversionMetrics | null>(null);
   const [loading, setLoading] = useState(false);
-  const [programs, setPrograms] = useState<any[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<Array<{ id: string; programName: string }>>([]);
+  const [branches, setBranches] = useState<Array<{ id: string; branchName: string }>>([]);
 
   useEffect(() => {
     if (api) {
@@ -34,9 +42,9 @@ export default function OutreachReportsPage() {
   const fetchPrograms = async () => {
     if (!api) return;
     try {
-      const response = await api.outreach.listPrograms({ page: 1, limit: 100 });
+      const response = await api.outreach.programs.list({ page: 1, limit: 100 });
       if (response.success) {
-        setPrograms(response.data || []);
+        setPrograms(response.data?.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch programs:', error);
@@ -46,9 +54,9 @@ export default function OutreachReportsPage() {
   const fetchBranches = async () => {
     if (!api) return;
     try {
-      const response = await api.branches.list({ page: 1, limit: 100 });
+      const response = await api.branches.list();
       if (response.success) {
-        setBranches(response.data || []);
+        setBranches(response.data ?? []);
       }
     } catch (error) {
       console.error('Failed to fetch branches:', error);
@@ -59,7 +67,7 @@ export default function OutreachReportsPage() {
     if (!api) return;
     setLoading(true);
     try {
-      const response = await api.outreach.getConversionFunnel(filters);
+      const response = await api.outreach.reports.conversionFunnel(filters);
       if (response.success) {
         setMetrics(response.data);
       }
@@ -185,7 +193,7 @@ export default function OutreachReportsPage() {
                 <CardTitle>Conversion Rate</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold text-green-600">
+                <p className="text-4xl font-bold text-emerald-600">
                   {metrics.conversionRate !== undefined ? `${metrics.conversionRate}%` : 'N/A'}
                 </p>
               </CardContent>
@@ -227,7 +235,7 @@ export default function OutreachReportsPage() {
                         {count} ({percentage}%)
                       </span>
                     </div>
-                    <div className="h-8 bg-gray-100 rounded-lg overflow-hidden">
+                    <div className="h-8 bg-muted rounded-lg overflow-hidden">
                       <div
                         className={`h-full ${statusColors[status]} transition-all duration-500 flex items-center justify-end px-3`}
                         style={{ width: `${width}%` }}
@@ -242,11 +250,11 @@ export default function OutreachReportsPage() {
               })}
 
               {metrics.statusCounts && (
-                <div className="pt-4 border-t space-y-2">
+                <div className="pt-4 mt-4 space-y-2">
                   <p className="text-sm font-medium">Other Statuses</p>
                   {Object.entries(metrics.statusCounts)
                     .filter(([status]) => !statusOrder.includes(status))
-                    .map(([status, count]: [string, any]) => (
+                    .map(([status, count]) => (
                       <div key={status} className="flex items-center justify-between text-sm">
                         <span>{status}</span>
                         <span className="text-muted-foreground">{count}</span>
@@ -264,7 +272,7 @@ export default function OutreachReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {Object.entries(metrics.dropOffRates).map(([transition, rate]: [string, any]) => (
+                  {Object.entries(metrics.dropOffRates).map(([transition, rate]) => (
                     <div key={transition} className="flex items-center justify-between text-sm">
                       <span>{transition}</span>
                       <span className={rate > 50 ? 'text-red-600 font-medium' : 'text-muted-foreground'}>

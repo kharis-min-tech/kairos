@@ -29,7 +29,7 @@ async function seedSoulsData() {
       console.error('❌ No branches found. Please seed branches first.');
       return;
     }
-    const branchId = existingBranches[0].id;
+    const branchId = existingBranches[0]!.id;
 
     // Get existing members
     const existingMembers = await db.select().from(members).where(eq(members.isActive, true)).limit(5);
@@ -49,9 +49,9 @@ async function seedSoulsData() {
         address: '123 Main Street',
         city: 'Metro City',
         description: 'Community outreach program for soul winning',
-        coordinatorId: existingMembers[0].id,
-        coordinatorName: `${existingMembers[0].firstName} ${existingMembers[0].lastName}`,
-        createdBy: existingMembers[0].id,
+        coordinatorId: existingMembers[0]!.id,
+        coordinatorName: `${existingMembers[0]!.firstName} ${existingMembers[0]!.lastName}`,
+        createdBy: existingMembers[0]!.id,
         totalSoulsReached: 0,
         isCompleted: false,
         isOpenToAllBranches: false,
@@ -115,7 +115,7 @@ async function seedSoulsData() {
           phone: soulData.phone,
           email: soulData.email,
           status: soulData.status,
-          assignedMemberId: existingMembers[Math.floor(Math.random() * existingMembers.length)].id,
+          assignedMemberId: existingMembers[Math.floor(Math.random() * existingMembers.length)]!.id,
           createdAt: createdDate,
           updatedAt: createdDate,
         })
@@ -143,7 +143,7 @@ async function seedSoulsData() {
           .insert(followUps)
           .values({
             soulId: soul.id,
-            memberId: existingMembers[Math.floor(Math.random() * existingMembers.length)].id,
+            memberId: existingMembers[Math.floor(Math.random() * existingMembers.length)]!.id,
             followUpDate: followUpDate,
             contactMethod: ['Phone Call', 'Text Message', 'Email', 'In Person'][Math.floor(Math.random() * 4)],
             contactStatus: contactStatus,

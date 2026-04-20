@@ -7,12 +7,12 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Badge, Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, AlertCircle, Users } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import {
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
-  DragStartEvent,
+  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -88,9 +88,9 @@ function SoulCard({
 
   return (
     <Card
-      className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${ragStatus.borderColor} ${
+      className={`cursor-pointer hover:shadow-ambient transition-shadow border-l-4 ${ragStatus.borderColor} ${
         isDragging ? 'opacity-50' : ''
-      } ${isSelected ? 'border-2 border-primary' : ''}`}
+      } ${isSelected ? 'ring-2 ring-primary' : ''}`}
     >
       <CardContent className="p-4 space-y-2">
         <div className="flex items-start justify-between">
@@ -104,7 +104,7 @@ function SoulCard({
                   onToggleSelect(soul.id);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="mt-1 h-4 w-4 rounded border-gray-300"
+                className="mt-1 h-4 w-4 rounded border-input/15"
               />
             )}
             <div>
@@ -236,7 +236,7 @@ export default function SoulsKanbanPage() {
       if (response.success && response.data) {
         // PaginatedResponse has data array inside
         const membersList = response.data.data || [];
-        setMembers(membersList.map((m: any) => ({
+        setMembers(membersList.map((m) => ({
           id: m.id,
           firstName: m.firstName,
           lastName: m.lastName,
@@ -297,17 +297,17 @@ export default function SoulsKanbanPage() {
       if (response.success) {
         toast({
           title: 'Bulk assignment successful',
-          description: `${response.data.reassignedCount} soul(s) reassigned`,
+          description: `${response.data?.reassignedCount ?? 0} soul(s) reassigned`,
         });
         setSelectedSouls(new Set());
         setShowBulkAssign(false);
         setBulkAssignMemberId('');
         await fetchSouls(api);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Bulk assignment failed',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -353,12 +353,12 @@ export default function SoulsKanbanPage() {
         title: 'Status updated',
         description: `Soul moved to ${newStatus}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert on error
       updateSoulOptimistic(soulId, { status: soul.status });
       toast({
         title: 'Failed to update status',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     }
@@ -417,7 +417,7 @@ export default function SoulsKanbanPage() {
 
       {/* Bulk Assignment Modal */}
       {showBulkAssign && (
-        <Card className="border-2 border-primary">
+        <Card className="ring-2 ring-primary">
           <CardHeader>
             <CardTitle>Bulk Assign {selectedSouls.size} Soul{selectedSouls.size !== 1 ? 's' : ''}</CardTitle>
           </CardHeader>
@@ -433,7 +433,7 @@ export default function SoulsKanbanPage() {
                   id="bulkAssignMember"
                   value={bulkAssignMemberId}
                   onChange={(e) => setBulkAssignMemberId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Select a member</option>
                   {members.map((member) => (

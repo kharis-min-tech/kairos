@@ -234,6 +234,7 @@ export interface OutreachProgramWithDetails extends OutreachProgram {
   coordinatorFirstName?: string | null;
   coordinatorLastName?: string | null;
   createdByName?: string | null;
+  creatorRole?: string | null;
   // For members
   isRegistered?: boolean;
   // For leaders/pastors/admin

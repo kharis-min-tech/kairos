@@ -16,7 +16,8 @@
     "db:drop": "turbo db:drop --filter=@kairos/database",
     "db:fresh": "turbo db:fresh --filter=@kairos/database",
     "db:studio": "turbo db:studio --filter=@kairos/database",
-    "db:seed": "turbo db:seed --filter=@kairos/database"
+    "db:seed": "turbo db:seed --filter=@kairos/database",
+    "db:seed-souls": "turbo db:seed-souls --filter=@kairos/database"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

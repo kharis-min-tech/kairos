@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createProgram, listPrograms, getProgram, updateProgram, registerWorker } from './service';
+import { createProgram, listPrograms } from './service';
 import type { Database } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { TEST_IDS } from '../test-helpers';
 import { ConflictError, ValidationError, ForbiddenError } from '@kairos/utils';
 
 describe('Outreach Programs Service', () => {
-  let mockDb: Database;
+  let mockDb: any;
   let adminAuth: AuthContext;
   let pastorAuth: AuthContext;
 

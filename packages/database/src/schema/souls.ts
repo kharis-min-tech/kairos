@@ -2,6 +2,7 @@ import { pgTable, uuid, varchar, text, timestamp, index } from 'drizzle-orm/pg-c
 import { relations } from 'drizzle-orm';
 import { outreachPrograms } from './outreach-programs';
 import { members } from './members';
+import { followUps } from './follow-ups';
 
 export const souls = pgTable('souls', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -44,5 +45,5 @@ export const soulsRelations = relations(souls, ({ one, many }) => ({
     references: [members.id],
     relationName: 'convertedSouls',
   }),
-  followUps: many('followUps'),
+  followUps: many(followUps),
 }));

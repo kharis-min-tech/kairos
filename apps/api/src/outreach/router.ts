@@ -77,7 +77,7 @@ app.get(
     
 
     const result = await listPrograms(db, auth, query);
-    return c.json({ success: true, ...result });
+    return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
   }
 );
 
@@ -172,9 +172,6 @@ app.get(
   '/reports/conversion-funnel',
   zValidator('query', conversionFunnelQuerySchema),
   async (c) => {
-    const auth = c.get('auth');
-    const query = c.req.valid('query');
-    
 
     // TODO: Implement getConversionFunnelMetrics service function
     // For now, return placeholder

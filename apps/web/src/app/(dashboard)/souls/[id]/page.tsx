@@ -8,6 +8,18 @@ import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitl
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
 
+interface FollowUpRecord {
+  id: string;
+  contactMethod: string;
+  contactStatus: string;
+  urgencyLevel?: string;
+  durationMinutes?: number;
+  notes?: string;
+  nextFollowUpDate?: string;
+  followUpDate: string;
+  memberName: string;
+}
+
 const STATUS_OPTIONS = [
   'New',
   'Following Up',
@@ -60,7 +72,7 @@ export default function SoulDetailPage() {
 
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [followUps, setFollowUps] = useState<any[]>([]);
+  const [followUps, setFollowUps] = useState<FollowUpRecord[]>([]);
   const [followUpsPagination, setFollowUpsPagination] = useState({
     page: 1,
     limit: 20,
@@ -83,8 +95,10 @@ export default function SoulDetailPage() {
         limit: followUpsPagination.limit,
       });
       if (response.success) {
-        setFollowUps(response.data || []);
-        setFollowUpsPagination(response.pagination || followUpsPagination);
+        setFollowUps(response.data?.data || []);
+        if (response.data?.pagination) {
+          setFollowUpsPagination(response.data.pagination);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch follow-ups:', error);
@@ -103,10 +117,10 @@ export default function SoulDetailPage() {
       });
       // Refresh soul data
       await fetchSoul(api, currentSoul.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to update status',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -155,10 +169,10 @@ export default function SoulDetailPage() {
       // Refresh soul data
       await fetchSoul(api, currentSoul.id);
       await fetchFollowUps();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to log follow-up',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -189,10 +203,10 @@ export default function SoulDetailPage() {
         // Otherwise just go back to souls list
         router.push('/souls');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to convert soul',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -307,7 +321,7 @@ export default function SoulDetailPage() {
                 value={currentSoul.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 disabled={loading}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
@@ -346,7 +360,7 @@ export default function SoulDetailPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {showFollowUpForm && (
-            <form onSubmit={handleLogFollowUp} className="space-y-4 p-4 border rounded-lg">
+            <form onSubmit={handleLogFollowUp} className="space-y-4 p-4 bg-muted rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="contactMethod">Contact Method *</Label>
@@ -357,7 +371,7 @@ export default function SoulDetailPage() {
                       setFollowUpForm((prev) => ({ ...prev, contactMethod: e.target.value }))
                     }
                     required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select method</option>
                     {CONTACT_METHODS.map((method) => (
@@ -390,7 +404,7 @@ export default function SoulDetailPage() {
                       setFollowUpForm((prev) => ({ ...prev, contactStatus: e.target.value }))
                     }
                     required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select status</option>
                     {CONTACT_STATUSES.map((status) => (
@@ -409,7 +423,7 @@ export default function SoulDetailPage() {
                     onChange={(e) =>
                       setFollowUpForm((prev) => ({ ...prev, urgencyLevel: e.target.value }))
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select urgency (optional)</option>
                     {URGENCY_LEVELS.map((level) => (
@@ -431,7 +445,7 @@ export default function SoulDetailPage() {
                     onChange={(e) =>
                       setFollowUpForm((prev) => ({ ...prev, updateStatus: e.target.value }))
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Keep current status ({currentSoul.status})</option>
                     {STATUS_OPTIONS.map((status) => (
@@ -497,7 +511,7 @@ export default function SoulDetailPage() {
             ) : (
               followUps.map((followUp) => {
                 // Manual urgency level takes priority over automatic RAG
-                let ragStatus;
+                let ragStatus = { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
                 
                 if (followUp.urgencyLevel) {
                   // Use manual urgency level set by worker
@@ -524,7 +538,7 @@ export default function SoulDetailPage() {
                 }
 
                 return (
-                  <div key={followUp.id} className={`border rounded-lg p-4 space-y-2 border-l-4 ${ragStatus.borderColor}`}>
+                  <div key={followUp.id} className={`bg-muted rounded-lg p-4 space-y-2 border-l-4 ${ragStatus.borderColor}`}>
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">

@@ -103,7 +103,7 @@ export function SoulsPipelineView() {
               setSouls([]);
             }}
             variant="ghost"
-            className="text-slate-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             Clear Filter
           </Button>
@@ -113,7 +113,7 @@ export function SoulsPipelineView() {
       {/* Souls List */}
       {loading && (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 
@@ -122,13 +122,13 @@ export function SoulsPipelineView() {
           {souls.map((soul) => (
             <Card
               key={soul.id}
-              className="bg-slate-900/50 border-slate-700 p-4 hover:border-purple-500/50 transition-all cursor-pointer"
+              className="bg-card p-4 hover:shadow-ambient transition-all cursor-pointer"
               onClick={() => setSelectedSoul(soul)}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-white">
+                    <h3 className="font-semibold text-foreground">
                       {soul.firstName} {soul.lastName}
                     </h3>
                     <Badge variant="outline" className="mt-1 text-xs">
@@ -140,7 +140,7 @@ export function SoulsPipelineView() {
                   </Badge>
                 </div>
 
-                <div className="space-y-1 text-sm text-slate-400">
+                <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Phone className="h-3 w-3" />
                     <span>{soul.phone}</span>
@@ -165,7 +165,7 @@ export function SoulsPipelineView() {
                   )}
                 </div>
 
-                <div className="text-xs text-slate-500 border-t border-slate-700 pt-2">
+                <div className="text-xs text-muted-foreground border-t border-border pt-2">
                   {soul.ragReason}
                 </div>
               </div>
@@ -175,14 +175,14 @@ export function SoulsPipelineView() {
       )}
 
       {!loading && selectedRAG && souls.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-700 p-12 text-center">
-          <p className="text-slate-400">No souls found with {selectedRAG} status</p>
+        <Card className="bg-card p-12 text-center">
+          <p className="text-muted-foreground">No souls found with {selectedRAG} status</p>
         </Card>
       )}
 
       {/* Soul Detail Dialog */}
       <Dialog open={!!selectedSoul} onOpenChange={() => setSelectedSoul(null)}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl">
+        <DialogContent className="bg-card max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">
               {selectedSoul?.firstName} {selectedSoul?.lastName}
@@ -199,44 +199,44 @@ export function SoulsPipelineView() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-slate-400">Phone</div>
+                  <div className="text-muted-foreground">Phone</div>
                   <div className="font-medium">{selectedSoul.phone}</div>
                 </div>
                 {selectedSoul.email && (
                   <div>
-                    <div className="text-slate-400">Email</div>
+                    <div className="text-muted-foreground">Email</div>
                     <div className="font-medium">{selectedSoul.email}</div>
                   </div>
                 )}
                 {selectedSoul.assignedMemberName && (
                   <div>
-                    <div className="text-slate-400">Assigned To</div>
+                    <div className="text-muted-foreground">Assigned To</div>
                     <div className="font-medium">{selectedSoul.assignedMemberName}</div>
                   </div>
                 )}
                 {selectedSoul.outreachName && (
                   <div>
-                    <div className="text-slate-400">Outreach Program</div>
+                    <div className="text-muted-foreground">Outreach Program</div>
                     <div className="font-medium">{selectedSoul.outreachName}</div>
                   </div>
                 )}
                 {selectedSoul.daysSinceLastFollowUp !== null && (
                   <div>
-                    <div className="text-slate-400">Days Since Last Contact</div>
+                    <div className="text-muted-foreground">Days Since Last Contact</div>
                     <div className="font-medium">{selectedSoul.daysSinceLastFollowUp} days</div>
                   </div>
                 )}
                 <div>
-                  <div className="text-slate-400">Created</div>
+                  <div className="text-muted-foreground">Created</div>
                   <div className="font-medium">
                     {new Date(selectedSoul.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 p-4 rounded-lg">
-                <div className="text-sm text-slate-400 mb-1">RAG Reason</div>
-                <div className="text-white">{selectedSoul.ragReason}</div>
+              <div className="bg-muted p-4 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">RAG Reason</div>
+                <div className="text-foreground">{selectedSoul.ragReason}</div>
               </div>
             </div>
           )}

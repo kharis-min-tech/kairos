@@ -37,8 +37,8 @@ export default function CreateProgramPage() {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [branches, setBranches] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [branches, setBranches] = useState<Array<{ id: string; branchName: string }>>([]);
+  const [members, setMembers] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
   const [showBranchWarning, setShowBranchWarning] = useState(false);
 
   useEffect(() => {
@@ -46,13 +46,13 @@ export default function CreateProgramPage() {
     if (api) {
       api.branches.list().then((response) => {
         if (response.success) {
-          setBranches(response.data);
+          setBranches(response.data ?? []);
         }
       });
 
       api.members.list({ limit: 100 }).then((response) => {
         if (response.success) {
-          setMembers(response.data.data);
+          setMembers(response.data?.data ?? []);
         }
       });
     }
@@ -131,10 +131,10 @@ export default function CreateProgramPage() {
 
       // Navigate to program detail
       router.push(`/outreach/programs/${program.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to create program',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -150,7 +150,7 @@ export default function CreateProgramPage() {
       {/* Branch Warning Dialog */}
       {showBranchWarning && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background border rounded-lg shadow-lg max-w-md w-full mx-4 p-6 space-y-4">
+          <div className="bg-background rounded-lg shadow-ambient max-w-md w-full mx-4 p-6 space-y-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
                 <span className="text-2xl font-bold text-amber-600">!</span>
@@ -160,7 +160,7 @@ export default function CreateProgramPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   You have selected <span className="font-semibold text-foreground">{selectedCoordinator?.firstName} {selectedCoordinator?.lastName}</span> as the coordinator.
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-4">
                   <p className="text-sm text-amber-900">
                     <strong>Important:</strong> This program will ONLY be visible to members of <span className="font-semibold">{selectedCoordinator?.firstName}'s branch</span>. Pastors and leaders from other branches will NOT be able to see or register for this program.
                   </p>
@@ -181,7 +181,7 @@ export default function CreateProgramPage() {
               <Button
                 onClick={submitProgram}
                 disabled={loading}
-                className="bg-amber-600 hover:bg-amber-700"
+                className="bg-accent hover:bg-accent/80 text-accent-foreground"
               >
                 {loading ? 'Creating...' : 'Continue Anyway'}
               </Button>
@@ -244,7 +244,7 @@ export default function CreateProgramPage() {
               id="branchId"
               value={formData.branchId}
               onChange={(e) => handleChange('branchId', e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">{isAdmin ? 'Select a branch' : 'Auto-assigned for Pastor/Leader'}</option>
               {branches.map((branch) => (
@@ -300,7 +300,7 @@ export default function CreateProgramPage() {
             id="coordinatorId"
             value={formData.coordinatorId}
             onChange={(e) => handleChange('coordinatorId', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="">Select coordinator</option>
             {isAdmin && (
@@ -348,7 +348,7 @@ export default function CreateProgramPage() {
                 id="isOpenToAllBranches"
                 checked={formData.isOpenToAllBranches}
                 onChange={(e) => handleChange('isOpenToAllBranches', e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="h-4 w-4 rounded border-input/15 text-primary focus:ring-accent"
               />
               <Label htmlFor="isOpenToAllBranches" className="cursor-pointer font-normal">
                 Open to All Branches (Allow pastors and leaders from all branches to register)

@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api-client';
 import { UnifiedDashboard } from '@/components/dashboard/unified-dashboard';
+import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from '@/components/dashboard/types';
 import { Loader2 } from 'lucide-react';
 
 export default function SoulsDashboardPage() {
   const api = useApi();
   const [loading, setLoading] = useState(true);
-  const [overview, setOverview] = useState<any>(null);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [followUpOverview, setFollowUpOverview] = useState<any>(null);
-  const [soulsData, setSoulsData] = useState<any>(null);
-  const [followUpsData, setFollowUpsData] = useState<any>(null);
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
+  const [followUpOverview, setFollowUpOverview] = useState<FollowUpOverviewData | null>(null);
+  const [soulsData, setSoulsData] = useState<PaginatedDashboardData<DashboardSoul> | null>(null);
+  const [followUpsData, setFollowUpsData] = useState<PaginatedDashboardData<DashboardFollowUp> | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -61,10 +62,10 @@ export default function SoulsDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-400 mx-auto" />
-          <p className="text-slate-400">Loading dashboard...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );

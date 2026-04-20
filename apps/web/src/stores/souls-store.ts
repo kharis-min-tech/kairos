@@ -48,10 +48,10 @@ interface SoulsState {
   // Actions
   fetchSouls: (api: KairosApi) => Promise<void>;
   fetchSoul: (api: KairosApi, id: string) => Promise<void>;
-  captureSoul: (api: KairosApi, data: any) => Promise<Soul>;
+  captureSoul: (api: KairosApi, data: Partial<Soul>) => Promise<Soul>;
   updateSoulStatus: (api: KairosApi, id: string, status: string, convertedToMemberId?: string) => Promise<void>;
   reassignSoul: (api: KairosApi, id: string, assignedMemberId: string) => Promise<void>;
-  convertSoul: (api: KairosApi, id: string) => Promise<any>;
+  convertSoul: (api: KairosApi, id: string) => Promise<Soul>;
   setFilters: (filters: Partial<SoulFilters>) => void;
   setPage: (page: number) => void;
   updateSoulOptimistic: (id: string, updates: Partial<Soul>) => void;
@@ -86,15 +86,15 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
         ...filters,
       });
 
-      if (response.success) {
+      if (response.success && response.data) {
         set({
-          souls: response.data,
-          pagination: response.pagination,
+          souls: response.data.data ?? [],
+          pagination: response.data.meta ?? get().pagination,
           loading: false,
         });
       }
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch souls', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch souls', loading: false });
     }
   },
 
@@ -105,8 +105,8 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
       if (response.success) {
         set({ currentSoul: response.data, loading: false });
       }
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch soul', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch soul', loading: false });
     }
   },
 
@@ -119,8 +119,8 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
         return response.data;
       }
       throw new Error('Failed to capture soul');
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to capture soul', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to capture soul', loading: false });
       throw error;
     }
   },
@@ -141,8 +141,8 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
           loading: false,
         }));
       }
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to update status', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to update status', loading: false });
       throw error;
     }
   },
@@ -156,8 +156,8 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
         // Refresh the soul data
         await get().fetchSoul(api, id);
       }
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to reassign soul', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to reassign soul', loading: false });
       throw error;
     }
   },
@@ -171,8 +171,8 @@ export const useSoulsStore = create<SoulsState>((set, get) => ({
         return response.data;
       }
       throw new Error('Failed to convert soul');
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to convert soul', loading: false });
+    } catch (error: unknown) {
+      set({ error: error instanceof Error ? error.message : 'Failed to convert soul', loading: false });
       throw error;
     }
   },

@@ -14,8 +14,10 @@ import {
   Area,
 } from 'recharts';
 
+import type { DashboardAnalytics, RagTrendEntry } from './types';
+
 interface PredictiveDashboardProps {
-  analytics: any;
+  analytics: DashboardAnalytics | null;
 }
 
 export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
@@ -30,9 +32,9 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
     const historicalData = analytics?.ragTrend || [];
     
     // Calculate averages from historical data
-    const avgRed = historicalData.reduce((sum: number, d: any) => sum + (d.RED || 0), 0) / historicalData.length || 0;
-    const avgAmber = historicalData.reduce((sum: number, d: any) => sum + (d.AMBER || 0), 0) / historicalData.length || 0;
-    const avgGreen = historicalData.reduce((sum: number, d: any) => sum + (d.GREEN || 0), 0) / historicalData.length || 0;
+    const avgRed = historicalData.reduce((sum: number, d: RagTrendEntry) => sum + (d.RED || 0), 0) / historicalData.length || 0;
+    const avgAmber = historicalData.reduce((sum: number, d: RagTrendEntry) => sum + (d.AMBER || 0), 0) / historicalData.length || 0;
+    const avgGreen = historicalData.reduce((sum: number, d: RagTrendEntry) => sum + (d.GREEN || 0), 0) / historicalData.length || 0;
 
     // Generate predictions with slight variations
     for (let i = 1; i <= 30; i++) {
@@ -58,7 +60,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
   const forecastData = generateForecast();
 
   // Combine historical and forecast data
-  const historicalData = (analytics?.ragTrend || []).slice(-7).map((d: any) => ({
+  const historicalData = (analytics?.ragTrend || []).slice(-7).map((d: RagTrendEntry) => ({
     date: d.date,
     RED: d.RED,
     AMBER: d.AMBER,
@@ -68,7 +70,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
 
   const combinedData = [
     ...historicalData,
-    ...forecastData.slice(0, 14).map((d: any) => ({
+    ...forecastData.slice(0, 14).map((d) => ({
       date: d.date,
       RED: d.predictedRED,
       AMBER: d.predictedAMBER,

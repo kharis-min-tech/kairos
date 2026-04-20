@@ -69,7 +69,7 @@ app.get(
     
 
     const result = await listSouls(db, auth, query);
-    return c.json({ success: true, ...result });
+    return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
   }
 );
 

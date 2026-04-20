@@ -1,6 +1,6 @@
 import { eq, and, or, ilike, count, sql, inArray, type SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { souls, members, outreachPrograms, followUps } from '@kairos/database';
+import { souls, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import {
   NotFoundError,
@@ -66,7 +66,7 @@ export async function updateSoulStatus(
     status: string;
     convertedToMemberId?: string;
   },
-  auth: AuthContext,
+  _auth: AuthContext,
 ) {
   // Normalize status
   const status = input.status.trim();

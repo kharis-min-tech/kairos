@@ -2,6 +2,8 @@ import { pgTable, uuid, varchar, text, date, integer, boolean, timestamp, index 
 import { relations } from 'drizzle-orm';
 import { branches } from './branches';
 import { members } from './members';
+import { outreachParticipants } from './outreach-participants';
+import { souls } from './souls';
 
 export const outreachPrograms = pgTable('outreach_programs', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -37,6 +39,6 @@ export const outreachProgramsRelations = relations(outreachPrograms, ({ one, man
     fields: [outreachPrograms.coordinatorId],
     references: [members.id],
   }),
-  participants: many('outreachParticipants'),
-  souls: many('souls'),
+  participants: many(outreachParticipants),
+  souls: many(souls),
 }));

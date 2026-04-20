@@ -91,7 +91,7 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
 function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
   const isActive = item.href === '/dashboard'
     ? pathname === '/dashboard'
-    : pathname.startsWith(item.href);
+    : pathname === item.href || (pathname.startsWith(item.href + '/'));
 
   return (
     <Link

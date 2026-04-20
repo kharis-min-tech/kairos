@@ -3,10 +3,11 @@
 import { Card } from '@kairos/ui';
 import { Target, TrendingUp, Clock, Award, Zap, Users } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import type { DashboardAnalytics, DashboardOverview } from './types';
 
 interface StrategicDashboardProps {
-  analytics: any;
-  overview: any;
+  analytics: DashboardAnalytics | null;
+  overview: DashboardOverview | null;
 }
 
 export function StrategicDashboard({ analytics, overview }: StrategicDashboardProps) {
@@ -154,7 +155,7 @@ export function StrategicDashboard({ analytics, overview }: StrategicDashboardPr
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''}: ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"

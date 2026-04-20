@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureSoul, updateSoulStatus, listSouls, getSoul, reassignSoul } from './souls-service';
+import { captureSoul, updateSoulStatus, listSouls, reassignSoul } from './souls-service';
 import type { Database } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { TEST_IDS } from '../test-helpers';
-import { ValidationError, ForbiddenError, NotFoundError } from '@kairos/utils';
+import { ValidationError, ForbiddenError } from '@kairos/utils';
 
 describe('Souls Service', () => {
-  let mockDb: Database;
+  let mockDb: any;
   let adminAuth: AuthContext;
   let pastorAuth: AuthContext;
   let memberAuth: AuthContext;
@@ -60,7 +60,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await captureSoul(mockDb, input, memberAuth);
+      const result = (await captureSoul(mockDb, input, memberAuth))!;
 
       expect(result.status).toBe('New');
       expect(result.assignedMemberId).toBe(memberAuth.memberId);
@@ -84,7 +84,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await captureSoul(mockDb, input, memberAuth);
+      const result = (await captureSoul(mockDb, input, memberAuth))!;
 
       expect(result.assignedMemberId).toBe(memberAuth.memberId);
     });
@@ -105,7 +105,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await captureSoul(mockDb, input, memberAuth);
+      const result = (await captureSoul(mockDb, input, memberAuth))!;
 
       expect(result.status).toBe('New');
     });
@@ -127,7 +127,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await captureSoul(mockDb, input, memberAuth);
+      const result = (await captureSoul(mockDb, input, memberAuth))!;
 
       expect(result.outreachId).toBeNull();
     });
@@ -183,7 +183,7 @@ describe('Souls Service', () => {
           input.convertedToMemberId = TEST_IDS.memberId;
         }
 
-        const result = await updateSoulStatus(mockDb, 'soul-1', input, adminAuth);
+        const result = (await updateSoulStatus(mockDb, 'soul-1', input, adminAuth))!;
 
         expect(result.status).toBe(status);
       }
@@ -205,7 +205,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await updateSoulStatus(mockDb, 'soul-1', { status: 'Following Up' }, adminAuth);
+      const result = (await updateSoulStatus(mockDb, 'soul-1', { status: 'Following Up' }, adminAuth))!;
 
       expect(result.status).toBe('Following Up');
     });
@@ -237,7 +237,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await updateSoulStatus(mockDb, 'soul-1', { status: '  Interested  ' as any }, adminAuth);
+      const result = (await updateSoulStatus(mockDb, 'soul-1', { status: '  Interested  ' as any }, adminAuth))!;
 
       expect(result.status).toBe('Interested');
     });
@@ -407,7 +407,7 @@ describe('Souls Service', () => {
         }),
       });
 
-      const result = await reassignSoul(mockDb, 'soul-1', { assignedMemberId: newMemberId }, adminAuth);
+      const result = (await reassignSoul(mockDb, 'soul-1', { assignedMemberId: newMemberId }, adminAuth))!;
 
       expect(result.assignedMemberId).toBe(newMemberId);
     });

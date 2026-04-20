@@ -36,6 +36,13 @@
       "when": 1774894991852,
       "tag": "0003_open_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776641505708,
+      "tag": "0005_sparkling_annihilus",
+      "breakpoints": true
     }
   ]
 }

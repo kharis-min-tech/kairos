@@ -13,46 +13,30 @@ interface RAGStatusCardProps {
 export function RAGStatusCard({ status, count, label, description }: RAGStatusCardProps) {
   const config = {
     RED: {
-      gradient: 'from-rose-900 to-red-800',
-      border: 'border-rose-500/50',
       icon: AlertCircle,
-      iconColor: 'text-rose-400',
-      glow: 'shadow-rose-500/20',
-      pulse: count > 0,
+      iconColor: 'text-destructive/70',
     },
     AMBER: {
-      gradient: 'from-amber-900 to-yellow-800',
-      border: 'border-amber-500/50',
       icon: AlertTriangle,
-      iconColor: 'text-amber-400',
-      glow: 'shadow-amber-500/20',
-      pulse: false,
+      iconColor: 'text-accent/70',
     },
     GREEN: {
-      gradient: 'from-emerald-900 to-green-800',
-      border: 'border-emerald-500/50',
       icon: CheckCircle,
-      iconColor: 'text-emerald-400',
-      glow: 'shadow-emerald-500/20',
-      pulse: false,
+      iconColor: 'text-success/70',
     },
   };
 
-  const { gradient, border, icon: Icon, iconColor, glow, pulse } = config[status];
+  const { icon: Icon, iconColor } = config[status];
 
   return (
-    <Card
-      className={`bg-gradient-to-br ${gradient} ${border} p-6 transition-all duration-300 hover:scale-105 ${glow} ${
-        pulse ? 'animate-pulse' : ''
-      }`}
-    >
+    <Card className="bg-card rounded p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <Icon className={`h-8 w-8 ${iconColor}`} />
-        <div className="text-3xl font-bold text-white">{count}</div>
+        <div className="text-3xl font-semibold text-foreground tracking-tight">{count}</div>
       </div>
       <div className="space-y-1">
-        <div className="text-sm font-semibold text-white">{label}</div>
-        <div className="text-xs text-slate-300">{description}</div>
+        <div className="text-sm font-semibold text-foreground">{label}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
       </div>
     </Card>
   );

@@ -73,7 +73,7 @@ export default function CaptureSoulPage() {
     try {
       const data = {
         ...formData,
-        outreachId: formData.outreachId || null,
+        outreachId: formData.outreachId || undefined,
         email: formData.email || undefined,
         address: formData.address || undefined,
         city: formData.city || undefined,
@@ -105,10 +105,10 @@ export default function CaptureSoulPage() {
 
       // Optionally navigate to soul detail
       router.push(`/souls/${soul.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Failed to capture soul',
-        description: error.message || 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -221,7 +221,7 @@ export default function CaptureSoulPage() {
               id="gender"
               value={formData.gender}
               onChange={(e) => handleChange('gender', e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select gender</option>
               <option value="Male">Male</option>
@@ -235,7 +235,7 @@ export default function CaptureSoulPage() {
               id="ageRange"
               value={formData.ageRange}
               onChange={(e) => handleChange('ageRange', e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select age range</option>
               <option value="18-25">18-25</option>

@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { Card, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { AlertCircle, AlertTriangle, CheckCircle, TrendingUp, Users, Target, Phone, Mail, User, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
 interface OperationalDashboardProps {
-  overview: any;
-  analytics: any;
-  followUpOverview: any;
-  soulsData: any;
-  followUpsData: any;
+  overview: DashboardOverview | null;
+  analytics: DashboardAnalytics | null;
+  followUpOverview: FollowUpOverviewData | null;
+  soulsData: PaginatedDashboardData<DashboardSoul> | null;
+  followUpsData: PaginatedDashboardData<DashboardFollowUp> | null;
 }
 
 const RAG_COLORS = {
@@ -21,18 +22,18 @@ const RAG_COLORS = {
 
 export function OperationalDashboard({ overview, analytics, followUpOverview, soulsData, followUpsData }: OperationalDashboardProps) {
   const [selectedRAG, setSelectedRAG] = useState<'RED' | 'AMBER' | 'GREEN' | null>(null);
-  const [selectedSoul, setSelectedSoul] = useState<any>(null);
+  const [selectedSoul, setSelectedSoul] = useState<DashboardSoul | null>(null);
   const [selectedFollowUpRAG, setSelectedFollowUpRAG] = useState<'RED' | 'AMBER' | 'GREEN' | null>(null);
-  const [selectedFollowUp, setSelectedFollowUp] = useState<any>(null);
+  const [selectedFollowUp, setSelectedFollowUp] = useState<DashboardFollowUp | null>(null);
 
   // Filter souls by RAG status
   const filteredSouls = selectedRAG && soulsData?.data
-    ? soulsData.data.filter((soul: any) => soul.ragStatus === selectedRAG)
+    ? soulsData.data.filter((soul) => soul.ragStatus === selectedRAG)
     : [];
 
   // Filter follow-ups by RAG status
   const filteredFollowUps = selectedFollowUpRAG && followUpsData?.data
-    ? followUpsData.data.filter((fu: any) => fu.ragStatus === selectedFollowUpRAG)
+    ? followUpsData.data.filter((fu) => fu.ragStatus === selectedFollowUpRAG)
     : [];
 
   // Prepare RAG status data for bar chart
@@ -63,12 +64,15 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
   const COLORS = ['#6D28D9', '#D97706', '#059669', '#E11D48', '#3B82F6', '#8B5CF6'];
 
   // Prepare RAG by status data
-  const ragByStatusData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, any]) => ({
-    status,
-    RED: counts.RED || 0,
-    AMBER: counts.AMBER || 0,
-    GREEN: counts.GREEN || 0,
-  }));
+  const ragByStatusData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, unknown]) => {
+    const c = counts as Record<string, number>;
+    return {
+      status,
+      RED: c.RED || 0,
+      AMBER: c.AMBER || 0,
+      GREEN: c.GREEN || 0,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -158,7 +162,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''}: ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -298,7 +302,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
             {selectedRAG} Status Souls ({filteredSouls.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
-            {filteredSouls.map((soul: any) => (
+            {filteredSouls.map((soul) => (
               <Card
                 key={soul.id}
                 className={`p-4 cursor-pointer hover:scale-105 transition-transform ${
@@ -367,7 +371,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
             {selectedFollowUpRAG} Status Follow-ups ({filteredFollowUps.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
-            {filteredFollowUps.map((fu: any) => (
+            {filteredFollowUps.map((fu) => (
               <Card
                 key={fu.id}
                 className={`p-4 cursor-pointer hover:scale-105 transition-transform ${
@@ -467,7 +471,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 <div>
                   <div className="text-slate-400">Created</div>
                   <div className="font-medium">
-                    {new Date(selectedSoul.createdAt).toLocaleDateString()}
+                    {selectedSoul.createdAt ? new Date(selectedSoul.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
               </div>
