@@ -28,6 +28,7 @@ export default function RootLayout({
         <Toaster
           richColors
           position="top-right"
+          duration={5000}
           toastOptions={{
             classNames: {
               success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
