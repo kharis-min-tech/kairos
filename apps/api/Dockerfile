@@ -15,11 +15,16 @@ COPY packages/utils/package.json ./packages/utils/
 
 RUN npm ci
 
-# Copy full source (tsx runs it directly — no tsc compile step needed)
+# Copy full source
 COPY apps/api ./apps/api
 COPY packages/database ./packages/database
 COPY packages/types ./packages/types
 COPY packages/utils ./packages/utils
+
+# Build workspace packages (tsx resolves @kairos/* via package.json "main" → dist/)
+RUN cd /app/packages/types && npx tsc
+RUN cd /app/packages/utils && npx tsc
+RUN cd /app/packages/database && npx tsc
 
 # Entrypoint script
 COPY apps/api/entrypoint.sh ./entrypoint.sh

@@ -3,13 +3,14 @@ Kharis Project Kairos — a church administration system for managing branches, 
 
 ## Quick Demo (no setup required)
 
-The fastest way to see Kairos running. You only need **Docker**.
+The fastest way to see Kairos running. You need **Docker** and **Git**.
 
 ```bash
-# 1. Get the demo compose file
-curl -O https://raw.githubusercontent.com/kharis-github/kairos/main/docker-compose.demo.yml
+# 1. Clone the repo
+git clone https://github.com/kharis-github/kairos.git
+cd kairos
 
-# 2. Start everything
+# 2. Build and start everything
 docker compose -f docker-compose.demo.yml up --build
 ```
 
