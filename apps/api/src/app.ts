@@ -23,7 +23,7 @@ export function createApp() {
   app.use('*', cors({
     origin: (origin) => {
       if (origin && /^http:\/\/localhost:\d+$/.test(origin)) return origin;
-      return 'http://localhost:3000';
+      return 'http://localhost:3002';
     },
     credentials: true,
   }));

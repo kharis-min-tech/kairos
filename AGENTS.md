@@ -37,7 +37,7 @@ packages/ui/     — Shadcn/ui component library
 ## Dev Startup
 ```bash
 docker compose up -d   # Start PostgreSQL
-npx turbo dev          # API on :3001, Next.js on :3000
+npx turbo dev          # API on :3001, Next.js on :3002
 ```
 
 ## Color Palette

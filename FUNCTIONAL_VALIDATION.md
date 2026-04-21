@@ -14,7 +14,7 @@ cd packages/database && npx drizzle-kit push
 # 3. Start all services
 npx turbo dev
 # API on http://localhost:3001
-# Web on http://localhost:3000
+# Web on http://localhost:3002
 ```
 
 You'll need a REST client (Postman, curl, or the Postman collection in `postman/`) for API-level checks.
@@ -24,7 +24,7 @@ You'll need a REST client (Postman, curl, or the Postman collection in `postman/
 ## Phase 1: Auth Flow
 
 ### 1.1 Signup
-- [ ] Navigate to `http://localhost:3000/signup`
+- [ ] Navigate to `http://localhost:3002/signup`
 - [ ] Fill in name, email, phone, password, select a branch → Submit
 - [ ] Verify redirected to `/verify-email`
 
@@ -39,7 +39,7 @@ You'll need a REST client (Postman, curl, or the Postman collection in `postman/
 - [ ] Login again as the new member — verify access to dashboard
 
 ### 1.4 Login
-- [ ] Navigate to `http://localhost:3000/login`
+- [ ] Navigate to `http://localhost:3002/login`
 - [ ] Login with approved member credentials
 - [ ] Verify redirected to `/dashboard`
 - [ ] Verify the "Welcome" banner or stats display
