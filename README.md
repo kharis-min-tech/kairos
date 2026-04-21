@@ -1,6 +1,32 @@
 # Kairos
 Kharis Project Kairos — a church administration system for managing branches, members, fellowships, donations, and more.
 
+## Quick Demo (no setup required)
+
+The fastest way to see Kairos running. You only need **Docker**.
+
+```bash
+# 1. Get the demo compose file
+curl -O https://raw.githubusercontent.com/kharis-github/kairos/main/docker-compose.demo.yml
+
+# 2. Start everything
+docker compose -f docker-compose.demo.yml up --build
+```
+
+Then open **http://localhost:3002** in your browser.
+
+| Credential | Value |
+|---|---|
+| Email | `admin@kairos.church` |
+| Password | `Password1!` |
+
+The first run takes a few minutes to build the images. Subsequent runs are instant. The database is seeded automatically with realistic branches, members, fellowships, and outreach data — no manual steps needed.
+
+To stop: `docker compose -f docker-compose.demo.yml down`  
+To wipe data and start fresh: `docker compose -f docker-compose.demo.yml down -v && docker compose -f docker-compose.demo.yml up`
+
+---
+
 ## Prerequisites
 
 Make sure the following are installed before getting started:

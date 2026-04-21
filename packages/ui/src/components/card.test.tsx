@@ -12,7 +12,7 @@ describe('Card', () => {
     render(<Card data-testid="card" />);
     const card = screen.getByTestId('card');
     expect(card.className).toContain('rounded-lg');
-    expect(card.className).toContain('border');
+    expect(card.className).toContain('rounded-lg bg-card text-card-foreground shadow-ambient');
   });
 
   it('merges additional className', () => {

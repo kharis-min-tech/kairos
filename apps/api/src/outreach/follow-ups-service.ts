@@ -30,6 +30,8 @@ export async function logFollowUp(
   },
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Verify soul exists and get current status
   const [soul] = await db
     .select({ 
@@ -45,7 +47,7 @@ export async function logFollowUp(
   }
 
   // Access control: only assigned member can log follow-ups
-  if (auth.systemRole === 'member' && soul.assignedMemberId !== auth.memberId) {
+  if (effectiveRole === 'member' && soul.assignedMemberId !== auth.memberId) {
     throw new ForbiddenError('You can only log follow-ups for souls assigned to you');
   }
 
@@ -99,6 +101,8 @@ export async function getFollowUpHistory(
     limit: number;
   },
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Verify soul exists and user has access
   const [soul] = await db
     .select({
@@ -118,7 +122,7 @@ export async function getFollowUpHistory(
   // Members can view follow-ups for:
   // 1. Souls assigned to them
   // 2. Souls from programs they're participating in (for collaboration)
-  if (auth.systemRole === 'member') {
+  if (effectiveRole === 'member') {
     // Check if soul is assigned to them
     const isAssigned = soul.assignedMemberId === auth.memberId;
     
@@ -144,7 +148,7 @@ export async function getFollowUpHistory(
     }
   }
 
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && soul.branchId && soul.branchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only view follow-ups for souls from your branch');
   }
 

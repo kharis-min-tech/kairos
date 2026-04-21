@@ -391,7 +391,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 - [ ] Auth pages created (Login, Register)
 - [ ] Auth provider implemented
 - [ ] Tailwind CSS configured with design tokens
-- [ ] App runs on `localhost:3000`
+- [ ] App runs on `localhost:3002`
 
 #### Task 1.7: API Gateway Setup (Day 8-9)
 **Description:** Create API Gateway HTTP API with custom authorizer
@@ -410,7 +410,7 @@ export class ApiStack extends Stack {
     this.httpApi = new apigatewayv2.HttpApi(this, 'KairosHttpApi', {
       apiName: `kairos-${props.env}-api`,
       corsPreflight: {
-        allowOrigins: ['http://localhost:3000', 'https://app.kairos.church'],
+        allowOrigins: ['http://localhost:3002', 'https://app.kairos.church'],
         allowMethods: [apigatewayv2.CorsHttpMethod.ANY],
         allowHeaders: ['*'],
         allowCredentials: true,

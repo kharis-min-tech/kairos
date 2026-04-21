@@ -185,7 +185,7 @@ export async function sendAccountApprovedEmail(
         <p>Great news — your Kharis Church account has been reviewed and approved by an administrator.</p>
         <p>You can now log in to access your full member portal, view fellowships, meetings, and more.</p>
         <p style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.FRONTEND_URL ?? 'http://localhost:3000'}/login"
+          <a href="${process.env.FRONTEND_URL ?? 'http://localhost:3002'}/login"
              style="background:#6D28D9;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
             Log In Now
           </a>

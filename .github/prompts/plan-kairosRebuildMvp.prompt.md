@@ -19,7 +19,7 @@ Rebuild Kairos Church Administration Platform from a clean branch with 4 MVP mod
 
 **Files to preserve**: `requirements/*`, `database/*` (from db_release), `package.json` (root), `turbo.json`, `tsconfig.base.json`, `playwright.config.ts`, `.github/workflows/*`
 
-**Dev startup**: `docker compose up -d` → `npx turbo dev` (starts both API on :3001 and Next.js on :3000)
+**Dev startup**: `docker compose up -d` → `npx turbo dev` (starts both API on :3001 and Next.js on :3002)
 
 ---
 
@@ -57,7 +57,7 @@ Rebuild Kairos Church Administration Platform from a clean branch with 4 MVP mod
 - `apps/api/src/server.ts` — Local dev entry point: `serve({ fetch: app.fetch, port: 3001 })` via `@hono/node-server`
 - `apps/api/src/middleware/auth.ts` — JWT verification middleware using `jsonwebtoken` (validates Bearer token, injects `AuthContext` into Hono context)
 - `apps/api/src/middleware/error-handler.ts` — Global error handler middleware
-- `apps/api/src/middleware/cors.ts` — CORS config for local dev (allow `localhost:3000`)
+- `apps/api/src/middleware/cors.ts` — CORS config for local dev (allow `localhost:3002`)
 - Each module gets its own Hono router file (e.g., `apps/api/src/auth/router.ts`) — same code works locally and on Lambda
 - **Lambda entry points** (created but not deployed yet): `apps/api/src/auth/lambda.ts` exports `handle(authApp)` — one per module for future module-grouped Lambda deployment
 - **Test**: Server starts, health check endpoint (`GET /health`), CORS headers present
@@ -367,7 +367,7 @@ Hono router at `apps/api/src/fellowships/router.ts`:
 
 ### Per-phase checks
 1. **Phase 0**: `git log --oneline -1` confirms clean branch. `docker compose up -d` starts PostgreSQL. `npx turbo build` succeeds with empty packages
-2. **Phase 1**: `npx turbo build` — all packages compile. `npx turbo test` — utility unit tests pass. `npx turbo dev` — API server responds to `GET /health` on :3001, Next.js on :3000
+2. **Phase 1**: `npx turbo build` — all packages compile. `npx turbo test` — utility unit tests pass. `npx turbo dev` — API server responds to `GET /health` on :3001, Next.js on :3002
 3. **Phase 2**: Auth router tests pass (bcrypt + JWT). Auth pages render. Login → dashboard redirect works. Signup → pending approval flow works
 4. **Phase 3**: Branch CRUD tests pass. Branch isolation tests pass (pastor can't access other branch)
 5. **Phase 4**: Member CRUD tests pass. Directory search/filter works. Approval workflow test (signup → approve → active). Branch isolation on member queries
@@ -379,7 +379,7 @@ Hono router at `apps/api/src/fellowships/router.ts`:
 - `npx turbo build` — full monorepo builds clean
 - `npx turbo test` — all unit/integration tests pass
 - `npx turbo lint` — no lint errors
-- `npx turbo dev` — API on :3001, web on :3000, both healthy
+- `npx turbo dev` — API on :3001, web on :3002, both healthy
 - Manual walkthrough: Signup → Verify Email → Pending Approval → Admin Approve → Login → Dashboard → Browse Members → Create Fellowship (K-Group type) → Create Fellowship (Express type) → Record Attendance
 
 ### TDD compliance

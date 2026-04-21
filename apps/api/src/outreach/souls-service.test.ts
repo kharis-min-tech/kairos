@@ -8,6 +8,7 @@ import { ValidationError, ForbiddenError } from '@kairos/utils';
 describe('Souls Service', () => {
   let mockDb: any;
   let adminAuth: AuthContext;
+  let adminActingAsMemberAuth: AuthContext;
   let pastorAuth: AuthContext;
   let memberAuth: AuthContext;
 
@@ -18,6 +19,13 @@ describe('Souls Service', () => {
       email: 'admin@kairos.local',
       systemRole: 'admin',
       activeRole: 'admin',
+      branchId: TEST_IDS.branchId,
+    };
+    adminActingAsMemberAuth = {
+      memberId: TEST_IDS.adminId,
+      email: 'admin@kairos.local',
+      systemRole: 'admin',
+      activeRole: 'member',
       branchId: TEST_IDS.branchId,
     };
     pastorAuth = {
@@ -351,6 +359,41 @@ describe('Souls Service', () => {
       });
 
       await listSouls(mockDb, pastorAuth, { page: 1, limit: 20 });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+
+    it('should only show assigned souls when admin acts as member', async () => {
+      mockDb.select = vi.fn((fields) => {
+        if (fields && 'count' in fields) {
+          return {
+            from: vi.fn().mockReturnValue({
+              leftJoin: vi.fn().mockReturnValue({
+                leftJoin: vi.fn().mockReturnValue({
+                  where: vi.fn().mockResolvedValue([{ count: 0 }]),
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              leftJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    offset: vi.fn().mockReturnValue({
+                      orderBy: vi.fn().mockResolvedValue([]),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      await listSouls(mockDb, adminActingAsMemberAuth, { page: 1, limit: 20 });
 
       expect(mockDb.select).toHaveBeenCalled();
     });
