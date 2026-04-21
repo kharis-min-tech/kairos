@@ -53,8 +53,6 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:3001
     container_name: kairos-demo-web
     restart: unless-stopped
     depends_on:
@@ -63,6 +61,7 @@ services:
     environment:
       PORT: 3002
       HOSTNAME: 0.0.0.0
+      INTERNAL_API_URL: http://kairos-demo-api:3001
     ports:
       - "3002:3002"
 
