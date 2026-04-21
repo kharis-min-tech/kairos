@@ -574,8 +574,10 @@ export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
  * Helper to get branch filter based on auth context
  */
 function getBranchFilter(auth: AuthContext) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Members can only see souls assigned to them
-  if (auth.systemRole === 'member') {
+  if (effectiveRole === 'member') {
     return eq(souls.assignedMemberId, auth.memberId);
   }
   
@@ -583,7 +585,7 @@ function getBranchFilter(auth: AuthContext) {
   // 1. The outreach program is in their branch OR the soul has no outreach program
   // 2. The assigned member (if any) is from their branch
   // This ensures strict branch isolation
-  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
     return or(
       // Souls from outreach programs in their branch with members from their branch
       sql`(${outreachPrograms.branchId} = ${auth.branchId} AND (${members.homeBranchId} = ${auth.branchId} OR ${members.homeBranchId} IS NULL))`,

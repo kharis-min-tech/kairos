@@ -41,9 +41,9 @@ app.post(
   zValidator('json', createProgramSchema),
   async (c) => {
     const auth = c.get('auth');
-    
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
+
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can create programs' }, 403);
     }
 

@@ -32,21 +32,23 @@ export async function createProgram(
   },
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Auto-set branch_id for Pastor/Leader, require for Admin
   let branchId = input.branchId;
-  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
     branchId = auth.branchId;
-  } else if (auth.systemRole === 'admin' && !branchId) {
+  } else if (effectiveRole === 'admin' && !branchId) {
     throw new ValidationError('branch_id is required for Admin users');
   }
 
   // Enforce branch isolation for Pastor/Leader
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && input.branchId && input.branchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && input.branchId && input.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only create programs for your own branch');
   }
 
   // Only admin can set isOpenToAllBranches
-  const isOpenToAllBranches = auth.systemRole === 'admin' ? (input.isOpenToAllBranches ?? false) : false;
+  const isOpenToAllBranches = effectiveRole === 'admin' ? (input.isOpenToAllBranches ?? false) : false;
 
   // Check for case-insensitive duplicate program name
   const normalizedName = input.programName.toLowerCase().trim();
@@ -71,7 +73,7 @@ export async function createProgram(
   if (input.coordinatorId) {
     if (input.coordinatorId === 'KHARIS') {
       // Special case for admin: use "Kharis" as coordinator name
-      if (auth.systemRole !== 'admin') {
+      if (effectiveRole !== 'admin') {
         throw new ForbiddenError('Only admin can set Kharis as coordinator');
       }
       finalCoordinatorName = 'Kharis';
@@ -146,13 +148,21 @@ export async function listPrograms(
     endDate?: string;
   },
 ) {
-  console.log('listPrograms - auth:', { systemRole: auth.systemRole, branchId: auth.branchId, memberId: auth.memberId });
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
+  console.log('listPrograms - auth:', {
+    systemRole: auth.systemRole,
+    activeRole: auth.activeRole,
+    effectiveRole,
+    branchId: auth.branchId,
+    memberId: auth.memberId,
+  });
   console.log('listPrograms - query:', query);
   
   const conditions: SQL[] = [];
 
   // Branch isolation with exception for programs open to all branches
-  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader' || auth.systemRole === 'member') {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader' || effectiveRole === 'member') {
     // Show programs from own branch OR programs that are open to all branches
     conditions.push(
       or(
@@ -160,7 +170,7 @@ export async function listPrograms(
         eq(outreachPrograms.isOpenToAllBranches, true)
       )!
     );
-    console.log('listPrograms - applying branch isolation for', auth.systemRole, 'branchId:', auth.branchId);
+    console.log('listPrograms - applying branch isolation for', effectiveRole, 'branchId:', auth.branchId);
   } else if (query.branchId) {
     conditions.push(eq(outreachPrograms.branchId, query.branchId));
     console.log('listPrograms - filtering by branchId:', query.branchId);
@@ -262,12 +272,12 @@ export async function listPrograms(
     }
     
     // If current user is admin, always show creator name
-    if (auth.systemRole === 'admin') {
+    if (effectiveRole === 'admin') {
       return { ...row, createdByName: creator.name, creatorRole: creator.role };
     }
     
     // If current user is leader/pastor, only show creator name if creator is also leader/pastor (not admin)
-    if ((auth.systemRole === 'leader' || auth.systemRole === 'pastor') && 
+    if ((effectiveRole === 'leader' || effectiveRole === 'pastor') && 
         (creator.role === 'leader' || creator.role === 'pastor')) {
       return { ...row, createdByName: creator.name, creatorRole: creator.role };
     }
@@ -292,7 +302,7 @@ export async function listPrograms(
   // For leaders/pastors/admin, get participant counts
   let programsWithRegistration = rowsWithCreatorNames;
   
-  if (auth.systemRole === 'member' && auth.memberId) {
+  if (effectiveRole === 'member' && auth.memberId) {
     const programIds = rowsWithCreatorNames.map(r => r.id);
     
     if (programIds.length > 0) {
@@ -400,6 +410,8 @@ export async function getProgram(
   programId: string,
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   const [program] = await db
     .select({
       id: outreachPrograms.id,
@@ -431,7 +443,7 @@ export async function getProgram(
   }
 
   // Branch isolation - allow access if from own branch OR program is open to all branches
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader' || auth.systemRole === 'member')) {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader' || effectiveRole === 'member') {
     if (program.branchId !== auth.branchId && !program.isOpenToAllBranches) {
       throw new ForbiddenError('You can only access programs from your own branch');
     }
@@ -458,7 +470,7 @@ export async function getProgram(
   // For admin: show all participants
   const participantConditions = [eq(outreachParticipants.outreachId, programId)];
   
-  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
     // Only show participants from own branch
     participantConditions.push(eq(members.homeBranchId, auth.branchId));
   }
@@ -513,12 +525,13 @@ export async function updateProgram(
   auth: AuthContext,
 ) {
   const program = await getProgram(db, programId, auth);
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
 
   // Authorization: Admin, Pastor, Leader, or Coordinator can update
   const canUpdate =
-    auth.systemRole === 'admin' ||
-    auth.systemRole === 'pastor' ||
-    auth.systemRole === 'leader' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'pastor' ||
+    effectiveRole === 'leader' ||
     program.coordinatorId === auth.memberId;
 
   if (!canUpdate) {
@@ -545,6 +558,8 @@ export async function registerWorker(
   input: { memberId: string; role?: string; notes?: string },
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Verify program exists and user has access
   const program = await getProgram(db, programId, auth);
 
@@ -559,7 +574,7 @@ export async function registerWorker(
   }
 
   // Members can only register themselves
-  if (auth.systemRole === 'member' && input.memberId !== auth.memberId) {
+  if (effectiveRole === 'member' && input.memberId !== auth.memberId) {
     throw new ForbiddenError('You can only register yourself for outreach programs');
   }
 

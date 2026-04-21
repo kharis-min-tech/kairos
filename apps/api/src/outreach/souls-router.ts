@@ -23,6 +23,7 @@ import {
 import { logFollowUp, getFollowUpHistory } from './follow-ups-service';
 import { convertSoulToMember } from './conversion-service';
 
+
 type Variables = {
   auth: AuthContext;
 };
@@ -80,9 +81,9 @@ app.get(
  */
 app.get('/export', async (c) => {
   const auth = c.get('auth');
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-  // Authorization check
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+  if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
     return c.json({ error: 'Only Admin, Pastor, and Leader can export souls' }, 403);
   }
 
@@ -158,9 +159,9 @@ app.put(
   zValidator('json', reassignSoulSchema),
   async (c) => {
     const auth = c.get('auth');
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can reassign souls' }, 403);
     }
 
@@ -196,9 +197,9 @@ app.post(
   zValidator('json', bulkReassignSoulsSchema),
   async (c) => {
     const auth = c.get('auth');
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can bulk reassign souls' }, 403);
     }
 

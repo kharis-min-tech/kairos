@@ -23,6 +23,8 @@ export async function convertSoulToMember(
   soulId: string,
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
   // Fetch soul with outreach program and branch relations
   const [soul] = await db
     .select({
@@ -48,11 +50,11 @@ export async function convertSoulToMember(
   }
 
   // Access control
-  if (auth.systemRole === 'member' && soul.assignedMemberId !== auth.memberId) {
+  if (effectiveRole === 'member' && soul.assignedMemberId !== auth.memberId) {
     throw new ForbiddenError('You can only convert souls assigned to you');
   }
 
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && soul.branchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only convert souls from your branch');
   }
 
