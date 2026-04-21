@@ -25,7 +25,7 @@ export default async function globalSetup() {
     cwd: path.join(ROOT, 'packages/database'),
     env: {
       ...process.env,
-      DATABASE_URL: 'postgresql://kairos:kairos@localhost:5432/kairos',
+      DATABASE_URL: 'postgresql://kairos:kairos@localhost:5430/kairos',
     },
   });
 

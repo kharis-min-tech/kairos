@@ -16,7 +16,7 @@ export default defineConfig({
 
   // Start the API server before running tests
   webServer: {
-    command: 'DATABASE_URL=postgresql://kairos:kairos@localhost:5432/kairos npm run dev --filter=api',
+    command: 'DATABASE_URL=postgresql://kairos:kairos@localhost:5430/kairos npm run dev --filter=api',
     url: 'http://localhost:3001/health',
     reuseExistingServer: true,
     timeout: 30_000,

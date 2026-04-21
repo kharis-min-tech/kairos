@@ -60,7 +60,7 @@ cp .env.example apps/api/.env
 The defaults work out of the box with the local Docker database. Edit the file if you need to change anything:
 
 ```
-DATABASE_URL=postgresql://kairos:kairos@localhost:5432/kairos
+DATABASE_URL=postgresql://kairos:kairos@localhost:5430/kairos
 JWT_SECRET=local-dev-secret-change-in-production
 JWT_REFRESH_SECRET=local-dev-refresh-secret-change-in-production
 PORT=3001
@@ -72,7 +72,7 @@ PORT=3001
 docker compose up -d
 ```
 
-This starts a PostgreSQL 15 container (`kairos-db`) on port `5432` with:
+This starts a PostgreSQL 15 container (`kairos-db`) on port `5430` with:
 - **User:** `kairos`
 - **Password:** `kairos`
 - **Database:** `kairos`

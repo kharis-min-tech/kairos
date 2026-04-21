@@ -57,7 +57,7 @@ This guide walks you through installing PostgreSQL on Windows Server/Desktop, cr
    - Click **Next**
 
    **f) Port**
-   - Default: **5432**
+   - Default: **5430**
    - Keep this default unless you have a conflict
    - Click **Next**
 
@@ -141,7 +141,7 @@ Set these environment variables so the scripts can connect without prompting for
    | Variable Name | Variable Value | Description |
    |--------------|----------------|-------------|
    | `PGHOST` | `localhost` | Database host |
-   | `PGPORT` | `5432` | Database port |
+   | `PGPORT` | `5430` | Database port |
    | `PGUSER` | `postgres` | Database username |
    | `PGPASSWORD` | `YourPassword` | Your PostgreSQL password |
 
@@ -184,7 +184,7 @@ Set these environment variables so the scripts can connect without prompting for
    }
    
    # Add connection info (replace YOUR_PASSWORD)
-   "localhost:5432:*:postgres:YOUR_PASSWORD" | Out-File -FilePath $pgpassFile -Encoding ASCII
+   "localhost:5430:*:postgres:YOUR_PASSWORD" | Out-File -FilePath $pgpassFile -Encoding ASCII
    
    # Set file permissions (hide from other users)
    $acl = Get-Acl $pgpassFile
@@ -405,7 +405,7 @@ SELECT * FROM members;  -- Now works without prefix
 **Solution:**
 - Check service is running: `Get-Service -Name postgresql*`
 - Start if needed: `Start-Service -Name "postgresql-x64-18"`
-- Verify port: Should be 5432 (check postgresql.conf)
+- Verify port: Should be 5430 (check postgresql.conf)
 
 ### Issue: Password authentication failed
 **Solution:**
@@ -483,7 +483,7 @@ If you've forgotten the postgres password or it's not working, you need to reset
   $env:PGPASSWORD = $null
   
   # Connect with explicit password prompt
-  psql -U postgres -h localhost -p 5432
+  psql -U postgres -h localhost -p 5430
   # Enter password when prompted
   ```
 
@@ -505,7 +505,7 @@ Get-ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### Issue: Port 5432 already in use
+### Issue: Port 5430 already in use
 **Solution:**
 - Another PostgreSQL instance is running
 - Change port during installation (e.g., 5433)
@@ -521,7 +521,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    ```
 
 2. **Connect your application:**
-   - Connection string: `Host=localhost;Port=5432;Database=kairos;Username=postgres;Password=YourPassword`
+   - Connection string: `Host=localhost;Port=5430;Database=kairos;Username=postgres;Password=YourPassword`
 
 3. **Backup database:**
    ```powershell

@@ -5,6 +5,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgresql://kairos:kairos@localhost:5432/kairos',
+    url: process.env.DATABASE_URL ?? 'postgresql://kairos:kairos@localhost:5430/kairos',
   },
 });

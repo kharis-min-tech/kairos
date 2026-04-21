@@ -6,7 +6,7 @@
  */
 import postgres from 'postgres';
 
-const url = process.env.DATABASE_URL ?? 'postgresql://kairos:kairos@localhost:5432/kairos';
+const url = process.env.DATABASE_URL ?? 'postgresql://kairos:kairos@localhost:5430/kairos';
 
 async function main() {
   const sql = postgres(url, { max: 1 });

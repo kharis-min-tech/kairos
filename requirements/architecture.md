@@ -1840,12 +1840,12 @@ graph TB
 **Security Groups:**
 ```
 Aurora Security Group:
-- Inbound: Port 5432 from Lambda Security Group only
+- Inbound: Port 5430 from Lambda Security Group only
 - Outbound: None
 
 Lambda Security Group:
 - Inbound: None
-- Outbound: Port 5432 to Aurora Security Group
+- Outbound: Port 5430 to Aurora Security Group
 - Outbound: Port 443 to VPC endpoints
 ```
 

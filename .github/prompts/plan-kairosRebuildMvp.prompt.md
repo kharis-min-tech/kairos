@@ -14,8 +14,8 @@ Rebuild Kairos Church Administration Platform from a clean branch with 4 MVP mod
 3. Write fresh `AGENTS.md` reflecting rebuild conventions (local-first, Hono API, 4 MVP modules, TDD mandate)
 4. Write fresh `.github/instructions/` files for the rebuild context
 5. Update `turbo.json` and root `package.json` if workspace structure changes
-6. Add `docker-compose.yml` — PostgreSQL 15 container (port 5432), with volume for persistence
-7. Add `.env.example` — `DATABASE_URL=postgresql://kairos:kairos@localhost:5432/kairos`, `JWT_SECRET`, `PORT=3001`
+6. Add `docker-compose.yml` — PostgreSQL 15 container (port 5430), with volume for persistence
+7. Add `.env.example` — `DATABASE_URL=postgresql://kairos:kairos@localhost:5430/kairos`, `JWT_SECRET`, `PORT=3001`
 
 **Files to preserve**: `requirements/*`, `database/*` (from db_release), `package.json` (root), `turbo.json`, `tsconfig.base.json`, `playwright.config.ts`, `.github/workflows/*`
 
