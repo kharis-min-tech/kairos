@@ -1,14 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-// Read at request time (runtime) — works in Docker standalone regardless of build env.
 const API_URL = process.env.INTERNAL_API_URL ?? 'http://localhost:3001';
 
-async function proxy(req: NextRequest, params: Promise<{ path: string[] }>) {
-  const { path } = await params;
+async function proxy(
+  req: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  const { path } = params;
+
   const targetUrl = `${API_URL}/api/${path.join('/')}${req.nextUrl.search}`;
 
   const headers = new Headers(req.headers);
-  // Remove headers that cause issues when forwarding
   headers.delete('host');
 
   const init: RequestInit = {
@@ -25,7 +27,6 @@ async function proxy(req: NextRequest, params: Promise<{ path: string[] }>) {
   const upstream = await fetch(targetUrl, init);
 
   const responseHeaders = new Headers(upstream.headers);
-  // Strip hop-by-hop headers
   responseHeaders.delete('transfer-encoding');
 
   return new NextResponse(upstream.body, {
