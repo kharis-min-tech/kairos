@@ -1,12 +1,12 @@
 import { createApiClient } from '@kairos/api-client';
 import { useAuthStore } from './auth-store';
 
-// In Docker the web container proxies /api/* to the API container via next.config.ts rewrites.
-// Use a relative base so the browser always calls the same origin — no CORS, no hardcoded ports.
-const API_BASE_URL =
-  typeof window !== 'undefined'
-    ? '' // browser: relative URL, proxied by Next.js
-    : (process.env.INTERNAL_API_URL ?? 'http://localhost:3001'); // SSR: call API directly
+// All API calls use a relative base URL (/api/...).
+// In Docker, the catch-all route handler at src/app/api/[...path]/route.ts
+// proxies these to INTERNAL_API_URL at request time (no build-time baking).
+const API_BASE_URL = typeof window === 'undefined'
+  ? (process.env.INTERNAL_API_URL ?? 'http://localhost:3001') // SSR / route handler itself
+  : ''; // browser → relative → handled by the route handler
 
 export const api = createApiClient(API_BASE_URL, () => {
   return useAuthStore.getState().accessToken;

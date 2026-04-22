@@ -25,11 +25,6 @@ RUN npx turbo build --filter=@kairos/utils
 RUN npx turbo build --filter=@kairos/api-client
 RUN npx turbo build --filter=@kairos/ui
 
-# INTERNAL_API_URL must be known at build time so next.config.ts rewrites() can use it.
-# In docker-compose.demo.yml the service name is kairos-demo-api.
-ARG INTERNAL_API_URL=http://kairos-demo-api:3001
-ENV INTERNAL_API_URL=$INTERNAL_API_URL
-
 RUN DOCKER_BUILD=1 npx turbo build --filter=@kairos/web
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
