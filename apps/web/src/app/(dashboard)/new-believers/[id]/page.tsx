@@ -349,6 +349,9 @@ export default function EnrollmentDetailPage() {
                       </option>
                     ))}
                   </select>
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                    ⚠ Changing stage manually bypasses session-complete checks — use with care.
+                  </p>
                 </div>
 
                 <div>
