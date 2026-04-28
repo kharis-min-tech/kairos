@@ -31,6 +31,8 @@ export const newBelieverEnrollments = pgTable(
     completedAt: timestamp('completed_at'),
     // JSONB map of stage → ISO completion timestamp, e.g. {"session-1":"2026-04-17T..."}
     sessionCompletedAt: jsonb('session_completed_at').$type<Record<string, string>>(),
+    // JSONB map of stage → teacher feedback text, e.g. {"session-1":"Great progress..."}
+    sessionFeedback: jsonb('session_feedback').$type<Record<string, string>>(),
     // Set when member joins a department at the integrated stage
     joinedDepartmentId: uuid('joined_department_id'),
     notes: text('notes'),

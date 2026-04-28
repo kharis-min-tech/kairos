@@ -9,4 +9,5 @@ export {
   sendJoinRequestRejectedEmail,
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
+  sendMentorAssignedEmail,
 } from './mailer';

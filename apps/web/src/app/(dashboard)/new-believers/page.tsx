@@ -1,6 +1,8 @@
 'use client';
 
 import { Suspense, useRef, useState } from 'react';
+import { DndContext, useDraggable, useDroppable, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useEnrollments, useEnrollmentAlerts, useCreateEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
@@ -147,185 +149,116 @@ function MemberCombobox({
 }
 
 const SESSION_STAGE_VALUES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
-const MAX_SELECT = 5;
+
+type EnrollmentCard = {
+  id: string;
+  memberFirstName: string;
+  memberLastName: string;
+  teacherFirstName?: string | null;
+  teacherLastName?: string | null;
+  mentorFirstName?: string | null;
+  mentorLastName?: string | null;
+  enrolledAt: string | Date;
+  updatedAt: string | Date;
+};
+
+function DraggableCard({
+  enrollment,
+  stageValue,
+  isDraggable,
+}: {
+  enrollment: EnrollmentCard;
+  stageValue: string;
+  isDraggable: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: enrollment.id,
+    data: { stage: stageValue },
+    disabled: !isDraggable,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...(isDraggable ? listeners : {})}
+      className={`rounded-xl border bg-white dark:border-gray-700 dark:bg-gray-800 select-none transition-all ${
+        isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
+      } ${isDragging ? 'opacity-30' : 'hover:shadow-md'}`}
+    >
+      <Link href={`/new-believers/${enrollment.id}`} className="block p-3">
+        <p className="text-sm font-medium">
+          {enrollment.memberFirstName} {enrollment.memberLastName}
+        </p>
+        {(enrollment.teacherFirstName || enrollment.teacherLastName) && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Teacher: {enrollment.teacherFirstName} {enrollment.teacherLastName}
+          </p>
+        )}
+        {enrollment.mentorFirstName && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Mentor: {enrollment.mentorFirstName} {enrollment.mentorLastName}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+        </p>
+      </Link>
+    </div>
+  );
+}
 
 function StageColumn({
   stage,
   enrollments,
-  canSelect,
-  selectMode,
-  selectedIds,
-  isAdvancing,
-  onEnterSelectMode,
-  onCancelSelectMode,
-  onToggle,
-  onAdvanceSelected,
+  canDrag,
+  isDropTarget,
 }: {
   stage: { value: NewBelieverStageValue; label: string; topic?: string };
-  enrollments: Array<{
-    id: string;
-    memberFirstName: string;
-    memberLastName: string;
-    teacherFirstName?: string | null;
-    teacherLastName?: string | null;
-    mentorFirstName?: string | null;
-    mentorLastName?: string | null;
-    enrolledAt: string | Date;
-    updatedAt: string | Date;
-  }>;
-  canSelect?: boolean;
-  selectMode: boolean;
-  selectedIds: Set<string>;
-  isAdvancing: boolean;
-  onEnterSelectMode: () => void;
-  onCancelSelectMode: () => void;
-  onToggle: (id: string) => void;
-  onAdvanceSelected: () => void;
+  enrollments: EnrollmentCard[];
+  canDrag: boolean;
+  isDropTarget: boolean;
 }) {
   const colorClass = STAGE_COLORS[stage.value];
-  const nextStageIdx = STAGES.findIndex((s) => s.value === stage.value) + 1;
-  const nextStage = STAGES[nextStageIdx];
-  const selectedCount = selectedIds.size;
-  const isSessionStage = SESSION_STAGE_VALUES.has(stage.value);
+  const { setNodeRef, isOver } = useDroppable({ id: stage.value });
 
   return (
     <div className="flex min-w-[220px] flex-col gap-2">
       {/* Column header */}
       <div className={`rounded-lg border px-3 py-2 ${colorClass}`}>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">
-            {stage.label}
-            <span className="ml-2 rounded-full bg-black/10 px-1.5 py-0.5 text-xs font-bold dark:bg-white/20">
-              {enrollments.length}
-            </span>
+        <span className="text-sm font-semibold">
+          {stage.label}
+          <span className="ml-2 rounded-full bg-black/10 px-1.5 py-0.5 text-xs font-bold dark:bg-white/20">
+            {enrollments.length}
           </span>
-          {canSelect && enrollments.length > 0 && nextStage && !selectMode && (
-            <button
-              onClick={onEnterSelectMode}
-              className="ml-2 rounded px-1.5 py-0.5 text-xs font-medium opacity-70 hover:opacity-100 hover:underline"
-            >
-              Select
-            </button>
-          )}
-        </div>
+        </span>
         {stage.topic && (
           <p className="mt-0.5 text-xs opacity-70">{stage.topic}</p>
         )}
       </div>
 
-      {/* Select-mode action bar */}
-      {selectMode && nextStage && (
-        <div className="rounded-lg border border-purple-300 bg-purple-50 px-3 py-2 dark:border-purple-700 dark:bg-purple-950/40">
-          <p className="text-xs text-purple-700 dark:text-purple-300">
-            {selectedCount === 0
-              ? `Pick up to ${MAX_SELECT} people`
-              : `${selectedCount} / ${MAX_SELECT} selected`}
-          </p>
-          {isSessionStage && (
-            <p className="mt-0.5 text-xs text-purple-600/70 dark:text-purple-400/70">
-              Will mark session complete &amp; advance
-            </p>
-          )}
-          <div className="mt-2 flex gap-2">
-            <button
-              onClick={onAdvanceSelected}
-              disabled={selectedCount === 0 || isAdvancing}
-              className="flex-1 rounded-lg bg-purple-700 px-2 py-1.5 text-xs font-semibold text-white hover:bg-purple-800 disabled:opacity-40"
-            >
-              {isAdvancing ? 'Advancing…' : `Advance (${selectedCount}) → ${nextStage.label}`}
-            </button>
-            <button
-              onClick={onCancelSelectMode}
-              disabled={isAdvancing}
-              className="rounded-lg border px-2 py-1.5 text-xs font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Cards */}
-      <div className="flex flex-col gap-2">
+      {/* Drop zone — highlights when a dragged card hovers over a valid target */}
+      <div
+        ref={setNodeRef}
+        className={`flex min-h-[80px] flex-col gap-2 rounded-lg transition-colors ${
+          isOver && isDropTarget
+            ? 'bg-purple-50 ring-2 ring-purple-400 dark:bg-purple-950/30 dark:ring-purple-600'
+            : ''
+        }`}
+      >
         {enrollments.length === 0 ? (
           <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
             No enrollments
           </p>
         ) : (
-          enrollments.map((e) => {
-            const checked = selectedIds.has(e.id);
-            const atMax = selectedCount >= MAX_SELECT && !checked;
-
-            if (selectMode) {
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  disabled={atMax}
-                  onClick={() => onToggle(e.id)}
-                  className={`w-full rounded-xl border text-left transition-shadow ${
-                    checked
-                      ? 'border-purple-500 bg-purple-50 shadow-md dark:border-purple-500 dark:bg-purple-950/40'
-                      : atMax
-                      ? 'border-gray-200 opacity-40 dark:border-gray-700'
-                      : 'border-gray-200 hover:shadow-md dark:border-gray-700'
-                  }`}
-                >
-                  <div className="flex items-start gap-2 p-3">
-                    <span
-                      className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-xs ${
-                        checked
-                          ? 'border-purple-600 bg-purple-600 text-white'
-                          : 'border-gray-400 dark:border-gray-500'
-                      }`}
-                    >
-                      {checked && '✓'}
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {e.memberFirstName} {e.memberLastName}
-                      </p>
-                      {(e.teacherFirstName || e.teacherLastName) && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Teacher: {e.teacherFirstName} {e.teacherLastName}
-                        </p>
-                      )}
-                      {e.mentorFirstName && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Mentor: {e.mentorFirstName} {e.mentorLastName}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            }
-
-            return (
-              <Link key={e.id} href={`/new-believers/${e.id}`}>
-                <Card className="cursor-pointer transition-shadow hover:shadow-md">
-                  <CardContent className="p-3">
-                    <p className="text-sm font-medium">
-                      {e.memberFirstName} {e.memberLastName}
-                    </p>
-                    {(e.teacherFirstName || e.teacherLastName) && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Teacher: {e.teacherFirstName} {e.teacherLastName}
-                      </p>
-                    )}
-                    {e.mentorFirstName && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Mentor: {e.mentorFirstName} {e.mentorLastName}
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Enrolled {new Date(e.enrolledAt).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })
+          enrollments.map((e) => (
+            <DraggableCard
+              key={e.id}
+              enrollment={e}
+              stageValue={stage.value}
+              isDraggable={canDrag}
+            />
+          ))
         )}
       </div>
     </div>
@@ -362,63 +295,35 @@ function NewBelieversContent() {
   const updateEnrollment = useUpdateEnrollment();
 
   // Select-to-advance state: which stage column is in select mode
-  const [selectStage, setSelectStage] = useState<NewBelieverStageValue | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isAdvancing, setIsAdvancing] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  function enterSelectMode(stageValue: NewBelieverStageValue) {
-    setSelectStage(stageValue);
-    setSelectedIds(new Set());
-  }
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over) return;
 
-  function cancelSelectMode() {
-    setSelectStage(null);
-    setSelectedIds(new Set());
-  }
+    const fromStage = (active.data.current as { stage: string }).stage;
+    const toStage = over.id as string;
+    const fromIdx = STAGES.findIndex((s) => s.value === fromStage);
+    const toIdx = STAGES.findIndex((s) => s.value === toStage);
+    if (toIdx !== fromIdx + 1) return; // only advance one stage forward
 
-  function toggleSelected(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else if (next.size < MAX_SELECT) {
-        next.add(id);
-      }
-      return next;
-    });
-  }
-
-  async function handleAdvanceSelected(stageValue: NewBelieverStageValue) {
-    const nextStageIdx = STAGES.findIndex((s) => s.value === stageValue) + 1;
-    const nextStage = STAGES[nextStageIdx];
-    if (!nextStage || selectedIds.size === 0) return;
-    setIsAdvancing(true);
-    const isSessionStage = SESSION_STAGE_VALUES.has(stageValue);
-    let ok = 0;
-    let failed = 0;
-    for (const eid of selectedIds) {
-      try {
-        const sessionCompletedAt = isSessionStage
-          ? { [stageValue]: new Date().toISOString() }
-          : undefined;
-        await updateEnrollment.mutateAsync({
-          id: eid,
-          data: {
-            stage: nextStage.value,
-            ...(sessionCompletedAt ? { sessionCompletedAt } : {}),
-          },
-        });
-        ok++;
-      } catch {
-        failed++;
-      }
-    }
-    setIsAdvancing(false);
-    cancelSelectMode();
-    if (failed === 0) {
-      toast.success(`${ok} member${ok !== 1 ? 's' : ''} advanced to ${nextStage.label}`);
-    } else {
-      toast.warning(`${ok} advanced, ${failed} failed`);
+    const enrollmentId = active.id as string;
+    const nextStage = STAGES[toIdx]!;
+    const isSessionStage = SESSION_STAGE_VALUES.has(fromStage);
+    const sessionCompletedAt = isSessionStage
+      ? { [fromStage]: new Date().toISOString() }
+      : undefined;
+    try {
+      await updateEnrollment.mutateAsync({
+        id: enrollmentId,
+        data: {
+          stage: nextStage.value,
+          ...(sessionCompletedAt ? { sessionCompletedAt } : {}),
+        },
+      });
+      toast.success(`Advanced to ${nextStage.label}`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to advance');
     }
   }
 
@@ -636,25 +541,21 @@ function NewBelieversContent() {
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto pb-4">
-          <div className="flex gap-4" style={{ minWidth: STAGES.length * 240 + 'px' }}>
-            {STAGES.map((s) => (
-              <StageColumn
-                key={s.value}
-                stage={s}
-                enrollments={byStage[s.value] ?? []}
-                canSelect={isAdminOrPastor && s.value !== 'integrated'}
-                selectMode={selectStage === s.value}
-                selectedIds={selectStage === s.value ? selectedIds : new Set()}
-                isAdvancing={isAdvancing && selectStage === s.value}
-                onEnterSelectMode={() => enterSelectMode(s.value)}
-                onCancelSelectMode={cancelSelectMode}
-                onToggle={toggleSelected}
-                onAdvanceSelected={() => handleAdvanceSelected(s.value)}
-              />
-            ))}
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="overflow-x-auto pb-4">
+            <div className="flex gap-4" style={{ minWidth: STAGES.length * 240 + 'px' }}>
+              {STAGES.map((s) => (
+                <StageColumn
+                  key={s.value}
+                  stage={s}
+                  enrollments={byStage[s.value] ?? []}
+                  canDrag={isAdminOrPastor && s.value !== 'integrated'}
+                  isDropTarget={isAdminOrPastor && s.value !== 'enrolled'}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </DndContext>
       )}
 
       {/* Enrol Member Dialog */}
@@ -703,8 +604,7 @@ function NewBelieversContent() {
 
               <div>
                 <label htmlFor="enrol-mentor" className="mb-1 block text-sm font-medium">
-                  Assign Mentor{' '}
-                  <span className="font-normal text-muted-foreground">(optional)</span>
+                  Assign Mentor
                 </label>
                 <MemberCombobox
                   id="enrol-mentor"
@@ -715,6 +615,11 @@ function NewBelieversContent() {
                 />
                 {mentorPool.length === 0 && enrollments.length > 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">All branch members are currently enrolled as students.</p>
+                )}
+                {enrollForm.mentorId && !branchMembers.find((m) => m.id === enrollForm.mentorId)?.email && (
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                    ⚠ This member has no email address on file — they won&apos;t receive an assignment notification.
+                  </p>
                 )}
               </div>
 
@@ -743,7 +648,7 @@ function NewBelieversContent() {
                 Cancel
               </button>
               <button
-                disabled={!enrollForm.memberId || !enrollForm.teacherId || createEnrollment.isPending}
+                disabled={!enrollForm.memberId || !enrollForm.teacherId || !enrollForm.mentorId || createEnrollment.isPending}
                 onClick={handleEnroll}
                 className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
               >

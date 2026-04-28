@@ -9,7 +9,7 @@ import {
   roles,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
+import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail } from '@kairos/utils';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -264,6 +264,26 @@ export async function createEnrollment(
     })
     .returning();
 
+  // Send mentor assignment email (fire-and-forget: never blocks enrolment)
+  if (data.mentorId && enrollment) {
+    const [mentorRows, studentRows] = await Promise.all([
+      db.select({ email: members.email, firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, data.mentorId)).limit(1),
+      db.select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, data.memberId)).limit(1),
+    ]);
+    const mentor = mentorRows[0];
+    const student = studentRows[0];
+    if (mentor?.email) {
+      const studentName = student ? `${student.firstName} ${student.lastName}` : 'a new believer';
+      sendMentorAssignedEmail(
+        mentor.email,
+        `${mentor.firstName} ${mentor.lastName}`,
+        studentName,
+      ).catch((err: unknown) => console.warn('[mailer] sendMentorAssignedEmail failed:', err));
+    }
+  }
+
   return enrollment!;
 }
 
@@ -279,6 +299,7 @@ export async function updateEnrollment(
     completedAt?: string | null;
     isActive?: boolean;
     sessionCompletedAt?: Record<string, string> | null;
+    sessionFeedback?: Record<string, string> | null;
     joinedDepartmentId?: string | null;
   }
 ) {
@@ -287,6 +308,9 @@ export async function updateEnrollment(
       branchId: newBelieverEnrollments.branchId,
       stage: newBelieverEnrollments.stage,
       sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+      sessionFeedback: newBelieverEnrollments.sessionFeedback,
+      mentorId: newBelieverEnrollments.mentorId,
+      memberId: newBelieverEnrollments.memberId,
     })
     .from(newBelieverEnrollments)
     .where(eq(newBelieverEnrollments.id, enrollmentId))
@@ -316,8 +340,14 @@ export async function updateEnrollment(
   // (sessions-only stages: session-1 through session-4)
   const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
   if (data.stage && data.stage !== existing.stage && SESSION_STAGES.has(existing.stage)) {
-    const completedMap = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
-    if (!completedMap[existing.stage]) {
+    // Merge incoming sessionCompletedAt with DB state BEFORE the guard check.
+    // The client sends stage + sessionCompletedAt in one payload; the DB hasn't been
+    // written yet, so existing.sessionCompletedAt won't contain the current session.
+    const mergedCompletedMap: Record<string, string> = {
+      ...((existing.sessionCompletedAt as Record<string, string>) ?? {}),
+      ...(data.sessionCompletedAt ?? {}),
+    };
+    if (!mergedCompletedMap[existing.stage]) {
       throw new ForbiddenError(
         `Cannot advance from ${existing.stage} until it has been marked complete. Use "Mark Complete" first.`
       );
@@ -341,9 +371,34 @@ export async function updateEnrollment(
     const existing_map = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
     updateValues.sessionCompletedAt = { ...existing_map, ...data.sessionCompletedAt };
   }
+  // Merge sessionFeedback into the existing map
+  if (data.sessionFeedback !== undefined && data.sessionFeedback !== null) {
+    const existing_feedback = (existing.sessionFeedback ?? {}) as Record<string, string>;
+    updateValues.sessionFeedback = { ...existing_feedback, ...data.sessionFeedback };
+  }
   // Auto-set completedAt when stage reaches completed/integrated
   if ((data.stage === 'completed' || data.stage === 'integrated') && data.completedAt === undefined) {
     updateValues.completedAt = new Date();
+  }
+
+  // Send mentor assignment email when mentor changes (fire-and-forget: never blocks the update)
+  if (data.mentorId !== undefined && data.mentorId !== null && data.mentorId !== existing.mentorId) {
+    const [mentorRows, studentRows] = await Promise.all([
+      db.select({ email: members.email, firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, data.mentorId)).limit(1),
+      db.select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, existing.memberId)).limit(1),
+    ]);
+    const mentor = mentorRows[0];
+    const student = studentRows[0];
+    if (mentor?.email) {
+      const studentName = student ? `${student.firstName} ${student.lastName}` : 'a student';
+      sendMentorAssignedEmail(
+        mentor.email,
+        `${mentor.firstName} ${mentor.lastName}`,
+        studentName,
+      ).catch((err: unknown) => console.warn('[mailer] sendMentorAssignedEmail failed:', err));
+    }
   }
 
   const [updated] = await db

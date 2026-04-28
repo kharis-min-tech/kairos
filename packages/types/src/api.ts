@@ -465,6 +465,7 @@ export interface UpdateEnrollmentRequest {
   completedAt?: string | null;
   isActive?: boolean;
   sessionCompletedAt?: Record<string, string> | null;
+  sessionFeedback?: Record<string, string> | null;
   joinedDepartmentId?: string | null;
 }
 

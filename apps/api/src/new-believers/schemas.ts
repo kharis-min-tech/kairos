@@ -27,6 +27,8 @@ export const updateEnrollmentSchema = z.object({
   isActive: z.boolean().optional(),
   /** Merged into existing sessionCompletedAt map */
   sessionCompletedAt: z.record(z.string(), z.string()).nullable().optional(),
+  /** Merged into existing sessionFeedback map */
+  sessionFeedback: z.record(z.string(), z.string()).nullable().optional(),
   /** Branch department joined at the integrated stage */
   joinedDepartmentId: z.string().uuid().nullable().optional(),
 });

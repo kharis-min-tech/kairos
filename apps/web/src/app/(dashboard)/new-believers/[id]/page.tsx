@@ -34,6 +34,12 @@ const STAGE_COLORS: Record<NewBelieverStageValue, string> = {
 
 const SESSION_STAGES: NewBelieverStageValue[] = ['session-1', 'session-2', 'session-3', 'session-4'];
 
+const MOCK_DEPARTMENTS = [
+  { id: 'mock-choir', departmentName: 'Choir' },
+  { id: 'mock-ushers', departmentName: 'Ushers' },
+  { id: 'mock-media', departmentName: 'Media Team' },
+];
+
 export default function EnrollmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -58,7 +64,8 @@ export default function EnrollmentDetailPage() {
     },
     enabled: !!user?.homeBranchId,
   });
-  const branchDepartments = deptData ?? [];
+  const branchDepartments: { id: string; departmentName: string }[] =
+    deptData && deptData.length > 0 ? deptData : MOCK_DEPARTMENTS;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<UpdateEnrollmentRequest>({});
@@ -66,6 +73,10 @@ export default function EnrollmentDetailPage() {
   // State for "Joined a Department" advance modal
   const [showJoinDeptModal, setShowJoinDeptModal] = useState(false);
   const [joinDeptId, setJoinDeptId] = useState('');
+
+  // State for "Mark Session Complete" modal — feedback is required before marking
+  const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
+  const [markCompleteFeedback, setMarkCompleteFeedback] = useState('');
 
   function startEdit() {
     if (!enrollment) return;
@@ -88,18 +99,27 @@ export default function EnrollmentDetailPage() {
     }
   }
 
-  async function handleMarkComplete() {
-    if (!enrollment || !SESSION_STAGES.includes(enrollment.stage as NewBelieverStageValue)) return;
+  function handleMarkComplete() {
+    setMarkCompleteFeedback('');
+    setShowMarkCompleteModal(true);
+  }
+
+  async function handleConfirmMarkComplete() {
+    if (!enrollment) return;
     const currentStage = enrollment.stage;
-    const existing = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+    const existingSca = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+    const existingSf = ((enrollment as unknown as Record<string, unknown>).sessionFeedback ?? {}) as Record<string, string>;
     try {
       await updateEnrollment.mutateAsync({
         id,
         data: {
-          sessionCompletedAt: { ...existing, [currentStage]: new Date().toISOString() },
+          sessionCompletedAt: { ...existingSca, [currentStage]: new Date().toISOString() },
+          sessionFeedback: { ...existingSf, [currentStage]: markCompleteFeedback.trim() },
         },
       });
       toast.success('Session marked as completed');
+      setShowMarkCompleteModal(false);
+      setMarkCompleteFeedback('');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to mark session complete');
     }
@@ -350,10 +370,7 @@ export default function EnrollmentDetailPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">
-                    Assign Mentor{' '}
-                    <span className="font-normal text-muted-foreground">(optional)</span>
-                  </label>
+                  <label className="mb-1 block text-sm font-medium">Assign Mentor</label>
                   <select
                     className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     value={editForm.mentorId ?? ''}
@@ -544,6 +561,47 @@ export default function EnrollmentDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Mark Session Complete modal — feedback required */}
+      {showMarkCompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
+            <h2 className="mb-1 text-lg font-semibold">Mark Session Complete</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Record feedback for this session before marking it complete.
+            </p>
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Session Feedback <span className="text-destructive">*</span>
+              </label>
+              <textarea
+                className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                rows={4}
+                placeholder="How did the session go? Any observations about the student’s progress?"
+                value={markCompleteFeedback}
+                onChange={(e) => setMarkCompleteFeedback(e.target.value)}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => { setShowMarkCompleteModal(false); setMarkCompleteFeedback(''); }}
+                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!markCompleteFeedback.trim() || updateEnrollment.isPending}
+                onClick={handleConfirmMarkComplete}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {updateEnrollment.isPending ? 'Saving…' : 'Confirm & Complete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* "Joined a Department" advance modal */}
       {showJoinDeptModal && (
