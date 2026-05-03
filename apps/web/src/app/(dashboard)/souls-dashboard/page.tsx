@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useApi } from '@/lib/api-client';
 import { UnifiedDashboard } from '@/components/dashboard/unified-dashboard';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from '@/components/dashboard/types';
@@ -14,29 +14,20 @@ export default function SoulsDashboardPage() {
   const [followUpOverview, setFollowUpOverview] = useState<FollowUpOverviewData | null>(null);
   const [soulsData, setSoulsData] = useState<PaginatedDashboardData<DashboardSoul> | null>(null);
   const [followUpsData, setFollowUpsData] = useState<PaginatedDashboardData<DashboardFollowUp> | null>(null);
+  const [dateFrom, setDateFrom] = useState<string | null>(null);
+  const [dateTo, setDateTo] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      const dateParams = dateFrom && dateTo ? { dateFrom, dateTo } : undefined;
       const [overviewRes, analyticsRes, followUpRes, soulsRes, followUpsRes] = await Promise.all([
-        api.dashboard.overview(),
-        api.dashboard.analytics(),
-        api.dashboard.followUpsOverview(),
-        api.dashboard.souls({ limit: 1000 }),
-        api.dashboard.followUps({ limit: 1000 }),
+        api.dashboard.overview(dateParams),
+        api.dashboard.analytics(dateParams),
+        api.dashboard.followUpsOverview(dateParams),
+        api.dashboard.souls({ limit: 1000, ...(dateParams ?? {}) }),
+        api.dashboard.followUps({ limit: 1000, ...(dateParams ?? {}) }),
       ]);
-
-      console.log('Dashboard API Responses:', {
-        overview: overviewRes,
-        analytics: analyticsRes,
-        followUp: followUpRes,
-        souls: soulsRes,
-        followUps: followUpsRes,
-      });
 
       if (overviewRes.success) {
         setOverview(overviewRes.data);
@@ -58,9 +49,18 @@ export default function SoulsDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, dateFrom, dateTo]);
 
-  if (loading) {
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleDateRangeChange = useCallback((from: string | null, to: string | null) => {
+    setDateFrom(from);
+    setDateTo(to);
+  }, []);
+
+  if (loading && !overview) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
@@ -79,6 +79,10 @@ export default function SoulsDashboardPage() {
       soulsData={soulsData}
       followUpsData={followUpsData}
       onRefresh={loadDashboardData}
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+      onDateRangeChange={handleDateRangeChange}
+      isRefreshing={loading}
     />
   );
 }

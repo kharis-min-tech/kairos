@@ -10,7 +10,7 @@ import { useFellowship, useUpdateFellowship } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
@@ -79,6 +79,7 @@ export default function EditFellowshipPage() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
@@ -177,7 +178,7 @@ export default function EditFellowshipPage() {
 
             <div className="space-y-2">
               <Label htmlFor="fellowshipName">Fellowship Name *</Label>
-              <Input id="fellowshipName" {...register('fellowshipName')} placeholder="e.g. Ikeja K-Group A" />
+              <Input id="fellowshipName" {...register('fellowshipName')} placeholder="e.g. Brixton K-Group A" />
               {errors.fellowshipName && (
                 <p className="text-sm text-destructive">{errors.fellowshipName.message}</p>
               )}
@@ -185,12 +186,13 @@ export default function EditFellowshipPage() {
 
             <div className="space-y-2">
               <Label htmlFor="fellowshipType">Fellowship Type *</Label>
-              <select id="fellowshipType" {...register('fellowshipType')} className={selectClass}>
-                <option value="">Select a type...</option>
-                {Object.values(FellowshipType).map((t) => (
-                  <option key={t} value={t}>{FELLOWSHIP_TYPE_LABELS[t] ?? t}</option>
-                ))}
-              </select>
+              <CustomSelect
+                id="fellowshipType"
+                value={watch('fellowshipType') ?? ''}
+                onValueChange={(v) => setValue('fellowshipType', v as FormValues['fellowshipType'])}
+                placeholder="Select a type..."
+                options={Object.values(FellowshipType).map((t) => ({ value: t, label: FELLOWSHIP_TYPE_LABELS[t] ?? t }))}
+              />
               {errors.fellowshipType && (
                 <p className="text-sm text-destructive">{errors.fellowshipType.message}</p>
               )}
@@ -199,14 +201,13 @@ export default function EditFellowshipPage() {
             {isAdmin && (
               <div className="space-y-2">
                 <Label htmlFor="branchId">Branch *</Label>
-                <select id="branchId" {...register('branchId')} className={selectClass}>
-                  <option value="">
-                    {branchesLoading ? 'Loading branches...' : 'Select a branch...'}
-                  </option>
-                  {branches?.map((branch) => (
-                    <option key={branch.id} value={branch.id}>{branch.branchName}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  id="branchId"
+                  value={watch('branchId') ?? ''}
+                  onValueChange={(v) => setValue('branchId', v)}
+                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.branchName }))}
+                />
                 {errors.branchId && (
                   <p className="text-sm text-destructive">{errors.branchId.message}</p>
                 )}
@@ -227,21 +228,23 @@ export default function EditFellowshipPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="leaderId">Leader</Label>
-                <select id="leaderId" {...register('leaderId')} className={selectClass}>
-                  <option value="">Select leader...</option>
-                  {branchMembers.map((m) => (
-                    <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  id="leaderId"
+                  value={watch('leaderId') ?? ''}
+                  onValueChange={(v) => setValue('leaderId', v)}
+                  placeholder="Select leader..."
+                  options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="coLeaderId">Co-Leader</Label>
-                <select id="coLeaderId" {...register('coLeaderId')} className={selectClass}>
-                  <option value="">Select co-leader...</option>
-                  {branchMembers.map((m) => (
-                    <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  id="coLeaderId"
+                  value={watch('coLeaderId') ?? ''}
+                  onValueChange={(v) => setValue('coLeaderId', v)}
+                  placeholder="Select co-leader..."
+                  options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                />
               </div>
             </div>
 
@@ -250,30 +253,33 @@ export default function EditFellowshipPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">Frequency</Label>
-                  <select id="meetingFrequency" {...register('meetingFrequency')} className={selectClass}>
-                    <option value="">—</option>
-                    {FREQUENCIES.map((f) => (
-                      <option key={f.value} value={f.value}>{f.label}</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    id="meetingFrequency"
+                    value={watch('meetingFrequency') ?? ''}
+                    onValueChange={(v) => setValue('meetingFrequency', v as FormValues['meetingFrequency'])}
+                    placeholder="—"
+                    options={FREQUENCIES.map((f) => ({ value: f.value, label: f.label }))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="meetingDay" className="text-xs text-muted-foreground">Day</Label>
-                  <select id="meetingDay" {...register('meetingDay')} className={selectClass}>
-                    <option value="">—</option>
-                    {DAYS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    id="meetingDay"
+                    value={watch('meetingDay') ?? ''}
+                    onValueChange={(v) => setValue('meetingDay', v as FormValues['meetingDay'])}
+                    placeholder="—"
+                    options={DAYS.map((d) => ({ value: d, label: d }))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="meetingTime" className="text-xs text-muted-foreground">Time</Label>
-                  <select id="meetingTime" {...register('meetingTime')} className={selectClass}>
-                    <option value="">—</option>
-                    {TIMES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    id="meetingTime"
+                    value={watch('meetingTime') ?? ''}
+                    onValueChange={(v) => setValue('meetingTime', v)}
+                    placeholder="—"
+                    options={TIMES.map((t) => ({ value: t, label: t }))}
+                  />
                 </div>
               </div>
             </div>

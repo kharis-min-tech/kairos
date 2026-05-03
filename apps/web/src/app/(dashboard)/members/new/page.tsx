@@ -8,7 +8,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useCreateMember } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { CreateMemberRequest } from '@kairos/types';
 
 export default function AddMemberPage() {
@@ -175,15 +175,13 @@ export default function AddMemberPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="gender">Gender *</Label>
-                <select
+                <CustomSelect
                   id="gender"
-                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                  {...register('gender', { required: 'Gender is required' })}
-                >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
+                  value={watch('gender') ?? ''}
+                  onValueChange={(v) => setValue('gender', v as 'Male' | 'Female')}
+                  placeholder="Select gender"
+                  options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                />
                 {errors.gender && <p className="mt-1 text-xs text-rose-600">{errors.gender.message}</p>}
               </div>
               <div>
@@ -234,22 +232,13 @@ export default function AddMemberPage() {
               </div>
               <div>
                 <Label htmlFor="emergencyContactRelationship">Relationship</Label>
-                <select
+                <CustomSelect
                   id="emergencyContactRelationship"
-                  {...register('emergencyContactRelationship')}
-                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                >
-                  <option value="">Select relationship...</option>
-                  <option value="Spouse">Spouse</option>
-                  <option value="Partner">Partner</option>
-                  <option value="Parent">Parent</option>
-                  <option value="Child">Child</option>
-                  <option value="Sibling">Sibling</option>
-                  <option value="Grandparent">Grandparent</option>
-                  <option value="Guardian">Guardian</option>
-                  <option value="Friend">Friend</option>
-                  <option value="Other">Other</option>
-                </select>
+                  value={watch('emergencyContactRelationship') ?? ''}
+                  onValueChange={(v) => setValue('emergencyContactRelationship', v)}
+                  placeholder="Select relationship..."
+                  options={['Spouse','Partner','Parent','Child','Sibling','Grandparent','Guardian','Friend','Other'].map((r) => ({ value: r, label: r }))}
+                />
               </div>
               <div>
                 <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
@@ -268,49 +257,36 @@ export default function AddMemberPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="homeBranchId">Home Branch *</Label>
-                <select
+                <CustomSelect
                   id="homeBranchId"
-                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                  {...register('homeBranchId', { required: 'Branch is required' })}
-                >
-                  <option value="">Select a branch</option>
-                  {branches?.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.branchName}
-                    </option>
-                  ))}
-                </select>
+                  value={watch('homeBranchId') ?? ''}
+                  onValueChange={(v) => setValue('homeBranchId', v)}
+                  placeholder="Select a branch"
+                  options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+                />
                 {errors.homeBranchId && <p className="mt-1 text-xs text-rose-600">{errors.homeBranchId.message}</p>}
               </div>
               <div>
                 <Label htmlFor="systemRole">System Role</Label>
-                <select
+                <CustomSelect
                   id="systemRole"
-                  className="mt-1 flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                  {...register('systemRole')}
-                >
-                  <option value="member">Member</option>
-                  <option value="pastor">Pastor</option>
-                  <option value="admin">Admin</option>
-                </select>
+                  value={watch('systemRole') ?? 'member'}
+                  onValueChange={(v) => setValue('systemRole', v as 'member' | 'pastor' | 'admin')}
+                  options={[{ value: 'member', label: 'Member' }, { value: 'pastor', label: 'Pastor' }, { value: 'admin', label: 'Admin' }]}
+                />
               </div>
             </div>
             {/* Secondary branch */}
             <div>
               <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
               <p className="mb-1 text-xs text-muted-foreground">Optional — e.g. a branch near their university or workplace</p>
-              <select
+              <CustomSelect
                 id="secondaryBranchId"
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                {...register('secondaryBranchId')}
-              >
-                <option value="">None</option>
-                {branches?.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </select>
+                value={watch('secondaryBranchId') ?? ''}
+                onValueChange={(v) => setValue('secondaryBranchId', v)}
+                placeholder="None"
+                options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+              />
             </div>
             {secondaryBranchId && (
               <div className="grid gap-4 sm:grid-cols-3 rounded-lg border border-dashed border-input/15 bg-muted/30 p-4">

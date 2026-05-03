@@ -125,7 +125,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
               stroke={RAG_COLORS.GREEN}
               fillOpacity={1}
               fill="url(#colorGREEN)"
-              name="All Good"
+              name="On Track"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -198,7 +198,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
             <PolarRadiusAxis stroke="#94a3b8" />
             <Radar name="Critical" dataKey="RED" stroke={RAG_COLORS.RED} fill={RAG_COLORS.RED} fillOpacity={0.6} />
             <Radar name="Monitor" dataKey="AMBER" stroke={RAG_COLORS.AMBER} fill={RAG_COLORS.AMBER} fillOpacity={0.6} />
-            <Radar name="All Good" dataKey="GREEN" stroke={RAG_COLORS.GREEN} fill={RAG_COLORS.GREEN} fillOpacity={0.6} />
+            <Radar name="On Track" dataKey="GREEN" stroke={RAG_COLORS.GREEN} fill={RAG_COLORS.GREEN} fillOpacity={0.6} />
             <Legend />
             <Tooltip
               contentStyle={{

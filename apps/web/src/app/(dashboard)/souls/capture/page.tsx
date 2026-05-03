@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Label, Textarea } from '@kairos/ui';
+import { Button, CustomSelect, Input, Label, Textarea } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 
@@ -29,6 +29,17 @@ export default function CaptureSoulPage() {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [programs, setPrograms] = useState<Array<{ id: string; programName: string }>>([]);
+
+  useEffect(() => {
+    if (!api) return;
+    api.outreach.programs.list({ limit: 100, isCompleted: false }).then((res) => {
+      if (res.success && res.data) {
+        const list = (res.data as any).data ?? [];
+        setPrograms(list.map((p: any) => ({ id: p.id, programName: p.programName })));
+      }
+    }).catch(() => {/* non-critical */});
+  }, [api]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -142,7 +153,7 @@ export default function CaptureSoulPage() {
               id="firstName"
               value={formData.firstName}
               onChange={(e) => handleChange('firstName', e.target.value)}
-              placeholder="John"
+              placeholder="James"
             />
             {errors.firstName && (
               <p className="text-sm text-destructive">{errors.firstName}</p>
@@ -157,7 +168,7 @@ export default function CaptureSoulPage() {
               id="lastName"
               value={formData.lastName}
               onChange={(e) => handleChange('lastName', e.target.value)}
-              placeholder="Doe"
+              placeholder="Smith"
             />
             {errors.lastName && (
               <p className="text-sm text-destructive">{errors.lastName}</p>
@@ -173,7 +184,7 @@ export default function CaptureSoulPage() {
             id="phone"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
-            placeholder="+234-800-1234-567"
+            placeholder="07700 900123"
           />
           {errors.phone && (
             <p className="text-sm text-destructive">{errors.phone}</p>
@@ -187,7 +198,7 @@ export default function CaptureSoulPage() {
             type="email"
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
-            placeholder="john.doe@example.com"
+            placeholder="james.smith@example.co.uk"
           />
           {errors.email && (
             <p className="text-sm text-destructive">{errors.email}</p>
@@ -200,7 +211,7 @@ export default function CaptureSoulPage() {
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="123 Main Street"
+            placeholder="45 High Street"
           />
         </div>
 
@@ -210,40 +221,44 @@ export default function CaptureSoulPage() {
             id="city"
             value={formData.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="Lagos"
+            placeholder="London"
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="gender">Gender (Optional)</Label>
-            <select
+            <CustomSelect
               id="gender"
               value={formData.gender}
-              onChange={(e) => handleChange('gender', e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Select gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+              onValueChange={(v) => handleChange('gender', v)}
+              placeholder="Select gender"
+              options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="ageRange">Age Range (Optional)</Label>
-            <select
+            <CustomSelect
               id="ageRange"
               value={formData.ageRange}
-              onChange={(e) => handleChange('ageRange', e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Select age range</option>
-              <option value="18-25">18-25</option>
-              <option value="26-35">26-35</option>
-              <option value="36-50">36-50</option>
-              <option value="51+">51+</option>
-            </select>
+              onValueChange={(v) => handleChange('ageRange', v)}
+              placeholder="Select age range"
+              options={[{ value: '18-25', label: '18-25' }, { value: '26-35', label: '26-35' }, { value: '36-50', label: '36-50' }, { value: '51+', label: '51+' }]}
+            />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="outreachId">Outreach Program</Label>
+          <CustomSelect
+            id="outreachId"
+            value={formData.outreachId}
+            onValueChange={(v) => handleChange('outreachId', v)}
+            placeholder="Ad-hoc / Solo Evangelism"
+            options={programs.map((p) => ({ value: p.id, label: p.programName }))}
+          />
+          <p className="text-xs text-muted-foreground">Leave blank if this was a personal/solo encounter.</p>
         </div>
 
         <div className="space-y-2">

@@ -25,6 +25,8 @@ export {
 } from './components/table';
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/select';
 export type { SelectProps } from './components/select';
+export { CustomSelect } from './components/custom-select';
+export type { CustomSelectProps, CustomSelectOption } from './components/custom-select';
 export { Textarea } from './components/textarea';
 export type { TextareaProps } from './components/textarea';
 export {

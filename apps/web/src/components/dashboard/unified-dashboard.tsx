@@ -1,11 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { AlertCircle, TrendingUp, Users, Phone, CheckCircle, Clock, RefreshCw, Info, AlertTriangle, ClipboardList, Calendar } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AlertCircle, RefreshCw, Info, AlertTriangle, ClipboardList, Calendar, CheckCircle, Users, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  formatDistanceToNow,
+  subDays,
+  subMonths,
+} from 'date-fns';
+import { DateSelect } from '@/components/date-select';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
+
+type DatePreset = 'week' | '1M' | '3M' | '6M' | 'custom';
 
 interface UnifiedDashboardProps {
   overview: DashboardOverview | null;
@@ -14,6 +22,10 @@ interface UnifiedDashboardProps {
   soulsData: PaginatedDashboardData<DashboardSoul> | null;
   followUpsData: PaginatedDashboardData<DashboardFollowUp> | null;
   onRefresh: () => void;
+  dateFrom: string | null;
+  dateTo: string | null;
+  onDateRangeChange: (from: string | null, to: string | null) => void;
+  isRefreshing?: boolean;
 }
 
 const COLORS = {
@@ -59,7 +71,7 @@ function InfoTooltip({ title, children }: { title: string; children: React.React
         <Info className="h-4 w-4" />
       </button>
       {isOpen && (
-        <div className="absolute z-[100] right-0 bottom-full mb-2 w-80 p-4 bg-card border border-border/15 rounded-lg shadow-ambient text-sm">
+        <div className="absolute z-[100] right-0 bottom-full mb-2 w-80 p-4 bg-card border border-border/15 rounded shadow-ambient text-sm">
           <div className="space-y-2 text-muted-foreground">
             {children}
           </div>
@@ -71,6 +83,8 @@ function InfoTooltip({ title, children }: { title: string; children: React.React
   );
 }
 
+// (DateSelect from @/components/date-select replaces the inline DatePill.)
+
 export function UnifiedDashboard({
   overview,
   analytics,
@@ -78,12 +92,20 @@ export function UnifiedDashboard({
   soulsData,
   followUpsData,
   onRefresh,
+  dateFrom,
+  dateTo,
+  onDateRangeChange,
+  isRefreshing,
 }: UnifiedDashboardProps) {
+  const router = useRouter();
   const [selectedSouls, setSelectedSouls] = useState<DashboardSoul[]>([]);
   const [selectedFollowUps, setSelectedFollowUps] = useState<DashboardFollowUp[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [followUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
+  const [datePreset, setDatePreset] = useState<DatePreset>('1M');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const isDark = useTheme();
   
   // Theme-aware colors for charts
@@ -91,36 +113,78 @@ export function UnifiedDashboard({
   const tooltipBg = isDark ? '#1e293b' : '#ffffff';
   const tooltipBorder = isDark ? '#475569' : '#e2e8f0';
 
-  console.log('UnifiedDashboard Props:', {
-    overview,
-    analytics,
-    followUpOverview,
-    soulsData,
-    followUpsData,
-    soulsDataKeys: soulsData ? Object.keys(soulsData) : 'null',
-    soulsDataData: soulsData?.data,
-    soulsDataDataLength: soulsData?.data?.length,
-  });
+  // Compute date range from preset
+  const formatDateInput = (d: Date) => d.toISOString().split('T')[0] ?? '';
+
+  const applyPreset = (preset: DatePreset) => {
+    setDatePreset(preset);
+    if (preset === 'custom') {
+      // Don't fire change until user picks both dates
+      return;
+    }
+    const now = new Date();
+    let from: Date;
+    switch (preset) {
+      case 'week':
+        from = subDays(now, 7);
+        break;
+      case '1M':
+        from = subMonths(now, 1);
+        break;
+      case '3M':
+        from = subMonths(now, 3);
+        break;
+      case '6M':
+        from = subMonths(now, 6);
+        break;
+      default:
+        from = subMonths(now, 1);
+    }
+    onDateRangeChange(from.toISOString(), now.toISOString());
+  };
+
+  const applyCustomRange = (from: string, to: string) => {
+    setCustomFrom(from);
+    setCustomTo(to);
+    if (from && to) {
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      // Set toDate to end-of-day for inclusive filtering
+      toDate.setHours(23, 59, 59, 999);
+      onDateRangeChange(fromDate.toISOString(), toDate.toISOString());
+    }
+  };
+
+  // Initialize default range (1M) on mount if no range provided
+  useEffect(() => {
+    if (dateFrom === null && dateTo === null) {
+      applyPreset('1M');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const showSouls = (souls: DashboardSoul[], title: string) => {
-    console.log('showSouls called with:', { souls, title, soulsLength: souls?.length });
     setSelectedSouls(souls || []);
     setDialogTitle(title);
     setDialogOpen(true);
   };
 
   const showFollowUps = (followUps: DashboardFollowUp[], title: string) => {
-    console.log('showFollowUps called with:', { followUps, title, followUpsLength: followUps?.length });
     setSelectedFollowUps(followUps || []);
     setDialogTitle(title);
     setFollowUpDialogOpen(true);
   };
 
+  const recentFollowUps = useMemo(
+    () => (followUpsData?.data ?? []).slice(0, 10),
+    [followUpsData],
+  );
+
   // Prepare data for charts
   const ragPieData = [
     { name: 'Critical', value: overview?.ragCounts?.RED || 0, color: COLORS.RED },
     { name: 'Monitor', value: overview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
-    { name: 'All Good', value: overview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
+    { name: 'On Track', value: overview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
   ];
 
   const statusBarData = [
@@ -134,7 +198,7 @@ export function UnifiedDashboard({
   const followUpRagData = [
     { name: 'Critical', value: followUpOverview?.ragCounts?.RED || 0, color: COLORS.RED },
     { name: 'Monitor', value: followUpOverview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
-    { name: 'All Good', value: followUpOverview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
+    { name: 'On Track', value: followUpOverview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
   ];
 
   const conversionFunnelData = analytics?.conversionFunnel ? [
@@ -153,15 +217,70 @@ export function UnifiedDashboard({
             <h1 className="text-4xl font-semibold text-primary tracking-tight">
               Souls Dashboard
             </h1>
-            <p className="text-muted-foreground mt-2">Monitor and manage your souls pipeline at a glance</p>
+            <p className="text-muted-foreground mt-2">Soul management and assimilation insights</p>
           </div>
           <button
             onClick={onRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] hover:from-[#3a17a0] hover:to-[#4f35b8] text-white rounded-lg transition-colors shadow-md"
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] hover:from-[#3a17a0] hover:to-[#4f35b8] text-white rounded transition-colors shadow-md disabled:opacity-60"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
+        </div>
+
+        {/* Date Filter Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center gap-1 rounded bg-[#f0f0f3] p-1.5 dark:bg-white/[0.06]">
+            {([
+              { key: 'week', label: 'Week' },
+              { key: '1M', label: '1M' },
+              { key: '3M', label: '3M' },
+              { key: '6M', label: '6M' },
+              { key: 'custom', label: 'Custom' },
+            ] as Array<{ key: DatePreset; label: string }>).map((opt) => {
+              const active = datePreset === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => applyPreset(opt.key)}
+                  className={`inline-flex items-center justify-center min-w-[64px] px-5 py-2 rounded text-sm font-semibold transition-all duration-150 ${
+                    active
+                      ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          {datePreset === 'custom' && (
+            <div className="inline-flex items-center gap-2">
+              <DateSelect
+                variant="pill"
+                value={customFrom}
+                placeholder="Start date"
+                maxDate={customTo || formatDateInput(new Date())}
+                onChange={(v) => applyCustomRange(v, customTo)}
+              />
+              <span className="text-sm font-medium text-muted-foreground">to</span>
+              <DateSelect
+                variant="pill"
+                value={customTo}
+                placeholder="End date"
+                minDate={customFrom}
+                maxDate={formatDateInput(new Date())}
+                onChange={(v) => applyCustomRange(customFrom, v)}
+              />
+            </div>
+          )}
+          {dateFrom && dateTo && (
+            <p className="text-xs text-muted-foreground">
+              Showing data from {new Date(dateFrom).toLocaleDateString()} to {new Date(dateTo).toLocaleDateString()}
+            </p>
+          )}
         </div>
 
         {/* Top Stats - Big Numbers */}
@@ -182,11 +301,11 @@ export function UnifiedDashboard({
 
           <div
             className="bg-card rounded p-6 shadow-ambient cursor-pointer hover:shadow-ambient-lg transition-shadow"
-            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'RED') || [], 'RED Critical Souls - Need Immediate Attention')}
+            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'RED') || [], 'Critical Souls - Need Immediate Attention')}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">RED Critical</p>
+                <p className="text-muted-foreground text-sm">Critical</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.RED || 0}</p>
                 <p className="text-muted-foreground text-xs mt-1">Click to view</p>
               </div>
@@ -196,11 +315,11 @@ export function UnifiedDashboard({
 
           <div
             className="bg-card rounded p-6 shadow-ambient cursor-pointer hover:shadow-ambient-lg transition-shadow"
-            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'AMBER') || [], 'AMBER Monitor - Needs Attention Soon')}
+            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'AMBER') || [], 'Monitor - Needs Attention Soon')}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">AMBER Monitor</p>
+                <p className="text-muted-foreground text-sm">Monitor</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.AMBER || 0}</p>
                 <p className="text-muted-foreground text-xs mt-1">Click to view</p>
               </div>
@@ -210,11 +329,11 @@ export function UnifiedDashboard({
 
           <div
             className="bg-card rounded p-6 shadow-ambient cursor-pointer hover:shadow-ambient-lg transition-shadow"
-            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'GREEN') || [], 'GREEN All Good - On Track')}
+            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'GREEN') || [], 'On Track - On Track')}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">GREEN All Good</p>
+                <p className="text-muted-foreground text-sm">On Track</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.GREEN || 0}</p>
                 <p className="text-muted-foreground text-xs mt-1">Click to view</p>
               </div>
@@ -228,7 +347,6 @@ export function UnifiedDashboard({
           {/* Souls RAG Status Pie Chart */}
           <div className="bg-card rounded p-6 shadow-ambient">
             <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
               Souls Pipeline Status
               <InfoTooltip title="Souls Pipeline RAG">
                 <p className="font-semibold text-foreground mb-2">Souls Pipeline RAG Criteria:</p>
@@ -249,7 +367,7 @@ export function UnifiedDashboard({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-success font-semibold">GREEN GREEN - All Good:</p>
+                    <p className="text-success font-semibold">GREEN GREEN - On Track:</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• New/Following Up: &lt; 2 days since last contact</li>
                       <li>• Interested: &lt; 3 days since last contact</li>
@@ -259,34 +377,40 @@ export function UnifiedDashboard({
                 </div>
               </InfoTooltip>
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie
                   data={ragPieData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={100}
-                  fill="#8884d8"
+                  innerRadius={72}
+                  outerRadius={96}
+                  paddingAngle={4}
+                  cornerRadius={4}
+                  stroke="none"
                   dataKey="value"
                 >
                   {ragPieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-4 text-center text-muted-foreground text-sm">
-              Total: {overview?.totalSouls || 0} souls in pipeline
+            <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+              {ragPieData.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span className="text-muted-foreground">{entry.name}</span>
+                  <span className="font-semibold text-foreground">{entry.value}</span>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Status Breakdown Bar Chart */}
           <div className="bg-card rounded p-6 shadow-ambient">
             <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
               Souls by Status
               <InfoTooltip title="Soul Status">
                 <p className="font-semibold text-foreground mb-2">Soul Status Definitions:</p>
@@ -300,14 +424,17 @@ export function UnifiedDashboard({
                 </ul>
               </InfoTooltip>
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={statusBarData}>
-                <XAxis dataKey="name" stroke={axisColor} angle={-35} textAnchor="end" height={100} interval={0} />
-                <YAxis stroke={axisColor} />
-                <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}` }} />
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={statusBarData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={axisColor} strokeOpacity={0.15} vertical={false} />
+                <XAxis dataKey="name" stroke={axisColor} angle={-25} textAnchor="end" height={70} interval={0} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                <YAxis stroke={axisColor} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip cursor={{ fill: axisColor, fillOpacity: 0.06 }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
                 <Bar 
                   dataKey="count" 
                   fill={COLORS.PURPLE}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={36}
                   onClick={(data) => {
                     showSouls(
                       soulsData?.data?.filter((s) => s.status === data.name) || [],
@@ -329,7 +456,6 @@ export function UnifiedDashboard({
           {/* Follow-up RAG Status */}
           <div className="bg-card rounded p-6 shadow-ambient">
             <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Phone className="h-5 w-5 text-primary" />
               Follow-up Status
               <InfoTooltip title="Follow-up RAG">
                 <p className="font-semibold text-foreground mb-2">Follow-up RAG Criteria:</p>
@@ -352,7 +478,7 @@ export function UnifiedDashboard({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-success font-semibold">GREEN GREEN - All Good:</p>
+                    <p className="text-success font-semibold">GREEN GREEN - On Track:</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• On track or no follow-up needed</li>
                       <li>• Contact Status: Successful</li>
@@ -361,16 +487,17 @@ export function UnifiedDashboard({
                 </div>
               </InfoTooltip>
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie
                   data={followUpRagData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={100}
-                  fill="#8884d8"
+                  innerRadius={72}
+                  outerRadius={96}
+                  paddingAngle={4}
+                  cornerRadius={4}
+                  stroke="none"
                   dataKey="value"
                   onClick={(data) => {
                     const name = data.name ?? '';
@@ -387,11 +514,17 @@ export function UnifiedDashboard({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-4 text-center text-muted-foreground text-sm">
-              Total: {followUpOverview?.totalFollowUps || 0} follow-ups (Click chart to view details)
+            <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+              {followUpRagData.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span className="text-muted-foreground">{entry.name}</span>
+                  <span className="font-semibold text-foreground">{entry.value}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -411,14 +544,17 @@ export function UnifiedDashboard({
                 <p className="text-xs mt-2 text-muted-foreground">Higher numbers at each stage indicate better retention.</p>
               </InfoTooltip>
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={conversionFunnelData} layout="vertical">
-                <XAxis type="number" stroke={axisColor} />
-                <YAxis dataKey="stage" type="category" stroke={axisColor} width={120} />
-                <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}` }} />
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={conversionFunnelData} layout="vertical" margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={axisColor} strokeOpacity={0.15} horizontal={false} />
+                <XAxis type="number" stroke={axisColor} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+                <YAxis dataKey="stage" type="category" stroke={axisColor} width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+                <Tooltip cursor={{ fill: axisColor, fillOpacity: 0.06 }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
                 <Bar 
                   dataKey="count" 
                   fill={COLORS.PURPLE}
+                  radius={[0, 4, 4, 0]}
+                  maxBarSize={28}
                   onClick={(data) => {
                     const stage = (data as unknown as Record<string, unknown>).stage as string;
                     showSouls(
@@ -480,7 +616,96 @@ export function UnifiedDashboard({
             <p className="text-muted-foreground text-xs mt-1">Days average</p>
           </div>
         </div>
-
+        {/* Recent Follow-up Activity */}
+        <div className="bg-card rounded shadow-ambient overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/15">
+            <h3 className="text-base font-semibold text-foreground tracking-wide">Recent Follow-up Activity</h3>
+            <button
+              type="button"
+              onClick={() => router.push('/souls')}
+              className="text-xs font-semibold text-primary tracking-wider uppercase hover:text-primary/80 transition-colors"
+            >
+              View All
+            </button>
+          </div>
+          {recentFollowUps.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-12 text-center">No follow-up activity in this date range.</p>
+          ) : (
+            <div>
+              {/* Column Headers */}
+              <div className="grid grid-cols-[2fr_1fr_1.25fr_1fr_1fr] items-center gap-4 px-6 py-3 bg-muted/30 border-b border-border/10">
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Soul Name</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Status</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Assignee</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Method</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase text-right">Last Action</span>
+              </div>
+              {/* Rows */}
+              <div className="divide-y divide-border/10">
+                {recentFollowUps.map((followUp) => {
+                  const statusLabel =
+                    followUp.ragStatus === 'RED' ? 'Critical' :
+                    followUp.ragStatus === 'AMBER' ? 'Monitor' : 'On Track';
+                  const statusClasses =
+                    followUp.ragStatus === 'RED' ? 'bg-destructive/10 text-destructive' :
+                    followUp.ragStatus === 'AMBER' ? 'bg-accent/15 text-accent' :
+                    'bg-success/10 text-success';
+                  const assigneeInitials = followUp.memberName
+                    ? followUp.memberName
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((p) => p[0]?.toUpperCase() ?? '')
+                        .join('') || '?'
+                    : '?';
+                  return (
+                    <button
+                      key={followUp.id}
+                      type="button"
+                      onClick={() => router.push(`/souls/${followUp.soulId}`)}
+                      className="w-full grid grid-cols-[2fr_1fr_1.25fr_1fr_1fr] items-center gap-4 px-6 py-4 text-left hover:bg-muted/30 transition-colors"
+                    >
+                      {/* Soul Name */}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{followUp.soulName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{followUp.contactStatus}</p>
+                      </div>
+                      {/* Status pill */}
+                      <div>
+                        <span className={`inline-flex items-center rounded px-2.5 py-1 text-[11px] font-semibold ${statusClasses}`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                      {/* Assignee */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        {followUp.memberName ? (
+                          <>
+                            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary">
+                              {assigneeInitials}
+                            </span>
+                            <span className="text-sm text-foreground truncate">{followUp.memberName}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                        )}
+                      </div>
+                      {/* Method */}
+                      <div>
+                        <span className="text-sm text-muted-foreground">{followUp.contactMethod ?? '—'}</span>
+                      </div>
+                      {/* Last Action */}
+                      <div className="text-right">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(followUp.followUpDate), { addSuffix: true })}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
         {/* Instructions Panel */}
         <div className="bg-muted rounded p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -489,15 +714,15 @@ export function UnifiedDashboard({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-destructive font-semibold mb-2">RED Critical (Red)</p>
+              <p className="text-destructive font-semibold mb-2">Critical (Red)</p>
               <p className="text-muted-foreground">These souls need immediate attention! No follow-up logged or overdue contacts. Click the red card above to see the list.</p>
             </div>
             <div>
-              <p className="text-accent font-semibold mb-2">AMBER Monitor (Amber)</p>
+              <p className="text-accent font-semibold mb-2">Monitor (Amber)</p>
               <p className="text-muted-foreground">Follow-up due soon. Keep an eye on these souls and schedule contact within 1-2 days.</p>
             </div>
             <div>
-              <p className="text-success font-semibold mb-2">GREEN All Good (Green)</p>
+              <p className="text-success font-semibold mb-2">On Track (Green)</p>
               <p className="text-muted-foreground">Recent contact made or no follow-up needed. These souls are on track!</p>
             </div>
           </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
-import { Card, CardContent, CardHeader, CardTitle, Label, Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, Label, Input, Button, CustomSelect } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 
 interface ConversionMetrics {
@@ -107,63 +108,51 @@ export default function OutreachReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
+              <DateSelect
                 id="startDate"
-                type="date"
                 value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                maxDate={filters.endDate || undefined}
+                onChange={(v) => setFilters({ ...filters, startDate: v })}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
-              <Input
+              <DateSelect
                 id="endDate"
-                type="date"
                 value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                minDate={filters.startDate || undefined}
+                onChange={(v) => setFilters({ ...filters, endDate: v })}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="program">Outreach Program</Label>
-              <Select
+              <CustomSelect
+                id="program"
                 value={filters.outreachId}
                 onValueChange={(value) => setFilters({ ...filters, outreachId: value })}
-              >
-                <SelectTrigger id="program">
-                  <SelectValue placeholder="All programs" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All programs</SelectItem>
-                  {programs.map((program) => (
-                    <SelectItem key={program.id} value={program.id}>
-                      {program.programName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="All programs"
+                options={[
+                  { value: '', label: 'All programs' },
+                  ...programs.map((program) => ({ value: program.id, label: program.programName })),
+                ]}
+              />
             </div>
 
             {activeRole === 'admin' && (
               <div className="space-y-2">
                 <Label htmlFor="branch">Branch</Label>
-                <Select
+                <CustomSelect
+                  id="branch"
                   value={filters.branchId}
                   onValueChange={(value) => setFilters({ ...filters, branchId: value })}
-                >
-                  <SelectTrigger id="branch">
-                    <SelectValue placeholder="All branches" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All branches</SelectItem>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
-                        {branch.branchName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="All branches"
+                  options={[
+                    { value: '', label: 'All branches' },
+                    ...branches.map((branch) => ({ value: branch.id, label: branch.branchName })),
+                  ]}
+                />
               </div>
             )}
           </div>

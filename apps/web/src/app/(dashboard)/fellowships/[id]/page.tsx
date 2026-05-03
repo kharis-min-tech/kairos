@@ -19,7 +19,8 @@ import {
   useReviewJoinRequest,
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -62,6 +63,8 @@ export default function FellowshipDetailPage() {
   const isMemberOfFellowship = members?.some((m) => m.memberId === user?.id);
   const hasPendingRequest = joinRequests?.some((r) => r.memberId === user?.id && r.status === 'pending');
   const showRequestToJoin = !isAdminOrPastor && !isMemberOfFellowship && !hasPendingRequest;
+  // Non-admin/pastor users who are not members of this fellowship can only see basic details
+  const isRestrictedView = !isAdminOrPastor && !isMemberOfFellowship;
 
   if (isLoading) {
     return (
@@ -89,9 +92,11 @@ export default function FellowshipDetailPage() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'details', label: 'Details' },
-    { key: 'members', label: `Members${members ? ` (${members.length})` : ''}` },
-    { key: 'meetings', label: `Meetings${meetings ? ` (${meetings.length})` : ''}` },
-    { key: 'attendance', label: 'Attendance' },
+    ...(!isRestrictedView ? [
+      { key: 'members' as const, label: `Members${members ? ` (${members.length})` : ''}` },
+      { key: 'meetings' as const, label: `Meetings${meetings ? ` (${meetings.length})` : ''}` },
+      { key: 'attendance' as const, label: 'Attendance' },
+    ] : []),
     ...(isAdminOrPastor ? [{ key: 'join-requests' as const, label: `Requests${joinRequests ? ` (${joinRequests.filter((r) => r.status === 'pending').length})` : ''}` }] : []),
   ];
 
@@ -241,6 +246,17 @@ export default function FellowshipDetailPage() {
 
       {activeTab === 'members' && (
         <div className="space-y-4">
+          {isRestrictedView ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <p className="font-medium">Members list is private</p>
+                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view its members.</p>
+              </CardContent>
+            </Card>
+          ) : (<>
           {/* Add Member Panel */}
           {isAdminOrPastor && (
             <div className="flex justify-end">
@@ -321,11 +337,7 @@ export default function FellowshipDetailPage() {
           {!members || members.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                {!isMemberOfFellowship && !isAdminOrPastor ? (
-                  <p className="text-muted-foreground">Member information is only available to fellowship members.</p>
-                ) : (
-                  <p className="text-muted-foreground">No members in this fellowship yet.</p>
-                )}
+                <p className="text-muted-foreground">No members in this fellowship yet.</p>
               </CardContent>
             </Card>
           ) : (
@@ -349,9 +361,9 @@ export default function FellowshipDetailPage() {
                         <p className="truncate font-medium">
                           {member.memberFirstName} {member.memberLastName}
                         </p>
-                        <span className={`text-xs font-medium ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {/* <span className={`text-xs font-medium ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {member.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                        </span> */}
                       </div>
                       {isAdminOrPastor && member.isActive && (
                         <button
@@ -380,11 +392,23 @@ export default function FellowshipDetailPage() {
               })}
             </div>
           )}
+          </>)}
         </div>
       )}
 
       {activeTab === 'meetings' && (
         <div className="space-y-4">
+          {isRestrictedView ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <p className="font-medium">Meetings are private</p>
+                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view meeting records.</p>
+              </CardContent>
+            </Card>
+          ) : (<>
           {/* Schedule Meeting Button + Dialog */}
           {isAdminOrPastor && (
             <div className="flex justify-end">
@@ -409,7 +433,7 @@ export default function FellowshipDetailPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Date *</label>
-                    <input type="date" value={meetingForm.meetingDate} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingDate: e.target.value }))} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <DateSelect value={meetingForm.meetingDate} onChange={(v) => setMeetingForm((f) => ({ ...f, meetingDate: v }))} />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Title</label>
@@ -421,7 +445,7 @@ export default function FellowshipDetailPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Location</label>
-                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder="e.g. Fellowship center" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder="e.g. Southwark Community Centre" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Duration (mins)</label>
@@ -524,12 +548,23 @@ export default function FellowshipDetailPage() {
               ))}
             </div>
           )}
+          </>)}
         </div>
       )}
 
       {activeTab === 'attendance' && (
         <div className="space-y-4">
-          {(() => {
+          {isRestrictedView ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <p className="font-medium">Attendance data is private</p>
+                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view attendance records.</p>
+              </CardContent>
+            </Card>
+          ) : (<>{(() => {
             const summary = attendanceSummary as { meetingId: string; meetingDate: string; total: number; present: number; absent: number; excused: number; late: number }[] | undefined;
             if (!summary || summary.length === 0) {
               return (
@@ -621,7 +656,8 @@ export default function FellowshipDetailPage() {
                 </Card>
               </>
             );
-          })()}
+          })()}</>
+          )}
         </div>
       )}
 
@@ -797,15 +833,12 @@ function AttendanceForm({
         {members.map((m) => (
           <div key={m.memberId} className="flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
             <span className="min-w-0 truncate text-sm font-medium">{m.memberFirstName} {m.memberLastName}</span>
-            <select
+            <CustomSelect
+              size="sm"
               value={attendanceRecords[m.memberId] ?? 'Present'}
-              onChange={(e) => setAttendanceRecords((prev) => ({ ...prev, [m.memberId]: e.target.value }))}
-              className="rounded-lg border border-input/15 px-2 py-1 text-sm"
-            >
-              {statuses.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onValueChange={(v) => setAttendanceRecords((prev) => ({ ...prev, [m.memberId]: v }))}
+              options={statuses.map((s) => ({ value: s, label: s }))}
+            />
           </div>
         ))}
       </div>

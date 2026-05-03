@@ -339,35 +339,58 @@ export function createApiClient(
     },
 
     dashboard: {
-      overview: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/overview'),
-      analytics: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/analytics'),
+      overview: (params?: { dateFrom?: string; dateTo?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/overview${query ? `?${query}` : ''}`);
+      },
+      analytics: (params?: { dateFrom?: string; dateTo?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/analytics${query ? `?${query}` : ''}`);
+      },
       souls: (params?: {
         ragStatus?: 'RED' | 'AMBER' | 'GREEN';
         status?: string;
         page?: number;
         limit?: number;
+        dateFrom?: string;
+        dateTo?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
         if (params?.status) qs.set('status', params.status);
         if (params?.page) qs.set('page', String(params.page));
         if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/souls${query ? `?${query}` : ''}`);
       },
-      followUpsOverview: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/follow-ups/overview'),
+      followUpsOverview: (params?: { dateFrom?: string; dateTo?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/follow-ups/overview${query ? `?${query}` : ''}`);
+      },
       followUps: (params?: {
         ragStatus?: 'RED' | 'AMBER' | 'GREEN';
         page?: number;
         limit?: number;
+        dateFrom?: string;
+        dateTo?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
         if (params?.page) qs.set('page', String(params.page));
         if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/follow-ups${query ? `?${query}` : ''}`);
       },

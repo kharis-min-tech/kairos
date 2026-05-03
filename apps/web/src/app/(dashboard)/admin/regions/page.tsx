@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRegions, useCreateRegion } from '@/hooks/use-branches';
-import { Button, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { CONTINENTS, COUNTRIES_BY_CONTINENT } from '@/lib/countries';
 
 export default function RegionsPage() {
@@ -56,32 +56,24 @@ export default function RegionsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="regionName">Continent *</Label>
-                <select
+                <CustomSelect
                   id="regionName"
                   value={regionName}
-                  onChange={(e) => { setRegionName(e.target.value); setCountry(''); }}
-                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                >
-                  <option value="">Select continent…</option>
-                  {CONTINENTS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => { setRegionName(v); setCountry(''); }}
+                  placeholder="Select continent…"
+                  options={CONTINENTS.map((c) => ({ value: c, label: c }))}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="country">Country *</Label>
-                <select
+                <CustomSelect
                   id="country"
                   value={country}
-                  onChange={(e) => setCountry(e.target.value)}
+                  onValueChange={setCountry}
                   disabled={!regionName}
-                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:opacity-50"
-                >
-                  <option value="">Select country…</option>
-                  {availableCountries.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  placeholder="Select country…"
+                  options={availableCountries.map((c) => ({ value: c, label: c }))}
+                />
               </div>
             </div>
             {createRegion.error && (

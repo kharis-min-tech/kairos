@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Card, CardContent, CardHeader } from '@kairos/ui';
+import { Button, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { KharisCardHeader } from '../kharis-logo';
@@ -58,9 +58,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
             <div
               className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${
                 i < currentStep
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white shadow-md shadow-[#5d3fd3]/30'
                   : i === currentStep
-                    ? 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/40'
+                    ? 'bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white ring-2 ring-[#5d3fd3] ring-offset-2 ring-offset-background shadow-lg shadow-[#5d3fd3]/40'
                     : 'border-2 border-muted bg-transparent text-muted-foreground'
               }`}
             >
@@ -73,13 +73,13 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               )}
             </div>
             <span className={`hidden text-[10px] font-medium sm:block ${
-              i === currentStep ? 'text-primary font-semibold' : i < currentStep ? 'text-foreground' : 'text-muted-foreground'
+              i === currentStep ? 'bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] bg-clip-text text-transparent font-semibold' : i < currentStep ? 'text-foreground' : 'text-muted-foreground'
             }`}>{label}</span>
           </div>
           {i < STEPS.length - 1 && (
             <div
               className={`mx-2 mb-4 h-0.5 w-8 rounded-full transition-colors sm:w-12 ${
-                i < currentStep ? 'bg-primary' : 'bg-muted'
+                i < currentStep ? 'bg-gradient-to-r from-[#451ebb] to-[#5d3fd3]' : 'bg-muted'
               }`}
             />
           )}
@@ -237,7 +237,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" className="h-11" placeholder="you@example.com" {...register('email')} />
+                <Input id="email" type="email" className="h-11" placeholder="you@example.co.uk" {...register('email')} />
                 {errors.email && (
                   <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
@@ -266,15 +266,19 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
-                  <select
-                    id="gender"
-                    {...register('gender')}
-                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="">Select...</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      id="gender"
+                      value={field.value ?? ''}
+                      onValueChange={field.onChange}
+                      placeholder="Select..."
+                      options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                    />
+                  )}
+                />
               </div>
             </>
           )}
@@ -300,16 +304,19 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="homeBranchId">Home Branch *</Label>
-                <select
-                  id="homeBranchId"
-                  {...register('homeBranchId')}
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">Select a branch...</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>{b.branchName}</option>
-                  ))}
-                </select>
+                <Controller
+                  name="homeBranchId"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      id="homeBranchId"
+                      value={field.value ?? ''}
+                      onValueChange={field.onChange}
+                      placeholder="Select a branch..."
+                      options={branches.map((b) => ({ value: b.id, label: b.branchName }))}
+                    />
+                  )}
+                />
                 {errors.homeBranchId && (
                   <p className="text-xs text-destructive">{errors.homeBranchId.message}</p>
                 )}
@@ -318,16 +325,19 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
                 <p className="text-xs text-muted-foreground">Optional — e.g. if you also attend a branch near your university or workplace</p>
-                <select
-                  id="secondaryBranchId"
-                  {...register('secondaryBranchId')}
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">None</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>{b.branchName}</option>
-                  ))}
-                </select>
+                <Controller
+                  name="secondaryBranchId"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      id="secondaryBranchId"
+                      value={field.value ?? ''}
+                      onValueChange={field.onChange}
+                      placeholder="None"
+                      options={branches.map((b) => ({ value: b.id, label: b.branchName }))}
+                    />
+                  )}
+                />
               </div>
 
               {secondaryBranchId && (
@@ -357,22 +367,19 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactRelationship">Relationship to Member</Label>
-                <select
-                  id="emergencyContactRelationship"
-                  {...register('emergencyContactRelationship')}
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">Select relationship...</option>
-                  <option value="Spouse">Spouse</option>
-                  <option value="Partner">Partner</option>
-                  <option value="Parent">Parent</option>
-                  <option value="Child">Child</option>
-                  <option value="Sibling">Sibling</option>
-                  <option value="Grandparent">Grandparent</option>
-                  <option value="Guardian">Guardian</option>
-                  <option value="Friend">Friend</option>
-                  <option value="Other">Other</option>
-                </select>
+                <Controller
+                  name="emergencyContactRelationship"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      id="emergencyContactRelationship"
+                      value={field.value ?? ''}
+                      onValueChange={field.onChange}
+                      placeholder="Select relationship..."
+                      options={['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other'].map((r) => ({ value: r, label: r }))}
+                    />
+                  )}
+                />
               </div>
 
               <div className="space-y-2">

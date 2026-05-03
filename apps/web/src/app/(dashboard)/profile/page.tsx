@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
 import { DateSelect } from '@/components/date-select';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -288,14 +288,12 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Gender</Label>
-                  <select
-                    {...register('gender')}
-                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/20"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                  <CustomSelect
+                    value={watch('gender') ?? ''}
+                    onValueChange={(v) => setValue('gender', v as 'Male' | 'Female' | '')}
+                    placeholder="Select gender"
+                    options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Date of Birth</Label>
@@ -366,22 +364,13 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="emergencyContactRelationship">Relationship</Label>
-                  <select
+                  <CustomSelect
                     id="emergencyContactRelationship"
-                    {...register('emergencyContactRelationship')}
-                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/20"
-                  >
-                    <option value="">Select relationship...</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Partner">Partner</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Child">Child</option>
-                    <option value="Sibling">Sibling</option>
-                    <option value="Grandparent">Grandparent</option>
-                    <option value="Guardian">Guardian</option>
-                    <option value="Friend">Friend</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    value={watch('emergencyContactRelationship') ?? ''}
+                    onValueChange={(v) => setValue('emergencyContactRelationship', v)}
+                    placeholder="Select relationship..."
+                    options={['Spouse','Partner','Parent','Child','Sibling','Grandparent','Guardian','Friend','Other'].map((r) => ({ value: r, label: r }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="emergencyContactPhone">Contact Phone</Label>

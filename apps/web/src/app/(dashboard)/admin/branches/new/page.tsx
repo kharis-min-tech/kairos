@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateBranch, useRegions } from '@/hooks/use-branches';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
@@ -32,6 +32,8 @@ export default function NewBranchPage() {
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -78,32 +80,25 @@ export default function NewBranchPage() {
 
             <div className="space-y-2">
               <Label htmlFor="regionId">Region *</Label>
-              <select
+              <CustomSelect
                 id="regionId"
-                {...register('regionId')}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-              >
-                <option value="">
-                  {regionsLoading ? 'Loading regions...' : 'Select a region'}
-                </option>
-                {regions?.map((r) => (
-                  <option key={r.id} value={r.id}>{r.regionName}</option>
-                ))}
-              </select>
+                value={watch('regionId') ?? ''}
+                onValueChange={(v) => setValue('regionId', v)}
+                placeholder={regionsLoading ? 'Loading regions...' : 'Select a region'}
+                options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
+              />
               {errors.regionId && <p className="text-sm text-destructive">{errors.regionId.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="branchType">Branch Type</Label>
-              <select
+              <CustomSelect
                 id="branchType"
-                {...register('branchType')}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-              >
-                {Object.values(BranchType).map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+                value={watch('branchType') ?? ''}
+                onValueChange={(v) => setValue('branchType', v as FormValues['branchType'])}
+                placeholder="Select type"
+                options={Object.values(BranchType).map((t) => ({ value: t, label: t }))}
+              />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

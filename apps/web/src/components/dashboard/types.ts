@@ -17,6 +17,7 @@ export interface DashboardSoul {
 
 export interface DashboardFollowUp {
   id: string;
+  soulId: string;
   soulName: string;
   ragStatus: 'RED' | 'AMBER' | 'GREEN';
   ragReason?: string;

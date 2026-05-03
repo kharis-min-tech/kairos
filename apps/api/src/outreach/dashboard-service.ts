@@ -1,7 +1,18 @@
-import { eq, or, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, or, sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { souls, followUps, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
+
+/**
+ * Combine branch isolation filter with optional date range filter.
+ */
+function combineFilters(...filters: Array<SQL | undefined>): SQL | undefined {
+  const defined = filters.filter((f): f is SQL => f !== undefined);
+  if (defined.length === 0) return undefined;
+  if (defined.length === 1) return defined[0];
+  return and(...defined);
+}
 
 /**
  * RAG Status Calculation for Souls Pipeline
@@ -16,7 +27,7 @@ import type { AuthContext } from '@kairos/types';
  *   - New/Following Up status: 2 days since last contact
  *   - Interested status: 3-4 days since last contact
  * 
- * 🟢 GREEN - All Good:
+ * 🟢 GREEN - On track:
  *   - New/Following Up status: < 2 days since last contact
  *   - Interested status: < 3 days since last contact
  *   - Converted/Not Interested/Lost Contact (no follow-up needed)
@@ -47,6 +58,7 @@ interface FollowUpWithRAG {
   soulId: string;
   soulName: string;
   contactStatus: string;
+  contactMethod: string | null;
   followUpDate: Date;
   memberName: string | null;
   ragStatus: RAGStatus;
@@ -114,8 +126,17 @@ function calculateFollowUpRAGStatus(contactStatus: string): { ragStatus: RAGStat
 /**
  * Get dashboard overview with RAG status counts
  */
-export async function getDashboardOverview(db: Database, auth: AuthContext) {
+export async function getDashboardOverview(
+  db: Database,
+  auth: AuthContext,
+  filters?: { dateFrom?: Date; dateTo?: Date },
+) {
   const branchFilter = getBranchFilter(auth);
+  const dateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
+      : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter);
 
   const soulsData = await db
     .select({
@@ -143,7 +164,7 @@ export async function getDashboardOverview(db: Database, auth: AuthContext) {
     .from(souls)
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .leftJoin(members, eq(souls.assignedMemberId, members.id))
-    .where(branchFilter);
+    .where(whereClause);
 
   // Calculate RAG for each soul
   const ragCounts = { RED: 0, AMBER: 0, GREEN: 0 };
@@ -180,12 +201,19 @@ export async function getSoulsWithRAGStatus(
     status?: string;
     page?: number;
     limit?: number;
+    dateFrom?: Date;
+    dateTo?: Date;
   },
 ): Promise<{ data: SoulWithRAG[]; pagination: any }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
   const branchFilter = getBranchFilter(auth);
+  const dateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
+      : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter);
 
   const soulsData = await db
     .select({
@@ -225,7 +253,7 @@ export async function getSoulsWithRAGStatus(
     .from(souls)
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .leftJoin(members, eq(souls.assignedMemberId, members.id))
-    .where(branchFilter)
+    .where(whereClause)
     .orderBy(souls.createdAt);
 
   // Calculate RAG and filter
@@ -287,12 +315,19 @@ export async function getFollowUpsWithRAGStatus(
     ragStatus?: RAGStatus;
     page?: number;
     limit?: number;
+    dateFrom?: Date;
+    dateTo?: Date;
   },
 ): Promise<{ data: FollowUpWithRAG[]; pagination: any }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
   const branchFilter = getBranchFilter(auth);
+  const dateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
+      : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter);
 
   const followUpsData = await db
     .select({
@@ -301,6 +336,7 @@ export async function getFollowUpsWithRAGStatus(
       soulFirstName: souls.firstName,
       soulLastName: souls.lastName,
       contactStatus: followUps.contactStatus,
+      contactMethod: followUps.contactMethod,
       followUpDate: followUps.followUpDate,
       memberName: sql<string>`CONCAT(${members.firstName}, ' ', ${members.lastName})`,
       branchId: outreachPrograms.branchId,
@@ -310,7 +346,7 @@ export async function getFollowUpsWithRAGStatus(
     .innerJoin(souls, eq(followUps.soulId, souls.id))
     .leftJoin(members, eq(followUps.memberId, members.id))
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
-    .where(branchFilter)
+    .where(whereClause)
     .orderBy(sql`${followUps.followUpDate} DESC`)
     .limit(1000);
 
@@ -323,6 +359,7 @@ export async function getFollowUpsWithRAGStatus(
       soulId: fu.soulId,
       soulName: `${fu.soulFirstName} ${fu.soulLastName}`,
       contactStatus: fu.contactStatus,
+      contactMethod: fu.contactMethod,
       followUpDate: fu.followUpDate,
       memberName: fu.memberName,
       ragStatus,
@@ -352,8 +389,17 @@ export async function getFollowUpsWithRAGStatus(
 /**
  * Get follow-up RAG overview
  */
-export async function getFollowUpRAGOverview(db: Database, auth: AuthContext) {
+export async function getFollowUpRAGOverview(
+  db: Database,
+  auth: AuthContext,
+  filters?: { dateFrom?: Date; dateTo?: Date },
+) {
   const branchFilter = getBranchFilter(auth);
+  const dateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
+      : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter);
 
   const followUpsData = await db
     .select({
@@ -363,7 +409,7 @@ export async function getFollowUpRAGOverview(db: Database, auth: AuthContext) {
     .innerJoin(souls, eq(followUps.soulId, souls.id))
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .leftJoin(members, eq(souls.assignedMemberId, members.id))
-    .where(branchFilter);
+    .where(whereClause);
 
   const ragCounts = { RED: 0, AMBER: 0, GREEN: 0 };
 
@@ -384,8 +430,22 @@ export async function getFollowUpRAGOverview(db: Database, auth: AuthContext) {
 /**
  * Get comprehensive analytics for dashboard
  */
-export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
+export async function getDashboardAnalytics(
+  db: Database,
+  auth: AuthContext,
+  filters?: { dateFrom?: Date; dateTo?: Date },
+) {
   const branchFilter = getBranchFilter(auth);
+  const soulsDateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
+      : undefined;
+  const followUpsDateFilter =
+    filters?.dateFrom && filters?.dateTo
+      ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
+      : undefined;
+  const soulsWhere = combineFilters(branchFilter, soulsDateFilter);
+  const followUpsWhere = combineFilters(branchFilter, followUpsDateFilter);
 
   // Get all souls with RAG status
   const soulsData = await db
@@ -415,7 +475,7 @@ export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
     .from(souls)
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .leftJoin(members, eq(souls.assignedMemberId, members.id))
-    .where(branchFilter);
+    .where(soulsWhere);
 
   // Calculate RAG for each soul
   const ragByStatus: Record<string, { RED: number; AMBER: number; GREEN: number }> = {};
@@ -430,19 +490,32 @@ export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
     'Lost Contact': 0,
   };
 
-  // Group by date for trend analysis (last 30 days)
-  const last30Days: string[] = [];
-  for (let i = 0; i < 30; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
+  // Group by date for trend analysis - dynamic window based on filter date range
+  // Defaults to last 30 days; capped at 90 days for chart readability
+  const trendStart = filters?.dateFrom ?? (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 29);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  })();
+  const trendEnd = filters?.dateTo ?? new Date();
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const dayCount = Math.min(
+    90,
+    Math.max(1, Math.floor((trendEnd.getTime() - trendStart.getTime()) / msPerDay) + 1),
+  );
+  const trendDays: string[] = [];
+  for (let i = 0; i < dayCount; i++) {
+    const date = new Date(trendStart);
+    date.setDate(trendStart.getDate() + i);
     const dateStr = date.toISOString().split('T')[0];
     if (dateStr) {
-      last30Days.push(dateStr);
+      trendDays.push(dateStr);
     }
   }
 
   const trendMap: Record<string, { RED: number; AMBER: number; GREEN: number }> = {};
-  last30Days.forEach((date) => {
+  trendDays.forEach((date) => {
     trendMap[date] = { RED: 0, AMBER: 0, GREEN: 0 };
   });
 
@@ -527,7 +600,7 @@ export async function getDashboardAnalytics(db: Database, auth: AuthContext) {
     .innerJoin(souls, eq(followUps.soulId, souls.id))
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
     .leftJoin(members, eq(souls.assignedMemberId, members.id))
-    .where(branchFilter);
+    .where(followUpsWhere);
 
   const responseRateByMethod: Record<string, { total: number; successful: number }> = {};
   followUpsData.forEach((fu) => {
