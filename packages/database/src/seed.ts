@@ -26,7 +26,7 @@ import { sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 
 const DATABASE_URL =
-  process.env['DATABASE_URL'] ?? 'postgresql://kairos:kairos@localhost:5432/kairos';
+  process.env['DATABASE_URL'] ?? 'postgresql://kairos:kairos@127.0.0.1:5433/kairos';
 
 async function seed() {
   const db = createDb(DATABASE_URL);

@@ -305,3 +305,30 @@ export interface OutreachParticipantWithMember extends OutreachParticipant {
   memberLastName: string;
   memberPhotoUrl?: string | null;
 }
+
+// ── Donation ───────────────────────────────────────────────
+
+export type DonationPurpose = 'Offering' | 'Tithe' | 'Building Fund' | 'Other';
+export type PaymentMethod = 'Cash' | 'Check' | 'Bank Transfer' | 'Mobile Money' | 'Card' | 'Online';
+
+export interface Donation extends BaseEntity {
+  memberId: string | null;
+  branchId: string;
+  amount: number;
+  currency: string;
+  donationPurpose: DonationPurpose;
+  paymentMethod: PaymentMethod;
+  donationDate: string; // ISO date string
+  isAnonymous: boolean;
+  description: string | null;
+  recordedBy: string | null;
+  stripePaymentIntentId: string | null;
+}
+
+export interface DonationWithDetails extends Donation {
+  memberFirstName?: string | null;
+  memberLastName?: string | null;
+  branchName: string;
+  recordedByFirstName?: string | null;
+  recordedByLastName?: string | null;
+}

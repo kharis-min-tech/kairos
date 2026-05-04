@@ -43,6 +43,13 @@
       "when": 1776641505708,
       "tag": "0005_sparkling_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776813070290,
+      "tag": "0006_blue_surge",
+      "breakpoints": true
     }
   ]
 }

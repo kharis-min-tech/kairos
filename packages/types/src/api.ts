@@ -447,3 +447,67 @@ export interface FollowUpStatistics {
   daysSinceLastFollowUp: number;
   averageDuration: number;
 }
+
+// ── Donations ──────────────────────────────────────────────
+
+export interface RecordManualDonationRequest {
+  memberId?: string | null;
+  amount: number;
+  donationPurpose: 'Offering' | 'Tithe' | 'Building Fund' | 'Other';
+  paymentMethod: 'Cash' | 'Check' | 'Bank Transfer' | 'Mobile Money';
+  donationDate: string; // ISO date
+  isAnonymous?: boolean;
+  description?: string;
+}
+
+export interface ListDonationsParams {
+  page?: number;
+  limit?: number;
+  memberId?: string;
+  branchId?: string;
+  purpose?: 'Offering' | 'Tithe' | 'Building Fund' | 'Other';
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface DonationReportsParams {
+  branchId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface DonationReportByPurpose {
+  purpose: string;
+  amount: number;
+  count: number;
+}
+
+export interface DonationReportByBranch {
+  branchId: string;
+  branchName: string;
+  amount: number;
+  count: number;
+}
+
+export interface TopDonor {
+  memberId: string | null;
+  memberName: string;
+  amount: number;
+  isAnonymous: boolean;
+}
+
+export interface DonationReportsResponse {
+  totalAmount: number;
+  totalCount: number;
+  byPurpose: DonationReportByPurpose[];
+  byBranch: DonationReportByBranch[];
+  topDonors: TopDonor[];
+}
+
+export interface MemberDonationSummary {
+  totalAmount: number;
+  totalCount: number;
+  byPurpose: DonationReportByPurpose[];
+  recentDonations: import('./entities').DonationWithDetails[];
+}
+

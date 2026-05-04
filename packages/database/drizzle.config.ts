@@ -5,6 +5,11 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgresql://kairos:kairos@localhost:5432/kairos',
+    host: '127.0.0.1',
+    port: 5433,
+    user: 'kairos',
+    password: 'kairos',
+    database: 'kairos',
+    ssl: false,
   },
 });

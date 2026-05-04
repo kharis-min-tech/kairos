@@ -372,6 +372,41 @@ export function createApiClient(
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/follow-ups${query ? `?${query}` : ''}`);
       },
     },
+
+    donations: {
+      list: (params?: import('@kairos/types').ListDonationsParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.memberId) qs.set('memberId', params.memberId);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.purpose) qs.set('purpose', params.purpose);
+        if (params?.startDate) qs.set('startDate', params.startDate);
+        if (params?.endDate) qs.set('endDate', params.endDate);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<import('@kairos/types').DonationWithDetails>>>(`/api/donations${query ? `?${query}` : ''}`);
+      },
+      recordManual: (data: import('@kairos/types').RecordManualDonationRequest) =>
+        client.post<ApiResponse<import('@kairos/types').Donation>>('/api/donations/manual', data),
+      reports: (params?: import('@kairos/types').DonationReportsParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.startDate) qs.set('startDate', params.startDate);
+        if (params?.endDate) qs.set('endDate', params.endDate);
+        const query = qs.toString();
+        return client.get<ApiResponse<import('@kairos/types').DonationReportsResponse>>(`/api/donations/reports${query ? `?${query}` : ''}`);
+      },
+      memberSummary: (memberId: string) =>
+        client.get<ApiResponse<import('@kairos/types').MemberDonationSummary>>(`/api/donations/member/${encodeURIComponent(memberId)}/summary`),
+      exportCsv: (params?: import('@kairos/types').DonationReportsParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.startDate) qs.set('startDate', params.startDate);
+        if (params?.endDate) qs.set('endDate', params.endDate);
+        const query = qs.toString();
+        return client.getBlob(`/api/donations/export${query ? `?${query}` : ''}`);
+      },
+    },
   };
 }
 
