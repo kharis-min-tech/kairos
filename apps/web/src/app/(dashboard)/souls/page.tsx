@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useAuthStore } from '@/lib/auth-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Badge, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
+import { Button, Input, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Users, Check, ChevronDown } from 'lucide-react';
 import {

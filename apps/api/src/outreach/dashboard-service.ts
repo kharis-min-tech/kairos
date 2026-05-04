@@ -65,7 +65,7 @@ interface FollowUpWithRAG {
   ragReason: string;
 }
 
-function calculateSoulRAGStatus(
+export function calculateSoulRAGStatus(
   status: string,
   daysSinceLastFollowUp: number | null,
   hasFollowUp: boolean,
@@ -106,7 +106,7 @@ function calculateSoulRAGStatus(
   return { ragStatus: 'GREEN', ragReason: 'On track' };
 }
 
-function calculateFollowUpRAGStatus(contactStatus: string): { ragStatus: RAGStatus; ragReason: string } {
+export function calculateFollowUpRAGStatus(contactStatus: string): { ragStatus: RAGStatus; ragReason: string } {
   const redStatuses = ['Wrong Number', 'Declined'];
   const amberStatuses = ['No Answer', 'Busy'];
   const greenStatuses = ['Successful', 'Scheduled', 'Completed'];
@@ -129,14 +129,15 @@ function calculateFollowUpRAGStatus(contactStatus: string): { ragStatus: RAGStat
 export async function getDashboardOverview(
   db: Database,
   auth: AuthContext,
-  filters?: { dateFrom?: Date; dateTo?: Date },
+  filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
   const branchFilter = getBranchFilter(auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
       : undefined;
-  const whereClause = combineFilters(branchFilter, dateFilter);
+  const programFilter = filters?.programId ? eq(souls.outreachId, filters.programId) : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter, programFilter);
 
   const soulsData = await db
     .select({
@@ -203,6 +204,7 @@ export async function getSoulsWithRAGStatus(
     limit?: number;
     dateFrom?: Date;
     dateTo?: Date;
+    programId?: string;
   },
 ): Promise<{ data: SoulWithRAG[]; pagination: any }> {
   const page = filters?.page || 1;
@@ -213,7 +215,8 @@ export async function getSoulsWithRAGStatus(
     filters?.dateFrom && filters?.dateTo
       ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
       : undefined;
-  const whereClause = combineFilters(branchFilter, dateFilter);
+  const programFilter = filters?.programId ? eq(souls.outreachId, filters.programId) : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter, programFilter);
 
   const soulsData = await db
     .select({
@@ -317,6 +320,7 @@ export async function getFollowUpsWithRAGStatus(
     limit?: number;
     dateFrom?: Date;
     dateTo?: Date;
+    programId?: string;
   },
 ): Promise<{ data: FollowUpWithRAG[]; pagination: any }> {
   const page = filters?.page || 1;
@@ -327,7 +331,8 @@ export async function getFollowUpsWithRAGStatus(
     filters?.dateFrom && filters?.dateTo
       ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
       : undefined;
-  const whereClause = combineFilters(branchFilter, dateFilter);
+  const programFilter = filters?.programId ? eq(souls.outreachId, filters.programId) : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter, programFilter);
 
   const followUpsData = await db
     .select({
@@ -392,14 +397,15 @@ export async function getFollowUpsWithRAGStatus(
 export async function getFollowUpRAGOverview(
   db: Database,
   auth: AuthContext,
-  filters?: { dateFrom?: Date; dateTo?: Date },
+  filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
   const branchFilter = getBranchFilter(auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
       : undefined;
-  const whereClause = combineFilters(branchFilter, dateFilter);
+  const programFilter = filters?.programId ? eq(souls.outreachId, filters.programId) : undefined;
+  const whereClause = combineFilters(branchFilter, dateFilter, programFilter);
 
   const followUpsData = await db
     .select({
@@ -433,7 +439,7 @@ export async function getFollowUpRAGOverview(
 export async function getDashboardAnalytics(
   db: Database,
   auth: AuthContext,
-  filters?: { dateFrom?: Date; dateTo?: Date },
+  filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
   const branchFilter = getBranchFilter(auth);
   const soulsDateFilter =
@@ -444,8 +450,9 @@ export async function getDashboardAnalytics(
     filters?.dateFrom && filters?.dateTo
       ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
       : undefined;
-  const soulsWhere = combineFilters(branchFilter, soulsDateFilter);
-  const followUpsWhere = combineFilters(branchFilter, followUpsDateFilter);
+  const programFilter = filters?.programId ? eq(souls.outreachId, filters.programId) : undefined;
+  const soulsWhere = combineFilters(branchFilter, soulsDateFilter, programFilter);
+  const followUpsWhere = combineFilters(branchFilter, followUpsDateFilter, programFilter);
 
   // Get all souls with RAG status
   const soulsData = await db
@@ -620,6 +627,22 @@ export async function getDashboardAnalytics(
     total: data.total,
   }));
 
+  // Stage assimilation rates: percentage of souls who advanced from one funnel
+  // stage to the next. Uses cumulative "reached at least this stage" counts so
+  // 'New' = total entering the funnel, 'Converted' = those who finished. A high
+  // rate indicates a healthy hand-off; a low rate flags where coaching is needed.
+  const funnelStages = ['New', 'Following Up', 'Interested', 'Converted'] as const;
+  const cumulative = funnelStages.map((_, i) =>
+    funnelStages.slice(i).reduce((sum, key) => sum + (conversionFunnel[key] || 0), 0),
+  );
+  const assimilationRates: Record<string, number> = {};
+  for (let i = 0; i < funnelStages.length - 1; i++) {
+    const from = cumulative[i] ?? 0;
+    const to = cumulative[i + 1] ?? 0;
+    const key = `${funnelStages[i]} → ${funnelStages[i + 1]}`;
+    assimilationRates[key] = from > 0 ? Math.round((to / from) * 1000) / 10 : 0;
+  }
+
   return {
     overview: {
       totalSouls,
@@ -634,6 +657,7 @@ export async function getDashboardAnalytics(
     ragTrend,
     statusDistribution,
     conversionFunnel,
+    assimilationRates,
     predictive: {
       predictedConversions,
       recentConversionRate: Math.round(recentConversionRate * 10) / 10,

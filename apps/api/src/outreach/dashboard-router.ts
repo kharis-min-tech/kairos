@@ -16,6 +16,7 @@ const router = new Hono<{ Variables: { auth: AuthContext } }>();
 const dateRangeSchema = {
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
+  programId: z.string().uuid().optional(),
 };
 
 /**
@@ -42,7 +43,7 @@ router.get(
     const query = c.req.valid('query');
     const range = parseDateRange(query.dateFrom, query.dateTo);
 
-    const overview = await getDashboardOverview(db, auth, range);
+    const overview = await getDashboardOverview(db, auth, { ...range, programId: query.programId });
 
     return c.json({
       success: true,
@@ -81,6 +82,7 @@ router.get(
       status: query.status,
       page: query.page,
       limit: query.limit,
+      programId: query.programId,
       ...range,
     });
 
@@ -106,7 +108,7 @@ router.get(
     const query = c.req.valid('query');
     const range = parseDateRange(query.dateFrom, query.dateTo);
 
-    const overview = await getFollowUpRAGOverview(db, auth, range);
+    const overview = await getFollowUpRAGOverview(db, auth, { ...range, programId: query.programId });
 
     return c.json({
       success: true,
@@ -142,6 +144,7 @@ router.get(
       ragStatus: query.ragStatus,
       page: query.page,
       limit: query.limit,
+      programId: query.programId,
       ...range,
     });
 
@@ -167,7 +170,7 @@ router.get(
     const query = c.req.valid('query');
     const range = parseDateRange(query.dateFrom, query.dateTo);
 
-    const analytics = await getDashboardAnalytics(db, auth, range);
+    const analytics = await getDashboardAnalytics(db, auth, { ...range, programId: query.programId });
 
     return c.json({
       success: true,

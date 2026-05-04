@@ -126,9 +126,6 @@ export default function EditFellowshipPage() {
     }
   };
 
-  const selectClass =
-    'flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20';
-
   if (fellowshipLoading) {
     return (
       <div className="flex items-center justify-center py-12">

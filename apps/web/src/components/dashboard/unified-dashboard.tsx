@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { AlertCircle, RefreshCw, Info, AlertTriangle, ClipboardList, Calendar, CheckCircle, Users, Clock } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, CustomSelect } from '@kairos/ui';
 import {
   formatDistanceToNow,
   subDays,
@@ -25,6 +25,9 @@ interface UnifiedDashboardProps {
   dateFrom: string | null;
   dateTo: string | null;
   onDateRangeChange: (from: string | null, to: string | null) => void;
+  programId?: string | null;
+  onProgramChange?: (programId: string | null) => void;
+  programs?: Array<{ id: string; programName: string }>;
   isRefreshing?: boolean;
 }
 
@@ -34,6 +37,15 @@ const COLORS = {
   GREEN: '#047857',
   PURPLE: '#5D3FD3',
 };
+
+// Thresholds for the Stage Assimilation Rates card. Higher = healthier.
+// Tweak these to recalibrate the RAG colouring without touching component logic.
+const ASSIMILATION_THRESHOLDS = {
+  /** At or above this %, the stage is GREEN (healthy hand-off). */
+  green: 60,
+  /** At or above this % (but below `green`), the stage is AMBER. Below = RED. */
+  amber: 30,
+} as const;
 
 // Hook to detect theme
 function useTheme() {
@@ -95,6 +107,9 @@ export function UnifiedDashboard({
   dateFrom,
   dateTo,
   onDateRangeChange,
+  programId = null,
+  onProgramChange,
+  programs = [],
   isRefreshing,
 }: UnifiedDashboardProps) {
   const router = useRouter();
@@ -280,6 +295,25 @@ export function UnifiedDashboard({
             <p className="text-xs text-muted-foreground">
               Showing data from {new Date(dateFrom).toLocaleDateString()} to {new Date(dateTo).toLocaleDateString()}
             </p>
+          )}
+          {onProgramChange && (
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Program
+              </span>
+              <div className="min-w-[220px]">
+                <CustomSelect
+                  value={programId ?? ''}
+                  onValueChange={(value) => onProgramChange(value === '' ? null : value)}
+                  options={[
+                    { value: '', label: 'All programs' },
+                    ...programs.map((p) => ({ value: p.id, label: p.programName })),
+                  ]}
+                  placeholder="All programs"
+                  size="sm"
+                />
+              </div>
+            </div>
           )}
         </div>
 
@@ -571,6 +605,74 @@ export function UnifiedDashboard({
             </div>
           </div>
         </div>
+
+        {/* Stage Assimilation Rates */}
+        {analytics?.assimilationRates && Object.keys(analytics.assimilationRates).length > 0 && (
+          <div className="bg-card rounded p-6 shadow-ambient">
+            <h3 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">
+              Stage Assimilation Rates
+              <InfoTooltip title="Stage Assimilation Rates">
+                <p className="font-semibold text-foreground mb-2">Stage Assimilation:</p>
+                <p className="text-xs mb-2">
+                  Percentage of souls who advanced from one funnel stage to the next.
+                  Tells the optimistic story of how people are progressing through our
+                  assimilation pipeline from <em>New</em> to <em>Converted</em>.
+                </p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Formula: souls reaching stage B / souls reaching stage A &times; 100
+                </p>
+                <p className="text-xs mt-2 text-success">
+                  Higher is better &mdash; more souls moving forward.
+                </p>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Thresholds: &ge;{ASSIMILATION_THRESHOLDS.green}% green &middot; &ge;{ASSIMILATION_THRESHOLDS.amber}% amber &middot; below = red.
+                </p>
+              </InfoTooltip>
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              How well souls are progressing through each stage of the pipeline.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(analytics.assimilationRates).map(([stage, rate]) => {
+                const tone =
+                  rate >= ASSIMILATION_THRESHOLDS.green
+                    ? 'success'
+                    : rate >= ASSIMILATION_THRESHOLDS.amber
+                      ? 'accent'
+                      : 'destructive';
+                const toneClasses =
+                  tone === 'success'
+                    ? 'text-success'
+                    : tone === 'accent'
+                      ? 'text-accent'
+                      : 'text-destructive';
+                const barClasses =
+                  tone === 'success'
+                    ? 'bg-success'
+                    : tone === 'accent'
+                      ? 'bg-accent'
+                      : 'bg-destructive';
+                return (
+                  <div key={stage} className="rounded border border-border/15 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {stage}
+                    </p>
+                    <p className={`mt-2 text-3xl font-semibold tracking-tight ${toneClasses}`}>
+                      {rate.toFixed(1)}%
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">advanced to next stage</p>
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded bg-muted">
+                      <div
+                        className={`h-full ${barClasses}`}
+                        style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Key Metrics Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

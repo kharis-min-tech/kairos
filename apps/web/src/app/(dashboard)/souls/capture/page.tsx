@@ -35,8 +35,8 @@ export default function CaptureSoulPage() {
     if (!api) return;
     api.outreach.programs.list({ limit: 100, isCompleted: false }).then((res) => {
       if (res.success && res.data) {
-        const list = (res.data as any).data ?? [];
-        setPrograms(list.map((p: any) => ({ id: p.id, programName: p.programName })));
+        const list = (res.data as { data?: Array<{ id: string; programName: string }> }).data ?? [];
+        setPrograms(list.map((p) => ({ id: p.id, programName: p.programName })));
       }
     }).catch(() => {/* non-critical */});
   }, [api]);

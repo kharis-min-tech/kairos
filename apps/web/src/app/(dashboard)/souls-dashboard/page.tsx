@@ -16,17 +16,48 @@ export default function SoulsDashboardPage() {
   const [followUpsData, setFollowUpsData] = useState<PaginatedDashboardData<DashboardFollowUp> | null>(null);
   const [dateFrom, setDateFrom] = useState<string | null>(null);
   const [dateTo, setDateTo] = useState<string | null>(null);
+  const [programId, setProgramId] = useState<string | null>(null);
+  const [programs, setPrograms] = useState<Array<{ id: string; programName: string }>>([]);
+
+  // Load outreach programs for the filter dropdown (once on mount).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.outreach.programs.list({ page: 1, limit: 200 });
+        if (cancelled) return;
+        if (res.success && res.data) {
+          const items = (res.data.data ?? []) as Array<{ id: string; programName: string }>;
+          setPrograms(items.map((p) => ({ id: p.id, programName: p.programName })));
+        }
+      } catch (error) {
+        console.error('Failed to load outreach programs:', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const dateParams = dateFrom && dateTo ? { dateFrom, dateTo } : undefined;
+      const baseParams: { dateFrom?: string; dateTo?: string; programId?: string } = {};
+      if (dateFrom && dateTo) {
+        baseParams.dateFrom = dateFrom;
+        baseParams.dateTo = dateTo;
+      }
+      if (programId) {
+        baseParams.programId = programId;
+      }
+      const hasParams = Object.keys(baseParams).length > 0;
+      const params = hasParams ? baseParams : undefined;
       const [overviewRes, analyticsRes, followUpRes, soulsRes, followUpsRes] = await Promise.all([
-        api.dashboard.overview(dateParams),
-        api.dashboard.analytics(dateParams),
-        api.dashboard.followUpsOverview(dateParams),
-        api.dashboard.souls({ limit: 1000, ...(dateParams ?? {}) }),
-        api.dashboard.followUps({ limit: 1000, ...(dateParams ?? {}) }),
+        api.dashboard.overview(params),
+        api.dashboard.analytics(params),
+        api.dashboard.followUpsOverview(params),
+        api.dashboard.souls({ limit: 1000, ...baseParams }),
+        api.dashboard.followUps({ limit: 1000, ...baseParams }),
       ]);
 
       if (overviewRes.success) {
@@ -49,7 +80,7 @@ export default function SoulsDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [api, dateFrom, dateTo]);
+  }, [api, dateFrom, dateTo, programId]);
 
   useEffect(() => {
     loadDashboardData();
@@ -58,6 +89,10 @@ export default function SoulsDashboardPage() {
   const handleDateRangeChange = useCallback((from: string | null, to: string | null) => {
     setDateFrom(from);
     setDateTo(to);
+  }, []);
+
+  const handleProgramChange = useCallback((id: string | null) => {
+    setProgramId(id);
   }, []);
 
   if (loading && !overview) {
@@ -82,6 +117,9 @@ export default function SoulsDashboardPage() {
       dateFrom={dateFrom}
       dateTo={dateTo}
       onDateRangeChange={handleDateRangeChange}
+      programId={programId}
+      onProgramChange={handleProgramChange}
+      programs={programs}
       isRefreshing={loading}
     />
   );

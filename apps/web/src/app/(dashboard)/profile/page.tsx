@@ -290,7 +290,7 @@ export default function ProfilePage() {
                   <Label>Gender</Label>
                   <CustomSelect
                     value={watch('gender') ?? ''}
-                    onValueChange={(v) => setValue('gender', v as 'Male' | 'Female' | '')}
+                    onValueChange={(v) => setValue('gender', v === '' ? undefined : (v as 'Male' | 'Female'))}
                     placeholder="Select gender"
                     options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
                   />

@@ -274,22 +274,6 @@ export function createApiClient(
         registerWorker: (programId: string, data: { memberId: string; role?: string; notes?: string }) =>
           client.post<ApiResponse<any>>(`/api/outreach/programs/${encodeURIComponent(programId)}/participants`, data),
       },
-      reports: {
-        conversionFunnel: (params?: {
-          branchId?: string;
-          outreachId?: string;
-          startDate?: string;
-          endDate?: string;
-        }) => {
-          const qs = new URLSearchParams();
-          if (params?.branchId) qs.set('branchId', params.branchId);
-          if (params?.outreachId) qs.set('outreachId', params.outreachId);
-          if (params?.startDate) qs.set('startDate', params.startDate);
-          if (params?.endDate) qs.set('endDate', params.endDate);
-          const query = qs.toString();
-          return client.get<ApiResponse<any>>(`/api/outreach/reports/conversion-funnel${query ? `?${query}` : ''}`);
-        },
-      },
     },
 
     souls: {
@@ -339,17 +323,19 @@ export function createApiClient(
     },
 
     dashboard: {
-      overview: (params?: { dateFrom?: string; dateTo?: string }) => {
+      overview: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
         const qs = new URLSearchParams();
         if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
         if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<any>>(`/api/outreach/dashboard/overview${query ? `?${query}` : ''}`);
       },
-      analytics: (params?: { dateFrom?: string; dateTo?: string }) => {
+      analytics: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
         const qs = new URLSearchParams();
         if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
         if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<any>>(`/api/outreach/dashboard/analytics${query ? `?${query}` : ''}`);
       },
@@ -360,6 +346,7 @@ export function createApiClient(
         limit?: number;
         dateFrom?: string;
         dateTo?: string;
+        programId?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
@@ -368,13 +355,15 @@ export function createApiClient(
         if (params?.limit) qs.set('limit', String(params.limit));
         if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
         if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/souls${query ? `?${query}` : ''}`);
       },
-      followUpsOverview: (params?: { dateFrom?: string; dateTo?: string }) => {
+      followUpsOverview: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
         const qs = new URLSearchParams();
         if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
         if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<any>>(`/api/outreach/dashboard/follow-ups/overview${query ? `?${query}` : ''}`);
       },
@@ -384,6 +373,7 @@ export function createApiClient(
         limit?: number;
         dateFrom?: string;
         dateTo?: string;
+        programId?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
@@ -391,6 +381,7 @@ export function createApiClient(
         if (params?.limit) qs.set('limit', String(params.limit));
         if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
         if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/follow-ups${query ? `?${query}` : ''}`);
       },
