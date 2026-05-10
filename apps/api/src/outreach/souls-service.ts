@@ -19,6 +19,9 @@ export async function captureSoul(
   db: Database,
   input: {
     outreachId?: string | null;
+    fellowshipId?: string | null;
+    sourceType?: 'Outreach' | 'Fellowship' | 'Department' | 'Ad Hoc';
+    departmentName?: string;
     firstName: string;
     lastName: string;
     phone: string;
@@ -35,6 +38,9 @@ export async function captureSoul(
     .insert(souls)
     .values({
       outreachId: input.outreachId ?? null,
+      fellowshipId: input.fellowshipId ?? null,
+      sourceType: input.sourceType ?? 'Ad Hoc',
+      departmentName: input.departmentName ?? null,
       firstName: input.firstName,
       lastName: input.lastName,
       phone: input.phone,
@@ -100,6 +106,83 @@ export async function updateSoulStatus(
       convertedToMemberId: input.convertedToMemberId ?? null,
       updatedAt: sql`NOW()`,
     })
+    .where(eq(souls.id, soulId))
+    .returning();
+
+  return updated;
+}
+
+/**
+ * Update soul details
+ * - Allows updating contact information and source categorization
+ * - Only assigned worker, leaders, pastors, and admins can update
+ */
+export async function updateSoul(
+  db: Database,
+  soulId: string,
+  input: {
+    outreachId?: string | null;
+    fellowshipId?: string | null;
+    sourceType?: 'Outreach' | 'Fellowship' | 'Department' | 'Ad Hoc';
+    departmentName?: string | null;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string | null;
+    address?: string | null;
+    city?: string | null;
+    gender?: 'Male' | 'Female' | null;
+    ageRange?: string | null;
+    notes?: string | null;
+  },
+  auth: AuthContext,
+) {
+  // Verify soul exists and check permissions
+  const [existing] = await db
+    .select({
+      id: souls.id,
+      assignedMemberId: souls.assignedMemberId,
+      branchId: souls.branchId,
+    })
+    .from(souls)
+    .where(eq(souls.id, soulId));
+
+  if (!existing) {
+    throw new NotFoundError('Soul not found');
+  }
+
+  // Permission check: only assigned worker, leaders, pastors, and admins can update
+  if (auth.systemRole === 'member' && existing.assignedMemberId !== auth.memberId) {
+    throw new ForbiddenError('You can only update souls assigned to you');
+  }
+
+  if ((auth.systemRole === 'leader' || auth.systemRole === 'pastor') && existing.branchId !== auth.branchId) {
+    throw new ForbiddenError('You can only update souls in your branch');
+  }
+
+  // Build update object with only provided fields
+  const updateData: any = {
+    updatedAt: sql`NOW()`,
+  };
+
+  if (input.outreachId !== undefined) updateData.outreachId = input.outreachId;
+  if (input.fellowshipId !== undefined) updateData.fellowshipId = input.fellowshipId;
+  if (input.sourceType !== undefined) updateData.sourceType = input.sourceType;
+  if (input.departmentName !== undefined) updateData.departmentName = input.departmentName;
+  if (input.firstName !== undefined) updateData.firstName = input.firstName;
+  if (input.lastName !== undefined) updateData.lastName = input.lastName;
+  if (input.phone !== undefined) updateData.phone = input.phone;
+  if (input.email !== undefined) updateData.email = input.email ? input.email.toLowerCase() : null;
+  if (input.address !== undefined) updateData.address = input.address;
+  if (input.city !== undefined) updateData.city = input.city;
+  if (input.gender !== undefined) updateData.gender = input.gender;
+  if (input.ageRange !== undefined) updateData.ageRange = input.ageRange;
+  if (input.notes !== undefined) updateData.notes = input.notes;
+
+  // Update soul
+  const [updated] = await db
+    .update(souls)
+    .set(updateData)
     .where(eq(souls.id, soulId))
     .returning();
 

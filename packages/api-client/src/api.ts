@@ -317,6 +317,8 @@ export function createApiClient(
         client.get<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}`),
       capture: (data: any) =>
         client.post<ApiResponse<any>>('/api/souls', data),
+      update: (id: string, data: any) =>
+        client.put<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}`, data),
       updateStatus: (id: string, data: { status: string; convertedToMemberId?: string }) =>
         client.put<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/status`, data),
       reassign: (id: string, data: { assignedMemberId: string }) =>
@@ -336,6 +338,117 @@ export function createApiClient(
         client.post<ApiResponse<any>>(`/api/souls/${encodeURIComponent(id)}/convert`, {}),
       exportCsv: () =>
         client.getBlob('/api/souls/export'),
+    },
+
+    attendance: {
+      services: {
+        list: (params?: {
+          page?: number;
+          limit?: number;
+          branchId?: string;
+          serviceType?: string;
+          startDate?: string;
+          endDate?: string;
+        }) => {
+          const qs = new URLSearchParams();
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.serviceType) qs.set('serviceType', params.serviceType);
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/attendance/services${query ? `?${query}` : ''}`);
+        },
+        get: (id: string) =>
+          client.get<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+        create: (data: any) =>
+          client.post<ApiResponse<any>>('/api/attendance/services', data),
+        update: (id: string, data: any) =>
+          client.patch<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(id)}`, data),
+        delete: (id: string) =>
+          client.delete<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+        restore: (id: string) =>
+          client.post<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(id)}/restore`, {}),
+        listDeleted: () =>
+          client.get<ApiResponse<any[]>>('/api/attendance/services/deleted'),
+        listOtherBranches: () =>
+          client.get<ApiResponse<any[]>>('/api/attendance/services/other-branches'),
+        getAttendance: (serviceId: string) =>
+          client.get<ApiResponse<any[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/attendance`),
+        recordAttendance: (serviceId: string, data: { records: any[] }) =>
+          client.post<ApiResponse<{ recorded: number }>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/attendance`, data),
+        updateAttendance: (serviceId: string, memberId: string, data: any) =>
+          client.patch<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/attendance/${encodeURIComponent(memberId)}`, data),
+        deleteAttendance: (serviceId: string, memberId: string) =>
+          client.delete<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/attendance/${encodeURIComponent(memberId)}`),
+      },
+      reports: {
+        trends: (params?: { branchId?: string; weeks?: number }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.weeks) qs.set('weeks', String(params.weeks));
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/trends${query ? `?${query}` : ''}`);
+        },
+        detailedTrends: (params?: { branchId?: string; weeks?: number }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.weeks) qs.set('weeks', String(params.weeks));
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/detailed-trends${query ? `?${query}` : ''}`);
+        },
+        byBranch: (params?: { startDate?: string; endDate?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
+        },
+        firstTimeVisitors: (params?: { branchId?: string; startDate?: string; endDate?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/first-time-visitors${query ? `?${query}` : ''}`);
+        },
+        missingMembers: (params?: { branchId?: string; weeks?: number }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.weeks) qs.set('weeks', String(params.weeks));
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/missing-members${query ? `?${query}` : ''}`);
+        },
+        byServiceType: (params?: { branchId?: string; weeks?: number }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.weeks) qs.set('weeks', String(params.weeks));
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/by-service-type${query ? `?${query}` : ''}`);
+        },
+        crossBranchVisits: (params?: { branchId?: string; weeks?: number; startDate?: string; endDate?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.weeks) qs.set('weeks', String(params.weeks));
+          if (params?.startDate) qs.set('startDate', params.startDate);
+          if (params?.endDate) qs.set('endDate', params.endDate);
+          const query = qs.toString();
+          return client.get<ApiResponse<any[]>>(`/api/attendance/reports/cross-branch-visits${query ? `?${query}` : ''}`);
+        },
+      },
+      memberHistory: (memberId: string, params?: { startDate?: string; endDate?: string; limit?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.startDate) qs.set('startDate', params.startDate);
+        if (params?.endDate) qs.set('endDate', params.endDate);
+        if (params?.limit) qs.set('limit', String(params.limit));
+        const query = qs.toString();
+        return client.get<ApiResponse<any[]>>(`/api/attendance/members/${encodeURIComponent(memberId)}/history${query ? `?${query}` : ''}`);
+      },
+      selfCheckIn: (serviceId: string, data?: { attendanceStatus?: 'Present' | 'Virtual' | 'Late'; arrivalTime?: string }) =>
+        client.post<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/check-in`, data || {}),
+      getMyStatus: (serviceId: string) =>
+        client.get<ApiResponse<any>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/my-status`),
     },
 
     dashboard: {

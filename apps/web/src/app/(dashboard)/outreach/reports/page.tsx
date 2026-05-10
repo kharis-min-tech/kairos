@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle, Label, Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@kairos/ui';
+import { DatePicker } from '@/components/date-picker';
 import { useAuthStore } from '@/lib/auth-store';
 
 interface ConversionMetrics {
@@ -106,22 +107,18 @@ export default function OutreachReportsPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
+              <DatePicker
+                label="Start Date"
                 value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                onChange={(date) => setFilters({ ...filters, startDate: date })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
+              <DatePicker
+                label="End Date"
                 value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                onChange={(date) => setFilters({ ...filters, endDate: date })}
               />
             </div>
 

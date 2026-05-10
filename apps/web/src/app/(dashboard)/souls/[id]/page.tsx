@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge } from '@kairos/ui';
+import { DatePicker } from '@/components/date-picker';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
 
@@ -59,6 +60,27 @@ export default function SoulDetailPage() {
   const { toast } = useToast();
   const { currentSoul, fetchSoul, updateSoulStatus } = useSoulsStore();
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    gender: '',
+    ageRange: '',
+    notes: '',
+    sourceType: 'Ad Hoc' as 'Outreach' | 'Fellowship' | 'Department' | 'Ad Hoc',
+    selectedOutreachId: '',
+    selectedFellowshipId: '',
+    departmentName: '',
+  });
+
+  const [outreachPrograms, setOutreachPrograms] = useState<any[]>([]);
+  const [fellowships, setFellowships] = useState<any[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
   const [followUpForm, setFollowUpForm] = useState({
     contactMethod: '',
     contactMethodOther: '',
@@ -86,6 +108,53 @@ export default function SoulDetailPage() {
       fetchFollowUps();
     }
   }, [api, params.id]);
+
+  // Populate edit form when soul data loads
+  useEffect(() => {
+    if (currentSoul) {
+      setEditForm({
+        firstName: currentSoul.firstName || '',
+        lastName: currentSoul.lastName || '',
+        phone: currentSoul.phone || '',
+        email: currentSoul.email || '',
+        address: currentSoul.address || '',
+        city: currentSoul.city || '',
+        gender: currentSoul.gender || '',
+        ageRange: currentSoul.ageRange || '',
+        notes: currentSoul.notes || '',
+        sourceType: (currentSoul as any).sourceType || 'Ad Hoc',
+        selectedOutreachId: currentSoul.outreachId || '',
+        selectedFellowshipId: (currentSoul as any).fellowshipId || '',
+        departmentName: (currentSoul as any).departmentName || '',
+      });
+    }
+  }, [currentSoul]);
+
+  // Fetch outreach programs and fellowships for edit mode
+  useEffect(() => {
+    const fetchOptions = async () => {
+      if (!api || !isEditing) return;
+      
+      try {
+        setLoadingOptions(true);
+        const user = (api as any).auth?.user;
+        
+        const [outreachRes, fellowshipRes] = await Promise.all([
+          api.outreach.programs.list({ page: 1, limit: 100, isCompleted: false }),
+          api.fellowships.list({ page: 1, limit: 100, memberId: user?.id }),
+        ]);
+        
+        setOutreachPrograms(outreachRes.data?.data || []);
+        setFellowships(fellowshipRes.data?.data || []);
+      } catch (error) {
+        console.error('Failed to load options:', error);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+    
+    fetchOptions();
+  }, [api, isEditing]);
 
   const fetchFollowUps = async () => {
     if (!api || !params.id) return;
@@ -214,6 +283,64 @@ export default function SoulDetailPage() {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!api || !currentSoul) return;
+
+    setLoading(true);
+    try {
+      const updateData: any = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phone: editForm.phone,
+        email: editForm.email || null,
+        address: editForm.address || null,
+        city: editForm.city || null,
+        gender: editForm.gender || null,
+        ageRange: editForm.ageRange || null,
+        notes: editForm.notes || null,
+        sourceType: editForm.sourceType,
+      };
+
+      // Add source-specific IDs
+      if (editForm.sourceType === 'Outreach') {
+        updateData.outreachId = editForm.selectedOutreachId || null;
+        updateData.fellowshipId = null;
+        updateData.departmentName = null;
+      } else if (editForm.sourceType === 'Fellowship') {
+        updateData.fellowshipId = editForm.selectedFellowshipId || null;
+        updateData.outreachId = null;
+        updateData.departmentName = null;
+      } else if (editForm.sourceType === 'Department') {
+        updateData.departmentName = editForm.departmentName || null;
+        updateData.outreachId = null;
+        updateData.fellowshipId = null;
+      } else {
+        // Ad Hoc
+        updateData.outreachId = null;
+        updateData.fellowshipId = null;
+        updateData.departmentName = null;
+      }
+
+      await api.souls.update(currentSoul.id, updateData);
+
+      toast({
+        title: 'Soul updated successfully',
+        description: 'Changes have been saved',
+      });
+
+      setIsEditing(false);
+      await fetchSoul(api, currentSoul.id);
+    } catch (error: unknown) {
+      toast({
+        title: 'Failed to update soul',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!currentSoul) {
     return (
       <div className="container mx-auto py-6">
@@ -237,6 +364,16 @@ export default function SoulDetailPage() {
         <Badge variant={currentSoul.status === 'Converted' ? 'default' : 'secondary'}>
           {currentSoul.status}
         </Badge>
+        {!isEditing && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            disabled={loading}
+          >
+            Edit
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -245,54 +382,164 @@ export default function SoulDetailPage() {
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{currentSoul.phone}</span>
-            </div>
-            {currentSoul.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{currentSoul.email}</span>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone *</Label>
+                  <Input
+                    id="phone"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={editForm.address}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, address: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={editForm.city}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <select
+                      id="gender"
+                      value={editForm.gender}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, gender: e.target.value }))}
+                      className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ageRange">Age Range</Label>
+                    <select
+                      id="ageRange"
+                      value={editForm.ageRange}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, ageRange: e.target.value }))}
+                      className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                    >
+                      <option value="">Select</option>
+                      <option value="18-25">18-25</option>
+                      <option value="26-35">26-35</option>
+                      <option value="36-50">36-50</option>
+                      <option value="51+">51+</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleSaveEdit} disabled={loading} size="sm">
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(false)}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-            )}
-            {currentSoul.address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {currentSoul.address}
-                  {currentSoul.city && `, ${currentSoul.city}`}
-                </span>
-              </div>
-            )}
-            {currentSoul.gender && (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span>{currentSoul.gender}</span>
-                {currentSoul.ageRange && <span>({currentSoul.ageRange})</span>}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Captured: {new Date(currentSoul.createdAt).toLocaleDateString()}</span>
-            </div>
-            {currentSoul.lastFollowUpDate && (
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  Last Follow-up: {new Date(currentSoul.lastFollowUpDate).toLocaleDateString()}
-                  {currentSoul.daysSinceLastFollowUp !== null && currentSoul.daysSinceLastFollowUp !== undefined && (
-                    <span className={currentSoul.daysSinceLastFollowUp >= 2 ? 'text-destructive ml-1' : 'ml-1'}>
-                      ({currentSoul.daysSinceLastFollowUp} day{currentSoul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago)
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{currentSoul.phone}</span>
+                </div>
+                {currentSoul.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{currentSoul.email}</span>
+                  </div>
+                )}
+                {currentSoul.address && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {currentSoul.address}
+                      {currentSoul.city && `, ${currentSoul.city}`}
                     </span>
-                  )}
-                </span>
-              </div>
-            )}
-            {!currentSoul.lastFollowUpDate && currentSoul.status !== 'Converted' && (
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">No follow-up logged yet</span>
-              </div>
+                  </div>
+                )}
+                {currentSoul.gender && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>{currentSoul.gender}</span>
+                    {currentSoul.ageRange && <span>({currentSoul.ageRange})</span>}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>Captured: {new Date(currentSoul.createdAt).toLocaleDateString()}</span>
+                </div>
+                {currentSoul.lastFollowUpDate && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Last Follow-up: {new Date(currentSoul.lastFollowUpDate).toLocaleDateString()}
+                      {currentSoul.daysSinceLastFollowUp !== null && currentSoul.daysSinceLastFollowUp !== undefined && (
+                        <span className={currentSoul.daysSinceLastFollowUp >= 2 ? 'text-destructive ml-1' : 'ml-1'}>
+                          ({currentSoul.daysSinceLastFollowUp} day{currentSoul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {!currentSoul.lastFollowUpDate && currentSoul.status !== 'Converted' && (
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">No follow-up logged yet</span>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -302,39 +549,117 @@ export default function SoulDetailPage() {
             <CardTitle>Assignment & Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>Assigned Worker</Label>
-              <p className="text-sm mt-1">
-                {currentSoul.assignedMemberName || 'Not assigned'}
-              </p>
-            </div>
-            <div>
-              <Label>Outreach Program</Label>
-              <p className="text-sm mt-1">
-                {currentSoul.outreachName || 'Ad-hoc Evangelism'}
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="status">Update Status</Label>
-              <select
-                id="status"
-                value={currentSoul.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                disabled={loading}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {isEditing ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="sourceType">Source Category *</Label>
+                  <select
+                    id="sourceType"
+                    value={editForm.sourceType}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, sourceType: e.target.value as any }))}
+                    disabled={loadingOptions}
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                  >
+                    <option value="Ad Hoc">Ad Hoc (Personal Evangelism)</option>
+                    {outreachPrograms.length > 0 && <option value="Outreach">Outreach Program</option>}
+                    {fellowships.length > 0 && <option value="Fellowship">Fellowship</option>}
+                    <option value="Department">Department</option>
+                  </select>
+                </div>
+
+                {editForm.sourceType === 'Outreach' && outreachPrograms.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="selectedOutreach">Select Outreach Program *</Label>
+                    <select
+                      id="selectedOutreach"
+                      value={editForm.selectedOutreachId}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, selectedOutreachId: e.target.value }))}
+                      className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                    >
+                      <option value="">Select an outreach program</option>
+                      {outreachPrograms.map((program: any) => (
+                        <option key={program.id} value={program.id}>
+                          {program.programName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {editForm.sourceType === 'Fellowship' && fellowships.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="selectedFellowship">Select Fellowship *</Label>
+                    <select
+                      id="selectedFellowship"
+                      value={editForm.selectedFellowshipId}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, selectedFellowshipId: e.target.value }))}
+                      className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+                    >
+                      <option value="">Select a fellowship</option>
+                      {fellowships.map((fellowship: any) => (
+                        <option key={fellowship.id} value={fellowship.id}>
+                          {fellowship.fellowshipName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {editForm.sourceType === 'Department' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="departmentName">Department Name *</Label>
+                    <Input
+                      id="departmentName"
+                      value={editForm.departmentName}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, departmentName: e.target.value }))}
+                      placeholder="e.g., Youth Ministry, Worship Team"
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label>Assigned Worker</Label>
+                  <p className="text-sm mt-1">
+                    {currentSoul.assignedMemberName || 'Not assigned'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Source Category</Label>
+                  <p className="text-sm mt-1">
+                    {(currentSoul as any).sourceType || 'Ad Hoc'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Outreach Program</Label>
+                  <p className="text-sm mt-1">
+                    {currentSoul.outreachName || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="status">Update Status</Label>
+                  <select
+                    id="status"
+                    value={currentSoul.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    disabled={loading}
+                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {currentSoul.notes && (
+      {currentSoul.notes && !isEditing && (
         <Card>
           <CardHeader>
             <CardTitle>Notes</CardTitle>
@@ -488,13 +813,11 @@ export default function SoulDetailPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nextFollowUpDate">Next Follow-up Date</Label>
-                <Input
-                  id="nextFollowUpDate"
-                  type="date"
+                <DatePicker
+                  label="Next Follow-up Date"
                   value={followUpForm.nextFollowUpDate}
-                  onChange={(e) =>
-                    setFollowUpForm((prev) => ({ ...prev, nextFollowUpDate: e.target.value }))
+                  onChange={(date) =>
+                    setFollowUpForm((prev) => ({ ...prev, nextFollowUpDate: date }))
                   }
                 />
               </div>

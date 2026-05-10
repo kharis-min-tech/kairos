@@ -141,8 +141,8 @@ export async function getMemberStats(db: Database, auth: AuthContext) {
     .innerJoin(fellowships, eq(fellowshipMembers.fellowshipId, fellowships.id))
     .where(and(eq(fellowshipMembers.memberId, memberId), eq(fellowshipMembers.isActive, true)));
 
-  // Recent attendance (last 30 days)
-  const attendanceRecords = await db
+  // Fellowship attendance (last 30 days)
+  const fellowshipAttendance = await db
     .select({
       status: fellowshipMeetingAttendance.attendanceStatus,
       count: count(),
@@ -160,16 +160,20 @@ export async function getMemberStats(db: Database, auth: AuthContext) {
     )
     .groupBy(fellowshipMeetingAttendance.attendanceStatus);
 
-  const totalAttendance = attendanceRecords.reduce((sum, r) => sum + r.count, 0);
-  const presentCount = attendanceRecords.find((r) => r.status === 'Present')?.count ?? 0;
+  // Calculate fellowship attendance stats
+  const totalFellowshipAttendance = fellowshipAttendance.reduce((sum, r) => sum + r.count, 0);
+  const fellowshipPresentCount = fellowshipAttendance.find((r) => r.status === 'Present')?.count ?? 0;
+  const fellowshipVirtualCount = fellowshipAttendance.find((r) => r.status === 'Virtual')?.count ?? 0;
+  const fellowshipLateCount = fellowshipAttendance.find((r) => r.status === 'Late')?.count ?? 0;
+  const fellowshipEffectivePresent = fellowshipPresentCount + fellowshipVirtualCount + fellowshipLateCount;
 
   return {
     fellowshipsJoined: myFellowships.length,
     fellowships: myFellowships,
     recentAttendance: {
-      total: totalAttendance,
-      present: presentCount,
-      rate: totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0,
+      total: totalFellowshipAttendance,
+      present: fellowshipEffectivePresent,
+      rate: totalFellowshipAttendance > 0 ? Math.round((fellowshipEffectivePresent / totalFellowshipAttendance) * 100) : 0,
     },
   };
 }

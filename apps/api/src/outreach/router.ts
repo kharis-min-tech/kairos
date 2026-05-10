@@ -75,9 +75,16 @@ app.get(
     const auth = c.get('auth');
     const query = c.req.valid('query');
     
-
-    const result = await listPrograms(db, auth, query);
-    return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
+    try {
+      const result = await listPrograms(db, auth, query);
+      return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
+    } catch (err: any) {
+      console.error('Error in listPrograms route:', err);
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      throw err;
+    }
   }
 );
 

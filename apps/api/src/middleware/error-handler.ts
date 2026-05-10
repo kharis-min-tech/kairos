@@ -31,7 +31,12 @@ export function errorHandler(err: Error, c: Context) {
     }
   }
 
-  logger.error('Unhandled error', { message: err.message, stack: err.stack });
+  logger.error('Unhandled error', { 
+    message: err.message, 
+    stack: err.stack,
+    name: err.name,
+    error: JSON.stringify(err, Object.getOwnPropertyNames(err))
+  });
   return c.json(
     { success: false, message: 'Something went wrong. Please try again or contact support.' },
     500,

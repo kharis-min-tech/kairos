@@ -232,3 +232,41 @@ export async function sendAccountRejectedEmail(
     previewUrl: nodemailer.getTestMessageUrl(info),
   });
 }
+
+export async function sendCrossBranchVisitNotification(
+  to: string[],
+  leaderName: string,
+  memberName: string,
+  homeBranchName: string,
+  visitedBranchName: string,
+  serviceType: string,
+  serviceDate: string,
+): Promise<void> {
+  const transport = await createTransport();
+
+  for (const recipient of to) {
+    const info = await transport.sendMail({
+      from: FROM_ADDRESS,
+      to: recipient,
+      subject: `Cross-Branch Visit: ${memberName} attended ${visitedBranchName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+          <h2 style="color: #6D28D9;">Cross-Branch Visit Notification</h2>
+          <p>Hi ${leaderName},</p>
+          <p>This is to let you know that <strong>${memberName}</strong> from <strong>${homeBranchName}</strong>
+             attended a <strong>${serviceType}</strong> at <strong>${visitedBranchName}</strong> on
+             <strong>${new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>.</p>
+          <p>This member is assigned to your branch but checked into a different location.</p>
+          <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+          <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        </div>
+      `,
+    });
+
+    mailerLogger.info('Cross-branch visit notification sent', {
+      to: recipient,
+      messageId: info.messageId,
+      previewUrl: nodemailer.getTestMessageUrl(info),
+    });
+  }
+}

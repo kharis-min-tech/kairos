@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Label, Textarea } from '@kairos/ui';
+import { DatePicker } from '@/components/date-picker';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -222,14 +223,10 @@ export default function CreateProgramPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="programDate">
-              Program Date <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="programDate"
-              type="date"
+            <DatePicker
+              label="Program Date"
               value={formData.programDate}
-              onChange={(e) => handleChange('programDate', e.target.value)}
+              onChange={(date) => handleChange('programDate', date)}
             />
             {errors.programDate && (
               <p className="text-sm text-destructive">{errors.programDate}</p>

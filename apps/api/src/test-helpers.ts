@@ -39,3 +39,111 @@ export const TEST_IDS = {
   roleId: '990e8400-e29b-41d4-a716-446655440000',
   leadershipId: 'aa0e8400-e29b-41d4-a716-446655440000',
 };
+
+import { db } from './db';
+import { branches, members, regions } from '@kairos/database';
+import bcrypt from 'bcrypt';
+
+/** Create a test region */
+export async function createTestRegion(data: { regionName: string }) {
+  const [region] = await db
+    .insert(regions)
+    .values({
+      regionName: data.regionName,
+      isActive: true,
+    })
+    .returning();
+  return region!;
+}
+
+/** Create a test branch */
+export async function createTestBranch(data: { branchName: string; regionId?: string }) {
+  // Ensure region exists
+  let regionId = data.regionId;
+  if (!regionId) {
+    const region = await createTestRegion({ regionName: 'Test Region' });
+    regionId = region.id;
+  }
+  
+  const [branch] = await db
+    .insert(branches)
+    .values({
+      branchName: data.branchName,
+      regionId,
+      address: '123 Test St',
+      city: 'Test City',
+      country: 'Test Country',
+      isActive: true,
+    })
+    .returning();
+  return branch!;
+}
+
+/** Create a test member */
+export async function createTestMember(data: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  branchId: string;
+  systemRole?: string;
+  isEmailVerified?: boolean;
+  approvalStatus?: string;
+}) {
+  const hashedPassword = await bcrypt.hash('Password1!', 10);
+  const [member] = await db
+    .insert(members)
+    .values({
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      password: hashedPassword,
+      homeBranchId: data.branchId,
+      systemRole: (data.systemRole as any) ?? 'member',
+      isEmailVerified: data.isEmailVerified ?? true,
+      approvalStatus: (data.approvalStatus as any) ?? 'approved',
+      isActive: true,
+    })
+    .returning();
+  return member!;
+}
+
+/** Helper for making test requests with auth */
+export function testRequest(app: any, token?: string) {
+  return {
+    get: (path: string) => {
+      const req = new Request(`http://localhost${path}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return app.fetch(req);
+    },
+    post: (path: string, body?: any) => {
+      const req = new Request(`http://localhost${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return app.fetch(req);
+    },
+    patch: (path: string, body?: any) => {
+      const req = new Request(`http://localhost${path}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return app.fetch(req);
+    },
+    delete: (path: string) => {
+      const req = new Request(`http://localhost${path}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return app.fetch(req);
+    },
+  };
+}

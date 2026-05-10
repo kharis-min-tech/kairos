@@ -57,12 +57,16 @@ async function seed() {
         branchName: 'Kharis London Central',
         regionId: uk!.id,
         branchType: 'Main',
-        address: '142 Kingsway',
+        address: 'Ark Walworth Academy, Shorncliffe Rd, London, SE1 5UJ',
         city: 'London',
-        postalCode: 'WC2B 6NH',
+        postalCode: 'SE1 5UJ',
         phone: '+442071234567',
         email: 'london@kharischurch.org',
         establishedDate: '2008-03-15',
+        serviceSchedule: [
+          { day: 'Sunday', time: '14:00', type: 'Sunday Service', gracePeriodMinutes: 15 },
+          { day: 'Thursday', time: '19:00', type: 'Midweek Service', gracePeriodMinutes: 15 },
+        ],
       },
       {
         branchName: 'Kharis Manchester',
@@ -74,6 +78,10 @@ async function seed() {
         phone: '+441611234567',
         email: 'manchester@kharischurch.org',
         establishedDate: '2015-06-01',
+        serviceSchedule: [
+          { day: 'Sunday', time: '14:00', type: 'Sunday Service', gracePeriodMinutes: 15 },
+          { day: 'Wednesday', time: '19:00', type: 'Midweek Service', gracePeriodMinutes: 15 },
+        ],
       },
       {
         branchName: 'Kharis Accra',
@@ -84,6 +92,10 @@ async function seed() {
         phone: '+233201234567',
         email: 'accra@kharischurch.org',
         establishedDate: '2012-01-10',
+        serviceSchedule: [
+          { day: 'Sunday', time: '14:00', type: 'Sunday Service', gracePeriodMinutes: 15 },
+          { day: 'Wednesday', time: '19:00', type: 'Midweek Service', gracePeriodMinutes: 15 },
+        ],
       },
       {
         branchName: 'Kharis Kumasi',
@@ -94,16 +106,24 @@ async function seed() {
         phone: '+233551234567',
         email: 'kumasi@kharischurch.org',
         establishedDate: '2018-09-01',
+        serviceSchedule: [
+          { day: 'Sunday', time: '14:00', type: 'Sunday Service', gracePeriodMinutes: 15 },
+          { day: 'Wednesday', time: '19:00', type: 'Midweek Service', gracePeriodMinutes: 15 },
+        ],
       },
       {
         branchName: 'Kharis Freetown',
         regionId: sl!.id,
         branchType: 'Main',
-        address: '33 Wilberforce Street',
+        address: 'Robert Hall, 23 Robert Street, Freetown',
         city: 'Freetown',
         phone: '+23276123456',
         email: 'freetown@kharischurch.org',
         establishedDate: '2019-11-20',
+        serviceSchedule: [
+          { day: 'Sunday', time: '14:00', type: 'Sunday Service', gracePeriodMinutes: 15 },
+          { day: 'Wednesday', time: '18:00', type: 'Midweek Service', gracePeriodMinutes: 15 },
+        ],
       },
     ])
     .returning();

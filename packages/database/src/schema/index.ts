@@ -13,3 +13,5 @@ export { outreachPrograms, outreachProgramsRelations } from './outreach-programs
 export { souls, soulsRelations } from './souls';
 export { followUps, followUpsRelations } from './follow-ups';
 export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
+export { services, servicesRelations } from './services';
+export { serviceAttendance, serviceAttendanceRelations } from './service-attendance';

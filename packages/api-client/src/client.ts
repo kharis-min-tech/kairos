@@ -61,11 +61,18 @@ export class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (error) {
+      // Network error or fetch failed
+      console.error('API request failed:', error);
+      throw new ApiClientError(0, `Network error: ${error instanceof Error ? error.message : 'Unable to connect to server'}`);
+    }
 
     // Auto-refresh on 401, then retry once (only when a token was sent)
     if (response.status === 401 && !isRetry && token) {
@@ -78,7 +85,13 @@ export class ApiClient {
       }
     }
 
-    const data = (await response.json()) as Record<string, unknown>;
+    let data: Record<string, unknown>;
+    try {
+      data = (await response.json()) as Record<string, unknown>;
+    } catch (error) {
+      console.error('Failed to parse response:', error);
+      throw new ApiClientError(response.status, `Invalid response from server (${response.status})`);
+    }
 
     if (!response.ok) {
       throw new ApiClientError(

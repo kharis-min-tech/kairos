@@ -11,6 +11,7 @@ import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, u
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { DatePicker } from '@/components/date-picker';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 
@@ -293,12 +294,10 @@ export default function BranchDetailPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Start Date</label>
-                  <Input
-                    type="date"
+                  <DatePicker
+                    label="Start Date"
                     value={assignStartDate}
-                    onChange={(e) => setAssignStartDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    onChange={setAssignStartDate}
                   />
                 </div>
               </div>

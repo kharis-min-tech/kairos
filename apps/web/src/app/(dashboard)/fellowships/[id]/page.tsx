@@ -20,6 +20,7 @@ import {
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } from '@kairos/ui';
+import { DatePicker } from '@/components/date-picker';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -408,8 +409,11 @@ export default function FellowshipDetailPage() {
               <CardContent className="space-y-3">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Date *</label>
-                    <input type="date" value={meetingForm.meetingDate} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingDate: e.target.value }))} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <DatePicker
+                      label="Date *"
+                      value={meetingForm.meetingDate}
+                      onChange={(date) => setMeetingForm((f) => ({ ...f, meetingDate: date }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Title</label>

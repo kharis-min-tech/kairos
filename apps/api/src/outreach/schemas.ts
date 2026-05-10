@@ -49,6 +49,9 @@ export const registerWorkerSchema = z.object({
 
 export const captureSoulSchema = z.object({
   outreachId: z.string().uuid('Invalid outreach ID').nullable().optional(),
+  fellowshipId: z.string().uuid('Invalid fellowship ID').nullable().optional(),
+  sourceType: z.enum(['Outreach', 'Fellowship', 'Department', 'Ad Hoc']).optional(),
+  departmentName: z.string().max(100).optional(),
   firstName: z.string().min(1, 'First name is required').max(100),
   lastName: z.string().min(1, 'Last name is required').max(100),
   phone: z.string()
@@ -61,6 +64,25 @@ export const captureSoulSchema = z.object({
   gender: z.enum(['Male', 'Female']).optional(),
   ageRange: z.string().max(20).optional(),
   notes: z.string().optional(),
+});
+
+export const updateSoulSchema = z.object({
+  outreachId: z.string().uuid('Invalid outreach ID').nullable().optional(),
+  fellowshipId: z.string().uuid('Invalid fellowship ID').nullable().optional(),
+  sourceType: z.enum(['Outreach', 'Fellowship', 'Department', 'Ad Hoc']).optional(),
+  departmentName: z.string().max(100).nullable().optional(),
+  firstName: z.string().min(1, 'First name is required').max(100).optional(),
+  lastName: z.string().min(1, 'Last name is required').max(100).optional(),
+  phone: z.string()
+    .max(20)
+    .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone format')
+    .optional(),
+  email: z.string().email('Invalid email address').max(100).nullable().optional(),
+  address: z.string().nullable().optional(),
+  city: z.string().max(100).nullable().optional(),
+  gender: z.enum(['Male', 'Female']).nullable().optional(),
+  ageRange: z.string().max(20).nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export const updateSoulStatusSchema = z.object({

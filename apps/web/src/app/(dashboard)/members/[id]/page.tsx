@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles } from '@/hooks/use-members';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
+import { MemberAttendanceHistory } from '@/components/member-attendance-history';
 import { Button } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -350,6 +351,9 @@ export default function MemberDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Attendance History */}
+      <MemberAttendanceHistory memberId={id} />
     </div>
   );
 }

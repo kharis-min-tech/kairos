@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth';
 import type { AuthContext } from '@kairos/types';
 import {
   captureSoulSchema,
+  updateSoulSchema,
   updateSoulStatusSchema,
   reassignSoulSchema,
   bulkReassignSoulsSchema,
@@ -13,6 +14,7 @@ import {
 } from './schemas';
 import {
   captureSoul,
+  updateSoul,
   updateSoulStatus,
   listSouls,
   getSoul,
@@ -116,6 +118,37 @@ app.get('/:id', async (c) => {
     throw err;
   }
 });
+
+/**
+ * PUT /api/souls/:id
+ * Update soul details
+ */
+app.put(
+  '/:id',
+  zValidator('json', updateSoulSchema),
+  async (c) => {
+    const auth = c.get('auth');
+    const soulId = c.req.param('id');
+    const input = c.req.valid('json');
+    
+
+    try {
+      const soul = await updateSoul(db, soulId, input, auth);
+      return c.json({ success: true, data: soul });
+    } catch (err: any) {
+      if (err.name === 'NotFoundError') {
+        return c.json({ error: err.message }, 404);
+      }
+      if (err.name === 'ValidationError') {
+        return c.json({ error: err.message }, 400);
+      }
+      if (err.name === 'ForbiddenError') {
+        return c.json({ error: err.message }, 403);
+      }
+      throw err;
+    }
+  }
+);
 
 /**
  * PUT /api/souls/:id/status
