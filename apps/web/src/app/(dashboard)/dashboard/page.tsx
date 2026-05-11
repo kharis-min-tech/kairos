@@ -2,6 +2,7 @@
 
 import { useAuthStore } from '@/lib/auth-store';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
+import { useMyRota } from '@/hooks/use-departments';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import {
   BarChart,
@@ -226,6 +227,12 @@ function BranchDashboard() {
 
 function MemberDashboard() {
   const { data, isLoading, error } = useMemberDashboard();
+  const { data: myRota } = useMyRota();
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingDuties = (myRota ?? [])
+    .filter((d) => d.serviceDate >= today && d.instanceStatus !== 'Cancelled')
+    .sort((a, b) => a.serviceDate.localeCompare(b.serviceDate))
+    .slice(0, 5);
 
   if (isLoading) return <DashboardSkeleton />;
   if (error) return <p className="text-rose-600 text-sm">Failed to load your stats.</p>;
@@ -281,6 +288,48 @@ function MemberDashboard() {
                   </span>
                 </li>
               ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {upcomingDuties.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Upcoming Rota Duties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {upcomingDuties.map((d) => {
+                const isToday = d.serviceDate === today;
+                const dateLabel = new Date(d.serviceDate + 'T00:00:00').toLocaleDateString(
+                  undefined,
+                  { weekday: 'short', month: 'short', day: 'numeric' },
+                );
+                return (
+                  <li
+                    key={d.assignmentId}
+                    className={`flex items-center justify-between p-3 text-sm ${
+                      isToday ? 'border border-[#f8b537]/40 bg-[#f8b537]/5' : 'bg-surface-container-lowest'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {d.templateName} • {d.slotRoleName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dateLabel}
+                        {d.startTime ? ` • ${d.startTime.slice(0, 5)}` : ''}
+                      </p>
+                    </div>
+                    {isToday && (
+                      <span className="rounded bg-[#f8b537] px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        Today
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </CardContent>
         </Card>

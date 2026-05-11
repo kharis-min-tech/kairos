@@ -19,7 +19,7 @@ import {
   useReviewJoinRequest,
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect, NumberStepper } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -449,7 +449,15 @@ export default function FellowshipDetailPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Duration (mins)</label>
-                    <input type="number" value={meetingForm.durationMinutes} onChange={(e) => setMeetingForm((f) => ({ ...f, durationMinutes: e.target.value }))} placeholder="60" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <NumberStepper
+                      value={Number(meetingForm.durationMinutes) || 0}
+                      onValueChange={(v) => setMeetingForm((f) => ({ ...f, durationMinutes: v ? String(v) : '' }))}
+                      min={0}
+                      max={600}
+                      step={5}
+                      suffix="m"
+                      ariaLabel="Meeting duration in minutes"
+                    />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">

@@ -21,6 +21,19 @@ import {
   outreachParticipants,
   souls,
   followUps,
+  departments,
+  branchDepartments,
+  departmentMembers,
+  departmentJoinRequests,
+  departmentFollowups,
+  departmentUniformOutfits,
+  departmentUniformSchedule,
+  rotaTemplates,
+  rotaTemplateSlots,
+  rotaPoolMembers,
+  rotaInstances,
+  rotaAssignments,
+  rotaSwapRequests,
 } from './schema';
 import { sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -35,7 +48,7 @@ async function seed() {
   console.log('Seeding database...\n');
 
   // Clean existing data so seed is idempotent
-  await db.execute(sql`TRUNCATE regions, roles CASCADE`);
+  await db.execute(sql`TRUNCATE regions, roles, departments CASCADE`);
   console.log('✓ Cleared existing data');
 
   // ── 1. Regions ──────────────────────────────────────────────
@@ -421,6 +434,291 @@ async function seed() {
     ])
     .returning();
   console.log(`✓ 4 roles`);
+
+  // ── 4b. Global Departments (master catalogue) ───────────────
+  const [
+    choirDept,
+    ushersDept,
+    /* dramaDept */, /* hospitalityDept */, /* hostDept */, /* productionDept */, /* soundDept */, /* sanctuaryDept */,
+    /* newBelieversDept */, /* welfareDept */, /* childrensDept */, /* designDept */, /* socialMediaDept */,
+  ] = await db.insert(departments).values([
+    { departmentName: 'Choir', description: 'Vocal worship ministry', iconKey: 'music' },
+    { departmentName: 'Ushers', description: 'Welcome, seating and order', iconKey: 'users' },
+    { departmentName: 'Drama', description: 'Drama and stage performances', iconKey: 'theater' },
+    { departmentName: 'Hospitality', description: 'Food, refreshments and guest care', iconKey: 'coffee' },
+    { departmentName: 'Host Team', description: 'First-time guest hosts', iconKey: 'hand-wave' },
+    { departmentName: 'Production', description: 'Stage production and lighting', iconKey: 'lightbulb' },
+    { departmentName: 'Sound', description: 'Audio engineering and mixing', iconKey: 'headphones' },
+    { departmentName: 'Sanctuary Keepers', description: 'Cleaning and sanctuary preparation', iconKey: 'sparkles' },
+    { departmentName: 'New Believers', description: 'New convert care and discipleship', iconKey: 'heart' },
+    { departmentName: 'Welfare', description: 'Pastoral care and benevolence', iconKey: 'hand-heart' },
+    { departmentName: "Children's Ministry", description: 'Sunday school and kids ministry', iconKey: 'baby' },
+    { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
+    { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
+  ]).returning();
+  console.log(`✓ 13 global departments`);
+
+  // ── 4c. Branch Departments (smoke seed: 2 active instances) ─
+  const [choirLondon, ushersAccra] = await db.insert(branchDepartments).values([
+    {
+      branchId: london!.id,
+      departmentId: choirDept!.id,
+      leadMemberId: leaderSarah!.id,
+      description: 'London choir ministry under Sarah',
+    },
+    {
+      branchId: accra!.id,
+      departmentId: ushersDept!.id,
+      leadMemberId: leaderDavid!.id,
+      description: 'Accra usher team under David',
+    },
+  ]).returning();
+  console.log(`✓ 2 branch-department instances`);
+
+  // ── 4d. Department Members (smoke seed) ─────────────────────
+  await db.insert(departmentMembers).values([
+    { branchDepartmentId: choirLondon!.id, memberId: leaderSarah!.id },
+    { branchDepartmentId: choirLondon!.id, memberId: regularMembers[0]!.id },
+    { branchDepartmentId: choirLondon!.id, memberId: regularMembers[2]!.id },
+    { branchDepartmentId: choirLondon!.id, memberId: pastorLondon!.id },
+    { branchDepartmentId: ushersAccra!.id, memberId: leaderDavid!.id },
+    { branchDepartmentId: ushersAccra!.id, memberId: regularMembers[1]!.id },
+  ]);
+  console.log(`✓ 6 department member assignments`);
+
+  // ── 4e. Choir@London rich scenario ──────────────────────────
+  // Demonstrates: join requests, followups (incl. overdue), uniform gallery + schedule,
+  // rota template + slots + pool + generated instances + assignments + swap request.
+
+  // Join requests (1 pending, 1 approved historic, 1 rejected)
+  await db.insert(departmentJoinRequests).values([
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: regularMembers[3]!.id, // John Smith (Manchester) — cross-branch interest
+      status: 'pending',
+      notes: 'I sing tenor and would love to join when visiting London.',
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: regularMembers[0]!.id, // Emma — already in choir; this is the historic request
+      status: 'approved',
+      notes: 'Soprano, 5 years experience.',
+      reviewedBy: leaderSarah!.id,
+      reviewedAt: new Date('2025-09-12T10:00:00Z'),
+      reviewNotes: 'Welcome to the choir!',
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: regularMembers[4]!.id, // Fatima (Freetown)
+      status: 'rejected',
+      notes: 'Interested in remote participation.',
+      reviewedBy: leaderSarah!.id,
+      reviewedAt: new Date('2026-01-08T09:30:00Z'),
+      reviewNotes: 'Choir requires in-person attendance for rehearsals.',
+    },
+  ]);
+  console.log(`✓ 3 department join requests (Choir@London)`);
+
+  // Followups (one current week, one prior month, one overdue >30 days, one never-followed-up via no entry)
+  await db.insert(departmentFollowups).values([
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: regularMembers[0]!.id, // Emma — recent
+      recordedById: leaderSarah!.id,
+      assignedToId: leaderSarah!.id,
+      contactMethod: 'Phone Call',
+      contactStatus: 'Successful',
+      durationMinutes: 15,
+      notes: 'Discussed solo for Easter service. Confirmed.',
+      contactedAt: new Date('2026-05-02T18:00:00Z'),
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: regularMembers[2]!.id, // Priscilla — overdue
+      recordedById: leaderSarah!.id,
+      assignedToId: leaderSarah!.id,
+      contactMethod: 'Email',
+      contactStatus: 'No Response',
+      notes: 'Sent rehearsal schedule, awaiting reply.',
+      contactedAt: new Date('2026-03-20T12:00:00Z'),
+      nextFollowUpDate: '2026-04-01',
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      memberId: pastorLondon!.id, // Pastor — pastoral check-in
+      recordedById: leaderSarah!.id,
+      contactMethod: 'In-Person',
+      contactStatus: 'Successful',
+      durationMinutes: 30,
+      notes: 'Discussed worship direction for Q2.',
+      contactedAt: new Date('2026-04-28T19:30:00Z'),
+    },
+  ]);
+  console.log(`✓ 3 department followups (Choir@London)`);
+
+  // Uniform outfits (2 in gallery)
+  // 1x1 transparent PNG placeholders so seed works without large blobs
+  const tinyPng =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgAAIAAAUAAen5QwAAAABJRU5ErkJggg==';
+  const [robeOutfit, suitOutfit] = await db
+    .insert(departmentUniformOutfits)
+    .values([
+      {
+        branchDepartmentId: choirLondon!.id,
+        name: 'Royal Purple Robes',
+        imageUrl: tinyPng,
+        genderTarget: 'Unisex',
+        notes: 'Standard Sunday robes with gold trim.',
+        uploadedById: leaderSarah!.id,
+      },
+      {
+        branchDepartmentId: choirLondon!.id,
+        name: 'Formal Black & White',
+        imageUrl: tinyPng,
+        genderTarget: 'Unisex',
+        notes: 'For special services and concerts.',
+        uploadedById: leaderSarah!.id,
+      },
+    ])
+    .returning();
+  console.log(`✓ 2 uniform outfits (Choir@London)`);
+
+  // Uniform schedule (last Sunday + this Sunday + next Sunday)
+  await db.insert(departmentUniformSchedule).values([
+    {
+      branchDepartmentId: choirLondon!.id,
+      outfitId: robeOutfit!.id,
+      serviceDate: '2026-05-03',
+      assignedById: leaderSarah!.id,
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      outfitId: suitOutfit!.id,
+      serviceDate: '2026-05-10',
+      notes: 'Mother\'s Day special service.',
+      assignedById: leaderSarah!.id,
+    },
+    {
+      branchDepartmentId: choirLondon!.id,
+      outfitId: robeOutfit!.id,
+      serviceDate: '2026-05-17',
+      assignedById: leaderSarah!.id,
+    },
+  ]);
+  console.log(`✓ 3 uniform schedule entries (Choir@London)`);
+
+  // Rota template: Sunday Worship (weekday 0 = Sunday)
+  const [sundayTemplate] = await db
+    .insert(rotaTemplates)
+    .values([
+      {
+        branchDepartmentId: choirLondon!.id,
+        name: 'Sunday Worship',
+        recurrence: 'Weekly',
+        weekday: 0,
+        defaultStartTime: '10:30:00',
+        notes: 'Main Sunday morning service.',
+      },
+    ])
+    .returning();
+  console.log(`✓ 1 rota template (Choir@London)`);
+
+  // Rota slots (3 roles)
+  const [leadVocalSlot, sopranoSlot, tenorSlot] = await db
+    .insert(rotaTemplateSlots)
+    .values([
+      { templateId: sundayTemplate!.id, roleName: 'Lead Vocal', positionsRequired: 1, sortOrder: 1 },
+      { templateId: sundayTemplate!.id, roleName: 'Soprano', positionsRequired: 1, sortOrder: 2 },
+      { templateId: sundayTemplate!.id, roleName: 'Tenor', positionsRequired: 1, sortOrder: 3 },
+    ])
+    .returning();
+  console.log(`✓ 3 rota slots`);
+
+  // Rota pool (4 members)
+  await db.insert(rotaPoolMembers).values([
+    {
+      templateId: sundayTemplate!.id,
+      memberId: leaderSarah!.id,
+      preferredRoleName: 'Lead Vocal',
+      weight: 2,
+      lastScheduledAt: '2026-05-03',
+    },
+    {
+      templateId: sundayTemplate!.id,
+      memberId: regularMembers[0]!.id,
+      preferredRoleName: 'Soprano',
+      weight: 1,
+      lastScheduledAt: '2026-04-26',
+    },
+    {
+      templateId: sundayTemplate!.id,
+      memberId: regularMembers[2]!.id,
+      preferredRoleName: 'Soprano',
+      weight: 1,
+    },
+    {
+      templateId: sundayTemplate!.id,
+      memberId: pastorLondon!.id,
+      preferredRoleName: 'Tenor',
+      weight: 1,
+      lastScheduledAt: '2026-04-19',
+    },
+  ]);
+  console.log(`✓ 4 rota pool members`);
+
+  // Rota instances (this Sunday published, next Sunday draft)
+  const [thisSundayInstance, nextSundayInstance] = await db
+    .insert(rotaInstances)
+    .values([
+      {
+        templateId: sundayTemplate!.id,
+        branchDepartmentId: choirLondon!.id,
+        serviceDate: '2026-05-10',
+        startTime: '10:30:00',
+        status: 'Published',
+        publishedAt: new Date('2026-05-04T09:00:00Z'),
+      },
+      {
+        templateId: sundayTemplate!.id,
+        branchDepartmentId: choirLondon!.id,
+        serviceDate: '2026-05-17',
+        startTime: '10:30:00',
+        status: 'Draft',
+      },
+    ])
+    .returning();
+  console.log(`✓ 2 rota instances`);
+
+  // Assignments — published instance fully filled; draft instance partial
+  const assignmentRows = await db
+    .insert(rotaAssignments)
+    .values([
+      // This Sunday (Published)
+      { instanceId: thisSundayInstance!.id, slotId: leadVocalSlot!.id, memberId: leaderSarah!.id, status: 'Confirmed' },
+      { instanceId: thisSundayInstance!.id, slotId: sopranoSlot!.id, memberId: regularMembers[2]!.id, status: 'Assigned' },
+      { instanceId: thisSundayInstance!.id, slotId: tenorSlot!.id, memberId: pastorLondon!.id, status: 'Assigned' },
+      // Next Sunday (Draft) — soprano left open
+      { instanceId: nextSundayInstance!.id, slotId: leadVocalSlot!.id, memberId: leaderSarah!.id, status: 'Assigned' },
+      { instanceId: nextSundayInstance!.id, slotId: sopranoSlot!.id, memberId: null, status: 'Open' },
+      { instanceId: nextSundayInstance!.id, slotId: tenorSlot!.id, memberId: pastorLondon!.id, status: 'Assigned' },
+    ])
+    .returning();
+  console.log(`✓ 6 rota assignments`);
+
+  // Pending swap request — Priscilla can't make this Sunday, proposes Emma
+  const sopranoThisSundayAssignment = assignmentRows.find(
+    (a) => a.instanceId === thisSundayInstance!.id && a.slotId === sopranoSlot!.id,
+  );
+  await db.insert(rotaSwapRequests).values([
+    {
+      assignmentId: sopranoThisSundayAssignment!.id,
+      requestedById: regularMembers[2]!.id,
+      proposedMemberId: regularMembers[0]!.id,
+      reason: 'Travelling for work, can Emma cover?',
+      status: 'pending',
+    },
+  ]);
+  console.log(`✓ 1 pending swap request`);
 
   // ── 5. Member Roles ─────────────────────────────────────────
   await db.insert(memberRoles).values([
