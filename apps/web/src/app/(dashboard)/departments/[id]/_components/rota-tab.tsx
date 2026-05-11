@@ -384,10 +384,10 @@ function InstanceDetail({
   }
 
   const sortedAssignments = [...data.assignments].sort((a, b) => {
-    const ao = a.slotSortOrder ?? 999;
-    const bo = b.slotSortOrder ?? 999;
+    const ao = a.sortOrder ?? 999;
+    const bo = b.sortOrder ?? 999;
     if (ao !== bo) return ao - bo;
-    return (a.slotRoleName ?? '').localeCompare(b.slotRoleName ?? '');
+    return (a.roleName ?? '').localeCompare(b.roleName ?? '');
   });
 
   return (
@@ -435,7 +435,7 @@ function InstanceDetail({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium">{a.slotRoleName ?? 'Unassigned slot'}</p>
+                  <p className="text-sm font-medium">{a.roleName ?? 'Unassigned slot'}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.memberId
                       ? `${a.memberFirstName ?? ''} ${a.memberLastName ?? ''}`.trim()
@@ -984,7 +984,7 @@ function SwapsSection({
                         {r.requesterFirstName} {r.requesterLastName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDateLong(r.serviceDate)} • {r.slotRoleName ?? 'Slot'}
+                        {formatDateLong(r.serviceDate)} • {r.roleName ?? 'Slot'}
                       </p>
                     </div>
                     <Badge className="rounded-sm capitalize">{r.status}</Badge>

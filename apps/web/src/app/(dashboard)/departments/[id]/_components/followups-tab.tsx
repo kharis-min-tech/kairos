@@ -105,10 +105,10 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                     className="inline-flex items-center gap-2 rounded-full bg-[#f8b537]/20 px-3 py-1.5 text-xs font-medium text-[#7a5a00] transition-colors hover:bg-[#f8b537]/30 dark:text-[#f8b537]"
                   >
                     <span>
-                      {row.firstName} {row.lastName}
+                      {row.memberFirstName} {row.memberLastName}
                     </span>
                     <span className="rounded-full bg-white/60 px-2 py-0.5 text-[10px] dark:bg-black/30">
-                      {row.daysSinceFollowup == null
+                      {row.daysSinceFollowup === null
                         ? 'never'
                         : `${row.daysSinceFollowup}d`}
                     </span>
