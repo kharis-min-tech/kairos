@@ -1,4 +1,5 @@
-import { eq, and, count, sql, exists, ne } from 'drizzle-orm';
+import { eq, and, count, sql, exists, ne, inArray } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import {
   departments,
@@ -15,16 +16,31 @@ import {
   ConflictError,
   ValidationError,
   sendJoinRequestReceivedEmail,
-  sendJoinRequestApprovedEmail,
   sendJoinRequestRejectedEmail,
+  sendInterviewScheduledEmail,
+  sendOfferExtendedEmail,
+  sendProbationStartedEmail,
+  sendProbationPassedEmail,
 } from '@kairos/utils';
+
+// ── Recruitment pipeline constants ─────────────────────────
+
+const OPEN_STATUSES = [
+  'applied',
+  'interview_scheduled',
+  'interviewed',
+  'offered',
+  'probation',
+] as const;
 
 // ── Helpers ────────────────────────────────────────────────
 
 function enforceBranchScope(auth: AuthContext, branchId?: string | null) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
   if (branchId && branchId !== auth.branchId) {
-    throw new ForbiddenError('You can only access departments in your branch');
+    throw new ForbiddenError(
+      'This department belongs to a different branch. You can only join departments in your own branch.',
+    );
   }
 }
 
@@ -168,6 +184,7 @@ export async function listBranchDepartments(
         startDate: branchDepartments.startDate,
         endDate: branchDepartments.endDate,
         isActive: branchDepartments.isActive,
+        probationDays: branchDepartments.probationDays,
         createdAt: branchDepartments.createdAt,
         updatedAt: branchDepartments.updatedAt,
         memberCount: sql<number>`(
@@ -176,7 +193,8 @@ export async function listBranchDepartments(
         )`,
         pendingJoinRequestCount: sql<number>`(
           SELECT COUNT(*)::int FROM department_join_requests djr
-          WHERE djr.branch_department_id = ${branchDepartments.id} AND djr.status = 'pending'
+          WHERE djr.branch_department_id = ${branchDepartments.id}
+            AND djr.status IN ('applied','interview_scheduled','interviewed','offered','probation')
         )`,
       })
       .from(branchDepartments)
@@ -218,6 +236,7 @@ export async function getBranchDepartment(db: Database, auth: AuthContext, id: s
       startDate: branchDepartments.startDate,
       endDate: branchDepartments.endDate,
       isActive: branchDepartments.isActive,
+      probationDays: branchDepartments.probationDays,
       createdAt: branchDepartments.createdAt,
       updatedAt: branchDepartments.updatedAt,
     })
@@ -568,6 +587,27 @@ export async function createJoinRequest(
 ) {
   const bd = await getBranchDepartment(db, auth, branchDepartmentId);
 
+  // Applicant's branch must match the department's branch (defense-in-depth:
+  // enforced even for admin/pastor roles, since enforceBranchScope skips them).
+  const [applicant] = await db
+    .select({
+      homeBranchId: members.homeBranchId,
+      secondaryBranchId: members.secondaryBranchId,
+      isAtSecondaryBranch: members.isAtSecondaryBranch,
+    })
+    .from(members)
+    .where(eq(members.id, auth.memberId));
+  if (!applicant) throw new NotFoundError('Member not found');
+  const applicantBranchId =
+    applicant.isAtSecondaryBranch && applicant.secondaryBranchId !== null
+      ? applicant.secondaryBranchId
+      : applicant.homeBranchId;
+  if (applicantBranchId !== bd.branchId) {
+    throw new ForbiddenError(
+      'You can only join departments in your own branch.',
+    );
+  }
+
   // Already a member
   const [active] = await db
     .select({ id: departmentMembers.id })
@@ -589,10 +629,10 @@ export async function createJoinRequest(
       and(
         eq(departmentJoinRequests.branchDepartmentId, branchDepartmentId),
         eq(departmentJoinRequests.memberId, auth.memberId),
-        eq(departmentJoinRequests.status, 'pending'),
+        inArray(departmentJoinRequests.status, OPEN_STATUSES as unknown as string[]),
       ),
     );
-  if (pending) throw new ConflictError('You already have a pending join request for this department');
+  if (pending) throw new ConflictError('You already have an open application for this department');
 
   // Max-departments cap
   const activeCount = await countActiveDepartmentsForMember(db, auth.memberId);
@@ -631,9 +671,25 @@ export async function listJoinRequests(
   db: Database,
   auth: AuthContext,
   branchDepartmentId: string,
+  query: { stage?: 'open' | 'all' | 'terminal' } = {},
 ) {
   const bd = await getBranchDepartment(db, auth, branchDepartmentId);
   enforceLeaderOrAbove(auth, bd);
+
+  const interviewerOne = alias(members, 'interviewer_one');
+  const interviewerTwo = alias(members, 'interviewer_two');
+
+  const stage = query.stage ?? 'all';
+  const stageFilter =
+    stage === 'open'
+      ? inArray(departmentJoinRequests.status, OPEN_STATUSES as unknown as string[])
+      : stage === 'terminal'
+      ? inArray(departmentJoinRequests.status, ['rejected', 'withdrawn', 'active', 'probation_failed'])
+      : undefined;
+
+  const where = stageFilter
+    ? and(eq(departmentJoinRequests.branchDepartmentId, bd.id), stageFilter)
+    : eq(departmentJoinRequests.branchDepartmentId, bd.id);
 
   return db
     .select({
@@ -649,30 +705,46 @@ export async function listJoinRequests(
       reviewedBy: departmentJoinRequests.reviewedBy,
       reviewedAt: departmentJoinRequests.reviewedAt,
       reviewNotes: departmentJoinRequests.reviewNotes,
+      interviewScheduledAt: departmentJoinRequests.interviewScheduledAt,
+      interviewFormat: departmentJoinRequests.interviewFormat,
+      interviewLocation: departmentJoinRequests.interviewLocation,
+      interviewerOneId: departmentJoinRequests.interviewerOneId,
+      interviewerOneFirstName: interviewerOne.firstName,
+      interviewerOneLastName: interviewerOne.lastName,
+      interviewerTwoId: departmentJoinRequests.interviewerTwoId,
+      interviewerTwoFirstName: interviewerTwo.firstName,
+      interviewerTwoLastName: interviewerTwo.lastName,
+      interviewOutcome: departmentJoinRequests.interviewOutcome,
+      interviewNotes: departmentJoinRequests.interviewNotes,
+      offeredAt: departmentJoinRequests.offeredAt,
+      offerExpiresAt: departmentJoinRequests.offerExpiresAt,
+      offerMessage: departmentJoinRequests.offerMessage,
+      offerRespondedAt: departmentJoinRequests.offerRespondedAt,
+      offerResponse: departmentJoinRequests.offerResponse,
+      probationDays: departmentJoinRequests.probationDays,
+      probationStartDate: departmentJoinRequests.probationStartDate,
+      probationEndDate: departmentJoinRequests.probationEndDate,
+      probationOutcome: departmentJoinRequests.probationOutcome,
+      probationNotes: departmentJoinRequests.probationNotes,
       createdAt: departmentJoinRequests.createdAt,
       updatedAt: departmentJoinRequests.updatedAt,
     })
     .from(departmentJoinRequests)
     .innerJoin(members, eq(departmentJoinRequests.memberId, members.id))
-    .where(
-      and(
-        eq(departmentJoinRequests.branchDepartmentId, bd.id),
-        eq(departmentJoinRequests.status, 'pending'),
-      ),
-    )
+    .leftJoin(interviewerOne, eq(departmentJoinRequests.interviewerOneId, interviewerOne.id))
+    .leftJoin(interviewerTwo, eq(departmentJoinRequests.interviewerTwoId, interviewerTwo.id))
+    .where(where)
     .orderBy(departmentJoinRequests.createdAt);
 }
 
-export async function reviewJoinRequest(
+// ── Recruitment state machine ──────────────────────────────
+
+async function loadJoinRequest(
   db: Database,
-  auth: AuthContext,
   branchDepartmentId: string,
   requestId: string,
-  data: { status: 'approved' | 'rejected'; reviewNotes?: string },
+  expectedStatuses: readonly string[],
 ) {
-  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
-  enforceLeaderOrAbove(auth, bd);
-
   const [request] = await db
     .select()
     .from(departmentJoinRequests)
@@ -680,26 +752,365 @@ export async function reviewJoinRequest(
       and(
         eq(departmentJoinRequests.id, requestId),
         eq(departmentJoinRequests.branchDepartmentId, branchDepartmentId),
-        eq(departmentJoinRequests.status, 'pending'),
       ),
     );
-  if (!request) throw new NotFoundError('Join request not found or already reviewed');
+  if (!request) throw new NotFoundError('Join request not found');
+  if (!expectedStatuses.includes(request.status)) {
+    throw new ConflictError(
+      `Cannot perform this action on a request in '${request.status}' stage`,
+    );
+  }
+  return request;
+}
 
-  // Re-check the cap at approval time
-  if (data.status === 'approved') {
-    const activeCount = await countActiveDepartmentsForMember(db, request.memberId);
-    if (activeCount >= MAX_DEPARTMENTS_PER_MEMBER) {
-      throw new ConflictError(
-        `Member is already in ${MAX_DEPARTMENTS_PER_MEMBER} departments — cannot approve`,
-      );
-    }
+async function validateInterviewer(
+  db: Database,
+  interviewerId: string,
+  branchId: string,
+  field: 'interviewerOneId' | 'interviewerTwoId',
+) {
+  const [m] = await db
+    .select({
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      secondaryBranchId: members.secondaryBranchId,
+      isAtSecondaryBranch: members.isAtSecondaryBranch,
+    })
+    .from(members)
+    .where(and(eq(members.id, interviewerId), eq(members.isActive, true)));
+  if (!m) throw new ValidationError(`${field}: interviewer not found`);
+  const activeBranch =
+    m.isAtSecondaryBranch && m.secondaryBranchId !== null
+      ? m.secondaryBranchId
+      : m.homeBranchId;
+  if (activeBranch !== branchId) {
+    throw new ValidationError(`${field}: interviewer must belong to the same branch`);
+  }
+}
+
+async function fireRequesterEmail(
+  db: Database,
+  memberId: string,
+  fn: (email: string, name: string, departmentName: string) => Promise<void>,
+  departmentName: string,
+) {
+  const [m] = await db
+    .select({ email: members.email, firstName: members.firstName })
+    .from(members)
+    .where(eq(members.id, memberId));
+  if (m?.email) fn(m.email, m.firstName, departmentName).catch(() => undefined);
+}
+
+export async function scheduleJoinRequestInterview(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: {
+    interviewScheduledAt: string;
+    interviewFormat: 'in_person' | 'virtual';
+    interviewLocation?: string;
+    interviewerOneId: string;
+    interviewerTwoId?: string;
+  },
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  enforceLeaderOrAbove(auth, bd);
+  await loadJoinRequest(db, branchDepartmentId, requestId, ['applied']);
+
+  if (data.interviewerTwoId && data.interviewerTwoId === data.interviewerOneId) {
+    throw new ValidationError('Interviewers must be distinct');
+  }
+  await validateInterviewer(db, data.interviewerOneId, bd.branchId, 'interviewerOneId');
+  if (data.interviewerTwoId) {
+    await validateInterviewer(db, data.interviewerTwoId, bd.branchId, 'interviewerTwoId');
   }
 
   const [updated] = await db
     .update(departmentJoinRequests)
     .set({
-      status: data.status,
-      reviewNotes: data.reviewNotes ?? request.reviewNotes,
+      status: 'interview_scheduled',
+      interviewScheduledAt: new Date(data.interviewScheduledAt),
+      interviewFormat: data.interviewFormat,
+      interviewLocation: data.interviewLocation ?? null,
+      interviewerOneId: data.interviewerOneId,
+      interviewerTwoId: data.interviewerTwoId ?? null,
+      interviewOutcome: 'pending',
+      updatedAt: new Date(),
+    })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  await fireRequesterEmail(
+    db,
+    updated!.memberId,
+    (email, name, deptName) =>
+      sendInterviewScheduledEmail(email, name, deptName, {
+        scheduledAt: new Date(data.interviewScheduledAt),
+        format: data.interviewFormat,
+        location: data.interviewLocation,
+      }),
+    bd.departmentName,
+  );
+
+  return updated!;
+}
+
+export async function recordJoinRequestInterview(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: { interviewOutcome: 'pass' | 'fail'; interviewNotes?: string },
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  enforceLeaderOrAbove(auth, bd);
+  await loadJoinRequest(db, branchDepartmentId, requestId, ['interview_scheduled']);
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({
+      status: 'interviewed',
+      interviewOutcome: data.interviewOutcome,
+      interviewNotes: data.interviewNotes ?? null,
+      updatedAt: new Date(),
+    })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  return updated!;
+}
+
+export async function extendJoinRequestOffer(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: { offerExpiresAt?: string; offerMessage?: string; probationDays?: number },
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  enforceLeaderOrAbove(auth, bd);
+  const request = await loadJoinRequest(db, branchDepartmentId, requestId, ['interviewed']);
+  if (request.interviewOutcome !== 'pass') {
+    throw new ConflictError('Cannot extend an offer when the interview did not pass');
+  }
+
+  const probationDays = data.probationDays ?? bd.probationDays ?? 28;
+  if (probationDays < 1 || probationDays > 365) {
+    throw new ValidationError('probationDays must be between 1 and 365');
+  }
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({
+      status: 'offered',
+      offeredAt: new Date(),
+      offerExpiresAt: data.offerExpiresAt ? new Date(data.offerExpiresAt) : null,
+      offerMessage: data.offerMessage ?? null,
+      probationDays,
+      updatedAt: new Date(),
+    })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  await fireRequesterEmail(
+    db,
+    updated!.memberId,
+    (email, name, deptName) =>
+      sendOfferExtendedEmail(email, name, deptName, {
+        expiresAt: data.offerExpiresAt ? new Date(data.offerExpiresAt) : null,
+        probationDays,
+        message: data.offerMessage,
+      }),
+    bd.departmentName,
+  );
+
+  return updated!;
+}
+
+export async function respondToJoinRequestOffer(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: { offerResponse: 'accepted' | 'declined' },
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  const request = await loadJoinRequest(db, branchDepartmentId, requestId, ['offered']);
+
+  if (request.memberId !== auth.memberId) {
+    throw new ForbiddenError('Only the applicant can respond to this offer');
+  }
+
+  if (request.offerExpiresAt && request.offerExpiresAt < new Date()) {
+    throw new ConflictError('This offer has expired');
+  }
+
+  if (data.offerResponse === 'declined') {
+    const [updated] = await db
+      .update(departmentJoinRequests)
+      .set({
+        status: 'rejected',
+        offerResponse: 'declined',
+        offerRespondedAt: new Date(),
+        reviewNotes: 'Offer declined by applicant',
+        updatedAt: new Date(),
+      })
+      .where(eq(departmentJoinRequests.id, requestId))
+      .returning();
+    return updated!;
+  }
+
+  // Accepted → enter probation
+  const activeCount = await countActiveDepartmentsForMember(db, auth.memberId);
+  if (activeCount >= MAX_DEPARTMENTS_PER_MEMBER) {
+    throw new ConflictError(
+      `You are already in ${MAX_DEPARTMENTS_PER_MEMBER} departments — leave one before accepting`,
+    );
+  }
+
+  const probationDays = request.probationDays ?? bd.probationDays ?? 28;
+  const startDate = sql<string>`CURRENT_DATE`;
+  const endDate = sql<string>`(CURRENT_DATE + INTERVAL '${sql.raw(String(probationDays))} days')::date`;
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({
+      status: 'probation',
+      offerResponse: 'accepted',
+      offerRespondedAt: new Date(),
+      probationStartDate: startDate as unknown as string,
+      probationEndDate: endDate as unknown as string,
+      probationOutcome: 'pending',
+      updatedAt: new Date(),
+    })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  // Reactivate or insert department member with probation status
+  const [existing] = await db
+    .select({ id: departmentMembers.id })
+    .from(departmentMembers)
+    .where(
+      and(
+        eq(departmentMembers.branchDepartmentId, branchDepartmentId),
+        eq(departmentMembers.memberId, auth.memberId),
+      ),
+    );
+  if (existing) {
+    await db
+      .update(departmentMembers)
+      .set({
+        isActive: true,
+        leaveDate: null,
+        membershipStatus: 'probation',
+        probationEndDate: endDate as unknown as string,
+        updatedAt: new Date(),
+      })
+      .where(eq(departmentMembers.id, existing.id));
+  } else {
+    await db.insert(departmentMembers).values({
+      branchDepartmentId,
+      memberId: auth.memberId,
+      membershipStatus: 'probation',
+      probationEndDate: endDate as unknown as string,
+    });
+  }
+
+  await fireRequesterEmail(
+    db,
+    auth.memberId,
+    (email, name, deptName) =>
+      sendProbationStartedEmail(email, name, deptName, { probationDays }),
+    bd.departmentName,
+  );
+
+  return updated!;
+}
+
+export async function withdrawJoinRequest(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+) {
+  await getBranchDepartment(db, auth, branchDepartmentId);
+  const request = await loadJoinRequest(db, branchDepartmentId, requestId, [
+    'applied',
+    'interview_scheduled',
+    'interviewed',
+    'offered',
+  ]);
+  if (request.memberId !== auth.memberId) {
+    throw new ForbiddenError('Only the applicant can withdraw this request');
+  }
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({ status: 'withdrawn', updatedAt: new Date() })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  return updated!;
+}
+
+export async function rejectJoinRequest(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: { reviewNotes?: string } = {},
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  enforceLeaderOrAbove(auth, bd);
+  const request = await loadJoinRequest(db, branchDepartmentId, requestId, [
+    'applied',
+    'interview_scheduled',
+    'interviewed',
+    'offered',
+  ]);
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({
+      status: 'rejected',
+      reviewedBy: auth.memberId,
+      reviewedAt: new Date(),
+      reviewNotes: data.reviewNotes ?? null,
+      updatedAt: new Date(),
+    })
+    .where(eq(departmentJoinRequests.id, requestId))
+    .returning();
+
+  await fireRequesterEmail(
+    db,
+    request.memberId,
+    sendJoinRequestRejectedEmail,
+    bd.departmentName,
+  );
+
+  return updated!;
+}
+
+export async function evaluateJoinRequestProbation(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  requestId: string,
+  data: { probationOutcome: 'passed' | 'failed'; probationNotes?: string },
+) {
+  const bd = await getBranchDepartment(db, auth, branchDepartmentId);
+  enforceLeaderOrAbove(auth, bd);
+  const request = await loadJoinRequest(db, branchDepartmentId, requestId, ['probation']);
+
+  const newStatus = data.probationOutcome === 'passed' ? 'active' : 'probation_failed';
+
+  const [updated] = await db
+    .update(departmentJoinRequests)
+    .set({
+      status: newStatus,
+      probationOutcome: data.probationOutcome,
+      probationNotes: data.probationNotes ?? null,
       reviewedBy: auth.memberId,
       reviewedAt: new Date(),
       updatedAt: new Date(),
@@ -707,37 +1118,51 @@ export async function reviewJoinRequest(
     .where(eq(departmentJoinRequests.id, requestId))
     .returning();
 
-  if (data.status === 'approved') {
-    const [existing] = await db
-      .select({ id: departmentMembers.id })
-      .from(departmentMembers)
+  if (data.probationOutcome === 'passed') {
+    await db
+      .update(departmentMembers)
+      .set({
+        membershipStatus: 'active',
+        probationEndDate: null,
+        updatedAt: new Date(),
+      })
       .where(
         and(
           eq(departmentMembers.branchDepartmentId, branchDepartmentId),
           eq(departmentMembers.memberId, request.memberId),
+          eq(departmentMembers.isActive, true),
         ),
       );
-    if (existing) {
-      await db
-        .update(departmentMembers)
-        .set({ isActive: true, leaveDate: null, updatedAt: new Date() })
-        .where(eq(departmentMembers.id, existing.id));
-    } else {
-      await db
-        .insert(departmentMembers)
-        .values({ branchDepartmentId, memberId: request.memberId });
-    }
-  }
 
-  // Outcome email
-  const [reviewee] = await db
-    .select({ email: members.email, firstName: members.firstName })
-    .from(members)
-    .where(eq(members.id, request.memberId));
-  if (reviewee?.email) {
-    const sendFn =
-      data.status === 'approved' ? sendJoinRequestApprovedEmail : sendJoinRequestRejectedEmail;
-    sendFn(reviewee.email, reviewee.firstName, bd.departmentName).catch(() => undefined);
+    await fireRequesterEmail(
+      db,
+      request.memberId,
+      (email, name, deptName) =>
+        sendProbationPassedEmail(email, name, deptName),
+      bd.departmentName,
+    );
+  } else {
+    await db
+      .update(departmentMembers)
+      .set({
+        isActive: false,
+        leaveDate: sql`CURRENT_DATE`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(departmentMembers.branchDepartmentId, branchDepartmentId),
+          eq(departmentMembers.memberId, request.memberId),
+          eq(departmentMembers.isActive, true),
+        ),
+      );
+
+    await fireRequesterEmail(
+      db,
+      request.memberId,
+      sendJoinRequestRejectedEmail,
+      bd.departmentName,
+    );
   }
 
   return updated!;
@@ -772,3 +1197,60 @@ export async function listMyDepartments(db: Database, auth: AuthContext) {
 
 // silence unused import
 void ne;
+
+// ── Member-facing: my open join requests ───────────────────
+
+export async function listMyJoinRequests(db: Database, auth: AuthContext) {
+  return db
+    .select({
+      id: departmentJoinRequests.id,
+      branchDepartmentId: departmentJoinRequests.branchDepartmentId,
+      memberId: departmentJoinRequests.memberId,
+      status: departmentJoinRequests.status,
+      notes: departmentJoinRequests.notes,
+      reviewedBy: departmentJoinRequests.reviewedBy,
+      reviewedAt: departmentJoinRequests.reviewedAt,
+      reviewNotes: departmentJoinRequests.reviewNotes,
+      interviewScheduledAt: departmentJoinRequests.interviewScheduledAt,
+      interviewFormat: departmentJoinRequests.interviewFormat,
+      interviewLocation: departmentJoinRequests.interviewLocation,
+      interviewerOneId: departmentJoinRequests.interviewerOneId,
+      interviewerTwoId: departmentJoinRequests.interviewerTwoId,
+      interviewOutcome: departmentJoinRequests.interviewOutcome,
+      interviewNotes: departmentJoinRequests.interviewNotes,
+      offeredAt: departmentJoinRequests.offeredAt,
+      offerExpiresAt: departmentJoinRequests.offerExpiresAt,
+      offerMessage: departmentJoinRequests.offerMessage,
+      offerRespondedAt: departmentJoinRequests.offerRespondedAt,
+      offerResponse: departmentJoinRequests.offerResponse,
+      probationDays: departmentJoinRequests.probationDays,
+      probationStartDate: departmentJoinRequests.probationStartDate,
+      probationEndDate: departmentJoinRequests.probationEndDate,
+      probationOutcome: departmentJoinRequests.probationOutcome,
+      probationNotes: departmentJoinRequests.probationNotes,
+      createdAt: departmentJoinRequests.createdAt,
+      updatedAt: departmentJoinRequests.updatedAt,
+      branchId: branchDepartments.branchId,
+      branchName: branches.branchName,
+      departmentId: branchDepartments.departmentId,
+      departmentName: departments.departmentName,
+      iconKey: departments.iconKey,
+    })
+    .from(departmentJoinRequests)
+    .innerJoin(
+      branchDepartments,
+      eq(departmentJoinRequests.branchDepartmentId, branchDepartments.id),
+    )
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .innerJoin(branches, eq(branchDepartments.branchId, branches.id))
+    .where(
+      and(
+        eq(departmentJoinRequests.memberId, auth.memberId),
+        inArray(
+          departmentJoinRequests.status,
+          OPEN_STATUSES as unknown as string[],
+        ),
+      ),
+    )
+    .orderBy(departmentJoinRequests.createdAt);
+}

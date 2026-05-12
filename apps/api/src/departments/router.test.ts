@@ -18,6 +18,10 @@ vi.mock('@kairos/utils', async () => {
     sendJoinRequestReceivedEmail: vi.fn(() => Promise.resolve()),
     sendJoinRequestApprovedEmail: vi.fn(() => Promise.resolve()),
     sendJoinRequestRejectedEmail: vi.fn(() => Promise.resolve()),
+    sendInterviewScheduledEmail: vi.fn(() => Promise.resolve()),
+    sendOfferExtendedEmail: vi.fn(() => Promise.resolve()),
+    sendProbationStartedEmail: vi.fn(() => Promise.resolve()),
+    sendProbationPassedEmail: vi.fn(() => Promise.resolve()),
   };
 });
 
@@ -262,14 +266,23 @@ describe('DELETE /api/departments/:id/members/:memberId', () => {
 
 describe('POST /api/departments/:id/join-requests', () => {
   it('allows member to create join request', async () => {
-    // 1) getBranchDept, 2) active check, 3) pending check, 4) cap count, 5) requester email
+    // 1) getBranchDept, 2) applicant branch, 3) active check, 4) pending check, 5) cap count, 6) requester email
     mockDb.select
       .mockReturnValueOnce(chainTo([sampleBranchDept]))
+      .mockReturnValueOnce(
+        chainTo([
+          {
+            homeBranchId: sampleBranchDept.branchId,
+            secondaryBranchId: null,
+            isAtSecondaryBranch: false,
+          },
+        ]),
+      )
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([{ value: 0 }]))
       .mockReturnValueOnce(chainTo([{ email: 'm@x', firstName: 'M' }]));
-    mockDb.insert.mockReturnValueOnce(chainTo([{ id: requestId, status: 'pending' }]));
+    mockDb.insert.mockReturnValueOnce(chainTo([{ id: requestId, status: 'applied' }]));
     const res = await app.request(`/api/departments/${branchDeptId}/join-requests`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
@@ -301,17 +314,17 @@ describe('GET /api/departments/:id/join-requests', () => {
   });
 });
 
-// ── PATCH /api/departments/:id/join-requests/:requestId ────
+// ── POST /api/departments/:id/join-requests/:requestId/reject ─
 
-describe('PATCH /api/departments/:id/join-requests/:requestId', () => {
+describe('POST /api/departments/:id/join-requests/:requestId/reject', () => {
   it('returns 403 for regular member', async () => {
     mockDb.select.mockReturnValueOnce(chainTo([sampleBranchDept]));
     const res = await app.request(
-      `/api/departments/${branchDeptId}/join-requests/${requestId}`,
+      `/api/departments/${branchDeptId}/join-requests/${requestId}/reject`,
       {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
-        body: JSON.stringify({ status: 'approved' }),
+        body: JSON.stringify({ reviewNotes: 'no fit' }),
       },
     );
     expect(res.status).toBe(403);

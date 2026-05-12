@@ -61,6 +61,10 @@ vi.mock('@kairos/utils', async () => {
     sendJoinRequestReceivedEmail: vi.fn(() => Promise.resolve()),
     sendJoinRequestApprovedEmail: vi.fn(() => Promise.resolve()),
     sendJoinRequestRejectedEmail: vi.fn(() => Promise.resolve()),
+    sendInterviewScheduledEmail: vi.fn(() => Promise.resolve()),
+    sendOfferExtendedEmail: vi.fn(() => Promise.resolve()),
+    sendProbationStartedEmail: vi.fn(() => Promise.resolve()),
+    sendProbationPassedEmail: vi.fn(() => Promise.resolve()),
   };
 });
 
@@ -102,11 +106,28 @@ const sampleJoinRequest = {
   id: requestId,
   branchDepartmentId: branchDeptId,
   memberId: memberAuth.memberId,
-  status: 'pending' as const,
+  status: 'applied' as const,
   notes: 'I would like to join',
   reviewedBy: null,
   reviewedAt: null,
   reviewNotes: null,
+  interviewScheduledAt: null as Date | null,
+  interviewFormat: null as string | null,
+  interviewLocation: null as string | null,
+  interviewerOneId: null as string | null,
+  interviewerTwoId: null as string | null,
+  interviewOutcome: 'pending' as string,
+  interviewNotes: null as string | null,
+  offeredAt: null as Date | null,
+  offerExpiresAt: null as Date | null,
+  offerMessage: null as string | null,
+  offerRespondedAt: null as Date | null,
+  offerResponse: null as string | null,
+  probationDays: null as number | null,
+  probationStartDate: null as string | null,
+  probationEndDate: null as string | null,
+  probationOutcome: 'pending' as string,
+  probationNotes: null as string | null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -129,7 +150,13 @@ import {
   removeDepartmentMember,
   createJoinRequest,
   listJoinRequests,
-  reviewJoinRequest,
+  scheduleJoinRequestInterview,
+  recordJoinRequestInterview,
+  extendJoinRequestOffer,
+  respondToJoinRequestOffer,
+  withdrawJoinRequest,
+  rejectJoinRequest,
+  evaluateJoinRequestProbation,
   listMyDepartments,
 } from './service';
 
@@ -222,7 +249,7 @@ describe('getBranchDepartment', () => {
   it('throws ForbiddenError for member in different branch', async () => {
     setupSelect([sampleBranchDept]);
     await expect(getBranchDepartment(mockDb, otherAuth, branchDeptId)).rejects.toThrow(
-      'You can only access departments in your branch',
+      'This department belongs to a different branch',
     );
   });
 });
@@ -528,10 +555,17 @@ describe('removeDepartmentMember', () => {
 // ── createJoinRequest ─────────────────────────────────────
 
 describe('createJoinRequest', () => {
+  const sampleApplicant = {
+    homeBranchId: branchId,
+    secondaryBranchId: null,
+    isAtSecondaryBranch: false,
+  };
+
   it('creates a request for a member', async () => {
-    // 1) getBranchDept, 2) active check, 3) pending check, 4) cap count, 5) requester email
+    // 1) getBranchDept, 2) applicant branch, 3) active check, 4) pending check, 5) cap count, 6) requester email
     setupSelectSequence(
       [sampleBranchDept],
+      [sampleApplicant],
       [],
       [],
       [{ value: 0 }],
@@ -542,22 +576,32 @@ describe('createJoinRequest', () => {
     expect(result).toEqual(sampleJoinRequest);
   });
 
+  it('throws ForbiddenError when applicant is in a different branch', async () => {
+    setupSelectSequence(
+      [sampleBranchDept],
+      [{ ...sampleApplicant, homeBranchId: 'other-branch' }],
+    );
+    await expect(
+      createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
+    ).rejects.toThrow('You can only join departments in your own branch');
+  });
+
   it('throws ConflictError when already a member', async () => {
-    setupSelectSequence([sampleBranchDept], [{ id: 'existing-dm' }]);
+    setupSelectSequence([sampleBranchDept], [sampleApplicant], [{ id: 'existing-dm' }]);
     await expect(
       createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
     ).rejects.toThrow('You are already a member of this department');
   });
 
   it('throws ConflictError when pending request exists', async () => {
-    setupSelectSequence([sampleBranchDept], [], [sampleJoinRequest]);
+    setupSelectSequence([sampleBranchDept], [sampleApplicant], [], [sampleJoinRequest]);
     await expect(
       createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
-    ).rejects.toThrow('pending join request');
+    ).rejects.toThrow('open application');
   });
 
   it('throws ConflictError when at max-departments cap', async () => {
-    setupSelectSequence([sampleBranchDept], [], [], [{ value: 2 }]);
+    setupSelectSequence([sampleBranchDept], [sampleApplicant], [], [], [{ value: 2 }]);
     await expect(
       createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
     ).rejects.toThrow('already in 2 departments');
@@ -582,87 +626,213 @@ describe('listJoinRequests', () => {
   });
 });
 
-// ── reviewJoinRequest ─────────────────────────────────────
+// ── Recruitment state machine ─────────────────────────────
 
-describe('reviewJoinRequest', () => {
-  it('approves and inserts new department member', async () => {
-    // 1) getBranchDept, 2) pending request lookup, 3) cap count (approve path), 4) existing membership check, 5) reviewee email
+const interviewerOne = { id: 'int-1', isActive: true, isAtSecondaryBranch: false, homeBranchId: branchId, secondaryBranchId: null };
+
+describe('scheduleJoinRequestInterview', () => {
+  it('transitions applied → interview_scheduled and persists interviewer + format', async () => {
     setupSelectSequence(
       [sampleBranchDept],
-      [sampleJoinRequest],
-      [{ value: 0 }],
-      [],
+      [sampleJoinRequest],          // loadJoinRequest expects 'applied' — sample is 'applied'
+      [interviewerOne],             // interviewer 1 lookup
+      [{ email: 'm@x', firstName: 'M' }], // requester email
+    );
+    setupUpdate([{ ...sampleJoinRequest, status: 'interview_scheduled' }]);
+    const result = await scheduleJoinRequestInterview(mockDb, adminAuth, branchDeptId, requestId, {
+      interviewScheduledAt: new Date().toISOString(),
+      interviewFormat: 'in_person',
+      interviewerOneId: 'int-1',
+    });
+    expect(result.status).toBe('interview_scheduled');
+  });
+
+  it('rejects when interviewers are not distinct', async () => {
+    setupSelectSequence([sampleBranchDept], [sampleJoinRequest]);
+    await expect(
+      scheduleJoinRequestInterview(mockDb, adminAuth, branchDeptId, requestId, {
+        interviewScheduledAt: new Date().toISOString(),
+        interviewFormat: 'in_person',
+        interviewerOneId: 'int-1',
+        interviewerTwoId: 'int-1',
+      }),
+    ).rejects.toThrow('Interviewers must be distinct');
+  });
+
+  it('forbids non-leader', async () => {
+    setupSelect([sampleBranchDept]);
+    await expect(
+      scheduleJoinRequestInterview(mockDb, memberAuth, branchDeptId, requestId, {
+        interviewScheduledAt: new Date().toISOString(),
+        interviewFormat: 'in_person',
+        interviewerOneId: 'int-1',
+      }),
+    ).rejects.toThrow('Only department leads or above');
+  });
+});
+
+describe('recordJoinRequestInterview', () => {
+  it('transitions interview_scheduled → interviewed with outcome', async () => {
+    const scheduled = { ...sampleJoinRequest, status: 'interview_scheduled' as const };
+    setupSelectSequence([sampleBranchDept], [scheduled]);
+    setupUpdate([{ ...scheduled, status: 'interviewed', interviewOutcome: 'pass' }]);
+    const result = await recordJoinRequestInterview(mockDb, adminAuth, branchDeptId, requestId, {
+      interviewOutcome: 'pass',
+    });
+    expect(result.status).toBe('interviewed');
+    expect(result.interviewOutcome).toBe('pass');
+  });
+
+  it('rejects when source state is wrong', async () => {
+    setupSelectSequence([sampleBranchDept], [sampleJoinRequest]); // sample is 'applied'
+    await expect(
+      recordJoinRequestInterview(mockDb, adminAuth, branchDeptId, requestId, {
+        interviewOutcome: 'pass',
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('extendJoinRequestOffer', () => {
+  it('transitions interviewed (pass) → offered with branch default probation', async () => {
+    const interviewed = { ...sampleJoinRequest, status: 'interviewed' as const, interviewOutcome: 'pass' };
+    setupSelectSequence(
+      [{ ...sampleBranchDept, probationDays: 30 }],
+      [interviewed],
       [{ email: 'm@x', firstName: 'M' }],
     );
-    setupUpdate([{ ...sampleJoinRequest, status: 'approved' }]);
+    setupUpdate([{ ...interviewed, status: 'offered', probationDays: 30 }]);
+    const result = await extendJoinRequestOffer(mockDb, adminAuth, branchDeptId, requestId, {});
+    expect(result.status).toBe('offered');
+    expect(result.probationDays).toBe(30);
+  });
+
+  it('refuses to offer when interview outcome is not pass', async () => {
+    const interviewed = { ...sampleJoinRequest, status: 'interviewed' as const, interviewOutcome: 'fail' };
+    setupSelectSequence([sampleBranchDept], [interviewed]);
+    await expect(
+      extendJoinRequestOffer(mockDb, adminAuth, branchDeptId, requestId, {}),
+    ).rejects.toThrow();
+  });
+});
+
+describe('respondToJoinRequestOffer', () => {
+  it('member accepts → probation status + dept_member insert', async () => {
+    const offered = {
+      ...sampleJoinRequest,
+      status: 'offered' as const,
+      offeredAt: new Date(),
+      offerExpiresAt: null,
+      probationDays: 28,
+    };
+    setupSelectSequence(
+      [sampleBranchDept],
+      [offered],
+      [{ value: 0 }],            // cap re-check
+      [],                        // existing dept_member lookup — none
+      [{ email: 'm@x', firstName: 'M' }], // probation started email
+    );
+    setupUpdate([{ ...offered, status: 'probation' }]);
     setupInsert([{ id: 'dm-new' }]);
-    const result = await reviewJoinRequest(mockDb, adminAuth, branchDeptId, requestId, {
-      status: 'approved',
+    const result = await respondToJoinRequestOffer(mockDb, memberAuth, branchDeptId, requestId, {
+      offerResponse: 'accepted',
     });
-    expect(result.status).toBe('approved');
+    expect(result.status).toBe('probation');
     expect(mockDb.insert).toHaveBeenCalled();
   });
 
-  it('approves and reactivates existing membership', async () => {
-    setupSelectSequence(
-      [sampleBranchDept],
-      [sampleJoinRequest],
-      [{ value: 0 }],
-      [{ id: 'prior-dm' }],
-      [{ email: 'm@x', firstName: 'M' }],
-    );
-    let updCount = 0;
-    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
-      updCount++;
-      return createChain(updCount === 1 ? [{ ...sampleJoinRequest, status: 'approved' }] : undefined);
+  it('member declines → status rejected with offerResponse declined', async () => {
+    const offered = { ...sampleJoinRequest, status: 'offered' as const, offerExpiresAt: null };
+    setupSelectSequence([sampleBranchDept], [offered]);
+    setupUpdate([{ ...offered, status: 'rejected', offerResponse: 'declined' }]);
+    const result = await respondToJoinRequestOffer(mockDb, memberAuth, branchDeptId, requestId, {
+      offerResponse: 'declined',
     });
-    const result = await reviewJoinRequest(mockDb, adminAuth, branchDeptId, requestId, {
-      status: 'approved',
-    });
-    expect(result.status).toBe('approved');
-    expect(updCount).toBe(2); // request status + reactivate membership
-    expect(mockDb.insert).not.toHaveBeenCalled();
+    expect(result.status).toBe('rejected');
+    expect(result.offerResponse).toBe('declined');
   });
 
-  it('rejects without modifying membership', async () => {
-    // 1) getBranchDept, 2) pending lookup, 3) reviewee email (no cap/existing checks on reject)
+  it('rejects when caller is not the requesting member', async () => {
+    setupSelectSequence([sampleBranchDept], [{ ...sampleJoinRequest, status: 'offered' }]);
+    await expect(
+      respondToJoinRequestOffer(mockDb, otherAuth, branchDeptId, requestId, { offerResponse: 'accepted' }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('withdrawJoinRequest', () => {
+  it('member withdraws from applied state', async () => {
+    setupSelectSequence([sampleBranchDept], [sampleJoinRequest]);
+    setupUpdate([{ ...sampleJoinRequest, status: 'withdrawn' }]);
+    const result = await withdrawJoinRequest(mockDb, memberAuth, branchDeptId, requestId);
+    expect(result.status).toBe('withdrawn');
+  });
+
+  it('forbids other members from withdrawing on their behalf', async () => {
+    setupSelectSequence([sampleBranchDept], [sampleJoinRequest]);
+    await expect(
+      withdrawJoinRequest(mockDb, otherAuth, branchDeptId, requestId),
+    ).rejects.toThrow();
+  });
+});
+
+describe('rejectJoinRequest', () => {
+  it('lead rejects an applied request and emails requester', async () => {
     setupSelectSequence(
       [sampleBranchDept],
       [sampleJoinRequest],
       [{ email: 'm@x', firstName: 'M' }],
     );
     setupUpdate([{ ...sampleJoinRequest, status: 'rejected' }]);
-    const result = await reviewJoinRequest(mockDb, adminAuth, branchDeptId, requestId, {
-      status: 'rejected',
-      reviewNotes: 'no thanks',
-    });
+    const result = await rejectJoinRequest(mockDb, adminAuth, branchDeptId, requestId, { reviewNotes: 'no fit' });
     expect(result.status).toBe('rejected');
-    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 
-  it('throws ForbiddenError for regular member', async () => {
+  it('forbids regular member from rejecting', async () => {
     setupSelect([sampleBranchDept]);
     await expect(
-      reviewJoinRequest(mockDb, memberAuth, branchDeptId, requestId, { status: 'approved' }),
+      rejectJoinRequest(mockDb, memberAuth, branchDeptId, requestId, {}),
     ).rejects.toThrow('Only department leads or above');
   });
+});
 
-  it('throws NotFoundError if request missing or not pending', async () => {
-    setupSelectSequence([sampleBranchDept], []);
-    await expect(
-      reviewJoinRequest(mockDb, adminAuth, branchDeptId, requestId, { status: 'approved' }),
-    ).rejects.toThrow('Join request not found or already reviewed');
-  });
-
-  it('refuses to approve when target member at cap', async () => {
+describe('evaluateJoinRequestProbation', () => {
+  it('passes probation → status active, dept_member promoted', async () => {
+    const probation = { ...sampleJoinRequest, status: 'probation' as const };
     setupSelectSequence(
       [sampleBranchDept],
-      [sampleJoinRequest],
-      [{ value: 2 }],
+      [probation],
+      [{ email: 'm@x', firstName: 'M' }],
     );
-    await expect(
-      reviewJoinRequest(mockDb, adminAuth, branchDeptId, requestId, { status: 'approved' }),
-    ).rejects.toThrow('Member is already in 2 departments');
+    let updCount = 0;
+    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      updCount++;
+      return createChain(updCount === 1 ? [{ ...probation, status: 'active' }] : undefined);
+    });
+    const result = await evaluateJoinRequestProbation(mockDb, adminAuth, branchDeptId, requestId, {
+      probationOutcome: 'passed',
+    });
+    expect(result.status).toBe('active');
+    expect(updCount).toBe(2); // request status + dept_member promote
+  });
+
+  it('fails probation → status probation_failed, dept_member deactivated', async () => {
+    const probation = { ...sampleJoinRequest, status: 'probation' as const };
+    setupSelectSequence(
+      [sampleBranchDept],
+      [probation],
+      [{ email: 'm@x', firstName: 'M' }],
+    );
+    let updCount = 0;
+    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      updCount++;
+      return createChain(updCount === 1 ? [{ ...probation, status: 'probation_failed' }] : undefined);
+    });
+    const result = await evaluateJoinRequestProbation(mockDb, adminAuth, branchDeptId, requestId, {
+      probationOutcome: 'failed',
+    });
+    expect(result.status).toBe('probation_failed');
+    expect(updCount).toBe(2);
   });
 });
 

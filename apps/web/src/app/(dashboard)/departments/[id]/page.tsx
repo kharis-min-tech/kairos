@@ -11,7 +11,8 @@ import {
   useAddDepartmentMember,
   useRemoveDepartmentMember,
   useCreateDepartmentJoinRequest,
-  useReviewDepartmentJoinRequest,
+  useRespondToDepartmentOffer,
+  useWithdrawDepartmentJoinRequest,
 } from '@/hooks/use-departments';
 import { useMembers } from '@/hooks/use-members';
 import {
@@ -27,8 +28,25 @@ import { MemberAvatar } from '@/components/member-avatar';
 import { FollowupsTab } from './_components/followups-tab';
 import { UniformTab } from './_components/uniform-tab';
 import { RotaTab } from './_components/rota-tab';
+import { RecruitmentTab } from './_components/recruitment-tab';
 
-type Tab = 'overview' | 'members' | 'followups' | 'uniform' | 'rota' | 'join-requests';
+type Tab = 'overview' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
+
+const OPEN_STATUSES = [
+  'applied',
+  'interview_scheduled',
+  'interviewed',
+  'offered',
+  'probation',
+] as const;
+
+const STAGE_LABELS: Record<string, string> = {
+  applied: 'Application received',
+  interview_scheduled: 'Interview scheduled',
+  interviewed: 'Interview complete',
+  offered: 'Offer pending your response',
+  probation: 'On probation',
+};
 
 export default function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +62,8 @@ export default function DepartmentDetailPage() {
   const addMember = useAddDepartmentMember();
   const removeMember = useRemoveDepartmentMember();
   const createJoinRequest = useCreateDepartmentJoinRequest();
-  const reviewJoinRequest = useReviewDepartmentJoinRequest();
+  const respondOffer = useRespondToDepartmentOffer();
+  const withdrawRequest = useWithdrawDepartmentJoinRequest();
 
   const { data: branchMembersData } = useMembers(
     dept?.branchId ? { branchId: dept.branchId, limit: 200 } : undefined,
@@ -52,10 +71,10 @@ export default function DepartmentDetailPage() {
   const branchMembers = branchMembersData?.data ?? [];
 
   const isMemberOfDept = members?.some((m) => m.memberId === user?.id);
-  const hasPendingRequest = joinRequests?.some(
-    (r) => r.memberId === user?.id && r.status === 'pending',
+  const myOpenRequest = joinRequests?.find(
+    (r) => r.memberId === user?.id && (OPEN_STATUSES as readonly string[]).includes(r.status),
   );
-  const showRequestToJoin = !isAdminOrPastor && !isMemberOfDept && !hasPendingRequest;
+  const showRequestToJoin = !isAdminOrPastor && !isMemberOfDept && !myOpenRequest;
   const isRestrictedView = !isAdminOrPastor && !isMemberOfDept;
 
   if (isLoading) {
@@ -108,10 +127,10 @@ export default function DepartmentDetailPage() {
     ...(isAdminOrPastor
       ? [
           {
-            key: 'join-requests' as const,
-            label: `Requests${
+            key: 'recruitment' as const,
+            label: `Recruitment${
               joinRequests
-                ? ` (${joinRequests.filter((r) => r.status === 'pending').length})`
+                ? ` (${joinRequests.filter((r) => (OPEN_STATUSES as readonly string[]).includes(r.status)).length})`
                 : ''
             }`,
           },
@@ -119,8 +138,10 @@ export default function DepartmentDetailPage() {
       : []),
   ];
 
-  const pendingRequests = joinRequests?.filter((r) => r.status === 'pending') ?? [];
-  const otherRequests = joinRequests?.filter((r) => r.status !== 'pending') ?? [];
+  const canManageRecruitment =
+    isAdminOrPastor ||
+    dept?.leadMemberId === user?.id ||
+    dept?.deputyMemberId === user?.id;
 
   return (
     <div className="space-y-6">
@@ -169,11 +190,76 @@ export default function DepartmentDetailPage() {
               {createJoinRequest.isPending ? 'Requesting...' : 'Request to Join'}
             </Button>
           )}
-          {hasPendingRequest && (
+          {hasMyOpenRequestPill(myOpenRequest) && (
             <span className="inline-flex items-center rounded-full bg-[#f8b537]/20 px-3 py-1 text-xs font-medium text-[#7a5a00] dark:text-[#f8b537]">
-              Request pending review
+              {STAGE_LABELS[myOpenRequest!.status] ?? myOpenRequest!.status}
             </span>
           )}
+          {myOpenRequest?.status === 'offered' && (
+            <>
+              <Button
+                size="sm"
+                onClick={() =>
+                  respondOffer.mutate(
+                    {
+                      branchDeptId: id,
+                      requestId: myOpenRequest.id,
+                      data: { offerResponse: 'accepted' },
+                    },
+                    {
+                      onSuccess: () => toast.success('Offer accepted — probation started.'),
+                      onError: (e: unknown) =>
+                        toast.error(
+                          e instanceof Error ? e.message : 'Failed to accept offer.',
+                        ),
+                    },
+                  )
+                }
+                disabled={respondOffer.isPending}
+              >
+                Accept Offer
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  respondOffer.mutate(
+                    {
+                      branchDeptId: id,
+                      requestId: myOpenRequest.id,
+                      data: { offerResponse: 'declined' },
+                    },
+                    {
+                      onSuccess: () => toast.success('Offer declined.'),
+                      onError: () => toast.error('Failed to decline offer.'),
+                    },
+                  )
+                }
+                disabled={respondOffer.isPending}
+              >
+                Decline
+              </Button>
+            </>
+          )}
+          {myOpenRequest &&
+            ['applied', 'interview_scheduled', 'interviewed'].includes(myOpenRequest.status) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  withdrawRequest.mutate(
+                    { branchDeptId: id, requestId: myOpenRequest.id },
+                    {
+                      onSuccess: () => toast.success('Request withdrawn.'),
+                      onError: () => toast.error('Failed to withdraw.'),
+                    },
+                  )
+                }
+                disabled={withdrawRequest.isPending}
+              >
+                Withdraw
+              </Button>
+            )}
         </div>
       </div>
 
@@ -402,126 +488,21 @@ export default function DepartmentDetailPage() {
         />
       )}
 
-      {activeTab === 'join-requests' && isAdminOrPastor && (
-        <div className="space-y-4">
-          {pendingRequests.length === 0 ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">
-                  No pending join requests.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Pending</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {pendingRequests.map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex items-center justify-between gap-3 rounded-md bg-muted/30 p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <MemberAvatar
-                        photoUrl={r.memberPhotoUrl}
-                        firstName={r.memberFirstName}
-                        lastName={r.memberLastName}
-                        size="sm"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {r.memberFirstName} {r.memberLastName}
-                        </p>
-                        {r.notes && (
-                          <p className="text-xs text-muted-foreground">{r.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          reviewJoinRequest.mutate(
-                            {
-                              branchDeptId: id,
-                              requestId: r.id,
-                              data: { decision: 'approved' },
-                            },
-                            {
-                              onSuccess: () => toast.success('Request approved.'),
-                              onError: () => toast.error('Failed to approve.'),
-                            },
-                          )
-                        }
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          reviewJoinRequest.mutate(
-                            {
-                              branchDeptId: id,
-                              requestId: r.id,
-                              data: { decision: 'rejected' },
-                            },
-                            {
-                              onSuccess: () => toast.success('Request rejected.'),
-                              onError: () => toast.error('Failed to reject.'),
-                            },
-                          )
-                        }
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {otherRequests.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">History</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {otherRequests.map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex items-center justify-between gap-3 rounded-md p-2 text-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <MemberAvatar
-                        photoUrl={r.memberPhotoUrl}
-                        firstName={r.memberFirstName}
-                        lastName={r.memberLastName}
-                        size="xs"
-                      />
-                      <span>
-                        {r.memberFirstName} {r.memberLastName}
-                      </span>
-                    </div>
-                    <span
-                      className={
-                        r.status === 'approved'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                      }
-                    >
-                      {r.status}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+      {activeTab === 'recruitment' && isAdminOrPastor && (
+        <RecruitmentTab
+          branchDeptId={id}
+          defaultProbationDays={dept.probationDays ?? 28}
+          branchMembers={branchMembers}
+          joinRequests={joinRequests ?? []}
+          canManage={canManageRecruitment}
+        />
       )}
     </div>
   );
+}
+
+function hasMyOpenRequestPill(
+  req: { status: string } | undefined,
+): req is { status: string } {
+  return Boolean(req);
 }

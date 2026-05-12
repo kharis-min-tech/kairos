@@ -14,6 +14,7 @@ import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { MyRequestsPanel } from './_components/my-requests-panel';
 
 interface ListParams {
   page?: number;
@@ -80,6 +81,9 @@ function DepartmentsContent() {
           </Link>
         )}
       </div>
+
+      {/* Member-facing: my open join requests / offers */}
+      <MyRequestsPanel />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">

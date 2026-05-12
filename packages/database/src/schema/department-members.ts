@@ -1,4 +1,4 @@
-import { pgTable, uuid, date, boolean, text, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, date, boolean, text, varchar, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { branchDepartments } from './branch-departments';
 import { members } from './members';
@@ -10,6 +10,8 @@ export const departmentMembers = pgTable('department_members', {
   joinDate: date('join_date').notNull().defaultNow(),
   leaveDate: date('leave_date'),
   isActive: boolean('is_active').default(true).notNull(),
+  membershipStatus: varchar('membership_status', { length: 20 }).default('active').notNull(),
+  probationEndDate: date('probation_end_date'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -19,6 +21,7 @@ export const departmentMembers = pgTable('department_members', {
   index('idx_department_members_is_active').on(table.isActive),
   uniqueIndex('uq_department_members_assignment').on(table.branchDepartmentId, table.memberId, table.joinDate),
   sql`CHECK (leave_date IS NULL OR leave_date >= join_date)`,
+  sql`CHECK (membership_status IN ('probation', 'active'))`,
 ]);
 
 export const departmentMembersRelations = relations(departmentMembers, ({ one }) => ({

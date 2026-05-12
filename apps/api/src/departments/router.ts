@@ -9,7 +9,13 @@ import {
   listBranchDepartmentsQuerySchema,
   addDepartmentMemberSchema,
   createJoinRequestSchema,
-  reviewJoinRequestSchema,
+  listJoinRequestsQuerySchema,
+  scheduleInterviewSchema,
+  recordInterviewSchema,
+  extendOfferSchema,
+  respondToOfferSchema,
+  rejectJoinRequestSchema,
+  evaluateProbationSchema,
   createGlobalDepartmentSchema,
   updateGlobalDepartmentSchema,
   createDepartmentFollowupSchema,
@@ -48,8 +54,15 @@ import {
   removeDepartmentMember,
   createJoinRequest,
   listJoinRequests,
-  reviewJoinRequest,
+  scheduleJoinRequestInterview,
+  recordJoinRequestInterview,
+  extendJoinRequestOffer,
+  respondToJoinRequestOffer,
+  withdrawJoinRequest,
+  rejectJoinRequest,
+  evaluateJoinRequestProbation,
   listMyDepartments,
+  listMyJoinRequests,
 } from './service';
 import {
   createFollowup,
@@ -129,6 +142,12 @@ departmentsRouter.patch(
 departmentsRouter.get('/mine', async (c) => {
   const auth = getAuth(c);
   const rows = await listMyDepartments(db, auth);
+  return c.json(successResponse(rows));
+});
+
+departmentsRouter.get('/me/join-requests', async (c) => {
+  const auth = getAuth(c);
+  const rows = await listMyJoinRequests(db, auth);
   return c.json(successResponse(rows));
 });
 
@@ -219,18 +238,118 @@ departmentsRouter.post(
   },
 );
 
-departmentsRouter.get('/:id/join-requests', async (c) => {
-  const auth = getAuth(c);
-  const requests = await listJoinRequests(db, auth, c.req.param('id')!);
-  return c.json(successResponse(requests));
-});
-
-departmentsRouter.patch(
-  '/:id/join-requests/:requestId',
-  zValidator('json', reviewJoinRequestSchema),
+departmentsRouter.get(
+  '/:id/join-requests',
+  zValidator('query', listJoinRequestsQuerySchema),
   async (c) => {
     const auth = getAuth(c);
-    const result = await reviewJoinRequest(
+    const requests = await listJoinRequests(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.valid('query'),
+    );
+    return c.json(successResponse(requests));
+  },
+);
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/schedule-interview',
+  zValidator('json', scheduleInterviewSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await scheduleJoinRequestInterview(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('requestId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/record-interview',
+  zValidator('json', recordInterviewSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await recordJoinRequestInterview(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('requestId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/extend-offer',
+  zValidator('json', extendOfferSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await extendJoinRequestOffer(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('requestId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/respond-offer',
+  zValidator('json', respondToOfferSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await respondToJoinRequestOffer(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('requestId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+departmentsRouter.post('/:id/join-requests/:requestId/withdraw', async (c) => {
+  const auth = getAuth(c);
+  const result = await withdrawJoinRequest(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.param('requestId')!,
+  );
+  return c.json(successResponse(result));
+});
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/reject',
+  zValidator('json', rejectJoinRequestSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await rejectJoinRequest(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('requestId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+departmentsRouter.post(
+  '/:id/join-requests/:requestId/evaluate-probation',
+  zValidator('json', evaluateProbationSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await evaluateJoinRequestProbation(
       db,
       auth,
       c.req.param('id')!,

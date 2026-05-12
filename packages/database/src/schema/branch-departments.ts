@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, date, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, date, boolean, integer, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { branches } from './branches';
 import { departments } from './departments';
@@ -21,6 +21,7 @@ export const branchDepartments = pgTable('branch_departments', {
   startDate: date('start_date').notNull().defaultNow(),
   endDate: date('end_date'),
   isActive: boolean('is_active').default(true).notNull(),
+  probationDays: integer('probation_days').default(28).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

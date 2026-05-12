@@ -155,6 +155,16 @@ export function useRemoveDepartmentMember() {
 
 // ── Join Requests ──────────────────────────────────────────
 
+export function useMyDepartmentJoinRequests() {
+  return useQuery({
+    queryKey: ['departments', 'me', 'join-requests'],
+    queryFn: async () => {
+      const res = await api.departments.joinRequests.listMine();
+      return res.data!;
+    },
+  });
+}
+
 export function useDepartmentJoinRequests(branchDeptId: string) {
   return useQuery({
     queryKey: ['departments', branchDeptId, 'join-requests'],
@@ -195,10 +205,170 @@ export function useReviewDepartmentJoinRequest() {
       requestId: string;
       data: { decision: 'approved' | 'rejected'; reviewNotes?: string };
     }) => {
-      const res = await api.departments.joinRequests.review(branchDeptId, requestId, {
-        status: data.decision,
+      // Legacy shim: 'approved' is no longer a single-step action; treat as reject for safety.
+      const res = await api.departments.joinRequests.reject(branchDeptId, requestId, {
         reviewNotes: data.reviewNotes,
       });
+      void data.decision;
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+// ── Recruitment pipeline mutations ─────────────────────────
+
+export function useScheduleDepartmentInterview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data: {
+        interviewScheduledAt: string;
+        interviewFormat: 'in_person' | 'virtual';
+        interviewLocation?: string;
+        interviewerOneId: string;
+        interviewerTwoId?: string;
+      };
+    }) => {
+      const res = await api.departments.joinRequests.scheduleInterview(
+        branchDeptId,
+        requestId,
+        data,
+      );
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useRecordDepartmentInterview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data: { interviewOutcome: 'pass' | 'fail'; interviewNotes?: string };
+    }) => {
+      const res = await api.departments.joinRequests.recordInterview(
+        branchDeptId,
+        requestId,
+        data,
+      );
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useExtendDepartmentOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data: { offerExpiresAt?: string; offerMessage?: string; probationDays?: number };
+    }) => {
+      const res = await api.departments.joinRequests.extendOffer(
+        branchDeptId,
+        requestId,
+        data,
+      );
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useRespondToDepartmentOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data: { offerResponse: 'accepted' | 'declined' };
+    }) => {
+      const res = await api.departments.joinRequests.respondToOffer(
+        branchDeptId,
+        requestId,
+        data,
+      );
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useWithdrawDepartmentJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+    }) => {
+      const res = await api.departments.joinRequests.withdraw(branchDeptId, requestId);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useRejectDepartmentJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data?: { reviewNotes?: string };
+    }) => {
+      const res = await api.departments.joinRequests.reject(branchDeptId, requestId, data ?? {});
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+  });
+}
+
+export function useEvaluateDepartmentProbation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      branchDeptId,
+      requestId,
+      data,
+    }: {
+      branchDeptId: string;
+      requestId: string;
+      data: { probationOutcome: 'passed' | 'failed'; probationNotes?: string };
+    }) => {
+      const res = await api.departments.joinRequests.evaluateProbation(
+        branchDeptId,
+        requestId,
+        data,
+      );
       return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),

@@ -332,6 +332,7 @@ export interface BranchDepartment extends BaseEntity {
   startDate: string; // ISO date string
   endDate: string | null;
   isActive: boolean;
+  probationDays: number;
 }
 
 export interface BranchDepartmentWithDetails extends BranchDepartment {
@@ -357,6 +358,8 @@ export interface DepartmentMember extends BaseEntity {
   leaveDate: string | null;
   isActive: boolean;
   notes: string | null;
+  membershipStatus: 'probation' | 'active';
+  probationEndDate: string | null;
 }
 
 export interface DepartmentMemberWithDetails extends DepartmentMember {
@@ -377,6 +380,23 @@ export interface DepartmentJoinRequest extends BaseEntity {
   reviewedBy: string | null;
   reviewedAt: Date | null;
   reviewNotes: string | null;
+  interviewScheduledAt: Date | null;
+  interviewFormat: 'in_person' | 'virtual' | null;
+  interviewLocation: string | null;
+  interviewerOneId: string | null;
+  interviewerTwoId: string | null;
+  interviewOutcome: 'pass' | 'fail' | 'pending' | null;
+  interviewNotes: string | null;
+  offeredAt: Date | null;
+  offerExpiresAt: Date | null;
+  offerMessage: string | null;
+  offerRespondedAt: Date | null;
+  offerResponse: 'accepted' | 'declined' | null;
+  probationDays: number | null;
+  probationStartDate: string | null;
+  probationEndDate: string | null;
+  probationOutcome: 'passed' | 'failed' | 'pending' | null;
+  probationNotes: string | null;
 }
 
 export interface DepartmentJoinRequestWithMember extends DepartmentJoinRequest {
@@ -384,6 +404,18 @@ export interface DepartmentJoinRequestWithMember extends DepartmentJoinRequest {
   memberLastName: string;
   memberPhotoUrl?: string | null;
   memberEmail?: string | null;
+  interviewerOneFirstName?: string | null;
+  interviewerOneLastName?: string | null;
+  interviewerTwoFirstName?: string | null;
+  interviewerTwoLastName?: string | null;
+}
+
+export interface MyDepartmentJoinRequest extends DepartmentJoinRequest {
+  branchId: string;
+  branchName: string;
+  departmentId: string;
+  departmentName: string;
+  iconKey: string | null;
 }
 
 // ── Department Followup ────────────────────────────────────
@@ -410,6 +442,17 @@ export interface DepartmentFollowupWithDetails extends DepartmentFollowup {
   assignedToLastName?: string | null;
   daysSinceFollowup?: number;
   isOverdue?: boolean;
+}
+
+export interface OverdueFollowupRow {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  email: string | null;
+  lastContactedAt: string | null;
+  daysSinceFollowup: number | null;
+  isOverdue: boolean;
 }
 
 // ── Department Uniform Outfit ──────────────────────────────

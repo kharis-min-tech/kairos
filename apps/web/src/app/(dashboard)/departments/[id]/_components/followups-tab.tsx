@@ -11,9 +11,9 @@ import {
   CardDescription,
   CustomSelect,
   Label,
-  NumberStepper,
   Textarea,
   Badge,
+  NumberStepper,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -45,7 +45,7 @@ interface FollowupsTabProps {
 }
 
 export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabProps) {
-  const [overdueDays, setOverdueDays] = useState(7);
+  const [overdueBucket, setOverdueBucket] = useState<'never' | '7' | '14' | null>(null);
   const [memberFilter, setMemberFilter] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
 
@@ -53,7 +53,8 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
     branchDeptId,
     memberFilter ? { memberId: memberFilter } : undefined,
   );
-  const { data: overdue } = useOverdueFollowups(branchDeptId, overdueDays);
+  // Fetch with threshold of 1 day so we get everyone overdue; bucket client-side.
+  const { data: overdue } = useOverdueFollowups(branchDeptId, 1);
   const createFollowup = useCreateDepartmentFollowup();
   const deleteFollowup = useDeleteDepartmentFollowup();
 
@@ -66,57 +67,99 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
     [members],
   );
 
+  const buckets = useMemo(() => {
+    const list = overdue ?? [];
+    return {
+      never: list.filter((r) => r.daysSinceFollowup === null),
+      d7: list.filter(
+        (r) => r.daysSinceFollowup !== null && r.daysSinceFollowup >= 7,
+      ),
+      d14: list.filter(
+        (r) => r.daysSinceFollowup !== null && r.daysSinceFollowup >= 14,
+      ),
+    };
+  }, [overdue]);
+
+  const visibleOverdue =
+    overdueBucket === 'never'
+      ? buckets.never
+      : overdueBucket === '7'
+        ? buckets.d7
+        : overdueBucket === '14'
+          ? buckets.d14
+          : [];
+
   return (
     <div className="space-y-6">
       {/* Overdue panel */}
       {canManage && (
         <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <CardHeader className="space-y-3 pb-3">
             <div>
               <CardTitle className="text-base">Overdue Followups</CardTitle>
               <CardDescription>
-                Members not contacted in the last {overdueDays} days.
+                Filter members by how long since their last contact.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Threshold</Label>
-              <NumberStepper
-                value={overdueDays}
-                onValueChange={(v) => setOverdueDays(v || 1)}
-                min={1}
-                max={365}
-                suffix="d"
-                ariaLabel="Overdue threshold in days"
+            <div className="flex flex-wrap gap-2">
+              <BucketFilter
+                label="Never contacted"
+                count={buckets.never.length}
+                active={overdueBucket === 'never'}
+                onClick={() =>
+                  setOverdueBucket((b) => (b === 'never' ? null : 'never'))
+                }
+              />
+              <BucketFilter
+                label="7+ days"
+                count={buckets.d7.length}
+                active={overdueBucket === '7'}
+                onClick={() => setOverdueBucket((b) => (b === '7' ? null : '7'))}
+              />
+              <BucketFilter
+                label="14+ days"
+                count={buckets.d14.length}
+                active={overdueBucket === '14'}
+                onClick={() => setOverdueBucket((b) => (b === '14' ? null : '14'))}
               />
             </div>
           </CardHeader>
-          <CardContent>
-            {!overdue || overdue.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                Everyone is on track.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {overdue.map((row) => (
-                  <button
-                    key={row.memberId}
-                    type="button"
-                    onClick={() => setMemberFilter(row.memberId)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#f8b537]/20 px-3 py-1.5 text-xs font-medium text-[#7a5a00] transition-colors hover:bg-[#f8b537]/30 dark:text-[#f8b537]"
-                  >
-                    <span>
-                      {row.memberFirstName} {row.memberLastName}
-                    </span>
-                    <span className="rounded-full bg-white/60 px-2 py-0.5 text-[10px] dark:bg-black/30">
-                      {row.daysSinceFollowup === null
-                        ? 'never'
-                        : `${row.daysSinceFollowup}d`}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
+          {overdueBucket && (
+            <CardContent className="pt-0">
+              {visibleOverdue.length === 0 ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">
+                  No members in this bucket.
+                </p>
+              ) : (
+                <div className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-white/10 bg-white/5 p-1.5 backdrop-blur-md">
+                  {visibleOverdue.map((row) => (
+                    <button
+                      key={row.memberId}
+                      type="button"
+                      onClick={() => setMemberFilter(row.memberId)}
+                      className="flex w-full items-center justify-between gap-3 rounded-sm px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#f8b537]/10"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <MemberAvatar
+                          firstName={row.firstName}
+                          lastName={row.lastName}
+                          size="sm"
+                        />
+                        <span className="truncate font-medium">
+                          {row.firstName} {row.lastName}
+                        </span>
+                      </div>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {row.daysSinceFollowup === null
+                          ? 'Never contacted'
+                          : `${row.daysSinceFollowup} days ago`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          )}
         </Card>
       )}
 
@@ -300,6 +343,43 @@ interface FollowupFormProps {
       assignedToId?: string | null;
     },
   ) => void;
+}
+
+function BucketFilter({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'inline-flex h-9 items-center gap-2 rounded-md border px-3.5 text-xs font-medium shadow-sm backdrop-blur-md transition-colors ' +
+        (active
+          ? 'border-[#f8b537]/70 bg-[#f8b537]/15 text-foreground'
+          : 'border-white/10 bg-white/5 text-foreground hover:border-[#f8b537]/40 hover:bg-[#f8b537]/10')
+      }
+    >
+      <span>{label}</span>
+      <span
+        className={
+          'rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ' +
+          (active
+            ? 'bg-[#f8b537]/30 text-[#f8b537]'
+            : 'bg-white/10 text-muted-foreground')
+        }
+      >
+        {count}
+      </span>
+    </button>
+  );
 }
 
 function FollowupForm({

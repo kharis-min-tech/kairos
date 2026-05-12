@@ -63,8 +63,10 @@ import type {
   DepartmentMemberWithDetails,
   DepartmentJoinRequest,
   DepartmentJoinRequestWithMember,
+  MyDepartmentJoinRequest,
   DepartmentFollowup,
   DepartmentFollowupWithDetails,
+  OverdueFollowupRow,
   DepartmentUniformOutfit,
   DepartmentUniformSchedule,
   DepartmentUniformScheduleWithOutfit,
@@ -294,14 +296,81 @@ export function createApiClient(
           client.delete<ApiResponse<DepartmentMember>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}`),
       },
 
-      // Join requests
+      // Join requests / recruitment pipeline
       joinRequests: {
         create: (branchDeptId: string, data: { notes?: string | null }) =>
           client.post<ApiResponse<DepartmentJoinRequest>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests`, data),
-        list: (branchDeptId: string) =>
-          client.get<ApiResponse<DepartmentJoinRequestWithMember[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests`),
-        review: (branchDeptId: string, requestId: string, data: { status: 'approved' | 'rejected'; reviewNotes?: string | null }) =>
-          client.patch<ApiResponse<DepartmentJoinRequest>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}`, data),
+        listMine: () =>
+          client.get<ApiResponse<MyDepartmentJoinRequest[]>>(`/api/departments/me/join-requests`),
+        list: (branchDeptId: string, params?: { stage?: 'open' | 'all' | 'terminal' }) => {
+          const qs = new URLSearchParams();
+          if (params?.stage) qs.set('stage', params.stage);
+          const query = qs.toString();
+          return client.get<ApiResponse<DepartmentJoinRequestWithMember[]>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests${query ? `?${query}` : ''}`,
+          );
+        },
+        scheduleInterview: (
+          branchDeptId: string,
+          requestId: string,
+          data: {
+            interviewScheduledAt: string;
+            interviewFormat: 'in_person' | 'virtual';
+            interviewLocation?: string;
+            interviewerOneId: string;
+            interviewerTwoId?: string;
+          },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/schedule-interview`,
+            data,
+          ),
+        recordInterview: (
+          branchDeptId: string,
+          requestId: string,
+          data: { interviewOutcome: 'pass' | 'fail'; interviewNotes?: string },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/record-interview`,
+            data,
+          ),
+        extendOffer: (
+          branchDeptId: string,
+          requestId: string,
+          data: { offerExpiresAt?: string; offerMessage?: string; probationDays?: number },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/extend-offer`,
+            data,
+          ),
+        respondToOffer: (
+          branchDeptId: string,
+          requestId: string,
+          data: { offerResponse: 'accepted' | 'declined' },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/respond-offer`,
+            data,
+          ),
+        withdraw: (branchDeptId: string, requestId: string) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/withdraw`,
+            {},
+          ),
+        reject: (branchDeptId: string, requestId: string, data: { reviewNotes?: string } = {}) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/reject`,
+            data,
+          ),
+        evaluateProbation: (
+          branchDeptId: string,
+          requestId: string,
+          data: { probationOutcome: 'passed' | 'failed'; probationNotes?: string },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/evaluate-probation`,
+            data,
+          ),
       },
 
       // Followups
@@ -318,7 +387,7 @@ export function createApiClient(
           const qs = new URLSearchParams();
           if (days !== undefined) qs.set('days', String(days));
           const query = qs.toString();
-          return client.get<ApiResponse<DepartmentFollowupWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups/overdue${query ? `?${query}` : ''}`);
+          return client.get<ApiResponse<OverdueFollowupRow[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups/overdue${query ? `?${query}` : ''}`);
         },
         listForMember: (branchDeptId: string, memberId: string) =>
           client.get<ApiResponse<DepartmentFollowupWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}/followups`),

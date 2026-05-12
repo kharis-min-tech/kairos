@@ -33,9 +33,40 @@ export const createJoinRequestSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export const reviewJoinRequestSchema = z.object({
-  status: z.enum(['approved', 'rejected']),
-  reviewNotes: z.string().max(500).optional(),
+export const listJoinRequestsQuerySchema = z.object({
+  stage: z.enum(['open', 'all', 'terminal']).optional(),
+});
+
+export const scheduleInterviewSchema = z.object({
+  interviewScheduledAt: z.string().datetime(),
+  interviewFormat: z.enum(['in_person', 'virtual']),
+  interviewLocation: z.string().max(500).optional(),
+  interviewerOneId: z.string().uuid(),
+  interviewerTwoId: z.string().uuid().optional(),
+});
+
+export const recordInterviewSchema = z.object({
+  interviewOutcome: z.enum(['pass', 'fail']),
+  interviewNotes: z.string().max(2000).optional(),
+});
+
+export const extendOfferSchema = z.object({
+  offerExpiresAt: z.string().datetime().optional(),
+  offerMessage: z.string().max(2000).optional(),
+  probationDays: z.coerce.number().int().min(1).max(365).optional(),
+});
+
+export const respondToOfferSchema = z.object({
+  offerResponse: z.enum(['accepted', 'declined']),
+});
+
+export const rejectJoinRequestSchema = z.object({
+  reviewNotes: z.string().max(2000).optional(),
+});
+
+export const evaluateProbationSchema = z.object({
+  probationOutcome: z.enum(['passed', 'failed']),
+  probationNotes: z.string().max(2000).optional(),
 });
 
 export const createGlobalDepartmentSchema = z.object({
