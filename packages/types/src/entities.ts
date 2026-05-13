@@ -12,6 +12,12 @@ import type {
   SoulStatus,
   ContactMethod,
   ContactStatus,
+  DepartmentJoinRequestStatus,
+  UniformGenderTarget,
+  RotaRecurrence,
+  RotaInstanceStatus,
+  RotaAssignmentStatus,
+  RotaSwapRequestStatus,
 } from './enums';
 
 // ── Base ───────────────────────────────────────────────────
@@ -358,4 +364,286 @@ export interface NewBelieverAttendance {
 export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
   memberFirstName: string;
   memberLastName: string;
+}
+// ── Departments (global catalogue) ─────────────────────────
+
+export interface Department extends BaseEntity {
+  departmentName: string;
+  description: string | null;
+  iconKey: string | null;
+  isActive: boolean;
+}
+
+// ── Branch Department (per-branch instance) ────────────────
+
+export interface BranchDepartment extends BaseEntity {
+  branchId: string;
+  departmentId: string;
+  leadMemberId: string;
+  deputyMemberId: string | null;
+  description: string | null;
+  startDate: string; // ISO date string
+  endDate: string | null;
+  isActive: boolean;
+  probationDays: number;
+}
+
+export interface BranchDepartmentWithDetails extends BranchDepartment {
+  departmentName: string;
+  iconKey: string | null;
+  branchName: string;
+  leadFirstName: string;
+  leadLastName: string;
+  leadPhotoUrl?: string | null;
+  deputyFirstName?: string | null;
+  deputyLastName?: string | null;
+  deputyPhotoUrl?: string | null;
+  memberCount?: number;
+  pendingJoinRequestCount?: number;
+}
+
+// ── Department Member ──────────────────────────────────────
+
+export interface DepartmentMember extends BaseEntity {
+  branchDepartmentId: string;
+  memberId: string;
+  joinDate: string; // ISO date string
+  leaveDate: string | null;
+  isActive: boolean;
+  notes: string | null;
+  membershipStatus: 'probation' | 'active';
+  probationEndDate: string | null;
+}
+
+export interface DepartmentMemberWithDetails extends DepartmentMember {
+  memberFirstName: string;
+  memberLastName: string;
+  memberPhotoUrl?: string | null;
+  memberEmail?: string | null;
+  memberPhone?: string | null;
+}
+
+// ── Department Join Request ────────────────────────────────
+
+export interface DepartmentJoinRequest extends BaseEntity {
+  branchDepartmentId: string;
+  memberId: string;
+  status: DepartmentJoinRequestStatus;
+  notes: string | null;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+  reviewNotes: string | null;
+  interviewScheduledAt: Date | null;
+  interviewFormat: 'in_person' | 'virtual' | null;
+  interviewLocation: string | null;
+  interviewerOneId: string | null;
+  interviewerTwoId: string | null;
+  interviewOutcome: 'pass' | 'fail' | 'pending' | null;
+  interviewNotes: string | null;
+  offeredAt: Date | null;
+  offerExpiresAt: Date | null;
+  offerMessage: string | null;
+  offerRespondedAt: Date | null;
+  offerResponse: 'accepted' | 'declined' | null;
+  probationDays: number | null;
+  probationStartDate: string | null;
+  probationEndDate: string | null;
+  probationOutcome: 'passed' | 'failed' | 'pending' | null;
+  probationNotes: string | null;
+}
+
+export interface DepartmentJoinRequestWithMember extends DepartmentJoinRequest {
+  memberFirstName: string;
+  memberLastName: string;
+  memberPhotoUrl?: string | null;
+  memberEmail?: string | null;
+  memberPhone?: string | null;
+  interviewerOneFirstName?: string | null;
+  interviewerOneLastName?: string | null;
+  interviewerTwoFirstName?: string | null;
+  interviewerTwoLastName?: string | null;
+}
+
+export interface MyDepartmentJoinRequest extends DepartmentJoinRequest {
+  branchId: string;
+  branchName: string;
+  departmentId: string;
+  departmentName: string;
+  iconKey: string | null;
+}
+
+// ── Department Followup ────────────────────────────────────
+
+export interface DepartmentFollowup extends BaseEntity {
+  branchDepartmentId: string;
+  memberId: string;
+  recordedById: string;
+  assignedToId: string | null;
+  contactedAt: Date;
+  contactMethod: ContactMethod;
+  contactStatus: ContactStatus;
+  durationMinutes: number | null;
+  notes: string | null;
+  nextFollowUpDate: string | null; // ISO date string
+}
+
+export interface DepartmentFollowupWithDetails extends DepartmentFollowup {
+  memberFirstName: string;
+  memberLastName: string;
+  recordedByFirstName: string;
+  recordedByLastName: string;
+  assignedToFirstName?: string | null;
+  assignedToLastName?: string | null;
+  daysSinceFollowup?: number;
+  isOverdue?: boolean;
+}
+
+export interface OverdueFollowupRow {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  email: string | null;
+  lastContactedAt: string | null;
+  daysSinceFollowup: number | null;
+  isOverdue: boolean;
+}
+
+// ── Department Uniform Outfit ──────────────────────────────
+
+export interface DepartmentUniformOutfit extends BaseEntity {
+  branchDepartmentId: string;
+  name: string;
+  imageUrl: string;
+  genderTarget: UniformGenderTarget;
+  notes: string | null;
+  isActive: boolean;
+  uploadedById: string | null;
+}
+
+// ── Department Uniform Schedule ────────────────────────────
+
+export interface DepartmentUniformSchedule extends BaseEntity {
+  branchDepartmentId: string;
+  outfitId: string;
+  serviceDate: string; // ISO date string
+  genderTarget: UniformGenderTarget;
+  notes: string | null;
+}
+
+export interface DepartmentUniformScheduleWithOutfit extends DepartmentUniformSchedule {
+  outfitName: string;
+  outfitImageUrl: string;
+  affectsCount: number;
+}
+
+// ── Rota Template ──────────────────────────────────────────
+
+export interface RotaTemplate extends BaseEntity {
+  branchDepartmentId: string;
+  name: string;
+  recurrence: RotaRecurrence;
+  weekday: number; // 0=Sunday … 6=Saturday
+  defaultStartTime: string | null; // HH:mm:ss
+  notes: string | null;
+  isActive: boolean;
+}
+
+export interface RotaTemplateWithSummary extends RotaTemplate {
+  slotCount: number;
+  positionCount: number;
+  poolCount: number;
+  lastGeneratedAt: string | null; // ISO date string
+}
+
+// ── Rota Template Slot ─────────────────────────────────────
+
+export interface RotaTemplateSlot extends BaseEntity {
+  templateId: string;
+  roleName: string;
+  positionsRequired: number;
+  sortOrder: number | null;
+  notes: string | null;
+}
+
+// ── Rota Pool Member ───────────────────────────────────────
+
+export interface RotaPoolMember extends BaseEntity {
+  templateId: string;
+  memberId: string;
+  preferredRoleName: string | null;
+  lastScheduledAt: string | null; // ISO date string
+  isActive: boolean;
+  notes: string | null;
+}
+
+export interface RotaPoolMemberWithDetails extends RotaPoolMember {
+  memberFirstName: string;
+  memberLastName: string;
+  memberPhotoUrl?: string | null;
+}
+
+// ── Rota Instance ──────────────────────────────────────────
+
+export interface RotaInstance extends BaseEntity {
+  templateId: string;
+  serviceDate: string; // ISO date string
+  status: RotaInstanceStatus;
+  publishedAt: Date | null;
+  notes: string | null;
+}
+export interface RotaInstanceAssignedMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+}
+
+export interface RotaInstanceWithSummary extends RotaInstance {
+  templateName: string | null;
+  templateStartTime: string | null; // HH:mm:ss
+  totalSlots: number;
+  filledSlots: number;
+  openSlots: number;
+  assignedMembers: RotaInstanceAssignedMember[];
+}
+// ── Rota Assignment ────────────────────────────────────────
+
+export interface RotaAssignment extends BaseEntity {
+  instanceId: string;
+  slotId: string;
+  memberId: string | null;
+  status: RotaAssignmentStatus;
+  notes: string | null;
+  respondedAt: Date | null;
+}
+
+export interface RotaAssignmentWithDetails extends RotaAssignment {
+  roleName: string;
+  sortOrder: number | null;
+  memberFirstName?: string | null;
+  memberLastName?: string | null;
+  memberPhotoUrl?: string | null;
+}
+
+// ── Rota Swap Request ──────────────────────────────────────
+
+export interface RotaSwapRequest extends BaseEntity {
+  assignmentId: string;
+  requesterId: string;
+  proposedMemberId: string | null;
+  reason: string | null;
+  status: RotaSwapRequestStatus;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+  reviewNotes: string | null;
+}
+
+export interface RotaSwapRequestWithDetails extends RotaSwapRequest {
+  serviceDate: string;
+  roleName: string;
+  requesterFirstName: string;
+  requesterLastName: string;
+  proposedFirstName?: string | null;
+  proposedLastName?: string | null;
 }

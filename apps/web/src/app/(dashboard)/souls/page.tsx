@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useAuthStore } from '@/lib/auth-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Badge, Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
+import { Button, Input, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Check, ChevronDown } from 'lucide-react';
 import {
   DndContext,
   type DragEndEvent,
@@ -25,11 +25,48 @@ interface SoulCardData {
   phone: string;
   status: string;
   assignedMemberName?: string;
+  assignedMemberAvatar?: string;
   daysSinceLastFollowUp?: number | null;
   outreachName?: string;
 }
 
 const KANBAN_STATUSES = ['New', 'Following Up', 'Interested', 'Not Interested', 'Converted', 'Lost Contact'];
+
+type RAGLabel = 'Critical' | 'Monitor' | 'On Track';
+
+// RAG Status: Red/Amber/Green based on follow-up timing
+function getRAGStatus(status: string, daysSinceLastFollowUp: number | null | undefined) {
+    const CRITICAL = { label: 'Critical' as RAGLabel, bgColor: 'bg-rose-100 dark:bg-rose-950/50', textColor: 'text-rose-700 dark:text-rose-300', borderColor: 'border-l-rose-500', dotColor: 'bg-rose-500' };
+    const MONITOR  = { label: 'Monitor'  as RAGLabel, bgColor: 'bg-amber-100 dark:bg-amber-950/50', textColor: 'text-amber-700 dark:text-amber-300', borderColor: 'border-l-amber-500', dotColor: 'bg-amber-500' };
+    const ON_TRACK = { label: 'On Track' as RAGLabel, bgColor: 'bg-emerald-100 dark:bg-emerald-950/50', textColor: 'text-emerald-700 dark:text-emerald-300', borderColor: 'border-l-emerald-500', dotColor: 'bg-emerald-500' };
+
+    // Converted, Not Interested, Lost Contact = GREEN (no follow-up needed)
+    if (status === 'Converted' || status === 'Not Interested' || status === 'Lost Contact') {
+      return ON_TRACK;
+    }
+
+    // No follow-up logged yet = RED (critical)
+    if (daysSinceLastFollowUp === null || daysSinceLastFollowUp === undefined) {
+      return CRITICAL;
+    }
+
+    // New or Following Up: RED if >= 3 days, AMBER if 2 days, GREEN if < 2 days
+    if (status === 'New' || status === 'Following Up') {
+      if (daysSinceLastFollowUp >= 3) return CRITICAL;
+      if (daysSinceLastFollowUp >= 2) return MONITOR;
+      return ON_TRACK;
+    }
+
+    // Interested: RED if >= 5 days, AMBER if 3-4 days, GREEN if < 3 days
+    if (status === 'Interested') {
+      if (daysSinceLastFollowUp >= 5) return CRITICAL;
+      if (daysSinceLastFollowUp >= 3) return MONITOR;
+      return ON_TRACK;
+    }
+
+    // Default GREEN
+    return ON_TRACK;
+}
 
 function SoulCard({ 
   soul, 
@@ -46,97 +83,83 @@ function SoulCard({
 }) {
   const router = useRouter();
   
-  // RAG Status: Red/Amber/Green based on follow-up timing
-  const getRAGStatus = (status: string, daysSinceLastFollowUp: number | null | undefined) => {
-    // Converted, Not Interested, Lost Contact = GREEN (no follow-up needed)
-    if (status === 'Converted' || status === 'Not Interested' || status === 'Lost Contact') {
-      return { label: 'All Good', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
-    }
-
-    // No follow-up logged yet = RED (critical)
-    if (daysSinceLastFollowUp === null || daysSinceLastFollowUp === undefined) {
-      return { label: 'Critical', bgColor: 'bg-rose-100', textColor: 'text-rose-700', borderColor: 'border-l-rose-500' };
-    }
-
-    // New or Following Up: RED if >= 3 days, AMBER if 2 days, GREEN if < 2 days
-    if (status === 'New' || status === 'Following Up') {
-      if (daysSinceLastFollowUp >= 3) {
-        return { label: 'Critical', bgColor: 'bg-rose-100', textColor: 'text-rose-700', borderColor: 'border-l-rose-500' };
-      } else if (daysSinceLastFollowUp >= 2) {
-        return { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
-      } else {
-        return { label: 'All Good', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
-      }
-    }
-
-    // Interested: RED if >= 5 days, AMBER if 3-4 days, GREEN if < 3 days
-    if (status === 'Interested') {
-      if (daysSinceLastFollowUp >= 5) {
-        return { label: 'Critical', bgColor: 'bg-rose-100', textColor: 'text-rose-700', borderColor: 'border-l-rose-500' };
-      } else if (daysSinceLastFollowUp >= 3) {
-        return { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
-      } else {
-        return { label: 'All Good', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
-      }
-    }
-
-    // Default GREEN
-    return { label: 'All Good', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
-  };
-
   const ragStatus = getRAGStatus(soul.status, soul.daysSinceLastFollowUp);
+
+  // Initials fallback for assignee avatar
+  const assigneeInitials = soul.assignedMemberName
+    ? soul.assignedMemberName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : null;
 
   return (
     <Card
-      className={`cursor-pointer hover:shadow-ambient transition-shadow border-l-4 ${ragStatus.borderColor} ${
+      className={`cursor-pointer hover:shadow-ambient transition-shadow ${
         isDragging ? 'opacity-50' : ''
-      } ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      }`}
     >
-      <CardContent className="p-4 space-y-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-2 flex-1" onClick={() => router.push(`/souls/${soul.id}`)}>
-            {canSelect && onToggleSelect && (
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onToggleSelect(soul.id);
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="mt-1 h-4 w-4 rounded border-input/15"
-              />
-            )}
-            <div>
-              <p className="font-semibold">
-                {soul.firstName} {soul.lastName}
-              </p>
-              <p className="text-sm text-muted-foreground">{soul.phone}</p>
+      <CardContent className="p-3">
+        {/* Zone 1 — identity + RAG */}
+        <div
+          className="flex items-start gap-2"
+          onClick={() => router.push(`/souls/${soul.id}`)}
+        >
+          {canSelect && onToggleSelect && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleSelect(soul.id); }}
+              className={`mt-0.5 flex-shrink-0 h-4 w-4 rounded flex items-center justify-center transition-colors ${
+                isSelected
+                  ? 'bg-foreground/10 border border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/0.15)]'
+                  : 'border border-foreground/30 bg-transparent hover:border-foreground/50'
+              }`}
+              aria-label={isSelected ? 'Deselect soul' : 'Select soul'}
+            >
+              {isSelected && <Check className="h-3 w-3 text-foreground" strokeWidth={2.5} />}
+            </button>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className={`inline-block h-2 w-2 rounded-full flex-shrink-0 ${ragStatus.dotColor}`} />
+              <p className="font-semibold leading-tight">{soul.firstName} {soul.lastName}</p>
             </div>
+            <p className="text-xs text-muted-foreground">{soul.phone}</p>
           </div>
-          <Badge className={`${ragStatus.bgColor} ${ragStatus.textColor} text-xs font-semibold border-0`}>
-            {ragStatus.label}
-          </Badge>
         </div>
-        <div className="flex items-center gap-1">
-          <Badge variant="outline" className="text-xs">
-            {soul.outreachName || 'Ad-hoc'}
-          </Badge>
-        </div>
-        {soul.assignedMemberName && (
-          <p className="text-xs text-muted-foreground">
-            Assigned to: {soul.assignedMemberName}
-          </p>
-        )}
-        {(soul.status === 'New' || soul.status === 'Following Up' || soul.status === 'Interested') && (
-          <div className="text-xs text-muted-foreground">
-            {soul.daysSinceLastFollowUp === null || soul.daysSinceLastFollowUp === undefined ? (
-              <span>No follow-up logged</span>
+
+        {/* Divider */}
+        <hr className="my-2.5 border-foreground/10" />
+
+        {/* Zone 2 — assignee + follow-up log */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            {soul.assignedMemberName ? (
+              <>
+                {soul.assignedMemberAvatar ? (
+                  <img
+                    src={soul.assignedMemberAvatar}
+                    alt={soul.assignedMemberName}
+                    className="h-6 w-6 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <span className="h-6 w-6 rounded bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                    {assigneeInitials}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground truncate">{soul.assignedMemberName}</span>
+              </>
             ) : (
-              <span>Last contact: {soul.daysSinceLastFollowUp} day{soul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago</span>
+              <span className="text-xs text-muted-foreground italic">Unassigned</span>
             )}
           </div>
-        )}
+          {(soul.status === 'New' || soul.status === 'Following Up' || soul.status === 'Interested') && (
+            <p className="text-xs text-muted-foreground">
+              {soul.daysSinceLastFollowUp === null || soul.daysSinceLastFollowUp === undefined
+                ? 'No follow-up logged'
+                : soul.daysSinceLastFollowUp === 0
+                  ? 'Last contact: Today'
+                  : `Last contact: ${soul.daysSinceLastFollowUp} day${soul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago`}
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -159,14 +182,14 @@ function KanbanColumn({
 }) {
   return (
     <div className="flex-1 min-w-[280px]">
-      <Card>
+      <Card className="bg-muted">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{status}</CardTitle>
-            <Badge variant="secondary">{count}</Badge>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">{status}</CardTitle>
+            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">{count}</span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+        <CardContent className="space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
           {souls.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No souls in this stage
@@ -196,8 +219,15 @@ export default function SoulsKanbanPage() {
   const { souls, filters, loading, fetchSouls, updateSoulStatus, setFilters, updateSoulOptimistic } = useSoulsStore();
   const { activeRole } = useAuthStore();
 
+  type SortOption = 'date-added' | 'name' | 'last-contact';
+
   const [activeSoul, setActiveSoul] = useState<SoulCardData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [ragFilter, setRagFilter] = useState<RAGLabel | 'All'>('All');
+  const [sourceFilter, setSourceFilter] = useState<string>('All');
+  const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false);
+  const sourceDropdownRef = useRef<HTMLDivElement>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('date-added');
   const [selectedSouls, setSelectedSouls] = useState<Set<string>>(new Set());
   const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [bulkAssignMemberId, setBulkAssignMemberId] = useState('');
@@ -227,6 +257,16 @@ export default function SoulsKanbanPage() {
       fetchMembers();
     }
   }, [showBulkAssign, api]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(e.target as Node)) {
+        setSourceDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchMembers = async () => {
     if (!api) return;
@@ -364,9 +404,33 @@ export default function SoulsKanbanPage() {
     }
   };
 
-  // Group souls by status for Kanban columns
+  // Derive unique outreach sources for the dropdown
+  const uniqueSources = [...new Set(souls.map((s) => s.outreachName || 'Ad-hoc'))].sort();
+
+  // Apply RAG filter → source filter → sort, then group by status for Kanban columns
+  const ragFiltered = ragFilter === 'All'
+    ? souls
+    : souls.filter((s) => getRAGStatus(s.status, s.daysSinceLastFollowUp).label === ragFilter);
+
+  const sourceFiltered = sourceFilter === 'All'
+    ? ragFiltered
+    : ragFiltered.filter((s) => (s.outreachName || 'Ad-hoc') === sourceFilter);
+
+  const filteredSouls = [...sourceFiltered].sort((a, b) => {
+    if (sortBy === 'name') {
+      return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+    }
+    if (sortBy === 'last-contact') {
+      const aVal = a.daysSinceLastFollowUp ?? Infinity;
+      const bVal = b.daysSinceLastFollowUp ?? Infinity;
+      return aVal - bVal;
+    }
+    // 'date-added': preserve server order (id is sequential)
+    return 0;
+  });
+
   const soulsByStatus = KANBAN_STATUSES.reduce((acc, status) => {
-    acc[status] = souls.filter((soul) => soul.status === status);
+    acc[status] = filteredSouls.filter((soul) => soul.status === status);
     return acc;
   }, {} as Record<string, typeof souls>);
 
@@ -374,7 +438,7 @@ export default function SoulsKanbanPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Souls Pipeline</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">Souls Pipeline</h1>
           <p className="text-muted-foreground">Track souls through the conversion journey</p>
         </div>
         <div className="flex gap-2">
@@ -384,40 +448,138 @@ export default function SoulsKanbanPage() {
               Assign {selectedSouls.size} Soul{selectedSouls.size !== 1 ? 's' : ''}
             </Button>
           )}
-          <Button onClick={() => router.push('/souls/capture')}>
+          <Button onClick={() => router.push('/souls/capture')} className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0">
             <Plus className="mr-2 h-4 w-4" />
             Capture Soul
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search souls..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        {canBulkAssign && souls.length > 0 && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={selectAll}>
-              Select All
-            </Button>
-            {selectedSouls.size > 0 && (
-              <Button variant="outline" size="sm" onClick={deselectAll}>
-                Deselect All
-              </Button>
-            )}
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search souls..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        )}
+          {canBulkAssign && souls.length > 0 && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={selectAll}>
+                Select All
+              </Button>
+              {selectedSouls.size > 0 && (
+                <Button variant="outline" size="sm" onClick={deselectAll}>
+                  Deselect All
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* RAG Status Filter + Sort */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* RAG segmented control */}
+          <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
+            {([
+              { label: 'All' as const,      display: 'All Souls', dotColor: null },
+              { label: 'Critical' as const, display: 'Critical',  dotColor: 'bg-rose-500' },
+              { label: 'Monitor'  as const, display: 'Monitor',   dotColor: 'bg-amber-500' },
+              { label: 'On Track' as const, display: 'On Track',  dotColor: 'bg-emerald-500' },
+            ]).map(({ label, display, dotColor }) => {
+              const isActive = ragFilter === label;
+              const count = label === 'All'
+                ? souls.length
+                : souls.filter((s) => getRAGStatus(s.status, s.daysSinceLastFollowUp).label === label).length;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setRagFilter(label === ragFilter && label !== 'All' ? 'All' : label)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                    isActive
+                      ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {dotColor && (
+                    <span className={`inline-block h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+                  )}
+                  {display}
+                  <span className={`${isActive ? 'opacity-60' : 'opacity-50'}`}>({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Source filter dropdown + Sort By segmented control */}
+          <div className="flex items-center gap-4">
+            {uniqueSources.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Source</span>
+                <div ref={sourceDropdownRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setSourceDropdownOpen((o) => !o)}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#f0f0f3] dark:bg-white/[0.06] text-xs font-semibold text-foreground transition-colors hover:bg-[#e4e4e8] dark:hover:bg-white/[0.10]"
+                  >
+                    <span>{sourceFilter === 'All' ? 'All Outreach Programs' : sourceFilter}</span>
+                    <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform duration-150 ${sourceDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {sourceDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl bg-white dark:bg-[#1c1c1f] shadow-lg border border-foreground/[0.08] py-1 overflow-hidden">
+                      {(['All', ...uniqueSources] as const).map((source) => (
+                        <button
+                          key={source}
+                          type="button"
+                          onClick={() => { setSourceFilter(source); setSourceDropdownOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            sourceFilter === source
+                              ? 'bg-primary/10 text-primary dark:bg-[#5D3FD3]/20 dark:text-violet-300'
+                              : 'text-foreground hover:bg-foreground/[0.05]'
+                          }`}
+                        >
+                          {source === 'All' ? 'All Outreach Programs' : source}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sort</span>
+            <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
+              {([
+                { value: 'date-added' as const,   label: 'Date Added' },
+                { value: 'name' as const,          label: 'Name' },
+                { value: 'last-contact' as const,  label: 'Last Contact' },
+              ]).map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSortBy(value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                    sortBy === value
+                      ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          </div>
+        </div>
       </div>
 
       {/* Bulk Assignment Modal */}
       {showBulkAssign && (
-        <Card className="ring-2 ring-primary">
+        <Card className="bg-primary/5">
           <CardHeader>
             <CardTitle>Bulk Assign {selectedSouls.size} Soul{selectedSouls.size !== 1 ? 's' : ''}</CardTitle>
           </CardHeader>
@@ -429,19 +591,13 @@ export default function SoulsKanbanPage() {
               {loadingMembers ? (
                 <p className="text-sm text-muted-foreground">Loading members...</p>
               ) : (
-                <select
+                <CustomSelect
                   id="bulkAssignMember"
                   value={bulkAssignMemberId}
-                  onChange={(e) => setBulkAssignMemberId(e.target.value)}
-                  className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Select a member</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.firstName} {member.lastName}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setBulkAssignMemberId}
+                  placeholder="Select a member"
+                  options={members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                />
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Select the member to assign these souls to
@@ -479,7 +635,7 @@ export default function SoulsKanbanPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {KANBAN_STATUSES.map((status) => (
               <div key={status} id={status} className="flex-1 min-w-[280px]">
                 <KanbanColumn
@@ -505,7 +661,7 @@ export default function SoulsKanbanPage() {
           <p className="text-muted-foreground mb-4">
             No souls found. Start by capturing your first soul!
           </p>
-          <Button onClick={() => router.push('/souls/capture')}>
+          <Button onClick={() => router.push('/souls/capture')} className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0">
             <Plus className="mr-2 h-4 w-4" />
             Capture Soul
           </Button>

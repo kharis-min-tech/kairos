@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 
@@ -56,6 +56,8 @@ export default function BranchDetailPage() {
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -128,30 +130,25 @@ export default function BranchDetailPage() {
 
             <div className="space-y-2">
               <Label htmlFor="regionId">Region *</Label>
-              <select
+              <CustomSelect
                 id="regionId"
-                {...register('regionId')}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-              >
-                <option value="">Select a region</option>
-                {regions?.map((r) => (
-                  <option key={r.id} value={r.id}>{r.regionName}</option>
-                ))}
-              </select>
+                value={watch('regionId') ?? ''}
+                onValueChange={(v) => setValue('regionId', v, { shouldDirty: true })}
+                placeholder="Select a region"
+                options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
+              />
               {errors.regionId && <p className="text-sm text-destructive">{errors.regionId.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="branchType">Branch Type</Label>
-              <select
+              <CustomSelect
                 id="branchType"
-                {...register('branchType')}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-              >
-                {Object.values(BranchType).map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+                value={watch('branchType') ?? ''}
+                onValueChange={(v) => setValue('branchType', v as FormValues['branchType'], { shouldDirty: true })}
+                placeholder="Select type"
+                options={Object.values(BranchType).map((t) => ({ value: t, label: t }))}
+              />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -270,35 +267,27 @@ export default function BranchDetailPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Role</label>
-                  <select
+                  <CustomSelect
                     value={assignRole}
-                    onChange={(e) => setAssignRole(e.target.value as 'Main Pastor' | 'Elder')}
-                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1.5 text-sm"
-                  >
-                    <option value="Elder">Elder</option>
-                    <option value="Main Pastor">Main Pastor</option>
-                  </select>
+                    onValueChange={(v) => setAssignRole(v as 'Main Pastor' | 'Elder')}
+                    options={[{ value: 'Elder', label: 'Elder' }, { value: 'Main Pastor', label: 'Main Pastor' }]}
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Member</label>
-                  <select
+                  <CustomSelect
                     value={assignMemberId}
-                    onChange={(e) => setAssignMemberId(e.target.value)}
-                    className="flex h-9 w-full rounded-lg border border-input/15 bg-background px-3 py-1.5 text-sm"
-                  >
-                    <option value="">Select a member...</option>
-                    {membersData?.data?.map((m) => (
-                      <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
-                    ))}
-                  </select>
+                    onValueChange={setAssignMemberId}
+                    placeholder="Select a member..."
+                    options={(membersData?.data ?? []).map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Start Date</label>
-                  <Input
-                    type="date"
+                  <DateSelect
                     value={assignStartDate}
-                    onChange={(e) => setAssignStartDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    onChange={setAssignStartDate}
+                    maxDate={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               </div>

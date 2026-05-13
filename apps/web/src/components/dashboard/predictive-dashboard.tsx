@@ -233,7 +233,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
               stroke="#059669"
               fill="url(#forecastGREEN)"
               strokeWidth={2}
-              name="All Good"
+              name="On Track"
             />
           </ComposedChart>
         </ResponsiveContainer>

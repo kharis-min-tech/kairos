@@ -8,7 +8,6 @@ import {
   updateProgramSchema,
   listProgramsQuerySchema,
   registerWorkerSchema,
-  conversionFunnelQuerySchema,
 } from './schemas';
 import {
   createProgram,
@@ -161,28 +160,6 @@ app.post(
       }
       throw err;
     }
-  }
-);
-
-/**
- * GET /api/outreach/reports/conversion-funnel
- * Get conversion funnel metrics
- */
-app.get(
-  '/reports/conversion-funnel',
-  zValidator('query', conversionFunnelQuerySchema),
-  async (c) => {
-
-    // TODO: Implement getConversionFunnelMetrics service function
-    // For now, return placeholder
-    return c.json({
-      success: true,
-      data: {
-        statusCounts: {},
-        conversionRate: 0,
-        averageDaysToConversion: 0,
-      },
-    });
   }
 );
 

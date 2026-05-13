@@ -105,11 +105,3 @@ export const listFollowUpsQuerySchema = z.object({
   soulId: z.string().uuid().optional(),
 });
 
-// ── Reports ────────────────────────────────────────────────
-
-export const conversionFunnelQuerySchema = z.object({
-  branchId: z.string().uuid().optional(),
-  outreachId: z.string().uuid().optional(),
-  startDate: z.string().date().optional(),
-  endDate: z.string().date().optional(),
-});

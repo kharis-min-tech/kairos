@@ -49,7 +49,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
       fill: RAG_COLORS.AMBER,
     },
     {
-      name: 'All Good',
+      name: 'On Track',
       count: overview?.ragCounts?.GREEN || 0,
       fill: RAG_COLORS.GREEN,
     },
@@ -111,7 +111,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
         <Card className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/50 border-emerald-500/30 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-emerald-300">All Good</p>
+              <p className="text-sm text-emerald-300">On Track</p>
               <p className="text-4xl font-bold text-white mt-2">{overview?.ragCounts?.GREEN || 0}</p>
             </div>
             <CheckCircle className="h-12 w-12 text-emerald-400" />
@@ -203,7 +203,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
             <Legend />
             <Bar dataKey="RED" stackId="a" fill={RAG_COLORS.RED} name="Critical" />
             <Bar dataKey="AMBER" stackId="a" fill={RAG_COLORS.AMBER} name="Monitor" />
-            <Bar dataKey="GREEN" stackId="a" fill={RAG_COLORS.GREEN} name="All Good" />
+            <Bar dataKey="GREEN" stackId="a" fill={RAG_COLORS.GREEN} name="On Track" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -285,7 +285,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
         >
           <div className="text-center">
             <CheckCircle className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-            <p className="text-sm text-emerald-300">View All Good Souls</p>
+            <p className="text-sm text-emerald-300">View On Track Souls</p>
             <p className="text-4xl font-bold text-white mt-2">{overview?.ragCounts?.GREEN || 0}</p>
             <p className="text-xs text-emerald-400 mt-1">Click to see names</p>
           </div>
@@ -430,9 +430,9 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                   selectedSoul.ragStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-300 border border-amber-500' :
                   'bg-emerald-500/20 text-emerald-300 border border-emerald-500'
                 }`}>
-                  {selectedSoul.ragStatus === 'RED' ? 'RED Critical' :
-                   selectedSoul.ragStatus === 'AMBER' ? 'AMBER Monitor' :
-                   'GREEN All Good'}
+                  {selectedSoul.ragStatus === 'RED' ? 'Critical' :
+                   selectedSoul.ragStatus === 'AMBER' ? 'Monitor' :
+                   'On Track'}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/20 text-purple-300 border border-purple-500">
                   {selectedSoul.status}
@@ -499,8 +499,8 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                   selectedFollowUp.ragStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-300 border border-amber-500' :
                   'bg-emerald-500/20 text-emerald-300 border border-emerald-500'
                 }`}>
-                  {selectedFollowUp.ragStatus === 'RED' ? 'RED Critical' :
-                   selectedFollowUp.ragStatus === 'AMBER' ? 'AMBER Monitor' :
+                  {selectedFollowUp.ragStatus === 'RED' ? 'Critical' :
+                   selectedFollowUp.ragStatus === 'AMBER' ? 'Monitor' :
                    'GREEN Successful'}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-500/20 text-blue-300 border border-blue-500">

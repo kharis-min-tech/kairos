@@ -80,7 +80,35 @@ Use linear icons with a `1.5px` stroke weight. Icons should be `on-surface-varia
 
 ---
 
-## 6. Do's and Don'ts
+## 6. Input Controls & Date Selection
+
+### The Universal Date Picker (`DateSelect`)
+**All date inputs in the app — without exception — must use the shared `DateSelect` component** from `@/components/date-select`. This is the single source of truth for date selection: a calendar popover with Day → Month → Year drill-down navigation, so it works equally well for near-future scheduling *and* for recalling historic dates (date of birth, established dates, etc.).
+
+**Forbidden:**
+- Native `<input type="date">` — inconsistent across browsers, breaks the design system.
+- Three-part `<CustomSelect>` (Month / Day / Year) trios — use `DateSelect`'s year/month views instead.
+- Any third-party calendar library outside this component.
+
+**Variants** — pick based on the surrounding chrome:
+
+| Variant | When to use | Visual |
+|---|---|---|
+| `variant="input"` *(default)* | Inside forms, alongside `<Input>` and `<CustomSelect>` fields | Full-width bordered field with trailing calendar icon — matches `<Input>` height & border |
+| `variant="pill"` | Dashboard filter bars, toolbars, dense control rows | Compact chip with leading calendar icon, neutral fill, no border |
+
+**Constraint props** (use these to enforce business rules):
+- `minDate` / `maxDate` — ISO `YYYY-MM-DD` bounds (e.g., date-range pickers should mirror each other; "as-of" pickers should set `maxDate={today}`).
+- `minYear` / `maxYear` — convenience for wide historical ranges (e.g., date of birth: `minYear={1920}`).
+
+**Always controlled:** value is an ISO `YYYY-MM-DD` string (or `''`). `onChange` fires with the same format.
+
+### Dropdown Styling
+All dropdowns must use the `CustomSelect` component from `@kairos/ui`. Never use native `<select>` elements — they break the design system's tonal consistency.
+
+---
+
+## 7. Do's and Don'ts
 
 ### Do
 - **Do** prioritize clean negative space. If a layout feels "busy," remove borders and check tonal contrast.

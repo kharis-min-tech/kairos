@@ -10,4 +10,8 @@ export {
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
   sendMentorAssignedEmail,
+  sendInterviewScheduledEmail,
+  sendOfferExtendedEmail,
+  sendProbationStartedEmail,
+  sendProbationPassedEmail,
 } from './mailer';

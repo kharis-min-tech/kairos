@@ -13,8 +13,17 @@ export { outreachPrograms, outreachProgramsRelations } from './outreach-programs
 export { souls, soulsRelations } from './souls';
 export { followUps, followUpsRelations } from './follow-ups';
 export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
-export {
-  newBelieverEnrollments,
-  newBelieverSessions,
-  newBelieverAttendance,
-} from './new-believers';
+export { newBelieverEnrollments, newBelieverSessions, newBelieverAttendance } from './new-believers';
+export { departments, departmentsRelations } from './departments';
+export { branchDepartments, branchDepartmentsRelations } from './branch-departments';
+export { departmentMembers, departmentMembersRelations } from './department-members';
+export { departmentJoinRequests, departmentJoinRequestsRelations } from './department-join-requests';
+export { departmentFollowups, departmentFollowupsRelations } from './department-followups';
+export { departmentUniformOutfits, departmentUniformOutfitsRelations } from './department-uniform-outfits';
+export { departmentUniformSchedule, departmentUniformScheduleRelations } from './department-uniform-schedule';
+export { rotaTemplates, rotaTemplatesRelations } from './rota-templates';
+export { rotaTemplateSlots, rotaTemplateSlotsRelations } from './rota-template-slots';
+export { rotaPoolMembers, rotaPoolMembersRelations } from './rota-pool-members';
+export { rotaInstances, rotaInstancesRelations } from './rota-instances';
+export { rotaAssignments, rotaAssignmentsRelations } from './rota-assignments';
+export { rotaSwapRequests, rotaSwapRequestsRelations } from './rota-swap-requests';

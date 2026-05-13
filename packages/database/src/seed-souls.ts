@@ -86,14 +86,14 @@ async function seedSoulsData() {
       { firstName: 'Nancy', lastName: 'Jackson', phone: '+1234567801', email: 'nancy.j@email.com', status: 'Interested', daysAgo: 4, hasFollowUp: true, lastFollowUpDays: 4 },
       { firstName: 'Daniel', lastName: 'White', phone: '+1234567802', email: 'daniel.w@email.com', status: 'Interested', daysAgo: 3, hasFollowUp: true, lastFollowUpDays: 3 },
       
-      // GREEN (ALL GOOD) - Recent contact
+      // GREEN (On Track) - Recent contact
       { firstName: 'Karen', lastName: 'Harris', phone: '+1234567803', email: 'karen.h@email.com', status: 'New', daysAgo: 1, hasFollowUp: true, lastFollowUpDays: 1 },
       { firstName: 'Matthew', lastName: 'Martin', phone: '+1234567804', email: 'matthew.m@email.com', status: 'Following Up', daysAgo: 1, hasFollowUp: true, lastFollowUpDays: 1 },
       { firstName: 'Betty', lastName: 'Thompson', phone: '+1234567805', email: 'betty.t@email.com', status: 'Interested', daysAgo: 2, hasFollowUp: true, lastFollowUpDays: 2 },
       { firstName: 'Anthony', lastName: 'Garcia', phone: '+1234567806', email: 'anthony.g@email.com', status: 'New', daysAgo: 0, hasFollowUp: true, lastFollowUpDays: 0 },
       { firstName: 'Sandra', lastName: 'Martinez', phone: '+1234567807', email: 'sandra.m@email.com', status: 'Following Up', daysAgo: 1, hasFollowUp: true, lastFollowUpDays: 1 },
       
-      // GREEN (ALL GOOD) - Converted/Not Interested/Lost Contact
+      // GREEN (On Track) - Converted/Not Interested/Lost Contact
       { firstName: 'Mark', lastName: 'Robinson', phone: '+1234567808', email: 'mark.r@email.com', status: 'Converted', daysAgo: 10, hasFollowUp: true, lastFollowUpDays: 5 },
       { firstName: 'Donna', lastName: 'Clark', phone: '+1234567809', email: 'donna.c@email.com', status: 'Converted', daysAgo: 15, hasFollowUp: true, lastFollowUpDays: 7 },
       { firstName: 'Paul', lastName: 'Rodriguez', phone: '+1234567810', email: 'paul.r@email.com', status: 'Not Interested', daysAgo: 8, hasFollowUp: true, lastFollowUpDays: 8 },
@@ -164,7 +164,7 @@ async function seedSoulsData() {
     console.log(`  - Total souls: ${soulsSeedData.length}`);
     console.log(`  - Critical (RED): ~8 souls`);
     console.log(`  - Monitor (AMBER): ~5 souls`);
-    console.log(`  - All Good (GREEN): ~9 souls`);
+    console.log(`  - On Track (GREEN): ~9 souls`);
     console.log('\n🎯 Navigate to /souls-dashboard to see the data!');
 
   } catch (error) {

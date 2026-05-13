@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
 import { useMyProfile } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
-import { Button } from '@kairos/ui';
+import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import type { FellowshipListParams } from '@kairos/types';
@@ -92,7 +92,7 @@ function FellowshipsContent() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
           {FELLOWSHIP_TYPES.map((type) => (
             <button
               key={type.value}
@@ -105,25 +105,25 @@ function FellowshipsContent() {
               }
               className={(
                 (params.fellowshipType || '') === type.value
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'border border-input/15 bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
-              ) + ' rounded-full px-4 py-1.5 text-sm font-medium transition-colors'}
+                  ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
+                  : 'text-muted-foreground hover:text-foreground'
+              ) + ' flex-1 whitespace-nowrap rounded-lg px-3 py-1 text-xs font-semibold transition-all duration-150'}
             >
               {type.label}
             </button>
           ))}
         </div>
         {activeRole === 'admin' && (
-          <select
+          <CustomSelect
+            size="sm"
             value={params.branchId ?? ''}
-            onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
-            className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-          >
-            <option value="">All Branches</option>
-            {(branchesResult ?? []).map((b) => (
-              <option key={b.id} value={b.id}>{b.branchName}</option>
-            ))}
-          </select>
+            onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
+            placeholder="All Branches"
+            options={[
+              { value: '', label: 'All Branches' },
+              ...(branchesResult ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+            ]}
+          />
         )}
       </div>
 

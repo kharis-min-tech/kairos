@@ -68,6 +68,31 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
+  Department,
+  BranchDepartment,
+  BranchDepartmentWithDetails,
+  DepartmentMember,
+  DepartmentMemberWithDetails,
+  DepartmentJoinRequest,
+  DepartmentJoinRequestWithMember,
+  MyDepartmentJoinRequest,
+  DepartmentFollowup,
+  DepartmentFollowupWithDetails,
+  OverdueFollowupRow,
+  DepartmentUniformOutfit,
+  DepartmentUniformSchedule,
+  DepartmentUniformScheduleWithOutfit,
+  RotaTemplate,
+  RotaTemplateWithSummary,
+  RotaTemplateSlot,
+  RotaPoolMember,
+  RotaPoolMemberWithDetails,
+  RotaInstance,
+  RotaInstanceWithSummary,
+  RotaAssignment,
+  RotaAssignmentWithDetails,
+  RotaSwapRequest,
+  RotaSwapRequestWithDetails,
 } from '@kairos/types';
 
 import { ApiClient } from './client';
@@ -235,6 +260,378 @@ export function createApiClient(
       },
     },
 
+    departments: {
+      // Global catalogue
+      listGlobal: () =>
+        client.get<ApiResponse<Department[]>>('/api/departments/global'),
+      createGlobal: (data: { departmentName: string; description?: string | null; iconKey?: string | null }) =>
+        client.post<ApiResponse<Department>>('/api/departments/global', data),
+      updateGlobal: (id: string, data: Partial<{ departmentName: string; description: string | null; iconKey: string | null; isActive: boolean }>) =>
+        client.patch<ApiResponse<Department>>(`/api/departments/global/${encodeURIComponent(id)}`, data),
+
+      // Member-facing aggregation
+      mine: () =>
+        client.get<ApiResponse<BranchDepartmentWithDetails[]>>('/api/departments/mine'),
+
+      // Branch department CRUD
+      list: (params?: { page?: number; limit?: number; branchId?: string; departmentId?: string; memberId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.memberId) qs.set('memberId', params.memberId);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<BranchDepartmentWithDetails>>>(`/api/departments${query ? `?${query}` : ''}`);
+      },
+      get: (id: string) =>
+        client.get<ApiResponse<BranchDepartmentWithDetails>>(`/api/departments/${encodeURIComponent(id)}`),
+      create: (data: {
+        branchId: string;
+        departmentId: string;
+        leadMemberId: string;
+        deputyMemberId?: string | null;
+        description?: string | null;
+        startDate?: string;
+      }) =>
+        client.post<ApiResponse<BranchDepartment>>('/api/departments', data),
+      update: (id: string, data: Partial<{ leadMemberId: string; deputyMemberId: string | null; description: string | null; endDate: string | null; isActive: boolean }>) =>
+        client.patch<ApiResponse<BranchDepartment>>(`/api/departments/${encodeURIComponent(id)}`, data),
+      deactivate: (id: string) =>
+        client.delete<ApiResponse<BranchDepartment>>(`/api/departments/${encodeURIComponent(id)}`),
+
+      // Members
+      members: {
+        list: (branchDeptId: string) =>
+          client.get<ApiResponse<DepartmentMemberWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members`),
+        add: (branchDeptId: string, data: { memberId: string; notes?: string | null }) =>
+          client.post<ApiResponse<DepartmentMember>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members`, data),
+        remove: (branchDeptId: string, memberId: string) =>
+          client.delete<ApiResponse<DepartmentMember>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}`),
+      },
+
+      // Join requests / recruitment pipeline
+      joinRequests: {
+        create: (branchDeptId: string, data: { notes?: string | null }) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests`, data),
+        listMine: () =>
+          client.get<ApiResponse<MyDepartmentJoinRequest[]>>(`/api/departments/me/join-requests`),
+        list: (branchDeptId: string, params?: { stage?: 'open' | 'all' | 'terminal' }) => {
+          const qs = new URLSearchParams();
+          if (params?.stage) qs.set('stage', params.stage);
+          const query = qs.toString();
+          return client.get<ApiResponse<DepartmentJoinRequestWithMember[]>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests${query ? `?${query}` : ''}`,
+          );
+        },
+        scheduleInterview: (
+          branchDeptId: string,
+          requestId: string,
+          data: {
+            interviewScheduledAt: string;
+            interviewFormat: 'in_person' | 'virtual';
+            interviewLocation?: string;
+            interviewerOneId: string;
+            interviewerTwoId?: string;
+          },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/schedule-interview`,
+            data,
+          ),
+        recordInterview: (
+          branchDeptId: string,
+          requestId: string,
+          data: { interviewOutcome: 'pass' | 'fail'; interviewNotes?: string },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/record-interview`,
+            data,
+          ),
+        extendOffer: (
+          branchDeptId: string,
+          requestId: string,
+          data: { offerExpiresAt?: string; offerMessage?: string; probationDays?: number },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/extend-offer`,
+            data,
+          ),
+        respondToOffer: (
+          branchDeptId: string,
+          requestId: string,
+          data: { offerResponse: 'accepted' | 'declined' },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/respond-offer`,
+            data,
+          ),
+        withdraw: (branchDeptId: string, requestId: string) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/withdraw`,
+            {},
+          ),
+        reject: (branchDeptId: string, requestId: string, data: { reviewNotes?: string } = {}) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/reject`,
+            data,
+          ),
+        evaluateProbation: (
+          branchDeptId: string,
+          requestId: string,
+          data: { probationOutcome: 'passed' | 'failed'; probationNotes?: string },
+        ) =>
+          client.post<ApiResponse<DepartmentJoinRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/join-requests/${encodeURIComponent(requestId)}/evaluate-probation`,
+            data,
+          ),
+      },
+
+      // Followups
+      followups: {
+        listForDepartment: (branchDeptId: string, params?: { memberId?: string; from?: string; to?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.memberId) qs.set('memberId', params.memberId);
+          if (params?.from) qs.set('from', params.from);
+          if (params?.to) qs.set('to', params.to);
+          const query = qs.toString();
+          return client.get<ApiResponse<DepartmentFollowupWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups${query ? `?${query}` : ''}`);
+        },
+        listOverdue: (branchDeptId: string, days?: number) => {
+          const qs = new URLSearchParams();
+          if (days !== undefined) qs.set('days', String(days));
+          const query = qs.toString();
+          return client.get<ApiResponse<OverdueFollowupRow[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups/overdue${query ? `?${query}` : ''}`);
+        },
+        listForMember: (branchDeptId: string, memberId: string) =>
+          client.get<ApiResponse<DepartmentFollowupWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}/followups`),
+        create: (
+          branchDeptId: string,
+          memberId: string,
+          data: {
+            contactedAt?: string;
+            contactMethod: string;
+            contactStatus: string;
+            durationMinutes?: number | null;
+            notes?: string | null;
+            nextFollowUpDate?: string | null;
+            assignedToId?: string | null;
+          },
+        ) =>
+          client.post<ApiResponse<DepartmentFollowup>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}/followups`, data),
+        update: (
+          branchDeptId: string,
+          followupId: string,
+          data: Partial<{
+            contactedAt: string;
+            contactMethod: string;
+            contactStatus: string;
+            durationMinutes: number | null;
+            notes: string | null;
+            nextFollowUpDate: string | null;
+            assignedToId: string | null;
+          }>,
+        ) =>
+          client.patch<ApiResponse<DepartmentFollowup>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups/${encodeURIComponent(followupId)}`, data),
+        delete: (branchDeptId: string, followupId: string) =>
+          client.delete<ApiResponse<DepartmentFollowup>>(`/api/departments/${encodeURIComponent(branchDeptId)}/followups/${encodeURIComponent(followupId)}`),
+      },
+
+      // Uniforms
+      uniforms: {
+        listOutfits: (branchDeptId: string, params?: { isActive?: boolean; genderTarget?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.isActive !== undefined) qs.set('isActive', String(params.isActive));
+          if (params?.genderTarget) qs.set('genderTarget', params.genderTarget);
+          const query = qs.toString();
+          return client.get<ApiResponse<DepartmentUniformOutfit[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniforms${query ? `?${query}` : ''}`);
+        },
+        createOutfit: (
+          branchDeptId: string,
+          data: { name: string; imageUrl: string; genderTarget?: string; notes?: string | null },
+        ) =>
+          client.post<ApiResponse<DepartmentUniformOutfit>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniforms`, data),
+        updateOutfit: (
+          branchDeptId: string,
+          outfitId: string,
+          data: Partial<{ name: string; imageUrl: string; genderTarget: string; notes: string | null; isActive: boolean }>,
+        ) =>
+          client.patch<ApiResponse<DepartmentUniformOutfit>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniforms/${encodeURIComponent(outfitId)}`, data),
+        deactivateOutfit: (branchDeptId: string, outfitId: string) =>
+          client.delete<ApiResponse<DepartmentUniformOutfit>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniforms/${encodeURIComponent(outfitId)}`),
+        listSchedule: (branchDeptId: string, params?: { from?: string; to?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.from) qs.set('from', params.from);
+          if (params?.to) qs.set('to', params.to);
+          const query = qs.toString();
+          return client.get<ApiResponse<DepartmentUniformScheduleWithOutfit[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniform-schedule${query ? `?${query}` : ''}`);
+        },
+        upcoming: (branchDeptId: string) =>
+          client.get<ApiResponse<DepartmentUniformScheduleWithOutfit[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniform-schedule/upcoming`),
+        assignSchedule: (
+          branchDeptId: string,
+          data: { outfitId: string; serviceDate: string; genderTarget?: string; notes?: string | null },
+        ) =>
+          client.post<ApiResponse<DepartmentUniformSchedule>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniform-schedule`, data),
+        removeAssignment: (branchDeptId: string, assignmentId: string) =>
+          client.delete<ApiResponse<DepartmentUniformSchedule>>(`/api/departments/${encodeURIComponent(branchDeptId)}/uniform-schedule/${encodeURIComponent(assignmentId)}`),
+      },
+
+      // Rota
+      rota: {
+        // Templates
+        listTemplates: (branchDeptId: string, params?: { includeArchived?: boolean }) => {
+          const qs = new URLSearchParams();
+          if (params?.includeArchived) qs.set('includeArchived', 'true');
+          const query = qs.toString();
+          return client.get<ApiResponse<RotaTemplateWithSummary[]>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates${query ? `?${query}` : ''}`,
+          );
+        },
+        createTemplate: (
+          branchDeptId: string,
+          data: { name: string; weekday: number; defaultStartTime?: string | null; notes?: string | null },
+        ) =>
+          client.post<ApiResponse<RotaTemplate>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates`, data),
+        updateTemplate: (
+          branchDeptId: string,
+          templateId: string,
+          data: Partial<{ name: string; weekday: number; defaultStartTime: string | null; notes: string | null; isActive: boolean }>,
+        ) =>
+          client.patch<ApiResponse<RotaTemplate>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}`, data),
+        deactivateTemplate: (branchDeptId: string, templateId: string) =>
+          client.delete<ApiResponse<{ id: string }>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}`),
+
+        // Slots
+        listSlots: (branchDeptId: string, templateId: string) =>
+          client.get<ApiResponse<RotaTemplateSlot[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/slots`),
+        createSlot: (
+          branchDeptId: string,
+          templateId: string,
+          data: { roleName: string; positionsRequired?: number; notes?: string | null; sortOrder?: number },
+        ) =>
+          client.post<ApiResponse<RotaTemplateSlot>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/slots`, data),
+        updateSlot: (
+          branchDeptId: string,
+          templateId: string,
+          slotId: string,
+          data: Partial<{ roleName: string; positionsRequired: number; notes: string | null; sortOrder: number; isActive: boolean }>,
+        ) =>
+          client.patch<ApiResponse<RotaTemplateSlot>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/slots/${encodeURIComponent(slotId)}`, data),
+        deleteSlot: (branchDeptId: string, templateId: string, slotId: string) =>
+          client.delete<ApiResponse<{ id: string }>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/slots/${encodeURIComponent(slotId)}`),
+
+        // Pool
+        listPool: (branchDeptId: string, templateId: string) =>
+          client.get<ApiResponse<RotaPoolMemberWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/pool`),
+        addPoolMember: (
+          branchDeptId: string,
+          templateId: string,
+          data: { memberId: string; preferredRoleName?: string | null; notes?: string | null },
+        ) =>
+          client.post<ApiResponse<RotaPoolMember>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/pool`, data),
+        removePoolMember: (branchDeptId: string, templateId: string, poolMemberId: string) =>
+          client.delete<ApiResponse<{ id: string }>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/pool/${encodeURIComponent(poolMemberId)}`),
+
+        // Generation
+        generate: (
+          branchDeptId: string,
+          templateId: string,
+          data: { weeks: number; startDate: string },
+        ) =>
+          client.post<ApiResponse<{ instanceCount: number; assignmentCount: number; openSlotCount: number }>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/generate`,
+            data,
+          ),
+
+        regenerateInstance: (branchDeptId: string, instanceId: string) =>
+          client.post<ApiResponse<{ instanceId: string; assignmentCount: number; openSlotCount: number }>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}/regenerate`,
+            {},
+          ),
+
+        // Instances
+        listInstances: (branchDeptId: string, params?: { from?: string; to?: string }) => {
+          const qs = new URLSearchParams();
+          if (params?.from) qs.set('from', params.from);
+          if (params?.to) qs.set('to', params.to);
+          const query = qs.toString();
+          return client.get<ApiResponse<RotaInstanceWithSummary[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances${query ? `?${query}` : ''}`);
+        },
+        getInstance: (branchDeptId: string, instanceId: string) =>
+          client.get<ApiResponse<RotaInstance & { assignments: RotaAssignmentWithDetails[] }>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}`,
+          ),
+        updateInstanceStatus: (
+          branchDeptId: string,
+          instanceId: string,
+          data: { status: 'Draft' | 'Published' | 'Cancelled'; notes?: string | null },
+        ) =>
+          client.patch<ApiResponse<RotaInstance>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}`,
+            data,
+          ),
+        updateAssignment: (
+          branchDeptId: string,
+          instanceId: string,
+          assignmentId: string,
+          data: Partial<{ memberId: string | null; status: 'Assigned' | 'Confirmed' | 'Declined' | 'Swapped' | 'Open'; notes: string | null }>,
+        ) =>
+          client.patch<ApiResponse<RotaAssignment>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}/assignments/${encodeURIComponent(assignmentId)}`,
+            data,
+          ),
+
+        // Swap requests
+        createSwapRequest: (
+          branchDeptId: string,
+          instanceId: string,
+          assignmentId: string,
+          data: { proposedMemberId?: string | null; reason?: string | null },
+        ) =>
+          client.post<ApiResponse<RotaSwapRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}/assignments/${encodeURIComponent(assignmentId)}/swap-requests`,
+            data,
+          ),
+        listSwapRequests: (branchDeptId: string, params?: { status?: 'pending' | 'approved' | 'rejected' | 'cancelled' }) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          const query = qs.toString();
+          return client.get<ApiResponse<RotaSwapRequestWithDetails[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-swap-requests${query ? `?${query}` : ''}`);
+        },
+        reviewSwapRequest: (
+          branchDeptId: string,
+          requestId: string,
+          data: { decision: 'approved' | 'rejected'; reviewNotes?: string | null },
+        ) =>
+          client.patch<ApiResponse<RotaSwapRequest>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-swap-requests/${encodeURIComponent(requestId)}`,
+            data,
+          ),
+      },
+    },
+
+    me: {
+      rota: (params?: { from?: string; to?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.from) qs.set('from', params.from);
+        if (params?.to) qs.set('to', params.to);
+        const query = qs.toString();
+        return client.get<ApiResponse<Array<{
+          assignmentId: string;
+          instanceId: string;
+          branchDepartmentId: string;
+          templateId: string;
+          templateName: string;
+          serviceDate: string;
+          startTime: string | null;
+          slotRoleName: string;
+          status: string;
+          instanceStatus: string;
+        }>>>(`/api/me/rota${query ? `?${query}` : ''}`);
+      },
+    },
+
     analytics: {
       adminStats: () =>
         client.get<ApiResponse<AdminDashboardStats>>('/api/analytics/admin'),
@@ -286,22 +683,6 @@ export function createApiClient(
         registerWorker: (programId: string, data: { memberId: string; role?: string; notes?: string }) =>
           client.post<ApiResponse<any>>(`/api/outreach/programs/${encodeURIComponent(programId)}/participants`, data),
       },
-      reports: {
-        conversionFunnel: (params?: {
-          branchId?: string;
-          outreachId?: string;
-          startDate?: string;
-          endDate?: string;
-        }) => {
-          const qs = new URLSearchParams();
-          if (params?.branchId) qs.set('branchId', params.branchId);
-          if (params?.outreachId) qs.set('outreachId', params.outreachId);
-          if (params?.startDate) qs.set('startDate', params.startDate);
-          if (params?.endDate) qs.set('endDate', params.endDate);
-          const query = qs.toString();
-          return client.get<ApiResponse<any>>(`/api/outreach/reports/conversion-funnel${query ? `?${query}` : ''}`);
-        },
-      },
     },
 
     souls: {
@@ -351,35 +732,65 @@ export function createApiClient(
     },
 
     dashboard: {
-      overview: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/overview'),
-      analytics: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/analytics'),
+      overview: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/overview${query ? `?${query}` : ''}`);
+      },
+      analytics: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/analytics${query ? `?${query}` : ''}`);
+      },
       souls: (params?: {
         ragStatus?: 'RED' | 'AMBER' | 'GREEN';
         status?: string;
         page?: number;
         limit?: number;
+        dateFrom?: string;
+        dateTo?: string;
+        programId?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
         if (params?.status) qs.set('status', params.status);
         if (params?.page) qs.set('page', String(params.page));
         if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/souls${query ? `?${query}` : ''}`);
       },
-      followUpsOverview: () =>
-        client.get<ApiResponse<any>>('/api/outreach/dashboard/follow-ups/overview'),
+      followUpsOverview: (params?: { dateFrom?: string; dateTo?: string; programId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
+        const query = qs.toString();
+        return client.get<ApiResponse<any>>(`/api/outreach/dashboard/follow-ups/overview${query ? `?${query}` : ''}`);
+      },
       followUps: (params?: {
         ragStatus?: 'RED' | 'AMBER' | 'GREEN';
         page?: number;
         limit?: number;
+        dateFrom?: string;
+        dateTo?: string;
+        programId?: string;
       }) => {
         const qs = new URLSearchParams();
         if (params?.ragStatus) qs.set('ragStatus', params.ragStatus);
         if (params?.page) qs.set('page', String(params.page));
         if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        if (params?.programId) qs.set('programId', params.programId);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<any>>>(`/api/outreach/dashboard/follow-ups${query ? `?${query}` : ''}`);
       },

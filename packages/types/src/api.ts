@@ -417,21 +417,6 @@ export interface ConversionResult {
   member: import('./entities').Member;
 }
 
-export interface ConversionFunnelMetrics {
-  statusCounts: Record<string, number>;
-  conversionRate: number;
-  dropOffRates: Record<string, number>;
-  averageDaysToConversion: number;
-  totalSouls: number;
-}
-
-export interface ConversionFunnelParams {
-  branchId?: string; // Admin only
-  outreachId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-}
-
 export interface ProgramStatistics {
   totalWorkers: number;
   totalSouls: number;

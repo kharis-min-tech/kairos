@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
 
 const NOTIFICATION_KEYS = [
   { key: 'kairos_push_enabled', label: 'Push Notifications', description: 'Receive push notifications for announcements and updates' },
@@ -184,24 +184,24 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">Language</p>
               <p className="text-xs text-muted-foreground">App display language</p>
             </div>
-            <select
+            <CustomSelect
               disabled
-              className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm opacity-50"
-            >
-              <option>English</option>
-            </select>
+              value="English"
+              onValueChange={() => {}}
+              options={[{ value: 'English', label: 'English' }]}
+            />
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Theme</p>
               <p className="text-xs text-muted-foreground">App appearance</p>
             </div>
-            <select
+            <CustomSelect
               disabled
-              className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm opacity-50"
-            >
-              <option>Light</option>
-            </select>
+              value="Light"
+              onValueChange={() => {}}
+              options={[{ value: 'Light', label: 'Light' }]}
+            />
           </div>
         </CardContent>
       </Card>

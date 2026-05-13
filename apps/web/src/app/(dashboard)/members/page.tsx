@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
-import { Button } from '@kairos/ui';
+import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { Input } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -140,38 +140,29 @@ export default function MembersPage() {
             Clear
           </Button>
         )}
-        <select
-          className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
+        <CustomSelect
+          size="sm"
           value={params.fellowshipId ?? ''}
-          onChange={(e) => setParams((p) => ({ ...p, fellowshipId: e.target.value || undefined, page: 1 }))}
-        >
-          <option value="">All Fellowships</option>
-          {(fellowshipsData?.data ?? []).map((f) => (
-            <option key={f.id} value={f.id}>{f.fellowshipName}</option>
-          ))}
-        </select>
+          onValueChange={(v) => setParams((p) => ({ ...p, fellowshipId: v || undefined, page: 1 }))}
+          placeholder="All Fellowships"
+          options={(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName }))}
+        />
         {isAdmin && (
-          <select
-            className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
+          <CustomSelect
+            size="sm"
             value={params.branchId ?? ''}
-            onChange={(e) => setParams((p) => ({ ...p, branchId: e.target.value || undefined, page: 1 }))}
-          >
-            <option value="">All Branches</option>
-            {(branches ?? []).map((b) => (
-              <option key={b.id} value={b.id}>{b.branchName}</option>
-            ))}
-          </select>
+            onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
+            placeholder="All Branches"
+            options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+          />
         )}
-        <select
-          className="h-10 rounded-lg border border-input/15 bg-background px-3 text-sm"
+        <CustomSelect
+          size="sm"
           value={params.approvalStatus ?? ''}
-          onChange={(e) => setParams((p) => ({ ...p, approvalStatus: (e.target.value || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
-        >
-          <option value="">All Statuses</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-          <option value="rejected">Rejected</option>
-        </select>
+          onValueChange={(v) => setParams((p) => ({ ...p, approvalStatus: (v || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
+          placeholder="All Statuses"
+          options={[{ value: 'approved', label: 'Approved' }, { value: 'pending', label: 'Pending' }, { value: 'rejected', label: 'Rejected' }]}
+        />
       </div>
 
       {!members || members.length === 0 ? (
