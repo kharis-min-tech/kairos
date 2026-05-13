@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect } from '@kairos/ui';
+import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect, NumberStepper } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
@@ -423,15 +423,16 @@ export default function SoulDetailPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="durationMinutes">Duration (minutes)</Label>
-                <Input
-                  id="durationMinutes"
-                  type="number"
-                  min="1"
-                  value={followUpForm.durationMinutes}
-                  onChange={(e) =>
-                    setFollowUpForm((prev) => ({ ...prev, durationMinutes: e.target.value }))
+                <NumberStepper
+                  value={Number(followUpForm.durationMinutes) || 0}
+                  onValueChange={(v) =>
+                    setFollowUpForm((prev) => ({ ...prev, durationMinutes: v ? String(v) : '' }))
                   }
-                  placeholder="15"
+                  min={0}
+                  max={600}
+                  step={5}
+                  suffix="m"
+                  ariaLabel="Duration in minutes"
                 />
               </div>
 

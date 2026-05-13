@@ -87,3 +87,89 @@ export const ContactStatus = {
   Interested: 'Interested',
 } as const;
 export type ContactStatus = (typeof ContactStatus)[keyof typeof ContactStatus];
+
+// ── Departments ────────────────────────────────────────────
+
+export const DepartmentJoinRequestStatus = {
+  Applied: 'applied',
+  InterviewScheduled: 'interview_scheduled',
+  Interviewed: 'interviewed',
+  Offered: 'offered',
+  Probation: 'probation',
+  Active: 'active',
+  Rejected: 'rejected',
+  Withdrawn: 'withdrawn',
+  ProbationFailed: 'probation_failed',
+} as const;
+export type DepartmentJoinRequestStatus =
+  (typeof DepartmentJoinRequestStatus)[keyof typeof DepartmentJoinRequestStatus];
+
+export const DepartmentInterviewFormat = {
+  InPerson: 'in_person',
+  Virtual: 'virtual',
+} as const;
+export type DepartmentInterviewFormat =
+  (typeof DepartmentInterviewFormat)[keyof typeof DepartmentInterviewFormat];
+
+export const DepartmentInterviewOutcome = {
+  Pass: 'pass',
+  Fail: 'fail',
+  Pending: 'pending',
+} as const;
+export type DepartmentInterviewOutcome =
+  (typeof DepartmentInterviewOutcome)[keyof typeof DepartmentInterviewOutcome];
+
+export const DepartmentOfferResponse = {
+  Accepted: 'accepted',
+  Declined: 'declined',
+} as const;
+export type DepartmentOfferResponse =
+  (typeof DepartmentOfferResponse)[keyof typeof DepartmentOfferResponse];
+
+export const DepartmentProbationOutcome = {
+  Passed: 'passed',
+  Failed: 'failed',
+  Pending: 'pending',
+} as const;
+export type DepartmentProbationOutcome =
+  (typeof DepartmentProbationOutcome)[keyof typeof DepartmentProbationOutcome];
+
+export const UniformGenderTarget = {
+  Male: 'Male',
+  Female: 'Female',
+  Unisex: 'Unisex',
+} as const;
+export type UniformGenderTarget = (typeof UniformGenderTarget)[keyof typeof UniformGenderTarget];
+
+// ── Rota ───────────────────────────────────────────────────
+
+export const RotaRecurrence = {
+  Weekly: 'Weekly',
+} as const;
+export type RotaRecurrence = (typeof RotaRecurrence)[keyof typeof RotaRecurrence];
+
+export const RotaInstanceStatus = {
+  Draft: 'Draft',
+  Published: 'Published',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+} as const;
+export type RotaInstanceStatus = (typeof RotaInstanceStatus)[keyof typeof RotaInstanceStatus];
+
+export const RotaAssignmentStatus = {
+  Assigned: 'Assigned',
+  Confirmed: 'Confirmed',
+  Declined: 'Declined',
+  Swapped: 'Swapped',
+  Open: 'Open',
+} as const;
+export type RotaAssignmentStatus = (typeof RotaAssignmentStatus)[keyof typeof RotaAssignmentStatus];
+
+export const RotaSwapRequestStatus = {
+  Pending: 'pending',
+  Approved: 'approved',
+  Rejected: 'rejected',
+  Cancelled: 'cancelled',
+} as const;
+export type RotaSwapRequestStatus =
+  (typeof RotaSwapRequestStatus)[keyof typeof RotaSwapRequestStatus];
