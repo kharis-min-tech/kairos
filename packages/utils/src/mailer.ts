@@ -233,6 +233,37 @@ export async function sendAccountRejectedEmail(
   });
 }
 
+export async function sendMentorAssignedEmail(
+  to: string,
+  mentorName: string,
+  studentName: string,
+): Promise<void> {
+  const transport = await createTransport();
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `You've been assigned as a mentor — Kharis Church`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #6D28D9;">Mentor Assignment</h2>
+        <p>Hi ${mentorName},</p>
+        <p>You have been assigned as a mentor for <strong>${studentName}</strong> in the New Believers programme.</p>
+        <p>Please reach out to them and support them through their journey of faith.</p>
+        <p>Log in to the Kharis Church portal to view their enrolment details.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Mentor assigned email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
 // ── Department recruitment pipeline emails ─────────────────────
 
 export async function sendInterviewScheduledEmail(

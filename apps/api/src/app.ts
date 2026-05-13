@@ -9,6 +9,7 @@ import { fellowshipsRouter } from './fellowships/router';
 import { departmentsRouter } from './departments/router';
 import { analyticsRouter } from './analytics/router';
 import { reportsRouter } from './reports/router';
+import { newBelieversRouter } from './new-believers/router';
 import outreachRouter from './outreach/router';
 import soulsRouter from './outreach/souls-router';
 import { meRouter } from './me/router';
@@ -52,6 +53,7 @@ export function createApp() {
   app.route('/api/departments', departmentsRouter);
   app.route('/api/analytics', analyticsRouter);
   app.route('/api/reports', reportsRouter);
+  app.route('/api/new-believers', newBelieversRouter);
   app.route('/api/outreach', outreachRouter);
   app.route('/api/souls', soulsRouter);
   app.route('/api/me', meRouter);

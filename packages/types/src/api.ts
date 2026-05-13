@@ -432,3 +432,59 @@ export interface FollowUpStatistics {
   daysSinceLastFollowUp: number;
   averageDuration: number;
 }
+
+// ── New Believers ────────────────────────────────────────
+export interface CreateEnrollmentRequest {
+  memberId: string;
+  branchId: string;
+  teacherId?: string;
+  mentorId?: string;
+  notes?: string;
+}
+
+export interface UpdateEnrollmentRequest {
+  stage?: string;
+  teacherId?: string | null;
+  mentorId?: string | null;
+  notes?: string | null;
+  completedAt?: string | null;
+  isActive?: boolean;
+  sessionCompletedAt?: Record<string, string> | null;
+  sessionFeedback?: Record<string, string> | null;
+  joinedDepartmentId?: string | null;
+}
+
+export interface EnrollmentListParams {
+  branchId?: string;
+  stage?: string;
+  teacherId?: string;
+  stale?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateNewBelieverSessionRequest {
+  branchId: string;
+  sessionDate: string;
+  topic: string;
+  teacherId?: string;
+  notes?: string;
+  feedback?: string;
+}
+
+export interface UpdateNewBelieverSessionRequest {
+  topic?: string;
+  sessionDate?: string;
+  notes?: string;
+  feedback?: string;
+  teacherId?: string | null;
+}
+
+export interface RecordNewBelieverAttendanceRequest {
+  records: { enrollmentId: string; attended: boolean; notes?: string }[];
+}
+
+export interface SessionListParams {
+  branchId?: string;
+  upcoming?: boolean;
+}

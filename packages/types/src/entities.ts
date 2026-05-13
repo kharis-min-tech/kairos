@@ -312,6 +312,59 @@ export interface OutreachParticipantWithMember extends OutreachParticipant {
   memberPhotoUrl?: string | null;
 }
 
+// ── New Believers ────────────────────────────────────────
+export interface NewBelieverEnrollment {
+  id: string;
+  memberId: string;
+  branchId: string;
+  teacherId?: string | null;
+  stage: string;
+  enrolledAt: string;
+  completedAt?: string | null;
+  sessionCompletedAt?: Record<string, string> | null;
+  joinedDepartmentId?: string | null;
+  notes?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewBelieverEnrollmentWithMember extends NewBelieverEnrollment {
+  memberFirstName: string;
+  memberLastName: string;
+  teacherFirstName?: string | null;
+  teacherLastName?: string | null;
+  mentorId?: string | null;
+  mentorFirstName?: string | null;
+  mentorLastName?: string | null;
+}
+
+export interface NewBelieverSession {
+  id: string;
+  branchId: string;
+  teacherId?: string | null;
+  teacherFirstName?: string | null;
+  teacherLastName?: string | null;
+  sessionDate: string;
+  topic: string;
+  notes?: string | null;
+  feedback?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewBelieverAttendance {
+  sessionId: string;
+  enrollmentId: string;
+  attended: boolean;
+  notes?: string | null;
+  recordedAt: string;
+}
+
+export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
+  memberFirstName: string;
+  memberLastName: string;
+}
 // ── Departments (global catalogue) ─────────────────────────
 
 export interface Department extends BaseEntity {
