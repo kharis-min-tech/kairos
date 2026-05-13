@@ -78,19 +78,72 @@ export interface CreateTemplateInput {
   notes?: string | null;
 }
 
-export async function listTemplates(db: Database, auth: AuthContext, branchDeptId: string) {
+export async function listTemplates(
+  db: Database,
+  auth: AuthContext,
+  branchDeptId: string,
+  query: { includeArchived?: boolean } = {},
+) {
   const bd = await loadBranchDepartment(db, branchDeptId);
   enforceBranchScope(auth, bd);
-  return db
+
+  const conditions = [eq(rotaTemplates.branchDepartmentId, branchDeptId)];
+  if (!query.includeArchived) conditions.push(eq(rotaTemplates.isActive, true));
+
+  const templates = await db
     .select()
     .from(rotaTemplates)
+    .where(and(...conditions))
+    .orderBy(desc(rotaTemplates.isActive), asc(rotaTemplates.name));
+
+  if (templates.length === 0) return [];
+
+  const templateIds = templates.map((t) => t.id);
+
+  const slotCounts = await db
+    .select({
+      templateId: rotaTemplateSlots.templateId,
+      count: sql<number>`count(*)::int`,
+      positions: sql<number>`coalesce(sum(${rotaTemplateSlots.positionsRequired}), 0)::int`,
+    })
+    .from(rotaTemplateSlots)
+    .where(inArray(rotaTemplateSlots.templateId, templateIds))
+    .groupBy(rotaTemplateSlots.templateId);
+
+  const poolCounts = await db
+    .select({
+      templateId: rotaPoolMembers.templateId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(rotaPoolMembers)
     .where(
       and(
-        eq(rotaTemplates.branchDepartmentId, branchDeptId),
-        eq(rotaTemplates.isActive, true),
+        inArray(rotaPoolMembers.templateId, templateIds),
+        eq(rotaPoolMembers.isActive, true),
       ),
     )
-    .orderBy(asc(rotaTemplates.name));
+    .groupBy(rotaPoolMembers.templateId);
+
+  const lastGenerated = await db
+    .select({
+      templateId: rotaInstances.templateId,
+      lastServiceDate: sql<string | null>`max(${rotaInstances.serviceDate})`,
+    })
+    .from(rotaInstances)
+    .where(inArray(rotaInstances.templateId, templateIds))
+    .groupBy(rotaInstances.templateId);
+
+  const slotMap = new Map(slotCounts.map((r) => [r.templateId, r]));
+  const poolMap = new Map(poolCounts.map((r) => [r.templateId, r.count]));
+  const genMap = new Map(lastGenerated.map((r) => [r.templateId, r.lastServiceDate]));
+
+  return templates.map((t) => ({
+    ...t,
+    slotCount: slotMap.get(t.id)?.count ?? 0,
+    positionCount: slotMap.get(t.id)?.positions ?? 0,
+    poolCount: poolMap.get(t.id) ?? 0,
+    lastGeneratedAt: genMap.get(t.id) ?? null,
+  }));
 }
 
 export async function createTemplate(
@@ -256,10 +309,10 @@ export async function listPool(
     .select({
       id: rotaPoolMembers.id,
       memberId: rotaPoolMembers.memberId,
-      firstName: members.firstName,
-      lastName: members.lastName,
+      memberFirstName: members.firstName,
+      memberLastName: members.lastName,
+      memberPhotoUrl: members.photoUrl,
       preferredRoleName: rotaPoolMembers.preferredRoleName,
-      weight: rotaPoolMembers.weight,
       lastScheduledAt: rotaPoolMembers.lastScheduledAt,
       notes: rotaPoolMembers.notes,
     })
@@ -277,7 +330,6 @@ export async function listPool(
 export interface AddPoolMemberInput {
   memberId: string;
   preferredRoleName?: string | null;
-  weight?: number;
   notes?: string | null;
 }
 
@@ -311,7 +363,6 @@ export async function addPoolMember(
       templateId,
       memberId: input.memberId,
       preferredRoleName: input.preferredRoleName ?? null,
-      weight: input.weight ?? 1,
       notes: input.notes ?? null,
     })
     .returning();
@@ -400,7 +451,6 @@ export async function generateRota(
   }));
   const pool: FairnessPoolMember[] = poolRows.map((p) => ({
     memberId: p.memberId,
-    weight: p.weight,
     lastScheduledAt: p.lastScheduledAt,
     preferredRoleName: p.preferredRoleName,
   }));
@@ -498,11 +548,88 @@ export async function listInstances(
   const conditions = [eq(rotaInstances.branchDepartmentId, branchDeptId)];
   if (query.from) conditions.push(gte(rotaInstances.serviceDate, query.from));
   if (query.to) conditions.push(lte(rotaInstances.serviceDate, query.to));
-  return db
-    .select()
+
+  const rows = await db
+    .select({
+      id: rotaInstances.id,
+      branchDepartmentId: rotaInstances.branchDepartmentId,
+      templateId: rotaInstances.templateId,
+      serviceDate: rotaInstances.serviceDate,
+      status: rotaInstances.status,
+      publishedAt: rotaInstances.publishedAt,
+      notes: rotaInstances.notes,
+      createdAt: rotaInstances.createdAt,
+      updatedAt: rotaInstances.updatedAt,
+      templateName: rotaTemplates.name,
+      templateStartTime: rotaTemplates.defaultStartTime,
+    })
     .from(rotaInstances)
+    .leftJoin(rotaTemplates, eq(rotaInstances.templateId, rotaTemplates.id))
     .where(and(...conditions))
     .orderBy(asc(rotaInstances.serviceDate));
+
+  if (rows.length === 0) return [];
+
+  const instanceIds = rows.map((r) => r.id);
+
+  const counts = await db
+    .select({
+      instanceId: rotaAssignments.instanceId,
+      total: sql<number>`count(*)::int`,
+      filled: sql<number>`count(${rotaAssignments.memberId})::int`,
+    })
+    .from(rotaAssignments)
+    .where(inArray(rotaAssignments.instanceId, instanceIds))
+    .groupBy(rotaAssignments.instanceId);
+
+  const assignedRows = await db
+    .select({
+      instanceId: rotaAssignments.instanceId,
+      memberId: rotaAssignments.memberId,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      photoUrl: members.photoUrl,
+      sortOrder: rotaTemplateSlots.sortOrder,
+    })
+    .from(rotaAssignments)
+    .leftJoin(rotaTemplateSlots, eq(rotaAssignments.slotId, rotaTemplateSlots.id))
+    .leftJoin(members, eq(rotaAssignments.memberId, members.id))
+    .where(
+      and(
+        inArray(rotaAssignments.instanceId, instanceIds),
+        sql`${rotaAssignments.memberId} is not null`,
+      ),
+    )
+    .orderBy(asc(rotaTemplateSlots.sortOrder));
+
+  const countMap = new Map(counts.map((c) => [c.instanceId, c]));
+  const memberMap = new Map<string, Array<{ memberId: string; firstName: string; lastName: string; photoUrl: string | null }>>();
+  for (const r of assignedRows) {
+    if (!r.memberId) continue;
+    const arr = memberMap.get(r.instanceId) ?? [];
+    if (arr.length < 6) {
+      arr.push({
+        memberId: r.memberId,
+        firstName: r.firstName ?? '',
+        lastName: r.lastName ?? '',
+        photoUrl: r.photoUrl ?? null,
+      });
+    }
+    memberMap.set(r.instanceId, arr);
+  }
+
+  return rows.map((r) => {
+    const c = countMap.get(r.id);
+    const total = c?.total ?? 0;
+    const filled = c?.filled ?? 0;
+    return {
+      ...r,
+      totalSlots: total,
+      filledSlots: filled,
+      openSlots: Math.max(total - filled, 0),
+      assignedMembers: memberMap.get(r.id) ?? [],
+    };
+  });
 }
 
 export async function getInstance(
@@ -524,11 +651,12 @@ export async function getInstance(
     .select({
       id: rotaAssignments.id,
       slotId: rotaAssignments.slotId,
-      slotRoleName: rotaTemplateSlots.roleName,
-      slotSortOrder: rotaTemplateSlots.sortOrder,
+      roleName: rotaTemplateSlots.roleName,
+      sortOrder: rotaTemplateSlots.sortOrder,
       memberId: rotaAssignments.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
+      memberPhotoUrl: members.photoUrl,
       status: rotaAssignments.status,
       notes: rotaAssignments.notes,
       respondedAt: rotaAssignments.respondedAt,
@@ -539,6 +667,96 @@ export async function getInstance(
     .where(eq(rotaAssignments.instanceId, instanceId))
     .orderBy(asc(rotaTemplateSlots.sortOrder));
   return { ...instance, assignments };
+}
+
+export async function regenerateInstance(
+  db: Database,
+  auth: AuthContext,
+  branchDeptId: string,
+  instanceId: string,
+): Promise<{ instanceId: string; assignmentCount: number; openSlotCount: number }> {
+  const bd = await loadBranchDepartment(db, branchDeptId);
+  enforceLeaderOrAbove(auth, bd);
+  const [instance] = await db
+    .select()
+    .from(rotaInstances)
+    .where(eq(rotaInstances.id, instanceId));
+  if (!instance || instance.branchDepartmentId !== branchDeptId) {
+    throw new NotFoundError('Rota instance not found');
+  }
+  if (instance.status !== 'Draft') {
+    throw new ConflictError(
+      'Only Draft instances can be regenerated. Set the instance back to Draft first.',
+    );
+  }
+
+  const slotsRows = await db
+    .select()
+    .from(rotaTemplateSlots)
+    .where(
+      and(
+        eq(rotaTemplateSlots.templateId, instance.templateId),
+        eq(rotaTemplateSlots.isActive, true),
+      ),
+    );
+  if (slotsRows.length === 0) throw new ValidationError('Template has no active slots');
+
+  const poolRows = await db
+    .select()
+    .from(rotaPoolMembers)
+    .where(
+      and(
+        eq(rotaPoolMembers.templateId, instance.templateId),
+        eq(rotaPoolMembers.isActive, true),
+      ),
+    );
+
+  const slots: FairnessSlot[] = slotsRows.map((s) => ({
+    slotId: s.id,
+    roleName: s.roleName,
+    positionsRequired: s.positionsRequired,
+    sortOrder: s.sortOrder,
+  }));
+  const pool: FairnessPoolMember[] = poolRows.map((p) => ({
+    memberId: p.memberId,
+    lastScheduledAt: p.lastScheduledAt,
+    preferredRoleName: p.preferredRoleName,
+  }));
+
+  const planned = planAssignments(pool, slots, [instance.serviceDate]);
+
+  // Wipe existing assignments for this instance, then insert fresh ones.
+  await db.delete(rotaAssignments).where(eq(rotaAssignments.instanceId, instanceId));
+
+  const newAssignments = planned.map((p) => ({
+    instanceId,
+    slotId: p.slotId,
+    memberId: p.memberId,
+    status: p.memberId ? ('Assigned' as const) : ('Open' as const),
+  }));
+  if (newAssignments.length > 0) {
+    await db.insert(rotaAssignments).values(newAssignments);
+  }
+
+  // Refresh lastScheduledAt for picked members.
+  for (const p of planned) {
+    if (!p.memberId) continue;
+    await db
+      .update(rotaPoolMembers)
+      .set({ lastScheduledAt: instance.serviceDate, updatedAt: new Date() })
+      .where(
+        and(
+          eq(rotaPoolMembers.templateId, instance.templateId),
+          eq(rotaPoolMembers.memberId, p.memberId),
+        ),
+      );
+  }
+
+  return {
+    instanceId,
+    assignmentCount: newAssignments.filter((a) => a.memberId !== null).length,
+    openSlotCount: newAssignments.filter((a) => a.memberId === null).length,
+  };
 }
 
 export async function updateInstanceStatus(

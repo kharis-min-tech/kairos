@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, date, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, date, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { rotaTemplates } from './rota-templates';
 import { members } from './members';
@@ -8,7 +8,6 @@ export const rotaPoolMembers = pgTable('rota_pool_members', {
   templateId: uuid('template_id').notNull().references(() => rotaTemplates.id, { onDelete: 'cascade' }),
   memberId: uuid('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   preferredRoleName: text('preferred_role_name'),
-  weight: integer('weight').default(1).notNull(),
   lastScheduledAt: date('last_scheduled_at'),
   isActive: boolean('is_active').default(true).notNull(),
   notes: text('notes'),
@@ -21,7 +20,6 @@ export const rotaPoolMembers = pgTable('rota_pool_members', {
   uniqueIndex('uq_rota_pool_members_active')
     .on(table.templateId, table.memberId)
     .where(sql`is_active = true`),
-  sql`CHECK (weight > 0)`,
 ]);
 
 export const rotaPoolMembersRelations = relations(rotaPoolMembers, ({ one }) => ({

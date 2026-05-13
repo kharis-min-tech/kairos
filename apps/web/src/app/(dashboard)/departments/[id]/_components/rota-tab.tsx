@@ -30,6 +30,7 @@ import {
   useAddRotaPoolMember,
   useRemoveRotaPoolMember,
   useGenerateRota,
+  useRegenerateRotaInstance,
   useRotaInstances,
   useRotaInstance,
   useUpdateRotaInstanceStatus,
@@ -38,7 +39,11 @@ import {
   useRotaSwapRequests,
   useReviewRotaSwapRequest,
 } from '@/hooks/use-departments';
-import type { DepartmentMemberWithDetails, RotaTemplate } from '@kairos/types';
+import type {
+  DepartmentMemberWithDetails,
+  RotaInstanceWithSummary,
+  RotaTemplateWithSummary,
+} from '@kairos/types';
 
 const WEEKDAYS = [
   { value: '0', label: 'Sunday' },
@@ -75,6 +80,52 @@ function formatDateLong(iso: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   });
+}
+
+function formatWeekdayShort(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' })
+    .toUpperCase();
+}
+
+function formatMonthShort(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' })
+    .toUpperCase();
+}
+
+function formatDayNumber(iso: string): string {
+  const [, , d] = iso.split('-').map(Number) as [number, number, number];
+  return String(d);
+}
+
+function formatTimeShort(time: string | null | undefined): string | null {
+  if (!time) return null;
+  const parts = time.split(':');
+  const hStr = parts[0] ?? '';
+  const mStr = parts[1] ?? '00';
+  const h = Number(hStr);
+  const m = Number(mStr);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const displayH = h % 12 === 0 ? 12 : h % 12;
+  return m === 0 ? `${displayH}:00 ${period}` : `${displayH}:${mStr.padStart(2, '0')} ${period}`;
+}
+
+function formatRelativeDate(iso: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+  const target = new Date(y, m - 1, d);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / (24 * 3600 * 1000));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays > 0 && diffDays < 7) return `In ${diffDays} days`;
+  if (diffDays < 0 && diffDays > -7) return `${-diffDays} days ago`;
+  return formatDateLong(iso);
 }
 
 function nextOccurrenceOfWeekday(weekday: number): string {
@@ -152,6 +203,8 @@ function ScheduleSection({
 }) {
   const [showGenerate, setShowGenerate] = useState(false);
   const [expandedInstanceId, setExpandedInstanceId] = useState<string | null>(null);
+  const [showCancelled, setShowCancelled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Draft' | 'Published' | 'Completed'>('all');
 
   const today = todayIso();
   const ninetyDaysOut = new Date();
@@ -168,24 +221,34 @@ function ScheduleSection({
     [templates],
   );
 
-  const list = useMemo(
-    () =>
-      [...(instances ?? [])].sort((a, b) =>
-        a.serviceDate.localeCompare(b.serviceDate),
-      ),
-    [instances],
-  );
+  const list = useMemo(() => {
+    const sorted = [...(instances ?? [])].sort((a, b) =>
+      a.serviceDate.localeCompare(b.serviceDate),
+    );
+    return sorted.filter((inst) => {
+      if (!showCancelled && inst.status === 'Cancelled') return false;
+      if (statusFilter !== 'all' && inst.status !== statusFilter) return false;
+      return true;
+    });
+  }, [instances, showCancelled, statusFilter]);
+
+  const cancelledCount = (instances ?? []).filter((i) => i.status === 'Cancelled').length;
 
   return (
     <div className="space-y-6">
-      {canManage && activeTemplates.length > 0 && (
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Upcoming services (next 90 days)</h3>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold">Upcoming services</h3>
+          <p className="text-xs text-muted-foreground">
+            Next 90 days. Drafts can be edited or regenerated; publish to notify members. Click any service to manage assignments.
+          </p>
+        </div>
+        {canManage && activeTemplates.length > 0 && (
           <Button onClick={() => setShowGenerate((v) => !v)} variant="default">
             {showGenerate ? 'Cancel' : 'Generate Schedule'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {showGenerate && (
         <GenerateForm
@@ -195,6 +258,38 @@ function ScheduleSection({
         />
       )}
 
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Status:</span>
+        {(
+          [
+            { v: 'all' as const, l: 'All' },
+            { v: 'Draft' as const, l: 'Draft' },
+            { v: 'Published' as const, l: 'Published' },
+            { v: 'Completed' as const, l: 'Completed' },
+          ]
+        ).map((opt) => (
+          <button
+            key={opt.v}
+            onClick={() => setStatusFilter(opt.v)}
+            className={`rounded-full px-3 py-1 transition-colors ${
+              statusFilter === opt.v
+                ? 'bg-[#5D3FD3] text-white'
+                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+            }`}
+          >
+            {opt.l}
+          </button>
+        ))}
+        {cancelledCount > 0 && (
+          <button
+            onClick={() => setShowCancelled((v) => !v)}
+            className="ml-auto text-muted-foreground hover:text-foreground"
+          >
+            {showCancelled ? 'Hide cancelled' : `Show cancelled (${cancelledCount})`}
+          </button>
+        )}
+      </div>
+
       {isLoading ? (
         <p className="py-8 text-center text-sm text-muted-foreground">Loading schedule...</p>
       ) : list.length === 0 ? (
@@ -203,62 +298,177 @@ function ScheduleSection({
             <p className="text-sm text-muted-foreground">
               {activeTemplates.length === 0
                 ? 'No templates yet. Create a template first, then generate a schedule.'
-                : 'No upcoming rota instances. Click Generate Schedule to create them.'}
+                : (instances ?? []).length === 0
+                  ? 'No upcoming rota instances. Click Generate Schedule to create them.'
+                  : 'No services match the current filter.'}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {list.map((inst) => {
-            const isToday = inst.serviceDate === today;
-            const isExpanded = expandedInstanceId === inst.id;
-            const tplName =
-              activeTemplates.find((t) => t.id === inst.templateId)?.name ??
-              templates?.find((t) => t.id === inst.templateId)?.name ??
-              'Template';
-            return (
-              <Card
-                key={inst.id}
-                className={`rounded ${
-                  isToday ? 'border-[#f8b537]/40 bg-[#f8b537]/5' : ''
-                }`}
-              >
-                <CardHeader
-                  className="flex cursor-pointer flex-row items-center justify-between space-y-0 pb-3"
-                  onClick={() => setExpandedInstanceId(isExpanded ? null : inst.id)}
-                >
-                  <div className="space-y-1">
-                    <CardTitle className="text-sm font-semibold">
-                      {formatDateLong(inst.serviceDate)}
-                      {isToday && (
-                        <span className="ml-2 rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                          Today
-                        </span>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="text-xs">{tplName}</CardDescription>
-                  </div>
-                  <Badge className={`${STATUS_TONE[inst.status] ?? ''} rounded-sm`}>
-                    {inst.status}
-                  </Badge>
-                </CardHeader>
-                {isExpanded && (
-                  <CardContent>
-                    <InstanceDetail
-                      branchDeptId={branchDeptId}
-                      instanceId={inst.id}
-                      members={members}
-                      canManage={canManage}
-                      currentUserId={currentUserId}
-                    />
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
+        <div className="space-y-2">
+          {list.map((inst) => (
+            <ScheduleRow
+              key={inst.id}
+              instance={inst}
+              today={today}
+              expanded={expandedInstanceId === inst.id}
+              onToggle={() =>
+                setExpandedInstanceId(expandedInstanceId === inst.id ? null : inst.id)
+              }
+              branchDeptId={branchDeptId}
+              members={members}
+              canManage={canManage}
+              currentUserId={currentUserId}
+            />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+function ScheduleRow({
+  instance,
+  today,
+  expanded,
+  onToggle,
+  branchDeptId,
+  members,
+  canManage,
+  currentUserId,
+}: {
+  instance: RotaInstanceWithSummary;
+  today: string;
+  expanded: boolean;
+  onToggle: () => void;
+  branchDeptId: string;
+  members: DepartmentMemberWithDetails[];
+  canManage: boolean;
+  currentUserId?: string;
+}) {
+  const isToday = instance.serviceDate === today && instance.status !== 'Cancelled';
+  const time = formatTimeShort(instance.templateStartTime);
+  const total = instance.totalSlots;
+  const filled = instance.filledSlots;
+  const open = instance.openSlots;
+  const fullyStaffed = total > 0 && open === 0;
+  const understaffed = total > 0 && filled < Math.ceil(total * 0.6);
+
+  return (
+    <Card
+      className={`rounded transition-shadow hover:shadow-sm ${
+        isToday ? 'border-[#f8b537]/50 bg-[#f8b537]/5' : ''
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-4 p-3 text-left sm:p-4"
+      >
+        {/* Date block */}
+        <div
+          className={`flex flex-shrink-0 flex-col items-center justify-center rounded px-3 py-2 leading-tight ${
+            isToday
+              ? 'bg-[#f8b537] text-white'
+              : 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100'
+          }`}
+          style={{ minWidth: '60px' }}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-wider">
+            {formatMonthShort(instance.serviceDate)}
+          </span>
+          <span className="text-xl font-bold">{formatDayNumber(instance.serviceDate)}</span>
+          <span className="text-[10px] uppercase tracking-wider opacity-80">
+            {formatWeekdayShort(instance.serviceDate)}
+          </span>
+        </div>
+
+        {/* Title + stats */}
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-semibold">
+              {instance.templateName ?? 'Service'}
+            </p>
+            {time && (
+              <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                {time}
+              </span>
+            )}
+            {isToday && (
+              <span className="rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                Today
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <span className="text-muted-foreground">{formatRelativeDate(instance.serviceDate)}</span>
+            {total > 0 && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <span
+                  className={
+                    fullyStaffed
+                      ? 'font-medium text-emerald-600 dark:text-emerald-400'
+                      : understaffed
+                        ? 'font-medium text-rose-600 dark:text-rose-400'
+                        : 'font-medium text-zinc-700 dark:text-zinc-300'
+                  }
+                >
+                  {filled}/{total} filled
+                </span>
+                {open > 0 && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-rose-600 dark:text-rose-400">
+                      {open} open
+                    </span>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Avatar stack */}
+        {instance.assignedMembers.length > 0 && (
+          <div className="hidden flex-shrink-0 items-center sm:flex">
+            <div className="flex -space-x-2">
+              {instance.assignedMembers.slice(0, 3).map((m) => (
+                <div key={m.memberId} className="rounded-full ring-2 ring-background">
+                  <MemberAvatar
+                    firstName={m.firstName}
+                    lastName={m.lastName}
+                    photoUrl={m.photoUrl}
+                    size="xs"
+                  />
+                </div>
+              ))}
+              {instance.filledSlots > 3 && (
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-[10px] font-semibold text-zinc-700 ring-2 ring-background dark:bg-zinc-700 dark:text-zinc-200">
+                  +{instance.filledSlots - 3}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Status */}
+        <Badge className={`${STATUS_TONE[instance.status] ?? ''} flex-shrink-0 rounded-sm`}>
+          {instance.status}
+        </Badge>
+      </button>
+      {expanded && (
+        <CardContent className="border-t pt-4">
+          <InstanceDetail
+            branchDeptId={branchDeptId}
+            instanceId={instance.id}
+            members={members}
+            canManage={canManage}
+            currentUserId={currentUserId}
+          />
+        </CardContent>
+      )}
+    </Card>
   );
 }
 
@@ -268,7 +478,7 @@ function GenerateForm({
   onDone,
 }: {
   branchDeptId: string;
-  templates: RotaTemplate[];
+  templates: RotaTemplateWithSummary[];
   onDone: () => void;
 }) {
   const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? '');
@@ -367,6 +577,7 @@ function InstanceDetail({
   const updateAssignment = useUpdateRotaAssignment();
   const updateStatus = useUpdateRotaInstanceStatus();
   const createSwap = useCreateRotaSwapRequest();
+  const regenerate = useRegenerateRotaInstance();
 
   const memberOptions = useMemo(
     () => [
@@ -393,7 +604,7 @@ function InstanceDetail({
   return (
     <div className="space-y-4">
       {canManage && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Label className="text-xs text-muted-foreground">Status:</Label>
           <CustomSelect
             value={data.status}
@@ -410,6 +621,33 @@ function InstanceDetail({
               { value: 'Cancelled', label: 'Cancelled' },
             ]}
           />
+          {data.status === 'Draft' && (
+            <Button
+              variant="outline"
+              disabled={regenerate.isPending}
+              onClick={() => {
+                if (!confirm('Re-pick all assignments for this service? Existing picks will be replaced.')) return;
+                regenerate.mutate(
+                  { branchDeptId, instanceId },
+                  {
+                    onSuccess: (res) =>
+                      toast.success(
+                        `Regenerated — ${res.assignmentCount} assigned, ${res.openSlotCount} open`,
+                      ),
+                    onError: (e: unknown) =>
+                      toast.error(e instanceof Error ? e.message : 'Failed to regenerate'),
+                  },
+                );
+              }}
+            >
+              Regenerate
+            </Button>
+          )}
+          {data.status !== 'Draft' && (
+            <span className="text-xs text-muted-foreground">
+              Set status back to Draft to regenerate this service.
+            </span>
+          )}
         </div>
       )}
 
@@ -502,19 +740,37 @@ function TemplatesSection({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
 }) {
-  const { data: templates, isLoading } = useRotaTemplates(branchDeptId);
+  const { data: allTemplates, isLoading } = useRotaTemplates(branchDeptId, {
+    includeArchived: true,
+  });
   const [showCreate, setShowCreate] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+
+  const active = useMemo(
+    () => (allTemplates ?? []).filter((t) => t.isActive),
+    [allTemplates],
+  );
+  const archived = useMemo(
+    () => (allTemplates ?? []).filter((t) => !t.isActive),
+    [allTemplates],
+  );
 
   return (
     <div className="space-y-6">
-      {canManage && (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold">Service templates</h3>
+          <p className="text-xs text-muted-foreground">
+            Templates are the recurring blueprint of a service — the day, default time, and the roles you need filled.
+          </p>
+        </div>
+        {canManage && (
           <Button onClick={() => setShowCreate((v) => !v)}>
             {showCreate ? 'Cancel' : 'New Template'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {showCreate && (
         <CreateTemplateForm branchDeptId={branchDeptId} onDone={() => setShowCreate(false)} />
@@ -522,26 +778,64 @@ function TemplatesSection({
 
       {isLoading ? (
         <p className="py-6 text-center text-sm text-muted-foreground">Loading templates...</p>
-      ) : !templates || templates.length === 0 ? (
+      ) : active.length === 0 && archived.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
             <p className="text-sm text-muted-foreground">No templates yet.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {templates.map((tpl) => (
-            <TemplateCard
-              key={tpl.id}
-              template={tpl}
-              branchDeptId={branchDeptId}
-              members={members}
-              canManage={canManage}
-              expanded={expandedId === tpl.id}
-              onToggle={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
-            />
-          ))}
-        </div>
+        <>
+          {active.length === 0 ? (
+            <Card className="rounded">
+              <CardContent className="py-6 text-center">
+                <p className="text-sm text-muted-foreground">No active templates.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {active.map((tpl) => (
+                <TemplateCard
+                  key={tpl.id}
+                  template={tpl}
+                  branchDeptId={branchDeptId}
+                  members={members}
+                  canManage={canManage}
+                  expanded={expandedId === tpl.id}
+                  onToggle={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {archived.length > 0 && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowArchived((v) => !v)}
+                className="flex w-full items-center justify-between rounded border border-border/60 bg-zinc-50 px-3 py-2 text-left text-sm font-medium hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+              >
+                <span>Archived templates ({archived.length})</span>
+                <span className="text-muted-foreground">{showArchived ? '▴' : '▾'}</span>
+              </button>
+              {showArchived && (
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {archived.map((tpl) => (
+                    <TemplateCard
+                      key={tpl.id}
+                      template={tpl}
+                      branchDeptId={branchDeptId}
+                      members={members}
+                      canManage={canManage}
+                      expanded={expandedId === tpl.id}
+                      onToggle={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -630,7 +924,7 @@ function TemplateCard({
   expanded,
   onToggle,
 }: {
-  template: RotaTemplate;
+  template: RotaTemplateWithSummary;
   branchDeptId: string;
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
@@ -639,42 +933,90 @@ function TemplateCard({
 }) {
   const deactivate = useDeactivateRotaTemplate();
   const weekdayLabel = WEEKDAYS.find((w) => w.value === String(template.weekday))?.label ?? '';
+  const time = formatTimeShort(template.defaultStartTime);
+  const isDraft = template.lastGeneratedAt === null;
+  const lastGen = template.lastGeneratedAt
+    ? formatDateLong(template.lastGeneratedAt)
+    : null;
 
   return (
-    <Card className="rounded">
-      <CardHeader
-        className="flex cursor-pointer flex-row items-center justify-between space-y-0 pb-3"
-        onClick={onToggle}
-      >
-        <div className="space-y-1">
-          <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
-          <CardDescription className="text-xs">
-            {weekdayLabel}
-            {template.defaultStartTime ? ` • ${template.defaultStartTime.slice(0, 5)}` : ''}
-          </CardDescription>
-        </div>
-        {canManage && template.isActive && (
-          <Button
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!confirm(`Deactivate template "${template.name}"?`)) return;
-              deactivate.mutate(
-                { branchDeptId, templateId: template.id },
-                {
-                  onSuccess: () => toast.success('Template deactivated'),
-                  onError: (err: unknown) =>
-                    toast.error(err instanceof Error ? err.message : 'Failed'),
-                },
-              );
-            }}
+    <Card className={`rounded ${!template.isActive ? 'opacity-60' : ''}`}>
+      <CardHeader className="space-y-2 pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="min-w-0 flex-1 text-left"
           >
-            Archive
-          </Button>
-        )}
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
+              {template.isActive ? (
+                isDraft ? (
+                  <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                    Draft
+                  </span>
+                ) : (
+                  <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    Active
+                  </span>
+                )
+              ) : (
+                <span className="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">
+                  Archived
+                </span>
+              )}
+            </div>
+            <CardDescription className="mt-1 text-xs">
+              {weekdayLabel}
+              {time ? ` • ${time}` : ''}
+            </CardDescription>
+            {template.notes && (
+              <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{template.notes}</p>
+            )}
+          </button>
+          {canManage && template.isActive && (
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Archive template"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!confirm(`Archive template "${template.name}"?`)) return;
+                deactivate.mutate(
+                  { branchDeptId, templateId: template.id },
+                  {
+                    onSuccess: () => toast.success('Template archived'),
+                    onError: (err: unknown) =>
+                      toast.error(err instanceof Error ? err.message : 'Failed'),
+                  },
+                );
+              }}
+            >
+              Archive
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
+          <span>
+            <strong className="text-foreground">{template.slotCount}</strong>{' '}
+            {template.slotCount === 1 ? 'role' : 'roles'}
+          </span>
+          <span>•</span>
+          <span>
+            <strong className="text-foreground">{template.positionCount}</strong>{' '}
+            {template.positionCount === 1 ? 'position' : 'positions'}
+          </span>
+          <span>•</span>
+          <span>
+            <strong className="text-foreground">{template.poolCount}</strong> in pool
+          </span>
+          <span className="ml-auto">
+            {lastGen ? `Last generated ${lastGen}` : 'Never generated'}
+          </span>
+        </div>
       </CardHeader>
       {expanded && (
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 border-t pt-4">
           <SlotsManager branchDeptId={branchDeptId} templateId={template.id} canManage={canManage} />
           <PoolManager
             branchDeptId={branchDeptId}
@@ -719,6 +1061,9 @@ function SlotsManager({
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Slots
       </h4>
+      <p className="text-xs text-muted-foreground">
+        Roles you need filled each service (e.g. Lead Vocal x1, Soprano x2). Positions = how many people for that role.
+      </p>
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No slots defined.</p>
       ) : (
@@ -814,7 +1159,6 @@ function PoolManager({
   const add = useAddRotaPoolMember();
   const remove = useRemoveRotaPoolMember();
   const [memberId, setMemberId] = useState('');
-  const [weight, setWeight] = useState(1);
 
   const inPool = useMemo(() => new Set((pool ?? []).map((p) => p.memberId)), [pool]);
   const availableOptions = useMemo(
@@ -833,6 +1177,9 @@ function PoolManager({
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Rotation Pool
       </h4>
+      <p className="text-xs text-muted-foreground">
+        Members eligible to be auto-scheduled. Assign a preferred role to give them priority for that slot. The algorithm picks least-recently-scheduled first, so frequency stays fair on its own.
+      </p>
       {!pool || pool.length === 0 ? (
         <p className="text-sm text-muted-foreground">No members in pool yet.</p>
       ) : (
@@ -854,7 +1201,7 @@ function PoolManager({
                     {p.memberFirstName} {p.memberLastName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Weight {p.weight}
+                    {p.preferredRoleName ? `Prefers ${p.preferredRoleName}` : 'Any role'}
                     {p.lastScheduledAt ? ` • Last scheduled ${p.lastScheduledAt}` : ''}
                   </p>
                 </div>
@@ -883,12 +1230,11 @@ function PoolManager({
               return;
             }
             add.mutate(
-              { branchDeptId, templateId, data: { memberId, weight } },
+              { branchDeptId, templateId, data: { memberId } },
               {
                 onSuccess: () => {
                   toast.success('Added to pool');
                   setMemberId('');
-                  setWeight(1);
                 },
                 onError: (err: unknown) =>
                   toast.error(err instanceof Error ? err.message : 'Failed'),
@@ -904,16 +1250,6 @@ function PoolManager({
               onValueChange={setMemberId}
               options={availableOptions}
               placeholder="Select member"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Weight</Label>
-            <NumberStepper
-              value={weight}
-              onValueChange={setWeight}
-              min={1}
-              max={10}
-              ariaLabel="Assignment weight"
             />
           </div>
           <Button type="submit" disabled={add.isPending}>
@@ -940,22 +1276,60 @@ function SwapsSection({
   const { data: requests, isLoading } = useRotaSwapRequests(branchDeptId, {
     status: statusFilter,
   });
+  // Pull pending count separately so the tab badge always shows it, even when on a different tab.
+  const { data: pendingForCount } = useRotaSwapRequests(branchDeptId, { status: 'pending' });
   const review = useReviewRotaSwapRequest();
+
+  const pendingCount = pendingForCount?.length ?? 0;
+
+  const tabs: { v: typeof statusFilter; l: string; count?: number }[] = [
+    { v: 'pending', l: 'Pending', count: pendingCount },
+    { v: 'approved', l: 'Approved' },
+    { v: 'rejected', l: 'Rejected' },
+    { v: 'cancelled', l: 'Cancelled' },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Label className="text-xs text-muted-foreground">Filter:</Label>
-        <CustomSelect
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-          options={[
-            { value: 'pending', label: 'Pending' },
-            { value: 'approved', label: 'Approved' },
-            { value: 'rejected', label: 'Rejected' },
-            { value: 'cancelled', label: 'Cancelled' },
-          ]}
-        />
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-base font-semibold">Swap requests</h3>
+          {pendingCount > 0 && (
+            <span className="rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-semibold text-[#a06b00] dark:text-[#f8b537]">
+              {pendingCount} awaiting review
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Members request a swap on their assignment; you approve it here and the system reassigns automatically.
+        </p>
+      </div>
+
+      <div className="flex gap-1 border-b border-border/60">
+        {tabs.map((tab) => (
+          <button
+            key={tab.v}
+            onClick={() => setStatusFilter(tab.v)}
+            className={`-mb-px flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+              statusFilter === tab.v
+                ? 'border-[#5D3FD3] text-[#5D3FD3]'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab.l}
+            {tab.count !== undefined && tab.count > 0 && (
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  statusFilter === tab.v
+                    ? 'bg-[#5D3FD3] text-white'
+                    : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200'
+                }`}
+              >
+                {tab.count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -978,43 +1352,59 @@ function SwapsSection({
                 }`}
               >
                 <CardContent className="space-y-3 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {r.requesterFirstName} {r.requesterLastName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateLong(r.serviceDate)} • {r.roleName ?? 'Slot'}
-                      </p>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <MemberAvatar
+                        firstName={r.requesterFirstName}
+                        lastName={r.requesterLastName}
+                        photoUrl={null}
+                        size="md"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold">
+                            {r.requesterFirstName} {r.requesterLastName}
+                          </p>
+                          {r.roleName && (
+                            <span className="rounded-sm bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                              {r.roleName}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDateLong(r.serviceDate)} • Service
+                        </p>
+                        {r.proposedFirstName && (
+                          <p className="text-xs">
+                            <span className="text-muted-foreground">Proposed cover:</span>{' '}
+                            <span className="font-medium">
+                              {r.proposedFirstName} {r.proposedLastName}
+                            </span>
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <Badge className="rounded-sm capitalize">{r.status}</Badge>
+                    <Badge
+                      className={`${
+                        STATUS_TONE[
+                          r.status === 'pending'
+                            ? 'Draft'
+                            : r.status === 'approved'
+                              ? 'Confirmed'
+                              : 'Declined'
+                        ] ?? ''
+                      } rounded-sm capitalize`}
+                    >
+                      {r.status}
+                    </Badge>
                   </div>
-                  {r.proposedFirstName && (
-                    <p className="text-xs">
-                      Proposed: {r.proposedFirstName} {r.proposedLastName}
-                    </p>
+                  {r.reason && (
+                    <blockquote className="border-l-2 border-zinc-300 bg-zinc-50 px-3 py-2 text-xs italic text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-300">
+                      “{r.reason}”
+                    </blockquote>
                   )}
-                  {r.reason && <p className="text-xs italic text-muted-foreground">“{r.reason}”</p>}
                   {canManage && r.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() =>
-                          review.mutate(
-                            {
-                              branchDeptId,
-                              requestId: r.id,
-                              data: { decision: 'approved' },
-                            },
-                            {
-                              onSuccess: () => toast.success('Approved'),
-                              onError: (err: unknown) =>
-                                toast.error(err instanceof Error ? err.message : 'Failed'),
-                            },
-                          )
-                        }
-                      >
-                        Approve
-                      </Button>
+                    <div className="flex justify-end gap-2">
                       <Button
                         variant="outline"
                         onClick={() =>
@@ -1033,6 +1423,24 @@ function SwapsSection({
                         }
                       >
                         Reject
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          review.mutate(
+                            {
+                              branchDeptId,
+                              requestId: r.id,
+                              data: { decision: 'approved' },
+                            },
+                            {
+                              onSuccess: () => toast.success('Approved'),
+                              onError: (err: unknown) =>
+                                toast.error(err instanceof Error ? err.message : 'Failed'),
+                            },
+                          )
+                        }
+                      >
+                        Approve
                       </Button>
                     </div>
                   )}

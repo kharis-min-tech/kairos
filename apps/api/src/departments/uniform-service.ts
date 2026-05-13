@@ -2,6 +2,7 @@ import { eq, and, gte, lte, desc, asc, sql, ne } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   branchDepartments,
+  departmentMembers,
   departmentUniformOutfits,
   departmentUniformSchedule,
   members,
@@ -163,7 +164,7 @@ export async function listSchedule(
   if (query.from) conditions.push(gte(departmentUniformSchedule.serviceDate, query.from));
   if (query.to) conditions.push(lte(departmentUniformSchedule.serviceDate, query.to));
 
-  return db
+  const rows = await db
     .select({
       id: departmentUniformSchedule.id,
       branchDepartmentId: departmentUniformSchedule.branchDepartmentId,
@@ -184,6 +185,41 @@ export async function listSchedule(
     )
     .where(and(...conditions))
     .orderBy(asc(departmentUniformSchedule.serviceDate));
+
+  if (rows.length === 0) return [];
+
+  // Compute "affects N members": active dept members whose gender matches outfit target
+  // (Unisex → everyone). Single grouped query keyed by genderTarget.
+  const genderCounts = await db
+    .select({
+      gender: members.gender,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(departmentMembers)
+    .innerJoin(members, eq(departmentMembers.memberId, members.id))
+    .where(
+      and(
+        eq(departmentMembers.branchDepartmentId, branchDeptId),
+        eq(departmentMembers.isActive, true),
+        eq(members.isActive, true),
+      ),
+    )
+    .groupBy(members.gender);
+
+  let maleCount = 0;
+  let femaleCount = 0;
+  for (const g of genderCounts) {
+    if (g.gender === 'Male') maleCount = g.count;
+    else if (g.gender === 'Female') femaleCount = g.count;
+  }
+  const totalCount = maleCount + femaleCount;
+
+  return rows.map((r) => {
+    const target = r.genderTarget as 'Male' | 'Female' | 'Unisex';
+    const affectsCount =
+      target === 'Male' ? maleCount : target === 'Female' ? femaleCount : totalCount;
+    return { ...r, affectsCount };
+  });
 }
 
 export interface AssignScheduleInput {

@@ -623,11 +623,11 @@ export function useRemoveUniformAssignment() {
 
 // ── Rota: Templates ────────────────────────────────────────
 
-export function useRotaTemplates(branchDeptId: string) {
+export function useRotaTemplates(branchDeptId: string, params?: { includeArchived?: boolean }) {
   return useQuery({
-    queryKey: ['departments', branchDeptId, 'rota-templates'],
+    queryKey: ['departments', branchDeptId, 'rota-templates', params?.includeArchived ?? false],
     queryFn: async () => {
-      const res = await api.departments.rota.listTemplates(branchDeptId);
+      const res = await api.departments.rota.listTemplates(branchDeptId, params);
       return res.data!;
     },
     enabled: !!branchDeptId,
@@ -726,7 +726,7 @@ export function useRotaPool(branchDeptId: string, templateId: string) {
 export function useAddRotaPoolMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ branchDeptId, templateId, data }: { branchDeptId: string; templateId: string; data: { memberId: string; preferredRoleName?: string | null; weight?: number; notes?: string | null } }) => {
+    mutationFn: async ({ branchDeptId, templateId, data }: { branchDeptId: string; templateId: string; data: { memberId: string; preferredRoleName?: string | null; notes?: string | null } }) => {
       const res = await api.departments.rota.addPoolMember(branchDeptId, templateId, data);
       return res.data!;
     },
@@ -759,6 +759,20 @@ export function useGenerateRota() {
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ['departments', vars.branchDeptId, 'rota-instances'] });
+    },
+  });
+}
+
+export function useRegenerateRotaInstance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ branchDeptId, instanceId }: { branchDeptId: string; instanceId: string }) => {
+      const res = await api.departments.rota.regenerateInstance(branchDeptId, instanceId);
+      return res.data!;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['departments', vars.branchDeptId, 'rota-instances'] });
+      qc.invalidateQueries({ queryKey: ['departments', vars.branchDeptId, 'rota-instances', vars.instanceId] });
     },
   });
 }

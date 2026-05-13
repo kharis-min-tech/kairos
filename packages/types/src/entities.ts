@@ -404,6 +404,7 @@ export interface DepartmentJoinRequestWithMember extends DepartmentJoinRequest {
   memberLastName: string;
   memberPhotoUrl?: string | null;
   memberEmail?: string | null;
+  memberPhone?: string | null;
   interviewerOneFirstName?: string | null;
   interviewerOneLastName?: string | null;
   interviewerTwoFirstName?: string | null;
@@ -480,6 +481,7 @@ export interface DepartmentUniformSchedule extends BaseEntity {
 export interface DepartmentUniformScheduleWithOutfit extends DepartmentUniformSchedule {
   outfitName: string;
   outfitImageUrl: string;
+  affectsCount: number;
 }
 
 // ── Rota Template ──────────────────────────────────────────
@@ -492,6 +494,13 @@ export interface RotaTemplate extends BaseEntity {
   defaultStartTime: string | null; // HH:mm:ss
   notes: string | null;
   isActive: boolean;
+}
+
+export interface RotaTemplateWithSummary extends RotaTemplate {
+  slotCount: number;
+  positionCount: number;
+  poolCount: number;
+  lastGeneratedAt: string | null; // ISO date string
 }
 
 // ── Rota Template Slot ─────────────────────────────────────
@@ -509,7 +518,6 @@ export interface RotaTemplateSlot extends BaseEntity {
 export interface RotaPoolMember extends BaseEntity {
   templateId: string;
   memberId: string;
-  weight: number;
   preferredRoleName: string | null;
   lastScheduledAt: string | null; // ISO date string
   isActive: boolean;
@@ -531,7 +539,21 @@ export interface RotaInstance extends BaseEntity {
   publishedAt: Date | null;
   notes: string | null;
 }
+export interface RotaInstanceAssignedMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+}
 
+export interface RotaInstanceWithSummary extends RotaInstance {
+  templateName: string | null;
+  templateStartTime: string | null; // HH:mm:ss
+  totalSlots: number;
+  filledSlots: number;
+  openSlots: number;
+  assignedMembers: RotaInstanceAssignedMember[];
+}
 // ── Rota Assignment ────────────────────────────────────────
 
 export interface RotaAssignment extends BaseEntity {

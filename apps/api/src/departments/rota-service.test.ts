@@ -120,11 +120,30 @@ import {
 // ── Templates ─────────────────────────────────────────────
 
 describe('listTemplates', () => {
-  it('returns active templates for the branch dept', async () => {
+  it('returns active templates with summary counts', async () => {
     const rows = [sampleTemplate];
-    setupSelectSequence([sampleBd], rows);
+    setupSelectSequence(
+      [sampleBd], // loadBranchDepartment
+      rows, // templates
+      [{ templateId, count: 3, positions: 5 }], // slot counts
+      [{ templateId, count: 7 }], // pool counts
+      [{ templateId, lastServiceDate: '2026-05-10' }], // last generated
+    );
     const result = await listTemplates(mockDb, leaderAuth, branchDeptId);
-    expect(result).toEqual(rows);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      ...sampleTemplate,
+      slotCount: 3,
+      positionCount: 5,
+      poolCount: 7,
+      lastGeneratedAt: '2026-05-10',
+    });
+  });
+
+  it('returns empty array when no templates exist', async () => {
+    setupSelectSequence([sampleBd], []);
+    const result = await listTemplates(mockDb, leaderAuth, branchDeptId);
+    expect(result).toEqual([]);
   });
 
   it('throws ForbiddenError for cross-branch viewer', async () => {
@@ -303,8 +322,8 @@ describe('generateRota', () => {
       { id: slotId, templateId, roleName: 'Soprano', positionsRequired: 1, sortOrder: 0, isActive: true },
     ];
     const pool = [
-      { memberId: memberId1, weight: 1, lastScheduledAt: null, preferredRoleName: null },
-      { memberId: memberId2, weight: 1, lastScheduledAt: null, preferredRoleName: null },
+      { memberId: memberId1, lastScheduledAt: null, preferredRoleName: null },
+      { memberId: memberId2, lastScheduledAt: null, preferredRoleName: null },
     ];
     // sequence: bd, template, slots, pool, existingInstances
     setupSelectSequence([sampleBd], [sampleTemplate], slots, pool, []);
@@ -328,14 +347,50 @@ describe('generateRota', () => {
 // ── Instances ─────────────────────────────────────────────
 
 describe('listInstances', () => {
-  it('returns instances within optional date range', async () => {
-    const rows = [{ id: instanceId, serviceDate: '2026-05-10' }];
-    setupSelectSequence([sampleBd], rows);
+  it('returns instances enriched with summary and assigned member previews', async () => {
+    const rows = [
+      {
+        id: instanceId,
+        branchDepartmentId: branchDeptId,
+        templateId,
+        serviceDate: '2026-05-10',
+        status: 'Draft',
+        publishedAt: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        templateName: 'Sunday Choir',
+        templateStartTime: '10:00',
+      },
+    ];
+    setupSelectSequence(
+      [sampleBd], // bd
+      rows, // instance rows
+      [{ instanceId, total: 4, filled: 3 }], // counts
+      [
+        { instanceId, memberId: memberId1, firstName: 'A', lastName: 'B', photoUrl: null, sortOrder: 0 },
+        { instanceId, memberId: memberId2, firstName: 'C', lastName: 'D', photoUrl: null, sortOrder: 1 },
+      ], // assigned member rows
+    );
     const result = await listInstances(mockDb, leaderAuth, branchDeptId, {
       from: '2026-05-01',
       to: '2026-05-31',
     });
-    expect(result).toEqual(rows);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: instanceId,
+      templateName: 'Sunday Choir',
+      totalSlots: 4,
+      filledSlots: 3,
+      openSlots: 1,
+    });
+    expect(result[0]!.assignedMembers).toHaveLength(2);
+  });
+
+  it('returns empty array when no instances found', async () => {
+    setupSelectSequence([sampleBd], []);
+    const result = await listInstances(mockDb, leaderAuth, branchDeptId, {});
+    expect(result).toEqual([]);
   });
 });
 

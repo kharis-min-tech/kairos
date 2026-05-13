@@ -95,6 +95,7 @@ import {
   addPoolMember,
   removePoolMember,
   generateRota,
+  regenerateInstance,
   listInstances,
   getInstance,
   updateInstanceStatus,
@@ -534,7 +535,8 @@ departmentsRouter.delete('/:id/uniform-schedule/:assignmentId', async (c) => {
 
 departmentsRouter.get('/:id/rota-templates', async (c) => {
   const auth = getAuth(c);
-  const rows = await listTemplates(db, auth, c.req.param('id')!);
+  const includeArchived = c.req.query('includeArchived') === 'true';
+  const rows = await listTemplates(db, auth, c.req.param('id')!, { includeArchived });
   return c.json(successResponse(rows));
 });
 
@@ -704,6 +706,17 @@ departmentsRouter.get('/:id/rota-instances/:instanceId', async (c) => {
     c.req.param('instanceId')!,
   );
   return c.json(successResponse(result));
+});
+
+departmentsRouter.post('/:id/rota-instances/:instanceId/regenerate', async (c) => {
+  const auth = getAuth(c);
+  const result = await regenerateInstance(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.param('instanceId')!,
+  );
+  return c.json(successResponse(result, 'Instance regenerated'));
 });
 
 departmentsRouter.patch(

@@ -439,7 +439,10 @@ async function seed() {
   const [
     choirDept,
     ushersDept,
-    /* dramaDept */, /* hospitalityDept */, /* hostDept */, /* productionDept */, /* soundDept */, /* sanctuaryDept */,
+    /* dramaDept */,
+    hospitalityDept,
+    hostDept,
+    /* productionDept */, /* soundDept */, /* sanctuaryDept */,
     /* newBelieversDept */, /* welfareDept */, /* childrensDept */, /* designDept */, /* socialMediaDept */,
   ] = await db.insert(departments).values([
     { departmentName: 'Choir', description: 'Vocal worship ministry', iconKey: 'music' },
@@ -458,8 +461,8 @@ async function seed() {
   ]).returning();
   console.log(`✓ 13 global departments`);
 
-  // ── 4c. Branch Departments (smoke seed: 2 active instances) ─
-  const [choirLondon, ushersAccra] = await db.insert(branchDepartments).values([
+  // ── 4c. Branch Departments (smoke seed: 4 active instances) ─
+  const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon] = await db.insert(branchDepartments).values([
     {
       branchId: london!.id,
       departmentId: choirDept!.id,
@@ -472,8 +475,22 @@ async function seed() {
       leadMemberId: leaderDavid!.id,
       description: 'Accra usher team under David',
     },
+    {
+      // Empty dept — used to demo the member-side "Request to Join" flow.
+      branchId: london!.id,
+      departmentId: hospitalityDept!.id,
+      leadMemberId: leaderSarah!.id,
+      description: 'London hospitality team — currently recruiting.',
+    },
+    {
+      // Used to demo the member-side "Accept / Decline Offer" flow (see seed below).
+      branchId: london!.id,
+      departmentId: hostDept!.id,
+      leadMemberId: leaderSarah!.id,
+      description: 'London first-time guest host team — interviewing applicants.',
+    },
   ]).returning();
-  console.log(`✓ 2 branch-department instances`);
+  console.log(`✓ 4 branch-department instances`);
 
   // ── 4d. Department Members (smoke seed) ─────────────────────
   await db.insert(departmentMembers).values([
@@ -490,18 +507,18 @@ async function seed() {
   // Demonstrates: join requests, followups (incl. overdue), uniform gallery + schedule,
   // rota template + slots + pool + generated instances + assignments + swap request.
 
-  // Join requests (1 pending, 1 approved historic, 1 rejected)
+  // Join requests (1 applied, 1 historic active, 1 rejected, 1 offered awaiting member response)
   await db.insert(departmentJoinRequests).values([
     {
       branchDepartmentId: choirLondon!.id,
-      memberId: regularMembers[3]!.id, // John Smith (Manchester) — cross-branch interest
-      status: 'pending',
+      memberId: regularMembers[3]!.id, // John Smith (Manchester) — historic cross-branch interest
+      status: 'applied',
       notes: 'I sing tenor and would love to join when visiting London.',
     },
     {
       branchDepartmentId: choirLondon!.id,
-      memberId: regularMembers[0]!.id, // Emma — already in choir; this is the historic request
-      status: 'approved',
+      memberId: regularMembers[0]!.id, // Emma — already in choir; this is the historic accepted request
+      status: 'active',
       notes: 'Soprano, 5 years experience.',
       reviewedBy: leaderSarah!.id,
       reviewedAt: new Date('2025-09-12T10:00:00Z'),
@@ -516,8 +533,26 @@ async function seed() {
       reviewedAt: new Date('2026-01-08T09:30:00Z'),
       reviewNotes: 'Choir requires in-person attendance for rehearsals.',
     },
+    {
+      // Demo: Emma has been interviewed and offered a spot on the Host Team.
+      // Logging in as Emma surfaces this in "My Requests" with Accept/Decline buttons.
+      branchDepartmentId: hostTeamLondon!.id,
+      memberId: regularMembers[0]!.id,
+      status: 'offered',
+      notes: 'I would love to welcome first-time guests on Sundays.',
+      interviewScheduledAt: new Date('2026-05-05T18:00:00Z'),
+      interviewFormat: 'in_person',
+      interviewLocation: 'London Central — Room 2',
+      interviewerOneId: leaderSarah!.id,
+      interviewOutcome: 'pass',
+      interviewNotes: 'Warm, articulate, great fit for guest hosting.',
+      offeredAt: new Date('2026-05-08T10:00:00Z'),
+      offerExpiresAt: new Date('2026-05-22T23:59:59Z'),
+      offerMessage: 'Welcome aboard! Please accept by May 22 to begin a 30-day probation.',
+      probationDays: 30,
+    },
   ]);
-  console.log(`✓ 3 department join requests (Choir@London)`);
+  console.log(`✓ 4 department join requests (incl. 1 offered awaiting Emma)`);
 
   // Followups (one current week, one prior month, one overdue >30 days, one never-followed-up via no entry)
   await db.insert(departmentFollowups).values([
@@ -640,27 +675,23 @@ async function seed() {
       templateId: sundayTemplate!.id,
       memberId: leaderSarah!.id,
       preferredRoleName: 'Lead Vocal',
-      weight: 2,
       lastScheduledAt: '2026-05-03',
     },
     {
       templateId: sundayTemplate!.id,
       memberId: regularMembers[0]!.id,
       preferredRoleName: 'Soprano',
-      weight: 1,
       lastScheduledAt: '2026-04-26',
     },
     {
       templateId: sundayTemplate!.id,
       memberId: regularMembers[2]!.id,
       preferredRoleName: 'Soprano',
-      weight: 1,
     },
     {
       templateId: sundayTemplate!.id,
       memberId: pastorLondon!.id,
       preferredRoleName: 'Tenor',
-      weight: 1,
       lastScheduledAt: '2026-04-19',
     },
   ]);

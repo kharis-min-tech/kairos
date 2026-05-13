@@ -700,6 +700,7 @@ export async function listJoinRequests(
       memberLastName: members.lastName,
       memberPhotoUrl: members.photoUrl,
       memberEmail: members.email,
+      memberPhone: members.phone,
       status: departmentJoinRequests.status,
       notes: departmentJoinRequests.notes,
       reviewedBy: departmentJoinRequests.reviewedBy,

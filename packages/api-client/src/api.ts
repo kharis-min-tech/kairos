@@ -71,10 +71,12 @@ import type {
   DepartmentUniformSchedule,
   DepartmentUniformScheduleWithOutfit,
   RotaTemplate,
+  RotaTemplateWithSummary,
   RotaTemplateSlot,
   RotaPoolMember,
   RotaPoolMemberWithDetails,
   RotaInstance,
+  RotaInstanceWithSummary,
   RotaAssignment,
   RotaAssignmentWithDetails,
   RotaSwapRequest,
@@ -466,8 +468,14 @@ export function createApiClient(
       // Rota
       rota: {
         // Templates
-        listTemplates: (branchDeptId: string) =>
-          client.get<ApiResponse<RotaTemplate[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates`),
+        listTemplates: (branchDeptId: string, params?: { includeArchived?: boolean }) => {
+          const qs = new URLSearchParams();
+          if (params?.includeArchived) qs.set('includeArchived', 'true');
+          const query = qs.toString();
+          return client.get<ApiResponse<RotaTemplateWithSummary[]>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates${query ? `?${query}` : ''}`,
+          );
+        },
         createTemplate: (
           branchDeptId: string,
           data: { name: string; weekday: number; defaultStartTime?: string | null; notes?: string | null },
@@ -507,7 +515,7 @@ export function createApiClient(
         addPoolMember: (
           branchDeptId: string,
           templateId: string,
-          data: { memberId: string; preferredRoleName?: string | null; weight?: number; notes?: string | null },
+          data: { memberId: string; preferredRoleName?: string | null; notes?: string | null },
         ) =>
           client.post<ApiResponse<RotaPoolMember>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-templates/${encodeURIComponent(templateId)}/pool`, data),
         removePoolMember: (branchDeptId: string, templateId: string, poolMemberId: string) =>
@@ -524,13 +532,19 @@ export function createApiClient(
             data,
           ),
 
+        regenerateInstance: (branchDeptId: string, instanceId: string) =>
+          client.post<ApiResponse<{ instanceId: string; assignmentCount: number; openSlotCount: number }>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances/${encodeURIComponent(instanceId)}/regenerate`,
+            {},
+          ),
+
         // Instances
         listInstances: (branchDeptId: string, params?: { from?: string; to?: string }) => {
           const qs = new URLSearchParams();
           if (params?.from) qs.set('from', params.from);
           if (params?.to) qs.set('to', params.to);
           const query = qs.toString();
-          return client.get<ApiResponse<RotaInstance[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances${query ? `?${query}` : ''}`);
+          return client.get<ApiResponse<RotaInstanceWithSummary[]>>(`/api/departments/${encodeURIComponent(branchDeptId)}/rota-instances${query ? `?${query}` : ''}`);
         },
         getInstance: (branchDeptId: string, instanceId: string) =>
           client.get<ApiResponse<RotaInstance & { assignments: RotaAssignmentWithDetails[] }>>(

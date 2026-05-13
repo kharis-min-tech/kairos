@@ -164,14 +164,34 @@ describe('deactivateOutfit', () => {
 // ── Schedule ──────────────────────────────────────────────
 
 describe('listSchedule', () => {
-  it('returns scheduled assignments', async () => {
-    const rows = [{ id: assignmentId, serviceDate: '2026-05-10', genderTarget: 'Unisex' }];
-    setupSelectSequence([sampleBd], rows);
+  it('returns scheduled assignments enriched with affectsCount', async () => {
+    const rows = [
+      { id: assignmentId, serviceDate: '2026-05-10', genderTarget: 'Unisex' },
+      { id: 'b', serviceDate: '2026-05-17', genderTarget: 'Male' },
+      { id: 'c', serviceDate: '2026-05-24', genderTarget: 'Female' },
+    ];
+    setupSelectSequence(
+      [sampleBd],
+      rows,
+      [
+        { gender: 'Male', count: 6 },
+        { gender: 'Female', count: 4 },
+      ],
+    );
     const result = await listSchedule(mockDb, adminAuth, branchDeptId, {
       from: '2026-05-01',
       to: '2026-05-31',
     });
-    expect(result).toEqual(rows);
+    expect(result).toHaveLength(3);
+    expect(result[0]).toMatchObject({ genderTarget: 'Unisex', affectsCount: 10 });
+    expect(result[1]).toMatchObject({ genderTarget: 'Male', affectsCount: 6 });
+    expect(result[2]).toMatchObject({ genderTarget: 'Female', affectsCount: 4 });
+  });
+
+  it('returns empty array when no schedule rows', async () => {
+    setupSelectSequence([sampleBd], []);
+    const result = await listSchedule(mockDb, adminAuth, branchDeptId, {});
+    expect(result).toEqual([]);
   });
 
   it('throws ForbiddenError for cross-branch viewer', async () => {

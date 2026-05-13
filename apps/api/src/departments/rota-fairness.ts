@@ -2,17 +2,15 @@
  * Pure rota fairness algorithm — no DB / IO. Easy to unit test.
  *
  * Goal: distribute slot assignments fairly across a pool of members.
- * - Each pool member has an optional `lastScheduledAt` date and a positive `weight`.
+ * - Each pool member has an optional `lastScheduledAt` date.
  * - For each service date and each slot, pick `positionsRequired` members.
  * - A member cannot be assigned to two slots on the same date (unique per instance).
  * - Lower `lastScheduledAt` (or null) wins (least-recently-scheduled first).
- * - Higher `weight` is a tiebreaker (weight reflects willingness to serve more often).
- * - Stable secondary tiebreaker by `memberId` for determinism.
+ * - Stable tiebreaker by `memberId` for determinism.
  */
 
 export interface FairnessPoolMember {
   memberId: string;
-  weight: number;
   lastScheduledAt: string | null; // YYYY-MM-DD or null
   preferredRoleName?: string | null;
 }
@@ -36,8 +34,6 @@ function compareFairness(a: FairnessPoolMember, b: FairnessPoolMember): number {
   const aDate = a.lastScheduledAt ?? '0000-00-00';
   const bDate = b.lastScheduledAt ?? '0000-00-00';
   if (aDate !== bDate) return aDate < bDate ? -1 : 1;
-  // higher weight wins
-  if (a.weight !== b.weight) return b.weight - a.weight;
   // deterministic tiebreaker
   return a.memberId < b.memberId ? -1 : 1;
 }

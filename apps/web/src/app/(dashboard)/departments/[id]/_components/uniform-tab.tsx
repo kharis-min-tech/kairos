@@ -92,6 +92,27 @@ function formatDateLong(iso: string): string {
   });
 }
 
+function formatMonthShort(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  return new Date(y, m - 1, d)
+    .toLocaleDateString(undefined, { month: 'short' })
+    .toUpperCase();
+}
+
+function formatDayNumber(iso: string): string {
+  const [, , d] = iso.split('-').map(Number);
+  return d ? String(d) : '';
+}
+
+function formatWeekdayShort(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  return new Date(y, m - 1, d)
+    .toLocaleDateString(undefined, { weekday: 'short' })
+    .toUpperCase();
+}
+
 function todayIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -122,6 +143,7 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
 
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [genderFilter, setGenderFilter] = useState<'All' | 'Male' | 'Female' | 'Unisex'>('All');
 
   const outfits = outfitsQuery.data ?? [];
   const schedule = useMemo(() => scheduleQuery.data ?? [], [scheduleQuery.data]);
@@ -133,6 +155,10 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
   const upcomingAssignments = useMemo(
     () => schedule.filter((s) => s.serviceDate > today).slice(0, 8),
     [schedule, today],
+  );
+  const filteredOutfits = useMemo(
+    () => (genderFilter === 'All' ? outfits : outfits.filter((o) => o.genderTarget === genderFilter)),
+    [outfits, genderFilter],
   );
 
   return (
@@ -232,6 +258,33 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
           {showUploadForm && canManage && (
             <UploadForm branchDeptId={branchDeptId} onDone={() => setShowUploadForm(false)} />
           )}
+          {outfits.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {(['All', 'Male', 'Female', 'Unisex'] as const).map((g) => {
+                const active = genderFilter === g;
+                const count =
+                  g === 'All' ? outfits.length : outfits.filter((o) => o.genderTarget === g).length;
+                const tone =
+                  g === 'All'
+                    ? active
+                      ? 'bg-[#5D3FD3] text-white'
+                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                    : active
+                      ? GENDER_TONE[g] + ' ring-2 ring-offset-1 ring-current'
+                      : (GENDER_TONE[g] ?? '') + ' opacity-70 hover:opacity-100';
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGenderFilter(g)}
+                    className={`rounded-full px-3 py-1 font-medium transition-all ${tone}`}
+                  >
+                    {g} {count > 0 && <span className="opacity-75">· {count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {outfitsQuery.isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Loading gallery…</p>
           ) : outfits.length === 0 ? (
@@ -239,9 +292,13 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
               No outfits yet.{' '}
               {canManage ? 'Upload your first outfit to start scheduling.' : ''}
             </p>
+          ) : filteredOutfits.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No outfits in this category.
+            </p>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {outfits.map((o) => (
+              {filteredOutfits.map((o) => (
                 <OutfitCard
                   key={o.id}
                   outfit={o}
@@ -336,10 +393,28 @@ function AssignmentCard({
       },
     );
   };
+  const isToday = assignment.serviceDate === todayIso();
   return (
     <div
       className={`flex gap-3 rounded-[4px] p-3 ${highlight ? 'bg-white/60 dark:bg-black/20' : 'bg-surface-container-lowest'}`}
     >
+      <div
+        className={`flex w-14 shrink-0 flex-col items-center justify-center rounded-[4px] py-2 text-center ${
+          isToday
+            ? 'bg-[#f8b537]/20 text-[#a06b00] dark:text-[#f8b537]'
+            : 'bg-surface-container-low text-foreground'
+        }`}
+      >
+        <span className="text-[10px] font-semibold leading-none opacity-75">
+          {formatMonthShort(assignment.serviceDate)}
+        </span>
+        <span className="my-0.5 text-xl font-bold leading-none">
+          {formatDayNumber(assignment.serviceDate)}
+        </span>
+        <span className="text-[10px] font-medium leading-none opacity-75">
+          {formatWeekdayShort(assignment.serviceDate)}
+        </span>
+      </div>
       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[4px] bg-surface-container-low">
         <img
           src={assignment.outfitImageUrl}
@@ -348,12 +423,13 @@ function AssignmentCard({
         />
       </div>
       <div className="flex flex-1 flex-col gap-1">
-        <p className="text-xs font-medium text-muted-foreground">
-          {formatDateLong(assignment.serviceDate)}
-        </p>
         <p className="text-sm font-medium leading-tight">{assignment.outfitName}</p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <GenderPill value={assignment.genderTarget} />
+          <span className="text-[11px] text-muted-foreground">
+            Affects {assignment.affectsCount}{' '}
+            {assignment.affectsCount === 1 ? 'member' : 'members'}
+          </span>
         </div>
         {assignment.notes && (
           <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{assignment.notes}</p>

@@ -199,7 +199,6 @@ export const updateRotaSlotSchema = createRotaSlotSchema.partial().extend({
 export const addPoolMemberSchema = z.object({
   memberId: z.string().uuid(),
   preferredRoleName: z.string().max(100).nullable().optional(),
-  weight: z.number().int().positive().optional(),
   notes: z.string().max(2000).nullable().optional(),
 });
 
