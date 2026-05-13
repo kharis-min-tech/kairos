@@ -863,7 +863,7 @@ function CandidateDetailDialog({
             <DetailSection title="Probation">
               <DetailRow label="Started" value={fmtDate(r.probationStartDate)} />
               <DetailRow label="Ends" value={fmtDate(r.probationEndDate)} />
-              {r.probationDays != null && (
+              {r.probationDays !== null && (
                 <DetailRow label="Length" value={`${r.probationDays} days`} />
               )}
               <DetailRow
