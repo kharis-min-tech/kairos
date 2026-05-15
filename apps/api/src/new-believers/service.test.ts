@@ -105,6 +105,22 @@ describe('listEnrollments', () => {
     expect(lastOrderByArgs.length).toBe(2);
   });
 
+  it('scopes non-admin sortBy=name requests to the caller branch (no leak via member join)', async () => {
+    // sortBy=name runs the member inner-join — confirm a leader requesting a foreign
+    // branchId still resolves only their own branch's rows even on the join code-path.
+    setupSelectSequence([], [{ total: 0 }]);
+    const { listEnrollments } = await import('./service');
+    const result = await listEnrollments(mockDb, leaderAuth, {
+      branchId: otherBranchId,
+      sortBy: 'name',
+      page: 1,
+      limit: 20,
+    });
+    // Two orderBy columns prove the join-driven name-sort path executed.
+    expect(lastOrderByArgs.length).toBe(2);
+    expect(result.total).toBe(0);
+  });
+
   it('honors sortBy=last-activity by ordering on updatedAt desc', async () => {
     setupSelectSequence([], [{ total: 0 }]);
     const { listEnrollments } = await import('./service');

@@ -145,7 +145,7 @@ export function EnrollDialog({
               placeholder="Select a mentor..."
             />
             {mentorHasNoEmail && (
-              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              <p className="mt-1 text-xs font-medium text-[#f8b537]">
                 This member has no email on file — they won&apos;t receive an assignment notification.
               </p>
             )}

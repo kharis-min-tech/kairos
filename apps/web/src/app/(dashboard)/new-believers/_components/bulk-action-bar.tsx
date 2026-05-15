@@ -38,7 +38,7 @@ export function BulkActionBar({
         </span>
       </span>
       {atCap && (
-        <span className="text-xs text-amber-700 dark:text-amber-300">
+        <span className="text-xs font-medium text-[#f8b537]">
           Cap reached — deselect a card to choose another.
         </span>
       )}

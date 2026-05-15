@@ -330,7 +330,7 @@ function NewBelieversContent() {
           <p className="text-xs text-muted-foreground">Active</p>
         </div>
         <div className="rounded-lg border bg-card px-4 py-2.5">
-          <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{alerts.length}</p>
+          <p className="text-2xl font-bold text-[#f8b537]">{alerts.length}</p>
           <p className="text-xs text-muted-foreground">No progress in 7+ days</p>
         </div>
         <div className="rounded-lg border bg-card px-4 py-2.5">
@@ -365,8 +365,8 @@ function NewBelieversContent() {
 
       {/* Stale alert banner */}
       {alerts.length > 0 && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/40">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+        <div className="rounded-lg border border-[#f8b537]/40 bg-[#f8b537]/10 px-4 py-3">
+          <p className="text-sm font-medium text-[#f8b537]">
             {alerts.length} enrolment{alerts.length !== 1 ? 's have' : ' has'} had no progress in over 7 days.
           </p>
           <div className="mt-1 flex flex-wrap gap-1">
@@ -375,13 +375,13 @@ function NewBelieversContent() {
                 key={e.id}
                 type="button"
                 onClick={() => setDrawerEnrollmentId(e.id)}
-                className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800 hover:bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200 dark:hover:bg-amber-800/60"
+                className="rounded bg-[#f8b537]/20 px-2 py-0.5 text-xs font-medium text-[#f8b537] hover:bg-[#f8b537]/30"
               >
                 {e.memberFirstName} {e.memberLastName}
               </button>
             ))}
             {alerts.length > 5 && (
-              <span className="text-xs text-amber-700 dark:text-amber-300">
+              <span className="text-xs font-medium text-[#f8b537]">
                 +{alerts.length - 5} more
               </span>
             )}

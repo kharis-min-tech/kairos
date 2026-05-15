@@ -14,19 +14,13 @@ import {
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
 import { STAGES, getNextStage } from './stage-config';
+import type { EnrollmentDetail } from './types';
 
 interface EnrollmentDetailDrawerProps {
   enrollmentId: string | null;
   onClose: () => void;
   /** Branch members available for teacher / mentor reassignment. */
   branchMembers: { id: string; firstName: string; lastName: string }[];
-}
-
-interface AttendanceHistoryItem {
-  sessionId: string;
-  sessionDate: string | Date;
-  topic?: string | null;
-  attended: boolean;
 }
 
 export function EnrollmentDetailDrawer({
@@ -38,7 +32,8 @@ export function EnrollmentDetailDrawer({
   const { activeRole } = useAuthStore();
   const canEdit = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
 
-  const { data: enrollment, isLoading } = useEnrollment(enrollmentId ?? '');
+  const { data, isLoading } = useEnrollment(enrollmentId ?? '');
+  const enrollment = data as EnrollmentDetail | undefined;
   const updateEnrollment = useUpdateEnrollment();
 
   const stage = enrollment
@@ -46,8 +41,7 @@ export function EnrollmentDetailDrawer({
     : undefined;
   const nextStage = enrollment ? getNextStage(enrollment.stage) : undefined;
 
-  const attendanceHistory: AttendanceHistoryItem[] =
-    ((enrollment as unknown as { attendanceHistory?: AttendanceHistoryItem[] })?.attendanceHistory) ?? [];
+  const attendanceHistory = enrollment?.attendanceHistory ?? [];
 
   async function handleAdvance() {
     if (!enrollment || !nextStage) return;
@@ -202,7 +196,7 @@ export function EnrollmentDetailDrawer({
             <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-foreground/10">
               <Link
                 href={`/new-believers/${enrollment.id}`}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5D3FD3] hover:underline"
+                className="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-[#5D3FD3] hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5D3FD3]/40"
                 onClick={onClose}
               >
                 Open full page <ExternalLink className="h-3.5 w-3.5" />

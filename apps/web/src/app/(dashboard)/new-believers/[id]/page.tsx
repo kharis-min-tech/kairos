@@ -31,6 +31,7 @@ import {
   getStageByValue,
   getNextStage,
 } from '../_components/stage-config';
+import type { EnrollmentDetail, AttendanceLogItem } from '../_components/types';
 
 export default function EnrollmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +40,8 @@ export default function EnrollmentDetailPage() {
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
   const canEdit = isAdminOrPastor || activeRole === 'leader';
 
-  const { data: enrollment, isLoading, error } = useEnrollment(id);
+  const { data, isLoading, error } = useEnrollment(id);
+  const enrollment = data as EnrollmentDetail | undefined;
   const updateEnrollment = useUpdateEnrollment();
 
   const { data: memberData } = useMembers(
@@ -103,11 +105,7 @@ export default function EnrollmentDetailPage() {
     if (!enrollment) return;
     const currentStage = enrollment.stage;
     const existingSca = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
-    const existingSf =
-      ((enrollment as unknown as Record<string, unknown>).sessionFeedback ?? {}) as Record<
-        string,
-        string
-      >;
+    const existingSf = enrollment.sessionFeedback ?? {};
     try {
       await updateEnrollment.mutateAsync({
         id,
@@ -198,17 +196,7 @@ export default function EnrollmentDetailPage() {
     label: `${m.firstName} ${m.lastName}`,
   }));
 
-  type AttendanceHistoryItem = {
-    sessionId: string;
-    sessionDate: string | Date;
-    topic?: string | null;
-    attended: boolean;
-    notes?: string | null;
-  };
-  const attendanceHistory: AttendanceHistoryItem[] =
-    ((enrollment as unknown as Record<string, unknown>).attendanceHistory as
-      | AttendanceHistoryItem[]
-      | undefined) ?? [];
+  const attendanceHistory: AttendanceLogItem[] = enrollment.attendanceHistory ?? [];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -236,7 +224,7 @@ export default function EnrollmentDetailPage() {
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                 currentSessionDone
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+                  : 'bg-[#f8b537]/20 text-[#f8b537]'
               }`}
             >
               {currentSessionDone ? 'Session Completed' : 'Session In Progress'}
@@ -279,13 +267,13 @@ export default function EnrollmentDetailPage() {
 
       {/* Teacher-as-student warning */}
       {enrollment.memberId === enrollment.teacherId && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/40">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" />
+        <div className="flex items-start gap-3 rounded-lg border border-[#f8b537]/40 bg-[#f8b537]/10 px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#f8b537]" />
           <div>
-            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-sm font-semibold text-[#f8b537]">
               Member enrolled as their own teacher
             </p>
-            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+            <p className="mt-0.5 text-xs font-medium text-[#f8b537]">
               {enrollment.memberFirstName} {enrollment.memberLastName} is assigned as both the
               student and the teacher on this enrolment. Please reassign the teacher using Edit.
             </p>
@@ -347,7 +335,7 @@ export default function EnrollmentDetailPage() {
                     }
                     options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
                   />
-                  <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                  <p className="mt-1 text-xs font-medium text-[#f8b537]">
                     Changing stage manually bypasses session-complete checks — use with care.
                   </p>
                 </div>
@@ -555,7 +543,7 @@ export default function EnrollmentDetailPage() {
                             className={`ml-2 rounded-full px-1.5 py-0.5 text-xs font-medium ${
                               sessionDone
                                 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+                                : 'bg-[#f8b537]/20 text-[#f8b537]'
                             }`}
                           >
                             {sessionDone ? 'Done' : 'Active'}
