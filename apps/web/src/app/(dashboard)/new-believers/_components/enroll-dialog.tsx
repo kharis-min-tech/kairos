@@ -76,11 +76,24 @@ export function EnrollDialog({
     }
   }, [open, reset]);
 
-  // Prevent picking the same person as student + teacher + mentor
+  // Safety net: clear teacher/mentor if they collide with the chosen member.
+  // The dropdowns below already filter the chosen member out, but the
+  // collision can still happen if the member field changes after a teacher
+  // or mentor was picked.
   useEffect(() => {
     if (memberId && teacherId === memberId) setValue('teacherId', '');
     if (memberId && mentorId === memberId) setValue('mentorId', '');
   }, [memberId, teacherId, mentorId, setValue]);
+
+  // Filter options so the selected member can never appear as their own
+  // teacher / mentor. Cross-exclude teacher and mentor too, since the
+  // same person playing both roles for one student is a likely mistake.
+  const teacherOptions = teacherPool
+    .filter((m) => m.id !== memberId && m.id !== mentorId)
+    .map(toOption);
+  const mentorOptions = mentorPool
+    .filter((m) => m.id !== memberId && m.id !== teacherId)
+    .map(toOption);
 
   const selectedMentor = allBranchMembers.find((m) => m.id === mentorId);
   const mentorHasNoEmail = !!mentorId && !selectedMentor?.email;
@@ -97,7 +110,12 @@ export function EnrollDialog({
       toast.success('Member enrolled in New Believers programme');
       onOpenChange(false);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to enroll member');
+      // Surface the full error to DevTools so we can diagnose 500s that
+      // come back as the generic 'Something went wrong' fallback.
+      console.error('createEnrollment failed:', err);
+      const apiStatus = (err as { status?: number } | null)?.status;
+      const fallback = apiStatus ? `Failed to enroll member (HTTP ${apiStatus})` : 'Failed to enroll member';
+      toast.error(err instanceof Error && err.message ? err.message : fallback);
     }
   }
 
@@ -130,7 +148,7 @@ export function EnrollDialog({
               id="enrol-teacher"
               value={teacherId ?? ''}
               onValueChange={(v) => setValue('teacherId', v)}
-              options={teacherPool.map(toOption)}
+              options={teacherOptions}
               placeholder="Select a teacher..."
             />
           </div>
@@ -141,7 +159,7 @@ export function EnrollDialog({
               id="enrol-mentor"
               value={mentorId ?? ''}
               onValueChange={(v) => setValue('mentorId', v)}
-              options={mentorPool.map(toOption)}
+              options={mentorOptions}
               placeholder="Select a mentor..."
             />
             {mentorHasNoEmail && (

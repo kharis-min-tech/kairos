@@ -175,4 +175,58 @@ describe('EnrollDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  it('hides the chosen member from the teacher dropdown', async () => {
+    const user = userEvent.setup();
+    render(<EnrollDialog {...baseProps} />, { wrapper });
+
+    // Pick Ada as the student
+    await user.click(screen.getByText(/Select a member/i));
+    await user.click(screen.getByRole('button', { name: 'Ada Lovelace' }));
+
+    // Open teacher dropdown — Ada must NOT appear, but Grace and Edsger must
+    await user.click(screen.getByText(/Select a teacher/i));
+    const teacherOptions = screen.getAllByRole('button');
+    const teacherNames = teacherOptions.map((b) => b.textContent ?? '');
+    expect(teacherNames.some((n) => n.includes('Grace Hopper'))).toBe(true);
+    expect(teacherNames.some((n) => n.includes('Edsger Dijkstra'))).toBe(true);
+    expect(teacherNames.filter((n) => n.includes('Ada Lovelace')).length).toBe(1);
+    // ↑ exactly one "Ada Lovelace" element: the currently-selected member chip
+    //   in the member CustomSelect. None in the teacher option list.
+  });
+
+  it('hides the chosen member from the mentor dropdown', async () => {
+    const user = userEvent.setup();
+    render(<EnrollDialog {...baseProps} />, { wrapper });
+
+    await user.click(screen.getByText(/Select a member/i));
+    await user.click(screen.getByRole('button', { name: 'Grace Hopper' }));
+
+    await user.click(screen.getByText(/Select a mentor/i));
+    const mentorNames = screen.getAllByRole('button').map((b) => b.textContent ?? '');
+    expect(mentorNames.some((n) => n.includes('Ada Lovelace'))).toBe(true);
+    expect(mentorNames.some((n) => n.includes('Edsger Dijkstra'))).toBe(true);
+    // Only one "Grace Hopper" — the selected-member chip; not in mentor options.
+    expect(mentorNames.filter((n) => n.includes('Grace Hopper')).length).toBe(1);
+  });
+
+  it('hides the chosen teacher from the mentor dropdown (and vice versa)', async () => {
+    const user = userEvent.setup();
+    render(<EnrollDialog {...baseProps} />, { wrapper });
+
+    // Pick a student so the dropdowns work normally
+    await user.click(screen.getByText(/Select a member/i));
+    await user.click(screen.getByRole('button', { name: 'Ada Lovelace' }));
+
+    // Pick Grace as teacher
+    await user.click(screen.getByText(/Select a teacher/i));
+    await user.click(screen.getByRole('button', { name: 'Grace Hopper' }));
+
+    // Mentor dropdown should hide Grace (already teacher) and Ada (the student)
+    await user.click(screen.getByText(/Select a mentor/i));
+    const mentorNames = screen.getAllByRole('button').map((b) => b.textContent ?? '');
+    expect(mentorNames.some((n) => n.includes('Edsger Dijkstra'))).toBe(true);
+    expect(mentorNames.filter((n) => n.includes('Grace Hopper')).length).toBe(1);
+    expect(mentorNames.filter((n) => n.includes('Ada Lovelace')).length).toBe(1);
+  });
 });
