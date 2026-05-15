@@ -50,6 +50,13 @@
       "when": 1777938232361,
       "tag": "0006_magenta_shriek",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778844178472,
+      "tag": "0007_fine_shiver_man",
+      "breakpoints": true
     }
   ]
 }
