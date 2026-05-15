@@ -459,8 +459,19 @@ export interface EnrollmentListParams {
   stage?: string;
   teacherId?: string;
   stale?: boolean;
+  sortBy?: 'date-added' | 'name' | 'last-activity';
   page?: number;
   limit?: number;
+}
+
+export interface BulkAdvanceEnrollmentsRequest {
+  enrollmentIds: string[];
+  targetStage: string;
+}
+
+export interface BulkAdvanceEnrollmentsResult {
+  advanced: number;
+  failed: number;
 }
 
 export interface CreateNewBelieverSessionRequest {

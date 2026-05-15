@@ -11,12 +11,14 @@ import {
   updateSessionSchema,
   recordAttendanceSchema,
   listSessionsQuerySchema,
+  bulkAdvanceSchema,
 } from './schemas';
 import {
   listEnrollments,
   getEnrollment,
   createEnrollment,
   updateEnrollment,
+  bulkAdvance,
   listSessions,
   createSession,
   updateSession,
@@ -52,6 +54,16 @@ newBelieversRouter.get('/enrollments/alerts', async (c) => {
   });
   return c.json(successResponse(result));
 });
+
+newBelieversRouter.post(
+  '/enrollments/bulk-advance',
+  zValidator('json', bulkAdvanceSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await bulkAdvance(db, auth, c.req.valid('json'));
+    return c.json(successResponse(result));
+  }
+);
 
 newBelieversRouter.get('/enrollments/:id', async (c) => {
   const auth = getAuth(c);

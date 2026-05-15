@@ -1,472 +1,36 @@
 'use client';
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DndContext, useDraggable, useDroppable, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  PointerSensor,
+} from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useEnrollments, useEnrollmentAlerts, useCreateEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
+import { Plus } from 'lucide-react';
+import { Button } from '@kairos/ui';
+import {
+  useEnrollments,
+  useEnrollmentAlerts,
+  useUpdateEnrollment,
+  useBulkAdvanceEnrollments,
+} from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMembers } from '@/hooks/use-members';
-import { Card, CardContent } from '@kairos/ui';
 import type { NewBelieverStageValue, EnrollmentListParams } from '@kairos/types';
 
-const STAGES: { value: NewBelieverStageValue; label: string; topic?: string }[] = [
-  { value: 'enrolled', label: 'Enrolled' },
-  { value: 'session-1', label: 'Session 1', topic: 'Foundations of Faith' },
-  { value: 'session-2', label: 'Session 2', topic: 'Who is a Christian' },
-  { value: 'session-3', label: 'Session 3', topic: 'Working out your Salvation' },
-  { value: 'session-4', label: 'Session 4', topic: 'The Importance of Fellowship' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'integrated', label: 'Joined a Department' },
-];
-
-const STAGE_COLORS: Record<NewBelieverStageValue, string> = {
-  enrolled: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-  'session-1': 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
-  'session-2': 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800',
-  'session-3': 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800',
-  'session-4': 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:border-violet-800',
-  completed: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800',
-  integrated: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800',
-};
-
-function MemberCombobox({
-  members,
-  value,
-  onChange,
-  placeholder = 'Search members…',
-  id,
-}: {
-  members: { id: string; firstName: string; lastName: string }[];
-  value: string;
-  onChange: (id: string, name: string) => void;
-  placeholder?: string;
-  id?: string;
-}) {
-  const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const selectedMember = members.find((m) => m.id === value);
-  const selectedLabel = selectedMember
-    ? `${selectedMember.firstName} ${selectedMember.lastName}`
-    : '';
-
-  // When open: filter by search text. When closed: show selected label.
-  const filtered = open
-    ? members.filter((m) =>
-        `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase())
-      )
-    : [];
-
-  function handleSelect(m: { id: string; firstName: string; lastName: string }) {
-    onChange(m.id, `${m.firstName} ${m.lastName}`);
-    setSearch('');
-    setOpen(false);
-  }
-
-  function handleFocus() {
-    setSearch(''); // clear so full list shows immediately
-    setOpen(true);
-  }
-
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
-    // Clear current selection so the user is picking fresh
-    if (value) onChange('', '');
-  }
-
-  function handleClear(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    onChange('', '');
-    setSearch('');
-    setOpen(true);
-  }
-
-  // Input displays: search text when open, selected name when closed
-  const inputValue = open ? search : selectedLabel;
-
-  return (
-    <div ref={containerRef} className="relative">
-      <div className="relative">
-        <input
-          id={id}
-          className="w-full rounded-lg border bg-white px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
-          placeholder={placeholder}
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          autoComplete="off"
-        />
-        {/* Chevron / clear button */}
-        {value && !open ? (
-          <button
-            type="button"
-            tabIndex={-1}
-            onMouseDown={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100"
-          >
-            ✕
-          </button>
-        ) : (
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
-            ▾
-          </span>
-        )}
-      </div>
-      {open && (
-        <ul className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          {filtered.length > 0 ? (
-            filtered.map((m) => (
-              <li key={m.id}>
-                <button
-                  type="button"
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-purple-50 dark:hover:bg-purple-900/30 ${
-                    m.id === value
-                      ? 'bg-purple-50 font-medium text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-                      : 'text-gray-900 dark:text-gray-100'
-                  }`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => handleSelect(m)}
-                >
-                  {m.firstName} {m.lastName}
-                  {m.id === value && <span className="ml-2 text-xs">✓</span>}
-                </button>
-              </li>
-            ))
-          ) : (
-            <li className="px-3 py-2 text-sm text-muted-foreground">
-              {members.length === 0 ? 'No members available' : 'No matches'}
-            </li>
-          )}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-const SESSION_STAGE_VALUES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
-const MAX_SELECT = 5;
-
-type EnrollmentCard = {
-  id: string;
-  memberId: string;
-  stage: string;
-  memberFirstName: string;
-  memberLastName: string;
-  teacherFirstName?: string | null;
-  teacherLastName?: string | null;
-  mentorFirstName?: string | null;
-  mentorLastName?: string | null;
-  enrolledAt: string | Date;
-  updatedAt: string | Date;
-};
-
-function DraggableCard({
-  enrollment,
-  stageValue,
-  isDraggable,
-  selectMode = false,
-  isSelected = false,
-  onToggle,
-}: {
-  enrollment: EnrollmentCard;
-  stageValue: string;
-  isDraggable: boolean;
-  selectMode?: boolean;
-  isSelected?: boolean;
-  onToggle?: () => void;
-}) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: enrollment.id,
-    data: { stage: stageValue },
-    disabled: !isDraggable || selectMode,
-  });
-
-  if (selectMode) {
-    return (
-      <div
-        onClick={onToggle}
-        className={`cursor-pointer rounded-xl border p-3 select-none transition-all ${
-          isSelected
-            ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-950/40'
-            : 'border-gray-200 bg-white hover:border-purple-300 dark:border-gray-700 dark:bg-gray-800'
-        }`}
-      >
-        <div className="flex items-start gap-2">
-          <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-xs font-bold transition-colors ${
-            isSelected
-              ? 'border-purple-600 bg-purple-600 text-white'
-              : 'border-gray-400 dark:border-gray-500'
-          }`}>
-            {isSelected && '✓'}
-          </div>
-          <div>
-            <p className="text-sm font-medium">
-              {enrollment.memberFirstName} {enrollment.memberLastName}
-            </p>
-            {(enrollment.teacherFirstName || enrollment.teacherLastName) && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Teacher: {enrollment.teacherFirstName} {enrollment.teacherLastName}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...(isDraggable ? listeners : {})}
-      className={`rounded-xl border bg-white dark:border-gray-700 dark:bg-gray-800 select-none transition-all ${
-        isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
-      } ${isDragging ? 'opacity-30' : 'hover:shadow-md'}`}
-    >
-      <Link href={`/new-believers/${enrollment.id}`} className="block p-3">
-        <p className="text-sm font-medium">
-          {enrollment.memberFirstName} {enrollment.memberLastName}
-        </p>
-        {(enrollment.teacherFirstName || enrollment.teacherLastName) && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Teacher: {enrollment.teacherFirstName} {enrollment.teacherLastName}
-          </p>
-        )}
-        {enrollment.mentorFirstName && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Mentor: {enrollment.mentorFirstName} {enrollment.mentorLastName}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-muted-foreground">
-          Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
-        </p>
-      </Link>
-    </div>
-  );
-}
-
-function StageColumn({
-  stage,
-  enrollments,
-  canDrag,
-  isDropTarget,
-  canBulkAdvance,
-  selectMode,
-  selectedIds,
-  isAdvancing,
-  onEnterSelectMode,
-  onCancelSelectMode,
-  onToggle,
-  onAdvanceSelected,
-}: {
-  stage: { value: NewBelieverStageValue; label: string; topic?: string };
-  enrollments: EnrollmentCard[];
-  canDrag: boolean;
-  isDropTarget: boolean;
-  canBulkAdvance: boolean;
-  selectMode: boolean;
-  selectedIds: Set<string>;
-  isAdvancing: boolean;
-  onEnterSelectMode: () => void;
-  onCancelSelectMode: () => void;
-  onToggle: (id: string) => void;
-  onAdvanceSelected: () => void;
-}) {
-  const colorClass = STAGE_COLORS[stage.value];
-  const { setNodeRef, isOver } = useDroppable({ id: stage.value });
-  const nextStage = STAGES[STAGES.findIndex((s) => s.value === stage.value) + 1];
-  const selectedCount = selectedIds.size;
-
-  return (
-    <div className="flex min-w-[220px] flex-col gap-2">
-      {/* Column header */}
-      <div className={`rounded-lg border px-3 py-2 ${colorClass}`}>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">
-            {stage.label}
-            <span className="ml-2 rounded-full bg-black/10 px-1.5 py-0.5 text-xs font-bold dark:bg-white/20">
-              {enrollments.length}
-            </span>
-          </span>
-          {canBulkAdvance && !selectMode && enrollments.length > 0 && (
-            <button
-              onClick={onEnterSelectMode}
-              title={`Select up to ${MAX_SELECT} members to advance together`}
-              className="ml-2 rounded px-2 py-0.5 text-xs font-medium bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
-            >
-              Bulk ▸
-            </button>
-          )}
-        </div>
-        {stage.topic && (
-          <p className="mt-0.5 text-xs opacity-70">{stage.topic}</p>
-        )}
-      </div>
-
-      {/* Bulk-select action bar */}
-      {selectMode && (
-        <div className="flex items-center justify-between rounded-lg border border-purple-300 bg-purple-50 px-3 py-2 dark:border-purple-700 dark:bg-purple-950/40">
-          <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-            {selectedCount}/{MAX_SELECT}
-          </span>
-          <div className="flex gap-1.5">
-            <button
-              onClick={onCancelSelectMode}
-              className="rounded px-2 py-1 text-xs text-purple-600 hover:bg-purple-100 dark:text-purple-300 dark:hover:bg-purple-900/40"
-            >
-              Cancel
-            </button>
-            {nextStage && (
-              <button
-                disabled={selectedCount === 0 || isAdvancing}
-                onClick={onAdvanceSelected}
-                className="rounded bg-purple-700 px-2 py-1 text-xs font-medium text-white hover:bg-purple-800 disabled:opacity-40"
-              >
-                {isAdvancing
-                  ? 'Moving…'
-                  : `Advance ${selectedCount > 0 ? selectedCount : ''} → ${nextStage.label}`}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Drop zone */}
-      <div
-        ref={setNodeRef}
-        className={`flex min-h-[80px] flex-col gap-2 rounded-lg transition-colors ${
-          isOver && isDropTarget
-            ? 'bg-purple-50 ring-2 ring-purple-400 dark:bg-purple-950/30 dark:ring-purple-600'
-            : ''
-        }`}
-      >
-        {enrollments.length === 0 ? (
-          <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-            No enrollments
-          </p>
-        ) : (
-          enrollments.map((e) => (
-            <DraggableCard
-              key={e.id}
-              enrollment={e}
-              stageValue={stage.value}
-              isDraggable={canDrag && !selectMode}
-              selectMode={selectMode}
-              isSelected={selectedIds.has(e.id)}
-              onToggle={() => onToggle(e.id)}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MyEnrollmentView({ enrollment }: { enrollment: EnrollmentCard }) {
-  const currentIdx = STAGES.findIndex((s) => s.value === enrollment.stage);
-
-  return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${
-          STAGE_COLORS[enrollment.stage as NewBelieverStageValue] ?? 'bg-gray-100 text-gray-700'
-        }`}>
-          {STAGES.find((s) => s.value === enrollment.stage)?.label ?? enrollment.stage}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div>
-        <div className="flex gap-1">
-          {STAGES.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-2 flex-1 rounded-full transition-colors ${
-                idx <= currentIdx ? 'bg-purple-600' : 'bg-gray-200 dark:bg-gray-700'
-              }`}
-            />
-          ))}
-        </div>
-        <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-          <span>Enrolled</span>
-          <span>Joined a Department</span>
-        </div>
-      </div>
-
-      {/* Journey checklist */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="mb-3 text-sm font-semibold">Your Journey</h3>
-          <ol className="space-y-2">
-            {STAGES.map((s, idx) => {
-              const isDone = idx < currentIdx;
-              const isCurrent = idx === currentIdx;
-              return (
-                <li key={s.value} className="flex items-start gap-3">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    isDone
-                      ? 'bg-emerald-500 text-white'
-                      : isCurrent
-                      ? 'bg-purple-700 text-white'
-                      : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                  }`}>
-                    {isDone ? '✓' : idx + 1}
-                  </div>
-                  <div>
-                    <p className={`text-sm ${
-                      isCurrent
-                        ? 'font-semibold text-purple-700 dark:text-purple-400'
-                        : isDone
-                        ? 'text-muted-foreground line-through'
-                        : 'text-muted-foreground'
-                    }`}>
-                      {s.label}
-                    </p>
-                    {s.topic && (
-                      <p className="text-xs text-muted-foreground">{s.topic}</p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </CardContent>
-      </Card>
-
-      {/* Support team */}
-      {(enrollment.teacherFirstName || enrollment.mentorFirstName) && (
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-semibold">Your Support Team</h3>
-            <dl className="space-y-2 text-sm">
-              {enrollment.teacherFirstName && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Teacher</dt>
-                  <dd className="font-medium">{enrollment.teacherFirstName} {enrollment.teacherLastName}</dd>
-                </div>
-              )}
-              {enrollment.mentorFirstName && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Mentor</dt>
-                  <dd className="font-medium">{enrollment.mentorFirstName} {enrollment.mentorLastName}</dd>
-                </div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
+import { STAGES, SESSION_STAGE_VALUES, MAX_BULK_SELECT } from './_components/stage-config';
+import type { EnrollmentCardData } from './_components/types';
+import { PipelineToolbar, type EnrollmentSortOption } from './_components/pipeline-toolbar';
+import { BulkActionBar } from './_components/bulk-action-bar';
+import { StageColumn } from './_components/stage-column';
+import { EnrollDialog } from './_components/enroll-dialog';
+import { EnrollmentDetailDrawer } from './_components/enrollment-detail-drawer';
+import { MemberJourneyView } from './_components/member-journey-view';
 
 function NewBelieversContent() {
   const { activeRole, user } = useAuthStore();
@@ -475,86 +39,155 @@ function NewBelieversContent() {
   const isMember = activeRole === 'member';
   const queryClient = useQueryClient();
 
-  // Bulk-advance select mode
-  const [selectStage, setSelectStage] = useState<string | null>(null);
+  // Selection state for bulk advance (souls-pattern)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [bulkTargetStage, setBulkTargetStage] = useState<NewBelieverStageValue | ''>('');
 
-  // Ref for dismissing pending undo toasts before a new drag starts
-  const undoToastRef = useRef<string | number | null>(null);
-
+  // Filters
   const [filterStage, setFilterStage] = useState<NewBelieverStageValue | ''>('');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<EnrollmentSortOption>('date-added');
+
+  // Modals & drawer
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
-  const [enrollForm, setEnrollForm] = useState({
-    memberId: '',
-    memberName: '',
-    teacherId: '',
-    teacherName: '',
-    mentorId: '',
-    mentorName: '',
-    notes: '',
-  });
+  const [drawerEnrollmentId, setDrawerEnrollmentId] = useState<string | null>(null);
+
+  // Track the undo toast so a fresh drop dismisses the stale one
+  const undoToastRef = useRef<string | number | null>(null);
 
   const fetchParams: EnrollmentListParams = {
     page: 1,
     limit: 200,
     branchId: activeRole === 'admin' ? undefined : user?.homeBranchId,
     stage: filterStage || undefined,
+    sortBy,
   };
 
   const { data: result, isLoading } = useEnrollments(fetchParams);
   const { data: alertsResult } = useEnrollmentAlerts();
-  const createEnrollment = useCreateEnrollment();
   const updateEnrollment = useUpdateEnrollment();
+  const bulkAdvance = useBulkAdvanceEnrollments();
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const { data: memberData } = useMembers(
+    user?.homeBranchId ? { branchId: user.homeBranchId, limit: 500 } : undefined,
+  );
+  const branchMembers = memberData?.data ?? [];
 
-  function enterSelectMode(stageValue: string) {
-    setSelectStage(stageValue);
-    setSelectedIds(new Set());
-  }
-  function cancelSelectMode() {
-    setSelectStage(null);
-    setSelectedIds(new Set());
-  }
+  const enrollments = (result?.data ?? []) as EnrollmentCardData[];
+  const alerts = alertsResult?.data ?? [];
+  const myEnrollment = isMember
+    ? enrollments.find((e) => e.memberId === user?.id)
+    : null;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  // Filter on the client by the search box (server already filters by stage / branch)
+  const displayedEnrollments = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return enrollments;
+    return enrollments.filter((e) => {
+      const memberName = `${e.memberFirstName} ${e.memberLastName}`.toLowerCase();
+      const teacherName = `${e.teacherFirstName ?? ''} ${e.teacherLastName ?? ''}`.toLowerCase();
+      return memberName.includes(q) || teacherName.includes(q);
+    });
+  }, [enrollments, search]);
+
+  const countsByStage = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const s of STAGES) acc[s.value] = 0;
+    for (const e of displayedEnrollments) acc[e.stage] = (acc[e.stage] ?? 0) + 1;
+    return acc;
+  }, [displayedEnrollments]);
+
+  const byStage = useMemo(() => {
+    return STAGES.reduce<Record<string, EnrollmentCardData[]>>((acc, s) => {
+      acc[s.value] = displayedEnrollments.filter((e) => e.stage === s.value);
+      return acc;
+    }, {});
+  }, [displayedEnrollments]);
+
+  // Pools for the enroll dialog (members not currently student / teacher / mentor)
+  const activeStudentIds = useMemo(() => new Set(enrollments.map((e) => e.memberId)), [enrollments]);
+  const activeTeacherIds = useMemo(
+    () => new Set(enrollments.filter((e) => e.teacherId).map((e) => e.teacherId!)),
+    [enrollments],
+  );
+  const activeMentorIds = useMemo(
+    () => new Set(enrollments.filter((e) => e.mentorId).map((e) => e.mentorId!)),
+    [enrollments],
+  );
+
+  const memberPool = useMemo(
+    () =>
+      branchMembers.filter(
+        (m) => !activeStudentIds.has(m.id) && !activeTeacherIds.has(m.id) && !activeMentorIds.has(m.id),
+      ),
+    [branchMembers, activeStudentIds, activeTeacherIds, activeMentorIds],
+  );
+  const teacherPool = useMemo(
+    () => branchMembers.filter((m) => !activeStudentIds.has(m.id)),
+    [branchMembers, activeStudentIds],
+  );
+  const mentorPool = useMemo(
+    () => branchMembers.filter((m) => !activeStudentIds.has(m.id)),
+    [branchMembers, activeStudentIds],
+  );
+
+  // ── Selection handlers ──────────────────────────────────
   function toggleSelected(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); return next; }
-      if (next.size >= MAX_SELECT) {
-        toast.warning(`You can select up to ${MAX_SELECT} members at a time`);
+      if (next.has(id)) {
+        next.delete(id);
+        return next;
+      }
+      if (next.size >= MAX_BULK_SELECT) {
+        toast.warning(`You can select up to ${MAX_BULK_SELECT} members at a time`);
         return prev;
       }
       next.add(id);
       return next;
     });
   }
-  async function handleAdvanceSelected(stageValue: string) {
-    const fromIdx = STAGES.findIndex((s) => s.value === stageValue);
-    const nextStage = STAGES[fromIdx + 1];
-    if (!nextStage || selectedIds.size === 0) return;
-    setIsAdvancing(true);
-    let ok = 0, failed = 0;
-    const isSessionStage = SESSION_STAGE_VALUES.has(stageValue);
-    for (const eid of selectedIds) {
-      const sessionCompletedAt = isSessionStage
-        ? { [stageValue]: new Date().toISOString() }
-        : undefined;
-      try {
-        await updateEnrollment.mutateAsync({
-          id: eid,
-          data: { stage: nextStage.value, ...(sessionCompletedAt ? { sessionCompletedAt } : {}) },
-        });
-        ok++;
-      } catch { failed++; }
-    }
-    setIsAdvancing(false);
-    cancelSelectMode();
-    if (failed === 0) toast.success(`${ok} member${ok !== 1 ? 's' : ''} advanced to ${nextStage.label}`);
-    else toast.warning(`${ok} advanced, ${failed} failed`);
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+    setBulkTargetStage('');
   }
 
+  function selectAllVisible() {
+    const next = new Set<string>();
+    for (const e of displayedEnrollments) {
+      if (next.size >= MAX_BULK_SELECT) break;
+      next.add(e.id);
+    }
+    setSelectedIds(next);
+    if (next.size > 0 && displayedEnrollments.length > MAX_BULK_SELECT) {
+      toast.warning(`Selected first ${MAX_BULK_SELECT} (cap)`);
+    }
+  }
+
+  async function handleBulkAdvance() {
+    if (selectedIds.size === 0 || !bulkTargetStage) return;
+    try {
+      const result = await bulkAdvance.mutateAsync({
+        enrollmentIds: Array.from(selectedIds),
+        targetStage: bulkTargetStage,
+      });
+      if (result.failed === 0) {
+        toast.success(`${result.advanced} member${result.advanced !== 1 ? 's' : ''} advanced`);
+      } else {
+        toast.warning(`${result.advanced} advanced, ${result.failed} failed`);
+      }
+      clearSelection();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Bulk advance failed');
+    }
+  }
+
+  // ── Drag and drop ──────────────────────────────────────
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -571,18 +204,16 @@ function NewBelieversContent() {
     const memberName = enrollment
       ? `${enrollment.memberFirstName} ${enrollment.memberLastName}`
       : 'Member';
-    const isSessionStage = SESSION_STAGE_VALUES.has(fromStage);
+    const isSessionStage = SESSION_STAGE_VALUES.has(fromStage as NewBelieverStageValue);
     const sessionCompletedAt = isSessionStage
       ? { [fromStage]: new Date().toISOString() }
       : undefined;
 
-    // Dismiss any previous pending undo toast
     if (undoToastRef.current !== null) {
       toast.dismiss(undoToastRef.current);
       undoToastRef.current = null;
     }
 
-    // Advance immediately so the card moves at once
     try {
       await updateEnrollment.mutateAsync({
         id: enrollmentId,
@@ -593,7 +224,6 @@ function NewBelieversContent() {
       return;
     }
 
-    // 5-second undo window
     let undone = false;
     const toastId = toast(`${memberName} → ${nextStage.label}`, {
       duration: 5000,
@@ -603,7 +233,6 @@ function NewBelieversContent() {
           undone = true;
           toast.dismiss(toastId);
           undoToastRef.current = null;
-          // Retry reversal up to 3 times with exponential backoff
           const delays = [0, 500, 1500];
           let reversed = false;
           for (const delay of delays) {
@@ -615,7 +244,9 @@ function NewBelieversContent() {
               });
               reversed = true;
               break;
-            } catch { /* retry */ }
+            } catch {
+              /* retry */
+            }
           }
           if (reversed) {
             toast.success('Move undone');
@@ -627,143 +258,29 @@ function NewBelieversContent() {
       },
     });
     undoToastRef.current = toastId;
-    setTimeout(() => { if (!undone) undoToastRef.current = null; }, 5500);
+    setTimeout(() => {
+      if (!undone) undoToastRef.current = null;
+    }, 5500);
   }
 
-  const { data: memberData } = useMembers(
-    user?.homeBranchId
-      ? { branchId: user.homeBranchId, limit: 500 }
-      : undefined,
-  );
-  const branchMembers = memberData?.data ?? [];
+  // ── Render branches ────────────────────────────────────
 
-  const enrollments = result?.data ?? [];
-  const alerts = alertsResult?.data ?? [];
-  const myEnrollment = isMember
-    ? (enrollments as EnrollmentCard[]).find((e) => e.memberId === user?.id)
-    : null;
+  if (isMember) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <header>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers</h1>
+          <p className="text-muted-foreground">
+            Your journey through the New Believers programme
+          </p>
+        </header>
 
-  const displayedEnrollments = enrollments.filter((e) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    const memberName = `${e.memberFirstName} ${e.memberLastName}`.toLowerCase();
-    const teacherName = `${e.teacherFirstName ?? ''} ${e.teacherLastName ?? ''}`.toLowerCase();
-    return memberName.includes(q) || teacherName.includes(q);
-  });
-
-  // Pool helpers
-  const activeStudentIds = new Set(enrollments.map((e) => e.memberId));
-  const activeTeacherIds = new Set(
-    enrollments.filter((e) => e.teacherId).map((e) => e.teacherId!),
-  );
-  const activeMentorIds = new Set(
-    enrollments.filter((e) => e.mentorId).map((e) => e.mentorId!),
-  );
-
-  // Member pool: not a current student, teacher, or mentor
-  const memberPool = branchMembers.filter(
-    (m) =>
-      !activeStudentIds.has(m.id) &&
-      !activeTeacherIds.has(m.id) &&
-      !activeMentorIds.has(m.id),
-  );
-
-  // Teacher pool: not a current student (teachers can teach multiple students)
-  const teacherPool = branchMembers.filter(
-    (m) => !activeStudentIds.has(m.id) && m.id !== enrollForm.memberId,
-  );
-
-  // Mentor pool: not a current student, not the enrollee (mentors can mentor many)
-  const mentorPool = branchMembers.filter(
-    (m) => !activeStudentIds.has(m.id) && m.id !== enrollForm.memberId,
-  );
-
-  const byStage = STAGES.reduce<Record<string, typeof displayedEnrollments>>(
-    (acc, s) => {
-      acc[s.value] = displayedEnrollments.filter((e) => e.stage === s.value);
-      return acc;
-    },
-    {},
-  );
-
-  async function handleEnroll() {
-    if (!enrollForm.memberId || !user?.homeBranchId) return;
-    try {
-      await createEnrollment.mutateAsync({
-        memberId: enrollForm.memberId,
-        branchId: user.homeBranchId,
-        teacherId: enrollForm.teacherId || undefined,
-        mentorId: enrollForm.mentorId || undefined,
-        notes: enrollForm.notes || undefined,
-      });
-      toast.success('Member enrolled in New Believers programme');
-      setShowEnrollDialog(false);
-      setEnrollForm({ memberId: '', memberName: '', teacherId: '', teacherName: '', mentorId: '', mentorName: '', notes: '' });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to enroll member');
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">New Believers</h1>
-            <p className="mt-1 text-sm text-purple-200">
-              {isMember
-                ? 'Your journey through the New Believers programme'
-                : 'Journey tracking from enrolment to joining a department'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isMember && (
-              <Link
-                href="/new-believers/sessions"
-                className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium transition-colors hover:bg-white/20"
-              >
-                Sessions
-              </Link>
-            )}
-            {isAdminOrPastor && (
-              <button
-                onClick={() => setShowEnrollDialog(true)}
-                className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-50"
-              >
-                + Enrol Member
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Stats row — hidden for members */}
-        {!isMember && (
-          <div className="mt-4 flex flex-wrap gap-4">
-            <div className="rounded-lg bg-white/10 px-4 py-2 text-center">
-              <p className="text-lg font-bold">{result?.total ?? 0}</p>
-              <p className="text-xs text-purple-200">Active</p>
-            </div>
-            <div className="rounded-lg bg-white/10 px-4 py-2 text-center">
-              <p className="text-lg font-bold text-amber-300">{alerts.length}</p>
-              <p className="text-xs text-purple-200">No progress in 7+ days</p>
-            </div>
-            <div className="rounded-lg bg-white/10 px-4 py-2 text-center">
-              <p className="text-lg font-bold">{byStage['integrated']?.length ?? 0}</p>
-              <p className="text-xs text-purple-200">Joined a Department</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {isMember ? (
-        /* ── Member personal view ── */
-        isLoading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading your progress…</p>
+            <p className="text-muted-foreground">Loading your progress...</p>
           </div>
         ) : myEnrollment ? (
-          <MyEnrollmentView enrollment={myEnrollment as EnrollmentCard} />
+          <MemberJourneyView enrollment={myEnrollment} />
         ) : (
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="text-sm font-medium text-muted-foreground">
@@ -773,233 +290,146 @@ function NewBelieversContent() {
               Speak to your pastor or branch leader to get started.
             </p>
           </div>
-        )
-      ) : (
-        <>
-          {/* Search bar */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by member or teacher name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border bg-white px-4 py-2.5 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
-            />
-            <svg
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+        )}
+      </div>
+    );
+  }
 
-          {/* Stale alert banner */}
-          {alerts.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/40">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                {alerts.length} enrolment{alerts.length !== 1 ? 's have' : ' has'} had no progress in over 7 days.
-              </p>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {alerts.slice(0, 5).map((e) => (
-                  <Link
-                    key={e.id}
-                    href={`/new-believers/${e.id}`}
-                    className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:hover:bg-amber-800/60"
-                  >
-                    {e.memberFirstName} {e.memberLastName}
-                  </Link>
-                ))}
-                {alerts.length > 5 && (
-                  <span className="text-xs text-amber-600 dark:text-amber-400">+{alerts.length - 5} more</span>
-                )}
-              </div>
-            </div>
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers</h1>
+          <p className="text-muted-foreground">
+            Journey tracking from enrolment to joining a department
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/new-believers/sessions"
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-foreground/5 transition-colors"
+          >
+            Sessions
+          </Link>
+          {isAdminOrPastor && (
+            <Button
+              onClick={() => setShowEnrollDialog(true)}
+              className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Enrol Member
+            </Button>
           )}
+        </div>
+      </div>
 
-          {/* Stage filter chips */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setFilterStage('')}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                filterStage === ''
-                  ? 'bg-purple-700 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`}
-            >
-              All
-            </button>
-            {STAGES.map((s) => (
+      {/* Stats row */}
+      <div className="flex flex-wrap gap-3">
+        <div className="rounded-lg border bg-card px-4 py-2.5">
+          <p className="text-2xl font-bold">{result?.total ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Active</p>
+        </div>
+        <div className="rounded-lg border bg-card px-4 py-2.5">
+          <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{alerts.length}</p>
+          <p className="text-xs text-muted-foreground">No progress in 7+ days</p>
+        </div>
+        <div className="rounded-lg border bg-card px-4 py-2.5">
+          <p className="text-2xl font-bold text-[#f8b537]">{byStage['integrated']?.length ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Joined a Department</p>
+        </div>
+      </div>
+
+      <PipelineToolbar
+        search={search}
+        onSearchChange={setSearch}
+        filterStage={filterStage}
+        onFilterStageChange={setFilterStage}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        countsByStage={countsByStage}
+        totalCount={displayedEnrollments.length}
+        canBulkSelect={canEdit}
+        hasSelection={selectedIds.size > 0}
+        onSelectAllVisible={selectAllVisible}
+        onDeselectAll={clearSelection}
+      />
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        targetStage={bulkTargetStage}
+        onTargetStageChange={setBulkTargetStage}
+        onAdvance={handleBulkAdvance}
+        onClear={clearSelection}
+        isAdvancing={bulkAdvance.isPending}
+      />
+
+      {/* Stale alert banner */}
+      {alerts.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/40">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            {alerts.length} enrolment{alerts.length !== 1 ? 's have' : ' has'} had no progress in over 7 days.
+          </p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {alerts.slice(0, 5).map((e) => (
               <button
-                key={s.value}
-                onClick={() => setFilterStage(s.value)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  filterStage === s.value
-                    ? 'bg-purple-700 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
+                key={e.id}
+                type="button"
+                onClick={() => setDrawerEnrollmentId(e.id)}
+                className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800 hover:bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200 dark:hover:bg-amber-800/60"
               >
-                {s.label}{s.topic ? ` · ${s.topic}` : ''}
+                {e.memberFirstName} {e.memberLastName}
               </button>
             ))}
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-muted-foreground">Loading pipeline…</p>
-            </div>
-          ) : filterStage ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {displayedEnrollments.map((e) => (
-                <Link key={e.id} href={`/new-believers/${e.id}`}>
-                  <Card className="cursor-pointer transition-shadow hover:shadow-md">
-                    <CardContent className="p-4">
-                      <p className="font-medium">
-                        {e.memberFirstName} {e.memberLastName}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground capitalize">
-                        {STAGES.find((s) => s.value === e.stage)?.label ?? e.stage}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-              <div className="overflow-x-auto pb-4">
-                <div className="flex gap-4" style={{ minWidth: STAGES.length * 240 + 'px' }}>
-                  {STAGES.map((s) => (
-                    <StageColumn
-                      key={s.value}
-                      stage={s}
-                      enrollments={byStage[s.value] ?? []}
-                      canDrag={canEdit && s.value !== 'integrated' && selectStage !== s.value}
-                      isDropTarget={canEdit && s.value !== 'enrolled'}
-                      canBulkAdvance={canEdit && s.value !== 'integrated'}
-                      selectMode={selectStage === s.value}
-                      selectedIds={selectStage === s.value ? selectedIds : new Set<string>()}
-                      isAdvancing={isAdvancing && selectStage === s.value}
-                      onEnterSelectMode={() => enterSelectMode(s.value)}
-                      onCancelSelectMode={cancelSelectMode}
-                      onToggle={toggleSelected}
-                      onAdvanceSelected={() => handleAdvanceSelected(s.value)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </DndContext>
-          )}
-        </>
-      )}
-
-      {/* Enrol Member Dialog */}
-      {showEnrollDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
-            <h2 className="mb-4 text-lg font-semibold">Enrol Member in New Believers</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="enrol-member" className="mb-1 block text-sm font-medium">
-                  Member
-                </label>
-                <MemberCombobox
-                  id="enrol-member"
-                  members={memberPool}
-                  value={enrollForm.memberId}
-                  onChange={(id, name) =>
-                    setEnrollForm((f) => ({
-                      ...f,
-                      memberId: id,
-                      memberName: name,
-                      // clear teacher/mentor if they happen to be the same person
-                      teacherId: f.teacherId === id ? '' : f.teacherId,
-                      teacherName: f.teacherId === id ? '' : f.teacherName,
-                      mentorId: f.mentorId === id ? '' : f.mentorId,
-                      mentorName: f.mentorId === id ? '' : f.mentorName,
-                    }))
-                  }
-                  placeholder="Type name to search…"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="enrol-teacher" className="mb-1 block text-sm font-medium">
-                  Assign Teacher
-                </label>
-                <MemberCombobox
-                  id="enrol-teacher"
-                  members={teacherPool}
-                  value={enrollForm.teacherId}
-                  onChange={(id, name) => setEnrollForm((f) => ({ ...f, teacherId: id, teacherName: name }))}
-                  placeholder="Search teacher…"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="enrol-mentor" className="mb-1 block text-sm font-medium">
-                  Assign Mentor
-                </label>
-                <MemberCombobox
-                  id="enrol-mentor"
-                  members={mentorPool}
-                  value={enrollForm.mentorId}
-                  onChange={(id, name) => setEnrollForm((f) => ({ ...f, mentorId: id, mentorName: name }))}
-                  placeholder="Search mentor…"
-                />
-                {mentorPool.length === 0 && enrollments.length > 0 && (
-                  <p className="mt-1 text-xs text-muted-foreground">All branch members are currently enrolled as students.</p>
-                )}
-                {enrollForm.mentorId && !branchMembers.find((m) => m.id === enrollForm.mentorId)?.email && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                    ⚠ This member has no email address on file — they won&apos;t receive an assignment notification.
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Notes{' '}
-                  <span className="font-normal text-muted-foreground">(optional)</span>
-                </label>
-                <textarea
-                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                  rows={2}
-                  value={enrollForm.notes}
-                  onChange={(e) => setEnrollForm((f) => ({ ...f, notes: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowEnrollDialog(false);
-                  setEnrollForm({ memberId: '', memberName: '', teacherId: '', teacherName: '', mentorId: '', mentorName: '', notes: '' });
-                }}
-                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!enrollForm.memberId || !enrollForm.teacherId || !enrollForm.mentorId || createEnrollment.isPending}
-                onClick={handleEnroll}
-                className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:opacity-50"
-              >
-                {createEnrollment.isPending ? 'Enrolling\u2026' : 'Enrol'}
-              </button>
-            </div>
+            {alerts.length > 5 && (
+              <span className="text-xs text-amber-700 dark:text-amber-300">
+                +{alerts.length - 5} more
+              </span>
+            )}
           </div>
         </div>
       )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Loading pipeline...</p>
+        </div>
+      ) : (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+            {STAGES.map((s) => (
+              <StageColumn
+                key={s.value}
+                stage={s}
+                enrollments={byStage[s.value] ?? []}
+                canDrag={canEdit && s.value !== 'integrated' && selectedIds.size === 0}
+                canSelect={canEdit && s.value !== 'integrated'}
+                selectedIds={selectedIds}
+                selectionAtCap={selectedIds.size >= MAX_BULK_SELECT}
+                onToggleSelect={toggleSelected}
+                onOpenDrawer={setDrawerEnrollmentId}
+              />
+            ))}
+          </div>
+        </DndContext>
+      )}
+
+      {isAdminOrPastor && user?.homeBranchId && (
+        <EnrollDialog
+          open={showEnrollDialog}
+          onOpenChange={setShowEnrollDialog}
+          branchId={user.homeBranchId}
+          memberPool={memberPool}
+          teacherPool={teacherPool}
+          mentorPool={mentorPool}
+          allBranchMembers={branchMembers}
+        />
+      )}
+
+      <EnrollmentDetailDrawer
+        enrollmentId={drawerEnrollmentId}
+        onClose={() => setDrawerEnrollmentId(null)}
+        branchMembers={branchMembers}
+      />
     </div>
   );
 }
@@ -1009,7 +439,7 @@ export default function NewBelieversPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading…</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       }
     >

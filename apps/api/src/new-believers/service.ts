@@ -1,4 +1,4 @@
-import { eq, and, desc, lt, sql, count } from 'drizzle-orm';
+import { eq, and, asc, desc, lt, sql, count } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   newBelieverEnrollments,
@@ -61,6 +61,7 @@ export async function listEnrollments(
     stage?: string;
     teacherId?: string;
     stale?: boolean;
+    sortBy?: 'date-added' | 'name' | 'last-activity';
     page: number;
     limit: number;
   }
@@ -84,6 +85,15 @@ export async function listEnrollments(
   conditions.push(eq(newBelieverEnrollments.isActive, true));
 
   const offset = (query.page - 1) * query.limit;
+
+  // Resolve sort columns via Drizzle helpers — no SQL concatenation.
+  // Default 'date-added' = newest enrolledAt first.
+  const orderColumns =
+    query.sortBy === 'name'
+      ? [asc(members.firstName), asc(members.lastName)]
+      : query.sortBy === 'last-activity'
+        ? [desc(newBelieverEnrollments.updatedAt)]
+        : [desc(newBelieverEnrollments.enrolledAt)];
 
   const [rows, countRows] = await Promise.all([
     db
@@ -120,7 +130,7 @@ export async function listEnrollments(
         sql`${newBelieverEnrollments.mentorId} = m.id`
       )
       .where(and(...conditions))
-      .orderBy(desc(newBelieverEnrollments.enrolledAt))
+      .orderBy(...orderColumns)
       .limit(query.limit)
       .offset(offset),
     db
@@ -408,6 +418,34 @@ export async function updateEnrollment(
     .returning();
 
   return updated!;
+}
+
+/**
+ * Bulk-advance enrollments to a target stage.
+ * Calls `updateEnrollment` for each id so all the per-enrollment guards
+ * (branch scope, teacher-or-above, session-complete checks, side-effects)
+ * still run. Returns the per-id outcome so the caller can render a toast.
+ */
+export async function bulkAdvance(
+  db: Database,
+  auth: AuthContext,
+  data: { enrollmentIds: string[]; targetStage: string }
+): Promise<{ advanced: number; failed: number }> {
+  let advanced = 0;
+  let failed = 0;
+  for (const enrollmentId of data.enrollmentIds) {
+    try {
+      // Per-session sessionCompletedAt marking is the caller's responsibility;
+      // this endpoint advances the stage and relies on the service guard to
+      // refuse advancement from a session stage that hasn't been marked complete.
+      await updateEnrollment(db, auth, enrollmentId, { stage: data.targetStage });
+      advanced++;
+    } catch (err) {
+      console.error('bulkAdvance: skipping enrollment', { enrollmentId, err });
+      failed++;
+    }
+  }
+  return { advanced, failed };
 }
 
 // ── Sessions ───────────────────────────────────────────────

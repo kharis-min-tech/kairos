@@ -45,6 +45,8 @@ import type {
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
   EnrollmentListParams,
+  BulkAdvanceEnrollmentsRequest,
+  BulkAdvanceEnrollmentsResult,
   CreateNewBelieverSessionRequest,
   UpdateNewBelieverSessionRequest,
   RecordNewBelieverAttendanceRequest,
@@ -803,11 +805,14 @@ export function createApiClient(
           if (params?.stage) qs.set('stage', params.stage);
           if (params?.teacherId) qs.set('teacherId', params.teacherId);
           if (params?.stale) qs.set('stale', 'true');
+          if (params?.sortBy) qs.set('sortBy', params.sortBy);
           if (params?.page) qs.set('page', String(params.page));
           if (params?.limit) qs.set('limit', String(params.limit));
           const q = qs.toString();
           return client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>(`/api/new-believers/enrollments${q ? `?${q}` : ''}`);
         },
+        bulkAdvance: (data: BulkAdvanceEnrollmentsRequest) =>
+          client.post<ApiResponse<BulkAdvanceEnrollmentsResult>>('/api/new-believers/enrollments/bulk-advance', data),
         alerts: () =>
           client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>('/api/new-believers/enrollments/alerts'),
         get: (id: string) =>

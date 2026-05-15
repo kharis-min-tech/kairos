@@ -38,8 +38,14 @@ export const listEnrollmentsQuerySchema = z.object({
   stage: z.enum(stages).optional(),
   teacherId: z.string().uuid().optional(),
   stale: z.coerce.boolean().optional(), // only enrollments with no update in N days
+  sortBy: z.enum(['date-added', 'name', 'last-activity']).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(500).default(20),
+});
+
+export const bulkAdvanceSchema = z.object({
+  enrollmentIds: z.array(z.string().uuid()).min(1).max(50),
+  targetStage: z.enum(stages),
 });
 
 export const createSessionSchema = z.object({

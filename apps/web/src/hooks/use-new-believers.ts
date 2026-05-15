@@ -6,6 +6,7 @@ import type {
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
   EnrollmentListParams,
+  BulkAdvanceEnrollmentsRequest,
   CreateNewBelieverSessionRequest,
   UpdateNewBelieverSessionRequest,
   RecordNewBelieverAttendanceRequest,
@@ -67,6 +68,17 @@ export function useUpdateEnrollment() {
       qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments'] });
       qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments', id] });
     },
+  });
+}
+
+export function useBulkAdvanceEnrollments() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: BulkAdvanceEnrollmentsRequest) => {
+      const res = await api.newBelievers.enrollments.bulkAdvance(data);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments'] }),
   });
 }
 
