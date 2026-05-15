@@ -2,16 +2,17 @@
 applyTo: "apps/web/**/*.tsx"
 ---
 
-## React Component Rules
+## React And UI Rules
 
-- Use function components with TypeScript interfaces for props
-- Co-locate component tests: `ComponentName.test.tsx` beside `ComponentName.tsx`
-- Use `'use client'` directive only when component uses hooks or browser APIs
-- Server Components by default in Next.js App Router
-- Shadcn/ui components from `@kairos/ui` — never install shadcn/ui in apps/web directly
-- Tailwind CSS for styling — no CSS modules or styled-components
-- Use `Link` from `next/link` for navigation — never `<a>` tags for internal routes
-- Forms: React Hook Form + Zod resolver for validation
-- State: Zustand for global state, React state for local component state
-- Data fetching: TanStack Query (useQuery/useMutation) wrapping `@kairos/api-client` methods
-- Color palette: Purple #6D28D9 (primary), Gold #D97706 (accent), Emerald #059669 (success), Rose #E11D48 (error)
+- Server Components by default. Add `'use client'` only for hooks, browser APIs, state, or event handlers.
+- Use function components with TypeScript interfaces for non-trivial props.
+- Use `@kairos/ui` components before creating local primitives.
+- Use Tailwind classes; do not add CSS modules or styled-components.
+- Use `Link` from `next/link` for internal navigation.
+- Forms use React Hook Form + Zod resolver.
+- Remote data uses TanStack Query hooks wrapping `@kairos/api-client`.
+- Global auth state uses `apps/web/src/lib/auth-store.ts`.
+- Use `DateSelect` for all date selection.
+- Use `CustomSelect` or shared select primitives; do not add native `<select>` for new UI.
+- Respect `DESIGN.md`: purple/gold palette, dark purple headers instead of navy, tonal surfaces, compact radii, no nested cards.
+- New role-gated UI must use `activeRole` and match API authorization rules.

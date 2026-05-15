@@ -1,18 +1,18 @@
 ---
-applyTo: "packages/database/**/*.ts"
+applyTo: "packages/database/**/*.ts,packages/database/drizzle/**/*.sql"
 ---
 
-## Drizzle Schema Rules
+## Drizzle And Migration Rules
 
-- Table name: `pgTable('snake_case_plural', { ... })`
-- Primary key: `id: uuid('id').defaultRandom().primaryKey()`
-- Foreign keys: `columnId: uuid('column_id').notNull().references(() => parentTable.id)`
-- Soft delete: `isActive: boolean('is_active').default(true).notNull()` — every table
-- Timestamps: `createdAt: timestamp('created_at').defaultNow().notNull()` and `updatedAt: timestamp('updated_at').defaultNow().notNull()` — every table
-- Column naming: snake_case in SQL (`branch_id`), Drizzle maps to camelCase in TypeScript (`branchId`)
-- String columns: use `varchar('name', { length: N })` with explicit length, or `text()` for unbounded
-- Money: `decimal('amount', { precision: 10, scale: 2 })` — never `float`
-- Check constraints: add in the table's third argument for business rule validation
-- Relations: define `tableNameRelations` using `relations()` in the same file
-- Exports: every new table and relation MUST be added to `src/index.ts`
-- Enums: use `varchar` + check constraint — not PostgreSQL `CREATE TYPE` enums
+- Table names are plural snake_case: `pgTable('branch_departments', { ... })`.
+- Primary keys use UUIDs: `id: uuid('id').defaultRandom().primaryKey()`.
+- Foreign key properties use camelCase and SQL columns use snake_case: `branchId: uuid('branch_id')`.
+- Business entities should have `isActive`, `createdAt`, and `updatedAt` unless there is an established exception.
+- Soft delete with `isActive`; do not hard-delete business history.
+- Use `varchar(..., { length })` for bounded strings and `text()` for unbounded text.
+- Use `decimal` for money; never `float`.
+- Use `varchar` + check constraints for fixed values rather than PostgreSQL enum types.
+- Define relations in the schema file or adjacent schema barrel following existing patterns.
+- Export every new table/relation from `packages/database/src/index.ts` or the schema barrel used by the repo.
+- Add SQL migrations under `packages/database/drizzle` for schema changes. Keep migrations idempotent where practical.
+- Keep schema fields consistent with `packages/types/src/entities.ts`.

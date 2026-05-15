@@ -1,47 +1,149 @@
-# Kairos — Rebuild v2
+# Kairos Agent Guide
 
-## Architecture
-- **Monorepo**: Turborepo + npm workspaces
-- **Frontend**: Next.js 15 App Router, Shadcn/ui, Tailwind CSS, Zustand
-- **Backend**: Hono framework (TypeScript-first, native Lambda adapter)
-- **Database**: Docker PostgreSQL 15 (local), Aurora Serverless v2 (future)
-- **ORM**: Drizzle ORM
-- **Auth**: bcrypt + jsonwebtoken (local dev); Cognito swap at deployment
-- **Testing**: Vitest + React Testing Library, strict TDD
+This is the working guide for coding agents in this repository. Keep it aligned with the actual codebase, not with old planning artifacts.
 
-## MVP Modules
-1. Auth — signup, login, verify email, forgot/reset password, JWT tokens, admin approval
-2. Branches — CRUD, pastor assignment, branch isolation
-3. Members — directory, CRUD, profile, approval, role assignment
-4. Fellowships — 5 subtypes (K-Groups, Kharis Express, New Breeds, KOC, KOC Colleges), meetings, attendance
+## Source Of Truth
 
-## Workspace Structure
+Read these before substantial work:
+
+- `AGENTS.md` - engineering conventions, repo shape, and agent workflow.
+- `DESIGN.md` - UI design system and interaction rules.
+- `requirements/` - product requirements, scope, architecture, and implementation notes. Treat older AWS/Cognito language as future-deployment context unless the current code already uses it.
+- `README.md` - local setup and commands.
+
+If these conflict with running code, inspect the implementation and update the docs as part of the change.
+
+## Current Architecture
+
+- Monorepo: Turborepo + npm workspaces.
+- Frontend: Next.js 15 App Router, React 19, Tailwind, shared `@kairos/ui`, TanStack Query, Zustand.
+- Backend: Hono API on Node for local development, structured so module routers can later map to Lambda.
+- Database: PostgreSQL 15 locally via Docker, Drizzle ORM schemas and migrations in `packages/database`.
+- Auth: local bcrypt + jsonwebtoken, refresh tokens, approval status, active role context. Cognito is a future deployment swap, not current runtime code.
+- Testing: Vitest, React Testing Library, strict TDD for behavior changes.
+
+## Product Surface
+
+The original rebuild MVP focused on Auth, Branches, Members, and Fellowships. The current codebase also includes Departments, Reports/Analytics, Outreach Programs, Souls Pipeline, New Believers, rota, and uniform workflows. Do not assume a four-module-only app when planning navigation, permissions, or shared types.
+
+Core roles:
+
+- `admin`: global access.
+- `pastor`: branch management access.
+- `leader`: fellowship/department leadership access where explicitly allowed.
+- `member`: self-service and public/branch-visible data.
+
+## Workspace Map
+
+```text
+apps/api/          Hono API server, module routers, services, schemas, tests
+apps/web/          Next.js App Router frontend
+packages/types/    Shared entity, enum, and API contract types
+packages/database/ Drizzle schemas, migrations, seeds, reset scripts
+packages/utils/    Shared auth, responses, errors, mailer, logger utilities
+packages/api-client/ Typed HTTP client used by the frontend
+packages/ui/       Shared UI components and Tailwind globals
+requirements/      Product and architecture requirements
+.github/instructions/ Scoped coding-agent instructions
+.github/prompts/   Reusable planning/implementation prompts
 ```
-apps/api/        — Hono API server (module routers + lambda entry points)
-apps/web/        — Next.js 15 frontend
-packages/types/  — Shared TypeScript types + enums
-packages/database/ — Drizzle ORM schemas + migrations
-packages/utils/  — Shared utilities (auth, errors, validation, logger)
-packages/api-client/ — Typed HTTP client
-packages/ui/     — Shadcn/ui component library
-```
 
-## Key Conventions
-- TDD: Write failing tests first, then implement
-- Branch isolation: Non-admin queries always filtered by user's branchId
-- Route alignment triplet: Hono router → API client method → frontend hook
-- camelCase in TypeScript, snake_case in SQL columns
-- UUID primary keys in Drizzle (mapped from SERIAL in raw SQL)
-- Soft deletes via `isActive` boolean — never hard delete
+## Route Alignment Triplet
 
-## Dev Startup
+Feature work should preserve this chain:
+
+1. Hono route and service in `apps/api/src/{module}`.
+2. Shared request/response/entity types in `packages/types/src`.
+3. API client method in `packages/api-client/src/api.ts`.
+4. Frontend hook in `apps/web/src/hooks`.
+5. Page/component usage in `apps/web/src/app` or `apps/web/src/components`.
+
+Current API routes are mounted under `/api/*` in `apps/api/src/app.ts`, not `/v1/*`.
+
+## Backend Patterns
+
+- Module folders usually contain `schemas.ts`, `service.ts`, `router.ts`, and focused tests.
+- Use `zValidator` or Zod schemas at route boundaries.
+- Use `authMiddleware`, `requireRole`, and `getAuth` from `apps/api/src/middleware/auth.ts`.
+- Use shared errors from `@kairos/utils` and return via `successResponse`.
+- Keep business rules in services; keep routers thin.
+- Register static routes like `/import`, `/export`, `/roles`, and `/me` before `/:id` routes.
+- Use Drizzle query builders and parameterized SQL helpers. Avoid string-built SQL.
+- Get the database from `apps/api/src/db.ts`; do not create ad hoc database clients in feature code.
+
+## Data Rules
+
+- UUID primary keys in Drizzle.
+- SQL columns are snake_case; TypeScript fields are camelCase.
+- Use `isActive` soft deletes. Do not hard-delete business records unless a requirement explicitly calls for it.
+- Every branch-scoped non-admin query must filter by the caller's branch context.
+- Members can have home and active secondary branch context; inspect existing service logic before adding branch filters.
+- Use `varchar` + check constraints for fixed values unless the existing table already uses a different pattern.
+- Timestamps use `createdAt` and `updatedAt`.
+- Migrations live in `packages/database/drizzle`; schema definitions live in `packages/database/src/schema`.
+
+## Frontend Patterns
+
+- Server Components by default. Add `'use client'` only for hooks, browser APIs, local state, or event handlers.
+- Use `@kairos/ui` components and local design conventions before introducing new primitives.
+- Forms use React Hook Form + Zod.
+- Remote data uses TanStack Query hooks that wrap `@kairos/api-client`.
+- Auth state lives in `apps/web/src/lib/auth-store.ts`.
+- Use `DateSelect` for date picking and `CustomSelect`/shared select components for dropdowns.
+- Route guards should be role-aware and should respect `activeRole`.
+- Prefer lucide icons for new controls when available; match existing inline icon style only when touching a local cluster that already uses it.
+
+## Testing Expectations
+
+- For behavior changes, write or update failing tests first.
+- Backend tests should cover happy path, validation, authorization, branch isolation, and soft-delete behavior where relevant.
+- Frontend tests should focus on visible behavior and user interactions.
+- Co-locate tests beside source.
+- Mock database and HTTP boundaries in unit tests; use Docker PostgreSQL only for intentional integration tests.
+
+## Useful Commands
+
 ```bash
-docker compose up -d   # Start PostgreSQL
-npx turbo dev          # API on :3001, Next.js on :3002
+docker compose up -d
+npm install
+npx turbo db:fresh
+npx turbo dev
+npx turbo test
+npx turbo typecheck
+npx turbo lint
+npx turbo build
 ```
 
-## Color Palette
-- Primary: Purple #6D28D9
-- Accent: Gold #D97706
-- Success: Emerald #059669
-- Error: Rose #E11D48
+Targeted examples:
+
+```bash
+npm run test --workspace=@kairos/api
+npm run test --workspace=@kairos/web
+npm run typecheck --workspace=@kairos/api
+npm run typecheck --workspace=@kairos/web
+```
+
+## Agent Orchestration
+
+Use one orchestrator and parallel workers only when the work naturally splits into independent write scopes. The orchestrator owns the plan, dependency graph, integration, and final verification.
+
+Good parallel lanes:
+
+- Types/database lane: `packages/types`, `packages/database`.
+- API lane: one module under `apps/api/src/{module}`.
+- Client/hooks lane: `packages/api-client` plus related `apps/web/src/hooks`.
+- UI lane: one route subtree or component cluster in `apps/web/src`.
+- Test/verification lane: focused tests after implementation contracts are known.
+
+Rules for parallel work:
+
+- Assign explicit file ownership before workers start.
+- Do not let two workers edit the same file unless one is only reviewing.
+- Start with contracts: types, schemas, route shapes, and permissions.
+- Integrate through the route alignment triplet.
+- Run targeted tests per lane, then a broader typecheck/test pass after integration.
+- Record unresolved product decisions in the final summary instead of encoding guesses into docs.
+
+## Pulling Requirements Into Work
+
+Before implementing a feature, check the relevant files in `requirements/`. The older requirements include future AWS, Cognito, S3, donations, and notification scope. For the current local-first app, implement only what is present in the active code path or explicitly requested.

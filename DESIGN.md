@@ -1,122 +1,99 @@
-# Design System Documentation: The Modern Sanctuary
+# Kairos Design System
 
-## 1. Overview & Creative North Star
-This design system is built to transform church administration from a utilitarian chore into a "Digital Sanctuary." Our Creative North Star is **The Modern Sanctuary**: an experience defined by architectural precision, structured clarity, and a sense of sacred order.
+## Creative Direction
 
-We move beyond the "SaaS template" look by rejecting standard grid-heavy layouts. Instead, we embrace **Balanced Composition** and **Tonal Depth**. The UI should feel like it was "carved" rather than "assembled," using clear breathing room to provide a professional and commanding presence for all content.
+Kairos should feel like a modern church operations console: calm, structured, premium, and fast to scan. The product is an admin tool first, not a marketing site. Prioritize clarity, efficient workflows, and role-aware information density.
 
----
+The visual north star is **The Modern Sanctuary**: architectural spacing, layered surfaces, restrained color, and confident purple/gold emphasis.
 
-## 2. Color & Tonal Architecture
-The palette is rooted in the high-contrast tension between `surface` (#f9f9f9) and `on-surface` (#1a1c1c), punctuated by the regal weight of `primary` (Royal Purple #5D3FD3) and the vibrant prestige of `secondary` (Vibrant Gold #f8b537).
+## Color Tokens
 
-### The "No-Line" Rule
-To maintain a high-end editorial feel, designers are **prohibited from using 1px solid borders for sectioning.** Boundaries must be defined through:
-- **Tonal Shifts:** Transitioning from `surface` to `surface-container-low`.
-- **Negative Space:** Using a consistent 24px to 32px gap to define content blocks.
+Use the app tokens in `apps/web/src/app/globals.css` and shared UI components as the implementation source.
 
-### Surface Hierarchy & Nesting
-Treat the interface as a series of physical layers. We use the Material surface tiers to create nested depth:
-1.  **Base:** `surface` (#f9f9f9) – The expansive floor of the application.
-2.  **Sectioning:** `surface-container-low` (#f3f3f3) – Large areas for content grouping.
-3.  **Elevation:** `surface-container-lowest` (#ffffff) – Individual cards or focal points.
+- Primary purple: `#6D28D9`
+- Deep purple: `#451ebb` / `#5d3fd3`
+- Dark header purple: `#3b0764` / `#4c1d95`
+- Accent gold: `#D97706` / `#f8b537`
+- Success emerald: `#059669`
+- Error rose: `#E11D48`
+- Base surface: near-white `#f9f9f9`
+- Primary text: near-black `#1a1c1c`
 
-### The "Glass & Gradient" Rule
-Standard flat buttons are insufficient for the Kharis Church identity. 
-- **Signature Textures:** Use a subtle linear gradient for main CTAs, transitioning from `primary` (#451ebb) to `primary-container` (#5d3fd3) at a 135-degree angle.
-- **Glassmorphism:** Use `surface-container-lowest` at 80% opacity with a `20px` backdrop-blur for floating navigation or sidebars to create a "frosted glass" effect.
+Avoid navy headers and one-note purple-only screens. Charts and status views should include purple, gold, emerald, rose, and a cool secondary such as sky where useful.
 
----
+## Surface Model
 
-## 3. Typography
-We utilize a clean, geometric sans-serif (Inter) to balance modernity with established authority.
+Use tonal layering instead of heavy outlines:
 
-*   **Display Scales (`display-lg` to `display-sm`):** Use these for high-impact moments—total monthly tithes, congregation growth, or welcoming headers. These should always be `on-surface` and set to a "Semi-Bold" weight with `-0.02em` tracking.
-*   **Headline & Title:** These are your navigational anchors. Use `headline-sm` (1.5rem) for section titles to establish a clear hierarchy.
-*   **Body & Labels:** `body-md` (0.875rem) is the workhorse for administration. Ensure a line-height of `1.6` to maintain readability in data-heavy views. 
-*   **The Gold Accent:** Use `secondary` (#f8b537) sparingly for `label-md` elements to highlight "Verified" statuses or "Premium" member tiers.
+- Page background: `background`.
+- App chrome/sidebar: translucent white or near-black with `backdrop-blur`.
+- Content surfaces: `card`, `muted`, and `secondary`.
+- Floating elements: ambient shadow, not harsh drop shadows.
 
----
+Borders are allowed for inputs, tables, accessibility states, and dense data controls. Avoid decorative section dividers; prefer spacing and tonal shifts.
 
-## 4. Elevation & Depth
-This system achieves hierarchy through **Tonal Layering** rather than structural lines.
+## Shape And Density
 
-### The Layering Principle
-Depth is achieved by "stacking." A `surface-container-lowest` card placed on a `surface-container-low` background creates a soft, natural lift. This mimics the look of fine paper on a stone desk.
+- Shared components currently use compact radii, usually `rounded`, `rounded-md`, or `rounded-lg`.
+- Keep cards and controls at 8px radius or less unless matching an existing auth/onboarding surface.
+- Do not nest cards inside cards. Use sections, grids, tabs, or dialogs instead.
+- Admin/dashboard views should be dense but readable; avoid landing-page hero composition inside the authenticated app.
 
-### Ambient Shadows
-When an element must float (e.g., a modal or a dropdown), use an **Ambient Shadow**:
-- **Color:** `on-surface` at 6% opacity.
-- **Blur:** 24px - 40px.
-- **Y-Offset:** 8px.
-This creates a soft glow rather than a harsh drop shadow, maintaining the "High-End" aesthetic.
+## Typography
 
-### The "Ghost Border" Fallback
-If a border is required for accessibility (e.g., input fields), use a **Ghost Border**: the `outline-variant` token (#c9c4d7) at **15% opacity**. Never use 100% opaque borders for decorative purposes.
+- Use Inter/system sans through the existing Tailwind setup.
+- Dashboard metrics can use `text-3xl` with tight tracking.
+- Panel/card headings should usually be `text-base` to `text-xl`.
+- Labels are small, semibold, and often muted.
+- Do not use negative letter spacing beyond existing Tailwind defaults.
 
----
+## Components
 
-## 5. Components
+- Buttons: use `@kairos/ui` `Button` when possible. Primary actions use the purple gradient already defined in the shared button.
+- Inputs: use `@kairos/ui` `Input`, `Textarea`, and labels. Focus states should use purple or gold accents.
+- Date inputs: always use `apps/web/src/components/date-select.tsx`.
+- Dropdowns: use `CustomSelect` or the shared select primitives. Do not add native `<select>` for new UI.
+- Tables/lists: use whitespace, row hover states, and muted backgrounds before adding dividers.
+- Icons: use lucide icons for new controls when practical; keep local inline SVGs only when editing a cluster that already uses them.
+- Charts: use Recharts and the established multi-color palette.
 
-### Buttons
-- **Primary:** `primary` background with `on-primary` text. Corners: `0.25rem` (4px). High-contrast and authoritative.
-- **Secondary:** Transparent background with a `Ghost Border`. Text in `primary`.
-- **Tertiary:** No background, no border. Text in `on-surface-variant`. Used for "Cancel" or "Go Back" actions.
+## App Shell
 
-### Cards & Lists
-- **Forbid dividers.** To separate list items, use a `12px` vertical gap and a subtle background hover state using `surface-container-high` (#e8e8e8).
-- **Asymmetry:** In dashboard cards, favor left-aligned typography with right-aligned status chips to create visual tension and interest.
+The authenticated app uses:
 
-### Input Fields
-- **Geometry:** Sharp `0.25rem` corners. 
-- **State:** On focus, the border shifts from a Ghost Border to a `secondary` (Gold) 1px border. This "Gold Glow" signifies the importance of the data being entered.
+- Left sidebar on desktop.
+- Mobile slide-out navigation.
+- Role-filtered nav items.
+- User/profile/settings controls at the bottom of the sidebar.
+- `activeRole` from auth state for route behavior.
 
-### Sophisticated Iconography
-Use linear icons with a `1.5px` stroke weight. Icons should be `on-surface-variant` unless they are active, in which case they transition to `primary`.
+New pages should fit this shell instead of creating separate navigation systems.
 
-### Specialized Admin Components
-- **The Contribution Monolith:** A large `surface-container-lowest` card featuring `display-md` typography for financial tracking, using a subtle Gold-to-White gradient background.
-- **The Grace Status Chip:** A pill-shaped component for membership status, using `secondary-container` with `on-secondary-container` text.
+## Page Patterns
 
----
+- Dashboards: stat row first, then charts/lists/actions.
+- CRUD pages: concise header, form sections, primary action anchored near the final decision point.
+- Detail pages: header summary, tabs for major domains, then role-aware actions.
+- Approval/review pages: show entity identity, status, requested change, and explicit approve/reject actions.
+- Import/export pages: show expected CSV shape, upload state, partial error summary, and resulting counts.
 
-## 6. Input Controls & Date Selection
+## Auth Pages
 
-### The Universal Date Picker (`DateSelect`)
-**All date inputs in the app — without exception — must use the shared `DateSelect` component** from `@/components/date-select`. This is the single source of truth for date selection: a calendar popover with Day → Month → Year drill-down navigation, so it works equally well for near-future scheduling *and* for recalling historic dates (date of birth, established dates, etc.).
+Auth pages may be more spacious and brand-forward than the app shell. They should still use the same purple/gold vocabulary and avoid unrelated illustration styles.
 
-**Forbidden:**
-- Native `<input type="date">` — inconsistent across browsers, breaks the design system.
-- Three-part `<CustomSelect>` (Month / Day / Year) trios — use `DateSelect`'s year/month views instead.
-- Any third-party calendar library outside this component.
+## Accessibility And Responsiveness
 
-**Variants** — pick based on the surrounding chrome:
+- Text must not overflow buttons, chips, cards, or sidebars on mobile.
+- Keep controls at stable sizes so loading states do not shift layouts.
+- Use semantic buttons and links.
+- Add `aria-label`/`title` for icon-only controls.
+- Preserve readable contrast in light and dark modes.
 
-| Variant | When to use | Visual |
-|---|---|---|
-| `variant="input"` *(default)* | Inside forms, alongside `<Input>` and `<CustomSelect>` fields | Full-width bordered field with trailing calendar icon — matches `<Input>` height & border |
-| `variant="pill"` | Dashboard filter bars, toolbars, dense control rows | Compact chip with leading calendar icon, neutral fill, no border |
+## Forbidden For New Work
 
-**Constraint props** (use these to enforce business rules):
-- `minDate` / `maxDate` — ISO `YYYY-MM-DD` bounds (e.g., date-range pickers should mirror each other; "as-of" pickers should set `maxDate={today}`).
-- `minYear` / `maxYear` — convenience for wide historical ranges (e.g., date of birth: `minYear={1920}`).
-
-**Always controlled:** value is an ISO `YYYY-MM-DD` string (or `''`). `onChange` fires with the same format.
-
-### Dropdown Styling
-All dropdowns must use the `CustomSelect` component from `@kairos/ui`. Never use native `<select>` elements — they break the design system's tonal consistency.
-
----
-
-## 7. Do's and Don'ts
-
-### Do
-- **Do** prioritize clean negative space. If a layout feels "busy," remove borders and check tonal contrast.
-- **Do** use `primary` (Purple) to guide the user’s eye toward the "Next Step" or "Success" action.
-- **Do** use `secondary` (Gold) as a reward—use it for achievements, milestones, or high-level status.
-
-### Don't
-- **Don't** use standard Material Design "elevated" shadows. They feel too "Android" and not "Editorial."
-- **Don't** use rounded corners larger than `0.25rem` (4px). We want sharp, architectural lines.
-- **Don't** use high-contrast dividers between list items. Use whitespace or tonal shifts instead.
-- **Don't** use pure black (#000000) for text. Always use `on-surface` (#1a1c1c) to keep the look sophisticated and readable.
+- Native date inputs.
+- Native dropdowns where shared select components fit.
+- Navy dashboard headers.
+- Decorative 1px section dividers as the main layout device.
+- Large rounded marketing cards inside operational pages.
+- Hard-coded colors that duplicate existing tokens without a reason.
