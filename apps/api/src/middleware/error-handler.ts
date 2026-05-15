@@ -31,7 +31,30 @@ export function errorHandler(err: Error, c: Context) {
     }
   }
 
+  // Print the raw Error to stderr so the full stack is always visible in
+  // the API terminal regardless of how the structured logger serialises it.
+  console.error('[unhandled]', err);
   logger.error('Unhandled error', { message: err.message, stack: err.stack });
+
+  // In non-production environments, include the real message + a short stack
+  // in the response body so devtools / toast surfaces the actual error
+  // instead of the opaque 'Something went wrong'. Stripped in production
+  // to avoid leaking internals.
+  const isProd = process.env['NODE_ENV'] === 'production';
+  if (!isProd) {
+    return c.json(
+      {
+        success: false,
+        message: err.message || 'Unhandled error',
+        debug: {
+          name: err.name,
+          stack: err.stack?.split('\n').slice(0, 6).join('\n'),
+        },
+      },
+      500,
+    );
+  }
+
   return c.json(
     { success: false, message: 'Something went wrong. Please try again or contact support.' },
     500,
