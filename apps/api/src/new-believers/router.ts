@@ -63,9 +63,7 @@ newBelieversRouter.post(
     const result = await bulkAdvance(db, auth, c.req.valid('json'));
     return c.json(successResponse(result));
   }
-);
-
-newBelieversRouter.get('/enrollments/:id', async (c) => {
+);newBelieversRouter.get('/enrollments/:id', async (c) => {
   const auth = getAuth(c);
   const enrollment = await getEnrollment(db, auth, c.req.param('id')!);
   return c.json(successResponse(enrollment));
@@ -84,7 +82,7 @@ newBelieversRouter.post(
 
 newBelieversRouter.patch(
   '/enrollments/:id',
-  zValidator('json', updateEnrollmentSchema),
+  requireRole('admin', 'pastor', 'leader'),  zValidator('json', updateEnrollmentSchema),
   async (c) => {
     const auth = getAuth(c);
     const enrollment = await updateEnrollment(db, auth, c.req.param('id')!, c.req.valid('json'));
@@ -107,7 +105,7 @@ newBelieversRouter.get(
 
 newBelieversRouter.post(
   '/sessions',
-  zValidator('json', createSessionSchema),
+  requireRole('admin', 'pastor', 'leader'),  zValidator('json', createSessionSchema),
   async (c) => {
     const auth = getAuth(c);
     const session = await createSession(db, auth, c.req.valid('json'));
@@ -117,7 +115,7 @@ newBelieversRouter.post(
 
 newBelieversRouter.patch(
   '/sessions/:id',
-  zValidator('json', updateSessionSchema),
+  requireRole('admin', 'pastor', 'leader'),  zValidator('json', updateSessionSchema),
   async (c) => {
     const auth = getAuth(c);
     const session = await updateSession(db, auth, c.req.param('id')!, c.req.valid('json'));
@@ -135,7 +133,7 @@ newBelieversRouter.get('/sessions/:sessionId/attendance', async (c) => {
 
 newBelieversRouter.post(
   '/sessions/:sessionId/attendance',
-  zValidator('json', recordAttendanceSchema),
+  requireRole('admin', 'pastor', 'leader'),  zValidator('json', recordAttendanceSchema),
   async (c) => {
     const auth = getAuth(c);
     const { records } = c.req.valid('json');

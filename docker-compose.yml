@@ -12,5 +12,43 @@ services:
     volumes:
       - kairos-pgdata:/var/lib/postgresql/data
 
+  mattermost-db:
+    image: postgres:15-alpine
+    container_name: kairos-mm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mattermost
+      POSTGRES_PASSWORD: mattermost
+      POSTGRES_DB: mattermost
+    volumes:
+      - kairos-mm-pgdata:/var/lib/postgresql/data
+
+  mattermost:
+    image: mattermost/mattermost-team-edition:latest
+    container_name: kairos-mattermost
+    restart: unless-stopped
+    depends_on:
+      - mattermost-db
+    ports:
+      - "8065:8065"
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: postgres://mattermost:mattermost@mattermost-db:5432/mattermost?sslmode=disable
+      MM_SERVICESETTINGS_SITEURL: http://localhost:8065
+      MM_SERVICESETTINGS_ENABLELOCALMODE: "true"
+      MM_SERVICESETTINGS_ALLOWEDUNTRUSTEDINTERNALCONNECTIONS: mattermost-db
+      MM_TEAMSETTINGS_ENABLEOPENSERVER: "false"
+      MM_EMAILSETTINGS_SENDEMAILNOTIFICATIONS: "false"
+    volumes:
+      - kairos-mm-data:/mattermost/data
+      - kairos-mm-logs:/mattermost/logs
+      - kairos-mm-config:/mattermost/config
+      - kairos-mm-plugins:/mattermost/plugins
+
 volumes:
   kairos-pgdata:
+  kairos-mm-pgdata:
+  kairos-mm-data:
+  kairos-mm-logs:
+  kairos-mm-config:
+  kairos-mm-plugins:

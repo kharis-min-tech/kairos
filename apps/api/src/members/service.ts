@@ -13,6 +13,12 @@ import {
   ValidationError,
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
+  mmCreateUser,
+  mmDeactivateUser,
+  mmGetOrCreateChannel,
+  mmAddUserToChannel,
+  branchChannelName,
+  getDefaultTeamId,
 } from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
@@ -226,7 +232,7 @@ export async function approveMember(
   }
 
   const [member] = await db
-    .select({ id: members.id, approvalStatus: members.approvalStatus, email: members.email, firstName: members.firstName })
+    .select({ id: members.id, approvalStatus: members.approvalStatus, email: members.email, firstName: members.firstName, lastName: members.lastName, homeBranchId: members.homeBranchId })
     .from(members)
     .where(eq(members.id, memberId));
 
@@ -245,11 +251,44 @@ export async function approveMember(
     .where(eq(members.id, memberId))
     .returning();
 
-  // Send approval/rejection email non-blocking
+  // Fire-and-forget: email + Mattermost provisioning
   if (member.email) {
     const memberName = member.firstName ?? 'Member';
     if (approved) {
       sendAccountApprovedEmail(member.email, memberName).catch(() => {});
+
+      // Provision Mattermost account and add to branch channel
+      void (async () => {
+        try {
+          const username = member.email.split('@')[0]!.toLowerCase().replace(/[^a-z0-9._-]/g, '') + '-' + member.id.slice(0, 4);
+          const mmUserId = await mmCreateUser(
+            member.email,
+            username,
+            member.firstName ?? '',
+            member.lastName ?? '',
+          );
+          if (mmUserId) {
+            // Persist mattermostUserId
+            await db
+              .update(members)
+              .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
+              .where(eq(members.id, memberId));
+
+            // Add to branch channel
+            const teamId = await getDefaultTeamId();
+            if (teamId) {
+              const channelId = await mmGetOrCreateChannel(
+                teamId,
+                branchChannelName(member.homeBranchId),
+                `Branch ${member.homeBranchId.slice(0, 8)}`,
+              );
+              if (channelId) await mmAddUserToChannel(channelId, mmUserId);
+            }
+          }
+        } catch (_err) {
+          // Non-fatal — Mattermost unavailability must not break approval
+        }
+      })();
     } else {
       sendAccountRejectedEmail(member.email, memberName).catch(() => {});
     }
@@ -379,7 +418,7 @@ export async function deactivateMember(
   }
 
   const [member] = await db
-    .select({ id: members.id })
+    .select({ id: members.id, mattermostUserId: members.mattermostUserId })
     .from(members)
     .where(and(...conditions));
 
@@ -397,6 +436,11 @@ export async function deactivateMember(
     .set({ isActive: false, updatedAt: sql`NOW()` })
     .where(eq(members.id, memberId))
     .returning();
+
+  // Deactivate Mattermost account non-blocking
+  if (member.mattermostUserId) {
+    mmDeactivateUser(member.mattermostUserId).catch(() => {});
+  }
 
   return updated;
 }

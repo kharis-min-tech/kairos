@@ -90,6 +90,7 @@ export interface Member extends BaseEntity {
   systemRole: SystemRole;
   emailVerified: boolean;
   mustChangePassword: boolean;
+  mattermostUserId: string | null;
 }
 
 export interface MemberWithBranch extends Member {

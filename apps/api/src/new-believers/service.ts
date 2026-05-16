@@ -145,7 +145,6 @@ export async function listEnrollments(
       : query.sortBy === 'last-activity'
         ? [desc(newBelieverEnrollments.updatedAt)]
         : [desc(newBelieverEnrollments.enrolledAt)];
-
   const [rows, countRows] = await Promise.all([
     db
       .select({
@@ -263,6 +262,15 @@ export async function createEnrollment(
   enforceAdminOrPastor(auth);
   enforceBranchScope(auth, data.branchId);
 
+  // Block enrolling pastors and admins as students
+  const [memberRecord] = await db
+    .select({ systemRole: members.systemRole })
+    .from(members)
+    .where(eq(members.id, data.memberId))
+    .limit(1);
+  if (memberRecord?.systemRole === 'admin' || memberRecord?.systemRole === 'pastor') {
+    throw new ForbiddenError('Pastors and admins cannot be enrolled as New Believers students');
+  }
   // Block enrolling a teacher as a student in the same branch
   const memberIsTeacher = await isNewBelieverTeacher(db, data.memberId, data.branchId);
   if (memberIsTeacher) {
@@ -400,12 +408,13 @@ export async function updateEnrollment(
       throw new ForbiddenError('This member is currently enrolled as a New Believers student and cannot be assigned as a teacher');
     }
   }
-  if (
-    data.stage &&
-    data.stage !== existing.stage &&
-    SESSION_STAGES.has(existing.stage) &&
-    isForwardStageMove(existing.stage, data.stage)
-  ) {
+  // (sessions-only stages: session-1 through session-4)
+  const STAGE_ORDER = ['enrolled', 'session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'];
+  const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
+  const isMovingForward = data.stage
+    ? STAGE_ORDER.indexOf(data.stage) > STAGE_ORDER.indexOf(existing.stage)
+    : false;
+  if (data.stage && data.stage !== existing.stage && SESSION_STAGES.has(existing.stage) && isMovingForward) {
     // Merge incoming sessionCompletedAt with DB state BEFORE the guard check.
     // The client sends stage + sessionCompletedAt in one payload; the DB hasn't been
     // written yet, so existing.sessionCompletedAt won't contain the current session.
@@ -517,7 +526,6 @@ export async function bulkAdvance(
   }
   return { advanced, failed };
 }
-
 // ── Sessions ───────────────────────────────────────────────
 
 export async function listSessions(

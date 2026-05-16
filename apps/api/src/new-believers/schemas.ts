@@ -54,7 +54,6 @@ export const bulkAdvanceSchema = z.object({
   enrollmentIds: z.array(z.string().uuid()).min(1).max(50),
   targetStage: z.enum(stages),
 });
-
 export const createSessionSchema = z.object({
   branchId: z.string().uuid(),
   sessionStage: z.enum(sessionStages),

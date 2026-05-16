@@ -38,6 +38,7 @@ export const members = pgTable('members', {
   passwordResetExpiry: timestamp('password_reset_expiry'),
   lastLoginAt: timestamp('last_login_at'),
   mustChangePassword: boolean('must_change_password').default(false).notNull(),
+  mattermostUserId: varchar('mattermost_user_id', { length: 26 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

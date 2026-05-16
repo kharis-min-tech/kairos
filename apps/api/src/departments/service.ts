@@ -21,6 +21,11 @@ import {
   sendOfferExtendedEmail,
   sendProbationStartedEmail,
   sendProbationPassedEmail,
+  mmGetOrCreateChannel,
+  mmAddUserToChannel,
+  mmRemoveUserFromChannel,
+  departmentChannelName,
+  getDefaultTeamId,
 } from '@kairos/utils';
 
 // ── Recruitment pipeline constants ─────────────────────────
@@ -1142,6 +1147,27 @@ export async function evaluateJoinRequestProbation(
         sendProbationPassedEmail(email, name, deptName),
       bd.departmentName,
     );
+
+    // Add member to Mattermost department channel
+    const [requester] = await db
+      .select({ mattermostUserId: members.mattermostUserId })
+      .from(members)
+      .where(eq(members.id, request.memberId));
+    if (requester?.mattermostUserId) {
+      void (async () => {
+        try {
+          const teamId = await getDefaultTeamId();
+          if (teamId) {
+            const channelId = await mmGetOrCreateChannel(
+              teamId,
+              departmentChannelName(branchDepartmentId),
+              bd.departmentName,
+            );
+            if (channelId) await mmAddUserToChannel(channelId, requester.mattermostUserId!);
+          }
+        } catch (_err) { /* non-fatal */ }
+      })();
+    }
   } else {
     await db
       .update(departmentMembers)
@@ -1157,6 +1183,27 @@ export async function evaluateJoinRequestProbation(
           eq(departmentMembers.isActive, true),
         ),
       );
+
+    // Remove member from Mattermost department channel
+    const [requester] = await db
+      .select({ mattermostUserId: members.mattermostUserId })
+      .from(members)
+      .where(eq(members.id, request.memberId));
+    if (requester?.mattermostUserId) {
+      void (async () => {
+        try {
+          const teamId = await getDefaultTeamId();
+          if (teamId) {
+            const channelId = await mmGetOrCreateChannel(
+              teamId,
+              departmentChannelName(branchDepartmentId),
+              bd.departmentName,
+            );
+            if (channelId) await mmRemoveUserFromChannel(channelId, requester.mattermostUserId!);
+          }
+        } catch (_err) { /* non-fatal */ }
+      })();
+    }
 
     await fireRequesterEmail(
       db,

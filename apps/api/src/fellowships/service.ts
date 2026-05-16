@@ -18,6 +18,10 @@ import {
   sendJoinRequestReceivedEmail,
   sendJoinRequestApprovedEmail,
   sendJoinRequestRejectedEmail,
+  mmGetOrCreateChannel,
+  mmAddUserToChannel,
+  fellowshipChannelName,
+  getDefaultTeamId,
 } from '@kairos/utils';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
@@ -713,7 +717,7 @@ export async function reviewJoinRequest(
 
   // Fire outcome email — non-blocking
   const [reviewee] = await db
-    .select({ email: members.email, firstName: members.firstName })
+    .select({ email: members.email, firstName: members.firstName, mattermostUserId: members.mattermostUserId })
     .from(members)
     .where(eq(members.id, request.memberId));
   if (reviewee?.email) {
@@ -724,6 +728,23 @@ export async function reviewJoinRequest(
     sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName).catch(() => {
       /* email failure is non-fatal */
     });
+  }
+
+  // Add to Mattermost fellowship channel if approved
+  if (data.status === 'approved' && reviewee?.mattermostUserId) {
+    void (async () => {
+      try {
+        const teamId = await getDefaultTeamId();
+        if (teamId) {
+          const channelId = await mmGetOrCreateChannel(
+            teamId,
+            fellowshipChannelName(fellowshipId),
+            fellowship.fellowshipName,
+          );
+          if (channelId) await mmAddUserToChannel(channelId, reviewee.mattermostUserId!);
+        }
+      } catch (_err) { /* non-fatal */ }
+    })();
   }
 
   return updated!;

@@ -15,3 +15,17 @@ export {
   sendProbationStartedEmail,
   sendProbationPassedEmail,
 } from './mailer';
+export {
+  mmCreateUser,
+  mmDeactivateUser,
+  mmGenerateLoginToken,
+  mmGetOrCreateChannel,
+  mmAddUserToChannel,
+  mmRemoveUserFromChannel,
+  mmPostMessage,
+  branchChannelName,
+  fellowshipChannelName,
+  departmentChannelName,
+  getDefaultTeamId,
+} from './mattermost';
+export type { MMUser, MMChannel } from './mattermost';
