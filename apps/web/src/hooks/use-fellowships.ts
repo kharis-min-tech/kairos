@@ -194,3 +194,13 @@ export function useReviewJoinRequest() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fellowships'] }),
   });
 }
+
+export function useFellowshipsMap() {
+  return useQuery({
+    queryKey: ['fellowships', 'map'],
+    queryFn: async () => {
+      const res = await api.fellowships.map();
+      return res.data!;
+    },
+  });
+}

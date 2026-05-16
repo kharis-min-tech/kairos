@@ -152,6 +152,11 @@ export async function createFellowship(
     leaderId?: string;
     coLeaderId?: string;
     meetingSchedule?: string;
+    meetingDay?: string;
+    meetingTime?: string;
+    latitude?: number;
+    longitude?: number;
+    country?: string;
   },
 ) {
   if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
@@ -184,6 +189,11 @@ export async function createFellowship(
       leaderId: data.leaderId,
       coLeaderId: data.coLeaderId,
       meetingSchedule: data.meetingSchedule,
+      meetingDay: data.meetingDay,
+      meetingTime: data.meetingTime,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      country: data.country,
     })
     .returning();
 
@@ -727,4 +737,35 @@ export async function reviewJoinRequest(
   }
 
   return updated!;
+}
+
+// ── Map data (gracefully handles missing location columns) ──
+
+export async function listFellowshipsForMap(db: Database, auth: AuthContext) {
+  try {
+    const rows = await db.execute(sql`
+      SELECT
+        f.id,
+        f.fellowship_name AS "fellowshipName",
+        f.branch_id AS "branchId",
+        b.branch_name AS "branchName",
+        f.fellowship_type AS "fellowshipType",
+        f.description,
+        f.meeting_schedule AS "meetingSchedule",
+        f.meeting_day AS "meetingDay",
+        f.meeting_time AS "meetingTime",
+        f.latitude,
+        f.longitude,
+        f.country
+      FROM fellowships f
+      LEFT JOIN branches b ON f.branch_id = b.id
+      WHERE f.is_active = true
+        AND f.latitude IS NOT NULL
+        AND f.longitude IS NOT NULL
+    `);
+    return rows.rows ?? rows;
+  } catch {
+    // If columns don't exist yet (migration not run), return empty
+    return [];
+  }
 }

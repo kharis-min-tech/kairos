@@ -181,6 +181,8 @@ export function createApiClient(
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<FellowshipWithBranch>>>(`/api/fellowships${query ? `?${query}` : ''}`);
       },
+      map: () =>
+        client.get<ApiResponse<FellowshipWithBranch[]>>('/api/fellowships/map'),
       get: (id: string) =>
         client.get<ApiResponse<FellowshipWithBranch>>(`/api/fellowships/${encodeURIComponent(id)}`),
       create: (data: CreateFellowshipRequest) =>

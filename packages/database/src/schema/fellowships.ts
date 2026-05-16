@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, boolean, timestamp, index, uniqueIndex, doublePrecision } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { branches } from './branches';
 import { members } from './members';
@@ -14,6 +14,11 @@ export const fellowships = pgTable('fellowships', {
   leaderId: uuid('leader_id').references(() => members.id, { onDelete: 'set null' }),
   coLeaderId: uuid('co_leader_id').references(() => members.id, { onDelete: 'set null' }),
   meetingSchedule: varchar('meeting_schedule', { length: 200 }),
+  meetingDay: varchar('meeting_day', { length: 20 }),
+  meetingTime: varchar('meeting_time', { length: 10 }),
+  latitude: doublePrecision('latitude'),
+  longitude: doublePrecision('longitude'),
+  country: varchar('country', { length: 100 }),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
