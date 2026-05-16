@@ -214,6 +214,11 @@ export interface CreateFellowshipRequest {
   leaderId?: string;
   coLeaderId?: string;
   meetingSchedule?: string;
+  meetingDay?: string;
+  meetingTime?: string;
+  latitude?: number;
+  longitude?: number;
+  country?: string;
 }
 
 export interface UpdateFellowshipRequest extends Partial<CreateFellowshipRequest> {}

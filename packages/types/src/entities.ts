@@ -148,6 +148,11 @@ export interface Fellowship extends BaseEntity {
   leaderId: string | null;
   coLeaderId: string | null;
   meetingSchedule: string | null;
+  meetingDay: string | null;
+  meetingTime: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  country: string | null;
   isActive: boolean;
 }
 
