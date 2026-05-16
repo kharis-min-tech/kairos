@@ -69,6 +69,18 @@ export async function getDefaultTeamId(): Promise<string | null> {
 
 // ── User management ──────────────────────────────────────────────────────────
 
+/** Looks up an existing Mattermost user by email. Returns their ID or null. */
+async function mmGetUserByEmail(email: string): Promise<string | null> {
+  try {
+    const res = await mmFetch(`/users/email/${encodeURIComponent(email)}`);
+    if (!res.ok) return null;
+    const user = (await res.json()) as MMUser;
+    return user.id;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Creates a Mattermost user account for a Kairos member.
  * Uses a random UUID password — the member never needs it (they use SSO token login).
@@ -88,6 +100,11 @@ export async function mmCreateUser(
     });
     if (!res.ok) {
       const body = await res.text();
+      const parsed = JSON.parse(body) as { id?: string };
+      // If email already exists, look up the existing user by email
+      if (parsed.id === 'app.user.save.email_exists.app_error') {
+        return mmGetUserByEmail(email);
+      }
       mmLogger.warn('Mattermost: failed to create user', { email, status: res.status, body });
       return null;
     }

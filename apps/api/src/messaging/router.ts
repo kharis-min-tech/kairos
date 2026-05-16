@@ -16,7 +16,9 @@ import { z } from 'zod';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { getAuth } from '../middleware/auth';
 import {
+  mmCreateUser,
   mmGetOrCreateChannel,
+  mmAddUserToChannel,
   mmPostMessage,
   mmGenerateLoginToken,
   branchChannelName,
@@ -25,11 +27,11 @@ import {
   getDefaultTeamId,
   ForbiddenError,
   NotFoundError,
+  successResponse,
 } from '@kairos/utils';
-import { successResponse } from '@kairos/utils';
 import { db } from '../db';
 import { members, fellowships, branchDepartments } from '@kairos/database';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 
 const broadcastSchema = z.object({
   target: z.enum(['branch', 'fellowship', 'department']),
@@ -67,6 +69,61 @@ messagingRouter.get('/login-token', async (c) => {
   }
 
   return c.json(successResponse({ token }));
+});
+
+// ── POST /backfill-mm ─────────────────────────────────────────────────────────
+// Admin-only. Provisions Mattermost accounts for all active members who don't
+// have one yet. Safe to run multiple times (skips already-provisioned members).
+messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
+  const unprovisioned = await db
+    .select({
+      id: members.id,
+      email: members.email,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      homeBranchId: members.homeBranchId,
+    })
+    .from(members)
+    .where(and(eq(members.isActive, true), isNull(members.mattermostUserId)));
+
+  const teamId = await getDefaultTeamId();
+  let provisioned = 0;
+  let failed = 0;
+
+  for (const member of unprovisioned) {
+    try {
+      const username =
+        member.email.split('@')[0]!.toLowerCase().replace(/[^a-z0-9._-]/g, '') +
+        '-' +
+        member.id.slice(0, 4);
+      const mmUserId = await mmCreateUser(
+        member.email,
+        username,
+        member.firstName ?? '',
+        member.lastName ?? '',
+      );
+      if (!mmUserId) { failed++; continue; }
+
+      await db
+        .update(members)
+        .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
+        .where(eq(members.id, member.id));
+
+      if (teamId && member.homeBranchId) {
+        const channelId = await mmGetOrCreateChannel(
+          teamId,
+          branchChannelName(member.homeBranchId),
+          `Branch ${member.homeBranchId.slice(0, 8)}`,
+        );
+        if (channelId) await mmAddUserToChannel(channelId, mmUserId);
+      }
+      provisioned++;
+    } catch {
+      failed++;
+    }
+  }
+
+  return c.json(successResponse({ provisioned, failed, total: unprovisioned.length }));
 });
 
 messagingRouter.post(

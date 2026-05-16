@@ -25,6 +25,7 @@ services:
 
   mattermost:
     image: mattermost/mattermost-team-edition:latest
+    platform: linux/amd64
     container_name: kairos-mattermost
     restart: unless-stopped
     depends_on:

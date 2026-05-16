@@ -3,13 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { MessageSquare, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
-import { Spinner } from '@/components/ui';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const MM_URL = process.env.NEXT_PUBLIC_MATTERMOST_URL ?? 'http://localhost:8065';
 
 export default function MessagesPage() {
-  const { token } = useAuthStore();
+  const { accessToken: token } = useAuthStore();
   const [loginToken, setLoginToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +83,7 @@ export default function MessagesPage() {
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-3 text-gray-500">
-              <Spinner />
+              <RefreshCw className="h-6 w-6 animate-spin" />
               <p className="text-sm">Loading messages…</p>
             </div>
           </div>
