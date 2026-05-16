@@ -144,7 +144,7 @@ function FellowshipsContent() {
       {showMap && (
         <div className="overflow-hidden rounded-xl border border-border">
           <div className="h-[500px]">
-            <FellowshipMap focusedFellowship={focusedFellowship} />
+            <FellowshipMap focusedFellowship={focusedFellowship} userRole={activeRole ?? undefined} />
           </div>
         </div>
       )}

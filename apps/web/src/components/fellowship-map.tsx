@@ -289,9 +289,10 @@ function PostcodeSearch({ onLocate }: { onLocate: (lat: number, lng: number, lab
 
 interface FellowshipMapProps {
   focusedFellowship?: FellowshipWithBranch | null;
+  userRole?: string;
 }
 
-export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps) {
+export default function FellowshipMap({ focusedFellowship, userRole }: FellowshipMapProps) {
   const { theme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -308,6 +309,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
   const [joinPanelFellowship, setJoinPanelFellowship] = useState<{ id: string; name: string; type: string; schedule: string } | null>(null);
   const [joinRequestSent, setJoinRequestSent] = useState(false);
   const [nearestBranch, setNearestBranch] = useState<{ branch: BranchLocation; distanceKm: number; userCoords: [number, number] } | null>(null);
+  const [showLegend, setShowLegend] = useState(true);
 
   const { data: listData } = useFellowships({ page: 1, limit: 200 });
   const fellowships = (listData?.data ?? []) as FellowshipWithBranch[];
@@ -1086,22 +1088,122 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       {/* Legend - hide when nearest branch panel is showing */}
       {!nearestBranch && (
       <div className="absolute bottom-6 left-4 z-[1000]">
-        <div className="rounded-lg bg-background/90 p-3 shadow-md backdrop-blur-sm">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">Fellowship Types</p>
-          <div className="space-y-1">
+        {showLegend ? (
+        <div className="rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm min-w-[280px]">
+          <div className="flex items-center justify-between mb-3 gap-4">
+            <p className="text-sm font-bold whitespace-nowrap">Fellowship Types</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  markersRef.current.forEach((m) => m.remove());
+                  markersRef.current = [];
+                  if (mapRef.current) {
+                    mapRef.current.flyTo([20, 0], 2, { duration: 1.2 });
+                  }
+                }}
+                className="flex items-center gap-1 rounded-full border border-primary/30 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Clear
+              </button>
+              <button
+                onClick={() => setShowLegend(false)}
+                className="text-muted-foreground hover:text-foreground p-0.5"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="divide-y divide-border/50">
             {Object.entries(TYPE_COLORS).map(([type, color]) => (
-              <div key={type} className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-xs">{type}</span>
-              </div>
+              <button
+                key={type}
+                className="flex items-center gap-3 w-full text-left py-2.5 hover:bg-muted/50 transition-colors rounded px-1"
+                onClick={() => {
+                  if (!mapRef.current) return;
+
+                  markersRef.current.forEach((m) => m.remove());
+                  markersRef.current = [];
+
+                  const matchingBranches = BRANCH_LOCATIONS.filter((b) =>
+                    b.fellowshipDetails.some((f) => f.type === type)
+                  );
+
+                  if (matchingBranches.length === 0) return;
+
+                  const bounds = L.latLngBounds([]);
+                  matchingBranches.forEach((branch) => {
+                    const fellowship = branch.fellowshipDetails.find((f) => f.type === type);
+                    if (!fellowship) return;
+
+                    const nextMeeting = getNextMeetingDate(fellowship.schedule);
+
+                    const icon = L.divIcon({
+                      className: 'fellowship-marker-icon',
+                      html: `<div style="width:36px;height:36px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`,
+                      iconSize: [36, 36],
+                      iconAnchor: [18, 18],
+                    });
+
+                    const marker = L.marker(branch.coords, { icon }).addTo(mapRef.current!);
+
+                    const popupContent = `
+                      <div style="min-width:200px;padding:4px 0;">
+                        <strong style="font-size:14px;color:#111827;">${branch.name}</strong>
+                        <div style="margin-top:6px;padding:8px;border:1px solid rgba(148,163,184,0.2);border-radius:8px;background:rgba(99,102,241,0.04);">
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:${color};"></div>
+                            <strong style="font-size:12px;color:#111827;">${fellowship.name}</strong>
+                          </div>
+                          ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
+                          <div style="margin-top:3px;font-size:11px;color:#6b7280;">${fellowship.description}</div>
+                        </div>
+                        <div style="margin-top:6px;font-size:10px;color:#6b7280;">${branch.country}</div>
+                      </div>
+                    `;
+
+                    marker.bindPopup(popupContent, { maxWidth: 280 });
+                    marker.bindTooltip(branch.name, { direction: 'top', offset: [0, -20] });
+                    markersRef.current.push(marker);
+                    bounds.extend(branch.coords);
+                  });
+
+                  if (matchingBranches.length === 1) {
+                    mapRef.current.flyTo(matchingBranches[0].coords, 10, { duration: 1.2 });
+                  } else {
+                    mapRef.current.fitBounds(bounds, { padding: [50, 50], duration: 1.2 });
+                  }
+                }}
+              >
+                <div className="h-4 w-4 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                <span className="text-sm flex-1">{type}</span>
+                {(userRole === 'admin' || userRole === 'pastor' || userRole === 'leader') && (
+                  <span className="text-xs text-muted-foreground font-medium">{BRANCH_LOCATIONS.filter(b => b.fellowshipDetails.some(f => f.type === type)).length}</span>
+                )}
+              </button>
             ))}
           </div>
         </div>
+        ) : (
+        <button
+          onClick={() => setShowLegend(true)}
+          className="rounded-xl bg-background/95 p-3 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all"
+          title="Show Fellowship Types"
+        >
+          <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        )}
       </div>
       )}
 
       {/* Custom styles */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .leaflet-container {
           background: ${isDark ? '#0a0a12' : '#aad3df'} !important;
         }
@@ -1130,7 +1232,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         .fellowship-tooltip::before {
           border-top-color: var(--border, #e5e7eb) !important;
         }
-      `}</style>
+      `}} />
     </div>
   );
 }
