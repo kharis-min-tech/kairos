@@ -21,8 +21,8 @@ import {
   mmGetOrCreateChannel,
   mmAddUserToChannel,
   fellowshipChannelName,
-  getDefaultTeamId,
 } from '@kairos/utils';
+import { getOrCreateBranchTeamId } from '../messaging/mm-branch-team';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
@@ -734,7 +734,7 @@ export async function reviewJoinRequest(
   if (data.status === 'approved' && reviewee?.mattermostUserId) {
     void (async () => {
       try {
-        const teamId = await getDefaultTeamId();
+        const teamId = await getOrCreateBranchTeamId(db, fellowship.branchId);
         if (teamId) {
           const channelId = await mmGetOrCreateChannel(
             teamId,

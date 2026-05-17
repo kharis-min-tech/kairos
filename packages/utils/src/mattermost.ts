@@ -54,7 +54,7 @@ export interface MMChannel {
 
 // ── Team helpers ─────────────────────────────────────────────────────────────
 
-/** Returns the ID of the first available team, used as the default team for channels. */
+/** Returns the ID of the first available team (fallback). */
 export async function getDefaultTeamId(): Promise<string | null> {
   try {
     const res = await mmFetch('/teams');
@@ -65,6 +65,70 @@ export async function getDefaultTeamId(): Promise<string | null> {
     mmLogger.warn('Mattermost: failed to get default team', { err });
     return null;
   }
+}
+
+/**
+ * Gets an existing Mattermost team by name, or creates it if it doesn't exist.
+ * Returns the team ID, or null on failure.
+ * Teams are invite-only (type: 'I') so members must be explicitly added.
+ */
+export async function mmGetOrCreateTeam(
+  name: string,
+  displayName: string,
+): Promise<string | null> {
+  try {
+    // Try to find existing team by name
+    const findRes = await mmFetch(`/teams/name/${encodeURIComponent(name)}`);
+    if (findRes.ok) {
+      const team = (await findRes.json()) as { id: string };
+      return team.id;
+    }
+    // Create it
+    const createRes = await mmFetch('/teams', {
+      method: 'POST',
+      body: JSON.stringify({ name, display_name: displayName, type: 'I' }),
+    });
+    if (!createRes.ok) {
+      const body = await createRes.text();
+      mmLogger.warn('Mattermost: failed to create team', { name, status: createRes.status, body });
+      return null;
+    }
+    const team = (await createRes.json()) as { id: string };
+    mmLogger.info('Mattermost: team created', { name, teamId: team.id });
+    return team.id;
+  } catch (err) {
+    mmLogger.warn('Mattermost: getOrCreateTeam exception', { name, err });
+    return null;
+  }
+}
+
+/** Adds a user to a Mattermost team. Fire-and-forget safe. */
+export async function mmAddUserToTeam(teamId: string, mmUserId: string): Promise<boolean> {
+  try {
+    const res = await mmFetch(`/teams/${teamId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ team_id: teamId, user_id: mmUserId }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      mmLogger.warn('Mattermost: failed to add user to team', { teamId, mmUserId, status: res.status, body });
+      return false;
+    }
+    return true;
+  } catch (err) {
+    mmLogger.warn('Mattermost: addUserToTeam exception', { teamId, mmUserId, err });
+    return false;
+  }
+}
+
+/** Slugifies a branch name into a valid Mattermost team name (lowercase, hyphens, max 64 chars). */
+export function branchTeamName(branchId: string, branchName: string): string {
+  const slug = branchName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 55);
+  return `${slug}-${branchId.slice(0, 8)}`;
 }
 
 // ── User management ──────────────────────────────────────────────────────────

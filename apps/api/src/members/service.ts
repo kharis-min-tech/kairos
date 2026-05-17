@@ -18,8 +18,8 @@ import {
   mmGetOrCreateChannel,
   mmAddUserToChannel,
   branchChannelName,
-  getDefaultTeamId,
 } from '@kairos/utils';
+import { getOrCreateBranchTeamId, mmAddUserToTeam } from '../messaging/mm-branch-team';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
@@ -274,9 +274,10 @@ export async function approveMember(
               .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
               .where(eq(members.id, memberId));
 
-            // Add to branch channel
-            const teamId = await getDefaultTeamId();
+            // Add to branch team and channel
+            const teamId = await getOrCreateBranchTeamId(db, member.homeBranchId);
             if (teamId) {
+              await mmAddUserToTeam(teamId, mmUserId);
               const channelId = await mmGetOrCreateChannel(
                 teamId,
                 branchChannelName(member.homeBranchId),

@@ -18,6 +18,7 @@ export const branches = pgTable('branches', {
   establishedDate: date('established_date'),
   serviceSchedule: jsonb('service_schedule').$type<Array<{ day: string; time: string; type: string }>>(),
   isActive: boolean('is_active').default(true).notNull(),
+  mattermostTeamId: varchar('mattermost_team_id', { length: 26 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

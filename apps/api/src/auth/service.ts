@@ -50,6 +50,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     systemRole: row.systemRole as MemberProfile['systemRole'],
     emailVerified: row.emailVerified,
     mustChangePassword: row.mustChangePassword,
+    mattermostUserId: row.mattermostUserId ?? null,
   };
 }
 

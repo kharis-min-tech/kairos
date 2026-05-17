@@ -48,6 +48,7 @@ const mockMember: Member = {
   systemRole: 'member',
   emailVerified: true,
   mustChangePassword: false,
+  mattermostUserId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

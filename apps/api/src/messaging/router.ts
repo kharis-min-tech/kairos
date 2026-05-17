@@ -24,11 +24,11 @@ import {
   branchChannelName,
   fellowshipChannelName,
   departmentChannelName,
-  getDefaultTeamId,
   ForbiddenError,
   NotFoundError,
   successResponse,
 } from '@kairos/utils';
+import { getOrCreateBranchTeamId, mmAddUserToTeam } from './mm-branch-team';
 import { db } from '../db';
 import { members, fellowships, branchDepartments } from '@kairos/database';
 import { eq, and, isNull, sql } from 'drizzle-orm';
@@ -86,7 +86,6 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
     .from(members)
     .where(and(eq(members.isActive, true), isNull(members.mattermostUserId)));
 
-  const teamId = await getDefaultTeamId();
   let provisioned = 0;
   let failed = 0;
 
@@ -109,13 +108,17 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
         .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
         .where(eq(members.id, member.id));
 
-      if (teamId && member.homeBranchId) {
-        const channelId = await mmGetOrCreateChannel(
-          teamId,
-          branchChannelName(member.homeBranchId),
-          `Branch ${member.homeBranchId.slice(0, 8)}`,
-        );
-        if (channelId) await mmAddUserToChannel(channelId, mmUserId);
+      if (member.homeBranchId) {
+        const teamId = await getOrCreateBranchTeamId(db, member.homeBranchId);
+        if (teamId) {
+          await mmAddUserToTeam(teamId, mmUserId);
+          const channelId = await mmGetOrCreateChannel(
+            teamId,
+            branchChannelName(member.homeBranchId),
+            `Branch ${member.homeBranchId.slice(0, 8)}`,
+          );
+          if (channelId) await mmAddUserToChannel(channelId, mmUserId);
+        }
       }
       provisioned++;
     } catch {
@@ -136,6 +139,7 @@ messagingRouter.post(
 
     let channelName: string;
     let channelDisplayName: string;
+    let resolvedBranchId: string;
 
     if (input.target === 'branch') {
       const branchId = input.branchId ?? auth.branchId;
@@ -151,6 +155,7 @@ messagingRouter.post(
 
       channelName = branchChannelName(branchId);
       channelDisplayName = `Branch ${branchId.slice(0, 8)}`;
+      resolvedBranchId = branchId;
 
     } else if (input.target === 'fellowship') {
       if (!input.fellowshipId) {
@@ -175,6 +180,7 @@ messagingRouter.post(
 
       channelName = fellowshipChannelName(input.fellowshipId);
       channelDisplayName = fellowship.fellowshipName;
+      resolvedBranchId = fellowship.branchId;
 
     } else {
       // department
@@ -194,9 +200,10 @@ messagingRouter.post(
 
       channelName = departmentChannelName(input.branchDepartmentId);
       channelDisplayName = `Department ${input.branchDepartmentId.slice(0, 8)}`;
+      resolvedBranchId = bd.branchId;
     }
 
-    const teamId = await getDefaultTeamId();
+    const teamId = await getOrCreateBranchTeamId(db, resolvedBranchId);
     if (!teamId) {
       return c.json({ error: 'Mattermost team not available' }, 503);
     }

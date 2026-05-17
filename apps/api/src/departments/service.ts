@@ -25,8 +25,8 @@ import {
   mmAddUserToChannel,
   mmRemoveUserFromChannel,
   departmentChannelName,
-  getDefaultTeamId,
 } from '@kairos/utils';
+import { getOrCreateBranchTeamId } from '../messaging/mm-branch-team';
 
 // ── Recruitment pipeline constants ─────────────────────────
 
@@ -1156,7 +1156,7 @@ export async function evaluateJoinRequestProbation(
     if (requester?.mattermostUserId) {
       void (async () => {
         try {
-          const teamId = await getDefaultTeamId();
+          const teamId = await getOrCreateBranchTeamId(db, bd.branchId);
           if (teamId) {
             const channelId = await mmGetOrCreateChannel(
               teamId,
@@ -1192,7 +1192,7 @@ export async function evaluateJoinRequestProbation(
     if (requester?.mattermostUserId) {
       void (async () => {
         try {
-          const teamId = await getDefaultTeamId();
+          const teamId = await getOrCreateBranchTeamId(db, bd.branchId);
           if (teamId) {
             const channelId = await mmGetOrCreateChannel(
               teamId,

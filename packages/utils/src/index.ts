@@ -23,9 +23,12 @@ export {
   mmAddUserToChannel,
   mmRemoveUserFromChannel,
   mmPostMessage,
+  mmGetOrCreateTeam,
+  mmAddUserToTeam,
   branchChannelName,
   fellowshipChannelName,
   departmentChannelName,
+  branchTeamName,
   getDefaultTeamId,
 } from './mattermost';
 export type { MMUser, MMChannel } from './mattermost';

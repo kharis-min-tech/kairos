@@ -109,14 +109,6 @@ export default function EnrollmentDetailPage() {
     const currentStage = enrollment.stage;
     const existingSca = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
     const existingSf = enrollment.sessionFeedback ?? {};
-    const nextStage = markCompleteShouldAdvance ? getNextStage(currentStage) : undefined;
-    const updateData: UpdateEnrollmentRequest = {
-      sessionCompletedAt: { ...existingSca, [currentStage]: new Date().toISOString() },
-      sessionFeedback: { ...existingSf, [currentStage]: markCompleteFeedback.trim() },
-    };
-    if (nextStage) {
-      updateData.stage = nextStage.value;
-    }
     try {
       await updateEnrollment.mutateAsync({
         id,
@@ -139,18 +131,6 @@ export default function EnrollmentDetailPage() {
     if (!enrollment) return;
     const nextStage = getNextStage(enrollment.stage);
     if (!nextStage) return;
-
-    if (SESSION_STAGE_VALUES.has(enrollment.stage as NewBelieverStageValue)) {
-      const completedMap = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
-      const feedbackMap = (enrollment.sessionFeedback ?? {}) as Record<string, string>;
-      const existingFeedback = feedbackMap[enrollment.stage]?.trim() ?? '';
-      if (!completedMap[enrollment.stage] || !existingFeedback) {
-        setMarkCompleteFeedback(existingFeedback);
-        setMarkCompleteShouldAdvance(true);
-        setShowMarkCompleteModal(true);
-        return;
-      }
-    }
 
     if (nextStage.value === 'integrated') {
       setJoinDeptId('');
@@ -364,7 +344,7 @@ export default function EnrollmentDetailPage() {
                     options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
                   />
                   <p className="mt-1 text-xs font-medium text-[#f8b537]">
-                    Moving forward from a session requires completed session feedback.
+                    Changing stage manually bypasses session-complete checks — use with care.
                   </p>
                 </div>
 
@@ -532,9 +512,7 @@ export default function EnrollmentDetailPage() {
                   const isCurrent = idx === currentStageIdx;
                   const isIntegrated = s.value === 'integrated';
                   const sessionDone =
-                    SESSION_STAGE_VALUES.has(s.value) &&
-                    !!sessionCompletedAt[s.value] &&
-                    !!sessionFeedback[s.value]?.trim();
+                    SESSION_STAGE_VALUES.has(s.value) && !!sessionCompletedAt[s.value];
                   return (
                     <li key={s.value} className="flex items-start gap-3">
                       <div
