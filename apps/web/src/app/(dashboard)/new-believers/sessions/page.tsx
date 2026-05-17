@@ -1,224 +1,390 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  useSessions,
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  MessageSquareText,
+  Plus,
+  Users,
+} from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CustomSelect,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Textarea,
+  TimeSelect,
+} from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
+import { useMembers } from '@/hooks/use-members';
+import {
   useCreateSession,
-  useSessionAttendance,
-  useRecordSessionAttendance,
-  useUpdateSession,
   useEnrollments,
+  useRecordSessionAttendance,
+  useSessionAttendance,
+  useSessions,
+  useUpdateSession,
 } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
-import type { CreateNewBelieverSessionRequest } from '@kairos/types';
+import type {
+  CreateNewBelieverSessionRequest,
+  NewBelieverAttendanceWithMember,
+  NewBelieverEnrollmentWithMember,
+  NewBelieverSession,
+  NewBelieverStageValue,
+} from '@kairos/types';
+import { STAGES, SESSION_STAGE_VALUES } from '../_components/stage-config';
 
-// --------------------------------------------------------------------------
-// Session row — expands to show attendance recorder
-// --------------------------------------------------------------------------
+const createSessionFormSchema = z.object({
+  sessionStage: z.enum(['session-1', 'session-2', 'session-3', 'session-4']),
+  sessionDate: z.string().min(1, 'Choose a session date'),
+  sessionTime: z.string().regex(/^\d{2}:\d{2}$/, 'Choose a session time'),
+  location: z.string().trim().min(1, 'Enter a location').max(300, 'Location is too long'),
+  teacherId: z.string().min(1, 'Choose a teacher'),
+  feedback: z.string().max(2000, 'Notes are too long').optional(),
+});
+
+type CreateSessionFormValues = z.infer<typeof createSessionFormSchema>;
+
+function todayIso() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function isUpcomingSession(sessionDate: string | Date) {
+  return new Date(sessionDate) >= startOfToday();
+}
+
+function formatSessionDate(sessionDate: string | Date) {
+  return new Date(sessionDate).toLocaleDateString(undefined, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function formatSessionTime(sessionDate: string | Date) {
+  return new Date(sessionDate).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function combineDateAndTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00`).toISOString();
+}
+
+function getSessionStageDef(sessionStage: string) {
+  return STAGES.find((stage) => stage.value === sessionStage);
+}
+
+const curriculumOptions = STAGES
+  .filter((stage) => SESSION_STAGE_VALUES.has(stage.value))
+  .map((stage) => ({
+    value: stage.value,
+    label: `${stage.label}: ${stage.topic}`,
+  }));
+
+function teacherName(session: NewBelieverSession) {
+  if (!session.teacherFirstName) return 'Unassigned teacher';
+  return `${session.teacherFirstName} ${session.teacherLastName ?? ''}`.trim();
+}
+
 function SessionRow({
   session,
   branchId,
   userMemberId,
   userRole,
+  canRecordAttendance,
 }: {
-  session: {
-    id: string;
-    sessionDate: string | Date;
-    topic: string;
-    teacherId?: string | null;
-    feedback?: string | null;
-    teacherFirstName?: string | null;
-    teacherLastName?: string | null;
-  };
+  session: NewBelieverSession;
   branchId: string;
   userMemberId: string;
   userRole: string;
+  canRecordAttendance: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const { data: attendance } = useSessionAttendance(expanded ? session.id : '');
+  const [toggles, setToggles] = useState<Record<string, boolean>>({});
+  const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [sessionNotes, setSessionNotes] = useState(session.feedback ?? '');
+  const [notesSaved, setNotesSaved] = useState(false);
+  const sessionStage = session.sessionStage as NewBelieverStageValue;
+  const stageDef = getSessionStageDef(sessionStage);
+
+  const { data: attendance, isLoading: attendanceLoading } = useSessionAttendance(
+    expanded ? session.id : '',
+  );
+  const { data: enrollmentData, isLoading: enrollmentsLoading } = useEnrollments(
+    { branchId, stage: sessionStage, limit: 500 },
+    { enabled: expanded && !!branchId },
+  );
   const recordAttendance = useRecordSessionAttendance();
   const updateSession = useUpdateSession();
 
-  // Local toggle state keyed by enrollmentId
-  const [toggles, setToggles] = useState<Record<string, boolean>>({});
-  const [saved, setSaved] = useState(false);
-
-  // Feedback state
-  const [feedbackText, setFeedbackText] = useState(session.feedback ?? '');
-  const [feedbackSaved, setFeedbackSaved] = useState(false);
-
+  const isAdminOrPastor = userRole === 'admin' || userRole === 'pastor';
   const isTeacherOfSession = !!session.teacherId && session.teacherId === userMemberId;
-  const canEditFeedback = isTeacherOfSession;
-  const canViewFeedback =
-    isTeacherOfSession || ['admin', 'pastor', 'leader'].includes(userRole);
+  const canEditSessionNotes = isTeacherOfSession || isAdminOrPastor;
+  const canViewSessionNotes = canEditSessionNotes || userRole === 'leader';
+  const status = isUpcomingSession(session.sessionDate) ? 'Upcoming' : 'Past';
 
-  async function handleSaveFeedback() {
-    try {
-      await updateSession.mutateAsync({ id: session.id, data: { feedback: feedbackText } });
-      toast.success('Feedback saved');
-      setFeedbackSaved(true);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save feedback');
-    }
-  }
+  const rows = useMemo(
+    () => (attendance ?? []) as NewBelieverAttendanceWithMember[],
+    [attendance],
+  );
+  const enrolled = useMemo(
+    () => (enrollmentData?.data ?? []) as NewBelieverEnrollmentWithMember[],
+    [enrollmentData?.data],
+  );
 
-  const rows = attendance ?? [];
+  const mergedRows = useMemo(() => {
+    const existingIds = new Set(rows.map((row) => row.enrollmentId));
+    const missingEnrollmentRows = enrolled
+      .filter((enrollment) => enrollment.isActive)
+      .filter((enrollment) => !['completed', 'integrated'].includes(enrollment.stage))
+      .filter((enrollment) => !existingIds.has(enrollment.id))
+      .map((enrollment) => ({
+        sessionId: session.id,
+        enrollmentId: enrollment.id,
+        memberFirstName: enrollment.memberFirstName,
+        memberLastName: enrollment.memberLastName,
+        attended: false,
+        recordedAt: '',
+      }));
 
-  // Initialize toggles from server when first loaded
+    return [...rows, ...missingEnrollmentRows].sort((a, b) => {
+      const last = a.memberLastName.localeCompare(b.memberLastName);
+      return last !== 0 ? last : a.memberFirstName.localeCompare(b.memberFirstName);
+    });
+  }, [enrolled, rows, session.id]);
+
   function getAttended(enrollmentId: string): boolean {
     if (enrollmentId in toggles) return toggles[enrollmentId] ?? false;
-    const existing = rows.find((r) => r.enrollmentId === enrollmentId);
-    return existing?.attended ?? false;
+    return rows.find((row) => row.enrollmentId === enrollmentId)?.attended ?? false;
   }
 
+  const presentCount = mergedRows.filter((row) => getAttended(row.enrollmentId)).length;
+
   async function handleSaveAttendance() {
-    const records = rows.map((r) => ({
-      enrollmentId: r.enrollmentId,
-      attended: getAttended(r.enrollmentId),
+    const records = mergedRows.map((row) => ({
+      enrollmentId: row.enrollmentId,
+      attended: getAttended(row.enrollmentId),
     }));
+
     try {
       await recordAttendance.mutateAsync({ sessionId: session.id, data: { records } });
       toast.success('Attendance saved');
-      setSaved(true);
+      setAttendanceSaved(true);
       setToggles({});
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to save attendance');
     }
   }
 
-  // Fetch enrolled members for this branch so we can show anyone not yet in attendance
-  const { data: enrollmentData } = useEnrollments(
-    expanded ? { branchId, stage: undefined } : undefined
-  );
-  const enrolled = enrollmentData?.data ?? [];
-
-  // Merge rows: prefer server rows, supplement with enrollments that have no row yet
-  const mergedRows: Array<{
-    enrollmentId: string;
-    memberFirstName: string;
-    memberLastName: string;
-    attended: boolean;
-  }> = rows.length > 0
-    ? rows
-    : enrolled
-        .filter((e) => e.isActive)
-        .map((e) => ({
-          enrollmentId: e.id,
-          memberFirstName: e.memberFirstName,
-          memberLastName: e.memberLastName,
-          attended: false,
-        }));
+  async function handleSaveNotes() {
+    try {
+      await updateSession.mutateAsync({
+        id: session.id,
+        data: { feedback: sessionNotes.trim() },
+      });
+      toast.success('Session notes saved');
+      setNotesSaved(true);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save session notes');
+    }
+  }
 
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg border border-input/10 bg-card shadow-ambient">
       <button
-        className="flex w-full items-center justify-between p-4 text-left"
-        onClick={() => setExpanded((v) => !v)}
+        type="button"
+        className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-muted/40"
+        onClick={() => setExpanded((value) => !value)}
       >
-        <div>
-          <p className="font-medium">{session.topic}</p>
-          <p className="text-sm text-muted-foreground">
-            {new Date(session.sessionDate).toLocaleDateString(undefined, {
-              weekday: 'short',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-            {session.teacherFirstName && (
-              <> · {session.teacherFirstName} {session.teacherLastName}</>
-            )}
-          </p>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+          <CalendarDays className="h-5 w-5" />
         </div>
-        <span className="text-xs text-muted-foreground">{expanded ? '▲ hide' : '▼ attendance'}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="truncate text-base font-semibold">{session.topic}</h2>
+            {stageDef && (
+              <Badge
+                variant="outline"
+                className="border-[#5D3FD3]/30 bg-[#5D3FD3]/10 text-[#5D3FD3]"
+              >
+                {stageDef.label}
+              </Badge>
+            )}
+            <Badge
+              variant="outline"
+              className={
+                status === 'Upcoming'
+                  ? 'border-[#5D3FD3]/30 bg-[#5D3FD3]/10 text-[#5D3FD3]'
+                  : 'border-foreground/10 bg-muted text-muted-foreground'
+              }
+            >
+              {status}
+            </Badge>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span>{formatSessionDate(session.sessionDate)}</span>
+            <span>{formatSessionTime(session.sessionDate)}</span>
+            {session.location && <span>{session.location}</span>}
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              {teacherName(session)}
+            </span>
+            {session.feedback && (
+              <span className="inline-flex items-center gap-1 text-[#D97706]">
+                <MessageSquareText className="h-3.5 w-3.5" />
+                Notes recorded
+              </span>
+            )}
+          </div>
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-5 w-5 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
+        )}
       </button>
 
       {expanded && (
-        <div className="border-t px-4 pb-4 pt-3">
-          {mergedRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No enrolled members.</p>
+        <div className="space-y-5 border-t border-foreground/10 px-4 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">Attendance</p>
+              <p className="text-xs text-muted-foreground">
+                {mergedRows.length === 0
+                  ? 'No active enrollments available for this branch.'
+                  : `${presentCount} of ${mergedRows.length} marked present`}
+                {stageDef ? ` · ${stageDef.label} candidates only` : ''}
+              </p>
+            </div>
+            {canRecordAttendance && mergedRows.length > 0 && (
+              <Button
+                onClick={handleSaveAttendance}
+                disabled={recordAttendance.isPending}
+                size="sm"
+              >
+                <ClipboardCheck className="mr-1.5 h-4 w-4" />
+                {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
+              </Button>
+            )}
+          </div>
+
+          {attendanceLoading || enrollmentsLoading ? (
+            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              Loading attendance...
+            </p>
+          ) : mergedRows.length === 0 ? (
+            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              No enrolled members are currently in the active class pipeline.
+            </p>
           ) : (
-            <>
-              <div className="mb-3 space-y-2">
-                {mergedRows.map((r) => (
-                  <div key={r.enrollmentId} className="flex items-center justify-between">
-                    <span className="text-sm">
-                      {r.memberFirstName} {r.memberLastName}
+            <div className="overflow-hidden rounded-lg border border-input/10">
+              {mergedRows.map((row) => {
+                const attended = getAttended(row.enrollmentId);
+                return (
+                  <div
+                    key={row.enrollmentId}
+                    className="flex items-center justify-between gap-3 border-b border-input/10 bg-background px-3 py-2.5 last:border-b-0"
+                  >
+                    <span className="text-sm font-medium">
+                      {row.memberFirstName} {row.memberLastName}
                     </span>
-                    <button
-                      onClick={() =>
-                        setToggles((t) => ({
-                          ...t,
-                          [r.enrollmentId]: !getAttended(r.enrollmentId),
-                        }))
-                      }
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        getAttended(r.enrollmentId)
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={attended ? 'success' : 'outline'}
+                      disabled={!canRecordAttendance}
+                      onClick={() => {
+                        setToggles((current) => ({
+                          ...current,
+                          [row.enrollmentId]: !attended,
+                        }));
+                        setAttendanceSaved(false);
+                      }}
                     >
-                      {getAttended(r.enrollmentId) ? '✓ Present' : 'Absent'}
-                    </button>
+                      <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                      {attended ? 'Present' : 'Absent'}
+                    </Button>
                   </div>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+          )}
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSaveAttendance}
-                  disabled={recordAttendance.isPending}
-                  className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
-                >
-                  {recordAttendance.isPending ? 'Saving…' : 'Save Attendance'}
-                </button>
-                {saved && (
-                  <span className="text-xs text-emerald-600">✓ Saved</span>
-                )}
-              </div>
+          {attendanceSaved && (
+            <p className="text-xs font-medium text-emerald-600">Attendance saved.</p>
+          )}
 
-              {/* Teacher Feedback */}
-              {canViewFeedback && (
-                <div className="mt-4 border-t pt-3">
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Teacher Feedback
-                  </p>
-                  {canEditFeedback ? (
-                    <div className="space-y-2">
-                      <textarea
-                        rows={3}
-                        className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                        placeholder="Add session feedback…"
-                        value={feedbackText}
-                        onChange={(e) => {
-                          setFeedbackText(e.target.value);
-                          setFeedbackSaved(false);
-                        }}
-                      />
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={handleSaveFeedback}
-                          disabled={updateSession.isPending}
-                          className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
-                        >
-                          {updateSession.isPending ? 'Saving…' : 'Save Feedback'}
-                        </button>
-                        {feedbackSaved && (
-                          <span className="text-xs text-emerald-600">✓ Saved</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                      {session.feedback ?? (
-                        <span className="italic text-muted-foreground">No feedback recorded yet.</span>
-                      )}
-                    </p>
-                  )}
+          {canViewSessionNotes && (
+            <div className="space-y-2 border-t border-foreground/10 pt-4">
+              <div>
+                <p className="text-sm font-semibold">Session Notes</p>
+                <p className="text-xs text-muted-foreground">
+                  Class-level notes for this session.
+                </p>
+              </div>
+              {canEditSessionNotes ? (
+                <>
+                  <Textarea
+                    rows={3}
+                    placeholder="Capture class-wide observations, questions raised, or follow-up themes."
+                    value={sessionNotes}
+                    onChange={(event) => {
+                      setSessionNotes(event.target.value);
+                      setNotesSaved(false);
+                    }}
+                  />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveNotes}
+                      disabled={updateSession.isPending}
+                    >
+                      {updateSession.isPending ? 'Saving...' : 'Save Notes'}
+                    </Button>
+                    {notesSaved && (
+                      <span className="text-xs font-medium text-emerald-600">Notes saved.</span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  {session.feedback || 'No session notes recorded yet.'}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       )}
@@ -226,191 +392,387 @@ function SessionRow({
   );
 }
 
-// --------------------------------------------------------------------------
-// Create Session Dialog
-// --------------------------------------------------------------------------
 function CreateSessionDialog({
   branchId,
-  onClose,
+  teacherOptions,
+  open,
+  onOpenChange,
 }: {
   branchId: string;
-  onClose: () => void;
+  teacherOptions: { value: string; label: string }[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const createSession = useCreateSession();
-  const [form, setForm] = useState<CreateNewBelieverSessionRequest>({
-    branchId,
-    sessionDate: new Date().toISOString().slice(0, 10),
-    topic: '',
+  const form = useForm<CreateSessionFormValues>({
+    resolver: zodResolver(createSessionFormSchema),
+    defaultValues: {
+      sessionStage: 'session-1',
+      sessionDate: todayIso(),
+      sessionTime: '19:00',
+      location: '',
+      teacherId: '',
+      feedback: '',
+    },
   });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const sessionDate = form.watch('sessionDate');
+  const sessionStage = form.watch('sessionStage');
+  const selectedStage = getSessionStageDef(sessionStage);
+
+  async function handleSubmit(values: CreateSessionFormValues) {
+    const payload: CreateNewBelieverSessionRequest = {
+      branchId,
+      sessionStage: values.sessionStage,
+      sessionDate: combineDateAndTime(values.sessionDate, values.sessionTime),
+      location: values.location.trim(),
+      teacherId: values.teacherId,
+      feedback: values.feedback?.trim() || undefined,
+    };
+
     try {
-      await createSession.mutateAsync(form);
+      await createSession.mutateAsync(payload);
       toast.success('Session created');
-      onClose();
+      form.reset({
+        sessionStage: 'session-1',
+        sessionDate: todayIso(),
+        sessionTime: '19:00',
+        location: '',
+        teacherId: '',
+        feedback: '',
+      });
+      onOpenChange(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to create session');
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100"
-      >
-        <h2 className="mb-4 text-lg font-semibold">New Session</h2>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          form.reset({
+            sessionStage: 'session-1',
+            sessionDate: todayIso(),
+            sessionTime: '19:00',
+            location: '',
+            teacherId: '',
+            feedback: '',
+          });
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Session</DialogTitle>
+          <DialogDescription>
+            Schedule a New Believers class session for this branch.
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Curriculum Session</label>
+            <CustomSelect
+              value={sessionStage}
+              onValueChange={(value) =>
+                form.setValue('sessionStage', value as CreateSessionFormValues['sessionStage'], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              options={curriculumOptions}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Topic: {selectedStage?.topic ?? 'Select a session'}
+            </p>
+            {form.formState.errors.sessionStage && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.sessionStage.message}
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="mb-1 block text-sm font-medium">Date</label>
-            <input
-              type="date"
-              required
-              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={form.sessionDate}
-              onChange={(e) => setForm((f) => ({ ...f, sessionDate: e.target.value }))}
+            <DateSelect
+              value={sessionDate}
+              onChange={(value) =>
+                form.setValue('sessionDate', value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
             />
+            {form.formState.errors.sessionDate && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.sessionDate.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Topic</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Foundations of Faith"
-              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
-              value={form.topic}
-              onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
+            <label className="mb-1 block text-sm font-medium">Time</label>
+            <TimeSelect
+              value={form.watch('sessionTime')}
+              onValueChange={(value) =>
+                form.setValue('sessionTime', value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              allowEmpty={false}
             />
+            {form.formState.errors.sessionTime && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.sessionTime.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Feedback <span className="font-normal text-muted-foreground">(optional)</span></label>
-            <textarea
-              rows={2}
-              className="w-full rounded-lg border px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={form.feedback ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, feedback: e.target.value || undefined }))}
+            <label htmlFor="session-location" className="mb-1 block text-sm font-medium">
+              Location
+            </label>
+            <Input
+              id="session-location"
+              placeholder="Main auditorium"
+              {...form.register('location')}
             />
+            {form.formState.errors.location && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.location.message}
+              </p>
+            )}
           </div>
-        </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={createSession.isPending}
-            className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
-          >
-            {createSession.isPending ? 'Creating…' : 'Create Session'}
-          </button>
-        </div>
-      </form>
-    </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Teacher</label>
+            <CustomSelect
+              value={form.watch('teacherId')}
+              onValueChange={(value) =>
+                form.setValue('teacherId', value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              options={teacherOptions}
+              placeholder="Assign teacher"
+            />
+            {form.formState.errors.teacherId && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.teacherId.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="session-feedback" className="mb-1 block text-sm font-medium">
+              Session Notes <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <Textarea
+              id="session-feedback"
+              rows={3}
+              placeholder="Class-wide observations or follow-up themes"
+              {...form.register('feedback')}
+            />
+            {form.formState.errors.feedback && (
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {form.formState.errors.feedback.message}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createSession.isPending}>
+              {createSession.isPending ? 'Creating...' : 'Create Session'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-// --------------------------------------------------------------------------
-// Page
-// --------------------------------------------------------------------------
 export default function SessionsPage() {
   const { user, activeRole } = useAuthStore();
   const branchId = user?.homeBranchId ?? '';
   const userMemberId = user?.id ?? '';
   const userRole = activeRole ?? 'member';
-
-  const { data: sessionData, isLoading } = useSessions(branchId ? { branchId } : undefined);
-  const sessions = sessionData ?? [];
+  const canManageSessions = userRole === 'admin' || userRole === 'pastor' || userRole === 'leader';
 
   const [showCreate, setShowCreate] = useState(false);
+  const [view, setView] = useState<'upcoming' | 'past' | 'all'>('upcoming');
 
-  const upcoming = sessions.filter(
-    (s) => new Date(s.sessionDate) >= new Date(new Date().toDateString())
+  const { data: sessionData, isLoading } = useSessions(branchId ? { branchId } : undefined);
+  const { data: memberData } = useMembers(
+    branchId ? { branchId, limit: 500 } : undefined,
   );
-  const past = sessions.filter(
-    (s) => new Date(s.sessionDate) < new Date(new Date().toDateString())
+  const sessions = useMemo(() => sessionData ?? [], [sessionData]);
+  const teacherOptions = useMemo(
+    () =>
+      (memberData?.data ?? []).map((member) => ({
+        value: member.id,
+        label: `${member.firstName} ${member.lastName}`,
+      })),
+    [memberData?.data],
   );
+  const upcoming = useMemo(
+    () =>
+      sessions
+        .filter((session) => isUpcomingSession(session.sessionDate))
+        .sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()),
+    [sessions],
+  );
+  const past = useMemo(
+    () =>
+      sessions
+        .filter((session) => !isUpcomingSession(session.sessionDate))
+        .sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()),
+    [sessions],
+  );
+
+  const visibleSessions =
+    view === 'upcoming' ? upcoming : view === 'past' ? past : [...upcoming, ...past];
+  const nextSession = upcoming[0];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="-mx-6 -mt-6 rounded-b-2xl bg-gradient-to-br from-purple-900 to-purple-700 px-6 py-7 text-white">
-        <p className="text-sm text-purple-200">New Believers</p>
-        <h1 className="mt-1 text-2xl font-bold">Sessions</h1>
-        <p className="mt-1 text-sm text-purple-200">
-          Record attendance and manage discipleship sessions.
+    <div className="container mx-auto space-y-6 py-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-2">
+          <Link
+            href="/new-believers"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            New Believers
+          </Link>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers Sessions</h1>
+            <p className="text-muted-foreground">
+              Class scheduling, attendance, and session-level notes.
+            </p>
+          </div>
+        </div>
+
+        {canManageSessions && (
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Session
+          </Button>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-2xl font-bold">{sessions.length}</p>
+              <p className="text-xs text-muted-foreground">Total sessions</p>
+            </div>
+            <CalendarDays className="h-5 w-5 text-[#5D3FD3]" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-2xl font-bold text-[#5D3FD3]">{upcoming.length}</p>
+              <p className="text-xs text-muted-foreground">Upcoming</p>
+            </div>
+            <ClipboardCheck className="h-5 w-5 text-[#5D3FD3]" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-sm font-semibold">
+                {nextSession ? formatSessionDate(nextSession.sessionDate) : 'No upcoming session'}
+              </p>
+              <p className="text-xs text-muted-foreground">Next class</p>
+            </div>
+            <MessageSquareText className="h-5 w-5 text-[#D97706]" />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex rounded-lg bg-muted p-1">
+          {[
+            { value: 'upcoming', label: `Upcoming (${upcoming.length})` },
+            { value: 'past', label: `Past (${past.length})` },
+            { value: 'all', label: `All (${sessions.length})` },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setView(option.value as typeof view)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === option.value
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {visibleSessions.length} session{visibleSessions.length === 1 ? '' : 's'} shown
         </p>
       </div>
 
-      {/* Action bar */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{sessions.length} sessions total</p>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800"
-        >
-          + New Session
-        </button>
-      </div>
-
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading sessions…</p>
-      )}
-
-      {/* Upcoming */}
-      {upcoming.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Upcoming
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {upcoming.map((s) => (
-              <SessionRow key={s.id} session={s} branchId={branchId} userMemberId={userMemberId} userRole={userRole} />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Past */}
-      {past.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Past
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {past.map((s) => (
-              <SessionRow key={s.id} session={s} branchId={branchId} userMemberId={userMemberId} userRole={userRole} />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {!isLoading && sessions.length === 0 && (
+      {isLoading ? (
+        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+          Loading sessions...
+        </p>
+      ) : visibleSessions.length > 0 ? (
+        <div className="space-y-3">
+          {visibleSessions.map((session) => (
+            <SessionRow
+              key={session.id}
+              session={session}
+              branchId={branchId}
+              userMemberId={userMemberId}
+              userRole={userRole}
+              canRecordAttendance={canManageSessions}
+            />
+          ))}
+        </div>
+      ) : (
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-sm text-muted-foreground">No sessions yet.</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-3 text-sm text-purple-700 hover:underline"
-          >
-            Create your first session →
-          </button>
+          <p className="text-sm font-medium text-muted-foreground">
+            {view === 'upcoming'
+              ? 'No upcoming sessions scheduled.'
+              : view === 'past'
+                ? 'No past sessions recorded.'
+                : 'No sessions yet.'}
+          </p>
+          {canManageSessions && (
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3"
+              onClick={() => setShowCreate(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Session
+            </Button>
+          )}
         </div>
       )}
 
-      {showCreate && branchId && (
-        <CreateSessionDialog branchId={branchId} onClose={() => setShowCreate(false)} />
+      {branchId && (
+        <CreateSessionDialog
+          branchId={branchId}
+          teacherOptions={teacherOptions}
+          open={showCreate}
+          onOpenChange={setShowCreate}
+        />
       )}
     </div>
   );

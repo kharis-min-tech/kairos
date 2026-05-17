@@ -19,6 +19,7 @@ import {
   Textarea,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -74,6 +75,7 @@ export default function EnrollmentDetailPage() {
 
   const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
   const [markCompleteFeedback, setMarkCompleteFeedback] = useState('');
+  const [markCompleteShouldAdvance, setMarkCompleteShouldAdvance] = useState(false);
 
   function startEdit() {
     if (!enrollment) return;
@@ -98,6 +100,7 @@ export default function EnrollmentDetailPage() {
 
   function handleMarkComplete() {
     setMarkCompleteFeedback('');
+    setMarkCompleteShouldAdvance(false);
     setShowMarkCompleteModal(true);
   }
 
@@ -106,17 +109,27 @@ export default function EnrollmentDetailPage() {
     const currentStage = enrollment.stage;
     const existingSca = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
     const existingSf = enrollment.sessionFeedback ?? {};
+    const nextStage = markCompleteShouldAdvance ? getNextStage(currentStage) : undefined;
+    const updateData: UpdateEnrollmentRequest = {
+      sessionCompletedAt: { ...existingSca, [currentStage]: new Date().toISOString() },
+      sessionFeedback: { ...existingSf, [currentStage]: markCompleteFeedback.trim() },
+    };
+    if (nextStage) {
+      updateData.stage = nextStage.value;
+    }
     try {
       await updateEnrollment.mutateAsync({
         id,
-        data: {
-          sessionCompletedAt: { ...existingSca, [currentStage]: new Date().toISOString() },
-          sessionFeedback: { ...existingSf, [currentStage]: markCompleteFeedback.trim() },
-        },
+        data: updateData,
       });
-      toast.success('Session marked as completed');
+      toast.success(
+        nextStage
+          ? `Session completed and advanced to ${nextStage.label}`
+          : 'Session marked as completed',
+      );
       setShowMarkCompleteModal(false);
       setMarkCompleteFeedback('');
+      setMarkCompleteShouldAdvance(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to mark session complete');
     }
@@ -126,6 +139,18 @@ export default function EnrollmentDetailPage() {
     if (!enrollment) return;
     const nextStage = getNextStage(enrollment.stage);
     if (!nextStage) return;
+
+    if (SESSION_STAGE_VALUES.has(enrollment.stage as NewBelieverStageValue)) {
+      const completedMap = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+      const feedbackMap = (enrollment.sessionFeedback ?? {}) as Record<string, string>;
+      const existingFeedback = feedbackMap[enrollment.stage]?.trim() ?? '';
+      if (!completedMap[enrollment.stage] || !existingFeedback) {
+        setMarkCompleteFeedback(existingFeedback);
+        setMarkCompleteShouldAdvance(true);
+        setShowMarkCompleteModal(true);
+        return;
+      }
+    }
 
     if (nextStage.value === 'integrated') {
       setJoinDeptId('');
@@ -190,7 +215,10 @@ export default function EnrollmentDetailPage() {
   const canAdvance = currentStageIdx < STAGES.length - 1;
   const isSessionStage = SESSION_STAGE_VALUES.has(enrollment.stage as NewBelieverStageValue);
   const sessionCompletedAt = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
-  const currentSessionDone = isSessionStage && !!sessionCompletedAt[enrollment.stage];
+  const sessionFeedback = (enrollment.sessionFeedback ?? {}) as Record<string, string>;
+  const currentSessionFeedback = sessionFeedback[enrollment.stage]?.trim();
+  const currentSessionDone =
+    isSessionStage && !!sessionCompletedAt[enrollment.stage] && !!currentSessionFeedback;
   const memberOptions = branchMembers.map((m) => ({
     value: m.id,
     label: `${m.firstName} ${m.lastName}`,
@@ -260,7 +288,7 @@ export default function EnrollmentDetailPage() {
           ))}
         </div>
         <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-          <span>Enrolled</span>
+          <span>Session 1</span>
           <span>Joined a Department</span>
         </div>
       </div>
@@ -336,7 +364,7 @@ export default function EnrollmentDetailPage() {
                     options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
                   />
                   <p className="mt-1 text-xs font-medium text-[#f8b537]">
-                    Changing stage manually bypasses session-complete checks — use with care.
+                    Moving forward from a session requires completed session feedback.
                   </p>
                 </div>
 
@@ -504,7 +532,9 @@ export default function EnrollmentDetailPage() {
                   const isCurrent = idx === currentStageIdx;
                   const isIntegrated = s.value === 'integrated';
                   const sessionDone =
-                    SESSION_STAGE_VALUES.has(s.value) && !!sessionCompletedAt[s.value];
+                    SESSION_STAGE_VALUES.has(s.value) &&
+                    !!sessionCompletedAt[s.value] &&
+                    !!sessionFeedback[s.value]?.trim();
                   return (
                     <li key={s.value} className="flex items-start gap-3">
                       <div
@@ -560,14 +590,27 @@ export default function EnrollmentDetailPage() {
       </div>
 
       {/* Mark Session Complete dialog */}
-      <Dialog open={showMarkCompleteModal} onOpenChange={setShowMarkCompleteModal}>
+      <Dialog
+        open={showMarkCompleteModal}
+        onOpenChange={(openMarkCompleteDialog) => {
+          setShowMarkCompleteModal(openMarkCompleteDialog);
+          if (!openMarkCompleteDialog) {
+            setMarkCompleteFeedback('');
+            setMarkCompleteShouldAdvance(false);
+          }
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Mark Session Complete</DialogTitle>
+            <DialogTitle>
+              {markCompleteShouldAdvance ? 'Session Feedback Required' : 'Mark Session Complete'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {markCompleteShouldAdvance
+                ? `Record feedback before moving to ${nextStage?.label ?? 'the next stage'}.`
+                : 'Record feedback for this session before marking it complete.'}
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Record feedback for this session before marking it complete.
-          </p>
           <div>
             <label className="mb-1 block text-sm font-medium">
               Session Feedback <span className="text-destructive">*</span>
@@ -585,6 +628,7 @@ export default function EnrollmentDetailPage() {
               onClick={() => {
                 setShowMarkCompleteModal(false);
                 setMarkCompleteFeedback('');
+                setMarkCompleteShouldAdvance(false);
               }}
             >
               Cancel
@@ -594,7 +638,11 @@ export default function EnrollmentDetailPage() {
               onClick={handleConfirmMarkComplete}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {updateEnrollment.isPending ? 'Saving...' : 'Confirm & Complete'}
+              {updateEnrollment.isPending
+                ? 'Saving...'
+                : markCompleteShouldAdvance
+                  ? 'Confirm & Advance'
+                  : 'Confirm & Complete'}
             </Button>
           </DialogFooter>
         </DialogContent>

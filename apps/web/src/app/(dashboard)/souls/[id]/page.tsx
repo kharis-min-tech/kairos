@@ -22,12 +22,12 @@ interface FollowUpRecord {
 }
 
 const STATUS_OPTIONS = [
-  'New',
-  'Following Up',
-  'Interested',
-  'Not Interested',
-  'Converted',
-  'Lost Contact',
+  { value: 'New', label: 'New' },
+  { value: 'Following Up', label: 'Following Up' },
+  { value: 'Interested', label: 'Interested' },
+  { value: 'Not Interested', label: 'Not Interested' },
+  { value: 'Lost Contact', label: 'Lost Contact' },
+  { value: 'Converted', label: 'Converted - use conversion action', disabled: true },
 ];
 
 const CONTACT_METHODS = [
@@ -108,6 +108,14 @@ export default function SoulDetailPage() {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!api || !currentSoul) return;
+    if (newStatus === 'Converted') {
+      toast({
+        title: 'Use the conversion action',
+        description: 'Converted souls need to be converted through the member creation flow.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -316,14 +324,17 @@ export default function SoulDetailPage() {
               </p>
             </div>
             <div>
-              <Label htmlFor="status">Update Status</Label>
+              <Label htmlFor="status">Stage / Outcome</Label>
               <CustomSelect
                 id="status"
                 value={currentSoul.status}
                 onValueChange={handleStatusChange}
-                disabled={loading}
-                options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                disabled={loading || currentSoul.status === 'Converted'}
+                options={STATUS_OPTIONS}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use outcomes like Interested, Not Interested, or Lost Contact after a follow-up. Conversion is handled by the member conversion action.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -407,16 +418,16 @@ export default function SoulDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="updateStatus">Update Soul Status (Optional)</Label>
+                  <Label htmlFor="updateStatus">Update Stage / Outcome (Optional)</Label>
                   <CustomSelect
                     id="updateStatus"
                     value={followUpForm.updateStatus}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, updateStatus: v }))}
                     placeholder={`Keep current status (${currentSoul.status})`}
-                    options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                    options={STATUS_OPTIONS}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Optionally update the soul's status based on this follow-up interaction
+                    Optionally update the soul's stage or outcome based on this follow-up interaction
                   </p>
                 </div>
               </div>

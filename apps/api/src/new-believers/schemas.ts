@@ -10,6 +10,13 @@ const stages = [
   'integrated',
 ] as const;
 
+const sessionStages = [
+  'session-1',
+  'session-2',
+  'session-3',
+  'session-4',
+] as const;
+
 export const createEnrollmentSchema = z.object({
   memberId: z.string().uuid(),
   branchId: z.string().uuid(),
@@ -50,14 +57,22 @@ export const bulkAdvanceSchema = z.object({
 
 export const createSessionSchema = z.object({
   branchId: z.string().uuid(),
+  sessionStage: z.enum(sessionStages),
   sessionDate: z.string().min(1),
-  topic: z.string().min(1).max(200),
-  teacherId: z.string().uuid().optional(),
+  topic: z.string().min(1).max(200).optional(),
+  location: z.string().min(1).max(300),
+  teacherId: z.string().uuid(),
   notes: z.string().max(1000).optional(),
   feedback: z.string().max(2000).optional(),
 });
 
-export const updateSessionSchema = createSessionSchema.partial();
+export const updateSessionSchema = createSessionSchema
+  .omit({ branchId: true })
+  .partial()
+  .extend({
+    location: z.string().max(300).nullable().optional(),
+    teacherId: z.string().uuid().nullable().optional(),
+  });
 
 export const recordAttendanceSchema = z.object({
   records: z.array(

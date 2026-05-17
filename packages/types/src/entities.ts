@@ -322,6 +322,7 @@ export interface NewBelieverEnrollment {
   enrolledAt: string;
   completedAt?: string | null;
   sessionCompletedAt?: Record<string, string> | null;
+  sessionFeedback?: Record<string, string> | null;
   joinedDepartmentId?: string | null;
   notes?: string | null;
   isActive: boolean;
@@ -345,8 +346,10 @@ export interface NewBelieverSession {
   teacherId?: string | null;
   teacherFirstName?: string | null;
   teacherLastName?: string | null;
+  sessionStage: string;
   sessionDate: string;
   topic: string;
+  location?: string | null;
   notes?: string | null;
   feedback?: string | null;
   createdAt: string;

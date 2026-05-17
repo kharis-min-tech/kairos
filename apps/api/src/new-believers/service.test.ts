@@ -65,6 +65,7 @@ const teacherId = '550e8400-0000-0000-0000-000000000005';
 const enrollmentId = '660e8400-0000-0000-0000-000000000006';
 const enrollment2Id = '660e8400-0000-0000-0000-000000000007';
 const enrollment3Id = '660e8400-0000-0000-0000-000000000008';
+const sessionId = '770e8400-0000-0000-0000-000000000009';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
 const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
@@ -188,6 +189,63 @@ describe('updateEnrollment stage advancement', () => {
       updateEnrollment(mockDb, adminAuth, enrollmentId, { stage: 'session-2' }),
     ).rejects.toThrow(/Cannot advance from session-1/);
   });
+
+  it('refuses to advance from a completed session stage without feedback', async () => {
+    setupSelectSequence(
+      [{
+        branchId,
+        stage: 'session-1',
+        sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+        sessionFeedback: {},
+        mentorId: null,
+        memberId,
+      }],
+    );
+    const { updateEnrollment } = await import('./service');
+    await expect(
+      updateEnrollment(mockDb, adminAuth, enrollmentId, { stage: 'session-2' }),
+    ).rejects.toThrow(/session feedback/);
+  });
+
+  it('allows advancing from a session stage when completion and feedback are supplied together', async () => {
+    setupSelectSequence(
+      [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+      [{ sessionId: 'session-a' }],
+    );
+    setupUpdate([{ id: enrollmentId, stage: 'session-2', branchId }]);
+    const { updateEnrollment } = await import('./service');
+    const result = await updateEnrollment(mockDb, adminAuth, enrollmentId, {
+      stage: 'session-2',
+      sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+      sessionFeedback: { 'session-1': 'Ready for the next session.' },
+    });
+    expect(result.stage).toBe('session-2');
+  });
+
+  it('refuses to advance from a session stage without matching present attendance', async () => {
+    setupSelectSequence(
+      [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+      [],
+    );
+    const { updateEnrollment } = await import('./service');
+    await expect(
+      updateEnrollment(mockDb, adminAuth, enrollmentId, {
+        stage: 'session-2',
+        sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+        sessionFeedback: { 'session-1': 'Ready for the next session.' },
+      }),
+    ).rejects.toThrow(/attendance has been marked present/);
+  });
+
+  it('allows reversing a session move without requiring feedback for the current stage', async () => {
+    setupSelectSequence(
+      [{ branchId, stage: 'session-2', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+    );
+    setupUpdate([{ id: enrollmentId, stage: 'session-1', branchId }]);
+    const { updateEnrollment } = await import('./service');
+    const result = await updateEnrollment(mockDb, adminAuth, enrollmentId, { stage: 'session-1' });
+    expect(result.stage).toBe('session-1');
+  });
 });
 
 // ── bulkAdvance ───────────────────────────────────────────
@@ -255,6 +313,59 @@ describe('bulkAdvance', () => {
   });
 });
 
+// ── recordSessionAttendance ───────────────────────────────
+
+describe('recordSessionAttendance', () => {
+  it('records attendance for active enrollments in the session stage', async () => {
+    setupSelectSequence(
+      [{ branchId, sessionStage: 'session-1' }],
+      [{ branchId, stage: 'session-1', isActive: true }],
+      [],
+    );
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain());
+
+    const { recordSessionAttendance } = await import('./service');
+    const result = await recordSessionAttendance(mockDb, pastorAuth, sessionId, [
+      { enrollmentId, attended: true },
+    ]);
+
+    expect(result).toEqual({ recorded: 1 });
+    expect(mockDb.insert).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects attendance records for enrollments in a different current stage', async () => {
+    setupSelectSequence(
+      [{ branchId, sessionStage: 'session-1' }],
+      [{ branchId, stage: 'session-2', isActive: true }],
+      [],
+    );
+
+    const { recordSessionAttendance } = await import('./service');
+    await expect(
+      recordSessionAttendance(mockDb, pastorAuth, sessionId, [
+        { enrollmentId, attended: true },
+      ]),
+    ).rejects.toThrow(/only be recorded for active session-1 enrollments/);
+  });
+
+  it('allows correcting existing attendance after the enrollment has advanced', async () => {
+    setupSelectSequence(
+      [{ branchId, sessionStage: 'session-1' }],
+      [{ branchId, stage: 'session-2', isActive: true }],
+      [{ enrollmentId }],
+    );
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain());
+
+    const { recordSessionAttendance } = await import('./service');
+    const result = await recordSessionAttendance(mockDb, pastorAuth, sessionId, [
+      { enrollmentId, attended: false },
+    ]);
+
+    expect(result).toEqual({ recorded: 1 });
+    expect(mockDb.insert).toHaveBeenCalledTimes(1);
+  });
+});
+
 // ── createEnrollment branch scope ─────────────────────────
 
 describe('createEnrollment', () => {
@@ -275,7 +386,7 @@ describe('createEnrollment', () => {
   it('admin can create an enrollment in any branch', async () => {
     // isNewBelieverTeacher → []; activeTeaching → []; activeMentoring → []; duplicate-check → []
     setupSelectSequence([], [], [], []);
-    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain([{ id: enrollmentId, memberId, branchId, stage: 'enrolled' }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain([{ id: enrollmentId, memberId, branchId, stage: 'session-1' }]));
 
     const { createEnrollment } = await import('./service');
     const result = await createEnrollment(mockDb, adminAuth, { memberId, branchId });

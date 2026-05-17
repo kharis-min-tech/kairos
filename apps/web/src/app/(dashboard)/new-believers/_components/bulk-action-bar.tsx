@@ -11,6 +11,7 @@ interface BulkActionBarProps {
   onAdvance: () => void;
   onClear: () => void;
   isAdvancing: boolean;
+  requiresIndividualFeedback?: boolean;
 }
 
 export function BulkActionBar({
@@ -20,6 +21,7 @@ export function BulkActionBar({
   onAdvance,
   onClear,
   isAdvancing,
+  requiresIndividualFeedback = false,
 }: BulkActionBarProps) {
   if (selectedCount === 0) return null;
 
@@ -42,6 +44,11 @@ export function BulkActionBar({
           Cap reached — deselect a card to choose another.
         </span>
       )}
+      {requiresIndividualFeedback && (
+        <span className="text-xs font-medium text-[#f8b537]">
+          Session moves need individual feedback. Open each card or drag one member at a time.
+        </span>
+      )}
       <div className="ml-auto flex items-center gap-2">
         <CustomSelect
           value={targetStage}
@@ -52,7 +59,7 @@ export function BulkActionBar({
         />
         <Button
           onClick={onAdvance}
-          disabled={!targetStage || isAdvancing}
+          disabled={!targetStage || isAdvancing || requiresIndividualFeedback}
           className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
         >
           {isAdvancing ? 'Advancing...' : 'Advance'}

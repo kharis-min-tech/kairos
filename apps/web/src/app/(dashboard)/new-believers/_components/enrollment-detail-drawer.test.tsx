@@ -223,7 +223,7 @@ describe('EnrollmentDetailDrawer', () => {
     });
   });
 
-  it('shows the "Advance to next stage" button for leader and calls the advance mutation', async () => {
+  it('asks for session feedback before advancing an incomplete session', async () => {
     const user = userEvent.setup();
     render(
       <EnrollmentDetailDrawer
@@ -239,6 +239,49 @@ describe('EnrollmentDetailDrawer', () => {
     expect(advanceBtn).toBeInTheDocument();
 
     await user.click(advanceBtn);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Session Feedback Required/i })).toBeInTheDocument();
+    });
+    expect(updateMutateAsync).not.toHaveBeenCalled();
+
+    await user.type(
+      screen.getByPlaceholderText(/How did the session go/i),
+      'Ada understands the session and is ready to continue.',
+    );
+    await user.click(screen.getByRole('button', { name: /Confirm & Advance/i }));
+
+    await waitFor(() => {
+      expect(updateMutateAsync).toHaveBeenCalledWith({
+        id: 'enr-1',
+        data: {
+          stage: 'session-2',
+          sessionCompletedAt: { 'session-1': expect.any(String) },
+          sessionFeedback: {
+            'session-1': 'Ada understands the session and is ready to continue.',
+          },
+        },
+      });
+    });
+  });
+
+  it('advances directly when session completion feedback already exists', async () => {
+    const user = userEvent.setup();
+    enrollmentData = makeEnrollment({
+      sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+      sessionFeedback: { 'session-1': 'Completed well.' },
+    });
+
+    render(
+      <EnrollmentDetailDrawer
+        enrollmentId="enr-1"
+        onClose={() => {}}
+        branchMembers={branchMembers}
+      />,
+      { wrapper },
+    );
+
+    await user.click(screen.getByRole('button', { name: /Advance to Session 2/i }));
+
     await waitFor(() => {
       expect(updateMutateAsync).toHaveBeenCalledWith({
         id: 'enr-1',

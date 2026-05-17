@@ -18,14 +18,14 @@ function makeEnrollment(overrides: Partial<EnrollmentCardData> = {}): Enrollment
 }
 
 describe('MemberJourneyView', () => {
-  it('renders the journey heading and an entry for each of the 7 stages', () => {
+  it('renders the journey heading and an entry for each visible stage', () => {
     render(<MemberJourneyView enrollment={makeEnrollment()} />);
     expect(screen.getByText(/Your Journey/i)).toBeInTheDocument();
-    // The journey checklist is an ordered list of 7 stage labels.
+    // The journey checklist is an ordered list of the visible stage labels.
     const journeyList = screen.getByRole('list');
     const items = within(journeyList).getAllByRole('listitem');
     expect(items).toHaveLength(STAGES.length);
-    expect(STAGES.length).toBe(7);
+    expect(STAGES.length).toBe(6);
 
     for (const s of STAGES) {
       // Labels appear at least once (the active stage label appears twice — once in
@@ -35,12 +35,10 @@ describe('MemberJourneyView', () => {
   });
 
   it('marks all stages before the current one as done (line-through styling)', () => {
-    // Current stage = session-2 → idx 2 → done indexes are 0 (enrolled) and 1 (session-1)
+    // Current stage = session-2: Session 1 is done, Session 2 is current.
     render(<MemberJourneyView enrollment={makeEnrollment({ stage: 'session-2' })} />);
 
-    const enrolledLabel = within(screen.getByRole('list')).getByText('Enrolled');
     const session1Label = within(screen.getByRole('list')).getByText('Session 1');
-    expect(enrolledLabel.className).toMatch(/line-through/);
     expect(session1Label.className).toMatch(/line-through/);
 
     // The current stage (Session 2) inside the list should NOT be line-through
@@ -110,16 +108,14 @@ describe('MemberJourneyView', () => {
     expect(screen.queryByText(/Your Support Team/i)).not.toBeInTheDocument();
   });
 
-  it('edge case — enrolled stage: only "Enrolled" is current, nothing is line-through', () => {
-    render(<MemberJourneyView enrollment={makeEnrollment({ stage: 'enrolled' })} />);
+  it('edge case: session-1 stage is current and nothing is line-through', () => {
+    render(<MemberJourneyView enrollment={makeEnrollment({ stage: 'session-1' })} />);
     const list = screen.getByRole('list');
-    // Enrolled is the current step → styled purple, NOT line-through
-    const enrolled = within(list).getByText('Enrolled');
-    expect(enrolled.className).toMatch(/text-\[#5D3FD3\]/);
-    expect(enrolled.className).not.toMatch(/line-through/);
+    const session1 = within(list).getByText('Session 1');
+    expect(session1.className).toMatch(/text-\[#5D3FD3\]/);
+    expect(session1.className).not.toMatch(/line-through/);
 
-    // No other step should be line-through (no done steps)
-    for (const s of STAGES.filter((s) => s.value !== 'enrolled')) {
+    for (const s of STAGES.filter((s) => s.value !== 'session-1')) {
       const el = within(list).getByText(s.label);
       expect(el.className).not.toMatch(/line-through/);
     }
@@ -128,7 +124,6 @@ describe('MemberJourneyView', () => {
   it('edge case — integrated stage: every prior stage is line-through (all done)', () => {
     render(<MemberJourneyView enrollment={makeEnrollment({ stage: 'integrated' })} />);
     const list = screen.getByRole('list');
-    // currentIdx = 6 → idx 0..5 are done
     for (const s of STAGES.slice(0, -1)) {
       const el = within(list).getByText(s.label);
       expect(el.className).toMatch(/line-through/);

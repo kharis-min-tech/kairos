@@ -26,7 +26,7 @@ export const newBelieverEnrollments = pgTable(
     branchId: uuid('branch_id').notNull().references(() => branches.id, { onDelete: 'cascade' }),
     teacherId: uuid('teacher_id').references(() => members.id, { onDelete: 'set null' }),
     mentorId: uuid('mentor_id').references(() => members.id, { onDelete: 'set null' }),
-    stage: varchar('stage', { length: 30 }).notNull().default('enrolled'),
+    stage: varchar('stage', { length: 30 }).notNull().default('session-1'),
     enrolledAt: timestamp('enrolled_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
     // JSONB map of stage → ISO completion timestamp, e.g. {"session-1":"2026-04-17T..."}
@@ -63,8 +63,10 @@ export const newBelieverSessions = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     branchId: uuid('branch_id').notNull().references(() => branches.id, { onDelete: 'cascade' }),
     teacherId: uuid('teacher_id').references(() => members.id, { onDelete: 'set null' }),
+    sessionStage: varchar('session_stage', { length: 30 }).notNull().default('session-1'),
     sessionDate: timestamp('session_date').notNull(),
     topic: varchar('topic', { length: 200 }).notNull(),
+    location: text('location'),
     notes: text('notes'),
     feedback: text('feedback'),
     createdBy: uuid('created_by').references(() => members.id, { onDelete: 'set null' }),
@@ -74,7 +76,9 @@ export const newBelieverSessions = pgTable(
   (table) => [
     index('idx_nb_sessions_branch_id').on(table.branchId),
     index('idx_nb_sessions_teacher_id').on(table.teacherId),
+    index('idx_nb_sessions_session_stage').on(table.sessionStage),
     index('idx_nb_sessions_session_date').on(table.sessionDate),
+    sql`CHECK (session_stage IN ('session-1', 'session-2', 'session-3', 'session-4'))`,
   ]
 );
 

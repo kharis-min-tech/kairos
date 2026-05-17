@@ -3,6 +3,17 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+  type DragStartEvent,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
   Card,
   CardContent,
   CardHeader,
@@ -33,6 +44,12 @@ import type {
   DepartmentJoinRequestWithMember,
   MemberWithBranch,
 } from '@kairos/types';
+import {
+  canDragRecruitmentRequest,
+  getRecruitmentDropRule,
+  type RecruitmentDragAction,
+  type RecruitmentDragRequest,
+} from './recruitment-drag-rules';
 
 const OPEN_STATUSES = [
   'applied',
@@ -145,6 +162,14 @@ export function RecruitmentTab({
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('date_added');
+  const [activeDragRequest, setActiveDragRequest] =
+    useState<DepartmentJoinRequestWithMember | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  );
 
   const schedule = useScheduleDepartmentInterview();
   const record = useRecordDepartmentInterview();
@@ -220,6 +245,40 @@ export function RecruitmentTab({
 
   const totalOpen = sortedOpen.length;
 
+  function openRecruitmentAction(
+    action: RecruitmentDragAction,
+    request: DepartmentJoinRequestWithMember,
+  ) {
+    if (action === 'schedule') setDialog({ kind: 'schedule', request });
+    if (action === 'record') setDialog({ kind: 'record', request });
+    if (action === 'offer') setDialog({ kind: 'offer', request });
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    const request = sortedOpen.find((r) => r.id === event.active.id);
+    if (request) setActiveDragRequest(request);
+  }
+
+  function handleDragCancel() {
+    setActiveDragRequest(null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveDragRequest(null);
+    if (!over) return;
+
+    const request = sortedOpen.find((r) => r.id === active.id);
+    if (!request) return;
+
+    const dropRule = getRecruitmentDropRule(request, over.id as string);
+    if (!dropRule.allowed || !dropRule.action) {
+      if (dropRule.reason) toast.error(dropRule.reason);
+      return;
+    }
+    openRecruitmentAction(dropRule.action, request);
+  }
+
   return (
     <div className="space-y-4">
       {/* Search + Sort toolbar — matches Souls Pipeline layout */}
@@ -257,57 +316,73 @@ export function RecruitmentTab({
         {search.trim() ? ` matching "${search.trim()}"` : ''}
       </p>
 
-      {/* Kanban columns — horizontal scroll like Souls Pipeline */}
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
-        <RecruitmentColumn
-          title="Applied"
-          status="applied"
-          requests={columns.applied}
-          onAction={(req) => setDialog({ kind: 'schedule', request: req })}
-          actionLabel="Schedule Interview"
-          onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
-          secondaryLabel="Reject"
-          onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
-        />
-        <RecruitmentColumn
-          title="Interview Scheduled"
-          status="interview_scheduled"
-          requests={columns.interview_scheduled}
-          onAction={(req) => setDialog({ kind: 'record', request: req })}
-          actionLabel="Record Interview"
-          onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
-          secondaryLabel="Reject"
-          onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
-        />
-        <RecruitmentColumn
-          title="Interviewed"
-          status="interviewed"
-          requests={columns.interviewed}
-          onAction={(req) => setDialog({ kind: 'offer', request: req })}
-          actionLabel="Extend Offer"
-          actionDisabled={(req) => req.interviewOutcome !== 'pass'}
-          onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
-          secondaryLabel="Reject"
-          onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
-        />
-        <RecruitmentColumn
-          title="Offer Extended"
-          status="offered"
-          requests={columns.offered}
-          actionLabel={null}
-          onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
-          secondaryLabel="Withdraw Offer"
-          onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
-        />
-        <RecruitmentColumn
-          title="On Probation"
-          status="probation"
-          requests={columns.probation}
-          onAction={(req) => setDialog({ kind: 'probation', request: req })}
-          actionLabel="Evaluate"
-          onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
-        />
-      </div>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        {/* Kanban columns — horizontal scroll like Souls Pipeline */}
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <RecruitmentColumn
+            title="Applied"
+            status="applied"
+            requests={columns.applied}
+            onAction={(req) => setDialog({ kind: 'schedule', request: req })}
+            actionLabel="Schedule Interview"
+            onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
+            secondaryLabel="Reject"
+            onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
+          />
+          <RecruitmentColumn
+            title="Interview Scheduled"
+            status="interview_scheduled"
+            requests={columns.interview_scheduled}
+            onAction={(req) => setDialog({ kind: 'record', request: req })}
+            actionLabel="Record Interview"
+            onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
+            secondaryLabel="Reject"
+            onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
+          />
+          <RecruitmentColumn
+            title="Interviewed"
+            status="interviewed"
+            requests={columns.interviewed}
+            onAction={(req) => setDialog({ kind: 'offer', request: req })}
+            actionLabel="Extend Offer"
+            actionDisabled={(req) => req.interviewOutcome !== 'pass'}
+            onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
+            secondaryLabel="Reject"
+            onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
+          />
+          <RecruitmentColumn
+            title="Offer Extended"
+            status="offered"
+            requests={columns.offered}
+            actionLabel={null}
+            onSecondary={(req) => setDialog({ kind: 'reject', request: req })}
+            secondaryLabel="Withdraw Offer"
+            onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
+          />
+          <RecruitmentColumn
+            title="On Probation"
+            status="probation"
+            requests={columns.probation}
+            onAction={(req) => setDialog({ kind: 'probation', request: req })}
+            actionLabel="Evaluate"
+            onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
+          />
+        </div>
+        <DragOverlay>
+          {activeDragRequest ? (
+            <CandidateCard
+              request={activeDragRequest}
+              status={activeDragRequest.status as OpenStatus}
+              variant="preview"
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {terminal.length > 0 && (
         <Card>
@@ -417,6 +492,13 @@ function RecruitmentColumn({
   onSecondary,
   onOpenDetail,
 }: ColumnProps) {
+  const { setNodeRef, isOver, active } = useDroppable({ id: status });
+  const activeRequest = active?.data.current as RecruitmentDragRequest | undefined;
+  const dropRule = getRecruitmentDropRule(activeRequest, status);
+  const isValidDropTarget = isOver && dropRule.allowed;
+  const isInvalidDropTarget =
+    isOver && !!activeRequest && !dropRule.allowed && activeRequest.status !== status;
+
   return (
     <div className="flex-1 min-w-[280px]">
       <Card className="bg-muted">
@@ -430,14 +512,23 @@ function RecruitmentColumn({
             </span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
+        <CardContent
+          ref={setNodeRef}
+          className={`space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin rounded-md transition-colors ${
+            isValidDropTarget
+              ? 'bg-primary/5 ring-2 ring-[#5D3FD3]/35 shadow-inner'
+              : isInvalidDropTarget
+                ? 'bg-muted/70 ring-1 ring-foreground/10'
+                : ''
+          }`}
+        >
           {requests.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No candidates in this stage
             </p>
           ) : (
             requests.map((r) => (
-              <CandidateCard
+              <DraggableCandidateCard
                 key={r.id}
                 request={r}
                 status={status}
@@ -456,6 +547,28 @@ function RecruitmentColumn({
   );
 }
 
+function DraggableCandidateCard(props: CandidateCardProps) {
+  const canDrag = canDragRecruitmentRequest(props.request);
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: props.request.id,
+    data: {
+      status: props.request.status,
+      interviewOutcome: props.request.interviewOutcome,
+    },
+    disabled: !canDrag,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...(canDrag ? attributes : {})}
+      {...(canDrag ? listeners : {})}
+    >
+      <CandidateCard {...props} isDragging={isDragging} />
+    </div>
+  );
+}
+
 interface CandidateCardProps {
   request: DepartmentJoinRequestWithMember;
   status: OpenStatus;
@@ -465,6 +578,8 @@ interface CandidateCardProps {
   secondaryLabel?: string;
   onSecondary?: (req: DepartmentJoinRequestWithMember) => void;
   onOpenDetail?: (req: DepartmentJoinRequestWithMember) => void;
+  isDragging?: boolean;
+  variant?: 'default' | 'preview';
 }
 
 function CandidateCard({
@@ -476,6 +591,8 @@ function CandidateCard({
   secondaryLabel,
   onSecondary,
   onOpenDetail,
+  isDragging = false,
+  variant = 'default',
 }: CandidateCardProps) {
   const interviewer = interviewerName(r);
 
@@ -547,12 +664,15 @@ function CandidateCard({
   return (
     <Card
       className={
-        'bg-card transition-shadow ' +
-        (onOpenDetail ? 'cursor-pointer hover:shadow-md' : 'hover:shadow-sm')
+        variant === 'preview'
+          ? 'pointer-events-none w-[280px] rotate-[1deg] border-[#5D3FD3]/15 bg-background/80 opacity-80 shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-[#5D3FD3]/10 backdrop-blur-sm'
+          : 'bg-card transition-shadow select-none ' +
+            (isDragging ? 'opacity-50 ' : '') +
+            (onOpenDetail ? 'cursor-pointer hover:shadow-md' : 'hover:shadow-sm')
       }
       onClick={handleCardClick}
-      role={onOpenDetail ? 'button' : undefined}
-      tabIndex={onOpenDetail ? 0 : undefined}
+      role={onOpenDetail && variant !== 'preview' ? 'button' : undefined}
+      tabIndex={onOpenDetail && variant !== 'preview' ? 0 : undefined}
       onKeyDown={(e) => {
         if (!onOpenDetail) return;
         if (e.key === 'Enter' || e.key === ' ') {
@@ -612,6 +732,7 @@ function CandidateCard({
                 size="sm"
                 className="h-7 px-2 text-[11px]"
                 disabled={actionDisabled?.(r) ?? false}
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => onAction(r)}
               >
                 {actionLabel}
@@ -622,6 +743,7 @@ function CandidateCard({
                 size="sm"
                 variant="outline"
                 className="h-7 px-2 text-[11px]"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => onSecondary(r)}
               >
                 {secondaryLabel}

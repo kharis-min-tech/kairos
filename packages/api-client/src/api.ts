@@ -837,7 +837,7 @@ export function createApiClient(
         getAttendance: (sessionId: string) =>
           client.get<ApiResponse<NewBelieverAttendanceWithMember[]>>(`/api/new-believers/sessions/${sessionId}/attendance`),
         recordAttendance: (sessionId: string, data: RecordNewBelieverAttendanceRequest) =>
-          client.post<ApiResponse<{ count: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
+          client.post<ApiResponse<{ recorded: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
       },
     },
   };

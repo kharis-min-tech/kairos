@@ -1,20 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ExternalLink } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   Button,
   CustomSelect,
+  Textarea,
 } from '@kairos/ui';
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
-import { STAGES, getNextStage } from './stage-config';
+import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
 import type { EnrollmentDetail } from './types';
+import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
 
 interface EnrollmentDetailDrawerProps {
   enrollmentId: string | null;
@@ -35,6 +40,8 @@ export function EnrollmentDetailDrawer({
   const { data, isLoading } = useEnrollment(enrollmentId ?? '');
   const enrollment = data as EnrollmentDetail | undefined;
   const updateEnrollment = useUpdateEnrollment();
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [advanceFeedback, setAdvanceFeedback] = useState('');
 
   const stage = enrollment
     ? STAGES.find((s) => s.value === enrollment.stage)
@@ -43,17 +50,59 @@ export function EnrollmentDetailDrawer({
 
   const attendanceHistory = enrollment?.attendanceHistory ?? [];
 
-  async function handleAdvance() {
-    if (!enrollment || !nextStage) return;
+  function resetFeedbackModal() {
+    setShowFeedbackModal(false);
+    setAdvanceFeedback('');
+  }
+
+  function needsSessionFeedbackBeforeAdvance() {
+    if (!enrollment || !SESSION_STAGE_VALUES.has(enrollment.stage as NewBelieverStageValue)) {
+      return false;
+    }
+    const completedMap = (enrollment.sessionCompletedAt ?? {}) as Record<string, string>;
+    const feedbackMap = (enrollment.sessionFeedback ?? {}) as Record<string, string>;
+    return !completedMap[enrollment.stage] || !feedbackMap[enrollment.stage]?.trim();
+  }
+
+  async function commitAdvance(feedback?: string) {
+    if (!enrollment || !nextStage) return false;
+    const updateData: UpdateEnrollmentRequest = { stage: nextStage.value };
+    const feedbackText = feedback?.trim();
+    if (SESSION_STAGE_VALUES.has(enrollment.stage as NewBelieverStageValue) && feedbackText) {
+      updateData.sessionCompletedAt = { [enrollment.stage]: new Date().toISOString() };
+      updateData.sessionFeedback = { [enrollment.stage]: feedbackText };
+    }
+
     try {
       await updateEnrollment.mutateAsync({
         id: enrollment.id,
-        data: { stage: nextStage.value },
+        data: updateData,
       });
       toast.success(`Advanced to ${nextStage.label}`);
+      return true;
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
+      return false;
     }
+  }
+
+  async function handleAdvance() {
+    if (!enrollment || !nextStage) return;
+    if (needsSessionFeedbackBeforeAdvance()) {
+      const existingFeedback =
+        ((enrollment.sessionFeedback ?? {}) as Record<string, string>)[enrollment.stage]?.trim() ??
+        '';
+      setAdvanceFeedback(existingFeedback);
+      setShowFeedbackModal(true);
+      return;
+    }
+    await commitAdvance();
+  }
+
+  async function handleConfirmAdvanceWithFeedback() {
+    if (!advanceFeedback.trim()) return;
+    const advanced = await commitAdvance(advanceFeedback);
+    if (advanced) resetFeedbackModal();
   }
 
   async function handleReassign(field: 'teacherId' | 'mentorId', value: string) {
@@ -75,12 +124,16 @@ export function EnrollmentDetailDrawer({
   }));
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            resetFeedbackModal();
+            onClose();
+          }
+        }}
+      >
       <DialogContent
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
         aria-label="Enrollment details"
@@ -91,6 +144,9 @@ export function EnrollmentDetailDrawer({
               ? `${enrollment.memberFirstName} ${enrollment.memberLastName}`
               : 'Loading...'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            View and update this new believer enrollment.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading || !enrollment ? (
@@ -214,7 +270,50 @@ export function EnrollmentDetailDrawer({
           </div>
         )}
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <Dialog
+        open={showFeedbackModal}
+        onOpenChange={(openFeedbackDialog) => {
+          if (!openFeedbackDialog) {
+            resetFeedbackModal();
+          } else {
+            setShowFeedbackModal(true);
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Session Feedback Required</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Record feedback before moving to {nextStage?.label ?? 'the next stage'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Session Feedback <span className="text-destructive">*</span>
+            </label>
+            <Textarea
+              rows={4}
+              placeholder="How did the session go? Any observations about the student's progress?"
+              value={advanceFeedback}
+              onChange={(e) => setAdvanceFeedback(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetFeedbackModal}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!advanceFeedback.trim() || updateEnrollment.isPending}
+              onClick={handleConfirmAdvanceWithFeedback}
+              className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
+            >
+              {updateEnrollment.isPending ? 'Saving...' : 'Confirm & Advance'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
-

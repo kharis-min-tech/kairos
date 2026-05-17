@@ -60,6 +60,19 @@ describe('BulkActionBar', () => {
     expect(onAdvance).toHaveBeenCalledTimes(1);
   });
 
+  it('disables bulk advance when individual session feedback is required', () => {
+    render(
+      <BulkActionBar
+        {...baseProps}
+        selectedCount={2}
+        targetStage={'session-2' as never}
+        requiresIndividualFeedback
+      />,
+    );
+    expect(screen.getByText(/Session moves need individual feedback/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Advance$/ })).toBeDisabled();
+  });
+
   it('shows the cap hint when selectedCount === MAX_BULK_SELECT', () => {
     render(<BulkActionBar {...baseProps} selectedCount={5} />);
     expect(screen.getByText(/Cap reached/i)).toBeInTheDocument();

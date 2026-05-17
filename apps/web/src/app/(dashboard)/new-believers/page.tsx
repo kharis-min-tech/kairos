@@ -4,15 +4,25 @@ import { Suspense, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   DndContext,
+  DragOverlay,
   useSensor,
   useSensors,
   PointerSensor,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
-import { Button } from '@kairos/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Textarea,
+} from '@kairos/ui';
 import {
   useEnrollments,
   useEnrollmentAlerts,
@@ -21,16 +31,24 @@ import {
 } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMembers } from '@/hooks/use-members';
-import type { NewBelieverStageValue, EnrollmentListParams } from '@kairos/types';
+import type { NewBelieverStageValue, EnrollmentListParams, UpdateEnrollmentRequest } from '@kairos/types';
 
 import { STAGES, SESSION_STAGE_VALUES, MAX_BULK_SELECT } from './_components/stage-config';
 import type { EnrollmentCardData } from './_components/types';
 import { PipelineToolbar, type EnrollmentSortOption } from './_components/pipeline-toolbar';
 import { BulkActionBar } from './_components/bulk-action-bar';
 import { StageColumn } from './_components/stage-column';
+import { EnrollmentCardDragPreview } from './_components/enrollment-card';
 import { EnrollDialog } from './_components/enroll-dialog';
 import { EnrollmentDetailDrawer } from './_components/enrollment-detail-drawer';
 import { MemberJourneyView } from './_components/member-journey-view';
+
+type PendingStageMove = {
+  enrollmentId: string;
+  fromStage: NewBelieverStageValue;
+  toStage: NewBelieverStageValue;
+  memberName: string;
+};
 
 function NewBelieversContent() {
   const { activeRole, user } = useAuthStore();
@@ -51,6 +69,9 @@ function NewBelieversContent() {
   // Modals & drawer
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [drawerEnrollmentId, setDrawerEnrollmentId] = useState<string | null>(null);
+  const [pendingStageMove, setPendingStageMove] = useState<PendingStageMove | null>(null);
+  const [stageMoveFeedback, setStageMoveFeedback] = useState('');
+  const [activeDragEnrollmentId, setActiveDragEnrollmentId] = useState<string | null>(null);
 
   // Track the undo toast so a fresh drop dismisses the stale one
   const undoToastRef = useRef<string | number | null>(null);
@@ -71,9 +92,12 @@ function NewBelieversContent() {
   const { data: memberData } = useMembers(
     user?.homeBranchId ? { branchId: user.homeBranchId, limit: 500 } : undefined,
   );
-  const branchMembers = memberData?.data ?? [];
+  const branchMembers = useMemo(() => memberData?.data ?? [], [memberData?.data]);
 
-  const enrollments = (result?.data ?? []) as EnrollmentCardData[];
+  const enrollments = useMemo(
+    () => (result?.data ?? []) as EnrollmentCardData[],
+    [result?.data],
+  );
   const alerts = alertsResult?.data ?? [];
   const myEnrollment = isMember
     ? enrollments.find((e) => e.memberId === user?.id)
@@ -107,6 +131,18 @@ function NewBelieversContent() {
       return acc;
     }, {});
   }, [displayedEnrollments]);
+  const selectedEnrollments = useMemo(
+    () => displayedEnrollments.filter((enrollment) => selectedIds.has(enrollment.id)),
+    [displayedEnrollments, selectedIds],
+  );
+  const selectedRequiresIndividualFeedback = useMemo(
+    () => selectedEnrollments.some((enrollment) => SESSION_STAGE_VALUES.has(enrollment.stage)),
+    [selectedEnrollments],
+  );
+  const activeDragEnrollment = useMemo(
+    () => enrollments.find((enrollment) => enrollment.id === activeDragEnrollmentId) ?? null,
+    [activeDragEnrollmentId, enrollments],
+  );
 
   // Pools for the enroll dialog (members not currently student / teacher / mentor)
   const activeStudentIds = useMemo(() => new Set(enrollments.map((e) => e.memberId)), [enrollments]);
@@ -171,6 +207,10 @@ function NewBelieversContent() {
 
   async function handleBulkAdvance() {
     if (selectedIds.size === 0 || !bulkTargetStage) return;
+    if (selectedRequiresIndividualFeedback) {
+      toast.warning('Session moves need individual feedback. Move one member at a time.');
+      return;
+    }
     try {
       const result = await bulkAdvance.mutateAsync({
         enrollmentIds: Array.from(selectedIds),
@@ -188,44 +228,39 @@ function NewBelieversContent() {
   }
 
   // ── Drag and drop ──────────────────────────────────────
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over) return;
+  function resetPendingStageMove() {
+    setPendingStageMove(null);
+    setStageMoveFeedback('');
+  }
 
-    const fromStage = (active.data.current as { stage: string }).stage;
-    const toStage = over.id as string;
-    const fromIdx = STAGES.findIndex((s) => s.value === fromStage);
-    const toIdx = STAGES.findIndex((s) => s.value === toStage);
-    if (toIdx !== fromIdx + 1) return;
-
-    const enrollmentId = active.id as string;
-    const nextStage = STAGES[toIdx]!;
-    const enrollment = enrollments.find((e) => e.id === enrollmentId);
-    const memberName = enrollment
-      ? `${enrollment.memberFirstName} ${enrollment.memberLastName}`
-      : 'Member';
-    const isSessionStage = SESSION_STAGE_VALUES.has(fromStage as NewBelieverStageValue);
-    const sessionCompletedAt = isSessionStage
-      ? { [fromStage]: new Date().toISOString() }
-      : undefined;
+  async function commitStageMove(move: PendingStageMove, feedback?: string) {
+    const nextStage = STAGES.find((s) => s.value === move.toStage);
+    if (!nextStage) return false;
 
     if (undoToastRef.current !== null) {
       toast.dismiss(undoToastRef.current);
       undoToastRef.current = null;
     }
 
+    const feedbackText = feedback?.trim();
+    const data: UpdateEnrollmentRequest = { stage: move.toStage };
+    if (SESSION_STAGE_VALUES.has(move.fromStage) && feedbackText) {
+      data.sessionCompletedAt = { [move.fromStage]: new Date().toISOString() };
+      data.sessionFeedback = { [move.fromStage]: feedbackText };
+    }
+
     try {
       await updateEnrollment.mutateAsync({
-        id: enrollmentId,
-        data: { stage: nextStage.value, ...(sessionCompletedAt ? { sessionCompletedAt } : {}) },
+        id: move.enrollmentId,
+        data,
       });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance');
-      return;
+      return false;
     }
 
     let undone = false;
-    const toastId = toast(`${memberName} → ${nextStage.label}`, {
+    const toastId = toast(`${move.memberName} → ${nextStage.label}`, {
       duration: 5000,
       action: {
         label: 'Undo',
@@ -239,8 +274,8 @@ function NewBelieversContent() {
             if (delay > 0) await new Promise<void>((r) => setTimeout(r, delay));
             try {
               await updateEnrollment.mutateAsync({
-                id: enrollmentId,
-                data: { stage: fromStage as NewBelieverStageValue },
+                id: move.enrollmentId,
+                data: { stage: move.fromStage },
               });
               reversed = true;
               break;
@@ -261,9 +296,72 @@ function NewBelieversContent() {
     setTimeout(() => {
       if (!undone) undoToastRef.current = null;
     }, 5500);
+    return true;
+  }
+
+  async function handleConfirmStageMove() {
+    if (!pendingStageMove || !stageMoveFeedback.trim()) return;
+    const moved = await commitStageMove(pendingStageMove, stageMoveFeedback);
+    if (moved) resetPendingStageMove();
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveDragEnrollmentId(event.active.id as string);
+  }
+
+  function handleDragCancel() {
+    setActiveDragEnrollmentId(null);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveDragEnrollmentId(null);
+    if (!over) return;
+
+    const fromStage = (active.data.current as { stage: NewBelieverStageValue }).stage;
+    const toStage = over.id as NewBelieverStageValue;
+    const fromIdx = STAGES.findIndex((s) => s.value === fromStage);
+    const toIdx = STAGES.findIndex((s) => s.value === toStage);
+    if (toIdx !== fromIdx + 1) return;
+
+    const enrollmentId = active.id as string;
+    const enrollment = enrollments.find((e) => e.id === enrollmentId);
+    const memberName = enrollment
+      ? `${enrollment.memberFirstName} ${enrollment.memberLastName}`
+      : 'Member';
+
+    const move: PendingStageMove = {
+      enrollmentId,
+      fromStage,
+      toStage,
+      memberName,
+    };
+
+    if (SESSION_STAGE_VALUES.has(fromStage)) {
+      const completedMap = (enrollment?.sessionCompletedAt ?? {}) as Record<string, string>;
+      const feedbackMap = (enrollment?.sessionFeedback ?? {}) as Record<string, string>;
+      const existingFeedback = feedbackMap[fromStage]?.trim() ?? '';
+      if (!completedMap[fromStage] || !existingFeedback) {
+        if (undoToastRef.current !== null) {
+          toast.dismiss(undoToastRef.current);
+          undoToastRef.current = null;
+        }
+        setPendingStageMove(move);
+        setStageMoveFeedback(existingFeedback);
+        return;
+      }
+    }
+
+    await commitStageMove(move);
   }
 
   // ── Render branches ────────────────────────────────────
+  const pendingMoveFromStage = pendingStageMove
+    ? STAGES.find((s) => s.value === pendingStageMove.fromStage)
+    : undefined;
+  const pendingMoveToStage = pendingStageMove
+    ? STAGES.find((s) => s.value === pendingStageMove.toStage)
+    : undefined;
 
   if (isMember) {
     return (
@@ -361,6 +459,7 @@ function NewBelieversContent() {
         onAdvance={handleBulkAdvance}
         onClear={clearSelection}
         isAdvancing={bulkAdvance.isPending}
+        requiresIndividualFeedback={selectedRequiresIndividualFeedback}
       />
 
       {/* Stale alert banner */}
@@ -394,7 +493,12 @@ function NewBelieversContent() {
           <p className="text-muted-foreground">Loading pipeline...</p>
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {STAGES.map((s) => (
               <StageColumn
@@ -410,8 +514,54 @@ function NewBelieversContent() {
               />
             ))}
           </div>
+          <DragOverlay>
+            {activeDragEnrollment ? (
+              <EnrollmentCardDragPreview enrollment={activeDragEnrollment} />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       )}
+
+      <Dialog
+        open={!!pendingStageMove}
+        onOpenChange={(open) => {
+          if (!open) resetPendingStageMove();
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Session Feedback Required</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Record feedback for {pendingStageMove?.memberName ?? 'this member'} before moving
+              from {pendingMoveFromStage?.label ?? 'this session'} to{' '}
+              {pendingMoveToStage?.label ?? 'the next stage'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Session Feedback <span className="text-destructive">*</span>
+            </label>
+            <Textarea
+              rows={4}
+              placeholder="How did the session go? Any observations about the student's progress?"
+              value={stageMoveFeedback}
+              onChange={(e) => setStageMoveFeedback(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetPendingStageMove}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!stageMoveFeedback.trim() || updateEnrollment.isPending}
+              onClick={handleConfirmStageMove}
+              className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
+            >
+              {updateEnrollment.isPending ? 'Saving...' : 'Confirm Move'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {isAdminOrPastor && user?.homeBranchId && (
         <EnrollDialog

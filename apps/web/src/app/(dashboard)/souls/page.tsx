@@ -14,9 +14,17 @@ import {
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import {
+  getSoulDisposition,
+  getSoulDropRule,
+  getSoulLane,
+  SOUL_PIPELINE_LANES,
+} from './_components/drag-rules';
 
 interface SoulCardData {
   id: string;
@@ -30,7 +38,7 @@ interface SoulCardData {
   outreachName?: string;
 }
 
-const KANBAN_STATUSES = ['New', 'Following Up', 'Interested', 'Not Interested', 'Converted', 'Lost Contact'];
+const KANBAN_STATUSES = [...SOUL_PIPELINE_LANES];
 
 type RAGLabel = 'Critical' | 'Monitor' | 'On Track';
 
@@ -73,17 +81,20 @@ function SoulCard({
   isDragging, 
   isSelected, 
   onToggleSelect, 
-  canSelect 
+  canSelect,
+  variant = 'default',
 }: { 
   soul: SoulCardData; 
   isDragging?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
   canSelect?: boolean;
+  variant?: 'default' | 'preview';
 }) {
   const router = useRouter();
   
   const ragStatus = getRAGStatus(soul.status, soul.daysSinceLastFollowUp);
+  const disposition = getSoulDisposition(soul.status);
 
   // Initials fallback for assignee avatar
   const assigneeInitials = soul.assignedMemberName
@@ -92,9 +103,13 @@ function SoulCard({
 
   return (
     <Card
-      className={`cursor-pointer hover:shadow-ambient transition-shadow ${
-        isDragging ? 'opacity-50' : ''
-      }`}
+      className={
+        variant === 'preview'
+          ? 'pointer-events-none w-[280px] rotate-[1deg] border-[#5D3FD3]/15 bg-background/80 opacity-80 shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-[#5D3FD3]/10 backdrop-blur-sm'
+          : `cursor-pointer hover:shadow-ambient transition-shadow select-none ${
+              isDragging ? 'opacity-50' : ''
+            }`
+      }
     >
       <CardContent className="p-3">
         {/* Zone 1 — identity + RAG */}
@@ -105,6 +120,7 @@ function SoulCard({
           {canSelect && onToggleSelect && (
             <button
               type="button"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onToggleSelect(soul.id); }}
               className={`mt-0.5 flex-shrink-0 h-4 w-4 rounded flex items-center justify-center transition-colors ${
                 isSelected
@@ -122,6 +138,19 @@ function SoulCard({
               <p className="font-semibold leading-tight">{soul.firstName} {soul.lastName}</p>
             </div>
             <p className="text-xs text-muted-foreground">{soul.phone}</p>
+            {disposition && (
+              <span
+                className={`mt-1.5 inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                  disposition === 'Interested'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                    : disposition === 'Not Interested'
+                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
+                      : 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300'
+                }`}
+              >
+                {disposition}
+              </span>
+            )}
           </div>
         </div>
 
@@ -165,6 +194,40 @@ function SoulCard({
   );
 }
 
+function DraggableSoulCard({
+  soul,
+  isSelected,
+  onToggleSelect,
+  canSelect,
+}: {
+  soul: SoulCardData;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
+  canSelect?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: soul.id,
+    data: { status: soul.status },
+    disabled: !!isSelected,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...(!isSelected ? attributes : {})}
+      {...(!isSelected ? listeners : {})}
+    >
+      <SoulCard
+        soul={soul}
+        isDragging={isDragging}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
+        canSelect={canSelect}
+      />
+    </div>
+  );
+}
+
 function KanbanColumn({
   status,
   souls,
@@ -180,6 +243,12 @@ function KanbanColumn({
   onToggleSelect?: (id: string) => void;
   canSelect?: boolean;
 }) {
+  const { setNodeRef, isOver, active } = useDroppable({ id: status });
+  const fromStatus = active?.data.current?.status as string | undefined;
+  const dropRule = getSoulDropRule(fromStatus, status);
+  const isValidDropTarget = isOver && dropRule.allowed;
+  const isInvalidDropTarget = isOver && !!fromStatus && !dropRule.allowed && fromStatus !== status;
+
   return (
     <div className="flex-1 min-w-[280px]">
       <Card className="bg-muted">
@@ -189,7 +258,16 @@ function KanbanColumn({
             <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">{count}</span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
+        <CardContent
+          ref={setNodeRef}
+          className={`space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin rounded-md transition-colors ${
+            isValidDropTarget
+              ? 'bg-primary/5 ring-2 ring-[#5D3FD3]/35 shadow-inner'
+              : isInvalidDropTarget
+                ? 'bg-muted/70 ring-1 ring-foreground/10'
+                : ''
+          }`}
+        >
           {souls.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No souls in this stage
@@ -197,7 +275,7 @@ function KanbanColumn({
           ) : (
             souls.map((soul) => (
               <div key={soul.id} data-soul-id={soul.id}>
-                <SoulCard 
+                <DraggableSoulCard
                   soul={soul} 
                   isSelected={selectedSouls?.has(soul.id)}
                   onToggleSelect={onToggleSelect}
@@ -382,7 +460,19 @@ export default function SoulsKanbanPage() {
     const newStatus = over.id as string;
     const soul = souls.find((s) => s.id === soulId);
 
-    if (!soul || soul.status === newStatus) return;
+    if (!soul) return;
+
+    const dropRule = getSoulDropRule(soul.status, newStatus);
+    if (!dropRule.allowed) {
+      if (dropRule.reason) {
+        toast({
+          title: 'Move not available',
+          description: dropRule.reason,
+          variant: 'destructive',
+        });
+      }
+      return;
+    }
 
     // Optimistic update
     updateSoulOptimistic(soulId, { status: newStatus });
@@ -404,10 +494,14 @@ export default function SoulsKanbanPage() {
     }
   };
 
+  const handleDragCancel = () => {
+    setActiveSoul(null);
+  };
+
   // Derive unique outreach sources for the dropdown
   const uniqueSources = [...new Set(souls.map((s) => s.outreachName || 'Ad-hoc'))].sort();
 
-  // Apply RAG filter → source filter → sort, then group by status for Kanban columns
+  // Apply RAG filter -> source filter -> sort, then group by journey lane for Kanban columns.
   const ragFiltered = ragFilter === 'All'
     ? souls
     : souls.filter((s) => getRAGStatus(s.status, s.daysSinceLastFollowUp).label === ragFilter);
@@ -430,7 +524,7 @@ export default function SoulsKanbanPage() {
   });
 
   const soulsByStatus = KANBAN_STATUSES.reduce((acc, status) => {
-    acc[status] = filteredSouls.filter((soul) => soul.status === status);
+    acc[status] = filteredSouls.filter((soul) => getSoulLane(soul.status) === status);
     return acc;
   }, {} as Record<string, typeof souls>);
 
@@ -634,6 +728,7 @@ export default function SoulsKanbanPage() {
           sensors={sensors}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {KANBAN_STATUSES.map((status) => (
@@ -651,7 +746,7 @@ export default function SoulsKanbanPage() {
           </div>
 
           <DragOverlay>
-            {activeSoul ? <SoulCard soul={activeSoul} isDragging /> : null}
+            {activeSoul ? <SoulCard soul={activeSoul} variant="preview" /> : null}
           </DragOverlay>
         </DndContext>
       )}

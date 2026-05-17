@@ -3,7 +3,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import { EnrollmentCard } from './enrollment-card';
-import type { StageDef } from './stage-config';
+import { getNextStage, type StageDef } from './stage-config';
 import type { EnrollmentCardData } from './types';
 
 interface StageColumnProps {
@@ -27,8 +27,12 @@ export function StageColumn({
   onToggleSelect,
   onOpenDrawer,
 }: StageColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage.value });
+  const { setNodeRef, isOver, active } = useDroppable({ id: stage.value });
   const count = enrollments.length;
+  const activeStage = active?.data.current?.stage as string | undefined;
+  const expectedNextStage = activeStage ? getNextStage(activeStage)?.value : undefined;
+  const isValidDropTarget = isOver && expectedNextStage === stage.value;
+  const isInvalidDropTarget = isOver && !!activeStage && expectedNextStage !== stage.value;
 
   return (
     <div className="flex-1 min-w-[280px]">
@@ -53,7 +57,11 @@ export function StageColumn({
         <CardContent
           ref={setNodeRef}
           className={`space-y-2 px-2 pb-2 pt-0 max-h-[calc(100vh-340px)] overflow-y-auto scrollbar-thin rounded-md transition-colors ${
-            isOver ? 'bg-primary/5 ring-2 ring-[#5D3FD3]/40' : ''
+            isValidDropTarget
+              ? 'bg-primary/5 ring-2 ring-[#5D3FD3]/35 shadow-inner'
+              : isInvalidDropTarget
+                ? 'bg-muted/70 ring-1 ring-foreground/10'
+                : ''
           }`}
         >
           {enrollments.length === 0 ? (

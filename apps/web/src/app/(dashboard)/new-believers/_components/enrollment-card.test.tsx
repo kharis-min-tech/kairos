@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DndContext } from '@dnd-kit/core';
-import { EnrollmentCard } from './enrollment-card';
+import { EnrollmentCard, EnrollmentCardDragPreview } from './enrollment-card';
 import type { EnrollmentCardData } from './types';
 
 function renderWithDnd(ui: React.ReactElement) {
@@ -149,5 +149,11 @@ describe('EnrollmentCard', () => {
     );
     const cb = screen.getByRole('button', { name: /Deselect enrollment/i });
     expect(cb).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('renders a drag preview without needing draggable context', () => {
+    render(<EnrollmentCardDragPreview enrollment={baseEnrollment} />);
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(screen.getByText(/No support team assigned/)).toBeInTheDocument();
   });
 });

@@ -476,16 +476,20 @@ export interface BulkAdvanceEnrollmentsResult {
 
 export interface CreateNewBelieverSessionRequest {
   branchId: string;
+  sessionStage: string;
   sessionDate: string;
-  topic: string;
-  teacherId?: string;
+  topic?: string;
+  location: string;
+  teacherId: string;
   notes?: string;
   feedback?: string;
 }
 
 export interface UpdateNewBelieverSessionRequest {
+  sessionStage?: string;
   topic?: string;
   sessionDate?: string;
+  location?: string | null;
   notes?: string;
   feedback?: string;
   teacherId?: string | null;

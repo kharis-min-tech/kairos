@@ -10,7 +10,7 @@ function renderWithDnd(ui: React.ReactElement) {
 }
 
 const session1Stage = STAGES.find((s) => s.value === 'session-1')!;
-const enrolledStage = STAGES.find((s) => s.value === 'enrolled')!;
+const completedStage = STAGES.find((s) => s.value === 'completed')!;
 
 function makeEnrollment(overrides: Partial<EnrollmentCardData> = {}): EnrollmentCardData {
   return {
@@ -97,12 +97,11 @@ describe('StageColumn', () => {
     expect(onOpenDrawer).toHaveBeenCalledWith('enr-clicked');
   });
 
-  it('does not render a topic line for stages without a topic (e.g. Enrolled)', () => {
+  it('does not render a topic line for stages without a topic', () => {
     renderWithDnd(
-      <StageColumn {...baseProps} stage={enrolledStage} enrollments={[]} />,
+      <StageColumn {...baseProps} stage={completedStage} enrollments={[]} />,
     );
-    expect(screen.getByText('Enrolled')).toBeInTheDocument();
-    // No topic on the "enrolled" stage definition
+    expect(screen.getByText('Completed')).toBeInTheDocument();
     expect(screen.queryByText(/Foundations of Faith/i)).not.toBeInTheDocument();
   });
 });

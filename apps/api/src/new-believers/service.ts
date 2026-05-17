@@ -51,6 +51,57 @@ async function enforceTeacherOrAbove(db: Database, auth: AuthContext, branchId: 
   }
 }
 
+const STAGE_ORDER = [
+  'enrolled',
+  'session-1',
+  'session-2',
+  'session-3',
+  'session-4',
+  'completed',
+  'integrated',
+] as const;
+
+const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
+
+const SESSION_TOPICS: Record<string, string> = {
+  'session-1': 'Foundations of Faith',
+  'session-2': 'Who is a Christian',
+  'session-3': 'Working out your Salvation',
+  'session-4': 'The Importance of Fellowship',
+};
+
+function isForwardStageMove(currentStage: string, targetStage: string) {
+  const currentIdx = STAGE_ORDER.findIndex((stage) => stage === currentStage);
+  const targetIdx = STAGE_ORDER.findIndex((stage) => stage === targetStage);
+  if (currentIdx < 0 || targetIdx < 0) return true;
+  return targetIdx > currentIdx;
+}
+
+function hasSessionFeedback(feedbackMap: Record<string, string>, stage: string) {
+  return typeof feedbackMap[stage] === 'string' && feedbackMap[stage].trim().length > 0;
+}
+
+async function hasAttendedSessionStage(
+  db: Database,
+  enrollmentId: string,
+  sessionStage: string,
+) {
+  const [attendance] = await db
+    .select({ sessionId: newBelieverAttendance.sessionId })
+    .from(newBelieverAttendance)
+    .innerJoin(newBelieverSessions, eq(newBelieverAttendance.sessionId, newBelieverSessions.id))
+    .where(
+      and(
+        eq(newBelieverAttendance.enrollmentId, enrollmentId),
+        eq(newBelieverAttendance.attended, true),
+        eq(newBelieverSessions.sessionStage, sessionStage),
+      )
+    )
+    .limit(1);
+
+  return !!attendance;
+}
+
 // ── Enrollments ────────────────────────────────────────────
 
 export async function listEnrollments(
@@ -106,6 +157,7 @@ export async function listEnrollments(
         enrolledAt: newBelieverEnrollments.enrolledAt,
         completedAt: newBelieverEnrollments.completedAt,
         sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+        sessionFeedback: newBelieverEnrollments.sessionFeedback,
         joinedDepartmentId: newBelieverEnrollments.joinedDepartmentId,
         notes: newBelieverEnrollments.notes,
         isActive: newBelieverEnrollments.isActive,
@@ -161,6 +213,7 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
       enrolledAt: newBelieverEnrollments.enrolledAt,
       completedAt: newBelieverEnrollments.completedAt,
       sessionCompletedAt: newBelieverEnrollments.sessionCompletedAt,
+      sessionFeedback: newBelieverEnrollments.sessionFeedback,
       joinedDepartmentId: newBelieverEnrollments.joinedDepartmentId,
       notes: newBelieverEnrollments.notes,
       isActive: newBelieverEnrollments.isActive,
@@ -270,7 +323,7 @@ export async function createEnrollment(
       teacherId: data.teacherId ?? null,
       mentorId: data.mentorId ?? null,
       notes: data.notes ?? null,
-      stage: 'enrolled',
+      stage: 'session-1',
     })
     .returning();
 
@@ -347,9 +400,12 @@ export async function updateEnrollment(
       throw new ForbiddenError('This member is currently enrolled as a New Believers student and cannot be assigned as a teacher');
     }
   }
-  // (sessions-only stages: session-1 through session-4)
-  const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
-  if (data.stage && data.stage !== existing.stage && SESSION_STAGES.has(existing.stage)) {
+  if (
+    data.stage &&
+    data.stage !== existing.stage &&
+    SESSION_STAGES.has(existing.stage) &&
+    isForwardStageMove(existing.stage, data.stage)
+  ) {
     // Merge incoming sessionCompletedAt with DB state BEFORE the guard check.
     // The client sends stage + sessionCompletedAt in one payload; the DB hasn't been
     // written yet, so existing.sessionCompletedAt won't contain the current session.
@@ -357,9 +413,23 @@ export async function updateEnrollment(
       ...((existing.sessionCompletedAt as Record<string, string>) ?? {}),
       ...(data.sessionCompletedAt ?? {}),
     };
+    const mergedFeedbackMap: Record<string, string> = {
+      ...((existing.sessionFeedback as Record<string, string>) ?? {}),
+      ...(data.sessionFeedback ?? {}),
+    };
     if (!mergedCompletedMap[existing.stage]) {
       throw new ForbiddenError(
         `Cannot advance from ${existing.stage} until it has been marked complete. Use "Mark Complete" first.`
+      );
+    }
+    if (!hasSessionFeedback(mergedFeedbackMap, existing.stage)) {
+      throw new ForbiddenError(
+        `Cannot advance from ${existing.stage} until session feedback has been recorded.`
+      );
+    }
+    if (!(await hasAttendedSessionStage(db, enrollmentId, existing.stage))) {
+      throw new ForbiddenError(
+        `Cannot advance from ${existing.stage} until attendance has been marked present for that session.`
       );
     }
   }
@@ -467,11 +537,14 @@ export async function listSessions(
       id: newBelieverSessions.id,
       branchId: newBelieverSessions.branchId,
       teacherId: newBelieverSessions.teacherId,
+      sessionStage: newBelieverSessions.sessionStage,
       sessionDate: newBelieverSessions.sessionDate,
       topic: newBelieverSessions.topic,
+      location: newBelieverSessions.location,
       notes: newBelieverSessions.notes,
       feedback: newBelieverSessions.feedback,
       createdAt: newBelieverSessions.createdAt,
+      updatedAt: newBelieverSessions.updatedAt,
       teacherFirstName: sql<string | null>`t.first_name`,
       teacherLastName: sql<string | null>`t.last_name`,
     })
@@ -484,18 +557,30 @@ export async function listSessions(
 export async function createSession(
   db: Database,
   auth: AuthContext,
-  data: { branchId: string; sessionDate: string; topic: string; teacherId?: string; notes?: string; feedback?: string }
+  data: {
+    branchId: string;
+    sessionStage: string;
+    sessionDate: string;
+    topic?: string;
+    location: string;
+    teacherId: string;
+    notes?: string;
+    feedback?: string;
+  }
 ) {
   await enforceTeacherOrAbove(db, auth, data.branchId);
   enforceBranchScope(auth, data.branchId);
+  const topic = SESSION_TOPICS[data.sessionStage] ?? data.topic ?? data.sessionStage;
 
   const [session] = await db
     .insert(newBelieverSessions)
     .values({
       branchId: data.branchId,
       sessionDate: new Date(data.sessionDate),
-      topic: data.topic,
-      teacherId: data.teacherId ?? null,
+      sessionStage: data.sessionStage,
+      topic,
+      location: data.location,
+      teacherId: data.teacherId,
       notes: data.notes ?? null,
       feedback: data.feedback ?? null,
       createdBy: auth.memberId,
@@ -509,7 +594,15 @@ export async function updateSession(
   db: Database,
   auth: AuthContext,
   sessionId: string,
-  data: { topic?: string; sessionDate?: string; notes?: string; feedback?: string; teacherId?: string | null }
+  data: {
+    sessionStage?: string;
+    topic?: string;
+    sessionDate?: string;
+    location?: string | null;
+    notes?: string;
+    feedback?: string;
+    teacherId?: string | null;
+  }
 ) {
   const [session] = await db
     .select({ branchId: newBelieverSessions.branchId, teacherId: newBelieverSessions.teacherId })
@@ -528,8 +621,14 @@ export async function updateSession(
   }
 
   const updateValues: Record<string, unknown> = { updatedAt: sql`NOW()` };
-  if (data.topic !== undefined) updateValues.topic = data.topic;
+  if (data.sessionStage !== undefined) {
+    updateValues.sessionStage = data.sessionStage;
+    updateValues.topic = SESSION_TOPICS[data.sessionStage] ?? data.topic;
+  } else if (data.topic !== undefined) {
+    updateValues.topic = data.topic;
+  }
   if (data.sessionDate !== undefined) updateValues.sessionDate = new Date(data.sessionDate);
+  if (data.location !== undefined) updateValues.location = data.location;
   if (data.notes !== undefined) updateValues.notes = data.notes;
   if (data.feedback !== undefined) updateValues.feedback = data.feedback;
   if (data.teacherId !== undefined) updateValues.teacherId = data.teacherId;
@@ -550,7 +649,7 @@ export async function recordSessionAttendance(
   records: Array<{ enrollmentId: string; attended: boolean; notes?: string }>
 ) {
   const [session] = await db
-    .select({ branchId: newBelieverSessions.branchId })
+    .select({ branchId: newBelieverSessions.branchId, sessionStage: newBelieverSessions.sessionStage })
     .from(newBelieverSessions)
     .where(eq(newBelieverSessions.id, sessionId))
     .limit(1);
@@ -561,6 +660,35 @@ export async function recordSessionAttendance(
 
   // Upsert all records
   for (const record of records) {
+    const [enrollment] = await db
+      .select({
+        branchId: newBelieverEnrollments.branchId,
+        stage: newBelieverEnrollments.stage,
+        isActive: newBelieverEnrollments.isActive,
+      })
+      .from(newBelieverEnrollments)
+      .where(eq(newBelieverEnrollments.id, record.enrollmentId))
+      .limit(1);
+    if (!enrollment) throw new NotFoundError('Enrollment');
+    if (enrollment.branchId !== session.branchId) {
+      throw new ForbiddenError('Attendance can only be recorded for enrollments in the session branch');
+    }
+    const [existingAttendance] = await db
+      .select({ enrollmentId: newBelieverAttendance.enrollmentId })
+      .from(newBelieverAttendance)
+      .where(
+        and(
+          eq(newBelieverAttendance.sessionId, sessionId),
+          eq(newBelieverAttendance.enrollmentId, record.enrollmentId),
+        )
+      )
+      .limit(1);
+    if ((!enrollment.isActive || enrollment.stage !== session.sessionStage) && !existingAttendance) {
+      throw new ForbiddenError(
+        `Attendance for this session can only be recorded for active ${session.sessionStage} enrollments`
+      );
+    }
+
     await db
       .insert(newBelieverAttendance)
       .values({
@@ -640,7 +768,7 @@ export async function autoEnroll(
     await db.insert(newBelieverEnrollments).values({
       memberId,
       branchId,
-      stage: 'enrolled',
+      stage: 'session-1',
     });
   }
 }

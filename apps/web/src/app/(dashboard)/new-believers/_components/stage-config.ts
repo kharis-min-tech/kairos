@@ -10,10 +10,10 @@ export interface StageDef {
 
 /**
  * Single source of truth for new-believer pipeline stages.
- * Order here must mirror the `NewBelieverStage` enum in `@kairos/types`.
+ * Active enrollments now start at Session 1; the legacy `enrolled` value
+ * remains in shared types for old rows/imports but is not shown as a board lane.
  */
 export const STAGES: StageDef[] = [
-  { value: 'enrolled',   label: 'Enrolled',            dotColor: 'bg-slate-400' },
   { value: 'session-1',  label: 'Session 1', topic: 'Foundations of Faith',         dotColor: 'bg-sky-500' },
   { value: 'session-2',  label: 'Session 2', topic: 'Who is a Christian',           dotColor: 'bg-indigo-500' },
   { value: 'session-3',  label: 'Session 3', topic: 'Working out your Salvation',   dotColor: 'bg-violet-500' },

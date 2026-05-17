@@ -15,13 +15,17 @@ import type {
 
 // ── Enrollment queries ─────────────────────────────────────
 
-export function useEnrollments(params?: EnrollmentListParams) {
+export function useEnrollments(
+  params?: EnrollmentListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ['new-believers', 'enrollments', params],
     queryFn: async () => {
       const res = await api.newBelievers.enrollments.list(params);
       return res.data!;
     },
+    enabled: options?.enabled ?? true,
   });
 }
 

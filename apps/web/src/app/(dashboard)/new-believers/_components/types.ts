@@ -19,6 +19,8 @@ export interface EnrollmentCardData {
   mentorLastName?: string | null;
   enrolledAt: string;
   updatedAt: string;
+  sessionCompletedAt?: Record<string, string> | null;
+  sessionFeedback?: Record<string, string> | null;
 }
 
 export interface AttendanceLogItem {
