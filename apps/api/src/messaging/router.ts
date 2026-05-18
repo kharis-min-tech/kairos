@@ -51,6 +51,8 @@ export const messagingRouter = new Hono();
 messagingRouter.use('*', authMiddleware);
 
 // ── GET /login-token ──────────────────────────────────────────────────────────
+// Returns a short-lived MM session token by logging in server-side.
+// The browser sets this as the MMAUTHTOKEN cookie for the MM origin.
 messagingRouter.get('/login-token', async (c) => {
   const auth = getAuth(c);
 
@@ -63,7 +65,25 @@ messagingRouter.get('/login-token', async (c) => {
     return c.json({ error: 'Mattermost account not yet provisioned' }, 404);
   }
 
-  return c.json(successResponse({ email: member.email, password: member.mattermostPassword }));
+  // Log in to Mattermost server-side — no CORS issues
+  const mmUrl = process.env.MATTERMOST_URL ?? 'http://localhost:8065';
+  try {
+    const mmRes = await fetch(`${mmUrl}/api/v4/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login_id: member.email, password: member.mattermostPassword }),
+    });
+    if (!mmRes.ok) {
+      return c.json({ error: 'Mattermost login failed' }, 503);
+    }
+    const sessionToken = mmRes.headers.get('Token');
+    if (!sessionToken) {
+      return c.json({ error: 'No session token returned from Mattermost' }, 503);
+    }
+    return c.json(successResponse({ token: sessionToken }));
+  } catch {
+    return c.json({ error: 'Could not reach Mattermost' }, 503);
+  }
 });
 
 // ── POST /backfill-mm ─────────────────────────────────────────────────────────

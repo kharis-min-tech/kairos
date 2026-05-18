@@ -10,6 +10,7 @@ type State = 'loading' | 'ready' | 'not-provisioned' | 'error';
 
 export default function MessagesPage() {
   const [state, setState] = useState<State>('loading');
+  const [mmSrc, setMmSrc] = useState(MM_URL);
   const didLogin = useRef(false);
 
   useEffect(() => {
@@ -18,40 +19,16 @@ export default function MessagesPage() {
 
     (async () => {
       try {
-        // 1. Get this member's MM credentials from Kairos API
+        // 1. Get a short-lived MM session token from Kairos API (proxied server-side, no CORS)
         const res = await api.messaging.getCredentials();
         if (!res.data) {
           setState('not-provisioned');
           return;
         }
-        const { email, password } = res.data;
+        const { token } = res.data;
 
-        // 2. POST to Mattermost's login endpoint — sets MMAUTHTOKEN cookie on MM origin
-        const mmRes = await fetch(`${MM_URL}/api/v4/users/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // stores the session cookie for localhost:8065
-          body: JSON.stringify({ login_id: email, password }),
-        });
-
-        if (!mmRes.ok) {
-          // May be logged in as a different user — logout then retry
-          await fetch(`${MM_URL}/api/v4/users/logout`, {
-            method: 'POST',
-            credentials: 'include',
-          });
-          const retry = await fetch(`${MM_URL}/api/v4/users/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ login_id: email, password }),
-          });
-          if (!retry.ok) {
-            setState('error');
-            return;
-          }
-        }
-
+        // 2. Use the token to create a login link MM accepts via ?login_token=
+        setMmSrc(`${MM_URL}?login_token=${token}`);
         setState('ready');
       } catch {
         setState('error');
@@ -111,7 +88,7 @@ export default function MessagesPage() {
       {state === 'ready' && (
         <div className="flex-1 relative">
           <iframe
-            src={MM_URL}
+            src={mmSrc}
             className="w-full h-full border-0"
             title="Kairos Messages"
             allow="clipboard-write; microphone"

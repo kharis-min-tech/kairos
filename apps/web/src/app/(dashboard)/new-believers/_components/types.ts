@@ -9,7 +9,7 @@ export interface EnrollmentCardData {
   id: string;
   memberId: string;
   stage: NewBelieverStageValue;
-  memberFirstName: string;
+  memberFirstName: string;a
   memberLastName: string;
   teacherId?: string | null;
   teacherFirstName?: string | null;
