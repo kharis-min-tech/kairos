@@ -13,6 +13,10 @@ import {
   listFellowshipsQuerySchema,
   createJoinRequestSchema,
   reviewJoinRequestSchema,
+  createFellowshipFollowupSchema,
+  updateFellowshipFollowupSchema,
+  listFellowshipFollowupsQuerySchema,
+  overdueFellowshipFollowupsQuerySchema,
 } from './schemas';
 import {
   listFellowships,
@@ -33,6 +37,14 @@ import {
   listJoinRequests,
   reviewJoinRequest,
 } from './service';
+import {
+  createFellowshipFollowup,
+  deleteFellowshipFollowup,
+  listFellowshipFollowups,
+  listFellowshipFollowupsForMember,
+  listOverdueFellowshipFollowups,
+  updateFellowshipFollowup,
+} from './followups-service';
 
 export const fellowshipsRouter = new Hono();
 
@@ -158,3 +170,91 @@ fellowshipsRouter.patch('/:id/join-requests/:requestId', zValidator('json', revi
   );
   return c.json(successResponse(result));
 });
+
+// ── Followups ──────────────────────────────────────────────
+
+fellowshipsRouter.get(
+  '/:id/followups',
+  zValidator('query', listFellowshipFollowupsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const rows = await listFellowshipFollowups(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.valid('query'),
+    );
+    return c.json(successResponse(rows));
+  },
+);
+
+fellowshipsRouter.get(
+  '/:id/followups/overdue',
+  zValidator('query', overdueFellowshipFollowupsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { days } = c.req.valid('query');
+    const rows = await listOverdueFellowshipFollowups(db, auth, c.req.param('id')!, days);
+    return c.json(successResponse(rows));
+  },
+);
+
+fellowshipsRouter.get('/:id/members/:memberId/followups', async (c) => {
+  const auth = getAuth(c);
+  const rows = await listFellowshipFollowupsForMember(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.param('memberId')!,
+  );
+  return c.json(successResponse(rows));
+});
+
+fellowshipsRouter.post(
+  '/:id/members/:memberId/followups',
+  requireRole('admin', 'pastor', 'leader'),
+  zValidator('json', createFellowshipFollowupSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const created = await createFellowshipFollowup(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('memberId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(created), 201);
+  },
+);
+
+fellowshipsRouter.patch(
+  '/:id/followups/:followupId',
+  requireRole('admin', 'pastor', 'leader'),
+  zValidator('json', updateFellowshipFollowupSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const updated = await updateFellowshipFollowup(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('followupId')!,
+      c.req.valid('json'),
+    );
+    return c.json(successResponse(updated));
+  },
+);
+
+fellowshipsRouter.delete(
+  '/:id/followups/:followupId',
+  requireRole('admin', 'pastor', 'leader'),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await deleteFellowshipFollowup(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.param('followupId')!,
+    );
+    return c.json(successResponse(result, 'Followup deleted'));
+  },
+);

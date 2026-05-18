@@ -216,6 +216,32 @@ export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
   memberPhotoUrl?: string | null;
 }
 
+// ── Fellowship Followup ────────────────────────────────────
+
+export interface FellowshipFollowup extends BaseEntity {
+  fellowshipId: string;
+  memberId: string;
+  recordedById: string;
+  assignedToId: string | null;
+  contactedAt: Date;
+  contactMethod: ContactMethod;
+  contactStatus: ContactStatus;
+  durationMinutes: number | null;
+  notes: string | null;
+  nextFollowUpDate: string | null; // ISO date string
+}
+
+export interface FellowshipFollowupWithDetails extends FellowshipFollowup {
+  memberFirstName: string;
+  memberLastName: string;
+  recordedByFirstName: string;
+  recordedByLastName: string;
+  assignedToFirstName?: string | null;
+  assignedToLastName?: string | null;
+  daysSinceFollowup?: number;
+  isOverdue?: boolean;
+}
+
 // ── Outreach Program ───────────────────────────────────────
 
 export interface OutreachProgram extends BaseEntity {

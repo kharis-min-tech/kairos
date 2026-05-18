@@ -23,9 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Cust
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
+import { FellowshipFollowupsTab } from './_components/followups-tab';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
-type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'join-requests';
+type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
 
 export default function FellowshipDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,10 +91,16 @@ export default function FellowshipDetailPage() {
     );
   }
 
+  const canManageFollowups =
+    isAdminOrPastor || fellowship.leaderId === user?.id || fellowship.coLeaderId === user?.id;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'details', label: 'Details' },
     ...(!isRestrictedView ? [
       { key: 'members' as const, label: `Members${members ? ` (${members.length})` : ''}` },
+    ] : []),
+    ...(canManageFollowups ? [{ key: 'followups' as const, label: 'Followups' }] : []),
+    ...(!isRestrictedView ? [
       { key: 'meetings' as const, label: `Meetings${meetings ? ` (${meetings.length})` : ''}` },
       { key: 'attendance' as const, label: 'Attendance' },
     ] : []),
@@ -172,17 +179,18 @@ export default function FellowshipDetailPage() {
         )}
       </div>
 
-      {/* Pill Tabs */}
-      <div className="flex gap-2">
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-1 border-b border-border/40">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-input/15 bg-card text-muted-foreground hover:border-primary/40 hover:text-primary'
-            }`}
+            className={
+              (activeTab === tab.key
+                ? 'border-[#5D3FD3] text-[#5D3FD3]'
+                : 'border-transparent text-muted-foreground hover:text-foreground') +
+              ' -mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors'
+            }
           >
             {tab.label}
           </button>
@@ -667,6 +675,14 @@ export default function FellowshipDetailPage() {
           })()}</>
           )}
         </div>
+      )}
+
+      {activeTab === 'followups' && (
+        <FellowshipFollowupsTab
+          fellowshipId={id}
+          members={members ?? []}
+          canManage={canManageFollowups}
+        />
       )}
 
       {activeTab === 'join-requests' && isAdminOrPastor && (

@@ -19,6 +19,10 @@ import {
   useFellowshipJoinRequests,
   useCreateJoinRequest,
   useReviewJoinRequest,
+  useFellowshipFollowups,
+  useOverdueFellowshipFollowups,
+  useCreateFellowshipFollowup,
+  useDeleteFellowshipFollowup,
 } from './use-fellowships';
 
 vi.mock('@/lib/api', () => ({
@@ -42,6 +46,14 @@ vi.mock('@/lib/api', () => ({
         record: vi.fn(),
         get: vi.fn(),
         summary: vi.fn(),
+      },
+      followups: {
+        listForFellowship: vi.fn(),
+        listOverdue: vi.fn(),
+        listForMember: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
       },
       joinRequests: {
         list: vi.fn(),
@@ -367,5 +379,70 @@ describe('useReviewJoinRequest', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.fellowships.joinRequests.review).toHaveBeenCalledWith('f1', 'jr1', { status: 'approved' });
+  });
+});
+
+// ── Followups ──────────────────────────────────────────────
+
+describe('useFellowshipFollowups', () => {
+  it('calls api.fellowships.followups.listForFellowship', async () => {
+    const rows = [{ id: 'fu1', fellowshipId: 'f1', memberId: 'm1' }];
+    const params = { memberId: 'm1' };
+    vi.mocked(api.fellowships.followups.listForFellowship).mockResolvedValue({ data: rows } as never);
+
+    const { result } = renderHook(() => useFellowshipFollowups('f1', params), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.followups.listForFellowship).toHaveBeenCalledWith('f1', params);
+    expect(result.current.data).toEqual(rows);
+  });
+
+  it('does not fetch when fellowshipId is empty', () => {
+    const { result } = renderHook(() => useFellowshipFollowups(''), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+describe('useOverdueFellowshipFollowups', () => {
+  it('calls api.fellowships.followups.listOverdue', async () => {
+    const rows = [{ memberId: 'm1', daysSinceFollowup: 10 }];
+    vi.mocked(api.fellowships.followups.listOverdue).mockResolvedValue({ data: rows } as never);
+
+    const { result } = renderHook(() => useOverdueFellowshipFollowups('f1', 7), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.followups.listOverdue).toHaveBeenCalledWith('f1', 7);
+    expect(result.current.data).toEqual(rows);
+  });
+});
+
+describe('useCreateFellowshipFollowup', () => {
+  it('calls api.fellowships.followups.create', async () => {
+    const payload = { contactMethod: 'Phone Call', contactStatus: 'Successful' };
+    vi.mocked(api.fellowships.followups.create).mockResolvedValue({ data: { id: 'fu1' } } as never);
+
+    const { result } = renderHook(() => useCreateFellowshipFollowup(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ fellowshipId: 'f1', memberId: 'm1', data: payload });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.followups.create).toHaveBeenCalledWith('f1', 'm1', payload);
+  });
+});
+
+describe('useDeleteFellowshipFollowup', () => {
+  it('calls api.fellowships.followups.delete', async () => {
+    vi.mocked(api.fellowships.followups.delete).mockResolvedValue({ data: { id: 'fu1' } } as never);
+
+    const { result } = renderHook(() => useDeleteFellowshipFollowup(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ fellowshipId: 'f1', followupId: 'fu1' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.fellowships.followups.delete).toHaveBeenCalledWith('f1', 'fu1');
   });
 });

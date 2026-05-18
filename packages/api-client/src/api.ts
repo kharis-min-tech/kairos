@@ -22,6 +22,9 @@ import type {
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
   RecordAttendanceRequest,
+  ListFellowshipFollowupsParams,
+  CreateFellowshipFollowupRequest,
+  UpdateFellowshipFollowupRequest,
   FellowshipListParams,
   AddFellowshipMemberRequest,
   CreateJoinRequestRequest,
@@ -70,6 +73,8 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
+  FellowshipFollowup,
+  FellowshipFollowupWithDetails,
   Department,
   BranchDepartment,
   BranchDepartmentWithDetails,
@@ -259,6 +264,52 @@ export function createApiClient(
           client.get<ApiResponse<FellowshipMeetingAttendance[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/meetings/${encodeURIComponent(meetingId)}/attendance`),
         summary: (fellowshipId: string) =>
           client.get<ApiResponse<unknown[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/attendance/summary`),
+      },
+      followups: {
+        listForFellowship: (fellowshipId: string, params?: ListFellowshipFollowupsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.limit) qs.set('limit', String(params.limit));
+          if (params?.days) qs.set('days', String(params.days));
+          if (params?.memberId) qs.set('memberId', params.memberId);
+          const query = qs.toString();
+          return client.get<ApiResponse<FellowshipFollowupWithDetails[]>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/followups${query ? `?${query}` : ''}`,
+          );
+        },
+        listOverdue: (fellowshipId: string, days?: number) => {
+          const qs = new URLSearchParams();
+          if (days !== undefined) qs.set('days', String(days));
+          const query = qs.toString();
+          return client.get<ApiResponse<OverdueFollowupRow[]>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/followups/overdue${query ? `?${query}` : ''}`,
+          );
+        },
+        listForMember: (fellowshipId: string, memberId: string) =>
+          client.get<ApiResponse<FellowshipFollowupWithDetails[]>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/members/${encodeURIComponent(memberId)}/followups`,
+          ),
+        create: (
+          fellowshipId: string,
+          memberId: string,
+          data: CreateFellowshipFollowupRequest,
+        ) =>
+          client.post<ApiResponse<FellowshipFollowup>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/members/${encodeURIComponent(memberId)}/followups`,
+            data,
+          ),
+        update: (
+          fellowshipId: string,
+          followupId: string,
+          data: UpdateFellowshipFollowupRequest,
+        ) =>
+          client.patch<ApiResponse<FellowshipFollowup>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/followups/${encodeURIComponent(followupId)}`,
+            data,
+          ),
+        delete: (fellowshipId: string, followupId: string) =>
+          client.delete<ApiResponse<FellowshipFollowup>>(
+            `/api/fellowships/${encodeURIComponent(fellowshipId)}/followups/${encodeURIComponent(followupId)}`,
+          ),
       },
     },
 

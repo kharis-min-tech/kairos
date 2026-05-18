@@ -259,6 +259,26 @@ export interface RecordAttendanceRequest {
   }[];
 }
 
+// ── Fellowship Followups ───────────────────────────────────
+
+export interface ListFellowshipFollowupsParams {
+  limit?: number;
+  days?: number;
+  memberId?: string;
+}
+
+export interface CreateFellowshipFollowupRequest {
+  contactedAt?: string;
+  contactMethod: string;
+  contactStatus: string;
+  durationMinutes?: number | null;
+  notes?: string | null;
+  nextFollowUpDate?: string | null;
+  assignedToId?: string | null;
+}
+
+export interface UpdateFellowshipFollowupRequest extends Partial<CreateFellowshipFollowupRequest> {}
+
 // ── Region ─────────────────────────────────────────────────
 
 export interface CreateRegionRequest {

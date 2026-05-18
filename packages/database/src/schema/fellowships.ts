@@ -4,6 +4,7 @@ import { branches } from './branches';
 import { members } from './members';
 import { fellowshipMembers } from './fellowship-members';
 import { fellowshipMeetings } from './fellowship-meetings';
+import { fellowshipFollowups } from './fellowship-followups';
 
 export const fellowships = pgTable('fellowships', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -32,4 +33,5 @@ export const fellowshipsRelations = relations(fellowships, ({ one, many }) => ({
   coLeader: one(members, { fields: [fellowships.coLeaderId], references: [members.id], relationName: 'fellowshipCoLeader' }),
   members: many(fellowshipMembers),
   meetings: many(fellowshipMeetings),
+  followups: many(fellowshipFollowups),
 }));
