@@ -595,9 +595,9 @@ export async function registerWorker(
       .returning();
 
     return participant;
-  } catch (err: any) {
+  } catch (err) {
     // Handle duplicate registration
-    if (err.code === '23505') {
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
       throw new ConflictError('You are already registered for this program');
     }
     throw err;

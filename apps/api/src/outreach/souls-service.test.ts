@@ -150,7 +150,7 @@ describe('Souls Service', () => {
 
       let capturedEmail = '';
       mockDb.insert = vi.fn().mockReturnValue({
-        values: vi.fn((vals: any) => {
+        values: vi.fn((vals: { email: string }) => {
           capturedEmail = vals.email;
           return {
             returning: vi.fn().mockResolvedValue([{
@@ -186,7 +186,7 @@ describe('Souls Service', () => {
           }),
         });
 
-        const input: any = { status };
+        const input: { status: string; convertedToMemberId?: string } = { status };
         if (status === 'Converted') {
           input.convertedToMemberId = TEST_IDS.memberId;
         }

@@ -3,6 +3,42 @@
 ## Document Overview
 This document defines the Minimum Viable Product (MVP) scope for Kairos church administration system, targeting Easter 2026 launch (April 12, 2026). This represents a 10-week development timeline with a phased rollout approach.
 
+**Living document.** Section 0 ("Current Implementation Status") tracks what has actually shipped against this scope as the live codebase evolves. Module sections below are tagged inline (`Status: ✅ Shipped / 🚧 In-flight / 📅 Planned`) so the spec remains the source of intent while reflecting reality. Items marked Planned or In-flight remain in scope — they are not removed when reconciling to the codebase.
+
+---
+
+## 0. Current Implementation Status (as of 2026-05-18)
+
+### Local-first development context
+
+Kairos is being built **local-first**, ahead of any cloud migration. The following original spec items are intentionally implemented with in-process equivalents and will be revisited when the cloud platform is provisioned:
+
+- **Authentication** — bcrypt + JWT in-process instead of Cognito.
+- **Profile photo uploads** — `photoUrl` exists on the member schema, but no S3/CloudFront presigned-upload endpoint yet.
+- **Transactional email** — verification + approval emails currently surface dev-mode tokens in the API response instead of being delivered via SES.
+- **Power BI / S3 nightly export** — deferred until cloud infra is in place.
+
+These are design choices, not gaps to fix on the current branch.
+
+### Module status snapshot
+
+| Module | Status | Notes |
+|---|---|---|
+| 1. Authentication & Security | ✅ Shipped (local-first) | bcrypt + JWT; Cognito target for cloud move |
+| 2. Membership Management | ✅ Shipped (less S3 photo upload) | Profile, CRUD, approval, role-assign, CSV import/export all live |
+| 3. Branch & Pastor Management | ✅ Shipped | Branches, regions, leadership history |
+| 4. Department Management | ✅ Shipped + expanded | Plus rota, recruitment pipeline, uniform schedule (originally out-of-scope) |
+| 5. Fellowship Management | ✅ Shipped + expanded | Plus fellowship follow-ups (originally out-of-scope) |
+| 6. Attendance Tracking | 🚧 Partial | Fellowship attendance shipped; **Service attendance in open PR (under review)** |
+| 7. Outreach Program Management | ✅ Shipped | |
+| 8. Evangelism (Soul Capture & Follow-up) | ✅ Shipped | Includes DnD Kanban for pipeline |
+| 9. Financial Management (Donations) | 🚧 **In open PR (under review)** | Not yet on the rebuild branch |
+| 10. Forms & Data Capture | 📅 Planned | Needs feature plan + implementation |
+| 11. Notifications & Communications | 📅 Planned | Assigned to a separate team member |
+| 12. Reporting & Analytics | 🚧 Partial | Dashboards + member-growth + fellowship attendance shipped; donation/service trends, conversion funnel report, CSV export, Power BI export still to do |
+| 13. Data Import/Export | 🚧 Partial | Member CSV + souls export shipped; donation/attendance exports blocked on their modules |
+| 14. New Believers Discipleship Pipeline | ✅ Shipped (additive) | Not in original MVP; see §14 below |
+
 ---
 
 ## Timeline & Phasing Strategy
@@ -39,11 +75,13 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 1. Authentication & Security
 
+**Status: ✅ Shipped (local-first)** — bcrypt + JWT in-process; Cognito remains the target for the cloud move. Email verification currently surfaces the token in the dev API response; SES delivery wires up at cloud migration time.
+
 ### Must Have (Week 2-3)
-- User registration and login (Cognito)
-- Password reset via email
+- User registration and login (Cognito target; **bcrypt + JWT locally**)
+- Password reset via email (**local-first: token returned in API response; SES delivery deferred**)
 - Role-based access control (Admin, Pastor, Leader, Member)
-- Custom authorization lambda for branch-level isolation
+- Custom authorization lambda for branch-level isolation (**implemented as Hono middleware in monolith; lambda form deferred to cloud move**)
 - Session management (secure tokens)
 
 ### Authorization Rules
@@ -69,16 +107,18 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 2. Membership Management
 
+**Status: ✅ Shipped (less S3 photo upload)** — `photoUrl` field exists on the schema; the S3 presigned-upload endpoint is deferred to the cloud move. Approval emails currently surface in the dev API response rather than via SES.
+
 ### Must Have (Week 3-4)
 
 **Member Registration:**
 - Self-registration flow (name, email, phone, DOB, gender, address)
 - Member selects home branch during registration
-- Email verification
+- Email verification (**local-first: dev token surfaced in response**)
 - Branch admin approval required before full access granted
 - Pending members can view their own profile and donations only
 - Unique member ID generation
-- Profile photo upload (S3 + CloudFront)
+- Profile photo upload (S3 + CloudFront) — **schema field present; upload endpoint deferred to cloud move**
 
 **Member Profile:**
 - View/edit personal information
@@ -122,6 +162,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 3. Branch & Pastor Management
 
+**Status: ✅ Shipped** — Branch CRUD, region assignment, leadership history, and branch isolation are all live.
+
 ### Must Have (Week 2)
 
 **Branch Management:**
@@ -152,6 +194,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 4. Department Management
 
+**Status: ✅ Shipped + expanded** — Rota/scheduling, the multi-stage recruitment pipeline, and uniform schedule were originally out of scope; they have since shipped as part of the live codebase and are now reflected as in-scope below. Broadcast messages remain blocked on the Notifications module (§11).
+
 ### Must Have (Week 4-5)
 
 **Department Setup:**
@@ -172,30 +216,43 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 **Department Leader Functions:**
 - View all department members
 - Approve/reject join requests (branch admin has visibility only)
-- Send broadcast messages to their own department only
-- Send messages to subset of members in their department
+- Send broadcast messages to their own department only (**📅 blocked on §11 Notifications**)
+- Send messages to subset of members in their department (**📅 blocked on §11 Notifications**)
 - Add follow-up notes on members (date, time, notes)
 - View member contact details
 - Alerts for members not followed up (default: 7 days, configurable by admin)
 - Follow-up notes visible to other leaders (for collaboration)
 
-**Recruitment Workflow:**
-- Member submits interest via form
-- Request goes to department leader
-- Leader approves/rejects
-- Member added to department
+**Recruitment Pipeline:**
+- Multi-stage kanban: Application → Interview → Offer → Probation → Member
+- Drag-and-drop stage transitions with rule-based guards (`recruitment-drag-rules.ts`)
+- Leader-driven interview/offer/probation notes per candidate
+- Conversion to active department member on completion of probation
+
+**Rota & Scheduling System:**
+- Rota templates (define recurring duty slots: role, day, time, frequency)
+- Rota instances generated from templates for a date range
+- Slot assignments to pool members
+- Pool-member opt-in per department
+- Swap-request workflow (member proposes swap → counterparty accepts/declines → leader confirms)
+- Per-member `/me/rota` view of upcoming duties (**🚧 endpoint live; dedicated UI page outstanding**)
+
+**Uniform Schedule:**
+- Department-level uniform outfit catalogue (name, description, image-ref)
+- Scheduled uniform-of-the-day per service date (e.g., "White cassock — Easter Sunday")
 
 ### Out of Scope for MVP
 - Department meeting attendance tracking
 - Historical records of who left when
-- Department-specific features (Choir audio uploads, uniform management, etc.)
-- Rota/scheduling system
-- Department calendars
+- Department-specific features beyond uniform schedule (e.g., Choir audio uploads, Children's department class management)
+- Department calendars beyond rota
 - Self-check-in for members (Phase 2)
 
 ---
 
 ## 5. Fellowship Management (K-Groups)
+
+**Status: ✅ Shipped + expanded** — Fellowship follow-ups (parallel to department follow-ups) were originally unspecified and have since shipped.
 
 ### Must Have (Week 5)
 
@@ -221,10 +278,15 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 **Fellowship Leader Functions:**
 - View all fellowship members
-- Send broadcast messages to fellowship
-- Send messages to subset of members
+- Send broadcast messages to fellowship (**📅 blocked on §11 Notifications**)
+- Send messages to subset of members (**📅 blocked on §11 Notifications**)
 - Add follow-up notes on members
 - View member contact details
+
+**Fellowship Follow-ups:**
+- Log follow-up interactions per member (date, method, notes, status)
+- Alerts for members not followed up within a configurable window
+- Follow-up notes visible to co-leaders for collaboration
 
 **Fellowship Meetings:**
 - Track meeting attendance (date, member, status: Present/Absent/Excused/Late)
@@ -238,6 +300,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 6. Attendance Tracking
+
+**Status: 🚧 Partial** — Fellowship attendance has shipped (meetings + per-meeting roll-call). Service attendance is **in an open PR pending review on a separate branch** and will land once reviewed; do not re-implement.
 
 ### Must Have (Week 6)
 
@@ -271,6 +335,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 7. Outreach Program Management
+
+**Status: ✅ Shipped** — Programs, worker registration (branch-scoped), soul-capture linkage, and the conversion-rate dashboard are all live.
 
 ### Must Have (Week 6-7)
 
@@ -307,6 +373,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 8. Evangelism Management (Soul Capture & Follow-up)
+
+**Status: ✅ Shipped** — Capture, assignment, pipeline (now a drag-and-drop kanban: New → Following Up → Interested → Converted), follow-up logging, conversion, and exports are live. Overdue-alert lambda is cloud-deferred; the overdue state is computable on read via the `overdueOnly` query param.
 
 ### Must Have (Week 6-7) - CRITICAL
 
@@ -353,6 +421,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 9. Financial Management (Donations)
+
+**Status: 🚧 In-flight** — Module is being delivered in an **open PR pending review on a separate branch**. The current `rebuild-v2` branch ships placeholder mock data on the reports page until the PR lands. Stripe integration remains the cloud-deferred portion; manual donation entry can land independently as part of the local-first phase.
 
 ### Must Have (Week 7-8) - CRITICAL
 
@@ -403,6 +473,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 10. Forms & Data Capture
 
+**Status: 📅 Planned — not yet started.** This team owns delivery. Bespoke flows already substitute for some pre-built forms (soul capture has a dedicated `/souls/capture` route; department signup has its own join-request flow). The form-builder itself, the submissions store, and the remaining pre-built forms still need a feature plan + implementation. Scope (generic builder vs. fixed set of form types) to be decided during planning.
+
 ### Must Have (Week 8-9)
 
 **Form Builder:**
@@ -449,6 +521,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 
 ## 11. Notifications & Communications
 
+**Status: 📅 Planned — owned by a separate team member.** Not on this team's backlog. Several other modules depend on this (department broadcast, fellowship broadcast, follow-up reminders, donation receipts) and remain partially blocked until the Notifications module lands.
+
 ### Must Have (Week 9)
 
 **Email Notifications (SES):**
@@ -485,6 +559,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 12. Reporting & Analytics
+
+**Status: 🚧 Partial** — Admin/Pastor/Leader dashboards, member-growth chart, and fellowship-attendance trend chart are live. Outstanding: soul conversion funnel report endpoint, CSV export from reports page, donation summary (blocked on §9), service-attendance trend (blocked on §6). Power BI / S3 nightly export is **cloud-deferred** alongside the rest of the local-first plan.
 
 ### Must Have (Week 9-10)
 
@@ -524,7 +600,7 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 - Date range filtering
 - Branch filtering
 
-**Power BI Integration:**
+**Power BI Integration (📅 cloud-deferred):**
 - Nightly S3 export (Parquet format)
 - Export tables: members, donations, attendance, souls, branches, departments, fellowships
 - EventBridge scheduled lambda (2 AM daily)
@@ -538,6 +614,8 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ---
 
 ## 13. Data Import/Export
+
+**Status: 🚧 Partial** — Member CSV import + export and souls CSV export are live. Donation/attendance exports unlock when their respective modules land.
 
 ### Must Have (Week 3)
 
@@ -561,6 +639,42 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 - Excel file support (.xlsx)
 - Import history/audit trail
 - Scheduled exports
+
+---
+
+## 14. New Believers Discipleship Pipeline
+
+**Status: ✅ Shipped (additive)** — Not in the original MVP spec; added to bridge converted souls (§8) and full membership/department integration (§2/§4).
+
+### Must Have
+
+**Enrollment:**
+- A converted soul (or an altar-call form submission) creates a `new_believer_enrollment` record automatically.
+- Each enrollment is scoped to a single branch and assigned both a teacher and a (optional) mentor.
+- One active enrollment per member per branch (partial unique index in migration 0007).
+
+**Stage Pipeline:**
+- Stages: `enrolled → session-1 → session-2 → session-3 → session-4 → completed → integrated`.
+- Per-stage completion timestamp + per-stage teacher-feedback text stored on the enrollment.
+- Admins/leaders can bulk-advance multiple enrollments to the next stage.
+- Reaching `integrated` records the department the new believer joined (`joinedDepartmentId`).
+
+**Sessions:**
+- Scheduled class sessions (date, topic, location, teacher) per branch.
+- Each session is tied to a specific session stage (`session-1` through `session-4`).
+- Per-session attendance roll-call: one record per enrollment per session, with notes and the recording leader.
+- Session notes + post-session feedback captured by the teacher.
+
+**Alerts:**
+- Stale-enrollment alerts surface members who have not progressed in a configurable window.
+
+**Workflow:**
+- Soul converted in §8 → enrollment auto-created → teacher schedules sessions → attendance recorded each week → stage advances on completion → final integration into a department closes the pipeline.
+
+### Out of Scope (deferred)
+- Per-stage curriculum content management
+- Automated reminder messages to mentor/mentee (blocked on §11 Notifications)
+- Mentor-pairing recommendations
 
 ---
 
@@ -665,22 +779,28 @@ This document defines the Minimum Viable Product (MVP) scope for Kairos church a
 ## Success Criteria (Easter Launch)
 
 ### Must Be Functional:
+
+Legend: ✅ shipped on `rebuild-v2` · 🚧 in open PR / partial · 📅 still to do · ☁️ cloud-deferred (intentional)
+
 1. ✅ Members can register and log in
 2. ✅ Admins can manage members, branches, departments, fellowships
 3. ✅ Pastors can view their branch data only
 4. ✅ Leaders can manage their departments/fellowships
 5. ✅ Members can view/edit their profile
-6. ✅ Members can view donation history
-7. ✅ Donations can be recorded (online + manual)
-8. ✅ Attendance can be tracked (services + fellowships)
-9. ✅ Souls can be captured and assigned for follow-up
+6. 🚧 Members can view donation history *(blocked on §9 PR)*
+7. 🚧 Donations can be recorded (online + manual) *(in open PR; Stripe ☁️ cloud-deferred)*
+8. 🚧 Attendance can be tracked (services + fellowships) *(fellowship ✅; service in open PR)*
+9. ✅ Souls can be captured and assigned for follow-up (with DnD kanban)
 10. ✅ Workers can log follow-ups and track status
-11. ✅ Forms can be created and submitted
-12. ✅ Basic reports and dashboards work
-13. ✅ CSV export works
-14. ✅ Power BI data export works
-15. ✅ Email notifications work
+11. 📅 Forms can be created and submitted *(this team to plan)*
+12. 🚧 Basic reports and dashboards work *(dashboards ✅; donation/conversion reports outstanding)*
+13. 🚧 CSV export works *(members + souls ✅; donations/attendance pending)*
+14. ☁️ Power BI data export works *(cloud-deferred)*
+15. ☁️ Email notifications work *(SES cloud-deferred; dev-mode tokens in local-first phase)*
 16. ✅ Web app works on mobile browsers
+
+**Additional shipped capability not in the original list:**
+17. ✅ New believers discipleship pipeline (enrollment → 4 sessions → integration) — see §14
 
 ### Performance Targets:
 - 500 members registered
@@ -822,9 +942,10 @@ All open questions have been answered:
 
 ## Approval & Sign-off
 
-**Document Version:** 1.0  
-**Date:** February 3, 2026  
-**Status:** Draft - Pending Review
+**Document Version:** 1.1
+**Original Date:** February 3, 2026
+**Last Reconciled Against Codebase:** May 18, 2026 — branch `rebuild-v2`
+**Status:** Living document — reconciled to shipped state. Forms (§10) and Notifications (§11) remain in scope; Donations (§9) and Service Attendance (§6) are in open PRs awaiting review.
 
 **Next Steps:**
 1. Review and approve MVP scope

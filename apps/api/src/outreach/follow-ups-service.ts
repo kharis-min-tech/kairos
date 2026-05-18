@@ -1,4 +1,4 @@
-import { eq, and, desc, count, sql } from 'drizzle-orm';
+import { eq, and, desc, count, sql, type SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { followUps, souls, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -72,7 +72,7 @@ export async function logFollowUp(
     .returning();
 
   // Update soul status if provided and different from current
-  const updateData: any = { updatedAt: sql`NOW()` };
+  const updateData: { updatedAt: SQL; status?: string } = { updatedAt: sql`NOW()` };
   if (input.updateStatus && input.updateStatus !== soul.status) {
     updateData.status = input.updateStatus;
   }

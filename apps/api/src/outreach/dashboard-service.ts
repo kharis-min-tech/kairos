@@ -206,7 +206,7 @@ export async function getSoulsWithRAGStatus(
     dateTo?: Date;
     programId?: string;
   },
-): Promise<{ data: SoulWithRAG[]; pagination: any }> {
+): Promise<{ data: SoulWithRAG[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
@@ -322,7 +322,7 @@ export async function getFollowUpsWithRAGStatus(
     dateTo?: Date;
     programId?: string;
   },
-): Promise<{ data: FollowUpWithRAG[]; pagination: any }> {
+): Promise<{ data: FollowUpWithRAG[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
