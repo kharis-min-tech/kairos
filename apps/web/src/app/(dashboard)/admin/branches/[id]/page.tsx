@@ -452,7 +452,7 @@ export default function BranchDetailPage() {
                               member.approvalStatus === 'approved'
                                 ? 'bg-emerald-100 text-emerald-700'
                                 : member.approvalStatus === 'pending'
-                                  ? 'bg-amber-100 text-amber-700'
+                                  ? 'bg-[#f8b537]/15 text-amber-700'
                                   : 'bg-rose-100 text-rose-700'
                             }`}>
                               {member.approvalStatus}

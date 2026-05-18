@@ -61,7 +61,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
     value: value as number,
   }));
 
-  const COLORS = ['#6D28D9', '#D97706', '#059669', '#E11D48', '#3B82F6', '#8B5CF6'];
+  const COLORS = ['#5D3FD3', '#f8b537', '#059669', '#E11D48', '#3B82F6', '#8B5CF6'];
 
   // Prepare RAG by status data
   const ragByStatusData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, unknown]) => {

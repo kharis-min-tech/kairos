@@ -115,7 +115,7 @@ export default function MembersPage() {
               <Button variant="outline" size="sm" className="relative">
                 Approval Queue
                 {(pendingResult?.meta?.total ?? 0) > 0 && (
-                  <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-900">
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#f8b537] px-1 text-xs font-bold text-[#3a2807]">
                     {pendingResult!.meta!.total}
                   </span>
                 )}
@@ -177,7 +177,7 @@ export default function MembersPage() {
             {members.map((member) => {
               const statusCls =
                 member.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                : member.approvalStatus === 'pending' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]'
                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-400';
               return (
                 <Link key={member.id} href={`/members/${member.id}`}>

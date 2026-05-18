@@ -38,7 +38,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
 
   // Prepare conversion funnel data
   const funnelData = [
-    { stage: 'New', count: analytics?.conversionFunnel?.New || 0, fill: '#6D28D9' },
+    { stage: 'New', count: analytics?.conversionFunnel?.New || 0, fill: '#5D3FD3' },
     { stage: 'Following Up', count: analytics?.conversionFunnel?.['Following Up'] || 0, fill: '#8B5CF6' },
     { stage: 'Interested', count: analytics?.conversionFunnel?.Interested || 0, fill: '#3B82F6' },
     { stage: 'Converted', count: analytics?.conversionFunnel?.Converted || 0, fill: '#059669' },

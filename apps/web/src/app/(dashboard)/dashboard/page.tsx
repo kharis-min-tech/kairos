@@ -15,7 +15,7 @@ import {
   Cell,
 } from 'recharts';
 
-const CHART_COLORS = ['#7c3aed', '#d97706', '#059669', '#e11d48', '#0ea5e9'];
+const CHART_COLORS = ['#5D3FD3', '#f8b537', '#059669', '#e11d48', '#0ea5e9'];
 
 // ── Stat Card ──────────────────────────────────────────────
 
@@ -31,8 +31,8 @@ function StatCard({
   accent?: 'purple' | 'gold' | 'emerald' | 'rose';
 }) {
   const accentClasses = {
-    purple: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-    gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    purple: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+    gold: 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]',
     emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   };

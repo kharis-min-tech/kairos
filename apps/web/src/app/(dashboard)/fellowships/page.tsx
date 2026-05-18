@@ -23,8 +23,8 @@ const FELLOWSHIP_TYPES = [
 ];
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  [FellowshipType.KGroups]: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  [FellowshipType.KharisExpress]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+  [FellowshipType.KGroups]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+  [FellowshipType.KharisExpress]: 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]',
   [FellowshipType.NewBreeds]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
   [FellowshipType.KharisOnCampus]: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
   [FellowshipType.KharisOnCampusColleges]: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',

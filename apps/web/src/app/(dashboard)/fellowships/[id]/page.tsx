@@ -173,7 +173,7 @@ export default function FellowshipDetailPage() {
           </Button>
         )}
         {hasPendingRequest && (
-          <span className="shrink-0 self-center rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+          <span className="shrink-0 self-center rounded-full bg-[#f8b537]/15 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-[#f8b537]">
             Request Pending
           </span>
         )}
@@ -622,7 +622,7 @@ export default function FellowshipDetailPage() {
                   <Card>
                     <CardContent className="py-4">
                       <p className="text-sm font-medium text-muted-foreground">Last Meeting Present</p>
-                      <p className="mt-1 text-2xl font-bold text-amber-600">{latestPresent}</p>
+                      <p className="mt-1 text-2xl font-bold text-[#a07720] dark:text-[#f8b537]">{latestPresent}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -641,7 +641,7 @@ export default function FellowshipDetailPage() {
                           <XAxis dataKey="date" fontSize={12} />
                           <YAxis domain={[0, 100]} fontSize={12} tickFormatter={(v) => `${v}%`} />
                           <Tooltip formatter={(value) => [`${value}%`, 'Rate']} />
-                          <Line type="monotone" dataKey="rate" stroke="#6D28D9" strokeWidth={2} dot={{ fill: '#6D28D9', r: 3 }} />
+                          <Line type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} dot={{ fill: '#5D3FD3', r: 3 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>

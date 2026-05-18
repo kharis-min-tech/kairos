@@ -60,7 +60,7 @@ export function StrategicDashboard({ analytics, overview }: StrategicDashboardPr
   // Pipeline health data
   const pipelineHealthData = [
     { name: 'Active', value: activeFollowUps, fill: '#059669' },
-    { name: 'Converted', value: converted, fill: '#6D28D9' },
+    { name: 'Converted', value: converted, fill: '#5D3FD3' },
     { name: 'Dropped', value: (analytics?.conversionFunnel?.['Not Interested'] || 0) + (analytics?.conversionFunnel?.['Lost Contact'] || 0), fill: '#E11D48' },
   ];
 
