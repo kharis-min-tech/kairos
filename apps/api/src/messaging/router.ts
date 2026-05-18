@@ -20,6 +20,7 @@ import {
   mmGetOrCreateChannel,
   mmAddUserToChannel,
   mmPostMessage,
+  mmUpdateUserPassword,
   branchChannelName,
   fellowshipChannelName,
   departmentChannelName,
@@ -30,7 +31,7 @@ import {
 import { getOrCreateBranchTeamId, mmAddUserToTeam } from './mm-branch-team';
 import { db } from '../db';
 import { members, fellowships, branchDepartments } from '@kairos/database';
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, or, sql } from 'drizzle-orm';
 
 const broadcastSchema = z.object({
   target: z.enum(['branch', 'fellowship', 'department']),
@@ -67,8 +68,9 @@ messagingRouter.get('/login-token', async (c) => {
 
 // ── POST /backfill-mm ─────────────────────────────────────────────────────────
 // Admin-only. Provisions Mattermost accounts for all active members who don't
-// have one yet. Safe to run multiple times (skips already-provisioned members).
+// have one yet. Safe to run multiple times.
 messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
+  // Fetch members who either have no MM account yet, or have one but no stored password
   const unprovisioned = await db
     .select({
       id: members.id,
@@ -76,11 +78,16 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
       firstName: members.firstName,
       lastName: members.lastName,
       homeBranchId: members.homeBranchId,
+      mattermostUserId: members.mattermostUserId,
     })
     .from(members)
-    .where(and(eq(members.isActive, true), isNull(members.mattermostUserId)));
+    .where(and(
+      eq(members.isActive, true),
+      or(isNull(members.mattermostUserId), isNull(members.mattermostPassword)),
+    ));
 
   let provisioned = 0;
+  let passwordsUpdated = 0;
   let failed = 0;
 
   for (const member of unprovisioned) {
@@ -89,6 +96,21 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
         member.email.split('@')[0]!.toLowerCase().replace(/[^a-z0-9._-]/g, '') +
         '-' +
         member.id.slice(0, 4);
+
+      // Already in MM but missing stored password — reset it and save
+      if (member.mattermostUserId) {
+        const newPassword = `Krs-${crypto.randomUUID()}`;
+        const ok = await mmUpdateUserPassword(member.mattermostUserId, newPassword);
+        if (!ok) { failed++; continue; }
+        await db
+          .update(members)
+          .set({ mattermostPassword: newPassword, updatedAt: sql`NOW()` })
+          .where(eq(members.id, member.id));
+        passwordsUpdated++;
+        continue;
+      }
+
+      // Net-new MM account
       const mmResult = await mmCreateUser(
         member.email,
         username,
@@ -121,7 +143,7 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
     }
   }
 
-  return c.json(successResponse({ provisioned, failed, total: unprovisioned.length }));
+  return c.json(successResponse({ provisioned, passwordsUpdated, failed, total: unprovisioned.length }));
 });
 
 messagingRouter.post(

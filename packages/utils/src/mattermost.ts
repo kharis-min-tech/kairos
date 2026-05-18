@@ -202,6 +202,29 @@ export async function mmDeactivateUser(mmUserId: string): Promise<void> {
 }
 
 /**
+ * Resets a Mattermost user's password (admin bot auth).
+ * Used by the backfill to store passwords for previously-provisioned users.
+ * Returns true on success.
+ */
+export async function mmUpdateUserPassword(mmUserId: string, newPassword: string): Promise<boolean> {
+  try {
+    const res = await mmFetch(`/users/${mmUserId}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ new_password: newPassword }),
+    });
+    if (!res.ok) {
+      mmLogger.warn('Mattermost: failed to update password', { mmUserId, status: res.status });
+      return false;
+    }
+    mmLogger.info('Mattermost: password updated', { mmUserId });
+    return true;
+  } catch (err) {
+    mmLogger.warn('Mattermost: updatePassword exception', { mmUserId, err });
+    return false;
+  }
+}
+
+/**
  * Generates a one-time login token for a Mattermost user so Kairos can drop
  * the member straight into the Mattermost UI without requiring a separate password.
  * Returns the token string, or null on failure.
