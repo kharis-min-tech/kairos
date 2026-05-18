@@ -261,17 +261,18 @@ export async function approveMember(
       void (async () => {
         try {
           const username = member.email.split('@')[0]!.toLowerCase().replace(/[^a-z0-9._-]/g, '') + '-' + member.id.slice(0, 4);
-          const mmUserId = await mmCreateUser(
+          const mmResult = await mmCreateUser(
             member.email,
             username,
             member.firstName ?? '',
             member.lastName ?? '',
           );
-          if (mmUserId) {
-            // Persist mattermostUserId
+          if (mmResult) {
+            const mmUserId = mmResult.userId;
+            // Persist mattermostUserId + password for auto-login
             await db
               .update(members)
-              .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
+              .set({ mattermostUserId: mmUserId, mattermostPassword: mmResult.password, updatedAt: sql`NOW()` })
               .where(eq(members.id, memberId));
 
             // Add to branch team and channel

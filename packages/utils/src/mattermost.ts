@@ -147,34 +147,37 @@ async function mmGetUserByEmail(email: string): Promise<string | null> {
 
 /**
  * Creates a Mattermost user account for a Kairos member.
- * Uses a random UUID password — the member never needs it (they use SSO token login).
- * Returns the Mattermost user ID, or null on failure.
+ * Accepts an optional password; generates one if not provided.
+ * Returns `{ userId, password }` on success, or null on failure.
+ * The password must be stored by the caller so the member can be auto-logged in later.
  */
 export async function mmCreateUser(
   email: string,
   username: string,
   firstName: string,
   lastName: string,
-): Promise<string | null> {
+  password?: string,
+): Promise<{ userId: string; password: string } | null> {
   try {
-    const password = `Krs-${crypto.randomUUID()}`;
+    const pw = password ?? `Krs-${crypto.randomUUID()}`;
     const res = await mmFetch('/users', {
       method: 'POST',
-      body: JSON.stringify({ email, username, password, first_name: firstName, last_name: lastName }),
+      body: JSON.stringify({ email, username, password: pw, first_name: firstName, last_name: lastName }),
     });
     if (!res.ok) {
       const body = await res.text();
       const parsed = JSON.parse(body) as { id?: string };
       // If email already exists, look up the existing user by email
       if (parsed.id === 'app.user.save.email_exists.app_error') {
-        return mmGetUserByEmail(email);
+        const existingId = await mmGetUserByEmail(email);
+        return existingId ? { userId: existingId, password: pw } : null;
       }
       mmLogger.warn('Mattermost: failed to create user', { email, status: res.status, body });
       return null;
     }
     const user = (await res.json()) as MMUser;
     mmLogger.info('Mattermost: user created', { email, mmUserId: user.id });
-    return user.id;
+    return { userId: user.id, password: pw };
   } catch (err) {
     mmLogger.warn('Mattermost: createUser exception', { email, err });
     return null;

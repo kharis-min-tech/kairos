@@ -20,7 +20,6 @@ import {
   mmGetOrCreateChannel,
   mmAddUserToChannel,
   mmPostMessage,
-  mmGenerateLoginToken,
   branchChannelName,
   fellowshipChannelName,
   departmentChannelName,
@@ -55,20 +54,15 @@ messagingRouter.get('/login-token', async (c) => {
   const auth = getAuth(c);
 
   const [member] = await db
-    .select({ mattermostUserId: members.mattermostUserId })
+    .select({ mattermostUserId: members.mattermostUserId, mattermostPassword: members.mattermostPassword, email: members.email })
     .from(members)
     .where(eq(members.id, auth.memberId));
 
-  if (!member?.mattermostUserId) {
+  if (!member?.mattermostUserId || !member?.mattermostPassword) {
     return c.json({ error: 'Mattermost account not yet provisioned' }, 404);
   }
 
-  const token = await mmGenerateLoginToken(member.mattermostUserId);
-  if (!token) {
-    return c.json({ error: 'Could not generate Mattermost login token' }, 503);
-  }
-
-  return c.json(successResponse({ token }));
+  return c.json(successResponse({ email: member.email, password: member.mattermostPassword }));
 });
 
 // ── POST /backfill-mm ─────────────────────────────────────────────────────────
@@ -95,17 +89,18 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
         member.email.split('@')[0]!.toLowerCase().replace(/[^a-z0-9._-]/g, '') +
         '-' +
         member.id.slice(0, 4);
-      const mmUserId = await mmCreateUser(
+      const mmResult = await mmCreateUser(
         member.email,
         username,
         member.firstName ?? '',
         member.lastName ?? '',
       );
-      if (!mmUserId) { failed++; continue; }
+      if (!mmResult) { failed++; continue; }
+      const mmUserId = mmResult.userId;
 
       await db
         .update(members)
-        .set({ mattermostUserId: mmUserId, updatedAt: sql`NOW()` })
+        .set({ mattermostUserId: mmUserId, mattermostPassword: mmResult.password, updatedAt: sql`NOW()` })
         .where(eq(members.id, member.id));
 
       if (member.homeBranchId) {

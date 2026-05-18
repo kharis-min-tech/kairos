@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { href: '/outreach/programs', label: 'Outreach Programs' },
   { href: '/souls', label: 'Souls Pipeline' },
   { href: '/souls-dashboard', label: 'Souls Dashboard', roles: ['admin', 'pastor', 'leader', 'member'] },
+  { href: '/messages', label: 'Messages' },
   { href: '/reports', label: 'Reports', roles: ['admin', 'pastor'] },
   { href: '/profile', label: 'Profile' },
 ];

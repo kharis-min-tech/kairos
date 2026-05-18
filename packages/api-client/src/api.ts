@@ -891,6 +891,10 @@ export function createApiClient(
           client.post<ApiResponse<{ recorded: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
       },
     },
+    messaging: {
+      getCredentials: () =>
+        client.get<ApiResponse<{ email: string; password: string }>>('/api/messaging/login-token'),
+    },
   };
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE members ADD COLUMN IF NOT EXISTS mattermost_password VARCHAR(255);
