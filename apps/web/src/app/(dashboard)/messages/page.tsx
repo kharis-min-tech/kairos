@@ -67,6 +67,17 @@ export default function MessagesPage() {
 
         if (!loginRes.ok) { setState('error'); return; }
 
+        // MM returns the session token in a `Token` response header (not Set-Cookie).
+        // Manually plant it as a cookie on this origin so the iframe picks it up.
+        const mmToken = loginRes.headers.get('Token');
+        if (mmToken) {
+          const userData: { id?: string } = await loginRes.json().catch(() => ({}));
+          document.cookie = `MMAUTHTOKEN=${mmToken}; path=/mm; SameSite=Lax`;
+          if (userData.id) {
+            document.cookie = `MMUSERID=${userData.id}; path=/mm; SameSite=Lax`;
+          }
+        }
+
         setMmSrc(await getMMSrc());
         setState('ready');
       } catch {
