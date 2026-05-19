@@ -21,6 +21,7 @@ import {
   mmAddUserToChannel,
   mmPostMessage,
   mmUpdateUserPassword,
+  mmUpdateUserRoles,
   mmGenerateLoginToken,
   branchChannelName,
   fellowshipChannelName,
@@ -31,7 +32,7 @@ import {
 } from '@kairos/utils';
 import { getOrCreateBranchTeamId, mmAddUserToTeam } from './mm-branch-team';
 import { db } from '../db';
-import { members, fellowships, branchDepartments } from '@kairos/database';
+import { members, fellowships, branchDepartments, branches } from '@kairos/database';
 import { eq, and, isNull, or, sql } from 'drizzle-orm';
 
 const broadcastSchema = z.object({
@@ -83,12 +84,19 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
       lastName: members.lastName,
       homeBranchId: members.homeBranchId,
       mattermostUserId: members.mattermostUserId,
+      systemRole: members.systemRole,
     })
     .from(members)
     .where(and(
       eq(members.isActive, true),
       or(isNull(members.mattermostUserId), isNull(members.mattermostPassword)),
     ));
+
+  // Fetch all active branch IDs upfront for admin team-assignment
+  const allBranches = await db
+    .select({ id: branches.id })
+    .from(branches)
+    .where(eq(branches.isActive, true));
 
   let provisioned = 0;
   let passwordsUpdated = 0;
@@ -110,6 +118,14 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
           .update(members)
           .set({ mattermostPassword: newPassword, updatedAt: sql`NOW()` })
           .where(eq(members.id, member.id));
+        // Ensure admins have system_admin role and all-team membership
+        if (member.systemRole === 'admin') {
+          await mmUpdateUserRoles(member.mattermostUserId, 'system_user system_admin');
+          for (const branch of allBranches) {
+            const teamId = await getOrCreateBranchTeamId(db, branch.id);
+            if (teamId) await mmAddUserToTeam(teamId, member.mattermostUserId);
+          }
+        }
         passwordsUpdated++;
         continue;
       }
@@ -129,7 +145,14 @@ messagingRouter.post('/backfill-mm', requireRole('admin'), async (c) => {
         .set({ mattermostUserId: mmUserId, mattermostPassword: mmResult.password, updatedAt: sql`NOW()` })
         .where(eq(members.id, member.id));
 
-      if (member.homeBranchId) {
+      // Admins get MM system_admin role and membership in all branch teams
+      if (member.systemRole === 'admin') {
+        await mmUpdateUserRoles(mmUserId, 'system_user system_admin');
+        for (const branch of allBranches) {
+          const teamId = await getOrCreateBranchTeamId(db, branch.id);
+          if (teamId) await mmAddUserToTeam(teamId, mmUserId);
+        }
+      } else if (member.homeBranchId) {
         const teamId = await getOrCreateBranchTeamId(db, member.homeBranchId);
         if (teamId) {
           await mmAddUserToTeam(teamId, mmUserId);

@@ -3,18 +3,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth-store';
 
 // /mm is proxied by Next.js to localhost:8065/mm (same origin — cookies work)
 const MM_PROXY = '/mm';
 // Deep path that avoids the /mm/ root redirect loop.
 // MM's client-side router will navigate to the correct team/channel after auth.
-const MM_SRC = `${MM_PROXY}/channels/town-square`;
+const MM_MEMBER_SRC = `${MM_PROXY}/channels/town-square`;
+// Admins land on the System Console for full MM administration.
+const MM_ADMIN_SRC = `${MM_PROXY}/admin_console`;
 
 type State = 'loading' | 'ready' | 'not-provisioned' | 'error';
 
 export default function MessagesPage() {
   const [state, setState] = useState<State>('loading');
   const didInit = useRef(false);
+  const user = useAuthStore((s) => s.user);
+  const mmSrc = user?.systemRole === 'admin' ? MM_ADMIN_SRC : MM_MEMBER_SRC;
 
   useEffect(() => {
     if (didInit.current) return;
@@ -105,7 +110,7 @@ export default function MessagesPage() {
       {state === 'ready' && (
         <div className="flex-1 relative">
           <iframe
-            src={MM_SRC}
+            src={mmSrc}
             className="w-full h-full border-0"
             title="Kairos Messages"
             allow="clipboard-write; microphone"

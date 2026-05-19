@@ -188,6 +188,29 @@ export async function mmCreateUser(
  * Deactivates (soft-deletes) a Mattermost user.
  * Called when a Kairos member is set to isActive = false.
  */
+/**
+ * Updates a Mattermost user's roles.
+ * Pass space-separated roles, e.g. "system_user system_admin".
+ * Returns true on success.
+ */
+export async function mmUpdateUserRoles(mmUserId: string, roles: string): Promise<boolean> {
+  try {
+    const res = await mmFetch(`/users/${mmUserId}/roles`, {
+      method: 'PUT',
+      body: JSON.stringify({ roles }),
+    });
+    if (!res.ok) {
+      mmLogger.warn('Mattermost: failed to update user roles', { mmUserId, roles, status: res.status });
+      return false;
+    }
+    mmLogger.info('Mattermost: user roles updated', { mmUserId, roles });
+    return true;
+  } catch (err) {
+    mmLogger.warn('Mattermost: updateUserRoles exception', { mmUserId, err });
+    return false;
+  }
+}
+
 export async function mmDeactivateUser(mmUserId: string): Promise<void> {
   try {
     const res = await mmFetch(`/users/${mmUserId}`, { method: 'DELETE' });

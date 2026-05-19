@@ -18,6 +18,7 @@ export {
 export {
   mmCreateUser,
   mmDeactivateUser,
+  mmUpdateUserRoles,
   mmUpdateUserPassword,
   mmGenerateLoginToken,
   mmGetOrCreateChannel,
