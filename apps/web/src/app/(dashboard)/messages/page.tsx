@@ -6,34 +6,14 @@ import { api } from '@/lib/api';
 
 // /mm is proxied by Next.js to localhost:8065/mm (same origin — cookies work)
 const MM_PROXY = '/mm';
-// Default deep path — avoids the /mm/ root redirect loop while still landing
-// in the right place after MM login.
-const MM_FALLBACK_SRC = `${MM_PROXY}/channels/town-square`;
+// Deep path that avoids the /mm/ root redirect loop.
+// MM's client-side router will navigate to the correct team/channel after auth.
+const MM_SRC = `${MM_PROXY}/channels/town-square`;
 
 type State = 'loading' | 'ready' | 'not-provisioned' | 'error';
 
-/** Fetch user's first MM team and return /{teamName}/channels/town-square path. */
-async function getMMSrc(): Promise<string> {
-  try {
-    const teamsRes = await fetch(`${MM_PROXY}/api/v4/users/me/teams`, {
-      credentials: 'include',
-    });
-    if (teamsRes.ok) {
-      const teams: Array<{ name: string }> = await teamsRes.json();
-      const first = teams[0];
-      if (first) {
-        return `${MM_PROXY}/${first.name}/channels/town-square`;
-      }
-    }
-  } catch {
-    // fall through to fallback
-  }
-  return MM_FALLBACK_SRC;
-}
-
 export default function MessagesPage() {
   const [state, setState] = useState<State>('loading');
-  const [mmSrc, setMmSrc] = useState<string>(MM_FALLBACK_SRC);
   const didInit = useRef(false);
 
   useEffect(() => {
@@ -45,7 +25,6 @@ export default function MessagesPage() {
         // Check if already authenticated with MM — skip re-login
         const meRes = await fetch(`${MM_PROXY}/api/v4/users/me`, { credentials: 'include' });
         if (meRes.ok) {
-          setMmSrc(await getMMSrc());
           setState('ready');
           return;
         }
@@ -57,7 +36,7 @@ export default function MessagesPage() {
           return;
         }
 
-        // Log into MM via the same-origin proxy — cookie is set on localhost:3002
+        // Log into MM via the same-origin proxy
         const loginRes = await fetch(`${MM_PROXY}/api/v4/users/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,7 +57,6 @@ export default function MessagesPage() {
           }
         }
 
-        setMmSrc(await getMMSrc());
         setState('ready');
       } catch {
         setState('error');
@@ -127,7 +105,7 @@ export default function MessagesPage() {
       {state === 'ready' && (
         <div className="flex-1 relative">
           <iframe
-            src={mmSrc}
+            src={MM_SRC}
             className="w-full h-full border-0"
             title="Kairos Messages"
             allow="clipboard-write; microphone"

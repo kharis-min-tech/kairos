@@ -893,7 +893,7 @@ export function createApiClient(
     },
     messaging: {
       getCredentials: () =>
-        client.get<ApiResponse<{ token: string }>>('/api/messaging/login-token'),
+        client.get<ApiResponse<{ email: string; password: string }>>('/api/messaging/login-token'),
     },
   };
 }
