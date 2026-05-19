@@ -60,7 +60,7 @@ cp .env.example apps/api/.env
 The defaults work out of the box with the local Docker database. Edit the file if you need to change anything:
 
 ```
-DATABASE_URL=postgresql://kairos:kairos@localhost:5432/kairos
+DATABASE_URL=postgresql://kairos:kairos@127.0.0.1:5433/kairos
 JWT_SECRET=local-dev-secret-change-in-production
 JWT_REFRESH_SECRET=local-dev-refresh-secret-change-in-production
 PORT=3001
@@ -72,7 +72,7 @@ PORT=3001
 docker compose up -d
 ```
 
-This starts a PostgreSQL 15 container (`kairos-db`) on port `5432` with:
+This starts a PostgreSQL 15 container (`kairos-db`) on port `5433` with:
 - **User:** `kairos`
 - **Password:** `kairos`
 - **Database:** `kairos`
@@ -150,3 +150,122 @@ Add `-v` to also delete all stored data:
 ```bash
 docker compose down -v
 ```
+
+## Login Credentials
+
+### Admin Account
+- **Email:** `admin@kairos.local`
+- **Password:** `Password1!`
+
+### Other Test Accounts
+All test accounts use the same password: `Password1!`
+
+- **Pastor:** `pastor@kairos.local`
+- **Member:** `member@kairos.local`
+
+## Troubleshooting
+
+### Database Connection Issues
+
+If you get "role kairos does not exist":
+
+1. **Reset Docker volumes:**
+   ```bash
+   docker compose down -v
+   docker compose up -d
+   sleep 5
+   ```
+
+2. **Verify database is running:**
+   ```bash
+   docker ps
+   docker logs kairos-db
+   ```
+
+3. **Test connection from inside container:**
+   ```bash
+   docker exec kairos-db psql -U kairos -d kairos -c "SELECT version();"
+   ```
+
+4. **Check users:**
+   ```bash
+   docker exec kairos-db psql -U kairos -d kairos -c "\du"
+   ```
+
+### Frontend Build Errors
+
+If you get module not found errors:
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Restart dev server:**
+   ```bash
+   # Stop the server (Ctrl+C)
+   npm run dev -- --port 3002
+   ```
+
+### Backend API Errors
+
+If backend fails to start:
+
+1. **Check database is running:**
+   ```bash
+   docker ps | grep kairos-db
+   ```
+
+2. **Run migrations:**
+   ```bash
+   npm run db:migrate
+   ```
+
+3. **Seed database:**
+   ```bash
+   npm run db:seed
+   ```
+
+## Donations Module
+
+The donations module has been added with the following pages:
+
+1. **History** - `/donations` - View all donations with filters
+2. **Record** - `/donations/record` - Record manual donations
+3. **Reports** - `/donations/reports` - Analytics and reports
+4. **Import** - `/donations/import` - CSV bulk import
+
+### Features:
+- Branch isolation (Pastors see only their branch)
+- Anonymous donations support
+- GBP currency only
+- CSV import/export
+- UK tax year templates
+- Real-time validation
+
+## Quick Start
+
+1. **Start Docker:**
+   ```bash
+   docker compose up -d
+   ```
+
+2. **Setup Database:**
+   ```bash
+   npm run db:fresh
+   ```
+
+3. **Start Frontend:**
+   ```bash
+   cd apps/web
+   npm run dev -- --port 3002
+   ```
+
+4. **Login:**
+   - Go to http://localhost:3002
+   - Email: `admin@kairos.local`
+   - Password: `Password1!`
+
+5. **Access Donations:**
+   - Click "Donations" in the sidebar
+   - Module connects to deployed API at https://api-staging.khar.is
