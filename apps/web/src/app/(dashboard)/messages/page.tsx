@@ -1,34 +1,73 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, ExternalLink, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const MM_URL = process.env.NEXT_PUBLIC_MATTERMOST_URL ?? 'http://localhost:8065';
+// /mm is proxied by Next.js to localhost:8065/mm (same origin — cookies work)
+const MM_PROXY = '/mm';
+// Default deep path — avoids the /mm/ root redirect loop while still landing
+// in the right place after MM login.
+const MM_FALLBACK_SRC = `${MM_PROXY}/channels/town-square`;
 
 type State = 'loading' | 'ready' | 'not-provisioned' | 'error';
 
+/** Fetch user's first MM team and return /{teamName}/channels/town-square path. */
+async function getMMSrc(): Promise<string> {
+  try {
+    const teamsRes = await fetch(`${MM_PROXY}/api/v4/users/me/teams`, {
+      credentials: 'include',
+    });
+    if (teamsRes.ok) {
+      const teams: Array<{ name: string }> = await teamsRes.json();
+      const first = teams[0];
+      if (first) {
+        return `${MM_PROXY}/${first.name}/channels/town-square`;
+      }
+    }
+  } catch {
+    // fall through to fallback
+  }
+  return MM_FALLBACK_SRC;
+}
+
 export default function MessagesPage() {
   const [state, setState] = useState<State>('loading');
-  const [mmSrc, setMmSrc] = useState(MM_URL);
-  const didLogin = useRef(false);
+  const [mmSrc, setMmSrc] = useState<string>(MM_FALLBACK_SRC);
+  const didInit = useRef(false);
 
   useEffect(() => {
-    if (didLogin.current) return;
-    didLogin.current = true;
+    if (didInit.current) return;
+    didInit.current = true;
 
     (async () => {
       try {
-        // 1. Get a short-lived MM session token from Kairos API (proxied server-side, no CORS)
+        // Check if already authenticated with MM — skip re-login
+        const meRes = await fetch(`${MM_PROXY}/api/v4/users/me`, { credentials: 'include' });
+        if (meRes.ok) {
+          setMmSrc(await getMMSrc());
+          setState('ready');
+          return;
+        }
+
+        // Get credentials from Kairos API
         const res = await api.messaging.getCredentials();
         if (!res.data) {
           setState('not-provisioned');
           return;
         }
-        const { token } = res.data;
 
-        // 2. Use the token to create a login link MM accepts via ?login_token=
-        setMmSrc(`${MM_URL}?login_token=${token}`);
+        // Log into MM via the same-origin proxy — cookie is set on localhost:3002
+        const loginRes = await fetch(`${MM_PROXY}/api/v4/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ login_id: res.data.email, password: res.data.password }),
+        });
+
+        if (!loginRes.ok) { setState('error'); return; }
+
+        setMmSrc(await getMMSrc());
         setState('ready');
       } catch {
         setState('error');
@@ -38,21 +77,9 @@ export default function MessagesPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-violet-600" />
-          <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
-        </div>
-        <a
-          href={MM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-violet-600"
-        >
-          Open in new tab
-          <ExternalLink className="h-3 w-3" />
-        </a>
+      <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-white">
+        <MessageSquare className="h-5 w-5 text-violet-600 mr-2" />
+        <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
       </div>
 
       {state === 'loading' && (
@@ -68,7 +95,8 @@ export default function MessagesPage() {
             <MessageSquare className="h-10 w-10 text-violet-300 mx-auto mb-3" />
             <p className="text-sm font-medium text-gray-700">Messaging not set up yet</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Your messaging account is created automatically once your membership is approved. Contact your admin if you think this is a mistake.
+              Your messaging account is created automatically once your membership is approved.
+              Contact your admin if you think this is a mistake.
             </p>
           </div>
         </div>
