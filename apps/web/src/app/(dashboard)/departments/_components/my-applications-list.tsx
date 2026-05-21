@@ -20,7 +20,7 @@ function formatDateTime(value: string | Date | null) {
   if (!value) return null;
   const d = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString('en-GB', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

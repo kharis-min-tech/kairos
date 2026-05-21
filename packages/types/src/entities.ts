@@ -394,6 +394,30 @@ export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
   memberFirstName: string;
   memberLastName: string;
 }
+
+// ── New Believers — programme-health insights ─────────────
+
+export interface NewBelieverAttendanceTrendPoint {
+  sessionId: string;
+  sessionDate: string;
+  sessionStage: string;
+  topic: string | null;
+  attended: number;
+  eligible: number;
+  attendanceRate: number;
+}
+
+export type NewBelieverStageFunnel = Record<
+  'enrolled' | 'session-1' | 'session-2' | 'session-3' | 'session-4' | 'completed' | 'integrated',
+  number
+>;
+
+export interface NewBelieverHealthSummary {
+  attendanceTrend: NewBelieverAttendanceTrendPoint[];
+  stageFunnel: NewBelieverStageFunnel;
+  stale: { count: number; thresholdDays: number };
+  summary: { avgAttendanceRate: number | null; activeEnrollments: number };
+}
 // ── Departments (global catalogue) ─────────────────────────
 
 export interface Department extends BaseEntity {

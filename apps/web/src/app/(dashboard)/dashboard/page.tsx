@@ -303,7 +303,7 @@ function MemberDashboard() {
               {upcomingDuties.map((d) => {
                 const isToday = d.serviceDate === today;
                 const dateLabel = new Date(d.serviceDate + 'T00:00:00').toLocaleDateString(
-                  undefined,
+                  'en-GB',
                   { weekday: 'short', month: 'short', day: 'numeric' },
                 );
                 return (
@@ -363,7 +363,7 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 

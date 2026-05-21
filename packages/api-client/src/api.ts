@@ -45,6 +45,7 @@ import type {
   NewBelieverEnrollmentWithMember,
   NewBelieverSession,
   NewBelieverAttendanceWithMember,
+  NewBelieverHealthSummary,
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
   EnrollmentListParams,
@@ -849,6 +850,12 @@ export function createApiClient(
       },
     },
     newBelievers: {
+      health: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const q = qs.toString();
+        return client.get<ApiResponse<NewBelieverHealthSummary>>(`/api/new-believers/health${q ? `?${q}` : ''}`);
+      },
       enrollments: {
         list: (params?: EnrollmentListParams) => {
           const qs = new URLSearchParams();

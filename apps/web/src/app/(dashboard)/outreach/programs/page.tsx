@@ -8,6 +8,7 @@ import { Button, Input, Badge, Table, TableHeader, TableBody, TableRow, TableHea
 import { Plus, Search, UserPlus, CheckCircle2, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/hooks/use-toast';
+import { formatShortDate } from '@/lib/date-format';
 
 type ProgramTab = 'active' | 'completed';
 
@@ -259,7 +260,7 @@ export default function OutreachProgramsPage() {
                 >
                   <TableCell className="font-medium">{program.programName}</TableCell>
                   <TableCell>
-                    {new Date(program.programDate).toLocaleDateString()}
+                    {formatShortDate(program.programDate)}
                   </TableCell>
                   <TableCell>{program.location}</TableCell>
                   <TableCell>{program.coordinatorName || 'Not assigned'}</TableCell>

@@ -13,6 +13,7 @@ import {
 } from '@kairos/ui';
 import { useMyDepartments } from '@/hooks/use-departments';
 import { useMyRota } from '@/hooks/use-me';
+import { formatDate, formatShortDate } from '@/lib/date-format';
 
 const PREVIEW_LIMIT = 3;
 
@@ -37,7 +38,7 @@ interface Props {
 function formatShortServiceDate(serviceDate: string): string {
   const [y, m, d] = serviceDate.split('-').map(Number);
   if (!y || !m || !d) return serviceDate;
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+  return formatDate(new Date(y, m - 1, d), {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -101,7 +102,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
         const remaining = Math.max(0, upcoming.length - preview.length);
         const probation = probationByDeptId?.get(dept.id);
         const probationEnds = probation?.endDate
-          ? new Date(probation.endDate).toLocaleDateString()
+          ? formatShortDate(probation.endDate)
           : null;
 
         return (

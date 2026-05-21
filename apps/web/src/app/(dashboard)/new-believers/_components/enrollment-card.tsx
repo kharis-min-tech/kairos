@@ -3,6 +3,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { Check } from 'lucide-react';
 import { Card, CardContent } from '@kairos/ui';
+import { formatShortDate } from '@/lib/date-format';
 import { STAGES, getStaleDays } from './stage-config';
 import type { EnrollmentCardData } from './types';
 
@@ -82,7 +83,7 @@ function EnrollmentCardContent({
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
-            Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+            Enrolled {formatShortDate(enrollment.enrolledAt)}
           </p>
         </div>
       </div>

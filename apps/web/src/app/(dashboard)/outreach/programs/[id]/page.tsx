@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
+import { formatShortDate } from '@/lib/date-format';
 
 interface ProgramParticipant {
   memberId: string;
@@ -297,7 +298,7 @@ export default function ProgramDetailPage() {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{new Date(program.programDate).toLocaleDateString()}</span>
+              <span>{formatShortDate(program.programDate)}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />

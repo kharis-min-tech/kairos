@@ -109,13 +109,13 @@ function daysAgo(value: Date | string | null | undefined): number | null {
 function formatStageDate(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = new Date(value);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
 }
 
 function formatStageDateTime(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = new Date(value);
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString('en-GB', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -805,7 +805,7 @@ function SearchIcon() {
 
 function fmtDate(value: Date | string | null | undefined): string {
   if (!value) return '—';
-  return new Date(value).toLocaleDateString(undefined, {
+  return new Date(value).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -814,7 +814,7 @@ function fmtDate(value: Date | string | null | undefined): string {
 
 function fmtDateTime(value: Date | string | null | undefined): string {
   if (!value) return '—';
-  return new Date(value).toLocaleString(undefined, {
+  return new Date(value).toLocaleString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

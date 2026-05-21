@@ -10,6 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 
+function todayIso(): string {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
+
 export default function CreateProgramPage() {
   const router = useRouter();
   const api = useApi();
@@ -79,6 +86,8 @@ export default function CreateProgramPage() {
     }
     if (!formData.programDate) {
       newErrors.programDate = 'Program date is required';
+    } else if (formData.programDate < todayIso()) {
+      newErrors.programDate = 'Program date cannot be in the past';
     }
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required';
@@ -230,6 +239,7 @@ export default function CreateProgramPage() {
               id="programDate"
               value={formData.programDate}
               onChange={(v) => handleChange('programDate', v)}
+              minDate={todayIso()}
             />
             {errors.programDate && (
               <p className="text-sm text-destructive">{errors.programDate}</p>

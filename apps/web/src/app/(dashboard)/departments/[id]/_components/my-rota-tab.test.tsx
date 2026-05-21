@@ -69,6 +69,15 @@ describe('MyRotaTab', () => {
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
+  it('uses the shared date picker for range filters instead of native date inputs', () => {
+    useMyRotaMock.mockReturnValue({ data: [], isLoading: false, isError: false });
+    const { container } = render(<MyRotaTab branchDepartmentId="bd-1" />, { wrapper });
+
+    expect(container.querySelector('input[type="date"]')).toBeNull();
+    expect(screen.getByLabelText('From')).toHaveAttribute('type', 'button');
+    expect(screen.getByLabelText('To')).toHaveAttribute('type', 'button');
+  });
+
   it('renders an error message on isError', () => {
     useMyRotaMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
     render(<MyRotaTab branchDepartmentId="bd-1" />, { wrapper });

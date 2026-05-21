@@ -17,6 +17,7 @@ import {
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
+import { formatDate, formatShortDateTime } from '@/lib/date-format';
 import {
   useCreateFellowshipFollowup,
   useDeleteFellowshipFollowup,
@@ -28,6 +29,13 @@ import type { FellowshipMemberWithDetails } from '@kairos/types';
 
 const CONTACT_METHODS = Object.values(ContactMethod);
 const CONTACT_STATUSES = Object.values(ContactStatus);
+
+function todayIso(): string {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
 
 const STATUS_TONE: Record<string, string> = {
   Successful: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
@@ -255,7 +263,7 @@ export function FellowshipFollowupsTab({
                       </p>
                       <p className="text-xs text-muted-foreground">
                         By {followup.recordedByFirstName} {followup.recordedByLastName} &middot;{' '}
-                        {new Date(followup.contactedAt).toLocaleString()}
+                        {formatShortDateTime(followup.contactedAt)}
                       </p>
                     </div>
                   </div>
@@ -284,7 +292,7 @@ export function FellowshipFollowupsTab({
                     {followup.nextFollowUpDate && (
                       <span>
                         Next:{' '}
-                        {new Date(followup.nextFollowUpDate).toLocaleDateString(undefined, {
+                        {formatDate(followup.nextFollowUpDate, {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -466,6 +474,7 @@ function FollowupForm({
                 id="fellowship-fu-next"
                 value={nextFollowUpDate}
                 onChange={setNextFollowUpDate}
+                minDate={todayIso()}
               />
             </div>
 

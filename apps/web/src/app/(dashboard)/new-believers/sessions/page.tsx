@@ -9,6 +9,7 @@ import { useSessions } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
 import type { NewBelieverSession } from '@kairos/types';
 import { CreateSessionDialog } from './_components/create-session-dialog';
+import { ProgramHealthStrip } from './_components/program-health-strip';
 import { SessionDetailPane } from './_components/session-detail-pane';
 import { SessionListItem } from './_components/session-list-item';
 import {
@@ -110,6 +111,8 @@ export default function SessionsPage() {
           </Button>
         )}
       </div>
+
+      <ProgramHealthStrip branchId={branchId || undefined} />
 
       {isLoading ? (
         <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">

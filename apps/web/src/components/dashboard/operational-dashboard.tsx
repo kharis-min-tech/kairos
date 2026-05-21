@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { AlertCircle, AlertTriangle, CheckCircle, TrendingUp, Users, Target, Phone, Mail, User, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
 interface OperationalDashboardProps {
@@ -401,7 +402,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                     )}
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3" />
-                      <span>{new Date(fu.followUpDate).toLocaleDateString()}</span>
+                      <span>{formatShortDate(fu.followUpDate)}</span>
                     </div>
                   </div>
                   <div className="text-xs text-slate-500 border-t border-slate-700 pt-2">
@@ -471,7 +472,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 <div>
                   <div className="text-slate-400">Created</div>
                   <div className="font-medium">
-                    {selectedSoul.createdAt ? new Date(selectedSoul.createdAt).toLocaleDateString() : 'N/A'}
+                    {selectedSoul.createdAt ? formatShortDate(selectedSoul.createdAt) : 'N/A'}
                   </div>
                 </div>
               </div>
@@ -522,7 +523,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 <div>
                   <div className="text-slate-400">Follow-up Date</div>
                   <div className="font-medium">
-                    {new Date(selectedFollowUp.followUpDate).toLocaleString()}
+                    {formatShortDateTime(selectedFollowUp.followUpDate)}
                   </div>
                 </div>
                 <div>

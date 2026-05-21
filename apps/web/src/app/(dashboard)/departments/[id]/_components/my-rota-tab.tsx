@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { CalendarClock, CalendarRange } from 'lucide-react';
-import { Badge, Card, CardContent, Input, Label } from '@kairos/ui';
+import { Badge, Card, CardContent, Label } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useMyRota } from '@/hooks/use-me';
+import { formatDate } from '@/lib/date-format';
 
 interface Props {
   branchDepartmentId: string;
@@ -22,7 +24,7 @@ interface RotaRow {
 function formatServiceDate(serviceDate: string): string {
   const [y, m, d] = serviceDate.split('-').map(Number);
   if (!y || !m || !d) return serviceDate;
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+  return formatDate(new Date(y, m - 1, d), {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -95,24 +97,22 @@ export function MyRotaTab({ branchDepartmentId }: Props) {
               <Label htmlFor="rota-from" className="text-xs text-muted-foreground">
                 From
               </Label>
-              <Input
+              <DateSelect
                 id="rota-from"
-                type="date"
                 value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="h-9"
+                onChange={setFrom}
+                maxDate={to || undefined}
               />
             </div>
             <div className="space-y-1">
               <Label htmlFor="rota-to" className="text-xs text-muted-foreground">
                 To
               </Label>
-              <Input
+              <DateSelect
                 id="rota-to"
-                type="date"
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="h-9"
+                onChange={setTo}
+                minDate={from || undefined}
               />
             </div>
           </div>

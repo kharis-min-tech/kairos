@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api-client';
 import { Card, Button, Badge, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { Loader2, Phone, Mail, User, Calendar } from 'lucide-react';
+import { formatShortDate } from '@/lib/date-format';
 
 type RAGStatus = 'RED' | 'AMBER' | 'GREEN';
 
@@ -229,7 +230,7 @@ export function SoulsPipelineView() {
                 <div>
                   <div className="text-muted-foreground">Created</div>
                   <div className="font-medium">
-                    {new Date(selectedSoul.createdAt).toLocaleDateString()}
+                    {formatShortDate(selectedSoul.createdAt)}
                   </div>
                 </div>
               </div>

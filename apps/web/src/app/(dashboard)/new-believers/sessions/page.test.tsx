@@ -53,9 +53,27 @@ vi.mock('@/hooks/use-new-believers', () => ({
   useSessions: () => ({ data: sessionsData, isLoading: false }),
   useSessionAttendance: () => ({ data: [], isLoading: false }),
   useEnrollments: () => ({ data: { data: [], pagination: {} }, isLoading: false }),
+  useEnrollmentAlerts: () => ({ data: { data: [], total: 0, page: 1, limit: 100 }, isLoading: false }),
   useRecordSessionAttendance: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUpdateSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useCreateSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useNewBelieversHealth: () => ({
+    data: {
+      attendanceTrend: [],
+      stageFunnel: {
+        enrolled: 0,
+        'session-1': 0,
+        'session-2': 0,
+        'session-3': 0,
+        'session-4': 0,
+        completed: 0,
+        integrated: 0,
+      },
+      stale: { count: 0, thresholdDays: 7 },
+      summary: { avgAttendanceRate: null, activeEnrollments: 0 },
+    },
+    isLoading: false,
+  }),
 }));
 
 import SessionsPage from './page';

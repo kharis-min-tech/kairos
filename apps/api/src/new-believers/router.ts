@@ -12,6 +12,7 @@ import {
   recordAttendanceSchema,
   listSessionsQuerySchema,
   bulkAdvanceSchema,
+  healthQuerySchema,
 } from './schemas';
 import {
   listEnrollments,
@@ -24,12 +25,26 @@ import {
   updateSession,
   recordSessionAttendance,
   getSessionAttendance,
+  getHealthSummary,
 } from './service';
 
 export const newBelieversRouter = new Hono();
 
 // All routes require authentication
 newBelieversRouter.use('*', authMiddleware);
+
+// ── Health (programme-health insights strip) ───────────────
+// Static path must sit ABOVE any future `/:id` route per apps/api/CLAUDE.md.
+
+newBelieversRouter.get(
+  '/health',
+  zValidator('query', healthQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getHealthSummary(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
 
 // ── Enrollments ────────────────────────────────────────────
 

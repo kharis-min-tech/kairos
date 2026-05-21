@@ -131,6 +131,19 @@ export function useSessionAttendance(sessionId: string) {
   });
 }
 
+// ── Programme-health insights ─────────────────────────────
+
+export function useNewBelieversHealth(branchId?: string) {
+  return useQuery({
+    queryKey: ['new-believers', 'health', branchId],
+    queryFn: async () => {
+      const res = await api.newBelievers.health(branchId ? { branchId } : undefined);
+      return res.data!;
+    },
+    staleTime: 60_000,
+  });
+}
+
 export function useRecordSessionAttendance() {
   const qc = useQueryClient();
   return useMutation({

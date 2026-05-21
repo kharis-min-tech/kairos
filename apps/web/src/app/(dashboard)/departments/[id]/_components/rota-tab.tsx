@@ -73,7 +73,7 @@ function todayIso(): string {
 
 function formatDateLong(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, {
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -85,14 +85,14 @@ function formatDateLong(iso: string): string {
 function formatWeekdayShort(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
   return new Date(Date.UTC(y, m - 1, d))
-    .toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' })
+    .toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })
     .toUpperCase();
 }
 
 function formatMonthShort(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
   return new Date(Date.UTC(y, m - 1, d))
-    .toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' })
+    .toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })
     .toUpperCase();
 }
 

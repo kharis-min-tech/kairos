@@ -128,7 +128,7 @@ describe('useScheduleDepartmentInterview', () => {
     const payload = {
       interviewerOneId: 'i1',
       interviewerTwoId: 'i2',
-      interviewAt: '2026-06-01T10:00:00Z',
+      interviewScheduledAt: '2026-06-01T10:00:00Z',
       interviewFormat: 'in_person' as const,
     };
     await act(async () => {
