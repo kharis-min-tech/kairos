@@ -17,6 +17,15 @@ async function createTransport() {
     });
   }
 
+  if (
+    process.env.MAILER_MODE === 'log'
+    || process.env.NODE_ENV === 'test'
+    || process.env.VITEST === 'true'
+  ) {
+    mailerLogger.info('Using log-only mailer transport');
+    return nodemailer.createTransport({ jsonTransport: true });
+  }
+
   const testAccount = await nodemailer.createTestAccount();
   mailerLogger.info('Using Ethereal test mailer — set SMTP_HOST/SMTP_USER/SMTP_PASS to use real SMTP');
   return nodemailer.createTransport({
@@ -227,6 +236,176 @@ export async function sendAccountRejectedEmail(
   });
 
   mailerLogger.info('Account rejected email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
+export async function sendMentorAssignedEmail(
+  to: string,
+  mentorName: string,
+  studentName: string,
+): Promise<void> {
+  const transport = await createTransport();
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `You've been assigned as a mentor — Kharis Church`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #6D28D9;">Mentor Assignment</h2>
+        <p>Hi ${mentorName},</p>
+        <p>You have been assigned as a mentor for <strong>${studentName}</strong> in the New Believers programme.</p>
+        <p>Please reach out to them and support them through their journey of faith.</p>
+        <p>Log in to the Kharis Church portal to view their enrolment details.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Mentor assigned email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
+// ── Department recruitment pipeline emails ─────────────────────
+
+export async function sendInterviewScheduledEmail(
+  to: string,
+  memberName: string,
+  departmentName: string,
+  details: { scheduledAt: Date; format: 'in_person' | 'virtual'; location?: string | null },
+): Promise<void> {
+  const transport = await createTransport();
+  const when = details.scheduledAt.toLocaleString('en-GB');
+  const formatLabel = details.format === 'virtual' ? 'Virtual' : 'In Person';
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `Interview scheduled — ${departmentName}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #6D28D9;">Interview Scheduled</h2>
+        <p>Hi ${memberName},</p>
+        <p>Your interview to join <strong>${departmentName}</strong> has been scheduled.</p>
+        <ul style="line-height: 1.8;">
+          <li><strong>When:</strong> ${when}</li>
+          <li><strong>Format:</strong> ${formatLabel}</li>
+          ${details.location ? `<li><strong>Location:</strong> ${details.location}</li>` : ''}
+        </ul>
+        <p>Please reach out to your branch leadership if you need to reschedule.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Interview scheduled email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
+export async function sendOfferExtendedEmail(
+  to: string,
+  memberName: string,
+  departmentName: string,
+  details: { expiresAt: Date | null; probationDays: number; message?: string | null },
+): Promise<void> {
+  const transport = await createTransport();
+  const expiresLabel = details.expiresAt
+    ? `This offer expires on <strong>${details.expiresAt.toLocaleDateString('en-GB')}</strong>.`
+    : '';
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `You have an offer to join ${departmentName}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #059669;">You’ve been offered a place</h2>
+        <p>Hi ${memberName},</p>
+        <p>Following your interview, we’d love to have you join <strong>${departmentName}</strong>.</p>
+        ${details.message ? `<blockquote style="border-left:4px solid #6D28D9;padding-left:12px;color:#374151;">${details.message}</blockquote>` : ''}
+        <p>If you accept, you will start a <strong>${details.probationDays}-day probation</strong> with the team.</p>
+        ${expiresLabel ? `<p>${expiresLabel}</p>` : ''}
+        <p>Log in to the Kharis portal to accept or decline the offer.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Offer extended email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
+export async function sendProbationStartedEmail(
+  to: string,
+  memberName: string,
+  departmentName: string,
+  details: { probationDays: number },
+): Promise<void> {
+  const transport = await createTransport();
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `Welcome to ${departmentName} — probation started`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #059669;">Welcome — probation started</h2>
+        <p>Hi ${memberName},</p>
+        <p>You’re now part of <strong>${departmentName}</strong> on a
+           <strong>${details.probationDays}-day probation</strong>.</p>
+        <p>Your team lead will check in with you at the end of the probation to confirm your full membership.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Probation started email sent', {
+    to,
+    messageId: info.messageId,
+    previewUrl: nodemailer.getTestMessageUrl(info),
+  });
+}
+
+export async function sendProbationPassedEmail(
+  to: string,
+  memberName: string,
+  departmentName: string,
+): Promise<void> {
+  const transport = await createTransport();
+
+  const info = await transport.sendMail({
+    from: FROM_ADDRESS,
+    to,
+    subject: `You’re now a full member of ${departmentName}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #059669;">Probation passed 🎉</h2>
+        <p>Hi ${memberName},</p>
+        <p>Congratulations — you’ve completed probation and are now a full member of
+           <strong>${departmentName}</strong>.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  });
+
+  mailerLogger.info('Probation passed email sent', {
     to,
     messageId: info.messageId,
     previewUrl: nodemailer.getTestMessageUrl(info),

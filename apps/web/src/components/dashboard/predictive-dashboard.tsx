@@ -14,6 +14,7 @@ import {
   Area,
 } from 'recharts';
 
+import { formatDate, formatShortDate } from '@/lib/date-format';
 import type { DashboardAnalytics, RagTrendEntry } from './types';
 
 interface PredictiveDashboardProps {
@@ -88,7 +89,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
     const month = new Date();
     month.setMonth(month.getMonth() + i);
     return {
-      month: month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      month: formatDate(month, { month: 'short', year: 'numeric' }),
       predicted: Math.round(predictedConversions * (1 + i * 0.05)),
       lower: Math.round(predictedConversions * (1 + i * 0.05) * 0.8),
       upper: Math.round(predictedConversions * (1 + i * 0.05) * 1.2),
@@ -198,7 +199,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
             <XAxis
               dataKey="date"
               stroke="#94a3b8"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={(value) => formatDate(value, { month: 'short', day: 'numeric' })}
             />
             <YAxis stroke="#94a3b8" />
             <Tooltip
@@ -208,7 +209,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString()}
+              labelFormatter={(value) => formatShortDate(value)}
             />
             <Legend />
             <Area
@@ -233,7 +234,7 @@ export function PredictiveDashboard({ analytics }: PredictiveDashboardProps) {
               stroke="#059669"
               fill="url(#forecastGREEN)"
               strokeWidth={2}
-              name="All Good"
+              name="On Track"
             />
           </ComposedChart>
         </ResponsiveContainer>

@@ -43,7 +43,7 @@ export default function MemberApprovalPage() {
             return (
               <Card key={member.id}>
                 <CardContent className="flex items-center gap-4 py-4">
-                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#f8b537]/15 text-sm font-bold text-amber-700">
                     {initials}
                   </div>
                   <div className="min-w-0 flex-1">

@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Label, Textarea } from '@kairos/ui';
+import { Button, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+
+function todayIso(): string {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
 
 export default function CreateProgramPage() {
   const router = useRouter();
@@ -78,6 +86,8 @@ export default function CreateProgramPage() {
     }
     if (!formData.programDate) {
       newErrors.programDate = 'Program date is required';
+    } else if (formData.programDate < todayIso()) {
+      newErrors.programDate = 'Program date cannot be in the past';
     }
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required';
@@ -213,7 +223,7 @@ export default function CreateProgramPage() {
             id="programName"
             value={formData.programName}
             onChange={(e) => handleChange('programName', e.target.value)}
-            placeholder="Easter Outreach 2024"
+            placeholder="Easter Outreach 2025"
           />
           {errors.programName && (
             <p className="text-sm text-destructive">{errors.programName}</p>
@@ -225,11 +235,11 @@ export default function CreateProgramPage() {
             <Label htmlFor="programDate">
               Program Date <span className="text-destructive">*</span>
             </Label>
-            <Input
+            <DateSelect
               id="programDate"
-              type="date"
               value={formData.programDate}
-              onChange={(e) => handleChange('programDate', e.target.value)}
+              onChange={(v) => handleChange('programDate', v)}
+              minDate={todayIso()}
             />
             {errors.programDate && (
               <p className="text-sm text-destructive">{errors.programDate}</p>
@@ -240,19 +250,13 @@ export default function CreateProgramPage() {
             <Label htmlFor="branchId">
               Branch {isAdmin && <span className="text-destructive">*</span>}
             </Label>
-            <select
+            <CustomSelect
               id="branchId"
               value={formData.branchId}
-              onChange={(e) => handleChange('branchId', e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">{isAdmin ? 'Select a branch' : 'Auto-assigned for Pastor/Leader'}</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.branchName}
-                </option>
-              ))}
-            </select>
+              onValueChange={(v) => handleChange('branchId', v)}
+              placeholder={isAdmin ? 'Select a branch' : 'Auto-assigned for Pastor/Leader'}
+              options={branches.map((branch) => ({ value: branch.id, label: branch.branchName }))}
+            />
             {errors.branchId && (
               <p className="text-sm text-destructive">{errors.branchId}</p>
             )}
@@ -267,7 +271,7 @@ export default function CreateProgramPage() {
             id="location"
             value={formData.location}
             onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="City Park"
+            placeholder="Victoria Park"
           />
           {errors.location && (
             <p className="text-sm text-destructive">{errors.location}</p>
@@ -280,7 +284,7 @@ export default function CreateProgramPage() {
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="123 Main Street"
+            placeholder="45 High Street"
           />
         </div>
 
@@ -290,38 +294,22 @@ export default function CreateProgramPage() {
             id="city"
             value={formData.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="Lagos"
+            placeholder="London"
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="coordinatorId">Coordinator (Optional)</Label>
-          <select
+          <CustomSelect
             id="coordinatorId"
             value={formData.coordinatorId}
-            onChange={(e) => handleChange('coordinatorId', e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">Select coordinator</option>
-            {isAdmin && (
-              <>
-                <option value="" disabled className="text-muted-foreground">
-                  --- Admin Options ---
-                </option>
-                <option value="KHARIS" className="font-semibold">
-                  Kharis (Allows all pastors/leaders to register)
-                </option>
-                <option value="" disabled className="text-muted-foreground">
-                  --- Branch Members ---
-                </option>
-              </>
-            )}
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.firstName} {member.lastName}
-              </option>
-            ))}
-          </select>
+            onValueChange={(v) => handleChange('coordinatorId', v)}
+            placeholder="Select coordinator"
+            options={[
+              ...(isAdmin ? [{ value: 'KHARIS', label: 'Kharis (Allows all pastors/leaders to register)' }] : []),
+              ...members.map((member) => ({ value: member.id, label: `${member.firstName} ${member.lastName}` })),
+            ]}
+          />
           {isAdmin && (
             <p className="text-sm text-muted-foreground">
               Note: Select <span className="font-semibold text-amber-600">Kharis</span> as coordinator to allow pastors and leaders from all branches to register for this program

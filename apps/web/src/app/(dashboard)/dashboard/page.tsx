@@ -2,6 +2,7 @@
 
 import { useAuthStore } from '@/lib/auth-store';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
+import { useMyRota } from '@/hooks/use-departments';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import {
   BarChart,
@@ -14,7 +15,7 @@ import {
   Cell,
 } from 'recharts';
 
-const CHART_COLORS = ['#7c3aed', '#d97706', '#059669', '#e11d48', '#0ea5e9'];
+const CHART_COLORS = ['#5D3FD3', '#f8b537', '#059669', '#e11d48', '#0ea5e9'];
 
 // ── Stat Card ──────────────────────────────────────────────
 
@@ -30,8 +31,8 @@ function StatCard({
   accent?: 'purple' | 'gold' | 'emerald' | 'rose';
 }) {
   const accentClasses = {
-    purple: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-    gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    purple: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+    gold: 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]',
     emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   };
@@ -226,6 +227,12 @@ function BranchDashboard() {
 
 function MemberDashboard() {
   const { data, isLoading, error } = useMemberDashboard();
+  const { data: myRota } = useMyRota();
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingDuties = (myRota ?? [])
+    .filter((d) => d.serviceDate >= today && d.instanceStatus !== 'Cancelled')
+    .sort((a, b) => a.serviceDate.localeCompare(b.serviceDate))
+    .slice(0, 5);
 
   if (isLoading) return <DashboardSkeleton />;
   if (error) return <p className="text-rose-600 text-sm">Failed to load your stats.</p>;
@@ -285,6 +292,48 @@ function MemberDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {upcomingDuties.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Upcoming Rota Duties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {upcomingDuties.map((d) => {
+                const isToday = d.serviceDate === today;
+                const dateLabel = new Date(d.serviceDate + 'T00:00:00').toLocaleDateString(
+                  'en-GB',
+                  { weekday: 'short', month: 'short', day: 'numeric' },
+                );
+                return (
+                  <li
+                    key={d.assignmentId}
+                    className={`flex items-center justify-between p-3 text-sm ${
+                      isToday ? 'border border-[#f8b537]/40 bg-[#f8b537]/5' : 'bg-surface-container-lowest'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {d.templateName} • {d.slotRoleName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dateLabel}
+                        {d.startTime ? ` • ${d.startTime.slice(0, 5)}` : ''}
+                      </p>
+                    </div>
+                    {isToday && (
+                      <span className="rounded bg-[#f8b537] px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        Today
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -314,7 +363,7 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles } from '@/hooks/use-members';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
-import { Button } from '@kairos/ui';
+import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -61,7 +61,7 @@ export default function MemberDetailPage() {
 
   const statusCls =
     member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
-    : member.approvalStatus === 'pending' ? 'bg-amber-100 text-amber-700'
+    : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-amber-700'
     : 'bg-rose-100 text-rose-700';
 
   return (
@@ -234,26 +234,18 @@ export default function MemberDetailPage() {
                 </div>
               )}
               <div className="flex gap-2">
-                <select
+                <CustomSelect
                   value={selectedRoleId}
-                  onChange={(e) => setSelectedRoleId(e.target.value)}
-                  className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                >
-                  <option value="">Select role…</option>
-                  {(allRoles ?? []).map((r) => (
-                    <option key={r.id} value={r.id}>{r.roleName}</option>
-                  ))}
-                </select>
-                <select
+                  onValueChange={setSelectedRoleId}
+                  placeholder="Select role…"
+                  options={(allRoles ?? []).map((r) => ({ value: r.id, label: r.roleName }))}
+                />
+                <CustomSelect
                   value={selectedBranchId}
-                  onChange={(e) => setSelectedBranchId(e.target.value)}
-                  className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                >
-                  <option value="">Select branch…</option>
-                  {(branchesData ?? []).map((b) => (
-                    <option key={b.id} value={b.id}>{b.branchName}</option>
-                  ))}
-                </select>
+                  onValueChange={setSelectedBranchId}
+                  placeholder="Select branch…"
+                  options={(branchesData ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+                />
                 <button
                   disabled={!selectedRoleId || !selectedBranchId || assignRole.isPending}
                   onClick={() => {
@@ -316,18 +308,12 @@ export default function MemberDetailPage() {
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <select
+                  <CustomSelect
                     value={selectedFellowshipId}
-                    onChange={(e) => setSelectedFellowshipId(e.target.value)}
-                    className="flex h-10 flex-1 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-                  >
-                    <option value="">Select a fellowship…</option>
-                    {(fellowshipsData?.data ?? [])
-                      .filter((f) => f.isActive)
-                      .map((f) => (
-                        <option key={f.id} value={f.id}>{f.fellowshipName}</option>
-                      ))}
-                  </select>
+                    onValueChange={setSelectedFellowshipId}
+                    placeholder="Select a fellowship…"
+                    options={(fellowshipsData?.data ?? []).filter((f) => f.isActive).map((f) => ({ value: f.id, label: f.fellowshipName }))}
+                  />
                   <button
                     disabled={!selectedFellowshipId || addToFellowship.isPending}
                     onClick={() => {

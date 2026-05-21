@@ -336,6 +336,7 @@ describe('forgotPassword', () => {
     const { forgotPassword } = await import('./service');
 
     setupSelectChain([{ id: baseMember.id, email: baseMember.email }]);
+    setupUpdateChain();
 
     const result = await forgotPassword(mockDb, 'john@example.com');
     expect(result.resetToken).toBeDefined();

@@ -6,10 +6,13 @@ import { authRouter } from './auth/router';
 import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
+import { departmentsRouter } from './departments/router';
 import { analyticsRouter } from './analytics/router';
 import { reportsRouter } from './reports/router';
+import { newBelieversRouter } from './new-believers/router';
 import outreachRouter from './outreach/router';
 import soulsRouter from './outreach/souls-router';
+import { meRouter } from './me/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -47,10 +50,13 @@ export function createApp() {
   app.route('/api/branches', branchesRouter);
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
+  app.route('/api/departments', departmentsRouter);
   app.route('/api/analytics', analyticsRouter);
   app.route('/api/reports', reportsRouter);
+  app.route('/api/new-believers', newBelieversRouter);
   app.route('/api/outreach', outreachRouter);
   app.route('/api/souls', soulsRouter);
+  app.route('/api/me', meRouter);
 
   // Error handler
   app.onError(errorHandler);

@@ -62,3 +62,53 @@ export const reviewJoinRequestSchema = z.object({
   status: z.enum(['approved', 'rejected']),
   notes: z.string().max(500).optional(),
 });
+
+// ── Followups ──────────────────────────────────────────────
+
+const contactMethodEnum = z.enum([
+  'Phone Call',
+  'Text Message',
+  'Email',
+  'WhatsApp',
+  'In-Person Visit',
+  'Other',
+]);
+
+const contactStatusEnum = z.enum([
+  'Successful',
+  'No Answer',
+  'Wrong Number',
+  'Call Back Later',
+  'Not Interested',
+  'Interested',
+]);
+
+export const createFellowshipFollowupSchema = z.object({
+  contactMethod: contactMethodEnum,
+  contactStatus: contactStatusEnum,
+  contactedAt: z.string().datetime().optional(),
+  durationMinutes: z.coerce.number().int().positive().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  nextFollowUpDate: z.string().nullable().optional(),
+  assignedToId: z.string().uuid().nullable().optional(),
+});
+
+export const updateFellowshipFollowupSchema = z.object({
+  contactMethod: contactMethodEnum.optional(),
+  contactStatus: contactStatusEnum.optional(),
+  contactedAt: z.string().datetime().optional(),
+  durationMinutes: z.coerce.number().int().positive().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  nextFollowUpDate: z.string().nullable().optional(),
+  assignedToId: z.string().uuid().nullable().optional(),
+});
+
+export const listFellowshipFollowupsQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(200).optional(),
+  days: z.coerce.number().int().positive().max(365).optional(),
+  memberId: z.string().uuid().optional(),
+});
+
+export const overdueFellowshipFollowupsQuerySchema = z.object({
+  days: z.coerce.number().int().positive().max(365).default(7),
+});

@@ -20,7 +20,7 @@ import {
   Cell,
 } from 'recharts';
 
-const CHART_COLORS = ['#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD'];
+const CHART_COLORS = ['#5D3FD3', '#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD'];
 
 // ── Mock giving data (donations module not in MVP) ─────────
 const MOCK_GIVING = [
@@ -51,8 +51,8 @@ function StatCard({
   accent?: 'purple' | 'gold' | 'emerald' | 'rose';
 }) {
   const accentClasses = {
-    purple: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-    gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    purple: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+    gold: 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]',
     emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   };
@@ -198,7 +198,7 @@ export default function ReportsPage() {
                     formatter={(value) => [`${value}%`, 'Rate']}
                     contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem', color: 'hsl(var(--foreground))' }}
                   />
-                  <Line type="monotone" dataKey="rate" stroke="#6D28D9" strokeWidth={2} dot={{ fill: '#6D28D9', r: 4 }} />
+                  <Line type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} dot={{ fill: '#5D3FD3', r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api-client';
 import { Card, Button, Badge, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { Loader2, User, Calendar } from 'lucide-react';
+import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 
 type RAGStatus = 'RED' | 'AMBER' | 'GREEN';
 
@@ -47,8 +48,8 @@ export function FollowUpRAGView() {
 
   const getRAGBadge = (status: RAGStatus) => {
     const config = {
-      RED: { label: 'RED Critical', className: 'bg-rose-500/20 text-rose-300 border-rose-500' },
-      AMBER: { label: 'AMBER Monitor', className: 'bg-amber-500/20 text-amber-300 border-amber-500' },
+      RED: { label: 'Critical', className: 'bg-rose-500/20 text-rose-300 border-rose-500' },
+      AMBER: { label: 'Monitor', className: 'bg-amber-500/20 text-amber-300 border-amber-500' },
       GREEN: { label: 'GREEN Successful', className: 'bg-emerald-500/20 text-emerald-300 border-emerald-500' },
     };
     return config[status];
@@ -67,7 +68,7 @@ export function FollowUpRAGView() {
               : 'border-rose-500/50 text-rose-300 hover:bg-rose-500/10'
           }`}
         >
-          RED Critical
+          Critical
         </Button>
         <Button
           onClick={() => setSelectedRAG('AMBER')}
@@ -78,7 +79,7 @@ export function FollowUpRAGView() {
               : 'border-amber-500/50 text-amber-300 hover:bg-amber-500/10'
           }`}
         >
-          AMBER Monitor
+          Monitor
         </Button>
         <Button
           onClick={() => setSelectedRAG('GREEN')}
@@ -142,7 +143,7 @@ export function FollowUpRAGView() {
                   )}
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3" />
-                    <span>{new Date(followUp.followUpDate).toLocaleDateString()}</span>
+                    <span>{formatShortDate(followUp.followUpDate)}</span>
                   </div>
                 </div>
 
@@ -190,7 +191,7 @@ export function FollowUpRAGView() {
                 <div>
                   <div className="text-muted-foreground">Follow-up Date</div>
                   <div className="font-medium">
-                    {new Date(selectedFollowUp.followUpDate).toLocaleString()}
+                    {formatShortDateTime(selectedFollowUp.followUpDate)}
                   </div>
                 </div>
                 <div>

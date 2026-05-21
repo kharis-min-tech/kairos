@@ -30,7 +30,7 @@ describe('Button', () => {
   it('applies default variant classes', () => {
     render(<Button>Default</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-primary');
+    expect(btn.className).toContain('inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-primary-foreground shadow-ambient hover:from-[#3d19a8] hover:to-[#5438c0] h-10 px-4 py-2');
   });
 
   it('applies destructive variant classes', () => {

@@ -8,7 +8,6 @@ import {
   updateProgramSchema,
   listProgramsQuerySchema,
   registerWorkerSchema,
-  conversionFunnelQuerySchema,
 } from './schemas';
 import {
   createProgram,
@@ -41,26 +40,16 @@ app.post(
   zValidator('json', createProgramSchema),
   async (c) => {
     const auth = c.get('auth');
-    
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
+
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can create programs' }, 403);
     }
 
     const input = c.req.valid('json');
 
-    try {
-      const program = await createProgram(db, input, auth);
-      return c.json({ success: true, data: program }, 201);
-    } catch (err: any) {
-      if (err.name === 'ConflictError') {
-        return c.json({ error: err.message }, 409);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      throw err;
-    }
+    const program = await createProgram(db, input, auth);
+    return c.json({ success: true, data: program }, 201);
   }
 );
 
@@ -88,20 +77,9 @@ app.get(
 app.get('/programs/:id', async (c) => {
   const auth = c.get('auth');
   const programId = c.req.param('id');
-  
 
-  try {
-    const program = await getProgram(db, programId, auth);
-    return c.json({ success: true, data: program });
-  } catch (err: any) {
-    if (err.name === 'NotFoundError') {
-      return c.json({ error: err.message }, 404);
-    }
-    if (err.name === 'ForbiddenError') {
-      return c.json({ error: err.message }, 403);
-    }
-    throw err;
-  }
+  const program = await getProgram(db, programId, auth);
+  return c.json({ success: true, data: program });
 });
 
 /**
@@ -116,20 +94,9 @@ app.put(
     const auth = c.get('auth');
     const programId = c.req.param('id');
     const input = c.req.valid('json');
-    
 
-    try {
-      const program = await updateProgram(db, programId, input, auth);
-      return c.json({ success: true, data: program });
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ForbiddenError') {
-        return c.json({ error: err.message }, 403);
-      }
-      throw err;
-    }
+    const program = await updateProgram(db, programId, input, auth);
+    return c.json({ success: true, data: program });
   }
 );
 
@@ -144,45 +111,9 @@ app.post(
     const auth = c.get('auth');
     const programId = c.req.param('id');
     const input = c.req.valid('json');
-    
 
-    try {
-      const result = await registerWorker(db, programId, input, auth);
-      return c.json({ success: true, data: result }, 201);
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      if (err.name === 'ConflictError') {
-        return c.json({ error: err.message }, 409);
-      }
-      throw err;
-    }
-  }
-);
-
-/**
- * GET /api/outreach/reports/conversion-funnel
- * Get conversion funnel metrics
- */
-app.get(
-  '/reports/conversion-funnel',
-  zValidator('query', conversionFunnelQuerySchema),
-  async (c) => {
-
-    // TODO: Implement getConversionFunnelMetrics service function
-    // For now, return placeholder
-    return c.json({
-      success: true,
-      data: {
-        statusCounts: {},
-        conversionRate: 0,
-        averageDaysToConversion: 0,
-      },
-    });
+    const result = await registerWorker(db, programId, input, auth);
+    return c.json({ success: true, data: result }, 201);
   }
 );
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useBranches, useDeleteBranch, useRegions } from '@/hooks/use-branches';
-import { Button } from '@kairos/ui';
+import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -49,16 +49,13 @@ export default function BranchesPage() {
 
       {/* Region Filter */}
       <div className="flex items-center gap-2">
-        <select
+        <CustomSelect
+          size="sm"
           value={regionFilter}
-          onChange={(e) => setRegionFilter(e.target.value)}
-          className="h-9 rounded-lg border border-input/15 bg-background px-3 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
-        >
-          <option value="">All Regions</option>
-          {(regions ?? []).map((r) => (
-            <option key={r.id} value={r.id}>{r.regionName}</option>
-          ))}
-        </select>
+          onValueChange={setRegionFilter}
+          placeholder="All Regions"
+          options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
+        />
       </div>
 
       {!branches || branches.length === 0 ? (

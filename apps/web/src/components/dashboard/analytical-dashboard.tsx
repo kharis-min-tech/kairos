@@ -20,6 +20,7 @@ import {
   Radar,
 } from 'recharts';
 
+import { formatDate, formatShortDate } from '@/lib/date-format';
 import type { DashboardAnalytics, RagCounts } from './types';
 
 interface AnalyticalDashboardProps {
@@ -38,7 +39,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
 
   // Prepare conversion funnel data
   const funnelData = [
-    { stage: 'New', count: analytics?.conversionFunnel?.New || 0, fill: '#6D28D9' },
+    { stage: 'New', count: analytics?.conversionFunnel?.New || 0, fill: '#5D3FD3' },
     { stage: 'Following Up', count: analytics?.conversionFunnel?.['Following Up'] || 0, fill: '#8B5CF6' },
     { stage: 'Interested', count: analytics?.conversionFunnel?.Interested || 0, fill: '#3B82F6' },
     { stage: 'Converted', count: analytics?.conversionFunnel?.Converted || 0, fill: '#059669' },
@@ -90,7 +91,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
             <XAxis
               dataKey="date"
               stroke="#94a3b8"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={(value) => formatDate(value, { month: 'short', day: 'numeric' })}
             />
             <YAxis stroke="#94a3b8" />
             <Tooltip
@@ -100,7 +101,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString()}
+              labelFormatter={(value) => formatShortDate(value)}
             />
             <Legend />
             <Area
@@ -125,7 +126,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
               stroke={RAG_COLORS.GREEN}
               fillOpacity={1}
               fill="url(#colorGREEN)"
-              name="All Good"
+              name="On Track"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -198,7 +199,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
             <PolarRadiusAxis stroke="#94a3b8" />
             <Radar name="Critical" dataKey="RED" stroke={RAG_COLORS.RED} fill={RAG_COLORS.RED} fillOpacity={0.6} />
             <Radar name="Monitor" dataKey="AMBER" stroke={RAG_COLORS.AMBER} fill={RAG_COLORS.AMBER} fillOpacity={0.6} />
-            <Radar name="All Good" dataKey="GREEN" stroke={RAG_COLORS.GREEN} fill={RAG_COLORS.GREEN} fillOpacity={0.6} />
+            <Radar name="On Track" dataKey="GREEN" stroke={RAG_COLORS.GREEN} fill={RAG_COLORS.GREEN} fillOpacity={0.6} />
             <Legend />
             <Tooltip
               contentStyle={{

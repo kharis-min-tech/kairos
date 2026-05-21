@@ -4,7 +4,7 @@ services:
     container_name: kairos-db
     restart: unless-stopped
     ports:
-      - "5430:5430"
+      - "5430:5432"
     environment:
       POSTGRES_USER: kairos
       POSTGRES_PASSWORD: kairos

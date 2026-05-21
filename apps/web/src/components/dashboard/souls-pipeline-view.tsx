@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api-client';
 import { Card, Button, Badge, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { Loader2, Phone, Mail, User, Calendar } from 'lucide-react';
+import { formatShortDate } from '@/lib/date-format';
 
 type RAGStatus = 'RED' | 'AMBER' | 'GREEN';
 
@@ -52,9 +53,9 @@ export function SoulsPipelineView() {
 
   const getRAGBadge = (status: RAGStatus) => {
     const config = {
-      RED: { label: 'RED Critical', className: 'bg-rose-500/20 text-rose-300 border-rose-500' },
-      AMBER: { label: 'AMBER Monitor', className: 'bg-amber-500/20 text-amber-300 border-amber-500' },
-      GREEN: { label: 'GREEN All Good', className: 'bg-emerald-500/20 text-emerald-300 border-emerald-500' },
+      RED: { label: 'Critical', className: 'bg-rose-500/20 text-rose-300 border-rose-500' },
+      AMBER: { label: 'Monitor', className: 'bg-amber-500/20 text-amber-300 border-amber-500' },
+      GREEN: { label: 'On Track', className: 'bg-emerald-500/20 text-emerald-300 border-emerald-500' },
     };
     return config[status];
   };
@@ -72,7 +73,7 @@ export function SoulsPipelineView() {
               : 'border-rose-500/50 text-rose-300 hover:bg-rose-500/10'
           }`}
         >
-          RED Critical
+          Critical
         </Button>
         <Button
           onClick={() => setSelectedRAG('AMBER')}
@@ -83,7 +84,7 @@ export function SoulsPipelineView() {
               : 'border-amber-500/50 text-amber-300 hover:bg-amber-500/10'
           }`}
         >
-          AMBER Monitor
+          Monitor
         </Button>
         <Button
           onClick={() => setSelectedRAG('GREEN')}
@@ -94,7 +95,7 @@ export function SoulsPipelineView() {
               : 'border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/10'
           }`}
         >
-          GREEN All Good
+          On Track
         </Button>
         {selectedRAG && (
           <Button
@@ -229,7 +230,7 @@ export function SoulsPipelineView() {
                 <div>
                   <div className="text-muted-foreground">Created</div>
                   <div className="font-medium">
-                    {new Date(selectedSoul.createdAt).toLocaleDateString()}
+                    {formatShortDate(selectedSoul.createdAt)}
                   </div>
                 </div>
               </div>

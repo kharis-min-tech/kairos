@@ -17,6 +17,7 @@ export interface DashboardSoul {
 
 export interface DashboardFollowUp {
   id: string;
+  soulId: string;
   soulName: string;
   ragStatus: 'RED' | 'AMBER' | 'GREEN';
   ragReason?: string;
@@ -70,6 +71,7 @@ export interface PredictiveData {
 export interface DashboardAnalytics {
   overview?: AnalyticsOverviewSection;
   conversionFunnel?: Record<string, number>;
+  assimilationRates?: Record<string, number>;
   statusDistribution?: Record<string, number>;
   ragByStatus?: Record<string, RagCounts>;
   ragTrend?: RagTrendEntry[];

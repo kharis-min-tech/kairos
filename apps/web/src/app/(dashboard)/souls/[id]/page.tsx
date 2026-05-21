@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge } from '@kairos/ui';
+import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect, NumberStepper } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
+import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 
 interface FollowUpRecord {
   id: string;
@@ -21,12 +23,12 @@ interface FollowUpRecord {
 }
 
 const STATUS_OPTIONS = [
-  'New',
-  'Following Up',
-  'Interested',
-  'Not Interested',
-  'Converted',
-  'Lost Contact',
+  { value: 'New', label: 'New' },
+  { value: 'Following Up', label: 'Following Up' },
+  { value: 'Interested', label: 'Interested' },
+  { value: 'Not Interested', label: 'Not Interested' },
+  { value: 'Lost Contact', label: 'Lost Contact' },
+  { value: 'Converted', label: 'Converted - use conversion action', disabled: true },
 ];
 
 const CONTACT_METHODS = [
@@ -47,10 +49,17 @@ const CONTACT_STATUSES = [
 ];
 
 const URGENCY_LEVELS = [
-  { value: 'GREEN', label: 'GREEN - All Good', color: 'text-emerald-700' },
+  { value: 'GREEN', label: 'GREEN - On Track', color: 'text-emerald-700' },
   { value: 'AMBER', label: 'AMBER - Monitor', color: 'text-amber-700' },
   { value: 'RED', label: 'RED - Critical', color: 'text-rose-700' },
 ];
+
+function todayIso(): string {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
 
 export default function SoulDetailPage() {
   const params = useParams();
@@ -107,6 +116,14 @@ export default function SoulDetailPage() {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!api || !currentSoul) return;
+    if (newStatus === 'Converted') {
+      toast({
+        title: 'Use the conversion action',
+        description: 'Converted souls need to be converted through the member creation flow.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -273,13 +290,13 @@ export default function SoulDetailPage() {
             )}
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Captured: {new Date(currentSoul.createdAt).toLocaleDateString()}</span>
+              <span>Captured: {formatShortDate(currentSoul.createdAt)}</span>
             </div>
             {currentSoul.lastFollowUpDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  Last Follow-up: {new Date(currentSoul.lastFollowUpDate).toLocaleDateString()}
+                  Last Follow-up: {formatShortDate(currentSoul.lastFollowUpDate)}
                   {currentSoul.daysSinceLastFollowUp !== null && currentSoul.daysSinceLastFollowUp !== undefined && (
                     <span className={currentSoul.daysSinceLastFollowUp >= 2 ? 'text-destructive ml-1' : 'ml-1'}>
                       ({currentSoul.daysSinceLastFollowUp} day{currentSoul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago)
@@ -315,20 +332,17 @@ export default function SoulDetailPage() {
               </p>
             </div>
             <div>
-              <Label htmlFor="status">Update Status</Label>
-              <select
+              <Label htmlFor="status">Stage / Outcome</Label>
+              <CustomSelect
                 id="status"
                 value={currentSoul.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                disabled={loading}
-                className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
+                onValueChange={handleStatusChange}
+                disabled={loading || currentSoul.status === 'Converted'}
+                options={STATUS_OPTIONS}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use outcomes like Interested, Not Interested, or Lost Contact after a follow-up. Conversion is handled by the member conversion action.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -364,22 +378,13 @@ export default function SoulDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="contactMethod">Contact Method *</Label>
-                  <select
+                  <CustomSelect
                     id="contactMethod"
                     value={followUpForm.contactMethod}
-                    onChange={(e) =>
-                      setFollowUpForm((prev) => ({ ...prev, contactMethod: e.target.value }))
-                    }
-                    required
-                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select method</option>
-                    {CONTACT_METHODS.map((method) => (
-                      <option key={method} value={method}>
-                        {method}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactMethod: v }))}
+                    placeholder="Select method"
+                    options={CONTACT_METHODS.map((m) => ({ value: m, label: m }))}
+                  />
                   {followUpForm.contactMethod === 'Other' && (
                     <Input
                       id="contactMethodOther"
@@ -397,80 +402,56 @@ export default function SoulDetailPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="contactStatus">Contact Status *</Label>
-                  <select
+                  <CustomSelect
                     id="contactStatus"
                     value={followUpForm.contactStatus}
-                    onChange={(e) =>
-                      setFollowUpForm((prev) => ({ ...prev, contactStatus: e.target.value }))
-                    }
-                    required
-                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select status</option>
-                    {CONTACT_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactStatus: v }))}
+                    placeholder="Select status"
+                    options={CONTACT_STATUSES.map((s) => ({ value: s, label: s }))}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="urgencyLevel">Urgency Level (Post-Contact Assessment)</Label>
-                  <select
+                  <CustomSelect
                     id="urgencyLevel"
                     value={followUpForm.urgencyLevel}
-                    onChange={(e) =>
-                      setFollowUpForm((prev) => ({ ...prev, urgencyLevel: e.target.value }))
-                    }
-                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select urgency (optional)</option>
-                    {URGENCY_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, urgencyLevel: v }))}
+                    placeholder="Select urgency (optional)"
+                    options={URGENCY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
+                  />
                   <p className="text-xs text-muted-foreground">
                     Use this to prioritize home visits or escalations (e.g., soul is responsive but situation requires follow-up)
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="updateStatus">Update Soul Status (Optional)</Label>
-                  <select
+                  <Label htmlFor="updateStatus">Update Stage / Outcome (Optional)</Label>
+                  <CustomSelect
                     id="updateStatus"
                     value={followUpForm.updateStatus}
-                    onChange={(e) =>
-                      setFollowUpForm((prev) => ({ ...prev, updateStatus: e.target.value }))
-                    }
-                    className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Keep current status ({currentSoul.status})</option>
-                    {STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, updateStatus: v }))}
+                    placeholder={`Keep current status (${currentSoul.status})`}
+                    options={STATUS_OPTIONS}
+                  />
                   <p className="text-xs text-muted-foreground">
-                    Optionally update the soul's status based on this follow-up interaction
+                    Optionally update the soul's stage or outcome based on this follow-up interaction
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="durationMinutes">Duration (minutes)</Label>
-                <Input
-                  id="durationMinutes"
-                  type="number"
-                  min="1"
-                  value={followUpForm.durationMinutes}
-                  onChange={(e) =>
-                    setFollowUpForm((prev) => ({ ...prev, durationMinutes: e.target.value }))
+                <NumberStepper
+                  value={Number(followUpForm.durationMinutes) || 0}
+                  onValueChange={(v) =>
+                    setFollowUpForm((prev) => ({ ...prev, durationMinutes: v ? String(v) : '' }))
                   }
-                  placeholder="15"
+                  min={0}
+                  max={600}
+                  step={5}
+                  suffix="m"
+                  ariaLabel="Duration in minutes"
                 />
               </div>
 
@@ -489,13 +470,13 @@ export default function SoulDetailPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="nextFollowUpDate">Next Follow-up Date</Label>
-                <Input
+                <DateSelect
                   id="nextFollowUpDate"
-                  type="date"
                   value={followUpForm.nextFollowUpDate}
-                  onChange={(e) =>
-                    setFollowUpForm((prev) => ({ ...prev, nextFollowUpDate: e.target.value }))
+                  onChange={(v) =>
+                    setFollowUpForm((prev) => ({ ...prev, nextFollowUpDate: v }))
                   }
+                  minDate={todayIso()}
                 />
               </div>
 
@@ -520,13 +501,13 @@ export default function SoulDetailPage() {
                   } else if (followUp.urgencyLevel === 'AMBER') {
                     ragStatus = { label: 'Monitor (Manual)', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
                   } else if (followUp.urgencyLevel === 'GREEN') {
-                    ragStatus = { label: 'All Good (Manual)', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
+                    ragStatus = { label: 'On Track (Manual)', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
                   }
                 } else {
                   // Fall back to automatic RAG based on contact status
                   const getFollowUpRAG = (contactStatus: string) => {
                     if (contactStatus === 'Successful') {
-                      return { label: 'All Good', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
+                      return { label: 'On Track', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
                     } else if (contactStatus === 'No Answer' || contactStatus === 'Busy') {
                       return { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
                     } else if (contactStatus === 'Wrong Number' || contactStatus === 'Declined') {
@@ -551,7 +532,7 @@ export default function SoulDetailPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          By {followUp.memberName} on {new Date(followUp.followUpDate).toLocaleString()}
+                          By {followUp.memberName} on {formatShortDateTime(followUp.followUpDate)}
                         </p>
                       </div>
                       {followUp.durationMinutes && (
@@ -565,7 +546,7 @@ export default function SoulDetailPage() {
                     )}
                     {followUp.nextFollowUpDate && (
                       <p className="text-xs text-muted-foreground">
-                        Next follow-up: {new Date(followUp.nextFollowUpDate).toLocaleDateString()}
+                        Next follow-up: {formatShortDate(followUp.nextFollowUpDate)}
                       </p>
                     )}
                   </div>

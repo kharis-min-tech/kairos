@@ -2,11 +2,15 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.INTERNAL_API_URL ?? 'http://localhost:3001';
 
+type ProxyRouteContext = {
+  params: Promise<{ path: string[] }>;
+};
+
 async function proxy(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: ProxyRouteContext,
 ) {
-  const { path } = params;
+  const { path } = await params;
 
   const targetUrl = `${API_URL}/api/${path.join('/')}${req.nextUrl.search}`;
 

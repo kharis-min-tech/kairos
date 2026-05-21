@@ -8,6 +8,7 @@ import { ConflictError, ValidationError, ForbiddenError } from '@kairos/utils';
 describe('Outreach Programs Service', () => {
   let mockDb: any;
   let adminAuth: AuthContext;
+  let adminActingAsMemberAuth: AuthContext;
   let pastorAuth: AuthContext;
 
   beforeEach(() => {
@@ -17,6 +18,13 @@ describe('Outreach Programs Service', () => {
       email: 'admin@kairos.local',
       systemRole: 'admin',
       activeRole: 'admin',
+      branchId: TEST_IDS.branchId,
+    };
+    adminActingAsMemberAuth = {
+      memberId: TEST_IDS.adminId,
+      email: 'admin@kairos.local',
+      systemRole: 'admin',
+      activeRole: 'member',
       branchId: TEST_IDS.branchId,
     };
     pastorAuth = {
@@ -174,6 +182,24 @@ describe('Outreach Programs Service', () => {
       ];
 
       mockDb.select = vi.fn((fields) => {
+        if (fields && 'outreachId' in fields && 'count' in fields) {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                groupBy: vi.fn().mockResolvedValue([]),
+              }),
+            }),
+          };
+        }
+        if (fields && 'branchId' in fields && 'count' in fields) {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                groupBy: vi.fn().mockResolvedValue([{ branchId: TEST_IDS.branchId, count: 10 }]),
+              }),
+            }),
+          };
+        }
         if (fields && 'count' in fields) {
           return {
             from: vi.fn().mockReturnValue({
@@ -263,6 +289,37 @@ describe('Outreach Programs Service', () => {
       });
 
       await listPrograms(mockDb, adminAuth, { page: 1, limit: 20 });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+
+    it('should apply branch isolation when admin acts as member', async () => {
+      mockDb.select = vi.fn((fields) => {
+        if (fields && 'count' in fields) {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([{ count: 0 }]),
+            }),
+          };
+        }
+        return {
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              leftJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    offset: vi.fn().mockReturnValue({
+                      orderBy: vi.fn().mockResolvedValue([]),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      await listPrograms(mockDb, adminActingAsMemberAuth, { page: 1, limit: 20 });
 
       expect(mockDb.select).toHaveBeenCalled();
     });

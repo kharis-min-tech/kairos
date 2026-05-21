@@ -23,6 +23,7 @@ import {
 import { logFollowUp, getFollowUpHistory } from './follow-ups-service';
 import { convertSoulToMember } from './conversion-service';
 
+
 type Variables = {
   auth: AuthContext;
 };
@@ -42,17 +43,9 @@ app.post(
   async (c) => {
     const auth = c.get('auth');
     const input = c.req.valid('json');
-    
 
-    try {
-      const soul = await captureSoul(db, input, auth);
-      return c.json({ success: true, data: soul }, 201);
-    } catch (err: any) {
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      throw err;
-    }
+    const soul = await captureSoul(db, input, auth);
+    return c.json({ success: true, data: soul }, 201);
   }
 );
 
@@ -66,7 +59,6 @@ app.get(
   async (c) => {
     const auth = c.get('auth');
     const query = c.req.valid('query');
-    
 
     const result = await listSouls(db, auth, query);
     return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
@@ -80,13 +72,12 @@ app.get(
  */
 app.get('/export', async (c) => {
   const auth = c.get('auth');
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-  // Authorization check
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+  if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
     return c.json({ error: 'Only Admin, Pastor, and Leader can export souls' }, 403);
   }
 
-  
   const csv = await exportSoulsToCSV(db, auth);
 
   c.header('Content-Type', 'text/csv');
@@ -101,20 +92,9 @@ app.get('/export', async (c) => {
 app.get('/:id', async (c) => {
   const auth = c.get('auth');
   const soulId = c.req.param('id');
-  
 
-  try {
-    const soul = await getSoul(db, soulId, auth);
-    return c.json({ success: true, data: soul });
-  } catch (err: any) {
-    if (err.name === 'NotFoundError') {
-      return c.json({ error: err.message }, 404);
-    }
-    if (err.name === 'ForbiddenError') {
-      return c.json({ error: err.message }, 403);
-    }
-    throw err;
-  }
+  const soul = await getSoul(db, soulId, auth);
+  return c.json({ success: true, data: soul });
 });
 
 /**
@@ -128,23 +108,9 @@ app.put(
     const auth = c.get('auth');
     const soulId = c.req.param('id');
     const input = c.req.valid('json');
-    
 
-    try {
-      const soul = await updateSoulStatus(db, soulId, input, auth);
-      return c.json({ success: true, data: soul });
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      if (err.name === 'ForbiddenError') {
-        return c.json({ error: err.message }, 403);
-      }
-      throw err;
-    }
+    const soul = await updateSoulStatus(db, soulId, input, auth);
+    return c.json({ success: true, data: soul });
   }
 );
 
@@ -158,31 +124,17 @@ app.put(
   zValidator('json', reassignSoulSchema),
   async (c) => {
     const auth = c.get('auth');
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can reassign souls' }, 403);
     }
 
     const soulId = c.req.param('id');
     const input = c.req.valid('json');
-    
 
-    try {
-      const soul = await reassignSoul(db, soulId, input, auth);
-      return c.json({ success: true, data: soul });
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      if (err.name === 'ForbiddenError') {
-        return c.json({ error: err.message }, 403);
-      }
-      throw err;
-    }
+    const soul = await reassignSoul(db, soulId, input, auth);
+    return c.json({ success: true, data: soul });
   }
 );
 
@@ -196,30 +148,16 @@ app.post(
   zValidator('json', bulkReassignSoulsSchema),
   async (c) => {
     const auth = c.get('auth');
+    const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-    // Authorization check
-    if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && auth.systemRole !== 'leader') {
+    if (!['admin', 'pastor', 'leader'].includes(effectiveRole)) {
       return c.json({ error: 'Only Admin, Pastor, and Leader can bulk reassign souls' }, 403);
     }
 
     const input = c.req.valid('json');
-    
 
-    try {
-      const result = await bulkReassignSouls(db, input, auth);
-      return c.json({ success: true, data: result });
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      if (err.name === 'ForbiddenError') {
-        return c.json({ error: err.message }, 403);
-      }
-      throw err;
-    }
+    const result = await bulkReassignSouls(db, input, auth);
+    return c.json({ success: true, data: result });
   }
 );
 
@@ -230,23 +168,12 @@ app.post(
 app.get('/:id/follow-ups', async (c) => {
   const auth = c.get('auth');
   const soulId = c.req.param('id');
-  
 
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
 
-  try {
-    const result = await getFollowUpHistory(db, soulId, auth, { page, limit });
-    return c.json({ success: true, ...result });
-  } catch (err: any) {
-    if (err.name === 'NotFoundError') {
-      return c.json({ error: err.message }, 404);
-    }
-    if (err.name === 'ForbiddenError') {
-      return c.json({ error: err.message }, 403);
-    }
-    throw err;
-  }
+  const result = await getFollowUpHistory(db, soulId, auth, { page, limit });
+  return c.json({ success: true, ...result });
 });
 
 /**
@@ -260,23 +187,9 @@ app.post(
     const auth = c.get('auth');
     const soulId = c.req.param('id');
     const input = c.req.valid('json');
-    
 
-    try {
-      const followUp = await logFollowUp(db, soulId, input, auth);
-      return c.json({ success: true, data: followUp }, 201);
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
-        return c.json({ error: err.message }, 404);
-      }
-      if (err.name === 'ValidationError') {
-        return c.json({ error: err.message }, 400);
-      }
-      if (err.name === 'ForbiddenError') {
-        return c.json({ error: err.message }, 403);
-      }
-      throw err;
-    }
+    const followUp = await logFollowUp(db, soulId, input, auth);
+    return c.json({ success: true, data: followUp }, 201);
   }
 );
 
@@ -287,23 +200,9 @@ app.post(
 app.post('/:id/convert', async (c) => {
   const auth = c.get('auth');
   const soulId = c.req.param('id');
-  
 
-  try {
-    const result = await convertSoulToMember(db, soulId, auth);
-    return c.json({ success: true, data: result }, 201);
-  } catch (err: any) {
-    if (err.name === 'NotFoundError') {
-      return c.json({ error: err.message }, 404);
-    }
-    if (err.name === 'ConflictError') {
-      return c.json({ error: err.message }, 409);
-    }
-    if (err.name === 'ForbiddenError') {
-      return c.json({ error: err.message }, 403);
-    }
-    throw err;
-  }
+  const result = await convertSoulToMember(db, soulId, auth);
+  return c.json({ success: true, data: result }, 201);
 });
 
 export default app;

@@ -1,5 +1,7 @@
 # Kairos - Design Requirements
 
+> **Palette source of truth: `DESIGN.md` (root) — "Modern Sanctuary".** Primary `#5D3FD3`, gold `#f8b537`, gradient `from-[#451ebb] to-[#5d3fd3]`. The palette below has been aligned to those values; some derived tokens (lighter/darker shades, contrast ratios computed against old hexes) still need to be recomputed against the new primary and gold. When the implementation pulls from this doc, defer to `DESIGN.md` if there's any conflict.
+
 ## Document Overview
 This document defines the user experience (UX) and user interface (UI) design requirements for Kairos church administration platform. It covers design principles, visual design system, component specifications, user flows, and accessibility requirements.
 
@@ -31,7 +33,7 @@ This document defines the user experience (UX) and user interface (UI) design re
 ```
 Purple (Primary):
 - Purple 900: #4C1D95 (Dark - headers, emphasis)
-- Purple 700: #6D28D9 (Main - primary actions)
+- Purple 700: #5D3FD3 (Main - primary actions — Modern Sanctuary)
 - Purple 500: #8B5CF6 (Light - hover states)
 - Purple 100: #EDE9FE (Very light - backgrounds)
 
@@ -43,7 +45,7 @@ Blue (Secondary):
 
 Gold (Accent):
 - Gold 900: #78350F (Dark - highlights)
-- Gold 600: #D97706 (Main - success, achievements)
+- Gold 600: #f8b537 (Main - achievements, focus rings, "Gold Glow" — Modern Sanctuary)
 - Gold 400: #FBBF24 (Light - warnings)
 - Gold 100: #FEF3C7 (Very light - backgrounds)
 
@@ -68,7 +70,8 @@ Gray Scale:
 
 **Semantic Colors:**
 ```
-Success: Gold 600 (#D97706)
+Success: Emerald 600 (#059669)   <!-- note: gold is for achievements, not success state -->
+Achievement / Verified: Gold 600 (#f8b537)
 Warning: Gold 400 (#FBBF24)
 Error: Burgundy 700 (#B91C1C)
 Info: Blue 700 (#1D4ED8)
@@ -1161,12 +1164,12 @@ Kairos must meet WCAG 2.1 Level AA standards. This section outlines specific req
 
 **Color Contrast Validation:**
 ```
-Purple 700 (#6D28D9) on White (#FFFFFF): 8.59:1 ✓
+Purple 700 (#5D3FD3) on White (#FFFFFF): ~7.6:1 ✓ (recompute against Modern Sanctuary)
 Blue 700 (#1D4ED8) on White (#FFFFFF): 8.59:1 ✓
-Gold 600 (#D97706) on White (#FFFFFF): 4.54:1 ✓
+Gold 600 (#f8b537) on White (#FFFFFF): ~1.9:1 ✗ — DO NOT use gold for body text on white; reserve for backgrounds, accents, and large-text only
 Burgundy 700 (#B91C1C) on White (#FFFFFF): 7.07:1 ✓
 Gray 700 (#374151) on White (#FFFFFF): 10.73:1 ✓
-White (#FFFFFF) on Purple 700 (#6D28D9): 8.59:1 ✓
+White (#FFFFFF) on Purple 700 (#5D3FD3): ~7.6:1 ✓
 ```
 
 **Text Alternatives:**
@@ -1185,7 +1188,7 @@ White (#FFFFFF) on Purple 700 (#6D28D9): 8.59:1 ✓
 **Keyboard Navigation:**
 - All interactive elements must be keyboard accessible
 - Tab order must be logical (top to bottom, left to right)
-- Focus indicators must be visible (Purple 700 outline, 2px)
+- Focus indicators must be visible (Gold #f8b537 — the "Gold Glow" — or Purple #5D3FD3 outline, 2px)
 - Skip to main content link (hidden until focused)
 - No keyboard traps
 
@@ -1193,8 +1196,14 @@ White (#FFFFFF) on Purple 700 (#6D28D9): 8.59:1 ✓
 ```css
 /* Focus styles */
 *:focus {
-  outline: 2px solid #6D28D9; /* Purple 700 */
+  outline: 2px solid #5D3FD3; /* Purple — Modern Sanctuary */
   outline-offset: 2px;
+}
+
+/* Inputs lift to gold on focus per Modern Sanctuary "Gold Glow" rule */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid #f8b537; /* Gold */
+  outline-offset: 0;
 }
 
 /* Skip to main content */
@@ -1202,7 +1211,7 @@ White (#FFFFFF) on Purple 700 (#6D28D9): 8.59:1 ✓
   position: absolute;
   top: -40px;
   left: 0;
-  background: #6D28D9;
+  background: #5D3FD3;
   color: white;
   padding: 8px;
   text-decoration: none;
@@ -1470,7 +1479,7 @@ export const spacing = {
 export const colors = {
   primary: {
     900: '#4C1D95',
-    700: '#6D28D9',
+    700: '#5D3FD3', // Modern Sanctuary primary
     500: '#8B5CF6',
     100: '#EDE9FE',
   },
@@ -1482,7 +1491,7 @@ export const colors = {
   },
   accent: {
     900: '#78350F',
-    600: '#D97706',
+    600: '#f8b537', // Modern Sanctuary gold
     400: '#FBBF24',
     100: '#FEF3C7',
   },
@@ -1627,7 +1636,7 @@ export const darkColors = {
   primary: {
     900: '#EDE9FE',
     700: '#8B5CF6',
-    500: '#6D28D9',
+    500: '#5D3FD3', // Modern Sanctuary primary
     100: '#4C1D95',
   },
   // ... other colors inverted

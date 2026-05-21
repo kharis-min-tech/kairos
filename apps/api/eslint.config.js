@@ -20,6 +20,15 @@ export default defineConfig([
     },
   },
   {
+    // Test files use `any` for vitest partial mocks and dynamic JSON-body assertions.
+    // Forcing structural types here costs clarity without buying type safety —
+    // production code is still strict.
+    files: ['src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     ignores: ['dist/**', 'node_modules/**'],
   },
 ]);

@@ -126,13 +126,14 @@ export async function listSouls(
     overdueOnly?: boolean;
   },
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
   const conditions: SQL[] = [];
 
   // Role-based filtering
-  if (auth.systemRole === 'member') {
+  if (effectiveRole === 'member') {
     // Members see only souls assigned to them
     conditions.push(eq(souls.assignedMemberId, auth.memberId));
-  } else if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+  } else if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
     // Pastors and Leaders see souls from their branch (via outreach program or assigned member)
     conditions.push(
       or(
@@ -237,6 +238,7 @@ export async function getSoul(
   soulId: string,
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
   const [soul] = await db
     .select({
       id: souls.id,
@@ -278,7 +280,7 @@ export async function getSoul(
   }
 
   // Access control
-  if (auth.systemRole === 'member' && soul.assignedMemberId !== auth.memberId) {
+  if (effectiveRole === 'member' && soul.assignedMemberId !== auth.memberId) {
     throw new ForbiddenError('You can only access souls assigned to you');
   }
 
@@ -297,6 +299,7 @@ export async function reassignSoul(
   input: { assignedMemberId: string },
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
   // Get soul with branch info
   const [soul] = await db
     .select({
@@ -313,7 +316,7 @@ export async function reassignSoul(
   }
 
   // Branch isolation for Pastor/Leader
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && soul.branchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only reassign souls from your own branch');
   }
 
@@ -328,7 +331,7 @@ export async function reassignSoul(
   }
 
   // For Pastor/Leader, ensure new member is from same branch
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only assign souls to members from your own branch');
   }
 
@@ -390,6 +393,7 @@ export async function bulkReassignSouls(
   },
   auth: AuthContext,
 ) {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
   if (!input.soulIds || input.soulIds.length === 0) {
     throw new ValidationError('At least one soul ID is required');
   }
@@ -405,7 +409,7 @@ export async function bulkReassignSouls(
   }
 
   // For Pastor/Leader, ensure new member is from same branch
-  if ((auth.systemRole === 'pastor' || auth.systemRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
+  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only assign souls to members from your own branch');
   }
 
@@ -426,7 +430,7 @@ export async function bulkReassignSouls(
   }
 
   // Branch isolation check for Pastor/Leader
-  if (auth.systemRole === 'pastor' || auth.systemRole === 'leader') {
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
     const invalidSouls = soulsList.filter(
       (soul) => soul.branchId !== auth.branchId && soul.assignedMemberBranchId !== auth.branchId
     );

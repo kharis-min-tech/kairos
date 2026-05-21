@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, Dialog, DialogContent, DialogHeader, DialogTitle } from '@kairos/ui';
 import { AlertCircle, AlertTriangle, CheckCircle, TrendingUp, Users, Target, Phone, Mail, User, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
 interface OperationalDashboardProps {
@@ -49,7 +50,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
       fill: RAG_COLORS.AMBER,
     },
     {
-      name: 'All Good',
+      name: 'On Track',
       count: overview?.ragCounts?.GREEN || 0,
       fill: RAG_COLORS.GREEN,
     },
@@ -61,7 +62,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
     value: value as number,
   }));
 
-  const COLORS = ['#6D28D9', '#D97706', '#059669', '#E11D48', '#3B82F6', '#8B5CF6'];
+  const COLORS = ['#5D3FD3', '#f8b537', '#059669', '#E11D48', '#3B82F6', '#8B5CF6'];
 
   // Prepare RAG by status data
   const ragByStatusData = Object.entries(analytics?.ragByStatus || {}).map(([status, counts]: [string, unknown]) => {
@@ -111,7 +112,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
         <Card className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/50 border-emerald-500/30 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-emerald-300">All Good</p>
+              <p className="text-sm text-emerald-300">On Track</p>
               <p className="text-4xl font-bold text-white mt-2">{overview?.ragCounts?.GREEN || 0}</p>
             </div>
             <CheckCircle className="h-12 w-12 text-emerald-400" />
@@ -203,7 +204,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
             <Legend />
             <Bar dataKey="RED" stackId="a" fill={RAG_COLORS.RED} name="Critical" />
             <Bar dataKey="AMBER" stackId="a" fill={RAG_COLORS.AMBER} name="Monitor" />
-            <Bar dataKey="GREEN" stackId="a" fill={RAG_COLORS.GREEN} name="All Good" />
+            <Bar dataKey="GREEN" stackId="a" fill={RAG_COLORS.GREEN} name="On Track" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -285,7 +286,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
         >
           <div className="text-center">
             <CheckCircle className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-            <p className="text-sm text-emerald-300">View All Good Souls</p>
+            <p className="text-sm text-emerald-300">View On Track Souls</p>
             <p className="text-4xl font-bold text-white mt-2">{overview?.ragCounts?.GREEN || 0}</p>
             <p className="text-xs text-emerald-400 mt-1">Click to see names</p>
           </div>
@@ -401,7 +402,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                     )}
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3" />
-                      <span>{new Date(fu.followUpDate).toLocaleDateString()}</span>
+                      <span>{formatShortDate(fu.followUpDate)}</span>
                     </div>
                   </div>
                   <div className="text-xs text-slate-500 border-t border-slate-700 pt-2">
@@ -430,9 +431,9 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                   selectedSoul.ragStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-300 border border-amber-500' :
                   'bg-emerald-500/20 text-emerald-300 border border-emerald-500'
                 }`}>
-                  {selectedSoul.ragStatus === 'RED' ? 'RED Critical' :
-                   selectedSoul.ragStatus === 'AMBER' ? 'AMBER Monitor' :
-                   'GREEN All Good'}
+                  {selectedSoul.ragStatus === 'RED' ? 'Critical' :
+                   selectedSoul.ragStatus === 'AMBER' ? 'Monitor' :
+                   'On Track'}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/20 text-purple-300 border border-purple-500">
                   {selectedSoul.status}
@@ -471,7 +472,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 <div>
                   <div className="text-slate-400">Created</div>
                   <div className="font-medium">
-                    {selectedSoul.createdAt ? new Date(selectedSoul.createdAt).toLocaleDateString() : 'N/A'}
+                    {selectedSoul.createdAt ? formatShortDate(selectedSoul.createdAt) : 'N/A'}
                   </div>
                 </div>
               </div>
@@ -499,8 +500,8 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                   selectedFollowUp.ragStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-300 border border-amber-500' :
                   'bg-emerald-500/20 text-emerald-300 border border-emerald-500'
                 }`}>
-                  {selectedFollowUp.ragStatus === 'RED' ? 'RED Critical' :
-                   selectedFollowUp.ragStatus === 'AMBER' ? 'AMBER Monitor' :
+                  {selectedFollowUp.ragStatus === 'RED' ? 'Critical' :
+                   selectedFollowUp.ragStatus === 'AMBER' ? 'Monitor' :
                    'GREEN Successful'}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-500/20 text-blue-300 border border-blue-500">
@@ -522,7 +523,7 @@ export function OperationalDashboard({ overview, analytics, followUpOverview, so
                 <div>
                   <div className="text-slate-400">Follow-up Date</div>
                   <div className="font-medium">
-                    {new Date(selectedFollowUp.followUpDate).toLocaleString()}
+                    {formatShortDateTime(selectedFollowUp.followUpDate)}
                   </div>
                 </div>
                 <div>

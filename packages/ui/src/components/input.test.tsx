@@ -32,6 +32,6 @@ describe('Input', () => {
   it('has base styling classes', () => {
     render(<Input />);
     const input = screen.getByRole('textbox');
-    expect(input.className).toContain('rounded-md');
+    expect(input.className).toContain('flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50');
   });
 });

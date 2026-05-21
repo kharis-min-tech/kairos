@@ -11,6 +11,9 @@ import type {
   RecordAttendanceRequest,
   CreateJoinRequestRequest,
   ReviewJoinRequestRequest,
+  ListFellowshipFollowupsParams,
+  CreateFellowshipFollowupRequest,
+  UpdateFellowshipFollowupRequest,
 } from '@kairos/types';
 
 // ── Fellowship queries ─────────────────────────────────────
@@ -192,5 +195,107 @@ export function useReviewJoinRequest() {
       return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fellowships'] }),
+  });
+}
+
+// ── Followups ──────────────────────────────────────────────
+
+export function useFellowshipFollowups(
+  fellowshipId: string,
+  params?: ListFellowshipFollowupsParams,
+) {
+  return useQuery({
+    queryKey: ['fellowships', fellowshipId, 'followups', params],
+    queryFn: async () => {
+      const res = await api.fellowships.followups.listForFellowship(fellowshipId, params);
+      return res.data!;
+    },
+    enabled: !!fellowshipId,
+  });
+}
+
+export function useOverdueFellowshipFollowups(fellowshipId: string, days?: number) {
+  return useQuery({
+    queryKey: ['fellowships', fellowshipId, 'followups', 'overdue', days],
+    queryFn: async () => {
+      const res = await api.fellowships.followups.listOverdue(fellowshipId, days);
+      return res.data!;
+    },
+    enabled: !!fellowshipId,
+  });
+}
+
+export function useFellowshipMemberFollowups(fellowshipId: string, memberId: string) {
+  return useQuery({
+    queryKey: ['fellowships', fellowshipId, 'members', memberId, 'followups'],
+    queryFn: async () => {
+      const res = await api.fellowships.followups.listForMember(fellowshipId, memberId);
+      return res.data!;
+    },
+    enabled: !!fellowshipId && !!memberId,
+  });
+}
+
+export function useCreateFellowshipFollowup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      fellowshipId,
+      memberId,
+      data,
+    }: {
+      fellowshipId: string;
+      memberId: string;
+      data: CreateFellowshipFollowupRequest;
+    }) => {
+      const res = await api.fellowships.followups.create(fellowshipId, memberId, data);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['fellowships', vars.fellowshipId, 'followups'] });
+      qc.invalidateQueries({
+        queryKey: ['fellowships', vars.fellowshipId, 'members', vars.memberId, 'followups'],
+      });
+    },
+  });
+}
+
+export function useUpdateFellowshipFollowup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      fellowshipId,
+      followupId,
+      data,
+    }: {
+      fellowshipId: string;
+      followupId: string;
+      data: UpdateFellowshipFollowupRequest;
+    }) => {
+      const res = await api.fellowships.followups.update(fellowshipId, followupId, data);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['fellowships', vars.fellowshipId, 'followups'] });
+    },
+  });
+}
+
+export function useDeleteFellowshipFollowup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      fellowshipId,
+      followupId,
+    }: {
+      fellowshipId: string;
+      followupId: string;
+    }) => {
+      const res = await api.fellowships.followups.delete(fellowshipId, followupId);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['fellowships', vars.fellowshipId, 'followups'] });
+    },
   });
 }

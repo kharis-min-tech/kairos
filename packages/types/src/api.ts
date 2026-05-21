@@ -259,6 +259,26 @@ export interface RecordAttendanceRequest {
   }[];
 }
 
+// ── Fellowship Followups ───────────────────────────────────
+
+export interface ListFellowshipFollowupsParams {
+  limit?: number;
+  days?: number;
+  memberId?: string;
+}
+
+export interface CreateFellowshipFollowupRequest {
+  contactedAt?: string;
+  contactMethod: string;
+  contactStatus: string;
+  durationMinutes?: number | null;
+  notes?: string | null;
+  nextFollowUpDate?: string | null;
+  assignedToId?: string | null;
+}
+
+export interface UpdateFellowshipFollowupRequest extends Partial<CreateFellowshipFollowupRequest> {}
+
 // ── Region ─────────────────────────────────────────────────
 
 export interface CreateRegionRequest {
@@ -417,21 +437,6 @@ export interface ConversionResult {
   member: import('./entities').Member;
 }
 
-export interface ConversionFunnelMetrics {
-  statusCounts: Record<string, number>;
-  conversionRate: number;
-  dropOffRates: Record<string, number>;
-  averageDaysToConversion: number;
-  totalSouls: number;
-}
-
-export interface ConversionFunnelParams {
-  branchId?: string; // Admin only
-  outreachId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-}
-
 export interface ProgramStatistics {
   totalWorkers: number;
   totalSouls: number;
@@ -446,4 +451,75 @@ export interface FollowUpStatistics {
   lastFollowUpDate?: string;
   daysSinceLastFollowUp: number;
   averageDuration: number;
+}
+
+// ── New Believers ────────────────────────────────────────
+export interface CreateEnrollmentRequest {
+  memberId: string;
+  branchId: string;
+  teacherId?: string;
+  mentorId?: string;
+  notes?: string;
+}
+
+export interface UpdateEnrollmentRequest {
+  stage?: string;
+  teacherId?: string | null;
+  mentorId?: string | null;
+  notes?: string | null;
+  completedAt?: string | null;
+  isActive?: boolean;
+  sessionCompletedAt?: Record<string, string> | null;
+  sessionFeedback?: Record<string, string> | null;
+  joinedDepartmentId?: string | null;
+}
+
+export interface EnrollmentListParams {
+  branchId?: string;
+  stage?: string;
+  teacherId?: string;
+  stale?: boolean;
+  sortBy?: 'date-added' | 'name' | 'last-activity';
+  page?: number;
+  limit?: number;
+}
+
+export interface BulkAdvanceEnrollmentsRequest {
+  enrollmentIds: string[];
+  targetStage: string;
+}
+
+export interface BulkAdvanceEnrollmentsResult {
+  advanced: number;
+  failed: number;
+}
+
+export interface CreateNewBelieverSessionRequest {
+  branchId: string;
+  sessionStage: string;
+  sessionDate: string;
+  topic?: string;
+  location: string;
+  teacherId: string;
+  notes?: string;
+  feedback?: string;
+}
+
+export interface UpdateNewBelieverSessionRequest {
+  sessionStage?: string;
+  topic?: string;
+  sessionDate?: string;
+  location?: string | null;
+  notes?: string;
+  feedback?: string;
+  teacherId?: string | null;
+}
+
+export interface RecordNewBelieverAttendanceRequest {
+  records: { enrollmentId: string; attended: boolean; notes?: string }[];
+}
+
+export interface SessionListParams {
+  branchId?: string;
+  upcoming?: boolean;
 }
