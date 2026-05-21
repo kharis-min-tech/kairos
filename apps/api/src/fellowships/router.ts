@@ -36,6 +36,7 @@ import {
   createJoinRequest,
   listJoinRequests,
   reviewJoinRequest,
+  listFellowshipsForMap,
 } from './service';
 import {
   createFellowshipFollowup,
@@ -58,6 +59,12 @@ fellowshipsRouter.get('/', zValidator('query', listFellowshipsQuerySchema), asyn
   const query = c.req.valid('query');
   const result = await listFellowships(db, auth, query);
   return c.json(successResponse(result));
+});
+
+fellowshipsRouter.get('/map', async (c) => {
+  const auth = getAuth(c);
+  const data = await listFellowshipsForMap(db, auth);
+  return c.json(successResponse(data));
 });
 
 fellowshipsRouter.get('/:id', async (c) => {

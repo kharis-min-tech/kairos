@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
@@ -12,6 +13,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kair
 import { useAuthStore } from '@/lib/auth-store';
 import type { FellowshipListParams } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
+import type { FellowshipWithBranch } from '@kairos/types';
+
+const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[500px] items-center justify-center rounded-xl border border-border bg-muted/30">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-3 text-sm text-muted-foreground">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
 
 const FELLOWSHIP_TYPES = [
   { label: 'All', value: '' },
@@ -45,6 +59,8 @@ function FellowshipsContent() {
     limit: 20,
     fellowshipType: initialType || undefined,
   });
+  const [showMap, setShowMap] = useState(false);
+  const [focusedFellowship, setFocusedFellowship] = useState<FellowshipWithBranch | null>(null);
 
   // Only admins see all branches; pastors and members are scoped to their branch
   const fetchParams: FellowshipListParams = activeRole === 'admin'
@@ -89,6 +105,49 @@ function FellowshipsContent() {
           </Link>
         )}
       </div>
+
+      {/* View toggle + Leadership stats */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant={showMap ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2"
+            onClick={() => setShowMap(!showMap)}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+            {showMap ? 'Hide Map' : 'Find on Map'}
+          </Button>
+        </div>
+
+        {(activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader') && pagination && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 rounded-lg bg-violet-500/10 px-3 py-1.5">
+              <svg className="h-4 w-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+              <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">{pagination.total} Fellowships</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5">
+              <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{fellowships?.filter(f => f.isActive).length ?? 0} Active</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Map section */}
+      {showMap && (
+        <div className="overflow-hidden rounded-xl border border-border">
+          <div className="h-[500px]">
+            <FellowshipMap focusedFellowship={focusedFellowship} />
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
@@ -136,9 +195,20 @@ function FellowshipsContent() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {fellowships.map((fellowship) => (
-              <Link key={fellowship.id} href={`/fellowships/${fellowship.id}`}>
-                <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
+            {fellowships.map((fellowship) => {
+              const isActive = focusedFellowship?.id === fellowship.id;
+              return (
+              <div
+                key={fellowship.id}
+                onClick={() => {
+                  if (showMap) {
+                    setFocusedFellowship(fellowship as FellowshipWithBranch);
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <Link href={`/fellowships/${fellowship.id}`} onClick={(e) => { if (showMap) e.preventDefault(); }}>
+                <Card className={`transition-all hover:shadow-md hover:-translate-y-0.5 ${isActive ? 'ring-2 ring-primary shadow-lg' : ''}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="text-base leading-snug">
@@ -171,6 +241,7 @@ function FellowshipsContent() {
                           size="sm"
                           onClick={(e) => {
                             e.preventDefault();
+                            e.stopPropagation();
                             if (confirm(`Deactivate ${fellowship.fellowshipName}?`)) {
                               deleteFellowship.mutate(fellowship.id, {
                                 onSuccess: () => toast.success('Fellowship deactivated.'),
@@ -185,8 +256,10 @@ function FellowshipsContent() {
                     )}
                   </CardContent>
                 </Card>
-              </Link>
-            ))}
+                </Link>
+              </div>
+              );
+            })}
           </div>
 
           {/* Pagination */}
