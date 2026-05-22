@@ -48,6 +48,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     emergencyContactRelationship: row.emergencyContactRelationship,
     approvalStatus: row.approvalStatus as MemberProfile['approvalStatus'],
     systemRole: row.systemRole as MemberProfile['systemRole'],
+    memberType: row.memberType as MemberProfile['memberType'],
     emailVerified: row.emailVerified,
     mustChangePassword: row.mustChangePassword,
   };

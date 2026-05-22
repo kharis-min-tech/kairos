@@ -41,6 +41,10 @@ export async function listMembers(
     conditions.push(eq(members.isActive, true));
   }
 
+  // The directory shows the member roll only — form-created prospect shells are
+  // managed via the New Believers pipeline and the Forms module, not here.
+  conditions.push(eq(members.memberType, 'member'));
+
   // Non-admin can only see their own branch (home or active secondary)
   if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
     conditions.push(

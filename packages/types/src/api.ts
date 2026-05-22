@@ -1,7 +1,7 @@
 // ── API request/response types ─────────────────────────────
 
-import type { SystemRole } from './enums';
-import type { Member } from './entities';
+import type { SystemRole, FormType, FormSubmissionStatus, MemberType } from './enums';
+import type { Member, FormSubmission, FormSubmissionPayload } from './entities';
 
 // ── Auth ───────────────────────────────────────────────────
 
@@ -528,3 +528,70 @@ export interface SessionListParams {
   branchId?: string;
   upcoming?: boolean;
 }
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export interface SubmitFormRequest {
+  /** Set when the altar-call UI search-and-select picked an existing member/prospect. */
+  subjectMemberId?: string;
+  /** Ignored by the server — branch is forced to auth.branchId. */
+  branchId?: string;
+  payload: FormSubmissionPayload | Record<string, unknown>;
+}
+
+export interface FormMemberSearchParams {
+  q: string;
+  branchId?: string;
+}
+
+export interface FormMemberSearchResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  memberType: MemberType;
+}
+
+export interface ListFormSubmissionsParams {
+  branchId?: string;
+  formType?: FormType;
+  status?: FormSubmissionStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface UpdateFormSubmissionRequest {
+  status?: FormSubmissionStatus;
+  notes?: string | null;
+}
+
+export interface ExportFormSubmissionsParams {
+  branchId?: string;
+  formType: FormType;
+  status?: FormSubmissionStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface DormantProspect {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  createdAt: string;
+  hasEnrollment: boolean;
+}
+
+export interface ListDormantProspectsParams {
+  branchId?: string;
+}
+
+export interface ArchiveProspectsRequest {
+  memberIds: string[];
+}
+
+export interface ArchiveProspectsResult {
+  archived: number;
+}
+
+export type { FormSubmission };

@@ -55,7 +55,21 @@ import type {
   UpdateNewBelieverSessionRequest,
   RecordNewBelieverAttendanceRequest,
   SessionListParams,
+  // Forms & Data Capture
+  FormSubmission,
+  SubmitFormRequest,
+  FormMemberSearchParams,
+  FormMemberSearchResult,
+  ListFormSubmissionsParams,
+  UpdateFormSubmissionRequest,
+  ExportFormSubmissionsParams,
+  DormantProspect,
+  ListDormantProspectsParams,
+  ArchiveProspectsRequest,
+  ArchiveProspectsResult,
 } from '@kairos/types';
+
+import type { FormType } from '@kairos/types';
 
 import type {
   Branch,
@@ -898,6 +912,57 @@ export function createApiClient(
           client.get<ApiResponse<NewBelieverAttendanceWithMember[]>>(`/api/new-believers/sessions/${sessionId}/attendance`),
         recordAttendance: (sessionId: string, data: RecordNewBelieverAttendanceRequest) =>
           client.post<ApiResponse<{ recorded: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
+      },
+    },
+
+    forms: {
+      // Submit a form (any logged-in member). Branch is forced server-side.
+      submit: (formType: FormType, data: SubmitFormRequest) =>
+        client.post<ApiResponse<FormSubmission>>(`/api/forms/${encodeURIComponent(formType)}/submit`, data),
+
+      // Typeahead for the altar-call search-and-select.
+      memberSearch: (params: FormMemberSearchParams) => {
+        const qs = new URLSearchParams();
+        qs.set('q', params.q);
+        if (params.branchId) qs.set('branchId', params.branchId);
+        return client.get<ApiResponse<FormMemberSearchResult[]>>(`/api/forms/member-search?${qs.toString()}`);
+      },
+
+      submissions: {
+        list: (params?: ListFormSubmissionsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.formType) qs.set('formType', params.formType);
+          if (params?.status) qs.set('status', params.status);
+          if (params?.from) qs.set('from', params.from);
+          if (params?.to) qs.set('to', params.to);
+          const q = qs.toString();
+          return client.get<ApiResponse<FormSubmission[]>>(`/api/forms/submissions${q ? `?${q}` : ''}`);
+        },
+        get: (id: string) =>
+          client.get<ApiResponse<FormSubmission>>(`/api/forms/submissions/${encodeURIComponent(id)}`),
+        update: (id: string, data: UpdateFormSubmissionRequest) =>
+          client.patch<ApiResponse<FormSubmission>>(`/api/forms/submissions/${encodeURIComponent(id)}`, data),
+        exportCsv: (params: ExportFormSubmissionsParams) => {
+          const qs = new URLSearchParams();
+          qs.set('formType', params.formType);
+          if (params.branchId) qs.set('branchId', params.branchId);
+          if (params.status) qs.set('status', params.status);
+          if (params.from) qs.set('from', params.from);
+          if (params.to) qs.set('to', params.to);
+          return client.getBlob(`/api/forms/submissions/export?${qs.toString()}`);
+        },
+      },
+
+      prospects: {
+        dormant: (params?: ListDormantProspectsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          const q = qs.toString();
+          return client.get<ApiResponse<DormantProspect[]>>(`/api/forms/prospects/dormant${q ? `?${q}` : ''}`);
+        },
+        archive: (data: ArchiveProspectsRequest) =>
+          client.post<ApiResponse<ArchiveProspectsResult>>('/api/forms/prospects/archive', data),
       },
     },
   };
