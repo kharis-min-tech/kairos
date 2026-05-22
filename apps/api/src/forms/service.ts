@@ -133,7 +133,14 @@ export async function submitForm(
 
   const parsed = schema.safeParse(body.payload);
   if (!parsed.success) {
-    throw new ValidationError(parsed.error.errors[0]?.message ?? 'Invalid form payload');
+    // Prefix the failing field so the message is actionable ("phone: Required")
+    // rather than a bare "Required". Preserves Zod's own message (incl. the
+    // helpful enum lists) and just names the offending field.
+    const issue = parsed.error.errors[0];
+    const field = issue?.path.join('.');
+    throw new ValidationError(
+      field ? `${field}: ${issue!.message}` : (issue?.message ?? 'Invalid form payload'),
+    );
   }
   const payload = parsed.data;
 
