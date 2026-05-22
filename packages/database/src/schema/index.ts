@@ -28,3 +28,4 @@ export { rotaPoolMembers, rotaPoolMembersRelations } from './rota-pool-members';
 export { rotaInstances, rotaInstancesRelations } from './rota-instances';
 export { rotaAssignments, rotaAssignmentsRelations } from './rota-assignments';
 export { rotaSwapRequests, rotaSwapRequestsRelations } from './rota-swap-requests';
+export { formSubmissions, formSubmissionsRelations } from './form-submissions';

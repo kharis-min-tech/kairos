@@ -18,6 +18,9 @@ import type {
   RotaInstanceStatus,
   RotaAssignmentStatus,
   RotaSwapRequestStatus,
+  MemberType,
+  FormType,
+  FormSubmissionStatus,
 } from './enums';
 
 // ── Base ───────────────────────────────────────────────────
@@ -88,6 +91,7 @@ export interface Member extends BaseEntity {
   emergencyContactRelationship: string | null;
   approvalStatus: MemberApprovalStatus;
   systemRole: SystemRole;
+  memberType: MemberType;
   emailVerified: boolean;
   mustChangePassword: boolean;
 }
@@ -704,4 +708,88 @@ export interface RotaSwapRequestWithDetails extends RotaSwapRequest {
   requesterLastName: string;
   proposedFirstName?: string | null;
   proposedLastName?: string | null;
+}
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export interface AltarCallPayload {
+  todaysDate: string; // ISO date string
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface BaptismPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export type TestimonyCategory =
+  | 'Business'
+  | 'Career/Job'
+  | 'Deliverance'
+  | 'Education'
+  | 'Financial'
+  | 'Health/Healing'
+  | 'Marriage/Family'
+  | 'Salvation'
+  | 'Unusual Favour'
+  | 'Other';
+
+export interface TestimonyPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  todaysDate: string; // ISO date string
+  dateOfTestimony: string; // ISO date string
+  category: TestimonyCategory;
+  details: string;
+  shareAnonymously: boolean;
+  happyToShareSunday: boolean;
+  acknowledged: boolean;
+}
+
+export interface BabyNamingPayload {
+  babyFullName: string;
+  dateOfBirth: string; // ISO date string
+  gender?: 'Male' | 'Female';
+  fathersName: string;
+  mothersName: string;
+  parentContactPhone: string;
+  parentContactEmail?: string;
+  preferredCeremonyDate?: string; // ISO date string
+  additionalNotes?: string;
+}
+
+export interface BabyDedicationPayload {
+  babyFullName: string;
+  dateOfBirth: string; // ISO date string
+  gender?: 'Male' | 'Female';
+  fathersName: string;
+  mothersName: string;
+  parentsAreMembers?: boolean;
+  parentContactPhone: string;
+  parentContactEmail?: string;
+  preferredDedicationDate?: string; // ISO date string
+  additionalNotes?: string;
+}
+
+export type FormSubmissionPayload =
+  | AltarCallPayload
+  | BaptismPayload
+  | TestimonyPayload
+  | BabyNamingPayload
+  | BabyDedicationPayload;
+
+export interface FormSubmission extends BaseEntity {
+  formType: FormType;
+  branchId: string;
+  submittedBy: string;
+  subjectMemberId: string | null;
+  payload: FormSubmissionPayload;
+  status: FormSubmissionStatus;
+  linkedEntityType: string | null;
+  linkedEntityId: string | null;
+  notes: string | null;
 }

@@ -185,3 +185,31 @@ export const RotaSwapRequestStatus = {
 } as const;
 export type RotaSwapRequestStatus =
   (typeof RotaSwapRequestStatus)[keyof typeof RotaSwapRequestStatus];
+
+// ── Members ────────────────────────────────────────────────
+
+export const MemberType = {
+  Member: 'member',
+  Prospect: 'prospect',
+} as const;
+export type MemberType = (typeof MemberType)[keyof typeof MemberType];
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export const FormType = {
+  AltarCall: 'altar_call',
+  Baptism: 'baptism',
+  Testimony: 'testimony',
+  BabyNaming: 'baby_naming',
+  BabyDedication: 'baby_dedication',
+} as const;
+export type FormType = (typeof FormType)[keyof typeof FormType];
+
+export const FormSubmissionStatus = {
+  New: 'new',
+  Reviewed: 'reviewed',
+  Converted: 'converted',
+  Dismissed: 'dismissed',
+} as const;
+export type FormSubmissionStatus =
+  (typeof FormSubmissionStatus)[keyof typeof FormSubmissionStatus];

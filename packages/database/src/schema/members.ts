@@ -34,6 +34,7 @@ export const members = pgTable('members', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   approvalStatus: varchar('approval_status', { length: 20 }).default('pending').notNull(),
   systemRole: varchar('system_role', { length: 20 }).default('member').notNull(),
+  memberType: varchar('member_type', { length: 20 }).default('member').notNull(),
   passwordResetToken: varchar('password_reset_token', { length: 255 }),
   passwordResetExpiry: timestamp('password_reset_expiry'),
   lastLoginAt: timestamp('last_login_at'),
@@ -51,6 +52,7 @@ export const members = pgTable('members', {
   sql`CHECK (gender IN ('Male', 'Female'))`,
   sql`CHECK (approval_status IN ('pending', 'approved', 'rejected'))`,
   sql`CHECK (system_role IN ('admin', 'pastor', 'leader', 'member'))`,
+  sql`CHECK (member_type IN ('member', 'prospect'))`,
 ]);
 
 export const membersRelations = relations(members, ({ one, many }) => ({
