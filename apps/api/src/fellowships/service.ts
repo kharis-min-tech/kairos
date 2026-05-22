@@ -741,7 +741,7 @@ export async function reviewJoinRequest(
 
 // ── Map data (gracefully handles missing location columns) ──
 
-export async function listFellowshipsForMap(db: Database, auth: AuthContext) {
+export async function listFellowshipsForMap(db: Database, _auth: AuthContext) {
   try {
     const rows = await db.execute(sql`
       SELECT
@@ -763,7 +763,8 @@ export async function listFellowshipsForMap(db: Database, auth: AuthContext) {
         AND f.latitude IS NOT NULL
         AND f.longitude IS NOT NULL
     `);
-    return rows.rows ?? rows;
+    // postgres-js `db.execute` returns the RowList (an array) directly.
+    return rows;
   } catch {
     // If columns don't exist yet (migration not run), return empty
     return [];
