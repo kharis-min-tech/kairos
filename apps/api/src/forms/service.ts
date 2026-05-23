@@ -11,11 +11,13 @@ import {
 import { createEnrollmentInternal } from '../new-believers/service';
 import {
   payloadSchemaByFormType,
+  isVisitorUnder16,
   type ListSubmissionsQuery,
   type UpdateSubmissionInput,
   type ExportSubmissionsQuery,
   type MemberSearchQuery,
   type ArchiveProspectsInput,
+  type FirstTimeVisitorPayload,
 } from './schemas';
 
 // ── Constants ──────────────────────────────────────────────
@@ -55,26 +57,45 @@ function resolveScopedBranchId(auth: AuthContext, branchId?: string): string {
   return auth.branchId;
 }
 
-/** Mint a prospect member shell (temp email + temp password), returning its id.
- *  Mirrors the convention in outreach/conversion-service.ts, plus memberType='prospect'. */
-async function createProspectShell(
+/** Mint a member shell (temp email + temp password), returning its id.
+ *  Mirrors the convention in outreach/conversion-service.ts. `memberType` lets
+ *  the caller mint a prospect (altar-call), a visitor or a child (first-time
+ *  visitor). `guardianMemberId` links a child shell to its guardian. */
+async function createMemberShell(
   db: Database,
   branchId: string,
-  data: { firstName: string; lastName: string; phone: string; email?: string },
+  data: {
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    email?: string;
+    middleName?: string | null;
+    dateOfBirth?: string | null;
+    gender?: 'Male' | 'Female' | null;
+    memberType: 'prospect' | 'visitor' | 'child';
+    guardianMemberId?: string | null;
+  },
 ): Promise<string> {
   const bcrypt = await import('bcrypt');
-  const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const { randomUUID } = await import('node:crypto');
+  const tempPassword = `temp_${randomUUID()}`;
   const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
+  // randomUUID guarantees uniqueness even when several shells (guardian + children)
+  // are minted in the same tick, where Date.now() alone would collide on the
+  // global-unique members.email constraint.
   const email =
     data.email && data.email.trim().length > 0
       ? data.email
-      : `prospect_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}@temp.kairos.local`;
+      : `${data.memberType}_${randomUUID()}@temp.kairos.local`;
 
   const [newMember] = await db
     .insert(members)
     .values({
       firstName: data.firstName,
       lastName: data.lastName,
+      middleName: data.middleName ?? null,
+      dateOfBirth: data.dateOfBirth ?? null,
+      gender: data.gender ?? null,
       phone: data.phone ?? null,
       email,
       homeBranchId: branchId,
@@ -82,7 +103,8 @@ async function createProspectShell(
       emailVerified: false,
       approvalStatus: 'approved',
       systemRole: 'member',
-      memberType: 'prospect',
+      memberType: data.memberType,
+      guardianMemberId: data.guardianMemberId ?? null,
       isActive: true,
       mustChangePassword: true,
       passwordHash: tempPasswordHash,
@@ -90,6 +112,15 @@ async function createProspectShell(
     .returning();
 
   return newMember!.id;
+}
+
+/** Mint a prospect member shell. Thin wrapper preserving the altar-call call site. */
+async function createProspectShell(
+  db: Database,
+  branchId: string,
+  data: { firstName: string; lastName: string; phone: string; email?: string },
+): Promise<string> {
+  return createMemberShell(db, branchId, { ...data, memberType: 'prospect' });
 }
 
 /** Find the linked member's active enrollment, or create one via the shared helper.
@@ -146,6 +177,11 @@ export async function submitForm(
 
   // branchId is always forced to the caller's branch — client value is ignored.
   const branchId = auth.branchId;
+  enforceBranchScope(auth, branchId);
+
+  if (formType === 'first_time_visitor') {
+    return submitFirstTimeVisitor(db, auth, branchId, body, payload as FirstTimeVisitorPayload);
+  }
 
   if (formType !== 'altar_call') {
     const [row] = await db
@@ -234,6 +270,124 @@ export async function submitForm(
       status: 'converted',
       linkedEntityType: 'new_believer_enrollment',
       linkedEntityId: enrollmentId,
+    })
+    .returning();
+  return row!;
+}
+
+// ── First-time visitor: create-or-link shell + child shells ──
+// `FirstTimeVisitorPayload` is derived from the Zod schema (z.infer) in schemas.ts
+// so the service can't drift from validation.
+
+/**
+ * First-time-visitor submission. Mirrors the altar_call shell pattern (match an
+ * existing member by name+phone, else mint a shell) but WITHOUT new-believer
+ * enrollment — there is no decision-for-Christ branch here. The subject shell is
+ * a `child` when the visitor is under 16, else a `visitor`. Each entry in the
+ * `children` array becomes a `child` shell linked to the subject via
+ * `guardianMemberId`. Interest/source live in the payload only (no auto join in
+ * v1). Status stays `new` — never auto-converted.
+ */
+async function submitFirstTimeVisitor(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string },
+  payload: FirstTimeVisitorPayload,
+) {
+  const under16 = isVisitorUnder16(payload as Record<string, unknown>);
+  let subjectMemberId: string | null = null;
+
+  if (body.subjectMemberId) {
+    // (a) explicit selection — must exist and be in the caller's branch
+    const [subject] = await db
+      .select({ id: members.id, branchId: members.homeBranchId })
+      .from(members)
+      .where(eq(members.id, body.subjectMemberId))
+      .limit(1);
+    if (!subject) throw new NotFoundError('Member');
+    if (subject.branchId !== branchId) {
+      throw new ForbiddenError('You can only link to members in your branch');
+    }
+    subjectMemberId = subject.id;
+  } else if (payload.phone && payload.phone.trim().length > 0) {
+    // (b) phone safety-net — active member in branch with exact phone match
+    const [byPhone] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(
+          eq(members.homeBranchId, branchId),
+          eq(members.isActive, true),
+          eq(members.phone, payload.phone),
+        ),
+      )
+      .limit(1);
+
+    if (byPhone) {
+      subjectMemberId = byPhone.id;
+    } else {
+      // (c) phone unique index is GLOBAL — bail with a Conflict before the INSERT
+      //     would hit the constraint as a raw 500.
+      const [phoneOwner] = await db
+        .select({ id: members.id })
+        .from(members)
+        .where(and(eq(members.isActive, true), eq(members.phone, payload.phone)))
+        .limit(1);
+      if (phoneOwner) {
+        throw new ConflictError(
+          'A member with this phone number already exists in another branch. Link them via search, or use different contact details.',
+        );
+      }
+    }
+  }
+
+  // (d) no match — mint the visitor/child shell
+  if (!subjectMemberId) {
+    subjectMemberId = await createMemberShell(db, branchId, {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      middleName: payload.middleName ?? null,
+      dateOfBirth: payload.dateOfBirth ?? null,
+      gender: payload.gender ?? null,
+      phone: payload.phone ?? null,
+      email: payload.email,
+      memberType: under16 ? 'child' : 'visitor',
+    });
+  }
+
+  // (e) mint a child shell per entry, linked to the subject via guardianMemberId
+  const childMemberIds: string[] = [];
+  if (payload.broughtChildren === true && payload.children) {
+    for (const child of payload.children) {
+      const childId = await createMemberShell(db, branchId, {
+        firstName: child.firstName,
+        lastName: child.lastName,
+        dateOfBirth: child.dateOfBirth ?? null,
+        gender: child.gender ?? null,
+        memberType: 'child',
+        guardianMemberId: subjectMemberId,
+      });
+      childMemberIds.push(childId);
+    }
+  }
+
+  // (f) record the submission — linked but NOT converted. Minted child ids are
+  //     persisted on the payload so the triage drawer can surface them; the
+  //     guardian link lives on members.guardianMemberId.
+  const enrichedPayload = { ...payload, childMemberIds };
+
+  const [row] = await db
+    .insert(formSubmissions)
+    .values({
+      formType: 'first_time_visitor',
+      branchId,
+      submittedBy: auth.memberId,
+      subjectMemberId,
+      payload: enrichedPayload,
+      status: 'new',
+      linkedEntityType: 'member',
+      linkedEntityId: subjectMemberId,
     })
     .returning();
   return row!;
@@ -393,6 +547,22 @@ const EXPORT_COLUMNS: Record<string, string[]> = {
     'preferredDedicationDate',
     'additionalNotes',
   ],
+  first_time_visitor: [
+    'firstName',
+    'lastName',
+    'dateOfBirth',
+    'gender',
+    'email',
+    'phone',
+    'isUnder16',
+    'guardianName',
+    'guardianPhone',
+    'broughtChildren',
+    'childrenCount',
+    'interest',
+    'howDidYouHear',
+    'invitedBy',
+  ],
 };
 
 function escapeCSV(value: unknown): string {
@@ -442,9 +612,16 @@ export async function exportSubmissionsToCSV(
     const anonymise =
       row.formType === 'testimony' && row.payload?.shareAnonymously === true;
     const REDACTED = new Set(['firstName', 'lastName', 'phone']);
-    const projected = payloadColumns.map((col) =>
-      anonymise && REDACTED.has(col) ? '(anonymous)' : row.payload?.[col],
-    );
+    const projected = payloadColumns.map((col) => {
+      if (anonymise && REDACTED.has(col)) return '(anonymous)';
+      // Derived column — the children array is flattened to a count rather
+      // than dumped as JSON, keeping the CSV readable.
+      if (col === 'childrenCount') {
+        const kids = row.payload?.children;
+        return Array.isArray(kids) ? kids.length : 0;
+      }
+      return row.payload?.[col];
+    });
     lines.push([...base, ...projected].map(escapeCSV).join(','));
   }
 

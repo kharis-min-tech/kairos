@@ -9,6 +9,7 @@ import {
   MessageSquareQuote,
   Baby,
   HandHeart,
+  UserPlus,
   ClipboardList,
   Archive,
   ChevronRight,
@@ -17,6 +18,7 @@ import { FORM_TYPES, FORM_META } from './_lib/form-meta';
 import type { FormType } from '@kairos/types';
 
 const FORM_ICONS: Record<FormType, React.ReactNode> = {
+  first_time_visitor: <UserPlus className="h-6 w-6" />,
   altar_call: <Flame className="h-6 w-6" />,
   baptism: <Droplets className="h-6 w-6" />,
   testimony: <MessageSquareQuote className="h-6 w-6" />,

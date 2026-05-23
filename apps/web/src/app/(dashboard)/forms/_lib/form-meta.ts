@@ -1,6 +1,7 @@
 import type { FormType, FormSubmissionStatus } from '@kairos/types';
 
 export const FORM_TYPES: FormType[] = [
+  'first_time_visitor',
   'altar_call',
   'baptism',
   'testimony',
@@ -19,6 +20,11 @@ export interface FormMetaEntry {
 }
 
 export const FORM_META: Record<FormType, FormMetaEntry> = {
+  first_time_visitor: {
+    type: 'first_time_visitor',
+    title: 'First-Time Visitor',
+    description: 'Welcome a first-time visitor and capture their details for follow-up.',
+  },
   altar_call: {
     type: 'altar_call',
     title: 'New Believers Class',

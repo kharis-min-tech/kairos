@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { evaluateCondition } from '@kairos/types';
 
 // ── Form type enum (matches @kairos/types FormType) ────────
 export const formTypes = [
@@ -7,6 +8,7 @@ export const formTypes = [
   'testimony',
   'baby_naming',
   'baby_dedication',
+  'first_time_visitor',
 ] as const;
 
 export const formSubmissionStatuses = [
@@ -86,6 +88,121 @@ export const babyDedicationPayloadSchema = z.object({
   additionalNotes: z.string().max(2000).optional(),
 });
 
+// ── First-time visitor (branching-aware) ───────────────────
+//
+// Field ids mirror FIRST_TIME_VISITOR_FORM exactly (the web renderer emits a
+// payload keyed by those ids). The under-16 / guardian / children branching is
+// enforced in superRefine, reusing `evaluateCondition` so the server applies the
+// SAME rule the form definition's `visibleWhen` uses (isUnder16 === 'Yes' OR
+// dateOfBirth implies age < 16). Interest/source fields stay optional.
+
+const firstTimeVisitorChildSchema = z.object({
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  dateOfBirth: z.string().min(1),
+  gender: genderEnum.optional(),
+});
+
+export type FirstTimeVisitorChild = z.infer<typeof firstTimeVisitorChildSchema>;
+
+/** True when the visitor is under 16 per the form-engine rule (self-report OR DOB-derived). */
+export function isVisitorUnder16(values: Record<string, unknown>): boolean {
+  return evaluateCondition(
+    {
+      op: 'or',
+      conditions: [
+        { field: 'isUnder16', op: 'equals', value: 'Yes' },
+        { field: 'dateOfBirth', op: 'ageUnder', value: 16 },
+      ],
+    },
+    values,
+  );
+}
+
+export const firstTimeVisitorPayloadSchema = z
+  .object({
+    // About you
+    firstName: z.string().min(1).max(100),
+    lastName: z.string().min(1).max(100),
+    middleName: z.string().max(100).optional(),
+    dateOfBirth: z.string().min(1),
+    gender: genderEnum.optional(),
+    isUnder16: z.enum(['Yes', 'No']).optional(),
+    // Contact (conditionally required — see superRefine)
+    email: z.string().email().optional(),
+    phone: z.string().max(20).optional(),
+    address: z.string().max(300).optional(),
+    city: z.string().max(100).optional(),
+    postalCode: z.string().max(20).optional(),
+    // Guardian (required when under 16 — see superRefine)
+    guardianName: z.string().max(200).optional(),
+    guardianPhone: z.string().max(20).optional(),
+    guardianRelationship: z.string().max(100).optional(),
+    // Children
+    broughtChildren: z.boolean().optional(),
+    children: z.array(firstTimeVisitorChildSchema).max(12).optional(),
+    // Getting involved (all optional)
+    interest: z
+      .enum(['fellowship', 'department', 'new_believers', 'just_visiting'])
+      .optional(),
+    howDidYouHear: z.string().max(500).optional(),
+    invitedBy: z.string().max(200).optional(),
+  })
+  .superRefine((v, ctx) => {
+    const under16 = isVisitorUnder16(v as Record<string, unknown>);
+
+    if (under16) {
+      // Guardian carries the contact burden; contact fields relaxed.
+      if (!v.guardianName || v.guardianName.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianName'],
+          message: 'Guardian name is required for visitors under 16',
+        });
+      }
+      if (!v.guardianPhone || v.guardianPhone.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianPhone'],
+          message: 'Guardian phone is required for visitors under 16',
+        });
+      }
+      if (!v.guardianRelationship || v.guardianRelationship.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianRelationship'],
+          message: 'Guardian relationship is required for visitors under 16',
+        });
+      }
+    } else {
+      // 16+: the visitor owns their contact details.
+      if (!v.email || v.email.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['email'],
+          message: 'Email is required',
+        });
+      }
+      if (!v.phone || v.phone.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['phone'],
+          message: 'Phone is required',
+        });
+      }
+    }
+
+    if (v.broughtChildren === true && (!v.children || v.children.length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['children'],
+        message: 'At least one child is required when you came with children',
+      });
+    }
+  });
+
+export type FirstTimeVisitorPayload = z.infer<typeof firstTimeVisitorPayloadSchema>;
+
 /** Map of formType → payload schema. Used to validate the submit body
  *  against the route's :formType param (discriminated by the route). */
 export const payloadSchemaByFormType = {
@@ -94,6 +211,7 @@ export const payloadSchemaByFormType = {
   testimony: testimonyPayloadSchema,
   baby_naming: babyNamingPayloadSchema,
   baby_dedication: babyDedicationPayloadSchema,
+  first_time_visitor: firstTimeVisitorPayloadSchema,
 } as const;
 
 /** Build the body validator for POST /:formType/submit.

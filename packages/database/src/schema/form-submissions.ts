@@ -21,7 +21,7 @@ export const formSubmissions = pgTable('form_submissions', {
     .on(table.formType, table.branchId, table.createdAt.desc()),
   index('idx_form_submissions_status').on(table.status),
   index('idx_form_submissions_subject_member_id').on(table.subjectMemberId),
-  sql`CHECK (form_type IN ('altar_call', 'baptism', 'testimony', 'baby_naming', 'baby_dedication'))`,
+  sql`CHECK (form_type IN ('altar_call', 'baptism', 'testimony', 'baby_naming', 'baby_dedication', 'first_time_visitor'))`,
   sql`CHECK (status IN ('new', 'reviewed', 'converted', 'dismissed'))`,
 ]);
 

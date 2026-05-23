@@ -8,6 +8,8 @@ import { AltarCallForm } from './_components/altar-call-form';
 import { BaptismForm } from './_components/baptism-form';
 import { TestimonyForm } from './_components/testimony-form';
 import { BabyForm } from './_components/baby-form';
+import { DeclarativeForm } from './_components/declarative-form';
+import { FORM_DEFINITIONS } from '@kairos/types';
 
 export default function FormFillPage({
   params,
@@ -31,6 +33,16 @@ export default function FormFillPage({
   }
 
   switch (formType) {
+    case 'first_time_visitor': {
+      const definition = FORM_DEFINITIONS.first_time_visitor!;
+      return (
+        <DeclarativeForm
+          definition={definition}
+          successTitle="Welcome recorded"
+          successMessage="Thank you for visiting. A leader will reach out to you soon."
+        />
+      );
+    }
     case 'altar_call':
       return <AltarCallForm />;
     case 'baptism':

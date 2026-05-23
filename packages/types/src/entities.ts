@@ -92,6 +92,7 @@ export interface Member extends BaseEntity {
   approvalStatus: MemberApprovalStatus;
   systemRole: SystemRole;
   memberType: MemberType;
+  guardianMemberId: string | null;
   emailVerified: boolean;
   mustChangePassword: boolean;
 }

@@ -191,6 +191,8 @@ export type RotaSwapRequestStatus =
 export const MemberType = {
   Member: 'member',
   Prospect: 'prospect',
+  Visitor: 'visitor',
+  Child: 'child',
 } as const;
 export type MemberType = (typeof MemberType)[keyof typeof MemberType];
 
@@ -202,6 +204,7 @@ export const FormType = {
   Testimony: 'testimony',
   BabyNaming: 'baby_naming',
   BabyDedication: 'baby_dedication',
+  FirstTimeVisitor: 'first_time_visitor',
 } as const;
 export type FormType = (typeof FormType)[keyof typeof FormType];
 
