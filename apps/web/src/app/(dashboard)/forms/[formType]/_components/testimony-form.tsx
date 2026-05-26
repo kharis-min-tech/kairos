@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { Button, Input, CustomSelect, Textarea } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
+import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META, TESTIMONY_CATEGORIES } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
+import { MemberSearchLink } from './member-search-link';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -40,6 +42,7 @@ export function TestimonyForm() {
 
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -53,6 +56,8 @@ export function TestimonyForm() {
     acknowledged: false,
   });
 
+  const isAnonymous = form.shareAnonymously === 'Yes';
+
   function set<K extends keyof typeof form>(field: K, value: (typeof form)[K]) {
     setForm((p) => ({ ...p, [field]: value }));
     setErrors((p) => {
@@ -60,6 +65,34 @@ export function TestimonyForm() {
       delete next[field as string];
       return next;
     });
+  }
+
+  function selectExisting(r: FormMemberSearchResult) {
+    setSubjectMemberId(r.id);
+    setForm((p) => ({
+      ...p,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      phone: r.phone ?? '',
+    }));
+    setErrors((p) => {
+      const next = { ...p };
+      delete next.firstName;
+      delete next.lastName;
+      delete next.phone;
+      return next;
+    });
+  }
+
+  function clearExisting() {
+    setSubjectMemberId(undefined);
+    setForm((p) => ({ ...p, firstName: '', lastName: '', phone: '' }));
+  }
+
+  function setShareAnonymously(value: string) {
+    // The API skips member matching for anonymous testimonies — drop any link.
+    if (value === 'Yes' && subjectMemberId) setSubjectMemberId(undefined);
+    set('shareAnonymously', value);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -92,7 +125,11 @@ export function TestimonyForm() {
       return;
     }
     try {
-      await submitForm.mutateAsync({ formType: 'testimony', data: { payload: candidate } });
+      await submitForm.mutateAsync({
+        formType: 'testimony',
+        // An anonymous testimony is never linked, even if a person was picked first.
+        data: { subjectMemberId: isAnonymous ? undefined : subjectMemberId, payload: candidate },
+      });
       setSubmitted(true);
     } catch {
       // surfaced below
@@ -102,6 +139,7 @@ export function TestimonyForm() {
   function reset() {
     setSubmitted(false);
     setErrors({});
+    setSubjectMemberId(undefined);
     setForm({
       firstName: '',
       lastName: '',
@@ -127,6 +165,17 @@ export function TestimonyForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
+        <MemberSearchLink
+          value={subjectMemberId}
+          onSelect={selectExisting}
+          onClear={clearExisting}
+          label="Find the person giving the testimony"
+          helpText="Search by name or phone. Leave blank to create a new contact."
+          linkedNote="Linked to an existing person — this testimony will be tied to their record."
+          disabled={isAnonymous}
+          disabledHint="An anonymous testimony won’t be linked to a person’s record."
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <FieldLabel htmlFor="firstName" required>
@@ -199,7 +248,7 @@ export function TestimonyForm() {
             name="Share anonymously?"
             value={form.shareAnonymously}
             options={YES_NO}
-            onChange={(v) => set('shareAnonymously', v)}
+            onChange={setShareAnonymously}
           />
           <FieldError message={errors.shareAnonymously} />
         </div>

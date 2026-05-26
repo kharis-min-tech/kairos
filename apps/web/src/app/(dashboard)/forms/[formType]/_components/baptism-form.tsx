@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button, Input } from '@kairos/ui';
+import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
+import { MemberSearchLink } from './member-search-link';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -22,6 +24,7 @@ export function BaptismForm() {
 
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '' });
 
   function set(field: keyof typeof form, value: string) {
@@ -31,6 +34,17 @@ export function BaptismForm() {
       delete next[field];
       return next;
     });
+  }
+
+  function selectExisting(r: FormMemberSearchResult) {
+    setSubjectMemberId(r.id);
+    setForm({ firstName: r.firstName, lastName: r.lastName, phone: r.phone ?? '' });
+    setErrors({});
+  }
+
+  function clearExisting() {
+    setSubjectMemberId(undefined);
+    setForm({ firstName: '', lastName: '', phone: '' });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -45,7 +59,10 @@ export function BaptismForm() {
       return;
     }
     try {
-      await submitForm.mutateAsync({ formType: 'baptism', data: { payload: parsed.data } });
+      await submitForm.mutateAsync({
+        formType: 'baptism',
+        data: { subjectMemberId, payload: parsed.data },
+      });
       setSubmitted(true);
     } catch {
       // surfaced below
@@ -55,6 +72,7 @@ export function BaptismForm() {
   function reset() {
     setSubmitted(false);
     setErrors({});
+    setSubjectMemberId(undefined);
     setForm({ firstName: '', lastName: '', phone: '' });
   }
 
@@ -69,6 +87,15 @@ export function BaptismForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
+        <MemberSearchLink
+          value={subjectMemberId}
+          onSelect={selectExisting}
+          onClear={clearExisting}
+          label="Find the baptism candidate"
+          helpText="Search by name or phone. Leave blank to create a new contact."
+          linkedNote="Linked to an existing person — their record will be used."
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <FieldLabel htmlFor="firstName" required>

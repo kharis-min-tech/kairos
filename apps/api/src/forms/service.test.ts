@@ -252,6 +252,10 @@ describe('submitForm — altar_call', () => {
 // ── submitForm: store-only + validation ───────────────────
 describe('submitForm — store-only', () => {
   it('persists testimony with status new and no shell/enrollment', async () => {
+    // testimonyPayload has shareAnonymously:false, so submitTestimony now does a
+    // link-only phone lookup. No match → subjectMemberId stays null; link-only
+    // NEVER mints, so there is no shell insert — only the submission insert.
+    setupSelectSequence([]); // in-branch phone lookup → no match
     setupInsert([{ id: submissionId, status: 'new' }]);
     const { submitForm } = await import('./service');
     const result = await submitForm(mockDb, memberAuth, 'testimony', { payload: testimonyPayload });
@@ -266,13 +270,19 @@ describe('submitForm — store-only', () => {
   });
 
   it('forces branchId to auth.branchId, ignoring client-sent branchId', async () => {
-    setupInsert([{ id: submissionId }]);
+    // baptism now mints a prospect shell FIRST (no subject, no phone match), so
+    // insertValuesArgs[0] is the member shell and [1] is the submission.
+    setupSelectSequence(
+      [], // in-branch phone safety-net → no match
+      [], // global phone-owner check → none
+    );
+    setupInsert([{ id: subjectId }], [{ id: submissionId }]);
     const { submitForm } = await import('./service');
     await submitForm(mockDb, memberAuth, 'baptism', {
       branchId: otherBranchId,
       payload: { firstName: 'A', lastName: 'B', phone: '07000' },
     });
-    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
     expect(submission.branchId).toBe(branchId);
   });
 
@@ -302,6 +312,334 @@ describe('submitForm — store-only', () => {
         payload: { ...testimonyPayload, category: 'NotACategory' },
       })
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+// ── submitForm: baptism ───────────────────────────────────
+//
+// Baptism resolves a subject via the shared resolveOrMintSubject ladder with a
+// mint policy (memberType=prospect). No conversion/enrollment — status stays
+// 'new', linkedEntityType is 'member' when a subject is resolved.
+describe('submitForm — baptism', () => {
+  const baptismPayload = { firstName: 'Jane', lastName: 'Doe', phone: '07123456789' };
+
+  it('mints a prospect shell and links it when no subject and no phone match, status new', async () => {
+    setupSelectSequence(
+      [], // in-branch phone safety-net → no match
+      [], // global phone-owner check → none
+    );
+    setupInsert(
+      [{ id: subjectId }], // prospect shell
+      [{ id: submissionId, status: 'new' }], // submission
+    );
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'baptism', { payload: baptismPayload });
+
+    // [0] minted shell, [1] submission
+    expect(insertValuesArgs.length).toBe(2);
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.memberType).toBe('prospect');
+    expect(shell.firstName).toBe('Jane');
+    expect(shell.lastName).toBe('Doe');
+    expect(shell.phone).toBe('07123456789');
+    expect(shell.homeBranchId).toBe(branchId);
+
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.formType).toBe('baptism');
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+    expect(submission.linkedEntityId).toBe(subjectId);
+    expect(submission.status).toBe('new');
+    expect(submission.branchId).toBe(branchId);
+    expect(submission.submittedBy).toBe(memberId);
+    expect(createEnrollmentMock).not.toHaveBeenCalled();
+    expect(result.id).toBe(submissionId);
+  });
+
+  it('links an existing in-branch active member by phone instead of minting', async () => {
+    setupSelectSequence(
+      [{ id: subjectId }], // in-branch phone match found
+    );
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baptism', { payload: baptismPayload });
+
+    // Only the submission is inserted — no shell minted.
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+  });
+
+  it('links an explicit in-branch subjectMemberId without minting', async () => {
+    setupSelectSequence([{ id: subjectId, branchId }]); // subject lookup in branch
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baptism', {
+      subjectMemberId: subjectId,
+      payload: baptismPayload,
+    });
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+  });
+
+  it('rejects a cross-branch explicit subjectMemberId with Forbidden', async () => {
+    setupSelectSequence([{ id: subjectId, branchId: otherBranchId }]);
+    setupInsert([{ id: submissionId }]); // arm + reset insert tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(
+      submitForm(mockDb, memberAuth, 'baptism', {
+        subjectMemberId: subjectId,
+        payload: baptismPayload,
+      })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(insertValuesArgs.length).toBe(0);
+  });
+
+  it('rejects when the phone belongs to an active member in another branch (Conflict, no insert)', async () => {
+    setupSelectSequence(
+      [], // in-branch phone safety-net → none
+      [{ id: 'other-branch-member' }], // global phone-owner → exists elsewhere
+    );
+    setupInsert([{ id: submissionId }]); // arm + reset insert tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ConflictError } = await import('@kairos/utils');
+    await expect(
+      submitForm(mockDb, memberAuth, 'baptism', { payload: baptismPayload })
+    ).rejects.toBeInstanceOf(ConflictError);
+    expect(insertValuesArgs.length).toBe(0);
+  });
+
+  it('explicit in-branch subject wins over a supplied phone — no phone lookup is performed', async () => {
+    // resolveOrMintSubject returns at the explicit-selection step, so only ONE
+    // select (the explicit-subject verification) is issued — the phone safety-net
+    // and global phone-owner lookups never run. Arming a single select row proves
+    // the explicit path short-circuits before any phone query.
+    setupSelectSequence([{ id: subjectId, branchId }]); // explicit subject lookup only
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baptism', {
+      subjectMemberId: subjectId,
+      // A phone that, if matched, would resolve to a DIFFERENT member — it must
+      // be ignored entirely because the explicit subject takes precedence.
+      payload: { firstName: 'Jane', lastName: 'Doe', phone: '07123456789' },
+    });
+
+    // Exactly one select issued (the explicit-subject verification); no phone lookups.
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+    expect(submission.linkedEntityId).toBe(subjectId);
+  });
+});
+
+// ── submitForm: testimony ─────────────────────────────────
+//
+// Testimony links to an existing member only (mode linkOnly — NEVER mints), and
+// skips matching entirely when shareAnonymously is set. Status stays 'new'.
+describe('submitForm — testimony', () => {
+  it('does no matching at all when shareAnonymously is true (subject null, no shell)', async () => {
+    // No select should be issued — assert by arming an empty sequence and
+    // confirming subjectMemberId is null with only the submission inserted.
+    setupSelectSequence([]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'testimony', {
+      payload: { ...testimonyPayload, shareAnonymously: true },
+    });
+
+    // select must not have been called — matching is skipped for anonymous.
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0);
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBeNull();
+    expect(submission.linkedEntityType).toBeNull();
+    expect(submission.status).toBe('new');
+  });
+
+  it('links an existing in-branch active member by phone when not anonymous', async () => {
+    setupSelectSequence([{ id: subjectId }]); // in-branch phone match
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'testimony', {
+      payload: { ...testimonyPayload, shareAnonymously: false },
+    });
+
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+    expect(submission.linkedEntityId).toBe(subjectId);
+  });
+
+  it('leaves subjectMemberId null and NEVER mints when not anonymous and no match', async () => {
+    setupSelectSequence([]); // in-branch phone lookup → no match (linkOnly stops here)
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'testimony', {
+      payload: { ...testimonyPayload, shareAnonymously: false },
+    });
+
+    // linkOnly never mints — only the submission insert occurred.
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBeNull();
+    expect(submission.linkedEntityType).toBeNull();
+    expect(submission.status).toBe('new');
+  });
+
+  it('rejects a cross-branch explicit subjectMemberId with Forbidden', async () => {
+    setupSelectSequence([{ id: subjectId, branchId: otherBranchId }]);
+    setupInsert([{ id: submissionId }]); // arm + reset insert tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(
+      submitForm(mockDb, memberAuth, 'testimony', {
+        subjectMemberId: subjectId,
+        payload: { ...testimonyPayload, shareAnonymously: false },
+      })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(insertValuesArgs.length).toBe(0);
+  });
+});
+
+// ── submitForm: baby_naming / baby_dedication ─────────────
+//
+// The subject is the baby, minted as a `child` shell with name split from
+// babyFullName. A matched parent (explicit pick, else in-branch phone) becomes
+// the baby's guardianMemberId. The parent is never minted. Status stays 'new'.
+describe('submitForm — baby forms', () => {
+  const babyPayload = {
+    babyFullName: 'Baby Grace Doe',
+    dateOfBirth: '2026-01-15',
+    gender: 'Female' as const,
+    fathersName: 'John Doe',
+    mothersName: 'Mary Doe',
+    parentContactPhone: '07123456789',
+  };
+
+  it('mints the baby as a child shell with split name and links it as the subject (no parent match)', async () => {
+    setupSelectSequence([]); // parentContactPhone lookup → no match
+    setupInsert(
+      [{ id: subjectId }], // baby shell
+      [{ id: submissionId, status: 'new' }], // submission
+    );
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'baby_naming', { payload: babyPayload });
+
+    // [0] baby shell, [1] submission
+    expect(insertValuesArgs.length).toBe(2);
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.memberType).toBe('child');
+    // "Baby Grace Doe" → first 'Baby', last 'Grace Doe'
+    expect(shell.firstName).toBe('Baby');
+    expect(shell.lastName).toBe('Grace Doe');
+    expect(shell.homeBranchId).toBe(branchId);
+    // No parent matched → guardian null.
+    expect(shell.guardianMemberId).toBeNull();
+
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.formType).toBe('baby_naming');
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+    expect(submission.linkedEntityId).toBe(subjectId);
+    expect(submission.status).toBe('new');
+    expect(submission.branchId).toBe(branchId);
+    expect(createEnrollmentMock).not.toHaveBeenCalled();
+    expect(result.id).toBe(submissionId);
+  });
+
+  it('links a parent matched by parentContactPhone as the baby shell guardian', async () => {
+    const parentId = '111e8400-0000-0000-0000-000000000111';
+    setupSelectSequence([{ id: parentId }]); // in-branch active parent phone match
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_dedication', { payload: babyPayload });
+
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.memberType).toBe('child');
+    expect(shell.guardianMemberId).toBe(parentId);
+
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.formType).toBe('baby_dedication');
+    // Matched guardian surfaced on payload for the triage drawer.
+    expect((submission.payload as Record<string, unknown>).matchedGuardianMemberId).toBe(parentId);
+  });
+
+  it('uses an explicit body.subjectMemberId (a parent) as the guardian', async () => {
+    const parentId = '111e8400-0000-0000-0000-000000000111';
+    setupSelectSequence([{ id: parentId, branchId }]); // explicit parent lookup in branch
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_naming', {
+      subjectMemberId: parentId,
+      payload: babyPayload,
+    });
+
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.guardianMemberId).toBe(parentId);
+    // The baby (not the parent) remains the submission subject.
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+  });
+
+  it('rejects a cross-branch explicit parent with Forbidden (no insert)', async () => {
+    const parentId = '111e8400-0000-0000-0000-000000000111';
+    setupSelectSequence([{ id: parentId, branchId: otherBranchId }]);
+    setupInsert([{ id: subjectId }], [{ id: submissionId }]); // should never be hit
+    const { submitForm } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(
+      submitForm(mockDb, memberAuth, 'baby_naming', {
+        subjectMemberId: parentId,
+        payload: babyPayload,
+      })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(insertValuesArgs.length).toBe(0);
+  });
+
+  it('forces branchId to auth.branchId, ignoring a client-sent branchId', async () => {
+    setupSelectSequence([]); // no parent match
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_dedication', {
+      branchId: otherBranchId,
+      payload: babyPayload,
+    });
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(shell.homeBranchId).toBe(branchId);
+    expect(submission.branchId).toBe(branchId);
+  });
+
+  it('splitFullName: a single-token babyFullName fills BOTH firstName and lastName', async () => {
+    setupSelectSequence([]); // no parent match
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_naming', {
+      payload: { ...babyPayload, babyFullName: 'Grace' },
+    });
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.firstName).toBe('Grace');
+    expect(shell.lastName).toBe('Grace');
+  });
+
+  it('splitFullName: a >100-char last-name portion is clamped to 100 chars on the minted shell', async () => {
+    setupSelectSequence([]); // no parent match
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const longLast = 'a'.repeat(150);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_naming', {
+      payload: { ...babyPayload, babyFullName: `Baby ${longLast}` },
+    });
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.firstName).toBe('Baby');
+    expect(String(shell.lastName).length).toBe(100);
+    expect(shell.lastName).toBe('a'.repeat(100));
   });
 });
 

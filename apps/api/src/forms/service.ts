@@ -18,6 +18,9 @@ import {
   type MemberSearchQuery,
   type ArchiveProspectsInput,
   type FirstTimeVisitorPayload,
+  type BaptismPayload,
+  type TestimonyPayload,
+  type BabyPayload,
 } from './schemas';
 
 // ── Constants ──────────────────────────────────────────────
@@ -114,13 +117,111 @@ async function createMemberShell(
   return newMember!.id;
 }
 
-/** Mint a prospect member shell. Thin wrapper preserving the altar-call call site. */
-async function createProspectShell(
+/**
+ * Shared subject-resolution pattern used by every matching form. Captures the
+ * common ladder that altar_call and first_time_visitor independently grew:
+ *
+ *   1. explicit `explicitSubjectMemberId` → verify it's a member in this branch
+ *      (NotFound if missing, Forbidden if cross-branch); return its id.
+ *   2. else if `phone` is present → exact match against an ACTIVE in-branch
+ *      member; return its id.
+ *   3. else apply `onNoMatch`:
+ *        - `{ mode: 'mint', memberType, ... }` runs the GLOBAL-phone ConflictError
+ *          guard (the phone unique index is cross-branch) then mints a shell and
+ *          returns the new id.
+ *        - `{ mode: 'linkOnly' }` returns null (match-or-nothing; never mints).
+ *
+ * The query ORDER here (explicit-subject OR (in-branch phone → global phone))
+ * mirrors the original inline blocks exactly so the mocked-Drizzle select
+ * sequences in the existing tests stay valid.
+ */
+type OnNoMatch =
+  | {
+      mode: 'mint';
+      memberType: 'prospect' | 'visitor' | 'child';
+      middleName?: string | null;
+      dateOfBirth?: string | null;
+      gender?: 'Male' | 'Female' | null;
+      email?: string;
+      guardianMemberId?: string | null;
+    }
+  | { mode: 'linkOnly' };
+
+async function resolveOrMintSubject(
   db: Database,
+  _auth: AuthContext,
   branchId: string,
-  data: { firstName: string; lastName: string; phone: string; email?: string },
-): Promise<string> {
-  return createMemberShell(db, branchId, { ...data, memberType: 'prospect' });
+  opts: {
+    explicitSubjectMemberId?: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    onNoMatch: OnNoMatch;
+  },
+): Promise<string | null> {
+  // (1) explicit selection — verify it exists and is in the caller's branch
+  if (opts.explicitSubjectMemberId) {
+    const [subject] = await db
+      .select({ id: members.id, branchId: members.homeBranchId })
+      .from(members)
+      .where(eq(members.id, opts.explicitSubjectMemberId))
+      .limit(1);
+    if (!subject) throw new NotFoundError('Member');
+    if (subject.branchId !== branchId) {
+      throw new ForbiddenError('You can only link to members in your branch');
+    }
+    return subject.id;
+  }
+
+  const phone = opts.phone?.trim();
+
+  // (2) phone safety-net — active member in branch with exact phone match
+  if (phone && phone.length > 0) {
+    const [byPhone] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(
+          eq(members.homeBranchId, branchId),
+          eq(members.isActive, true),
+          eq(members.phone, phone),
+        ),
+      )
+      .limit(1);
+    if (byPhone) return byPhone.id;
+  }
+
+  // (3) no match — apply the caller's policy
+  if (opts.onNoMatch.mode === 'linkOnly') return null;
+
+  // mint mode: the phone unique index (idx_members_phone_active) is GLOBAL across
+  // branches, so before minting a shell, check whether an active member elsewhere
+  // already owns this phone — otherwise the INSERT would hit the constraint as a
+  // raw 500. Only meaningful when a phone is actually supplied.
+  if (phone && phone.length > 0) {
+    const [phoneOwner] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(and(eq(members.isActive, true), eq(members.phone, phone)))
+      .limit(1);
+    if (phoneOwner) {
+      throw new ConflictError(
+        'A member with this phone number already exists in another branch. Link them via search, or use different contact details.',
+      );
+    }
+  }
+
+  return createMemberShell(db, branchId, {
+    firstName: opts.firstName,
+    lastName: opts.lastName,
+    phone: phone && phone.length > 0 ? phone : null,
+    email: opts.onNoMatch.email,
+    middleName: opts.onNoMatch.middleName ?? null,
+    dateOfBirth: opts.onNoMatch.dateOfBirth ?? null,
+    gender: opts.onNoMatch.gender ?? null,
+    memberType: opts.onNoMatch.memberType,
+    guardianMemberId: opts.onNoMatch.guardianMemberId ?? null,
+  });
 }
 
 /** Find the linked member's active enrollment, or create one via the shared helper.
@@ -179,97 +280,61 @@ export async function submitForm(
   const branchId = auth.branchId;
   enforceBranchScope(auth, branchId);
 
+  // Per-form matching policies. Each resolves a subject via the shared
+  // `resolveOrMintSubject` ladder, varying only in the no-match policy.
   if (formType === 'first_time_visitor') {
     return submitFirstTimeVisitor(db, auth, branchId, body, payload as FirstTimeVisitorPayload);
   }
+  if (formType === 'baptism') {
+    return submitBaptism(db, auth, branchId, body, payload as BaptismPayload);
+  }
+  if (formType === 'testimony') {
+    return submitTestimony(db, auth, branchId, body, payload as TestimonyPayload);
+  }
+  if (formType === 'baby_naming' || formType === 'baby_dedication') {
+    return submitBabyForm(db, auth, branchId, formType, body, payload as BabyPayload);
+  }
 
-  if (formType !== 'altar_call') {
+  if (formType === 'altar_call') {
+    // ── altar_call: match-or-mint a prospect, then ensure enrollment ──
+    const ac = payload as { firstName: string; lastName: string; phone: string };
+    const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+      explicitSubjectMemberId: body.subjectMemberId,
+      firstName: ac.firstName,
+      lastName: ac.lastName,
+      phone: ac.phone,
+      onNoMatch: { mode: 'mint', memberType: 'prospect' },
+    });
+    // mint mode always yields an id (match, or a freshly minted shell).
+    const enrollmentId = await ensureEnrollment(db, subjectMemberId!, branchId);
     const [row] = await db
       .insert(formSubmissions)
       .values({
         formType,
         branchId,
         submittedBy: auth.memberId,
-        subjectMemberId: null,
+        subjectMemberId,
         payload,
-        status: 'new',
-        linkedEntityType: null,
-        linkedEntityId: null,
+        status: 'converted',
+        linkedEntityType: 'new_believer_enrollment',
+        linkedEntityId: enrollmentId,
       })
       .returning();
     return row!;
   }
 
-  // ── altar_call: create-or-link shell + ensure enrollment ──
-  const ac = payload as { firstName: string; lastName: string; phone: string };
-  let subjectMemberId: string;
-
-  if (body.subjectMemberId) {
-    // (a) explicit selection — verify it exists and is in the caller's branch
-    const [subject] = await db
-      .select({ id: members.id, branchId: members.homeBranchId })
-      .from(members)
-      .where(eq(members.id, body.subjectMemberId))
-      .limit(1);
-    if (!subject) throw new NotFoundError('Member');
-    if (subject.branchId !== branchId) {
-      throw new ForbiddenError('You can only link to members in your branch');
-    }
-    subjectMemberId = subject.id;
-  } else {
-    // (b) phone safety-net — active member in branch with exact phone match
-    const [byPhone] = await db
-      .select({ id: members.id })
-      .from(members)
-      .where(
-        and(
-          eq(members.homeBranchId, branchId),
-          eq(members.isActive, true),
-          eq(members.phone, ac.phone),
-        ),
-      )
-      .limit(1);
-
-    if (byPhone) {
-      subjectMemberId = byPhone.id;
-    } else {
-      // (c) The phone unique index (idx_members_phone_active) is GLOBAL across branches,
-      //     so before minting a shell, check whether an active member elsewhere already
-      //     owns this phone — otherwise the INSERT would hit the constraint as a raw 500.
-      const [phoneOwner] = await db
-        .select({ id: members.id })
-        .from(members)
-        .where(and(eq(members.isActive, true), eq(members.phone, ac.phone)))
-        .limit(1);
-      if (phoneOwner) {
-        throw new ConflictError(
-          'A member with this phone number already exists in another branch. Link them via search, or use different contact details.',
-        );
-      }
-      // (d) create a new prospect shell
-      subjectMemberId = await createProspectShell(db, branchId, {
-        firstName: ac.firstName,
-        lastName: ac.lastName,
-        phone: ac.phone,
-      });
-    }
-  }
-
-  // (d) ensure an enrollment (reuse if one already exists)
-  const enrollmentId = await ensureEnrollment(db, subjectMemberId, branchId);
-
-  // (e) record the submission, linked + converted
+  // Generic fallback — store-only for any future form without a matching policy.
   const [row] = await db
     .insert(formSubmissions)
     .values({
       formType,
       branchId,
       submittedBy: auth.memberId,
-      subjectMemberId,
+      subjectMemberId: null,
       payload,
-      status: 'converted',
-      linkedEntityType: 'new_believer_enrollment',
-      linkedEntityId: enrollmentId,
+      status: 'new',
+      linkedEntityType: null,
+      linkedEntityId: null,
     })
     .returning();
   return row!;
@@ -388,6 +453,173 @@ async function submitFirstTimeVisitor(
       status: 'new',
       linkedEntityType: 'member',
       linkedEntityId: subjectMemberId,
+    })
+    .returning();
+  return row!;
+}
+
+// ── Baptism / testimony / baby: shared insert ──────────────
+
+/** Insert a non-converting submission, deriving the linked-entity columns from
+ *  whether a subject was resolved. Used by the link/match forms. */
+async function insertFormSubmission(
+  db: Database,
+  data: {
+    formType: string;
+    branchId: string;
+    submittedBy: string;
+    subjectMemberId: string | null;
+    payload: unknown;
+  },
+) {
+  const [row] = await db
+    .insert(formSubmissions)
+    .values({
+      formType: data.formType,
+      branchId: data.branchId,
+      submittedBy: data.submittedBy,
+      subjectMemberId: data.subjectMemberId,
+      payload: data.payload,
+      status: 'new',
+      linkedEntityType: data.subjectMemberId ? 'member' : null,
+      linkedEntityId: data.subjectMemberId,
+    })
+    .returning();
+  return row!;
+}
+
+/** Split a single full-name string into first/last for a child shell. The first
+ *  whitespace-token is the first name, the remainder the last name (a lone token
+ *  fills both). Clamped to the members.firstName/lastName varchar(100) limit. */
+function splitFullName(full: string): { firstName: string; lastName: string } {
+  const trimmed = full.trim();
+  const parts = trimmed.split(/\s+/);
+  const first = parts[0] ?? trimmed;
+  const last = parts.length > 1 ? parts.slice(1).join(' ') : (parts[0] ?? trimmed);
+  return { firstName: first.slice(0, 100), lastName: last.slice(0, 100) };
+}
+
+// ── Baptism: match an existing member, else mint a prospect shell ──
+async function submitBaptism(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string },
+  payload: BaptismPayload,
+) {
+  const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+    explicitSubjectMemberId: body.subjectMemberId,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+    onNoMatch: { mode: 'mint', memberType: 'prospect' },
+  });
+  return insertFormSubmission(db, {
+    formType: 'baptism',
+    branchId,
+    submittedBy: auth.memberId,
+    subjectMemberId,
+    payload,
+  });
+}
+
+// ── Testimony: link to an existing member only; never mint. Skip matching
+//    entirely when the giver opts to share anonymously. ──
+async function submitTestimony(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string },
+  payload: TestimonyPayload,
+) {
+  let subjectMemberId: string | null = null;
+  if (!payload.shareAnonymously) {
+    subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+      explicitSubjectMemberId: body.subjectMemberId,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      phone: payload.phone,
+      onNoMatch: { mode: 'linkOnly' },
+    });
+  }
+  return insertFormSubmission(db, {
+    formType: 'testimony',
+    branchId,
+    submittedBy: auth.memberId,
+    subjectMemberId,
+    payload,
+  });
+}
+
+// ── Baby naming / dedication: the subject is the baby, minted as a `child`
+//    shell. An existing parent (explicit pick from the typeahead, else an
+//    in-branch member matching parentContactPhone) is linked as the baby's
+//    guardian. The parent is never minted — fathersName/mothersName don't split
+//    cleanly into first/last, and the agreed policy is link-only for the parent.
+async function submitBabyForm(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  formType: 'baby_naming' | 'baby_dedication',
+  body: { subjectMemberId?: string },
+  payload: BabyPayload,
+) {
+  let guardianMemberId: string | null = null;
+  if (body.subjectMemberId) {
+    const [parent] = await db
+      .select({ id: members.id, branchId: members.homeBranchId })
+      .from(members)
+      .where(eq(members.id, body.subjectMemberId))
+      .limit(1);
+    if (!parent) throw new NotFoundError('Member');
+    if (parent.branchId !== branchId) {
+      throw new ForbiddenError('You can only link to members in your branch');
+    }
+    guardianMemberId = parent.id;
+  } else if (payload.parentContactPhone && payload.parentContactPhone.trim().length > 0) {
+    const [byPhone] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(
+          eq(members.homeBranchId, branchId),
+          eq(members.isActive, true),
+          eq(members.phone, payload.parentContactPhone.trim()),
+        ),
+      )
+      .limit(1);
+    if (byPhone) guardianMemberId = byPhone.id;
+  }
+
+  const { firstName, lastName } = splitFullName(payload.babyFullName);
+  const babyMemberId = await createMemberShell(db, branchId, {
+    firstName,
+    lastName,
+    phone: null,
+    dateOfBirth: payload.dateOfBirth ?? null,
+    gender: payload.gender ?? null,
+    memberType: 'child',
+    guardianMemberId,
+  });
+
+  // The baby is the subject; the matched parent (if any) lives on members.guardianMemberId.
+  const enrichedPayload = {
+    ...payload,
+    babyMemberId,
+    ...(guardianMemberId ? { matchedGuardianMemberId: guardianMemberId } : {}),
+  };
+
+  const [row] = await db
+    .insert(formSubmissions)
+    .values({
+      formType,
+      branchId,
+      submittedBy: auth.memberId,
+      subjectMemberId: babyMemberId,
+      payload: enrichedPayload,
+      status: 'new',
+      linkedEntityType: 'member',
+      linkedEntityId: babyMemberId,
     })
     .returning();
   return row!;

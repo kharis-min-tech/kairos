@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { Button, Input, Textarea } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
+import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
+import { MemberSearchLink } from './member-search-link';
 
 const baseSchema = z.object({
   babyFullName: z.string().trim().min(1, 'Baby’s full name is required'),
@@ -43,6 +45,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
 
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [form, setForm] = useState({
     babyFullName: '',
     dateOfBirth: '',
@@ -63,6 +66,21 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
       delete next[field as string];
       return next;
     });
+  }
+
+  function selectParent(r: FormMemberSearchResult) {
+    setSubjectMemberId(r.id);
+    setForm((p) => ({ ...p, parentContactPhone: r.phone ?? '' }));
+    setErrors((p) => {
+      const next = { ...p };
+      delete next.parentContactPhone;
+      return next;
+    });
+  }
+
+  function clearParent() {
+    setSubjectMemberId(undefined);
+    setForm((p) => ({ ...p, parentContactPhone: '', parentContactEmail: '' }));
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -104,7 +122,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
     }
 
     try {
-      await submitForm.mutateAsync({ formType: mode, data: { payload } });
+      await submitForm.mutateAsync({ formType: mode, data: { subjectMemberId, payload } });
       setSubmitted(true);
     } catch {
       // surfaced below
@@ -114,6 +132,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
   function reset() {
     setSubmitted(false);
     setErrors({});
+    setSubjectMemberId(undefined);
     setForm({
       babyFullName: '',
       dateOfBirth: '',
@@ -139,6 +158,15 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
+        <MemberSearchLink
+          value={subjectMemberId}
+          onSelect={selectParent}
+          onClear={clearParent}
+          label="Find the parent/guardian"
+          helpText="Search by name or phone to link an existing member. Leave blank otherwise."
+          linkedNote="Linked to an existing member — they’ll be recorded as the parent/guardian."
+        />
+
         <div className="space-y-2">
           <FieldLabel htmlFor="babyFullName" required>
             Baby’s full name

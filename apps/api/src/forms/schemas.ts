@@ -202,6 +202,13 @@ export const firstTimeVisitorPayloadSchema = z
   });
 
 export type FirstTimeVisitorPayload = z.infer<typeof firstTimeVisitorPayloadSchema>;
+export type BaptismPayload = z.infer<typeof baptismPayloadSchema>;
+export type TestimonyPayload = z.infer<typeof testimonyPayloadSchema>;
+export type BabyNamingPayload = z.infer<typeof babyNamingPayloadSchema>;
+export type BabyDedicationPayload = z.infer<typeof babyDedicationPayloadSchema>;
+/** Baby naming and dedication share the fields the service touches (babyFullName,
+ *  dateOfBirth, gender, parentContactPhone); dedication adds parentsAreMembers. */
+export type BabyPayload = BabyNamingPayload | BabyDedicationPayload;
 
 /** Map of formType → payload schema. Used to validate the submit body
  *  against the route's :formType param (discriminated by the route). */
