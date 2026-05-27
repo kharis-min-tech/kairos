@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams, CreateMemberRequest } from '@kairos/types';
+import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams, CreateMemberRequest, UpsertHealthRecordRequest } from '@kairos/types';
 
 // ── Member queries ─────────────────────────────────────────
 
@@ -88,6 +88,38 @@ export function useCreateMember() {
       return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}
+
+// ── Member Health Record (minor safeguarding) ──────────────
+
+/**
+ * Fetches the safeguarding health record for a minor. Pass `enabled` as
+ * `isMinor && !redacted` so the request is only made when the viewer has
+ * safeguarding access — otherwise the API would 403.
+ */
+export function useMemberHealthRecord(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['members', id, 'health-record'],
+    queryFn: async () => {
+      const res = await api.members.getHealthRecord(id);
+      return res.data ?? null;
+    },
+    enabled: !!id && enabled,
+  });
+}
+
+export function useUpsertMemberHealthRecord(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: UpsertHealthRecordRequest) => {
+      const res = await api.members.upsertHealthRecord(id, data);
+      return res.data ?? null;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', id, 'health-record'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
   });
 }
 

@@ -13,6 +13,8 @@ import {
   useMemberRoles,
   useAssignRole,
   useRemoveRole,
+  useMemberHealthRecord,
+  useUpsertMemberHealthRecord,
 } from './use-members';
 
 vi.mock('@/lib/api', () => ({
@@ -25,6 +27,8 @@ vi.mock('@/lib/api', () => ({
       approve: vi.fn(),
       deactivate: vi.fn(),
       create: vi.fn(),
+      getHealthRecord: vi.fn(),
+      upsertHealthRecord: vi.fn(),
       roles: {
         list: vi.fn(),
         assign: vi.fn(),
@@ -271,5 +275,123 @@ describe('useRemoveRole', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.members.roles.remove).toHaveBeenCalledWith('member-1', 'mr1');
+  });
+});
+
+// ── useMemberHealthRecord ──────────────────────────────────
+
+const mockHealthRecord = {
+  id: 'hr-1',
+  memberId: 'member-1',
+  branchId: 'branch-1',
+  medicalConditions: 'Asthma',
+  allergies: 'Peanuts',
+  medications: null,
+  dietaryNeeds: null,
+  additionalNotes: null,
+  photoMediaConsent: true,
+  medicalTreatmentConsent: false,
+  dataProcessingConsent: null,
+  consentRecordedBy: 'admin-1',
+  consentDate: '2026-05-01',
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe('useMemberHealthRecord', () => {
+  it('uses query key ["members", id, "health-record"] and returns res.data', async () => {
+    vi.mocked(api.members.getHealthRecord).mockResolvedValue({ data: mockHealthRecord } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useMemberHealthRecord('member-1', true), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.members.getHealthRecord).toHaveBeenCalledWith('member-1');
+    expect(result.current.data).toEqual(mockHealthRecord);
+    expect(qc.getQueryData(['members', 'member-1', 'health-record'])).toEqual(mockHealthRecord);
+  });
+
+  it('returns null data when there is no record', async () => {
+    vi.mocked(api.members.getHealthRecord).mockResolvedValue({ data: null } as never);
+
+    const { result } = renderHook(() => useMemberHealthRecord('member-1', true), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('does not fetch when enabled is false (redacted / no access)', () => {
+    const { result } = renderHook(() => useMemberHealthRecord('member-1', false), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(api.members.getHealthRecord).not.toHaveBeenCalled();
+  });
+
+  it('does not fetch when id is empty', () => {
+    const { result } = renderHook(() => useMemberHealthRecord('', true), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+// ── useUpsertMemberHealthRecord ────────────────────────────
+
+describe('useUpsertMemberHealthRecord', () => {
+  it('calls api.members.upsertHealthRecord with id and the tri-state payload', async () => {
+    vi.mocked(api.members.upsertHealthRecord).mockResolvedValue({ data: mockHealthRecord } as never);
+
+    const { result } = renderHook(() => useUpsertMemberHealthRecord('member-1'), { wrapper: createWrapper() });
+
+    const payload = {
+      medicalConditions: 'Asthma',
+      allergies: 'Peanuts',
+      medications: null,
+      dietaryNeeds: null,
+      additionalNotes: null,
+      photoMediaConsent: true,
+      medicalTreatmentConsent: false,
+      dataProcessingConsent: null,
+    };
+
+    await act(async () => {
+      result.current.mutate(payload);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.members.upsertHealthRecord).toHaveBeenCalledWith('member-1', payload);
+  });
+
+  it('invalidates the health-record and member detail query keys on success', async () => {
+    vi.mocked(api.members.upsertHealthRecord).mockResolvedValue({ data: mockHealthRecord } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useUpsertMemberHealthRecord('member-1'), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ medicalConditions: 'x' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['members', 'member-1', 'health-record'] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['members', 'member-1'] });
+  });
+
+  it('surfaces error on rejection', async () => {
+    vi.mocked(api.members.upsertHealthRecord).mockRejectedValue(new Error('Forbidden'));
+
+    const { result } = renderHook(() => useUpsertMemberHealthRecord('member-1'), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ medicalConditions: 'x' });
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Forbidden');
   });
 });
