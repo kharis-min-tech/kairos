@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import {
   Button,
+  Checkbox,
   Input,
   Textarea,
   CustomSelect,
   Card,
   CardContent,
+  cn,
 } from '@kairos/ui';
 import { Search, X, Plus, Trash2 } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
@@ -309,15 +311,22 @@ export function DeclarativeForm({
 
     if (field.type === 'checkbox') {
       return (
-        <label className="flex items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-input/30 text-[#5D3FD3] focus:ring-[#f8b537]"
-            checked={Boolean(value)}
-            onChange={(e) => onChange(e.target.checked)}
-          />
-          {field.label}
-        </label>
+        <div className="space-y-2">
+          <label
+            className={cn(
+              'group flex cursor-pointer items-start gap-3 rounded-lg border border-input/15 bg-background/70 p-3 text-sm font-medium text-foreground transition-colors',
+              'hover:border-[#6D28D9]/35 hover:bg-[#6D28D9]/5',
+              'dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#6D28D9]/45 dark:hover:bg-[#6D28D9]/10',
+            )}
+          >
+            <Checkbox
+              checked={Boolean(value)}
+              onChange={(e) => onChange(e.target.checked)}
+            />
+            <span className="leading-5">{field.label}</span>
+          </label>
+          <FieldError message={errorMsg} />
+        </div>
       );
     }
 

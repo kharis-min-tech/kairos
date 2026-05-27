@@ -450,6 +450,47 @@ async function seed() {
     .returning();
   console.log(`✓ 1 minor (child) linked to a guardian`);
 
+  // Minor with NO guardian — surfaces immediately on the safeguarding-review
+  // page with a "No guardian" (guardianStatus 'none') flag.
+  await db
+    .insert(members)
+    .values({
+      firstName: 'Noah',
+      lastName: 'Adeyemi',
+      email: 'noah.adeyemi@temp.kairos.local',
+      gender: 'Male',
+      dateOfBirth: '2014-03-02', // ~11 → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: null,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    });
+  console.log(`✓ 1 minor (child) with no guardian`);
+
+  // Login-ready minor — verified + approved so a login attempt reaches the
+  // minor-login block (rather than tripping the email-not-verified check first).
+  // Use this account to demo that minors are refused at sign-in.
+  await db
+    .insert(members)
+    .values({
+      firstName: 'Maya',
+      lastName: 'Bello',
+      email: 'maya.bello@kairos.local',
+      gender: 'Female',
+      dateOfBirth: '2012-11-20', // ~13 → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: guardianEmma.id,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    });
+  console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
+
   // ── 4. Roles ────────────────────────────────────────────────
   const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole] = await db
     .insert(roles)
@@ -1183,11 +1224,15 @@ async function seed() {
   console.log('  Pending: new.applicant@kairos.local   (London)');
   console.log('  Unverified: unverified@kairos.local   (London)');
   console.log('');
-  console.log('Under-16 data-protection demo (minor: Lily Thompson, London):');
-  console.log('  • Lily is memberType "child" — she has NO login (login is blocked for minors).');
-  console.log('  • emma.thompson@kairos.local — guardian → sees Lily\'s full record + health.');
-  console.log('  • sarah.williams@kairos.local — Safeguarding Lead (London) → sees full record + health.');
-  console.log('  • Any other London member → sees Lily REDACTED (name only, no DOB/contact/health).');
+  console.log('Under-16 data-protection demo (3 London minors):');
+  console.log('  • Lily Thompson  — child, guardian = Emma Thompson, has a health record.');
+  console.log('      emma.thompson@kairos.local   (guardian)        → full record + health');
+  console.log('      sarah.williams@kairos.local  (Safeguarding Lead) → full record + health');
+  console.log('      any other London member                        → REDACTED (name only)');
+  console.log('  • Noah Adeyemi   — child, NO guardian → shows "No guardian" on /members/safeguarding.');
+  console.log('  • Maya Bello     — child, verified+approved → demos the minor-login block:');
+  console.log('      try logging in as maya.bello@kairos.local → refused ("belongs to a minor").');
+  console.log('  • Deactivate Emma to make Lily show as "Guardian inactive" on the review page.');
 
   process.exit(0);
 }
