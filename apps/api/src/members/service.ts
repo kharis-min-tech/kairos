@@ -1,11 +1,12 @@
 import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
-import { isMinorMember } from '@kairos/types';
+import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import {
   NotFoundError,
@@ -752,6 +753,10 @@ export async function upsertHealthRecord(
     ? { consentRecordedBy: auth.memberId, consentDate: sql`CURRENT_DATE` }
     : {};
 
+  // memberId is UNIQUE, so at most one row can exist — the probe intentionally
+  // ignores isActive. If a prior record was soft-deleted, reactivating it on
+  // upsert is the only valid path (a second insert would violate the unique
+  // constraint); hence the unconditional isActive:true on update.
   const [existing] = await db
     .select({ id: memberHealthRecords.id })
     .from(memberHealthRecords)
@@ -771,6 +776,81 @@ export async function upsertHealthRecord(
     .values({ ...input, ...consentFields, memberId, branchId: member.homeBranchId })
     .returning();
   return created as MemberHealthRecord;
+}
+
+/**
+ * Safeguarding-review list: active minors (memberType 'child' or DOB under the
+ * minor threshold) whose guardian link is missing OR points at a deactivated
+ * member. Surfaces minors left without an active responsible adult — e.g. after
+ * a guardian is deactivated (which is allowed, not blocked). Branch-scoped and
+ * gated to safeguarding access (admin/pastor, or a Safeguarding Lead in the
+ * branch) — these viewers may already see minors' protected data.
+ */
+export async function listUnguardedMinors(
+  db: Database,
+  auth: AuthContext,
+  query: { branchId?: string },
+) {
+  const branchId = query.branchId ?? auth.branchId;
+
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+    if (!safeguardingBranches.has(branchId)) {
+      throw new ForbiddenError('You need safeguarding access to view this list');
+    }
+  }
+
+  const guardian = alias(members, 'guardian');
+  const rows = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      dateOfBirth: members.dateOfBirth,
+      branchName: branches.branchName,
+      guardianMemberId: members.guardianMemberId,
+      guardianFirstName: guardian.firstName,
+      guardianLastName: guardian.lastName,
+    })
+    .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
+    .leftJoin(guardian, eq(members.guardianMemberId, guardian.id))
+    .where(
+      and(
+        eq(members.homeBranchId, branchId),
+        eq(members.isActive, true),
+        // is a protected minor
+        or(
+          eq(members.memberType, 'child'),
+          sql`${members.dateOfBirth} > (CURRENT_DATE - INTERVAL '${sql.raw(String(MINOR_AGE_THRESHOLD))} years')`,
+        ),
+        // guardian missing or deactivated
+        or(sql`${members.guardianMemberId} IS NULL`, eq(guardian.isActive, false)),
+      ),
+    )
+    .orderBy(members.lastName, members.firstName);
+
+  return (rows as Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+    branchName: string;
+    guardianMemberId: string | null;
+    guardianFirstName: string | null;
+    guardianLastName: string | null;
+  }>).map((r) => ({
+    id: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    dateOfBirth: r.dateOfBirth,
+    branchName: r.branchName,
+    guardianStatus: (r.guardianMemberId === null ? 'none' : 'inactive') as 'none' | 'inactive',
+    guardianName:
+      r.guardianMemberId && r.guardianFirstName
+        ? `${r.guardianFirstName} ${r.guardianLastName ?? ''}`.trim()
+        : null,
+  }));
 }
 
 // ── CSV Import / Export ────────────────────────────────────

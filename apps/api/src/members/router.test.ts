@@ -306,6 +306,36 @@ describe('PUT /api/members/:id/health-record', () => {
   });
 });
 
+describe('GET /api/members/safeguarding/unguarded-minors', () => {
+  it('returns 401 without auth', async () => {
+    const res = await app.request('/api/members/safeguarding/unguarded-minors');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns the list for an admin (not captured by /:id)', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([
+      { id: 'minor-1', firstName: 'Lily', lastName: 'Thompson', dateOfBirth: '2016-01-01', branchName: 'London', guardianMemberId: null, guardianFirstName: null, guardianLastName: null },
+    ]));
+
+    const res = await app.request('/api/members/safeguarding/unguarded-minors', {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data[0].guardianStatus).toBe('none');
+  });
+
+  it('returns 403 for a member without safeguarding access', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([])); // SG-Lead branches → none
+    const res = await app.request('/api/members/safeguarding/unguarded-minors', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+    expect(res.status).toBe(403);
+  });
+});
+
 // ── GET /api/members/:id/roles ─────────────────────────────
 
 describe('GET /api/members/:id/roles', () => {

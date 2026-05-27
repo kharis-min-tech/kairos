@@ -77,3 +77,7 @@ export const listMembersQuerySchema = z.object({
   approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
   fellowshipId: z.string().uuid().optional(),
 });
+
+export const unguardedMinorsQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
+});

@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};
   const methods = [
-    'select', 'from', 'where', 'innerJoin', 'orderBy', 'limit', 'offset',
+    'select', 'from', 'where', 'innerJoin', 'leftJoin', 'orderBy', 'limit', 'offset',
     'insert', 'values', 'returning',
     'update', 'set',
   ];
@@ -111,6 +111,7 @@ import {
   switchActiveBranch,
   getHealthRecord,
   upsertHealthRecord,
+  listUnguardedMinors,
 } from './service';
 
 // ── listMembers ───────────────────────────────────────────
@@ -946,5 +947,55 @@ describe('upsertHealthRecord', () => {
     setupSelectSequence([]);
     await expect(upsertHealthRecord(mockDb, 'minor-1', { medicalConditions: 'x' }, adminAuth))
       .rejects.toThrow('Member not found');
+  });
+});
+
+describe('listUnguardedMinors', () => {
+  const unguardedRow = {
+    id: 'minor-1',
+    firstName: 'Lily',
+    lastName: 'Thompson',
+    dateOfBirth: '2016-01-01',
+    branchName: 'Lagos Branch',
+    guardianMemberId: null,
+    guardianFirstName: null,
+    guardianLastName: null,
+  };
+
+  it('admin gets the list (no capability query) with guardianStatus "none"', async () => {
+    setupSelect([unguardedRow]); // single select: the minors query
+    const result = await listUnguardedMinors(mockDb, adminAuth, {});
+    expect(result).toHaveLength(1);
+    expect(result[0]!.guardianStatus).toBe('none');
+    expect(result[0]!.guardianName).toBeNull();
+  });
+
+  it('maps an inactive-guardian row to guardianStatus "inactive" with the name', async () => {
+    setupSelect([
+      { ...unguardedRow, guardianMemberId: guardianId, guardianFirstName: 'Emma', guardianLastName: 'Thompson' },
+    ]);
+    const result = await listUnguardedMinors(mockDb, adminAuth, {});
+    expect(result[0]!.guardianStatus).toBe('inactive');
+    expect(result[0]!.guardianName).toBe('Emma Thompson');
+  });
+
+  it('allows a Safeguarding Lead scoped to the branch', async () => {
+    // select 1: viewer SG-Lead branches → includes branchId; select 2: minors
+    setupSelectSequence([{ branchId }], [unguardedRow]);
+    const result = await listUnguardedMinors(mockDb, sgLeadSameBranchAuth, {});
+    expect(result).toHaveLength(1);
+  });
+
+  it('forbids a leader without the Safeguarding Lead role', async () => {
+    setupSelectSequence([]); // viewer SG-Lead branches → none
+    await expect(listUnguardedMinors(mockDb, leaderAuth, {}))
+      .rejects.toThrow('need safeguarding access');
+  });
+
+  it('forbids a Safeguarding Lead querying a branch they do not cover', async () => {
+    // viewer holds SG-Lead only in otherBranchId; queries branchId
+    setupSelectSequence([{ branchId: otherBranchId }]);
+    await expect(listUnguardedMinors(mockDb, sgLeadSameBranchAuth, { branchId }))
+      .rejects.toThrow('need safeguarding access');
   });
 });

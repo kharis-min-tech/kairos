@@ -10,6 +10,7 @@ import {
   listMembersQuerySchema,
   createMemberSchema,
   upsertHealthRecordSchema,
+  unguardedMinorsQuerySchema,
 } from './schemas';
 import {
   listMembers,
@@ -29,6 +30,7 @@ import {
   switchActiveBranch,
   getHealthRecord,
   upsertHealthRecord,
+  listUnguardedMinors,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 
@@ -90,6 +92,18 @@ membersRouter.get('/roles', requireRole('admin'), async (c) => {
   const allRoles = await listRoles(db);
   return c.json(successResponse(allRoles));
 });
+
+// ── Safeguarding review ────────────────────────────────────
+// Static path — must precede '/:id' so it isn't captured as an id.
+membersRouter.get(
+  '/safeguarding/unguarded-minors',
+  zValidator('query', unguardedMinorsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await listUnguardedMinors(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
 
 membersRouter.get('/:id', async (c) => {
   const auth = getAuth(c);
