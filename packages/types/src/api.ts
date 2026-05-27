@@ -1,7 +1,13 @@
 // ── API request/response types ─────────────────────────────
 
 import type { SystemRole, FormType, FormSubmissionStatus, MemberType } from './enums';
-import type { Member, FormSubmission, FormSubmissionPayload } from './entities';
+import type {
+  Member,
+  MemberWithBranch,
+  MemberHealthRecord,
+  FormSubmission,
+  FormSubmissionPayload,
+} from './entities';
 
 // ── Auth ───────────────────────────────────────────────────
 
@@ -203,6 +209,55 @@ export interface MemberListParams {
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   fellowshipId?: string;
 }
+
+// ── Minor data protection ──────────────────────────────────
+// Members surfaced through the list/detail read paths carry two extra flags so
+// the web layer can render a redacted state. When a member is a protected minor
+// and the viewer lacks safeguarding access, the sensitive fields below are set
+// to null and `redacted` is true. Non-minor members always have
+// `isMinor: false, redacted: false` and are returned unchanged.
+
+/** Fields that get nulled out when a minor record is redacted. */
+export type RedactableMemberField =
+  | 'dateOfBirth'
+  | 'email'
+  | 'phone'
+  | 'address'
+  | 'city'
+  | 'postalCode'
+  | 'emergencyContactName'
+  | 'emergencyContactPhone'
+  | 'emergencyContactRelationship';
+
+/** Minor-protection flags threaded onto every member read response. */
+export interface MinorProtectionFlags {
+  isMinor: boolean;
+  redacted: boolean;
+}
+
+/** A member list row (with branch name) carrying minor-protection flags. */
+export type MemberWithBranchProtected = MemberWithBranch & MinorProtectionFlags;
+
+/** A member detail object carrying minor-protection flags. */
+export type MemberDetailProtected = MemberWithBranch & MinorProtectionFlags;
+
+// ── Member Health Record ───────────────────────────────────
+// Upsert payload for the 1:1 health record. All fields optional/nullable —
+// branchId is derived server-side from the member's homeBranchId and consent
+// stamping (consentRecordedBy/consentDate) happens server-side.
+
+export interface UpsertHealthRecordRequest {
+  medicalConditions?: string | null;
+  allergies?: string | null;
+  medications?: string | null;
+  dietaryNeeds?: string | null;
+  additionalNotes?: string | null;
+  photoMediaConsent?: boolean | null;
+  medicalTreatmentConsent?: boolean | null;
+  dataProcessingConsent?: boolean | null;
+}
+
+export type HealthRecordResponse = MemberHealthRecord | null;
 
 // ── Fellowship ─────────────────────────────────────────────
 

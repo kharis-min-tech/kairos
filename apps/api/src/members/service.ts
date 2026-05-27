@@ -2,9 +2,10 @@ import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
-import { members, memberRoles, roles, branches, fellowshipMembers } from '@kairos/database';
+import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import type { SwitchActiveBranchResponse } from '@kairos/types';
+import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
+import { isMinorMember } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import {
   NotFoundError,
@@ -20,6 +21,108 @@ function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'pastor') return;
   if (auth.memberId === memberId) return;
   throw new ForbiddenError('You can only access your own profile');
+}
+
+// ── Minor data protection ─────────────────────────────────
+// The seeded role that grants safeguarding access to minor records.
+const SAFEGUARDING_LEAD_ROLE = 'Safeguarding Lead';
+
+// Sensitive member fields that are nulled out when a minor record is redacted.
+const REDACTABLE_FIELDS = [
+  'dateOfBirth',
+  'email',
+  'phone',
+  'address',
+  'city',
+  'postalCode',
+  'emergencyContactName',
+  'emergencyContactPhone',
+  'emergencyContactRelationship',
+] as const;
+
+/** Minimal member shape the safeguarding gate keys off. */
+type SafeguardingSubject = {
+  homeBranchId: string;
+  guardianMemberId?: string | null;
+};
+
+/**
+ * Resolve, ONCE per request, the set of branchIds where the viewer holds an
+ * active Safeguarding Lead role. Admin/pastor short-circuit (they see all) and
+ * don't trigger the query. Used by the list path to avoid an N+1.
+ */
+async function getViewerSafeguardingBranches(
+  db: Database,
+  auth: AuthContext,
+): Promise<Set<string>> {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+    return new Set();
+  }
+  const rows = await db
+    .select({ branchId: memberRoles.branchId })
+    .from(memberRoles)
+    .innerJoin(roles, eq(memberRoles.roleId, roles.id))
+    .where(
+      and(
+        eq(memberRoles.memberId, auth.memberId),
+        eq(memberRoles.isActive, true),
+        eq(roles.roleName, SAFEGUARDING_LEAD_ROLE),
+        eq(roles.isActive, true),
+      ),
+    );
+  return new Set(rows.map((r) => r.branchId));
+}
+
+/**
+ * In-memory safeguarding-access check given a pre-resolved capability set.
+ * True when the viewer is admin/pastor, the member's guardian, or holds an
+ * active Safeguarding Lead role scoped to the member's home branch.
+ */
+function hasSafeguardingAccessWith(
+  auth: AuthContext,
+  member: SafeguardingSubject,
+  safeguardingBranches: Set<string>,
+): boolean {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return true;
+  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
+  return safeguardingBranches.has(member.homeBranchId);
+}
+
+/**
+ * Async single-member safeguarding-access check (detail / health-record path).
+ * Resolves the viewer's Safeguarding Lead branches then evaluates in memory.
+ */
+async function hasSafeguardingAccess(
+  db: Database,
+  auth: AuthContext,
+  member: SafeguardingSubject,
+): Promise<boolean> {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return true;
+  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
+  const branches = await getViewerSafeguardingBranches(db, auth);
+  return branches.has(member.homeBranchId);
+}
+
+/**
+ * Thread `isMinor` / `redacted` flags onto a member row, nulling the sensitive
+ * fields when the member is a protected minor and the viewer lacks access.
+ */
+function applyMinorProtection<T extends Record<string, unknown>>(
+  row: T,
+  hasAccess: boolean,
+): T & { isMinor: boolean; redacted: boolean } {
+  const isMinor = isMinorMember({
+    memberType: row['memberType'] as string | null | undefined,
+    dateOfBirth: row['dateOfBirth'] as string | null | undefined,
+  });
+  if (!isMinor || hasAccess) {
+    return { ...row, isMinor, redacted: false };
+  }
+  const redacted = { ...row } as Record<string, unknown>;
+  for (const field of REDACTABLE_FIELDS) {
+    if (field in redacted) redacted[field] = null;
+  }
+  return { ...(redacted as T), isMinor: true, redacted: true };
 }
 
 export async function listRoles(db: Database) {
@@ -95,20 +198,35 @@ export async function listMembers(
   const where = and(...conditions);
   const offset = (query.page - 1) * query.limit;
 
+  // Resolve the viewer's safeguarding capability ONCE up front (admin/pastor
+  // short-circuit to an empty set without a query), then evaluate per-row in
+  // memory to avoid an N+1 across the list.
+  const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+
   const [rows, [total]] = await Promise.all([
     db
       .select({
         id: members.id,
         firstName: members.firstName,
         lastName: members.lastName,
+        middleName: members.middleName,
         email: members.email,
         phone: members.phone,
+        dateOfBirth: members.dateOfBirth,
+        address: members.address,
+        city: members.city,
+        postalCode: members.postalCode,
+        emergencyContactName: members.emergencyContactName,
+        emergencyContactPhone: members.emergencyContactPhone,
+        emergencyContactRelationship: members.emergencyContactRelationship,
         homeBranchId: members.homeBranchId,
         branchName: branches.branchName,
         gender: members.gender,
         membershipDate: members.membershipDate,
         approvalStatus: members.approvalStatus,
         systemRole: members.systemRole,
+        memberType: members.memberType,
+        guardianMemberId: members.guardianMemberId,
         isActive: members.isActive,
         createdAt: members.createdAt,
         photoUrl: members.photoUrl,
@@ -122,8 +240,12 @@ export async function listMembers(
     db.select({ count: count() }).from(members).where(where),
   ]);
 
+  const data = rows.map((row) =>
+    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches)),
+  );
+
   return {
-    data: rows,
+    data,
     pagination: {
       page: query.page,
       limit: query.limit,
@@ -134,8 +256,6 @@ export async function listMembers(
 }
 
 export async function getMember(db: Database, memberId: string, auth: AuthContext) {
-  enforceMemberAccess(auth, memberId);
-
   const [member] = await db
     .select({
       id: members.id,
@@ -164,6 +284,8 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       emergencyContactRelationship: members.emergencyContactRelationship,
       approvalStatus: members.approvalStatus,
       systemRole: members.systemRole,
+      memberType: members.memberType,
+      guardianMemberId: members.guardianMemberId,
       emailVerified: members.emailVerified,
       createdAt: members.createdAt,
       updatedAt: members.updatedAt,
@@ -173,7 +295,34 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
     .where(and(eq(members.id, memberId), eq(members.isActive, true)));
 
   if (!member) throw new NotFoundError('Member not found');
-  return member;
+
+  const isPrivileged = auth.systemRole === 'admin' || auth.systemRole === 'pastor';
+  const isSelf = auth.memberId === memberId;
+
+  // Admin/pastor and the member themselves always get the full record.
+  if (isPrivileged || isSelf) {
+    return applyMinorProtection(member, true);
+  }
+
+  // Non-privileged, non-self readers:
+  //  - ADULT records keep the original strict gate (admin/pastor/self only) so
+  //    this feature doesn't newly expose adults' address / emergency contacts.
+  //  - MINOR records follow the safeguarding model: the linked guardian (branch-
+  //    independent) and Safeguarding Leads scoped to the child's branch get the
+  //    full record; other same-branch viewers get a REDACTED stub (name/branch,
+  //    no DOB/contact); out-of-branch viewers are denied.
+  if (!isMinorMember({ memberType: member.memberType, dateOfBirth: member.dateOfBirth })) {
+    throw new ForbiddenError('You can only access your own profile');
+  }
+  // Guardian / SG-Lead access is evaluated BEFORE the branch gate — a guardian
+  // active in another branch must still reach their own child's record.
+  if (await hasSafeguardingAccess(db, auth, member)) {
+    return applyMinorProtection(member, true);
+  }
+  if (member.homeBranchId !== auth.branchId) {
+    throw new ForbiddenError('You can only access members in your branch');
+  }
+  return applyMinorProtection(member, false);
 }
 
 export async function getMyProfile(db: Database, auth: AuthContext) {
@@ -521,6 +670,107 @@ export async function reactivateMember(
     .returning();
 
   return updated;
+}
+
+// ── Health Records (minor data protection) ────────────────
+
+/**
+ * Fetch the member (branch-scoped lookup) and assert the viewer has
+ * safeguarding access. Throws NotFound if the member doesn't exist or is out
+ * of the viewer's branch scope, Forbidden if access is denied.
+ */
+async function loadMemberForSafeguarding(
+  db: Database,
+  memberId: string,
+  auth: AuthContext,
+): Promise<SafeguardingSubject & { id: string }> {
+  // Resolve by id only — NOT filtered by the viewer's branch. Safeguarding
+  // access is branch-independent for a guardian, and scoped to the MEMBER's
+  // branch (not the viewer's) for a Safeguarding Lead; both are decided by
+  // hasSafeguardingAccess below. Pre-filtering on auth.branchId here would lock
+  // out a guardian whose active branch differs from their child's home branch.
+  const [member] = await db
+    .select({
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      memberType: members.memberType,
+      dateOfBirth: members.dateOfBirth,
+      guardianMemberId: members.guardianMemberId,
+    })
+    .from(members)
+    .where(and(eq(members.id, memberId), eq(members.isActive, true)));
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  const hasAccess = await hasSafeguardingAccess(db, auth, member);
+  if (!hasAccess) {
+    throw new ForbiddenError('You do not have safeguarding access to this member');
+  }
+
+  return member;
+}
+
+export async function getHealthRecord(
+  db: Database,
+  memberId: string,
+  auth: AuthContext,
+): Promise<MemberHealthRecord | null> {
+  await loadMemberForSafeguarding(db, memberId, auth);
+
+  const [record] = await db
+    .select()
+    .from(memberHealthRecords)
+    .where(and(eq(memberHealthRecords.memberId, memberId), eq(memberHealthRecords.isActive, true)));
+
+  return (record as MemberHealthRecord | undefined) ?? null;
+}
+
+export async function upsertHealthRecord(
+  db: Database,
+  memberId: string,
+  input: {
+    medicalConditions?: string | null;
+    allergies?: string | null;
+    medications?: string | null;
+    dietaryNeeds?: string | null;
+    additionalNotes?: string | null;
+    photoMediaConsent?: boolean | null;
+    medicalTreatmentConsent?: boolean | null;
+    dataProcessingConsent?: boolean | null;
+  },
+  auth: AuthContext,
+): Promise<MemberHealthRecord> {
+  const member = await loadMemberForSafeguarding(db, memberId, auth);
+
+  // Stamp consent provenance only when a consent flag is actually provided.
+  const consentProvided =
+    input.photoMediaConsent !== undefined ||
+    input.medicalTreatmentConsent !== undefined ||
+    input.dataProcessingConsent !== undefined;
+
+  const consentFields = consentProvided
+    ? { consentRecordedBy: auth.memberId, consentDate: sql`CURRENT_DATE` }
+    : {};
+
+  const [existing] = await db
+    .select({ id: memberHealthRecords.id })
+    .from(memberHealthRecords)
+    .where(eq(memberHealthRecords.memberId, memberId));
+
+  if (existing) {
+    const [updated] = await db
+      .update(memberHealthRecords)
+      .set({ ...input, ...consentFields, isActive: true, updatedAt: sql`NOW()` })
+      .where(eq(memberHealthRecords.memberId, memberId))
+      .returning();
+    return updated as MemberHealthRecord;
+  }
+
+  const [created] = await db
+    .insert(memberHealthRecords)
+    .values({ ...input, ...consentFields, memberId, branchId: member.homeBranchId })
+    .returning();
+  return created as MemberHealthRecord;
 }
 
 // ── CSV Import / Export ────────────────────────────────────

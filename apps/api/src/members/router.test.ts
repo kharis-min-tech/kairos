@@ -148,12 +148,17 @@ describe('GET /api/members/:id', () => {
     expect(res.status).toBe(200);
   });
 
-  it('should return 403 when member views another profile', async () => {
+  it('should return 403 when member views a profile in another branch', async () => {
+    // Target member lives in a different branch from the requesting member.
+    const otherBranchMember = { ...sampleMember, id: TEST_IDS.pastorId, homeBranchId: 'some-other-branch' };
+    const chain = chainTo([otherBranchMember]);
+    mockDb.select.mockReturnValueOnce(chain);
+
     const res = await app.request(`/api/members/${TEST_IDS.pastorId}`, {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
 
-    // ForbiddenError thrown by enforceMemberAccess
+    // Branch-scope gate in getMember rejects cross-branch reads.
     expect(res.status).toBe(403);
   });
 
@@ -239,6 +244,65 @@ describe('POST /api/members/:id/approve', () => {
     });
 
     expect(res.status).toBe(401);
+  });
+});
+
+// ── Health Records ─────────────────────────────────────────
+
+describe('GET /api/members/:id/health-record', () => {
+  it('returns 401 without auth', async () => {
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/health-record`);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns the record for an admin', async () => {
+    // select 1: member lookup (admin → no SG prefetch); select 2: record
+    mockDb.select
+      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([{ id: 'hr-1', memberId: TEST_IDS.memberId, medicalConditions: 'Asthma' }]));
+
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/health-record`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.medicalConditions).toBe('Asthma');
+  });
+
+  it('returns 403 when an unrelated in-branch member lacks safeguarding access', async () => {
+    // select 1: member lookup; select 2: SG-Lead branches → none
+    mockDb.select
+      .mockReturnValueOnce(chainTo([{ id: 'someone-else', homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([]));
+
+    const res = await app.request(`/api/members/someone-else/health-record`, {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('PUT /api/members/:id/health-record', () => {
+  it('upserts a record as admin and stamps consent', async () => {
+    // select 1: member lookup; select 2: existing record → none
+    mockDb.select
+      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([]));
+    mockDb.insert.mockReturnValueOnce(chainTo([{ id: 'hr-1', memberId: TEST_IDS.memberId, photoMediaConsent: true }]));
+
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/health-record`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ medicalConditions: 'Asthma', photoMediaConsent: true }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.photoMediaConsent).toBe(true);
   });
 });
 

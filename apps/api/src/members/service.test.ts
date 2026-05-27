@@ -109,6 +109,8 @@ import {
   exportMembersCsv,
   listRoles,
   switchActiveBranch,
+  getHealthRecord,
+  upsertHealthRecord,
 } from './service';
 
 // ── listMembers ───────────────────────────────────────────
@@ -147,7 +149,9 @@ describe('getMember', () => {
     expect(result.email).toBe('john@test.com');
   });
 
-  it('rejects access to other member profile', async () => {
+  it('rejects access to a member in another branch', async () => {
+    // otherAuth is a plain member in 'other-branch'; the target lives in branchId.
+    setupSelect([sampleMemberFull]);
     await expect(getMember(mockDb, memberId, otherAuth)).rejects.toThrow('You can only access your own profile');
   });
 
@@ -653,6 +657,294 @@ describe('switchActiveBranch', () => {
   it('throws NotFoundError when member does not exist', async () => {
     setupSelect([]);
     await expect(switchActiveBranch(mockDb, memberAuth, memberId))
+      .rejects.toThrow('Member not found');
+  });
+});
+
+// ── Minor data protection ─────────────────────────────────
+
+const otherBranchId = '220e8400-0000-0000-0000-000000000077';
+const guardianId = '440e8400-0000-0000-0000-000000000004';
+
+// A minor member living in `branchId`, with `guardianId` as their guardian.
+const minorMember = {
+  ...sampleMemberFull,
+  id: 'minor-1',
+  firstName: 'Tiny',
+  lastName: 'Tot',
+  dateOfBirth: '2016-01-01',
+  email: 'kid@test.com',
+  phone: '555000',
+  address: '1 Kid St',
+  city: 'Lagos',
+  postalCode: 'LG1',
+  emergencyContactName: 'Mum',
+  emergencyContactPhone: '555111',
+  emergencyContactRelationship: 'Parent',
+  homeBranchId: branchId,
+  branchName: 'Lagos Branch',
+  memberType: 'member',
+  guardianMemberId: guardianId,
+};
+
+// Auth contexts for the various viewers.
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
+const guardianAuth = { memberId: guardianId, email: 'guardian@test.com', systemRole: 'member' as const, branchId };
+const sgLeadSameBranchAuth = { memberId: '000-sg-same', email: 'sg-same@test.com', systemRole: 'leader' as const, branchId };
+// Physically present in `branchId` (so the detail read gate passes) but only
+// holds the Safeguarding Lead role in a DIFFERENT branch (otherBranchId).
+const sgLeadOtherBranchAuth = { memberId: '000-sg-other', email: 'sg-other@test.com', systemRole: 'leader' as const, branchId };
+
+describe('getMember — minor redaction', () => {
+  it('admin sees full minor record (not redacted)', async () => {
+    // select 1: member row; the viewer-capability prefetch is skipped for admin/pastor
+    setupSelect([minorMember]);
+    const result = await getMember(mockDb, 'minor-1', adminAuth);
+    expect(result.isMinor).toBe(true);
+    expect(result.redacted).toBe(false);
+    expect(result.dateOfBirth).toBe('2016-01-01');
+    expect(result.email).toBe('kid@test.com');
+  });
+
+  it('guardian sees their own child full record', async () => {
+    // select 1: member row; guardian match short-circuits capability lookup
+    setupSelect([minorMember]);
+    const result = await getMember(mockDb, 'minor-1', guardianAuth);
+    expect(result.redacted).toBe(false);
+    expect(result.phone).toBe('555000');
+    expect(result.emergencyContactName).toBe('Mum');
+  });
+
+  it('guardian active in a DIFFERENT branch still sees their own child full record', async () => {
+    // The guardian link is branch-independent — a guardian scoped to another
+    // branch must not be locked out of their own child's record.
+    const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
+    setupSelect([minorMember]); // guardian match short-circuits, no capability query
+    const result = await getMember(mockDb, 'minor-1', crossBranchGuardian);
+    expect(result.redacted).toBe(false);
+    expect(result.dateOfBirth).toBe('2016-01-01');
+    expect(result.emergencyContactName).toBe('Mum');
+  });
+
+  it('unrelated in-branch leader gets a REDACTED minor record', async () => {
+    // select 1: member row; select 2: viewer safeguarding-lead branches → none
+    setupSelectSequence([minorMember], []);
+    const result = await getMember(mockDb, 'minor-1', leaderAuth);
+    expect(result.isMinor).toBe(true);
+    expect(result.redacted).toBe(true);
+    expect(result.dateOfBirth).toBeNull();
+    expect(result.email).toBeNull();
+    expect(result.phone).toBeNull();
+    expect(result.address).toBeNull();
+    expect(result.city).toBeNull();
+    expect(result.postalCode).toBeNull();
+    expect(result.emergencyContactName).toBeNull();
+    expect(result.emergencyContactPhone).toBeNull();
+    expect(result.emergencyContactRelationship).toBeNull();
+    // Non-sensitive fields are kept
+    expect(result.firstName).toBe('Tiny');
+    expect(result.homeBranchId).toBe(branchId);
+    expect(result.photoUrl).toBeNull();
+  });
+
+  it('Safeguarding Lead in the member branch sees full record', async () => {
+    // select 1: member row; select 2: viewer holds SG-Lead in branchId
+    setupSelectSequence([minorMember], [{ branchId }]);
+    const result = await getMember(mockDb, 'minor-1', sgLeadSameBranchAuth);
+    expect(result.redacted).toBe(false);
+    expect(result.email).toBe('kid@test.com');
+  });
+
+  it('Safeguarding Lead in a DIFFERENT branch does NOT see full record', async () => {
+    // select 1: member row (in branchId); select 2: viewer holds SG-Lead only in otherBranchId
+    setupSelectSequence([minorMember], [{ branchId: otherBranchId }]);
+    const result = await getMember(mockDb, 'minor-1', sgLeadOtherBranchAuth);
+    expect(result.redacted).toBe(true);
+    expect(result.email).toBeNull();
+  });
+
+  it('admin sees a non-minor record unredacted', async () => {
+    const adult = { ...minorMember, dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelect([adult]);
+    const result = await getMember(mockDb, 'minor-1', adminAuth);
+    expect(result.isMinor).toBe(false);
+    expect(result.redacted).toBe(false);
+    expect(result.email).toBe('kid@test.com');
+  });
+
+  it('an unrelated in-branch leader CANNOT read an adult record (adult privacy preserved)', async () => {
+    // Adults keep the original strict gate: admin/pastor/self only. A general
+    // in-branch leader is forbidden — they must NOT see another adult's address
+    // or emergency contacts via the detail endpoint.
+    const adult = { ...minorMember, dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelect([adult]);
+    await expect(getMember(mockDb, 'minor-1', leaderAuth)).rejects.toThrow(
+      'You can only access your own profile',
+    );
+  });
+});
+
+describe('listMembers — minor redaction', () => {
+  it('redacts in-list minors for an unrelated in-branch leader', async () => {
+    const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01' };
+    // select 1: viewer SG-Lead branches → none; select 2: rows; select 3: count
+    setupSelectSequence([], [minorMember, adult], [{ count: 2 }]);
+    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const minorRow = result.data.find((m) => m.id === 'minor-1')!;
+    const adultRow = result.data.find((m) => m.id === 'adult-1')!;
+    expect(minorRow.isMinor).toBe(true);
+    expect(minorRow.redacted).toBe(true);
+    expect(minorRow.email).toBeNull();
+    expect(minorRow.phone).toBeNull();
+    expect(adultRow.isMinor).toBe(false);
+    expect(adultRow.redacted).toBe(false);
+    expect(adultRow.email).toBe('kid@test.com');
+  });
+
+  it('does not redact for a guardian viewing their own child in the list', async () => {
+    // guardian has no SG-Lead role; select 1: SG branches → none; select 2: rows; select 3: count
+    setupSelectSequence([], [minorMember], [{ count: 1 }]);
+    const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
+    const minorRow = result.data[0]!;
+    expect(minorRow.redacted).toBe(false);
+    expect(minorRow.email).toBe('kid@test.com');
+  });
+
+  it('admin sees all list rows unredacted without a capability prefetch', async () => {
+    setupSelectSequence([minorMember], [{ count: 1 }]);
+    const result = await listMembers(mockDb, adminAuth, { page: 1, limit: 20 });
+    expect(result.data[0]!.redacted).toBe(false);
+    expect(result.data[0]!.email).toBe('kid@test.com');
+  });
+});
+
+// ── Health Record ─────────────────────────────────────────
+
+const healthRecord = {
+  id: 'hr-1',
+  memberId: 'minor-1',
+  branchId,
+  medicalConditions: 'Asthma',
+  allergies: null,
+  medications: null,
+  dietaryNeeds: null,
+  additionalNotes: null,
+  photoMediaConsent: null,
+  medicalTreatmentConsent: null,
+  dataProcessingConsent: null,
+  consentRecordedBy: null,
+  consentDate: null,
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe('getHealthRecord', () => {
+  it('returns the record for a Safeguarding Lead in the member branch', async () => {
+    // select 1: member (id/homeBranchId/memberType/dob/guardian); select 2: SG branches; select 3: record
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [{ branchId }],
+      [healthRecord],
+    );
+    const result = await getHealthRecord(mockDb, 'minor-1', sgLeadSameBranchAuth);
+    expect(result).toEqual(healthRecord);
+  });
+
+  it('returns null when no record exists (admin)', async () => {
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [],
+    );
+    const result = await getHealthRecord(mockDb, 'minor-1', adminAuth);
+    expect(result).toBeNull();
+  });
+
+  it('throws NotFoundError for a missing member', async () => {
+    setupSelectSequence([]);
+    await expect(getHealthRecord(mockDb, 'minor-1', adminAuth))
+      .rejects.toThrow('Member not found');
+  });
+
+  it('throws ForbiddenError when the viewer lacks safeguarding access', async () => {
+    // member exists; viewer is a leader with no SG-Lead role
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [],
+    );
+    await expect(getHealthRecord(mockDb, 'minor-1', leaderAuth))
+      .rejects.toThrow('do not have safeguarding access');
+  });
+
+  it('allows the guardian to read their child record', async () => {
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [healthRecord],
+    );
+    const result = await getHealthRecord(mockDb, 'minor-1', guardianAuth);
+    expect(result).toEqual(healthRecord);
+  });
+
+  it('allows a guardian active in a DIFFERENT branch to read their child record', async () => {
+    // The member lookup is no longer pre-filtered by the viewer's branch, so a
+    // cross-branch guardian resolves the child and the guardian match grants access.
+    const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [healthRecord],
+    );
+    const result = await getHealthRecord(mockDb, 'minor-1', crossBranchGuardian);
+    expect(result).toEqual(healthRecord);
+  });
+});
+
+describe('upsertHealthRecord', () => {
+  it('inserts a new record when none exists and stamps consent', async () => {
+    // select 1: member; select 2: SG branches (admin → skipped, but harness tolerates); select 3: existing record → none
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [],
+    );
+    setupInsert([{ ...healthRecord, photoMediaConsent: true, consentRecordedBy: adminAuth.memberId }]);
+    const result = await upsertHealthRecord(
+      mockDb,
+      'minor-1',
+      { medicalConditions: 'Asthma', photoMediaConsent: true },
+      adminAuth,
+    );
+    expect(mockDb.insert).toHaveBeenCalled();
+    expect(result.consentRecordedBy).toBe(adminAuth.memberId);
+    expect(result.photoMediaConsent).toBe(true);
+  });
+
+  it('updates an existing record when present', async () => {
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [{ id: 'hr-1' }],
+    );
+    setupUpdate([{ ...healthRecord, medicalConditions: 'Peanut allergy' }]);
+    const result = await upsertHealthRecord(
+      mockDb,
+      'minor-1',
+      { medicalConditions: 'Peanut allergy' },
+      adminAuth,
+    );
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(result.medicalConditions).toBe('Peanut allergy');
+  });
+
+  it('throws ForbiddenError when the viewer lacks safeguarding access', async () => {
+    setupSelectSequence(
+      [{ id: 'minor-1', homeBranchId: branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: guardianId }],
+      [],
+    );
+    await expect(upsertHealthRecord(mockDb, 'minor-1', { medicalConditions: 'x' }, leaderAuth))
+      .rejects.toThrow('do not have safeguarding access');
+  });
+
+  it('throws NotFoundError for a missing member', async () => {
+    setupSelectSequence([]);
+    await expect(upsertHealthRecord(mockDb, 'minor-1', { medicalConditions: 'x' }, adminAuth))
       .rejects.toThrow('Member not found');
   });
 });

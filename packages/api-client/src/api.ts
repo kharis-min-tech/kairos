@@ -18,6 +18,10 @@ import type {
   ApproveMemberRequest,
   AssignRoleRequest,
   MemberListParams,
+  MemberWithBranchProtected,
+  MemberDetailProtected,
+  UpsertHealthRecordRequest,
+  HealthRecordResponse,
   CreateFellowshipRequest,
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
@@ -77,7 +81,6 @@ import type {
   Region,
   BranchLeadershipWithMember,
   Member,
-  MemberWithBranch,
   MemberRole,
   MemberRoleWithDetails,
   Fellowship,
@@ -193,10 +196,10 @@ export function createApiClient(
         if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
         if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
-        return client.get<ApiResponse<PaginatedResponse<MemberWithBranch>>>(`/api/members${query ? `?${query}` : ''}`);
+        return client.get<ApiResponse<PaginatedResponse<MemberWithBranchProtected>>>(`/api/members${query ? `?${query}` : ''}`);
       },
       get: (id: string) =>
-        client.get<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
+        client.get<ApiResponse<MemberDetailProtected>>(`/api/members/${encodeURIComponent(id)}`),
       update: (id: string, data: UpdateMemberRequest) =>
         client.patch<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`, data),
       approve: (id: string, data: ApproveMemberRequest) =>
@@ -217,6 +220,10 @@ export function createApiClient(
         client.get<ApiResponse<Member>>('/api/members/me'),
       switchActiveBranch: (id: string) =>
         client.patch<ApiResponse<SwitchActiveBranchResponse>>(`/api/members/${encodeURIComponent(id)}/active-branch`, {}),
+      getHealthRecord: (id: string) =>
+        client.get<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`),
+      upsertHealthRecord: (id: string, data: UpsertHealthRecordRequest) =>
+        client.put<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`, data),
       roles: {
         listAll: () =>
           client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),

@@ -6,9 +6,11 @@ import type { Database } from '@kairos/database';
 import { members } from '@kairos/database';
 import type { AuthContext, AuthTokens, LoginResponse, MemberProfile } from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
+import { isMinorMember } from '@kairos/types';
 import {
   NotFoundError,
   ConflictError,
+  ForbiddenError,
   UnauthorizedError,
   ValidationError,
   logger,
@@ -113,6 +115,14 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
     throw new ConflictError('A member with this email already exists');
   }
 
+  // Minors cannot self-register — a guardian registers them (e.g. via the
+  // first-timer form, which mints a 'child' shell). See U16 data-protection.
+  if (isMinorMember({ dateOfBirth: input.dateOfBirth })) {
+    throw new ForbiddenError(
+      'Registrants under 16 cannot create their own account. Please ask a parent or guardian to register on your behalf.',
+    );
+  }
+
   // Check for duplicate phone (among active members)
   if (input.phone) {
     const phoneExists = await db
@@ -208,6 +218,14 @@ export async function login(
 
   if (member.approvalStatus !== 'approved') {
     throw new ValidationError('Your account is pending approval by an administrator.');
+  }
+
+  // Minors (under-16 / memberType 'child') cannot sign in — a guardian manages
+  // their record on their behalf. See the U16 data-protection feature.
+  if (isMinorMember(member)) {
+    throw new ForbiddenError(
+      'This account belongs to a minor and cannot be used to sign in. A parent or guardian manages this record.',
+    );
   }
 
   const memberRole = member.systemRole as SystemRole;
