@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button, Input, Card, CardContent } from '@kairos/ui';
+import { Button, Input } from '@kairos/ui';
+import type { FormMemberSearchResult } from '@kairos/types';
 import { DateSelect } from '@/components/date-select';
-import { Search, X } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
-import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
+import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
+import { MemberSearchLink } from './member-search-link';
 
 const schema = z.object({
   todaysDate: z.string().min(1, 'Today’s date is required'),
@@ -28,8 +29,6 @@ export function AltarCallForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const [form, setForm] = useState({
     todaysDate: today(),
@@ -37,11 +36,6 @@ export function AltarCallForm() {
     lastName: '',
     phone: '',
   });
-
-  const { data: searchResults, isFetching: searching } = useFormMemberSearch(
-    { q: searchTerm, branchId: user?.homeBranchId },
-    { enabled: searchOpen && searchTerm.trim().length >= 2 },
-  );
 
   function set(field: keyof typeof form, value: string) {
     setForm((p) => ({ ...p, [field]: value }));
@@ -52,12 +46,7 @@ export function AltarCallForm() {
     });
   }
 
-  function selectExisting(r: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    phone: string | null;
-  }) {
+  function selectExisting(r: FormMemberSearchResult) {
     setSubjectMemberId(r.id);
     setForm((p) => ({
       ...p,
@@ -65,13 +54,11 @@ export function AltarCallForm() {
       lastName: r.lastName,
       phone: r.phone ?? '',
     }));
-    setSearchOpen(false);
-    setSearchTerm(`${r.firstName} ${r.lastName}`);
+    setErrors({});
   }
 
   function clearExisting() {
     setSubjectMemberId(undefined);
-    setSearchTerm('');
     setForm({ todaysDate: today(), firstName: '', lastName: '', phone: '' });
   }
 
@@ -100,7 +87,6 @@ export function AltarCallForm() {
   function reset() {
     setSubmitted(false);
     setSubjectMemberId(undefined);
-    setSearchTerm('');
     setErrors({});
     setForm({ todaysDate: today(), firstName: '', lastName: '', phone: '' });
   }
@@ -120,77 +106,12 @@ export function AltarCallForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
-        {/* Find existing person */}
-        <Card>
-          <CardContent className="space-y-3 py-5">
-            <FieldLabel htmlFor="member-search">Find an existing person</FieldLabel>
-            <p className="text-xs text-muted-foreground">
-              Search by name or phone. Leave blank to create a new contact.
-            </p>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="member-search"
-                className="pl-9 pr-9"
-                placeholder="Search by name or phone…"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setSearchOpen(true);
-                  if (subjectMemberId) setSubjectMemberId(undefined);
-                }}
-                onFocus={() => setSearchOpen(true)}
-              />
-              {(searchTerm || subjectMemberId) && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={clearExisting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {subjectMemberId ? (
-              <p className="text-xs font-medium text-[#16A34A]">
-                Linked to an existing person — submitting will enrol them.
-              </p>
-            ) : null}
-
-            {searchOpen && searchTerm.trim().length >= 2 && !subjectMemberId ? (
-              <div className="rounded-lg border border-input/15">
-                {searching ? (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
-                ) : searchResults && searchResults.length > 0 ? (
-                  <ul>
-                    {searchResults.map((r) => (
-                      <li key={r.id}>
-                        <button
-                          type="button"
-                          onClick={() => selectExisting(r)}
-                          className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-foreground/5"
-                        >
-                          <span className="font-medium text-foreground">
-                            {r.firstName} {r.lastName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {r.phone ?? 'No phone'} · {r.memberType}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">
-                    No matches — a new contact will be created.
-                  </p>
-                )}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+        <MemberSearchLink
+          value={subjectMemberId}
+          onSelect={selectExisting}
+          onClear={clearExisting}
+          linkedNote="Linked to an existing person — submitting will enrol them."
+        />
 
         <div className="space-y-2">
           <FieldLabel required>Today’s date</FieldLabel>
