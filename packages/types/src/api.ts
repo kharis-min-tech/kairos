@@ -259,6 +259,20 @@ export interface UpsertHealthRecordRequest {
 
 export type HealthRecordResponse = MemberHealthRecord | null;
 
+// ── Safeguarding review ────────────────────────────────────
+// An active minor whose guardian link is missing ('none') or points at a
+// deactivated member ('inactive') — surfaced for safeguarding follow-up.
+
+export interface UnguardedMinor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  branchName: string;
+  guardianStatus: 'none' | 'inactive';
+  guardianName: string | null;
+}
+
 // ── Fellowship ─────────────────────────────────────────────
 
 export interface CreateFellowshipRequest {

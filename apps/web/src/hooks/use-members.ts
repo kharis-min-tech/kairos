@@ -123,6 +123,25 @@ export function useUpsertMemberHealthRecord(id: string) {
   });
 }
 
+// ── Safeguarding review ────────────────────────────────────
+
+/**
+ * Lists active minors whose guardian is missing ('none') or deactivated
+ * ('inactive'), for safeguarding follow-up. The endpoint is gated server-side
+ * to admin/pastor or a branch Safeguarding Lead — a viewer without access gets
+ * a 403, which surfaces as `error`/`isError` so the page can render an access
+ * state rather than an empty list.
+ */
+export function useUnguardedMinors(branchId?: string) {
+  return useQuery({
+    queryKey: ['members', 'unguarded-minors', branchId ?? null],
+    queryFn: async () => {
+      const res = await api.members.listUnguardedMinors(branchId ? { branchId } : undefined);
+      return res.data!;
+    },
+  });
+}
+
 // ── Member Roles ───────────────────────────────────────────
 
 export function useAllRoles() {

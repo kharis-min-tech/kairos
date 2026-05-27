@@ -15,6 +15,7 @@ import {
   useRemoveRole,
   useMemberHealthRecord,
   useUpsertMemberHealthRecord,
+  useUnguardedMinors,
 } from './use-members';
 
 vi.mock('@/lib/api', () => ({
@@ -29,6 +30,7 @@ vi.mock('@/lib/api', () => ({
       create: vi.fn(),
       getHealthRecord: vi.fn(),
       upsertHealthRecord: vi.fn(),
+      listUnguardedMinors: vi.fn(),
       roles: {
         list: vi.fn(),
         assign: vi.fn(),
@@ -390,6 +392,58 @@ describe('useUpsertMemberHealthRecord', () => {
     await act(async () => {
       result.current.mutate({ medicalConditions: 'x' });
     });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Forbidden');
+  });
+});
+
+// ── useUnguardedMinors ─────────────────────────────────────
+
+const mockUnguardedMinor = {
+  id: 'minor-1',
+  firstName: 'Sam',
+  lastName: 'Young',
+  dateOfBirth: '2015-04-10',
+  branchName: 'Central',
+  guardianStatus: 'none',
+  guardianName: null,
+};
+
+describe('useUnguardedMinors', () => {
+  it('uses query key ["members", "unguarded-minors", null] and returns res.data', async () => {
+    vi.mocked(api.members.listUnguardedMinors).mockResolvedValue({ data: [mockUnguardedMinor] } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useUnguardedMinors(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.members.listUnguardedMinors).toHaveBeenCalledWith(undefined);
+    expect(result.current.data).toEqual([mockUnguardedMinor]);
+    expect(qc.getQueryData(['members', 'unguarded-minors', null])).toEqual([mockUnguardedMinor]);
+  });
+
+  it('keys by branchId and passes it through to the api', async () => {
+    vi.mocked(api.members.listUnguardedMinors).mockResolvedValue({ data: [] } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useUnguardedMinors('branch-9'), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.members.listUnguardedMinors).toHaveBeenCalledWith({ branchId: 'branch-9' });
+    expect(qc.getQueryData(['members', 'unguarded-minors', 'branch-9'])).toEqual([]);
+  });
+
+  it('exposes the error (e.g. 403) instead of swallowing it', async () => {
+    vi.mocked(api.members.listUnguardedMinors).mockRejectedValue(new Error('Forbidden'));
+
+    const { result } = renderHook(() => useUnguardedMinors(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.message).toBe('Forbidden');

@@ -22,6 +22,7 @@ import type {
   MemberDetailProtected,
   UpsertHealthRecordRequest,
   HealthRecordResponse,
+  UnguardedMinor,
   CreateFellowshipRequest,
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
@@ -224,6 +225,12 @@ export function createApiClient(
         client.get<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`),
       upsertHealthRecord: (id: string, data: UpsertHealthRecordRequest) =>
         client.put<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`, data),
+      listUnguardedMinors: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<UnguardedMinor[]>>(`/api/members/safeguarding/unguarded-minors${query ? `?${query}` : ''}`);
+      },
       roles: {
         listAll: () =>
           client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),
