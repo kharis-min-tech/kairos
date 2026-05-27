@@ -794,3 +794,23 @@ export interface FormSubmission extends BaseEntity {
   linkedEntityId: string | null;
   notes: string | null;
 }
+
+// ── Member Health Record ───────────────────────────────────
+// Sensitive, 1:1 with a member. Consent flags are nullable: null = not yet
+// recorded, distinct from an explicit true/false answer.
+
+export interface MemberHealthRecord extends BaseEntity {
+  memberId: string;
+  branchId: string;
+  medicalConditions: string | null;
+  allergies: string | null;
+  medications: string | null;
+  dietaryNeeds: string | null;
+  additionalNotes: string | null;
+  photoMediaConsent: boolean | null;
+  medicalTreatmentConsent: boolean | null;
+  dataProcessingConsent: boolean | null;
+  consentRecordedBy: string | null;
+  consentDate: string | null; // ISO date string
+  isActive: boolean;
+}

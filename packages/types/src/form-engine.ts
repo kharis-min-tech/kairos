@@ -116,7 +116,7 @@ function isCombinator(cond: FormConditionDef): cond is FormCombinatorCondition {
  * Compute whole years elapsed from an ISO-ish date string to `now`.
  * Returns `null` when the value is not a parseable date.
  */
-function ageInYears(value: unknown, now: Date): number | null {
+export function ageInYears(value: unknown, now: Date): number | null {
   if (typeof value !== 'string' && !(value instanceof Date)) return null;
   const dob = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(dob.getTime())) return null;

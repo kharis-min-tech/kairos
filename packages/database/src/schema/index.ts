@@ -29,3 +29,9 @@ export { rotaInstances, rotaInstancesRelations } from './rota-instances';
 export { rotaAssignments, rotaAssignmentsRelations } from './rota-assignments';
 export { rotaSwapRequests, rotaSwapRequestsRelations } from './rota-swap-requests';
 export { formSubmissions, formSubmissionsRelations } from './form-submissions';
+export {
+  memberHealthRecords,
+  memberHealthRecordsRelations,
+  type MemberHealthRecord,
+  type NewMemberHealthRecord,
+} from './member-health-records';

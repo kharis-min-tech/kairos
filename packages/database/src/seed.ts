@@ -14,6 +14,7 @@ import {
   members,
   roles,
   memberRoles,
+  memberHealthRecords,
   branchLeadership,
   fellowships,
   fellowshipMembers,
@@ -423,17 +424,47 @@ async function seed() {
     .returning();
   console.log(`✓ 17 members (1 admin, 4 pastors, 2 leaders, 5 regular, 3 multi-branch, 1 pending, 1 unverified)`);  // alexJohnson, amaBoateng, abenaOsei
 
+  // Minor (child) with a guardian link — exercises the under-16 data-protection
+  // feature. Emma Thompson (regular London member) is the guardian; she sees the
+  // full record via the guardian link, leaderSarah sees it via the Safeguarding
+  // Lead role (assigned below), and any other London member gets a redacted view.
+  // Children carry NOT-NULL email + passwordHash like any member shell, but are
+  // typed 'child' and blocked from logging in (see auth/service.ts).
+  const guardianEmma = regularMembers[0]!;
+  const [childLily] = await db
+    .insert(members)
+    .values({
+      firstName: 'Lily',
+      lastName: 'Thompson',
+      email: 'lily.thompson@temp.kairos.local',
+      gender: 'Female',
+      dateOfBirth: '2015-09-14', // ~10 years old → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: guardianEmma.id,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    })
+    .returning();
+  console.log(`✓ 1 minor (child) linked to a guardian`);
+
   // ── 4. Roles ────────────────────────────────────────────────
-  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole] = await db
+  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole] = await db
     .insert(roles)
     .values([
       { roleName: 'Worship Lead', description: 'Leads worship during services' },
       { roleName: 'Youth Coordinator', description: 'Coordinates youth programs and activities' },
       { roleName: 'Media Team', description: 'Handles audio/visual and online streaming' },
       { roleName: 'Welcome Team', description: 'Greets and assists visitors at services' },
+      {
+        roleName: 'Safeguarding Lead',
+        description: 'Authorised to view and manage safeguarding and health records for minors',
+      },
     ])
     .returning();
-  console.log(`✓ 4 roles`);
+  console.log(`✓ 5 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -757,8 +788,29 @@ async function seed() {
     { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id },
     { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id },
     { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id },
+    // Safeguarding Lead in London — grants full access to London minors' records.
+    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id },
   ]);
-  console.log(`✓ 4 member-role assignments`);
+  console.log(`✓ 5 member-role assignments`);
+
+  // ── 5b. Minor health record ─────────────────────────────────
+  // Health/safeguarding record for Lily (the seeded child). Visible only to
+  // admin/pastor, her guardian (Emma), and London Safeguarding Leads (Sarah).
+  await db.insert(memberHealthRecords).values({
+    memberId: childLily!.id,
+    branchId: london!.id,
+    medicalConditions: 'Mild asthma',
+    allergies: 'Peanuts, tree nuts',
+    medications: 'Salbutamol inhaler (as needed)',
+    dietaryNeeds: 'Nut-free meals only',
+    additionalNotes: 'Carries a reliever inhaler in her bag; notify guardian for any reaction.',
+    photoMediaConsent: true,
+    medicalTreatmentConsent: true,
+    dataProcessingConsent: false,
+    consentRecordedBy: pastorLondon!.id,
+    consentDate: '2026-01-15',
+  });
+  console.log(`✓ 1 minor health record`);
 
   // ── 6. Branch Leadership ────────────────────────────────────
   await db.insert(branchLeadership).values([
@@ -1130,6 +1182,12 @@ async function seed() {
   console.log('  Pastor:  yaw.kwarteng@kairos.local    (Kumasi)');
   console.log('  Pending: new.applicant@kairos.local   (London)');
   console.log('  Unverified: unverified@kairos.local   (London)');
+  console.log('');
+  console.log('Under-16 data-protection demo (minor: Lily Thompson, London):');
+  console.log('  • Lily is memberType "child" — she has NO login (login is blocked for minors).');
+  console.log('  • emma.thompson@kairos.local — guardian → sees Lily\'s full record + health.');
+  console.log('  • sarah.williams@kairos.local — Safeguarding Lead (London) → sees full record + health.');
+  console.log('  • Any other London member → sees Lily REDACTED (name only, no DOB/contact/health).');
 
   process.exit(0);
 }
