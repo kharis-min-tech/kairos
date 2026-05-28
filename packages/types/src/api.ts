@@ -330,11 +330,34 @@ export interface MemberDashboardStats {
     fellowshipName: string;
     fellowshipType: string;
   }[];
+  branchCount: number;
+  branches: {
+    branchId: string;
+    branchName: string;
+    isHome: boolean;
+  }[];
   recentAttendance: {
     total: number;
     present: number;
+    late: number;
+    absent: number;
     rate: number;
   };
+}
+
+export interface FellowshipDashboardStats {
+  totalBranches: number;
+  totalMembers: number;
+  totalFellowships: number;
+  attendanceRate: number;
+  attendanceBreakdown: {
+    present: number;
+    late: number;
+    absent: number;
+    excused: number;
+    total: number;
+  };
+  engagement: 'High' | 'Medium' | 'Low';
 }
 
 // ── Reports ────────────────────────────────────────────────

@@ -14,6 +14,7 @@ async function main() {
     console.log('⚠️  Dropping public schema and all its objects...');
     await sql`DROP SCHEMA public CASCADE`;
     await sql`CREATE SCHEMA public`;
+    await sql`DROP SCHEMA IF EXISTS drizzle CASCADE`;
     console.log('✅ Schema cleared. Run db:migrate to rebuild.');
   } finally {
     await sql.end();

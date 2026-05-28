@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
-import { getAdminStats, getBranchStats, getMemberStats } from './service';
+import { getAdminStats, getBranchStats, getMemberStats, getFellowshipStats } from './service';
 
 export const analyticsRouter = new Hono();
 
@@ -19,6 +19,13 @@ analyticsRouter.get('/admin', async (c) => {
 analyticsRouter.get('/branch', async (c) => {
   const auth = getAuth(c);
   const stats = await getBranchStats(db, auth);
+  return c.json(successResponse(stats));
+});
+
+// GET /api/analytics/fellowship — Fellowship stats (fellowship page summary)
+analyticsRouter.get('/fellowship', async (c) => {
+  const auth = getAuth(c);
+  const stats = await getFellowshipStats(db, auth);
   return c.json(successResponse(stats));
 });
 
