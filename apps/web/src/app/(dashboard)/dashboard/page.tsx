@@ -7,7 +7,8 @@ import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hoo
 import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
-import { useMemberGrowth, useAttendanceTrend, useFellowshipStats } from '@/hooks/use-reports';
+import { useMemberGrowth, useAttendanceTrend } from '@/hooks/use-reports';
+import { useAttendanceSummary, useAttendanceByBranch } from '@/hooks/use-attendance';
 import { useNewBelieversHealth, useEnrollments } from '@/hooks/use-new-believers';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -708,6 +709,73 @@ function QuickActions({ role }: { role: string }) {
   );
 }
 
+// ── Donut (shared by the service-attendance status + rate cards) ──
+
+function MissionDonut({ segments, colors, centerValue, centerLabel }: {
+  segments: { name: string; value: number }[];
+  colors: string[];
+  centerValue: string;
+  centerLabel: string;
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative aspect-square w-full max-w-[120px]">
+        <svg viewBox="0 0 120 120" className="h-full w-full">
+          {(() => {
+            const cx = 60, cy = 60, r = 48;
+            const circumference = 2 * Math.PI * r;
+            const gapDegrees = 8;
+            const totalGaps = segments.length * gapDegrees;
+            const availableDegrees = 360 - totalGaps;
+            let currentAngle = -90;
+            return segments.map((d, i) => {
+              const fraction = d.value / 100;
+              const segmentDegrees = fraction * availableDegrees;
+              const arcLength = (segmentDegrees / 360) * circumference;
+              const rotation = currentAngle;
+              currentAngle += segmentDegrees + gapDegrees;
+              return (
+                <circle
+                  key={i}
+                  cx={cx} cy={cy} r={r}
+                  fill="none"
+                  stroke={colors[i % colors.length]}
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray={`${arcLength} ${circumference}`}
+                  transform={`rotate(${rotation} ${cx} ${cy})`}
+                />
+              );
+            });
+          })()}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: '4px' }}>
+          <span className="text-xl font-bold text-foreground">{centerValue}</span>
+          <span className="text-[9px] text-muted-foreground text-center leading-tight font-medium">{centerLabel}</span>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+        {segments.map((d, i) => (
+          <div key={i} className="flex items-center gap-1.5">
+            <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+            <span className="text-[10px] text-muted-foreground">{d.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Map the by-branch report into the small bar chart shape (short code + label).
+function toBranchChart(rows?: { branchName: string; distinctAttendees: number; attendanceRate: number }[]) {
+  return (rows ?? []).map((b) => ({
+    name: b.branchName.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase() || b.branchName.slice(0, 3).toUpperCase(),
+    label: b.branchName,
+    count: b.distinctAttendees,
+    rate: Math.round(b.attendanceRate * 100),
+  }));
+}
+
 // ── Mission Control Reports (Admin) ────────────────────────
 
 function AdminMissionControlReports() {
@@ -716,50 +784,43 @@ function AdminMissionControlReports() {
   const { data: nbHealth } = useNewBelieversHealth();
   const { data: attendanceData } = useAttendanceTrend();
   const { data: adminData } = useAdminDashboard();
-  const { data: fellowshipStats } = useFellowshipStats();
+  const { data: attendanceSummary } = useAttendanceSummary();
+  const { data: branchAttendance } = useAttendanceByBranch();
 
   const totalMembers = adminData?.totalMembers ?? 0;
-  
+
   const avgAttendance = attendanceData?.length
     ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length)
     : 0;
 
-  // Use real attendance breakdown from API, fallback to avgAttendance calculation
-  const breakdown = fellowshipStats?.attendanceBreakdown;
-  const total = breakdown?.total ?? 0;
-  
-  let presentPct: number, latePct: number, absentPct: number;
-  
-  if (total > 0 && breakdown) {
-    // Use real data from database
-    presentPct = Math.round((breakdown.present / total) * 100);
-    latePct = Math.round((breakdown.late / total) * 100);
-    absentPct = Math.round((breakdown.absent / total) * 100);
-  } else {
-    // No attendance records — show zeros
-    presentPct = 0;
-    latePct = 0;
-    absentPct = 0;
-  }
+  // Service-attendance status split (Present/Late/Virtual) from the summary endpoint.
+  const statusBreakdown = attendanceSummary?.statusBreakdown;
+  const statusTotal = statusBreakdown?.total ?? 0;
+  const hasAttendanceData = statusTotal > 0;
+  const presentPct = hasAttendanceData ? Math.round((statusBreakdown!.present / statusTotal) * 100) : 0;
+  const latePct = hasAttendanceData ? Math.round((statusBreakdown!.late / statusTotal) * 100) : 0;
+  const virtualPct = hasAttendanceData ? Math.round((statusBreakdown!.virtual / statusTotal) * 100) : 0;
+  const statusSegments = hasAttendanceData
+    ? [
+        { name: `Present ${presentPct}%`, value: presentPct },
+        { name: `Late ${latePct}%`, value: latePct },
+        { name: `Virtual ${virtualPct}%`, value: virtualPct },
+      ]
+    : [{ name: 'No data', value: 100 }];
+  const statusColors = hasAttendanceData ? ['#16A34A', '#f8b537', '#5D3FD3'] : ['rgba(255,255,255,0.12)'];
 
-  const hasAttendanceData = total > 0;
-  const donutData = hasAttendanceData ? [
-    { name: `Present ${presentPct}%`, value: presentPct },
-    { name: `Late ${latePct}%`, value: latePct },
-    { name: `Absent ${absentPct}%`, value: absentPct },
-  ] : [
-    { name: 'No data', value: 100 },
+  // Second donut — attendance rate (distinct attendees ÷ active members).
+  const ratePct = attendanceSummary ? Math.round(attendanceSummary.rate.rate * 100) : 0;
+  const distinctAttendees = attendanceSummary?.rate.distinctAttendees ?? 0;
+  const activeForRate = attendanceSummary?.rate.activeMembers ?? 0;
+  const rateSegments = [
+    { name: `Attended ${ratePct}%`, value: ratePct },
+    { name: `Not yet ${100 - ratePct}%`, value: 100 - ratePct },
   ];
-  const DONUT = hasAttendanceData ? ['#6D28D9', '#10b981', '#f8b537'] : ['rgba(255,255,255,0.1)'];
+  const rateColors = ['#5D3FD3', 'rgba(255,255,255,0.12)'];
 
-  // Branch data — use actual branch names from members by approval
-  const branchData = [
-    { name: 'KLC', label: 'London Central', count: 6 },
-    { name: 'KEL', label: 'London East', count: 6 },
-    { name: 'KGA', label: 'Accra', count: 3 },
-    { name: 'KWT', label: 'Watford', count: 2 },
-    { name: 'KBR', label: 'Birmingham', count: 2 },
-  ];
+  // Real per-branch attendance for the branch bar (replaces the hardcoded placeholders).
+  const branchData = toBranchChart(branchAttendance);
 
   const engagementPct = avgAttendance;
   const engagementLabel = engagementPct >= 70 ? 'High' : engagementPct >= 40 ? 'Medium' : 'Low';
@@ -791,7 +852,7 @@ function AdminMissionControlReports() {
   return (
     <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
       <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3">
 
         {/* 1 — Membership Growth */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('growth')}>
@@ -815,74 +876,27 @@ function AdminMissionControlReports() {
           </div>
         </div>
 
-        {/* 2 — Service Attendance */}
+        {/* 2 — Service Attendance (Present/Late/Virtual split) */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Service Attendance</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">This Month</p>
-          <div className="flex flex-col items-center">
-            {/* SVG donut with gaps and rounded ends */}
-            <div className="relative flex-shrink-0" style={{ width: 120, height: 120 }}>
-              <svg width="120" height="120" viewBox="0 0 120 120">
-                {(() => {
-                  const cx = 60, cy = 60, r = 48;
-                  const circumference = 2 * Math.PI * r;
-                  const gapDegrees = 8; // gap between segments in degrees
-                  const totalGaps = donutData.length * gapDegrees;
-                  const availableDegrees = 360 - totalGaps;
-                  let currentAngle = -90;
-                  
-                  return donutData.map((d, i) => {
-                    const fraction = d.value / 100;
-                    const segmentDegrees = (fraction * availableDegrees);
-                    const arcLength = (segmentDegrees / 360) * circumference;
-                    const dashArray = `${arcLength} ${circumference}`;
-                    const rotation = currentAngle;
-                    currentAngle += segmentDegrees + gapDegrees;
-                    
-                    return (
-                      <circle
-                        key={i}
-                        cx={cx} cy={cy} r={r}
-                        fill="none"
-                        stroke={DONUT[i]}
-                        strokeWidth="12"
-                        strokeLinecap="round"
-                        strokeDasharray={dashArray}
-                        strokeDashoffset="0"
-                        transform={`rotate(${rotation} ${cx} ${cy})`}
-                        style={{
-                          animation: `drawCircle 1.5s ease-out forwards`,
-                          animationDelay: `${i * 0.2}s`,
-                          strokeDashoffset: circumference,
-                        }}
-                      />
-                    );
-                  });
-                })()}
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: '4px' }}>
-                <span className="text-xl font-bold text-foreground">{avgAttendance}%</span>
-                <span className="text-[9px] text-muted-foreground text-center leading-tight font-medium">Avg. Attendance</span>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-4">
-              {donutData.map((d, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: DONUT[i] }} />
-                  <span className="text-[10px] text-muted-foreground">{d.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-[10px] text-muted-foreground/70 mb-2">Last 30 Days</p>
+          <MissionDonut segments={statusSegments} colors={statusColors} centerValue={String(statusTotal)} centerLabel="Check-ins" />
         </div>
 
-        {/* 3 — Member Engagement */}
+        {/* 3 — Attendance Rate (distinct attendees ÷ active members) */}
+        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Rate</p>
+          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct vs Active</p>
+          <MissionDonut segments={rateSegments} colors={rateColors} centerValue={`${ratePct}%`} centerLabel={`${distinctAttendees}/${activeForRate} active`} />
+        </div>
+
+        {/* 4 — Member Engagement */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('engagement')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Member Engagement</p>
           <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
           <div className="flex flex-col items-center">
-            <div className="relative" style={{ width: 160, height: 90 }}>
-              <svg width="160" height="90" viewBox="0 0 160 90">
+            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
+              <svg viewBox="0 0 160 90" className="h-full w-full">
                 {/* Dark track */}
                 <path
                   d="M 16 80 A 64 64 0 0 1 144 80"
@@ -920,7 +934,7 @@ function AdminMissionControlReports() {
                 />
               </svg>
               {/* Label — centered vertically inside the arc */}
-              <div className="absolute inset-0 flex flex-col items-center" style={{ paddingTop: '30px' }}>
+              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
                 <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
                 <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
               </div>
@@ -938,23 +952,23 @@ function AdminMissionControlReports() {
           </div>
         </div>
 
-        {/* 4 — Membership by Branch */}
+        {/* 5 — Attendance by Branch */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('branch')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Membership by Branch</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Total Members</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance by Branch</p>
+          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct Attendees</p>
           <div className="h-[130px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={branchData} barSize={14} margin={{ top: 4, right: 4, bottom: 16, left: -18 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v, _, p) => [v, p.payload.label]} />
-                <Bar dataKey="count" fill="#6D28D9" radius={[3, 3, 0, 0]} />
+                <YAxis tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v, _, p) => [`${v} attendees (${p.payload.rate}%)`, p.payload.label]} />
+                <Bar dataKey="count" fill="#5D3FD3" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* 5 — New Believers Pipeline */}
+        {/* 6 — New Believers Pipeline */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('newBelievers')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">New Believers</p>
           <p className="text-[10px] text-muted-foreground/70 mb-2">Pipeline</p>
@@ -981,20 +995,20 @@ function AdminMissionControlReports() {
       </div>
 
       {/* Mission Evidence Dialog */}
-      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} absentPct={absentPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={branchData} nbHealth={nbHealth} />
+      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} virtualPct={virtualPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={branchData} nbHealth={nbHealth} />
     </div>
   );
 }
 
 // ── Mission Control Evidence Dialog (shared) ───────────────
 
-function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, latePct, absentPct, engagementLabel, totalMembers, branchData: _branchData, nbHealth }: {
+function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, latePct, virtualPct, engagementLabel, totalMembers, branchData: _branchData, nbHealth }: {
   type: 'growth' | 'attendance' | 'engagement' | 'branch' | 'newBelievers' | null;
   onClose: () => void;
   chartGrowth: { month: string; members: number }[];
   presentPct: number;
   latePct: number;
-  absentPct: number;
+  virtualPct: number;
   engagementLabel: string;
   totalMembers: number;
   branchData: { name: string; label: string; count: number }[];
@@ -1061,16 +1075,16 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
               <p className="text-xs text-muted-foreground">Service attendance breakdown (last 30 days)</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#6D28D9]">{presentPct}%</p>
+                  <p className="text-3xl font-bold text-[#16A34A]">{presentPct}%</p>
                   <p className="text-xs text-muted-foreground mt-1">Present</p>
                 </div>
                 <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#10b981]">{latePct}%</p>
+                  <p className="text-3xl font-bold text-[#f8b537]">{latePct}%</p>
                   <p className="text-xs text-muted-foreground mt-1">Late</p>
                 </div>
                 <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#f8b537]">{absentPct}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">Absent</p>
+                  <p className="text-3xl font-bold text-[#5D3FD3]">{virtualPct}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">Virtual</p>
                 </div>
               </div>
 
@@ -1363,40 +1377,40 @@ function BranchMissionControlReports() {
   const { data: growthData } = useMemberGrowth();
   const { data: attendanceData } = useAttendanceTrend();
   const { data: branchData } = useBranchDashboard();
-  const { data: fellowshipStats } = useFellowshipStats();
+  const { data: attendanceSummary } = useAttendanceSummary();
   const { data: nbHealth } = useNewBelieversHealth();
 
   const totalMembers = branchData?.totalMembers ?? 0;
-  
+
   const avgAttendance = attendanceData?.length
     ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length)
     : 0;
 
-  const breakdown = fellowshipStats?.attendanceBreakdown;
-  const total = breakdown?.total ?? 0;
-  
-  let presentPct: number, latePct: number, absentPct: number;
-  
-  if (total > 0 && breakdown) {
-    presentPct = Math.round((breakdown.present / total) * 100);
-    latePct = Math.round((breakdown.late / total) * 100);
-    absentPct = Math.round((breakdown.absent / total) * 100);
-  } else {
-    // No attendance records — show zeros
-    presentPct = 0;
-    latePct = 0;
-    absentPct = 0;
-  }
+  // Service-attendance status split (Present/Late/Virtual) for this branch.
+  const statusBreakdown = attendanceSummary?.statusBreakdown;
+  const statusTotal = statusBreakdown?.total ?? 0;
+  const hasAttendanceData = statusTotal > 0;
+  const presentPct = hasAttendanceData ? Math.round((statusBreakdown!.present / statusTotal) * 100) : 0;
+  const latePct = hasAttendanceData ? Math.round((statusBreakdown!.late / statusTotal) * 100) : 0;
+  const virtualPct = hasAttendanceData ? Math.round((statusBreakdown!.virtual / statusTotal) * 100) : 0;
+  const statusSegments = hasAttendanceData
+    ? [
+        { name: `Present ${presentPct}%`, value: presentPct },
+        { name: `Late ${latePct}%`, value: latePct },
+        { name: `Virtual ${virtualPct}%`, value: virtualPct },
+      ]
+    : [{ name: 'No data', value: 100 }];
+  const statusColors = hasAttendanceData ? ['#16A34A', '#f8b537', '#5D3FD3'] : ['rgba(255,255,255,0.12)'];
 
-  const hasAttendanceData = total > 0;
-  const donutData = hasAttendanceData ? [
-    { name: `Present ${presentPct}%`, value: presentPct },
-    { name: `Late ${latePct}%`, value: latePct },
-    { name: `Absent ${absentPct}%`, value: absentPct },
-  ] : [
-    { name: 'No data', value: 100 },
+  // Second donut — attendance rate (distinct attendees ÷ active members).
+  const ratePct = attendanceSummary ? Math.round(attendanceSummary.rate.rate * 100) : 0;
+  const distinctAttendees = attendanceSummary?.rate.distinctAttendees ?? 0;
+  const activeForRate = attendanceSummary?.rate.activeMembers ?? 0;
+  const rateSegments = [
+    { name: `Attended ${ratePct}%`, value: ratePct },
+    { name: `Not yet ${100 - ratePct}%`, value: 100 - ratePct },
   ];
-  const DONUT = hasAttendanceData ? ['#6D28D9', '#10b981', '#f8b537'] : ['rgba(255,255,255,0.1)'];
+  const rateColors = ['#5D3FD3', 'rgba(255,255,255,0.12)'];
 
   const engagementPct = avgAttendance;
   const engagementLabel = engagementPct >= 70 ? 'High' : engagementPct >= 40 ? 'Medium' : 'Low';
@@ -1423,7 +1437,7 @@ function BranchMissionControlReports() {
   return (
     <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
       <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3">
 
         {/* 1 — Membership Growth */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('growth')}>
@@ -1447,73 +1461,27 @@ function BranchMissionControlReports() {
           </div>
         </div>
 
-        {/* 2 — Service Attendance */}
+        {/* 2 — Service Attendance (Present/Late/Virtual split) */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Service Attendance</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">This Month</p>
-          <div className="flex flex-col items-center">
-            <div className="relative flex-shrink-0" style={{ width: 120, height: 120 }}>
-              <svg width="120" height="120" viewBox="0 0 120 120">
-                {(() => {
-                  const cx = 60, cy = 60, r = 48;
-                  const circumference = 2 * Math.PI * r;
-                  const gapDegrees = 8;
-                  const totalGaps = donutData.length * gapDegrees;
-                  const availableDegrees = 360 - totalGaps;
-                  let currentAngle = -90;
-                  
-                  return donutData.map((d, i) => {
-                    const fraction = d.value / 100;
-                    const segmentDegrees = (fraction * availableDegrees);
-                    const arcLength = (segmentDegrees / 360) * circumference;
-                    const dashArray = `${arcLength} ${circumference}`;
-                    const rotation = currentAngle;
-                    currentAngle += segmentDegrees + gapDegrees;
-                    
-                    return (
-                      <circle
-                        key={i}
-                        cx={cx} cy={cy} r={r}
-                        fill="none"
-                        stroke={DONUT[i]}
-                        strokeWidth="12"
-                        strokeLinecap="round"
-                        strokeDasharray={dashArray}
-                        strokeDashoffset="0"
-                        transform={`rotate(${rotation} ${cx} ${cy})`}
-                        style={{
-                          animation: `drawCircle 1.5s ease-out forwards`,
-                          animationDelay: `${i * 0.2}s`,
-                          strokeDashoffset: circumference,
-                        }}
-                      />
-                    );
-                  });
-                })()}
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: '4px' }}>
-                <span className="text-xl font-bold text-foreground">{avgAttendance}%</span>
-                <span className="text-[9px] text-muted-foreground text-center leading-tight font-medium">Avg. Attendance</span>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-4">
-              {donutData.map((d, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: DONUT[i] }} />
-                  <span className="text-[10px] text-muted-foreground">{d.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-[10px] text-muted-foreground/70 mb-2">Last 30 Days</p>
+          <MissionDonut segments={statusSegments} colors={statusColors} centerValue={String(statusTotal)} centerLabel="Check-ins" />
         </div>
 
-        {/* 3 — Member Engagement */}
+        {/* 3 — Attendance Rate (distinct attendees ÷ active members) */}
+        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Rate</p>
+          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct vs Active</p>
+          <MissionDonut segments={rateSegments} colors={rateColors} centerValue={`${ratePct}%`} centerLabel={`${distinctAttendees}/${activeForRate} active`} />
+        </div>
+
+        {/* 4 — Member Engagement */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('engagement')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Member Engagement</p>
           <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
           <div className="flex flex-col items-center">
-            <div className="relative" style={{ width: 160, height: 90 }}>
-              <svg width="160" height="90" viewBox="0 0 160 90">
+            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
+              <svg viewBox="0 0 160 90" className="h-full w-full">
                 <path
                   d="M 16 80 A 64 64 0 0 1 144 80"
                   fill="none"
@@ -1547,7 +1515,7 @@ function BranchMissionControlReports() {
                   }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center" style={{ paddingTop: '30px' }}>
+              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
                 <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
                 <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
               </div>
@@ -1565,7 +1533,7 @@ function BranchMissionControlReports() {
           </div>
         </div>
 
-        {/* 4 — New Believers Pipeline */}
+        {/* 5 — New Believers Pipeline */}
         <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('newBelievers')}>
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">New Believers</p>
           <p className="text-[10px] text-muted-foreground/70 mb-2">Pipeline</p>
@@ -1592,7 +1560,7 @@ function BranchMissionControlReports() {
       </div>
 
       {/* Branch Mission Evidence Dialog */}
-      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} absentPct={absentPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={[]} nbHealth={nbHealth} />
+      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} virtualPct={virtualPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={[]} nbHealth={nbHealth} />
     </div>
   );
 }
@@ -1647,7 +1615,7 @@ function MemberMissionControlReports() {
   return (
     <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
       <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
         {/* 1 — My Branches */}
         <div className="rounded-lg bg-muted p-3">
@@ -1697,8 +1665,8 @@ function MemberMissionControlReports() {
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Breakdown</p>
           <p className="text-[10px] text-muted-foreground/70 mb-2">This Period</p>
           <div className="flex flex-col items-center">
-            <div className="relative flex-shrink-0" style={{ width: 120, height: 120 }}>
-              <svg width="120" height="120" viewBox="0 0 120 120">
+            <div className="relative aspect-square w-full max-w-[120px]">
+              <svg viewBox="0 0 120 120" className="h-full w-full">
                 {(() => {
                   const cx = 60, cy = 60, r = 48;
                   const circumference = 2 * Math.PI * r;
@@ -1743,8 +1711,8 @@ function MemberMissionControlReports() {
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">My Engagement</p>
           <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
           <div className="flex flex-col items-center">
-            <div className="relative" style={{ width: 160, height: 90 }}>
-              <svg width="160" height="90" viewBox="0 0 160 90">
+            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
+              <svg viewBox="0 0 160 90" className="h-full w-full">
                 <path d="M 16 80 A 64 64 0 0 1 144 80" fill="none" stroke="hsl(var(--border))" strokeWidth="8" strokeLinecap="round" />
                 <path d="M 16 80 A 64 64 0 0 1 144 80" fill="none" stroke={engagementColor} strokeWidth="8" strokeLinecap="round"
                   opacity="0.75" strokeDasharray="201" strokeDashoffset="0"
@@ -1754,7 +1722,7 @@ function MemberMissionControlReports() {
                   style={{ animation: 'chartFadeIn 0.3s ease-out forwards', animationDelay: '1.5s', opacity: 0 }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center" style={{ paddingTop: '30px' }}>
+              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
                 <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
                 <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
               </div>
@@ -1833,15 +1801,17 @@ function MissionSummary({ role }: { role: string }) {
 
   return (
     <div className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-center gap-4 px-5 py-4">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#6D28D9]/20">
-          <svg className="h-5 w-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>
+      <div className="flex flex-col items-center gap-3 px-5 py-4 sm:flex-row sm:justify-center sm:gap-4">
+        <div className="flex items-center gap-3 sm:flex-shrink-0">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#6D28D9]/20">
+            <svg className="h-5 w-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Mission Summary</p>
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex-shrink-0">Mission Summary</p>
-        <div className="flex items-center gap-12">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:gap-12">
           {items.map((item, i) => (
             <React.Fragment key={i}>
-              {i > 0 && <div className="h-12 w-px bg-white/10" />}
+              {i > 0 && <div className="hidden h-12 w-px bg-white/10 sm:block" />}
               <div className="text-center">
                 <p className="text-2xl font-bold" style={{ color: item.color }}>{item.value}</p>
                 <p className="text-[10px] text-muted-foreground/70 mt-0.5">{item.label}</p>
