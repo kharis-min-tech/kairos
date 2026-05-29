@@ -15,6 +15,8 @@ import {
   roles,
   memberRoles,
   memberHealthRecords,
+  services,
+  serviceAttendance,
   branchLeadership,
   fellowships,
   fellowshipMembers,
@@ -853,6 +855,60 @@ async function seed() {
   });
   console.log(`✓ 1 minor health record`);
 
+  // ── 5c. Service attendance (Sunday/Special services, present-only) ──
+  // Present-only model: rows exist ONLY for attendees (Present/Late/Virtual);
+  // absence is inferred. London has 5 active 'member'-type people (Daniel, James,
+  // Sarah, Emma, Alex Johnson). We record some of them across 3 services so the
+  // reports demo: trends (multiple weeks), first-time visitor, and missing-members
+  // (Alex Johnson is never recorded → shows as missing).
+  const serviceDaysAgo = (n: number, hour = 10) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    d.setHours(hour, 0, 0, 0);
+    return d;
+  };
+
+  const [svcLastSunday, svcPrevSunday, svcWatchnight] = await db
+    .insert(services)
+    .values([
+      { branchId: london!.id, serviceDate: serviceDaysAgo(3), serviceType: 'Sunday', topic: 'Faith that moves mountains', preacherId: pastorLondon!.id, expectedAttendance: 120, createdBy: pastorLondon!.id },
+      { branchId: london!.id, serviceDate: serviceDaysAgo(10), serviceType: 'Sunday', topic: 'The Good Shepherd', preacherId: pastorLondon!.id, expectedAttendance: 120, createdBy: pastorLondon!.id },
+      { branchId: london!.id, serviceDate: serviceDaysAgo(17, 21), serviceType: 'Special', serviceTitle: 'Watchnight Service', topic: 'Crossing Over', preacherId: pastorLondon!.id, createdBy: pastorLondon!.id },
+    ])
+    .returning();
+
+  // First-time visitor captured at the most recent Sunday — minted as a visitor shell.
+  const [serviceVisitor] = await db
+    .insert(members)
+    .values({
+      firstName: 'Grace',
+      lastName: 'Newcomer',
+      email: 'grace.newcomer@temp.kairos.local',
+      homeBranchId: london!.id,
+      memberType: 'visitor',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    })
+    .returning();
+
+  await db.insert(serviceAttendance).values([
+    // Last Sunday: Emma + Sarah present, Daniel virtual, James late, plus a first-time visitor. (Alex absent → inferred.)
+    { serviceId: svcLastSunday!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: leaderSarah!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: admin!.id, attendanceStatus: 'Virtual', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: pastorLondon!.id, attendanceStatus: 'Late', arrivalTime: serviceDaysAgo(3, 11), recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: serviceVisitor!.id, attendanceStatus: 'Present', isFirstTimeVisitor: true, recordedBy: pastorLondon!.id },
+    // Previous Sunday: lighter turnout.
+    { serviceId: svcPrevSunday!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcPrevSunday!.id, memberId: admin!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    // Watchnight (Special): Sarah + Emma.
+    { serviceId: svcWatchnight!.id, memberId: leaderSarah!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcWatchnight!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+  ]);
+  console.log(`✓ 3 services + 9 attendance records (1 first-time visitor)`);
+
   // ── 6. Branch Leadership ────────────────────────────────────
   await db.insert(branchLeadership).values([
     { branchId: london!.id, memberId: pastorLondon!.id, role: 'Main Pastor', isCurrent: true },
@@ -1233,6 +1289,12 @@ async function seed() {
   console.log('  • Maya Bello     — child, verified+approved → demos the minor-login block:');
   console.log('      try logging in as maya.bello@kairos.local → refused ("belongs to a minor").');
   console.log('  • Deactivate Emma to make Lily show as "Guardian inactive" on the review page.');
+  console.log('');
+  console.log('Service attendance demo (London, 3 services):');
+  console.log('  • 2 Sundays + 1 Watchnight (Special). Present/Late/Virtual recorded; absence inferred.');
+  console.log('  • Grace Newcomer is a first-time visitor (visitor shell) at the last Sunday.');
+  console.log('  • Alex Johnson is never recorded → appears under Reports → missing members.');
+  console.log('  • As admin/pastor the create-service form lets you pick any branch.');
 
   process.exit(0);
 }
