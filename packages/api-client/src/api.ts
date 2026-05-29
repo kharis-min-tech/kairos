@@ -90,6 +90,8 @@ import type {
   MissingMembersParams,
   BranchAttendanceRate,
   BranchAttendanceParams,
+  AttendanceSummary,
+  AttendanceSummaryParams,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -1054,6 +1056,13 @@ export function createApiClient(
         if (params?.weeks) qs.set('weeks', String(params.weeks));
         const query = qs.toString();
         return client.get<ApiResponse<BranchAttendanceRate[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
+      },
+      summary: (params?: AttendanceSummaryParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<AttendanceSummary>>(`/api/attendance/reports/summary${query ? `?${query}` : ''}`);
       },
     },
   };
