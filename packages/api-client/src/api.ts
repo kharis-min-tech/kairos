@@ -72,6 +72,23 @@ import type {
   ListDormantProspectsParams,
   ArchiveProspectsRequest,
   ArchiveProspectsResult,
+  // Attendance
+  CreateServiceRequest,
+  UpdateServiceRequest,
+  ServiceListParams,
+  ServiceSummary,
+  ServiceWithDetail,
+  RosterParams,
+  RosterEntry,
+  RecordServiceAttendanceRequest,
+  RecordAttendanceResult,
+  ServiceAttendanceRow,
+  AttendanceTrendPoint,
+  AttendanceTrendsParams,
+  MissingMember,
+  MissingMembersParams,
+  BranchAttendanceRate,
+  BranchAttendanceParams,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -977,6 +994,63 @@ export function createApiClient(
         },
         archive: (data: ArchiveProspectsRequest) =>
           client.post<ApiResponse<ArchiveProspectsResult>>('/api/forms/prospects/archive', data),
+      },
+    },
+
+    attendance: {
+      listServices: (params?: ServiceListParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.type) qs.set('type', params.type);
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<ServiceSummary>>>(`/api/attendance/services${query ? `?${query}` : ''}`);
+      },
+      getService: (id: string) =>
+        client.get<ApiResponse<ServiceWithDetail>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+      createService: (data: CreateServiceRequest) =>
+        client.post<ApiResponse<ServiceSummary>>('/api/attendance/services', data),
+      updateService: (id: string, data: UpdateServiceRequest) =>
+        client.patch<ApiResponse<ServiceSummary>>(`/api/attendance/services/${encodeURIComponent(id)}`, data),
+      deleteService: (id: string) =>
+        client.delete<ApiResponse<ServiceSummary>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+
+      roster: (serviceId: string, params?: RosterParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.search) qs.set('search', params.search);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<RosterEntry>>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/roster${query ? `?${query}` : ''}`);
+      },
+      recordAttendance: (serviceId: string, data: RecordServiceAttendanceRequest) =>
+        client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
+      listAttendance: (serviceId: string) =>
+        client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
+
+      trends: (params?: AttendanceTrendsParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<AttendanceTrendPoint[]>>(`/api/attendance/reports/trends${query ? `?${query}` : ''}`);
+      },
+      missingMembers: (params?: MissingMembersParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.services) qs.set('services', String(params.services));
+        const query = qs.toString();
+        return client.get<ApiResponse<MissingMember[]>>(`/api/attendance/reports/missing-members${query ? `?${query}` : ''}`);
+      },
+      byBranch: (params?: BranchAttendanceParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<BranchAttendanceRate[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
       },
     },
   };
