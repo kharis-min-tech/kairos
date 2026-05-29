@@ -823,4 +823,25 @@ export interface BranchAttendanceParams {
   weeks?: number;
 }
 
+// Dashboard summary feeding the Mission Control donuts: present/late/virtual
+// status split + distinct-attendees ÷ active-members rate.
+export interface AttendanceSummary {
+  statusBreakdown: {
+    present: number;
+    late: number;
+    virtual: number;
+    total: number;
+  };
+  rate: {
+    distinctAttendees: number;
+    activeMembers: number;
+    rate: number;
+  };
+}
+
+export interface AttendanceSummaryParams {
+  branchId?: string;
+  weeks?: number;
+}
+
 export type { FormSubmission };
