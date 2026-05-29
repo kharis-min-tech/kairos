@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAdminStats, getBranchStats, getMemberStats } from './service';
+import { getAdminStats, getBranchStats, getMemberStats, getFellowshipStats } from './service';
 import type { AuthContext } from '@kairos/types';
 
 // ── Mock DB helper ─────────────────────────────────────────
@@ -121,5 +121,43 @@ describe('getMemberStats', () => {
     const result = await getMemberStats(mockDb, memberAuth);
     expect(result.fellowshipsJoined).toBe(0);
     expect(result.recentAttendance.rate).toBe(0);
+  });
+});
+
+// ── getFellowshipStats ─────────────────────────────────────
+// Selects in order: branchCount, memberCount, fellowshipCount (Promise.all),
+// then the attendance breakdown, then the recent-meeting count.
+
+describe('getFellowshipStats', () => {
+  it('aggregates counts + attendance rate and classifies engagement as High', async () => {
+    setupSelectSequence(
+      [{ value: 3 }],   // branchCount
+      [{ value: 150 }], // memberCount
+      [{ value: 20 }],  // fellowshipCount
+      [{ total: 100, present: 70, late: 10, absent: 15, excused: 5 }], // attendance breakdown
+      [{ value: 80 }],  // recent meetings (80 / 20 fellowships = 4/month)
+    );
+
+    const result = await getFellowshipStats(mockDb, adminAuth);
+    expect(result.totalBranches).toBe(3);
+    expect(result.totalMembers).toBe(150);
+    expect(result.totalFellowships).toBe(20);
+    expect(result.attendanceRate).toBe(70);
+    expect(result.attendanceBreakdown).toMatchObject({ present: 70, late: 10, absent: 15, excused: 5, total: 100 });
+    expect(result.engagement).toBe('High');
+  });
+
+  it('classifies engagement as Low when attendance and meeting frequency are poor', async () => {
+    setupSelectSequence(
+      [{ value: 3 }],
+      [{ value: 150 }],
+      [{ value: 20 }],
+      [{ total: 100, present: 40, late: 10, absent: 45, excused: 5 }], // 40% present
+      [{ value: 10 }], // 10 / 20 = 0.5 meetings/month
+    );
+
+    const result = await getFellowshipStats(mockDb, adminAuth);
+    expect(result.attendanceRate).toBe(40);
+    expect(result.engagement).toBe('Low');
   });
 });

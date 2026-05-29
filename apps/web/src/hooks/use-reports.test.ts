@@ -2,13 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useMemberGrowth, useAttendanceTrend } from './use-reports';
+import { useMemberGrowth, useAttendanceTrend, useFellowshipStats, useOutreachOverview, useOutreachAnalytics } from './use-reports';
 
 vi.mock('@/lib/api', () => ({
   api: {
     reports: {
       memberGrowth: vi.fn(),
       attendanceTrend: vi.fn(),
+    },
+    analytics: {
+      fellowshipStats: vi.fn(),
+    },
+    dashboard: {
+      overview: vi.fn(),
+      analytics: vi.fn(),
     },
   },
 }));
@@ -87,5 +94,46 @@ describe('useAttendanceTrend', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.message).toBe('Forbidden');
+  });
+});
+
+// ── useFellowshipStats / outreach hooks (added by PR #36, were untested) ──
+
+describe('useFellowshipStats', () => {
+  it('returns fellowship stats for any authenticated role', async () => {
+    const stats = { totalBranches: 3, totalMembers: 150, totalFellowships: 20, attendanceRate: 70, attendanceBreakdown: { present: 70, late: 10, absent: 15, excused: 5, total: 100 }, engagement: 'High' };
+    vi.mocked(api.analytics.fellowshipStats).mockResolvedValue({ data: stats } as never);
+
+    const { result } = renderHook(() => useFellowshipStats(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.analytics.fellowshipStats).toHaveBeenCalled();
+    expect(result.current.data?.engagement).toBe('High');
+  });
+});
+
+describe('useOutreachOverview', () => {
+  it('returns the souls RAG overview', async () => {
+    const overview = { totalSouls: 42, ragCounts: { RED: 5, AMBER: 12, GREEN: 25 }, statusCounts: {}, criticalCount: 5, monitorCount: 12, allGoodCount: 25 };
+    vi.mocked(api.dashboard.overview).mockResolvedValue({ data: overview } as never);
+
+    const { result } = renderHook(() => useOutreachOverview(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.dashboard.overview).toHaveBeenCalled();
+    expect(result.current.data?.totalSouls).toBe(42);
+  });
+});
+
+describe('useOutreachAnalytics', () => {
+  it('returns the outreach conversion analytics', async () => {
+    const analytics = { overview: { totalSouls: 42, converted: 10, conversionRate: 24, avgDaysToConversion: 30, activeFollowUps: 8 }, conversionFunnel: {}, statusDistribution: {}, responseRates: [] };
+    vi.mocked(api.dashboard.analytics).mockResolvedValue({ data: analytics } as never);
+
+    const { result } = renderHook(() => useOutreachAnalytics(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.dashboard.analytics).toHaveBeenCalled();
+    expect(result.current.data?.overview.converted).toBe(10);
   });
 });
