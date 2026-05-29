@@ -11,6 +11,7 @@ import type {
   AttendanceTrendsParams,
   MissingMembersParams,
   BranchAttendanceParams,
+  AttendanceSummaryParams,
 } from '@kairos/types';
 
 // ── Service queries ────────────────────────────────────────
@@ -89,6 +90,16 @@ export function useAttendanceByBranch(params?: BranchAttendanceParams) {
     queryKey: ['attendance', 'by-branch', params],
     queryFn: async () => {
       const res = await api.attendance.byBranch(params);
+      return res.data!;
+    },
+  });
+}
+
+export function useAttendanceSummary(params?: AttendanceSummaryParams) {
+  return useQuery({
+    queryKey: ['attendance', 'summary', params],
+    queryFn: async () => {
+      const res = await api.attendance.summary(params);
       return res.data!;
     },
   });

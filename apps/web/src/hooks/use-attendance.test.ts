@@ -9,6 +9,7 @@ import {
   useAttendanceTrends,
   useMissingMembers,
   useAttendanceByBranch,
+  useAttendanceSummary,
   useCreateService,
   useUpdateService,
   useDeleteService,
@@ -29,6 +30,7 @@ vi.mock('@/lib/api', () => ({
       trends: vi.fn(),
       missingMembers: vi.fn(),
       byBranch: vi.fn(),
+      summary: vi.fn(),
     },
   },
 }));
@@ -128,6 +130,21 @@ describe('report queries', () => {
     const { result } = renderHook(() => useAttendanceByBranch(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.attendance.byBranch).toHaveBeenCalled();
+  });
+
+  it('useAttendanceSummary returns the status split + rate', async () => {
+    vi.mocked(api.attendance.summary).mockResolvedValue({
+      data: {
+        statusBreakdown: { present: 8, late: 1, virtual: 1, total: 10 },
+        rate: { distinctAttendees: 8, activeMembers: 12, rate: 0.667 },
+      },
+    } as never);
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAttendanceSummary({ weeks: 4 }), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.attendance.summary).toHaveBeenCalledWith({ weeks: 4 });
+    expect(result.current.data?.statusBreakdown.total).toBe(10);
+    expect(result.current.data?.rate.rate).toBe(0.667);
   });
 });
 
