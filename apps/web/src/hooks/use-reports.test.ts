@@ -13,6 +13,16 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// member-growth and attendance-trend hooks only fire when the active role is
+// admin or pastor — drive that via a controllable auth-store mock.
+let mockActiveRole: string | null = 'admin';
+vi.mock('@/lib/auth-store', () => ({
+  useAuthStore: (selector?: (s: { activeRole: string | null }) => unknown) => {
+    const state = { activeRole: mockActiveRole };
+    return selector ? selector(state) : state;
+  },
+}));
+
 import { api } from '@/lib/api';
 
 function createWrapper() {
@@ -23,6 +33,7 @@ function createWrapper() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockActiveRole = 'admin';
 });
 
 // ── useMemberGrowth ────────────────────────────────────────
