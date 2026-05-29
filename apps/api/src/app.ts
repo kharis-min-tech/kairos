@@ -14,6 +14,7 @@ import outreachRouter from './outreach/router';
 import soulsRouter from './outreach/souls-router';
 import { meRouter } from './me/router';
 import { formsRouter } from './forms/router';
+import { attendanceRouter } from './attendance/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -59,6 +60,7 @@ export function createApp() {
   app.route('/api/souls', soulsRouter);
   app.route('/api/me', meRouter);
   app.route('/api/forms', formsRouter);
+  app.route('/api/attendance', attendanceRouter);
 
   // Error handler
   app.onError(errorHandler);
