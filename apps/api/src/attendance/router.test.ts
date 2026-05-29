@@ -14,6 +14,7 @@ const svc = {
   getAttendanceTrends: vi.fn(),
   getMissingMembers: vi.fn(),
   getAttendanceByBranch: vi.fn(),
+  getAttendanceSummary: vi.fn(),
 };
 
 vi.mock('./service', () => svc);
@@ -264,5 +265,18 @@ describe('reports', () => {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.status).toBe(200);
+  });
+
+  it('GET /reports/summary is allowed for a plain member (dashboard donuts)', async () => {
+    svc.getAttendanceSummary.mockResolvedValue({
+      statusBreakdown: { present: 8, late: 1, virtual: 1, total: 10 },
+      rate: { distinctAttendees: 8, activeMembers: 12, rate: 0.667 },
+    });
+    const res = await app.request('/api/attendance/reports/summary?weeks=4', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data.statusBreakdown.total).toBe(10);
   });
 });

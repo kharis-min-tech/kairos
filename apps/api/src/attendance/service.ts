@@ -616,3 +616,57 @@ export async function getAttendanceByBranch(
     };
   });
 }
+
+// Dashboard summary feeding the two Mission Control donuts: the Present/Late/
+// Virtual status split and the distinct-attendees ÷ active-members rate.
+// Readable by any authenticated role and branch-scoped — admin sees all branches
+// (or query.branchId), everyone else (pastor/leader/member) is pinned to their
+// own branch — so it's safe to surface on the member dashboard.
+export async function getAttendanceSummary(
+  db: Database,
+  auth: AuthContext,
+  query: { branchId?: string; weeks: number },
+) {
+  const scopeBranchId = auth.systemRole === 'admin' ? query.branchId : auth.branchId;
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const serviceConditions = [eq(services.isActive, true), gte(services.serviceDate, since)];
+  if (scopeBranchId) serviceConditions.push(eq(services.branchId, scopeBranchId));
+
+  // 1) Status split (Present/Late/Virtual) — one row per status.
+  const statusRows = await db
+    .select({ status: serviceAttendance.attendanceStatus, value: count() })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(and(...serviceConditions))
+    .groupBy(serviceAttendance.attendanceStatus);
+  const statusMap = new Map(statusRows.map((r) => [r.status, Number(r.value)]));
+  const present = statusMap.get('Present') ?? 0;
+  const late = statusMap.get('Late') ?? 0;
+  const virtual = statusMap.get('Virtual') ?? 0;
+
+  // 2) Distinct attendees over the window (rate numerator).
+  const distinctRows = await db
+    .select({ value: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})` })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(and(...serviceConditions));
+  const distinctAttendees = Number(distinctRows[0]?.value ?? 0);
+
+  // 3) Active 'member'-type count in scope (rate denominator).
+  const activeConditions = [eq(members.isActive, true), eq(members.memberType, 'member')];
+  if (scopeBranchId) activeConditions.push(eq(members.homeBranchId, scopeBranchId));
+  const activeRows = await db.select({ value: count() }).from(members).where(and(...activeConditions));
+  const activeMembers = Number(activeRows[0]?.value ?? 0);
+
+  const rate = activeMembers > 0 ? Math.min(1, distinctAttendees / activeMembers) : 0;
+
+  return {
+    statusBreakdown: { present, late, virtual, total: present + late + virtual },
+    rate: {
+      distinctAttendees,
+      activeMembers,
+      rate: Math.round(rate * 1000) / 1000,
+    },
+  };
+}

@@ -108,3 +108,8 @@ export const byBranchQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   weeks: z.coerce.number().int().positive().max(52).default(4),
 });
+
+export const summaryQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
+  weeks: z.coerce.number().int().positive().max(52).default(4),
+});

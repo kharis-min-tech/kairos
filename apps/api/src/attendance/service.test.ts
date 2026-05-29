@@ -95,6 +95,7 @@ import {
   listAttendance,
   getMissingMembers,
   getAttendanceByBranch,
+  getAttendanceSummary,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -447,5 +448,51 @@ describe('getAttendanceByBranch', () => {
     setupSelectSequence([]); // branchRows empty → early return
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
     expect(result).toEqual([]);
+  });
+});
+
+// ── getAttendanceSummary ──────────────────────────────────
+// Three queries merged: (1) status split, (2) distinct attendees, (3) active members.
+
+describe('getAttendanceSummary', () => {
+  it('merges the status split and the distinct/active rate', async () => {
+    setupSelectSequence(
+      [{ status: 'Present', value: 10 }, { status: 'Late', value: 3 }, { status: 'Virtual', value: 2 }],
+      [{ value: 12 }], // distinct attendees
+      [{ value: 20 }], // active members
+    );
+
+    const result = await getAttendanceSummary(mockDb, adminAuth, { weeks: 4 });
+
+    expect(result.statusBreakdown).toEqual({ present: 10, late: 3, virtual: 2, total: 15 });
+    expect(result.rate).toEqual({ distinctAttendees: 12, activeMembers: 20, rate: 0.6 });
+  });
+
+  it('caps the rate at 1.0 when attendees exceed active members', async () => {
+    setupSelectSequence(
+      [{ status: 'Present', value: 5 }],
+      [{ value: 5 }],
+      [{ value: 4 }],
+    );
+    const result = await getAttendanceSummary(mockDb, adminAuth, { weeks: 4 });
+    expect(result.rate.rate).toBe(1);
+    expect(result.statusBreakdown).toEqual({ present: 5, late: 0, virtual: 0, total: 5 });
+  });
+
+  it('reports zeros when there are no records or active members', async () => {
+    setupSelectSequence([], [{ value: 0 }], [{ value: 0 }]);
+    const result = await getAttendanceSummary(mockDb, adminAuth, { weeks: 4 });
+    expect(result.statusBreakdown).toEqual({ present: 0, late: 0, virtual: 0, total: 0 });
+    expect(result.rate.rate).toBe(0);
+  });
+
+  it('is readable by a plain member (branch-scoped, no throw)', async () => {
+    setupSelectSequence(
+      [{ status: 'Present', value: 1 }],
+      [{ value: 1 }],
+      [{ value: 2 }],
+    );
+    const result = await getAttendanceSummary(mockDb, memberAuth, { weeks: 4 });
+    expect(result.rate.rate).toBe(0.5);
   });
 });

@@ -12,6 +12,7 @@ import {
   trendsQuerySchema,
   missingMembersQuerySchema,
   byBranchQuerySchema,
+  summaryQuerySchema,
 } from './schemas';
 import {
   createService,
@@ -25,6 +26,7 @@ import {
   getAttendanceTrends,
   getMissingMembers,
   getAttendanceByBranch,
+  getAttendanceSummary,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -62,6 +64,18 @@ attendanceRouter.get(
   async (c) => {
     const auth = getAuth(c);
     const result = await getAttendanceByBranch(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+// Dashboard summary — readable by any authenticated role (branch-scoped in the
+// service for non-admins), so the member dashboard can show it.
+attendanceRouter.get(
+  '/reports/summary',
+  zValidator('query', summaryQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getAttendanceSummary(db, auth, c.req.valid('query'));
     return c.json(successResponse(result));
   },
 );
