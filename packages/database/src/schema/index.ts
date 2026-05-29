@@ -35,3 +35,15 @@ export {
   type MemberHealthRecord,
   type NewMemberHealthRecord,
 } from './member-health-records';
+export {
+  services,
+  servicesRelations,
+  type Service,
+  type NewService,
+} from './services';
+export {
+  serviceAttendance,
+  serviceAttendanceRelations,
+  type ServiceAttendance,
+  type NewServiceAttendance,
+} from './service-attendance';
