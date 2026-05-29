@@ -1,0 +1,79 @@
+'use client';
+
+import { use } from 'react';
+import Link from 'next/link';
+import { ChevronLeft, Users } from 'lucide-react';
+import { Card, CardContent, cn } from '@kairos/ui';
+import { useService } from '@/hooks/use-attendance';
+import { formatShortDate } from '@/lib/date-format';
+import { ServiceType } from '@kairos/types';
+import { CheckInPanel } from '../_components/check-in-panel';
+
+const TYPE_BADGE: Record<string, string> = {
+  [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+  [ServiceType.Midweek]: 'bg-[#16A34A]/15 text-[#16A34A]',
+  [ServiceType.Special]: 'bg-[#f8b537]/20 text-[#a07720] dark:text-[#f8b537]',
+};
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+export default function CheckInPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { data: service, isLoading, isError, error } = useService(id);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Link
+        href="/attendance"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to services
+      </Link>
+
+      {isLoading ? (
+        <div className="h-24 animate-pulse rounded-xl bg-foreground/5" />
+      ) : isError ? (
+        <div className="rounded-lg bg-[#dc2626]/10 px-4 py-3 text-sm text-[#dc2626]">
+          {error instanceof Error ? error.message : 'Could not load this service.'}
+        </div>
+      ) : service ? (
+        <>
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                      TYPE_BADGE[service.serviceType],
+                    )}
+                  >
+                    {service.serviceType}
+                  </span>
+                  <h1 className="text-xl font-bold text-foreground">
+                    {service.serviceTitle || `${service.serviceType} Service`}
+                  </h1>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatShortDate(service.serviceDate)} · {formatTime(service.serviceDate)}
+                  {service.preacherName ? ` · ${service.preacherName}` : ''}
+                  {service.topic ? ` · ${service.topic}` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-lg bg-foreground/[0.04] px-3 py-2 text-sm">
+                <Users className="h-4 w-4 text-[#5D3FD3]" />
+                <span className="font-semibold text-foreground">{service.recordedCount}</span>
+                <span className="text-muted-foreground">recorded</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <CheckInPanel serviceId={id} />
+        </>
+      ) : null}
+    </div>
+  );
+}
