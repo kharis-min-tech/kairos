@@ -360,7 +360,8 @@ export async function listPrograms(
           .where(
             and(
               inArray(members.homeBranchId, branchIds),
-              eq(members.isActive, true)
+              eq(members.isActive, true),
+              eq(members.memberType, 'member')
             )
           )
           .groupBy(members.homeBranchId);
@@ -373,7 +374,7 @@ export async function listPrograms(
           const [totalAllBranches] = await db
             .select({ count: count() })
             .from(members)
-            .where(eq(members.isActive, true));
+            .where(and(eq(members.isActive, true), eq(members.memberType, 'member')));
           
           totalMembersAllBranches = totalAllBranches?.count || 0;
         }

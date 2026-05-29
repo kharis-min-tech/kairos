@@ -279,7 +279,21 @@ export async function createEnrollment(
 ) {
   enforceAdminOrPastor(auth);
   enforceBranchScope(auth, data.branchId);
+  return createEnrollmentInternal(db, data);
+}
 
+/**
+ * Gate-free enrollment core. Applies the domain rules (no teacher/mentor self-enrol,
+ * no duplicate active enrollment) and creates the row, but performs NO authz check.
+ * `createEnrollment` is the role-gated public entry point; internal callers that have
+ * already authorized the action by other means (e.g. the open-to-all-members altar-call
+ * form flow, which is branch-scoped at the submission boundary) call this directly
+ * instead of spoofing an admin auth context.
+ */
+export async function createEnrollmentInternal(
+  db: Database,
+  data: { memberId: string; branchId: string; teacherId?: string; mentorId?: string; notes?: string }
+) {
   // Block enrolling a teacher as a student in the same branch
   const memberIsTeacher = await isNewBelieverTeacher(db, data.memberId, data.branchId);
   if (memberIsTeacher) {

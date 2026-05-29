@@ -19,6 +19,9 @@ export default function MembersPage() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
   const isPastor = activeRole === 'pastor';
+  // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
+  // the page itself enforces real access via the API (403 for unauthorized leaders).
+  const canSeeSafeguarding = isAdmin || isPastor || activeRole === 'leader';
   const [params, setParams] = useState<MemberListParams>({
     page: 1,
     limit: 20,
@@ -109,6 +112,11 @@ export default function MembersPage() {
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exportLoading}>
               {exportLoading ? 'Exporting…' : 'Export CSV'}
             </Button>
+          )}
+          {canSeeSafeguarding && (
+            <Link href="/members/safeguarding">
+              <Button variant="outline" size="sm">Safeguarding review</Button>
+            </Link>
           )}
           {isAdmin && (
             <Link href="/members/approval">

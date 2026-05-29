@@ -20,7 +20,10 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
 
   const [[branchCount], [memberCount], [fellowshipCount]] = await Promise.all([
     db.select({ value: count() }).from(branches).where(eq(branches.isActive, true)),
-    db.select({ value: count() }).from(members).where(eq(members.isActive, true)),
+    db
+      .select({ value: count() })
+      .from(members)
+      .where(and(eq(members.isActive, true), eq(members.memberType, 'member'))),
     db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
   ]);
 
@@ -31,7 +34,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
       count: count(),
     })
     .from(members)
-    .where(eq(members.isActive, true))
+    .where(and(eq(members.isActive, true), eq(members.memberType, 'member')))
     .groupBy(members.approvalStatus);
 
   // Fellowships by type
@@ -62,7 +65,13 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
     db
       .select({ value: count() })
       .from(members)
-      .where(and(eq(members.homeBranchId, branchId), eq(members.isActive, true))),
+      .where(
+        and(
+          eq(members.homeBranchId, branchId),
+          eq(members.isActive, true),
+          eq(members.memberType, 'member'),
+        ),
+      ),
     db
       .select({ value: count() })
       .from(fellowships)
@@ -88,6 +97,7 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
         eq(members.homeBranchId, branchId),
         eq(members.approvalStatus, 'pending'),
         eq(members.isActive, true),
+        eq(members.memberType, 'member'),
       ),
     );
 

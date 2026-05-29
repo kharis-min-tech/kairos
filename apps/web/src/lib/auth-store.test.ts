@@ -28,6 +28,8 @@ const mockMember: Member = {
   emergencyContactRelationship: null,
   approvalStatus: 'approved',
   systemRole: 'member',
+  memberType: 'member',
+  guardianMemberId: null,
   emailVerified: true,
   mustChangePassword: false,
   createdAt: new Date(),

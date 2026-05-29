@@ -127,7 +127,7 @@ function getNextMeetingDate(schedule: string): string | null {
   // Extract time
   const timeMatch = schedule.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
   let timeStr = '';
-  if (timeMatch && timeMatch[1] && timeMatch[2] && timeMatch[3]) {
+  if (timeMatch) {
     const hours = parseInt(timeMatch[1]);
     const mins = timeMatch[2];
     const ampm = timeMatch[3].toUpperCase();
@@ -444,8 +444,8 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     const { fellowshipName, meetingSchedule, fellowshipType, branchName } = focusedFellowship;
 
     // Try to get coordinates: first from fellowship data, then from branch lookup
-    const lat = (focusedFellowship as unknown as Record<string, unknown>).latitude as number | undefined;
-    const lng = (focusedFellowship as unknown as Record<string, unknown>).longitude as number | undefined;
+    const lat = (focusedFellowship as Record<string, unknown>).latitude as number | undefined;
+    const lng = (focusedFellowship as Record<string, unknown>).longitude as number | undefined;
     const coords = (lat && lng)
       ? [lat, lng] as [number, number]
       : branchName && BRANCH_LOCATIONS[branchName]
@@ -501,6 +501,58 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
   }, []);
+
+  // ── Add fellowship markers ─────────────────────────────
+
+  const addFellowshipMarkers = useCallback((country?: CountryData) => {
+    clearMarkers();
+    if (!mapRef.current) return;
+
+    const filtered = country
+      ? fellowships.filter((f) => f.country === country.name && f.latitude && f.longitude)
+      : fellowships.filter((f) => f.latitude && f.longitude);
+
+    filtered.forEach((fellowship) => {
+      const color = TYPE_COLORS[fellowship.fellowshipType] || '#6366f1';
+
+      const icon = L.divIcon({
+        className: 'fellowship-marker-icon',
+        html: `
+          <div style="
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: ${color};
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+          ">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      });
+
+      const marker = L.marker([fellowship.latitude!, fellowship.longitude!], { icon })
+        .addTo(mapRef.current!)
+        .on('click', () => selectFellowship(fellowship));
+
+      marker.bindTooltip(fellowship.fellowshipName, {
+        direction: 'top',
+        offset: [0, -20],
+        className: 'fellowship-tooltip',
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, [fellowships, clearMarkers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fly to country ─────────────────────────────────────
 
@@ -637,6 +689,19 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       });
     }, 1600);
   }, [clearMarkers]);
+
+  // ── Select a fellowship ────────────────────────────────
+
+  const selectFellowship = (fellowship: FellowshipWithBranch) => {
+    setSelectedFellowship(fellowship);
+    setStage('detail');
+    setShowConfirmation(false);
+    setJoinSubmitted(false);
+
+    if (mapRef.current && fellowship.latitude && fellowship.longitude) {
+      mapRef.current.flyTo([fellowship.latitude, fellowship.longitude], 15, { duration: 1.2 });
+    }
+  };
 
   // ── Back to globe ──────────────────────────────────────
 

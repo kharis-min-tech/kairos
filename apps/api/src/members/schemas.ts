@@ -55,6 +55,20 @@ export const createMemberSchema = z.object({
   systemRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional().default('member'),
 });
 
+// Health record upsert — all fields optional/nullable. Consent flags are
+// tri-state (true / false / null = not yet recorded). branchId and consent
+// provenance are derived server-side.
+export const upsertHealthRecordSchema = z.object({
+  medicalConditions: z.string().max(2000).nullable().optional(),
+  allergies: z.string().max(2000).nullable().optional(),
+  medications: z.string().max(2000).nullable().optional(),
+  dietaryNeeds: z.string().max(2000).nullable().optional(),
+  additionalNotes: z.string().max(2000).nullable().optional(),
+  photoMediaConsent: z.boolean().nullable().optional(),
+  medicalTreatmentConsent: z.boolean().nullable().optional(),
+  dataProcessingConsent: z.boolean().nullable().optional(),
+});
+
 export const listMembersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(500).default(20),
@@ -62,4 +76,8 @@ export const listMembersQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
   fellowshipId: z.string().uuid().optional(),
+});
+
+export const unguardedMinorsQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
 });

@@ -11,6 +11,8 @@ import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
+import { Lock } from 'lucide-react';
+import { SafeguardingSection } from './_components/safeguarding-section';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +66,10 @@ export default function MemberDetailPage() {
     : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-amber-700'
     : 'bg-rose-100 text-rose-700';
 
+  // When the member is a minor and the viewer lacks safeguarding access, the API
+  // returns the sensitive fields as null. Show a locked notice rather than blanks.
+  const hidden = member.isMinor && member.redacted;
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -90,6 +96,12 @@ export default function MemberDetailPage() {
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
                   {member.approvalStatus}
                 </span>
+                {member.isMinor && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3]">
+                    <Lock className="h-3 w-3" strokeWidth={2} />
+                    Minor — protected
+                  </span>
+                )}
                 <span className="text-sm capitalize text-muted-foreground">{member.systemRole}</span>
               </div>
             </div>
@@ -159,10 +171,10 @@ export default function MemberDetailPage() {
             <CardTitle>Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <InfoRow label="Email" value={member.email} />
-            <InfoRow label="Phone" value={member.phone} />
+            <InfoRow label="Email" value={member.email} redacted={hidden} />
+            <InfoRow label="Phone" value={member.phone} redacted={hidden} />
             <InfoRow label="Gender" value={member.gender} />
-            <InfoRow label="Date of Birth" value={member.dateOfBirth} />
+            <InfoRow label="Date of Birth" value={member.dateOfBirth} redacted={hidden} />
             <InfoRow label="Membership Date" value={member.membershipDate} />
           </CardContent>
         </Card>
@@ -172,15 +184,24 @@ export default function MemberDetailPage() {
             <CardTitle>Contact & Location</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <InfoRow label="Address" value={member.address} />
-            <InfoRow label="City" value={member.city} />
-            <InfoRow label="Postal Code" value={member.postalCode} />
-            <InfoRow label="Emergency Contact" value={member.emergencyContactName} />
-            <InfoRow label="Relationship" value={member.emergencyContactRelationship} />
-            <InfoRow label="Emergency Phone" value={member.emergencyContactPhone} />
+            <InfoRow label="Address" value={member.address} redacted={hidden} />
+            <InfoRow label="City" value={member.city} redacted={hidden} />
+            <InfoRow label="Postal Code" value={member.postalCode} redacted={hidden} />
+            <InfoRow label="Emergency Contact" value={member.emergencyContactName} redacted={hidden} />
+            <InfoRow label="Relationship" value={member.emergencyContactRelationship} redacted={hidden} />
+            <InfoRow label="Emergency Phone" value={member.emergencyContactPhone} redacted={hidden} />
           </CardContent>
         </Card>
       </div>
+
+      {/* Safeguarding & Health — minors only */}
+      {member.isMinor && (
+        <SafeguardingSection
+          memberId={member.id}
+          redacted={member.redacted}
+          canEdit={canManage}
+        />
+      )}
 
       {/* Roles */}
       <Card>
@@ -340,11 +361,18 @@ export default function MemberDetailPage() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+function InfoRow({ label, value, redacted }: { label: string; value: string | null | undefined; redacted?: boolean }) {
   return (
     <div className="flex justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span>{value ?? '\u2014'}</span>
+      {redacted ? (
+        <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <Lock className="h-3.5 w-3.5 text-[#5D3FD3]" strokeWidth={1.5} />
+          {'Hidden \u2014 safeguarding protected'}
+        </span>
+      ) : (
+        <span>{value ?? '\u2014'}</span>
+      )}
     </div>
   );
 }

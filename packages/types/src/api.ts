@@ -1,7 +1,20 @@
 // ── API request/response types ─────────────────────────────
 
-import type { SystemRole } from './enums';
-import type { Member } from './entities';
+import type {
+  SystemRole,
+  FormType,
+  FormSubmissionStatus,
+  MemberType,
+  ServiceType,
+  ServiceAttendanceStatus,
+} from './enums';
+import type {
+  Member,
+  MemberWithBranch,
+  MemberHealthRecord,
+  FormSubmission,
+  FormSubmissionPayload,
+} from './entities';
 
 // ── Auth ───────────────────────────────────────────────────
 
@@ -202,6 +215,69 @@ export interface MemberListParams {
   branchId?: string;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   fellowshipId?: string;
+}
+
+// ── Minor data protection ──────────────────────────────────
+// Members surfaced through the list/detail read paths carry two extra flags so
+// the web layer can render a redacted state. When a member is a protected minor
+// and the viewer lacks safeguarding access, the sensitive fields below are set
+// to null and `redacted` is true. Non-minor members always have
+// `isMinor: false, redacted: false` and are returned unchanged.
+
+/** Fields that get nulled out when a minor record is redacted. */
+export type RedactableMemberField =
+  | 'dateOfBirth'
+  | 'email'
+  | 'phone'
+  | 'address'
+  | 'city'
+  | 'postalCode'
+  | 'emergencyContactName'
+  | 'emergencyContactPhone'
+  | 'emergencyContactRelationship';
+
+/** Minor-protection flags threaded onto every member read response. */
+export interface MinorProtectionFlags {
+  isMinor: boolean;
+  redacted: boolean;
+}
+
+/** A member list row (with branch name) carrying minor-protection flags. */
+export type MemberWithBranchProtected = MemberWithBranch & MinorProtectionFlags;
+
+/** A member detail object carrying minor-protection flags. */
+export type MemberDetailProtected = MemberWithBranch & MinorProtectionFlags;
+
+// ── Member Health Record ───────────────────────────────────
+// Upsert payload for the 1:1 health record. All fields optional/nullable —
+// branchId is derived server-side from the member's homeBranchId and consent
+// stamping (consentRecordedBy/consentDate) happens server-side.
+
+export interface UpsertHealthRecordRequest {
+  medicalConditions?: string | null;
+  allergies?: string | null;
+  medications?: string | null;
+  dietaryNeeds?: string | null;
+  additionalNotes?: string | null;
+  photoMediaConsent?: boolean | null;
+  medicalTreatmentConsent?: boolean | null;
+  dataProcessingConsent?: boolean | null;
+}
+
+export type HealthRecordResponse = MemberHealthRecord | null;
+
+// ── Safeguarding review ────────────────────────────────────
+// An active minor whose guardian link is missing ('none') or points at a
+// deactivated member ('inactive') — surfaced for safeguarding follow-up.
+
+export interface UnguardedMinor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  branchName: string;
+  guardianStatus: 'none' | 'inactive';
+  guardianName: string | null;
 }
 
 // ── Fellowship ─────────────────────────────────────────────
@@ -551,3 +627,200 @@ export interface SessionListParams {
   branchId?: string;
   upcoming?: boolean;
 }
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export interface SubmitFormRequest {
+  /** Set when the altar-call UI search-and-select picked an existing member/prospect. */
+  subjectMemberId?: string;
+  /** Ignored by the server — branch is forced to auth.branchId. */
+  branchId?: string;
+  payload: FormSubmissionPayload | Record<string, unknown>;
+}
+
+export interface FormMemberSearchParams {
+  q: string;
+  branchId?: string;
+}
+
+export interface FormMemberSearchResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  memberType: MemberType;
+}
+
+export interface ListFormSubmissionsParams {
+  branchId?: string;
+  formType?: FormType;
+  status?: FormSubmissionStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface UpdateFormSubmissionRequest {
+  status?: FormSubmissionStatus;
+  notes?: string | null;
+}
+
+export interface ExportFormSubmissionsParams {
+  branchId?: string;
+  formType: FormType;
+  status?: FormSubmissionStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface DormantProspect {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  createdAt: string;
+  hasEnrollment: boolean;
+}
+
+export interface ListDormantProspectsParams {
+  branchId?: string;
+}
+
+export interface ArchiveProspectsRequest {
+  memberIds: string[];
+}
+
+export interface ArchiveProspectsResult {
+  archived: number;
+}
+
+// ── Attendance (services) ──────────────────────────────────
+
+export interface CreateServiceRequest {
+  branchId?: string;
+  serviceDate: string; // ISO datetime
+  serviceType: ServiceType;
+  serviceTitle?: string;
+  topic?: string;
+  preacherId?: string;
+  expectedAttendance?: number;
+}
+
+export type UpdateServiceRequest = Partial<CreateServiceRequest>;
+
+export interface ServiceListParams {
+  page?: number;
+  limit?: number;
+  branchId?: string;
+  type?: ServiceType;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface ServiceSummary {
+  id: string;
+  branchId: string;
+  branchName: string | null;
+  serviceDate: string;
+  serviceType: ServiceType;
+  serviceTitle: string | null;
+  topic: string | null;
+  preacherId: string | null;
+  expectedAttendance: number | null;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceWithDetail extends ServiceSummary {
+  preacherName: string | null;
+  recordedCount: number;
+}
+
+export interface RosterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface RosterEntry {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  status: ServiceAttendanceStatus | null;
+}
+
+export interface RecordAttendanceExistingEntry {
+  memberId: string;
+  status: ServiceAttendanceStatus;
+  arrivalTime?: string;
+}
+
+export interface RecordAttendanceVisitorEntry {
+  visitor: { firstName: string; lastName: string; phone?: string };
+  status: ServiceAttendanceStatus;
+  arrivalTime?: string;
+}
+
+export type RecordAttendanceEntry =
+  | RecordAttendanceExistingEntry
+  | RecordAttendanceVisitorEntry;
+
+export interface RecordServiceAttendanceRequest {
+  entries: RecordAttendanceEntry[];
+}
+
+export interface RecordAttendanceResult {
+  recorded: number;
+}
+
+export interface ServiceAttendanceRow {
+  serviceId: string;
+  memberId: string;
+  memberFirstName: string;
+  memberLastName: string;
+  attendanceStatus: ServiceAttendanceStatus;
+  arrivalTime: string | null;
+  isFirstTimeVisitor: boolean;
+  recordedBy: string;
+  recordedAt: string;
+}
+
+export interface AttendanceTrendPoint {
+  weekStart: string;
+  attendees: number;
+  serviceCount: number;
+}
+
+export interface AttendanceTrendsParams {
+  branchId?: string;
+  weeks?: number;
+}
+
+export interface MissingMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  servicesConsidered: number;
+}
+
+export interface MissingMembersParams {
+  branchId?: string;
+  services?: number;
+}
+
+export interface BranchAttendanceRate {
+  branchId: string;
+  branchName: string;
+  activeMembers: number;
+  distinctAttendees: number;
+  attendanceRate: number;
+}
+
+export interface BranchAttendanceParams {
+  branchId?: string;
+  weeks?: number;
+}
+
+export type { FormSubmission };
