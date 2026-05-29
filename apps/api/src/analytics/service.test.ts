@@ -100,12 +100,16 @@ describe('getMemberStats', () => {
   it('returns personal stats with attendance', async () => {
     setupSelectSequence(
       [{ fellowshipId: 'f1', fellowshipName: 'Grace K-Group', fellowshipType: 'K-Groups' }],
+      [{ homeBranchId: 'b1', secondaryBranchId: null }],
+      [{ id: 'b1', branchName: 'London' }],
       [{ status: 'Present', count: 3 }, { status: 'Absent', count: 1 }],
     );
 
     const result = await getMemberStats(mockDb, memberAuth);
     expect(result.fellowshipsJoined).toBe(1);
     expect(result.fellowships).toHaveLength(1);
+    expect(result.branchCount).toBe(1);
+    expect(result.branches[0]?.isHome).toBe(true);
     expect(result.recentAttendance.total).toBe(4);
     expect(result.recentAttendance.present).toBe(3);
     expect(result.recentAttendance.rate).toBe(75);

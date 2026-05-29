@@ -14,6 +14,16 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// Each dashboard hook only fires for its matching active role — drive that via
+// a controllable auth-store mock, set per describe block below.
+let mockActiveRole: string | null = null;
+vi.mock('@/lib/auth-store', () => ({
+  useAuthStore: (selector?: (s: { activeRole: string | null }) => unknown) => {
+    const state = { activeRole: mockActiveRole };
+    return selector ? selector(state) : state;
+  },
+}));
+
 import { api } from '@/lib/api';
 
 function createWrapper() {
@@ -29,6 +39,8 @@ beforeEach(() => {
 // ── useAdminDashboard ──────────────────────────────────────
 
 describe('useAdminDashboard', () => {
+  beforeEach(() => { mockActiveRole = 'admin'; });
+
   it('calls api.analytics.adminStats and returns data', async () => {
     const mockStats = { totalBranches: 5, totalMembers: 120, totalFellowships: 15 };
     vi.mocked(api.analytics.adminStats).mockResolvedValue({ data: mockStats } as never);
@@ -53,6 +65,8 @@ describe('useAdminDashboard', () => {
 // ── useBranchDashboard ─────────────────────────────────────
 
 describe('useBranchDashboard', () => {
+  beforeEach(() => { mockActiveRole = 'pastor'; });
+
   it('calls api.analytics.branchStats and returns data', async () => {
     const mockStats = { totalMembers: 35, totalFellowships: 4, recentMeetings: 12, pendingApprovals: 3 };
     vi.mocked(api.analytics.branchStats).mockResolvedValue({ data: mockStats } as never);
@@ -68,6 +82,8 @@ describe('useBranchDashboard', () => {
 // ── useMemberDashboard ─────────────────────────────────────
 
 describe('useMemberDashboard', () => {
+  beforeEach(() => { mockActiveRole = 'member'; });
+
   it('calls api.analytics.memberStats and returns data', async () => {
     const mockStats = { fellowshipsJoined: 2, recentAttendance: { total: 10, present: 8, rate: 80 } };
     vi.mocked(api.analytics.memberStats).mockResolvedValue({ data: mockStats } as never);

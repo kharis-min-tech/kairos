@@ -135,6 +135,16 @@ describe('GET /api/analytics/member', () => {
       ]),
     );
 
+    // memberRecord (home + secondary branch)
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ homeBranchId: TEST_IDS.branchId, secondaryBranchId: null }]),
+    );
+
+    // myBranches
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ id: TEST_IDS.branchId, branchName: 'London' }]),
+    );
+
     // attendanceRecords
     mockDb.select.mockReturnValueOnce(
       chainTo([

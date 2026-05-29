@@ -38,6 +38,7 @@ import type {
   AdminDashboardStats,
   BranchDashboardStats,
   MemberDashboardStats,
+  FellowshipDashboardStats,
   CreateMemberRequest,
   CreateMemberResponse,
   ChangePasswordRequest,
@@ -738,6 +739,8 @@ export function createApiClient(
         client.get<ApiResponse<AdminDashboardStats>>('/api/analytics/admin'),
       branchStats: () =>
         client.get<ApiResponse<BranchDashboardStats>>('/api/analytics/branch'),
+      fellowshipStats: () =>
+        client.get<ApiResponse<FellowshipDashboardStats>>('/api/analytics/fellowship'),
       memberStats: () =>
         client.get<ApiResponse<MemberDashboardStats>>('/api/analytics/member'),
     },
