@@ -1,6 +1,13 @@
 // ── API request/response types ─────────────────────────────
 
-import type { SystemRole, FormType, FormSubmissionStatus, MemberType } from './enums';
+import type {
+  SystemRole,
+  FormType,
+  FormSubmissionStatus,
+  MemberType,
+  ServiceType,
+  ServiceAttendanceStatus,
+} from './enums';
 import type {
   Member,
   MemberWithBranch,
@@ -661,6 +668,136 @@ export interface ArchiveProspectsRequest {
 
 export interface ArchiveProspectsResult {
   archived: number;
+}
+
+// ── Attendance (services) ──────────────────────────────────
+
+export interface CreateServiceRequest {
+  branchId?: string;
+  serviceDate: string; // ISO datetime
+  serviceType: ServiceType;
+  serviceTitle?: string;
+  topic?: string;
+  preacherId?: string;
+  expectedAttendance?: number;
+}
+
+export type UpdateServiceRequest = Partial<CreateServiceRequest>;
+
+export interface ServiceListParams {
+  page?: number;
+  limit?: number;
+  branchId?: string;
+  type?: ServiceType;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface ServiceSummary {
+  id: string;
+  branchId: string;
+  branchName: string | null;
+  serviceDate: string;
+  serviceType: ServiceType;
+  serviceTitle: string | null;
+  topic: string | null;
+  preacherId: string | null;
+  expectedAttendance: number | null;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceWithDetail extends ServiceSummary {
+  preacherName: string | null;
+  recordedCount: number;
+}
+
+export interface RosterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface RosterEntry {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  status: ServiceAttendanceStatus | null;
+}
+
+export interface RecordAttendanceExistingEntry {
+  memberId: string;
+  status: ServiceAttendanceStatus;
+  arrivalTime?: string;
+}
+
+export interface RecordAttendanceVisitorEntry {
+  visitor: { firstName: string; lastName: string; phone?: string };
+  status: ServiceAttendanceStatus;
+  arrivalTime?: string;
+}
+
+export type RecordAttendanceEntry =
+  | RecordAttendanceExistingEntry
+  | RecordAttendanceVisitorEntry;
+
+export interface RecordServiceAttendanceRequest {
+  entries: RecordAttendanceEntry[];
+}
+
+export interface RecordAttendanceResult {
+  recorded: number;
+}
+
+export interface ServiceAttendanceRow {
+  serviceId: string;
+  memberId: string;
+  memberFirstName: string;
+  memberLastName: string;
+  attendanceStatus: ServiceAttendanceStatus;
+  arrivalTime: string | null;
+  isFirstTimeVisitor: boolean;
+  recordedBy: string;
+  recordedAt: string;
+}
+
+export interface AttendanceTrendPoint {
+  weekStart: string;
+  attendees: number;
+  serviceCount: number;
+}
+
+export interface AttendanceTrendsParams {
+  branchId?: string;
+  weeks?: number;
+}
+
+export interface MissingMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  servicesConsidered: number;
+}
+
+export interface MissingMembersParams {
+  branchId?: string;
+  services?: number;
+}
+
+export interface BranchAttendanceRate {
+  branchId: string;
+  branchName: string;
+  activeMembers: number;
+  distinctAttendees: number;
+  attendanceRate: number;
+}
+
+export interface BranchAttendanceParams {
+  branchId?: string;
+  weeks?: number;
 }
 
 export type { FormSubmission };

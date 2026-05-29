@@ -216,3 +216,21 @@ export const FormSubmissionStatus = {
 } as const;
 export type FormSubmissionStatus =
   (typeof FormSubmissionStatus)[keyof typeof FormSubmissionStatus];
+
+// ── Service Attendance ─────────────────────────────────────
+
+export const ServiceType = {
+  Sunday: 'Sunday',
+  Midweek: 'Midweek',
+  Special: 'Special',
+} as const;
+export type ServiceType = (typeof ServiceType)[keyof typeof ServiceType];
+
+// Present-only model: a row exists only for attendees, so there is no 'Absent'.
+export const ServiceAttendanceStatus = {
+  Present: 'Present',
+  Late: 'Late',
+  Virtual: 'Virtual',
+} as const;
+export type ServiceAttendanceStatus =
+  (typeof ServiceAttendanceStatus)[keyof typeof ServiceAttendanceStatus];

@@ -21,6 +21,8 @@ import type {
   MemberType,
   FormType,
   FormSubmissionStatus,
+  ServiceType,
+  ServiceAttendanceStatus,
 } from './enums';
 
 // ── Base ───────────────────────────────────────────────────
@@ -813,4 +815,35 @@ export interface MemberHealthRecord extends BaseEntity {
   consentRecordedBy: string | null;
   consentDate: string | null; // ISO date string
   isActive: boolean;
+}
+
+// ── Service & Service Attendance ───────────────────────────
+// Service-level attendance (Sunday / Midweek / Special), distinct from
+// fellowship-meeting attendance. serviceDate is a timestamp so two services on
+// the same day (e.g. 9am + 11am) are distinguishable.
+
+export interface Service extends BaseEntity {
+  branchId: string;
+  serviceDate: Date;
+  serviceType: ServiceType;
+  serviceTitle: string | null;
+  topic: string | null;
+  preacherId: string | null;
+  expectedAttendance: number | null;
+  createdBy: string;
+  isActive: boolean;
+}
+
+// Present-only model: a row exists only for attendees. No 'Absent' status.
+// Composite PK (serviceId, memberId), no surrogate id, no createdAt — so it
+// does not extend BaseEntity.
+export interface ServiceAttendance {
+  serviceId: string;
+  memberId: string;
+  attendanceStatus: ServiceAttendanceStatus;
+  arrivalTime: Date | null;
+  isFirstTimeVisitor: boolean;
+  recordedBy: string;
+  recordedAt: Date;
+  updatedAt: Date;
 }
