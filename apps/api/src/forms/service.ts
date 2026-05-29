@@ -9,6 +9,7 @@ import {
   ConflictError,
 } from '@kairos/utils';
 import { createEnrollmentInternal } from '../new-believers/service';
+import { createMemberShell } from '../lib/member-shell';
 import {
   payloadSchemaByFormType,
   isVisitorUnder16,
@@ -58,63 +59,6 @@ function resolveScopedBranchId(auth: AuthContext, branchId?: string): string {
   }
   enforceBranchScope(auth, branchId);
   return auth.branchId;
-}
-
-/** Mint a member shell (temp email + temp password), returning its id.
- *  Mirrors the convention in outreach/conversion-service.ts. `memberType` lets
- *  the caller mint a prospect (altar-call), a visitor or a child (first-time
- *  visitor). `guardianMemberId` links a child shell to its guardian. */
-async function createMemberShell(
-  db: Database,
-  branchId: string,
-  data: {
-    firstName: string;
-    lastName: string;
-    phone?: string | null;
-    email?: string;
-    middleName?: string | null;
-    dateOfBirth?: string | null;
-    gender?: 'Male' | 'Female' | null;
-    memberType: 'prospect' | 'visitor' | 'child';
-    guardianMemberId?: string | null;
-  },
-): Promise<string> {
-  const bcrypt = await import('bcrypt');
-  const { randomUUID } = await import('node:crypto');
-  const tempPassword = `temp_${randomUUID()}`;
-  const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
-  // randomUUID guarantees uniqueness even when several shells (guardian + children)
-  // are minted in the same tick, where Date.now() alone would collide on the
-  // global-unique members.email constraint.
-  const email =
-    data.email && data.email.trim().length > 0
-      ? data.email
-      : `${data.memberType}_${randomUUID()}@temp.kairos.local`;
-
-  const [newMember] = await db
-    .insert(members)
-    .values({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      middleName: data.middleName ?? null,
-      dateOfBirth: data.dateOfBirth ?? null,
-      gender: data.gender ?? null,
-      phone: data.phone ?? null,
-      email,
-      homeBranchId: branchId,
-      membershipDate: sql`CURRENT_DATE`,
-      emailVerified: false,
-      approvalStatus: 'approved',
-      systemRole: 'member',
-      memberType: data.memberType,
-      guardianMemberId: data.guardianMemberId ?? null,
-      isActive: true,
-      mustChangePassword: true,
-      passwordHash: tempPasswordHash,
-    })
-    .returning();
-
-  return newMember!.id;
 }
 
 /**
