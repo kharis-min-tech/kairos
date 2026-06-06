@@ -848,3 +848,20 @@ export interface ServiceAttendance {
   recordedAt: Date;
   updatedAt: Date;
 }
+
+// ── Announcements ──────────────────────────────────────────
+
+export interface Announcement {
+  id: string;
+  branchId: string;
+  authorId: string;
+  authorName: string;
+  target: 'branch' | 'fellowship' | 'department';
+  targetEntityId: string | null;
+  title: string | null;
+  message: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+

@@ -824,3 +824,21 @@ export interface BranchAttendanceParams {
 }
 
 export type { FormSubmission };
+
+// ── Announcements ──────────────────────────────────────────
+
+export interface CreateAnnouncementRequest {
+  target: 'branch' | 'fellowship' | 'department';
+  branchId?: string;
+  fellowshipId?: string;
+  branchDepartmentId?: string;
+  title?: string;
+  message: string;
+}
+
+export interface ListAnnouncementsRequest {
+  branchId?: string;
+  target?: 'branch' | 'fellowship' | 'department';
+  limit?: number;
+  offset?: number;
+}

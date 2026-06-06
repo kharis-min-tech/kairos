@@ -1,122 +1,223 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { Megaphone, Loader2, Send, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+import { useAnnouncements, useSendAnnouncement } from '@/hooks/use-announcements';
+import { Button } from '@kairos/ui';
+import { Card, CardContent } from '@kairos/ui';
+import type { Announcement } from '@kairos/types';
 
-// /mm is proxied by Next.js to localhost:8065/mm (same origin — cookies work)
-const MM_PROXY = '/mm';
-// Deep path that avoids the /mm/ root redirect loop.
-// MM's client-side router will navigate to the correct team/channel after auth.
-const MM_MEMBER_SRC = `${MM_PROXY}/channels/town-square`;
-// Admins land on the System Console for full MM administration.
-const MM_ADMIN_SRC = `${MM_PROXY}/admin_console`;
+// ── Schema ─────────────────────────────────────────────────
 
-type State = 'loading' | 'ready' | 'not-provisioned' | 'error';
+const composeSchema = z.object({
+  target: z.enum(['branch', 'fellowship', 'department']),
+  title: z.string().trim().max(200).optional(),
+  message: z.string().trim().min(1, 'Message is required').max(4000),
+});
+
+type ComposeForm = z.infer<typeof composeSchema>;
+
+// ── Helpers ────────────────────────────────────────────────
+
+function formatRelativeTime(date: Date): string {
+  const now = Date.now();
+  const diff = now - new Date(date).getTime();
+  const mins = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function targetLabel(a: Announcement): string {
+  if (a.target === 'branch') return 'Branch';
+  if (a.target === 'fellowship') return 'Fellowship';
+  return 'Department';
+}
+
+const TARGET_BADGE: Record<string, string> = {
+  branch: 'bg-violet-100 text-violet-700',
+  fellowship: 'bg-blue-100 text-blue-700',
+  department: 'bg-emerald-100 text-emerald-700',
+};
+
+// ── Compose panel ──────────────────────────────────────────
+
+function ComposePanel() {
+  const [open, setOpen] = useState(false);
+  const { mutateAsync, isPending } = useSendAnnouncement();
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ComposeForm>({
+    resolver: zodResolver(composeSchema),
+    defaultValues: { target: 'branch' },
+  });
+
+  async function onSubmit(data: ComposeForm) {
+    try {
+      await mutateAsync({
+        target: data.target,
+        title: data.title || undefined,
+        message: data.message,
+      });
+      toast.success('Announcement sent');
+      reset();
+      setOpen(false);
+    } catch {
+      toast.error('Failed to send announcement');
+    }
+  }
+
+  return (
+    <div className="border-b border-border bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Send className="h-4 w-4 text-violet-500" />
+          New Announcement
+        </span>
+        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <form onSubmit={handleSubmit(onSubmit)} className="px-6 pb-5 pt-1 space-y-4 bg-gray-50 border-t border-border">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Send to</label>
+            <select
+              {...register('target')}
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+            >
+              <option value="branch">Entire Branch</option>
+              <option value="fellowship">Fellowship</option>
+              <option value="department">Department</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Title <span className="text-gray-400">(optional)</span></label>
+            <input
+              {...register('title')}
+              placeholder="e.g. Sunday Service Reminder"
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Message</label>
+            <textarea
+              {...register('message')}
+              rows={4}
+              placeholder="Write your announcement here…"
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+            />
+            {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message.message}</p>}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setOpen(false); reset(); }}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+              Send
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+// ── Announcement card ──────────────────────────────────────
+
+function AnnouncementCard({ item }: { item: Announcement }) {
+  return (
+    <Card className="border-border shadow-none">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {item.title && (
+              <p className="text-sm font-semibold text-gray-900 mb-1">{item.title}</p>
+            )}
+            <p className="text-sm text-gray-700 whitespace-pre-line">{item.message}</p>
+          </div>
+          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${TARGET_BADGE[item.target] ?? 'bg-gray-100 text-gray-600'}`}>
+            {targetLabel(item)}
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-medium text-gray-600">{item.authorName}</span>
+          <span>·</span>
+          <span>{formatRelativeTime(item.createdAt)}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────
 
 export default function MessagesPage() {
-  const [state, setState] = useState<State>('loading');
-  const didInit = useRef(false);
   const user = useAuthStore((s) => s.user);
-  const mmSrc = user?.systemRole === 'admin' ? MM_ADMIN_SRC : MM_MEMBER_SRC;
+  const canCompose = user?.systemRole === 'admin' || user?.systemRole === 'pastor' || user?.systemRole === 'leader';
 
-  useEffect(() => {
-    if (didInit.current) return;
-    didInit.current = true;
-
-    (async () => {
-      try {
-        // Check if already authenticated with MM — skip re-login
-        const meRes = await fetch(`${MM_PROXY}/api/v4/users/me`, { credentials: 'include' });
-        if (meRes.ok) {
-          setState('ready');
-          return;
-        }
-
-        // Get credentials from Kairos API
-        const res = await api.messaging.getCredentials();
-        if (!res.data) {
-          setState('not-provisioned');
-          return;
-        }
-
-        // Log into MM via the same-origin proxy
-        const loginRes = await fetch(`${MM_PROXY}/api/v4/users/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ login_id: res.data.email, password: res.data.password }),
-        });
-
-        if (!loginRes.ok) { setState('error'); return; }
-
-        // MM returns the session token in a `Token` response header (not Set-Cookie).
-        // Manually plant it as a cookie on this origin so the iframe picks it up.
-        const mmToken = loginRes.headers.get('Token');
-        if (mmToken) {
-          const userData: { id?: string } = await loginRes.json().catch(() => ({}));
-          document.cookie = `MMAUTHTOKEN=${mmToken}; path=/mm; SameSite=Lax`;
-          if (userData.id) {
-            document.cookie = `MMUSERID=${userData.id}; path=/mm; SameSite=Lax`;
-          }
-        }
-
-        setState('ready');
-      } catch {
-        setState('error');
-      }
-    })();
-  }, []);
+  const { data: announcements = [], isLoading, isError } = useAnnouncements({ limit: 50 });
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
-      <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-white">
-        <MessageSquare className="h-5 w-5 text-violet-600 mr-2" />
-        <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-white shrink-0">
+        <div className="flex items-center gap-2">
+          <Megaphone className="h-5 w-5 text-violet-600" />
+          <h1 className="text-lg font-semibold text-gray-900">Announcements</h1>
+        </div>
+        {announcements.length > 0 && (
+          <span className="text-xs text-muted-foreground">{announcements.length} message{announcements.length !== 1 ? 's' : ''}</span>
+        )}
       </div>
 
-      {state === 'loading' && (
-        <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Connecting to Messages…</span>
-        </div>
-      )}
+      {/* Compose (admin / pastor / leader only) */}
+      {canCompose && <ComposePanel />}
 
-      {state === 'not-provisioned' && (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center max-w-sm">
-            <MessageSquare className="h-10 w-10 text-violet-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-700">Messaging not set up yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Your messaging account is created automatically once your membership is approved.
-              Contact your admin if you think this is a mistake.
-            </p>
+      {/* Feed */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50">
+        {isLoading && (
+          <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">Loading announcements…</span>
           </div>
-        </div>
-      )}
+        )}
 
-      {state === 'error' && (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center max-w-sm">
-            <p className="text-sm font-medium text-gray-700">Could not connect to Messages</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              The messaging service may be temporarily unavailable. Try refreshing the page.
-            </p>
+        {isError && (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-sm text-red-500">Could not load announcements. Try refreshing the page.</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {state === 'ready' && (
-        <div className="flex-1 relative">
-          <iframe
-            src={mmSrc}
-            className="w-full h-full border-0"
-            title="Kairos Messages"
-            allow="clipboard-write; microphone"
-          />
-        </div>
-      )}
+        {!isLoading && !isError && announcements.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+            <Megaphone className="h-10 w-10 text-gray-300" />
+            <p className="text-sm font-medium text-gray-500">No announcements yet</p>
+            {canCompose && (
+              <p className="text-xs text-muted-foreground">Use the compose panel above to send your first announcement.</p>
+            )}
+          </div>
+        )}
+
+        {!isLoading && announcements.map((item: Announcement) => (
+          <AnnouncementCard key={item.id} item={item} />
+        ))}
+      </div>
     </div>
   );
 }

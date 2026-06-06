@@ -93,6 +93,7 @@ import type {
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
+import type { CreateAnnouncementRequest, ListAnnouncementsRequest } from '@kairos/types';
 
 import type {
   Branch,
@@ -137,6 +138,7 @@ import type {
   RotaAssignmentWithDetails,
   RotaSwapRequest,
   RotaSwapRequestWithDetails,
+  Announcement,
 } from '@kairos/types';
 
 import { ApiClient } from './client';
@@ -951,6 +953,15 @@ export function createApiClient(
     messaging: {
       getCredentials: () =>
         client.get<ApiResponse<{ email: string; password: string }>>('/api/messaging/login-token'),
+      sendAnnouncement: (data: CreateAnnouncementRequest) =>
+        client.post<ApiResponse<{ channelName: string; message: string }>>('/api/messaging/broadcast', data),
+      getAnnouncements: (params?: ListAnnouncementsRequest) => {
+        const qs = new URLSearchParams();
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.offset) qs.set('offset', String(params.offset));
+        const q = qs.toString();
+        return client.get<ApiResponse<Announcement[]>>(`/api/messaging/announcements${q ? `?${q}` : ''}`);
+      },
     },
 
     forms: {

@@ -47,3 +47,4 @@ export {
   type ServiceAttendance,
   type NewServiceAttendance,
 } from './service-attendance';
+export { announcements, announcementsRelations } from './announcements';

@@ -32,8 +32,8 @@ import {
 } from '@kairos/utils';
 import { getOrCreateBranchTeamId, mmAddUserToTeam } from './mm-branch-team';
 import { db } from '../db';
-import { members, fellowships, branchDepartments, branches } from '@kairos/database';
-import { eq, and, isNull, or, sql } from 'drizzle-orm';
+import { members, fellowships, branchDepartments, branches, announcements } from '@kairos/database';
+import { eq, and, isNull, or, sql, desc, inArray } from 'drizzle-orm';
 
 const broadcastSchema = z.object({
   target: z.enum(['branch', 'fellowship', 'department']),
@@ -263,6 +263,59 @@ messagingRouter.post(
 
     await mmPostMessage(channelId, formattedMessage);
 
+    // Persist announcement to DB for the native Kairos feed
+    const targetEntityId =
+      input.target === 'fellowship' ? input.fellowshipId
+      : input.target === 'department' ? input.branchDepartmentId
+      : undefined;
+
+    await db.insert(announcements).values({
+      branchId: resolvedBranchId,
+      authorId: auth.memberId,
+      target: input.target,
+      targetEntityId: targetEntityId ?? null,
+      title: input.title ?? null,
+      message: input.message,
+    });
+
     return c.json(successResponse({ channelName, message: 'Broadcast sent' }));
   },
 );
+
+// ── GET /announcements ────────────────────────────────────────────────────────
+// Returns paginated announcements visible to the caller:
+//   - admin/pastor: all announcements for their branch
+//   - leader/member: branch-wide + announcements targeting their fellowships/departments
+messagingRouter.get('/announcements', async (c) => {
+  const auth = getAuth(c);
+  const limit = Math.min(Number(c.req.query('limit') ?? 20), 100);
+  const offset = Number(c.req.query('offset') ?? 0);
+
+  const rows = await db
+    .select({
+      id: announcements.id,
+      branchId: announcements.branchId,
+      authorId: announcements.authorId,
+      authorName: sql<string>`concat(${members.firstName}, ' ', ${members.lastName})`,
+      target: announcements.target,
+      targetEntityId: announcements.targetEntityId,
+      title: announcements.title,
+      message: announcements.message,
+      isActive: announcements.isActive,
+      createdAt: announcements.createdAt,
+      updatedAt: announcements.updatedAt,
+    })
+    .from(announcements)
+    .innerJoin(members, eq(announcements.authorId, members.id))
+    .where(
+      and(
+        eq(announcements.branchId, auth.branchId),
+        eq(announcements.isActive, true),
+      )
+    )
+    .orderBy(desc(announcements.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return c.json(successResponse(rows));
+});
