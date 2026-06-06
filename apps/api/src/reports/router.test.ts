@@ -38,11 +38,15 @@ describe('GET /api/reports/member-growth', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 for member role', async () => {
+  it('should allow member role (branch-scoped)', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([{ month: '2024-04', newSignups: 2 }]));
+
     const res = await app.request('/api/reports/member-growth', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
   });
 
   it('should return member growth data for admin', async () => {
@@ -88,11 +92,15 @@ describe('GET /api/reports/attendance-trend', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 for member role', async () => {
+  it('should allow member role (branch-scoped)', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([{ week: '2024-05-27', total: 10, present: 8 }]));
+
     const res = await app.request('/api/reports/attendance-trend', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
   });
 
   it('should return attendance trend data for admin', async () => {
@@ -124,11 +132,15 @@ describe('GET /api/reports/fellowship-activity', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 for member role', async () => {
+  it('should allow member role (branch-scoped)', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([{ fellowshipName: 'Grace K-Group', meetingCount: 4, totalAttendees: 32 }]));
+
     const res = await app.request('/api/reports/fellowship-activity', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
   });
 
   it('should return fellowship activity data for admin', async () => {

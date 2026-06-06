@@ -9,6 +9,7 @@ import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useMembers } from '@/hooks/use-members';
 import { useDepartments } from '@/hooks/use-departments';
 import { useAuthStore } from '@/lib/auth-store';
+import { formatShortDate } from '@/lib/date-format';
 import {
   Button,
   Card,
@@ -249,7 +250,7 @@ export default function EnrollmentDetailPage() {
             </span>
           )}
           <span className="text-muted-foreground">
-            Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+            Enrolled {formatShortDate(enrollment.enrolledAt)}
           </span>
         </div>
       </header>
@@ -409,7 +410,7 @@ export default function EnrollmentDetailPage() {
                   <div>
                     <dt className="text-muted-foreground">Enrolled On</dt>
                     <dd className="font-medium">
-                      {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                      {formatShortDate(enrollment.enrolledAt)}
                     </dd>
                   </div>
                   <div>
@@ -432,7 +433,7 @@ export default function EnrollmentDetailPage() {
                     <dt className="text-muted-foreground">Completed On</dt>
                     <dd className="font-medium">
                       {enrollment.completedAt
-                        ? new Date(enrollment.completedAt).toLocaleDateString()
+                        ? formatShortDate(enrollment.completedAt)
                         : '—'}
                     </dd>
                   </div>
@@ -479,7 +480,7 @@ export default function EnrollmentDetailPage() {
                       <div>
                         <p className="font-medium">{a.topic ?? 'Session'}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(a.sessionDate).toLocaleDateString()}
+                          {formatShortDate(a.sessionDate)}
                         </p>
                       </div>
                       <span

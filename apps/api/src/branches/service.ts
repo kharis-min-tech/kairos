@@ -148,7 +148,13 @@ export async function deleteBranch(db: Database, branchId: string) {
   const [memberCount] = await db
     .select({ count: count() })
     .from(members)
-    .where(and(eq(members.homeBranchId, branchId), eq(members.isActive, true)));
+    .where(
+      and(
+        eq(members.homeBranchId, branchId),
+        eq(members.isActive, true),
+        eq(members.memberType, 'member'),
+      ),
+    );
 
   if (memberCount && memberCount.count > 0) {
     throw new ValidationError('Cannot deactivate branch with active members');

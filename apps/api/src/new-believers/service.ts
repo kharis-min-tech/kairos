@@ -61,6 +61,23 @@ const STAGE_ORDER = [
   'integrated',
 ] as const;
 
+/** Days of inactivity that mark an enrollment as "stale". */
+export const STALE_THRESHOLD_DAYS = 7;
+
+/**
+ * Shared stale-enrollment predicate — reused by `listEnrollments` (stale=true filter)
+ * and `getHealthSummary`. Single source of truth for "what counts as stale".
+ *
+ * Definition: active enrollment, not yet completed/integrated, no update in N days.
+ */
+export function staleEnrollmentCondition() {
+  return and(
+    eq(newBelieverEnrollments.isActive, true),
+    sql`${newBelieverEnrollments.stage} NOT IN ('completed', 'integrated')`,
+    lt(newBelieverEnrollments.updatedAt, sql`NOW() - INTERVAL '${sql.raw(String(STALE_THRESHOLD_DAYS))} days'`),
+  )!;
+}
+
 const SESSION_STAGES = new Set(['session-1', 'session-2', 'session-3', 'session-4']);
 
 const SESSION_TOPICS: Record<string, string> = {
@@ -129,11 +146,11 @@ export async function listEnrollments(
   if (query.stage) conditions.push(eq(newBelieverEnrollments.stage, query.stage));
   if (query.teacherId) conditions.push(eq(newBelieverEnrollments.teacherId, query.teacherId));
   if (query.stale) {
-    // Stale = no update in 7 days and not yet completed/integrated
-    conditions.push(lt(newBelieverEnrollments.updatedAt, sql`NOW() - INTERVAL '7 days'`));
-    conditions.push(sql`${newBelieverEnrollments.stage} NOT IN ('completed', 'integrated')`);
+    // Shared predicate — keep behaviour in lock-step with getHealthSummary.
+    conditions.push(staleEnrollmentCondition());
+  } else {
+    conditions.push(eq(newBelieverEnrollments.isActive, true));
   }
-  conditions.push(eq(newBelieverEnrollments.isActive, true));
 
   const offset = (query.page - 1) * query.limit;
 
@@ -261,7 +278,21 @@ export async function createEnrollment(
 ) {
   enforceAdminOrPastor(auth);
   enforceBranchScope(auth, data.branchId);
+  return createEnrollmentInternal(db, data);
+}
 
+/**
+ * Gate-free enrollment core. Applies the domain rules (no teacher/mentor self-enrol,
+ * no duplicate active enrollment) and creates the row, but performs NO authz check.
+ * `createEnrollment` is the role-gated public entry point; internal callers that have
+ * already authorized the action by other means (e.g. the open-to-all-members altar-call
+ * form flow, which is branch-scoped at the submission boundary) call this directly
+ * instead of spoofing an admin auth context.
+ */
+export async function createEnrollmentInternal(
+  db: Database,
+  data: { memberId: string; branchId: string; teacherId?: string; mentorId?: string; notes?: string }
+) {
   // Block enrolling pastors and admins as students
   const [memberRecord] = await db
     .select({ systemRole: members.systemRole })
@@ -750,6 +781,171 @@ export async function getSessionAttendance(
     .innerJoin(members, eq(newBelieverEnrollments.memberId, members.id))
     .where(eq(newBelieverAttendance.sessionId, sessionId))
     .orderBy(members.lastName, members.firstName);
+}
+
+// ── Health summary ────────────────────────────────────────
+
+export type StageFunnel = Record<(typeof STAGE_ORDER)[number], number>;
+
+export interface AttendanceTrendPoint {
+  sessionId: string;
+  sessionDate: string;
+  sessionStage: string;
+  topic: string | null;
+  attended: number;
+  eligible: number;
+  attendanceRate: number;
+}
+
+export interface HealthSummary {
+  attendanceTrend: AttendanceTrendPoint[];
+  stageFunnel: StageFunnel;
+  stale: { count: number; thresholdDays: number };
+  summary: { avgAttendanceRate: number | null; activeEnrollments: number };
+}
+
+/**
+ * Aggregated programme-health metrics for the New Believers Sessions page.
+ *
+ * - Trend: last 8 sessions in the branch, newest-first, with attended/eligible counts.
+ * - Funnel: counts of active enrollments per stage (all 7 stages present, missing → 0).
+ * - Stale: count of stale enrollments via shared {@link staleEnrollmentCondition}.
+ * - Summary: average attendance rate across the window + total active enrollments.
+ *
+ * Branch scope mirrors {@link listEnrollments}: non-admin/non-pastor callers are
+ * silently coerced to `auth.branchId` (no leak even if the query asks otherwise).
+ */
+export async function getHealthSummary(
+  db: Database,
+  auth: AuthContext,
+  query: { branchId?: string },
+): Promise<HealthSummary> {
+  const scopedBranchId =
+    auth.systemRole === 'admin' || auth.systemRole === 'pastor'
+      ? query.branchId
+      : auth.branchId;
+
+  if (scopedBranchId && auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    enforceBranchScope(auth, scopedBranchId);
+  }
+
+  const trendConditions = scopedBranchId
+    ? [eq(newBelieverSessions.branchId, scopedBranchId)]
+    : [];
+  const enrollmentBranchConditions = scopedBranchId
+    ? [eq(newBelieverEnrollments.branchId, scopedBranchId)]
+    : [];
+
+  const [trendRows, funnelRows, staleAndActiveRows] = await Promise.all([
+    db
+      .select({
+        sessionId: newBelieverSessions.id,
+        sessionDate: newBelieverSessions.sessionDate,
+        sessionStage: newBelieverSessions.sessionStage,
+        topic: newBelieverSessions.topic,
+        attended: sql<number>`COALESCE(SUM(CASE WHEN ${newBelieverAttendance.attended} = true THEN 1 ELSE 0 END), 0)`,
+        eligible: sql<number>`COALESCE(COUNT(${newBelieverAttendance.enrollmentId}), 0)`,
+      })
+      .from(newBelieverSessions)
+      .leftJoin(
+        newBelieverAttendance,
+        eq(newBelieverAttendance.sessionId, newBelieverSessions.id),
+      )
+      .where(trendConditions.length > 0 ? and(...trendConditions) : undefined)
+      .groupBy(
+        newBelieverSessions.id,
+        newBelieverSessions.sessionDate,
+        newBelieverSessions.sessionStage,
+        newBelieverSessions.topic,
+      )
+      .orderBy(desc(newBelieverSessions.sessionDate))
+      .limit(8),
+    db
+      .select({
+        stage: newBelieverEnrollments.stage,
+        count: count(),
+      })
+      .from(newBelieverEnrollments)
+      .where(
+        and(
+          eq(newBelieverEnrollments.isActive, true),
+          ...enrollmentBranchConditions,
+        ),
+      )
+      .groupBy(newBelieverEnrollments.stage),
+    db
+      .select({
+        staleCount: sql<number>`COALESCE(SUM(CASE
+          WHEN ${newBelieverEnrollments.isActive} = true
+            AND ${newBelieverEnrollments.stage} NOT IN ('completed', 'integrated')
+            AND ${newBelieverEnrollments.updatedAt} < NOW() - INTERVAL '${sql.raw(String(STALE_THRESHOLD_DAYS))} days'
+          THEN 1 ELSE 0 END), 0)`,
+        activeCount: sql<number>`COALESCE(SUM(CASE
+          WHEN ${newBelieverEnrollments.isActive} = true
+            AND ${newBelieverEnrollments.stage} != 'integrated'
+          THEN 1 ELSE 0 END), 0)`,
+      })
+      .from(newBelieverEnrollments)
+      .where(
+        enrollmentBranchConditions.length > 0
+          ? and(...enrollmentBranchConditions)
+          : undefined,
+      ),
+  ]);
+
+  const attendanceTrend: AttendanceTrendPoint[] = (trendRows as Array<{
+    sessionId: string;
+    sessionDate: string | Date;
+    sessionStage: string;
+    topic: string | null;
+    attended: number | string;
+    eligible: number | string;
+  }>).map((row) => {
+    const attended = Number(row.attended ?? 0);
+    const eligible = Number(row.eligible ?? 0);
+    const attendanceRate = eligible > 0 ? attended / eligible : 0;
+    return {
+      sessionId: row.sessionId,
+      sessionDate:
+        row.sessionDate instanceof Date
+          ? row.sessionDate.toISOString()
+          : String(row.sessionDate),
+      sessionStage: row.sessionStage,
+      topic: row.topic,
+      attended,
+      eligible,
+      attendanceRate,
+    };
+  });
+
+  // Fill all 7 stages with 0 by default, then overlay actual counts.
+  const stageFunnel = STAGE_ORDER.reduce<StageFunnel>((acc, stage) => {
+    acc[stage] = 0;
+    return acc;
+  }, { } as StageFunnel);
+  for (const row of funnelRows as Array<{ stage: string; count: number | string }>) {
+    if ((STAGE_ORDER as readonly string[]).includes(row.stage)) {
+      stageFunnel[row.stage as (typeof STAGE_ORDER)[number]] = Number(row.count ?? 0);
+    }
+  }
+
+  const counts = (staleAndActiveRows as Array<{ staleCount: number | string; activeCount: number | string }>)[0]
+    ?? { staleCount: 0, activeCount: 0 };
+  const staleCount = Number(counts.staleCount ?? 0);
+  const activeEnrollments = Number(counts.activeCount ?? 0);
+
+  const avgAttendanceRate =
+    attendanceTrend.length > 0
+      ? attendanceTrend.reduce((sum, point) => sum + point.attendanceRate, 0) /
+        attendanceTrend.length
+      : null;
+
+  return {
+    attendanceTrend,
+    stageFunnel,
+    stale: { count: staleCount, thresholdDays: STALE_THRESHOLD_DAYS },
+    summary: { avgAttendanceRate, activeEnrollments },
+  };
 }
 
 // ── Auto-enroll helper (called from souls-update-status & altar-call form) ──

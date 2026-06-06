@@ -1,8 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
+
+const POPOVER_GAP = 6;
+const VIEWPORT_PADDING = 12;
+
+interface PanelPosition {
+  top: number;
+  left: number;
+  minWidth: number;
+  maxWidth: number;
+  maxHeight: number;
+}
 
 export interface CustomSelectOption {
   value: string;
@@ -33,12 +45,16 @@ export function CustomSelect({
   size = 'default',
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
+  const [panelPosition, setPanelPosition] = useState<PanelPosition | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedTrigger = ref.current?.contains(target);
+      const clickedPanel = panelRef.current?.contains(target);
+      if (!clickedTrigger && !clickedPanel) {
         setOpen(false);
       }
     };
@@ -50,51 +66,101 @@ export function CustomSelect({
     if (e.key === 'Escape') setOpen(false);
   };
 
-  const toggleOpen = () => {
-    if (!open && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+
       const spaceBelow = window.innerHeight - rect.bottom;
-      const estimatedPanelHeight = Math.min(options.length * 36 + 8, 300);
-      setOpenUpward(spaceBelow < estimatedPanelHeight);
-    }
+      const panelHeight = panelRef.current?.getBoundingClientRect().height
+        ?? Math.min(options.length * 36 + 8, 300);
+      const maxWidth = Math.max(120, window.innerWidth - VIEWPORT_PADDING * 2);
+      const minWidth = Math.min(rect.width, maxWidth);
+      const panelWidth = Math.min(
+        Math.max(panelRef.current?.getBoundingClientRect().width ?? rect.width, minWidth),
+        maxWidth,
+      );
+      const opensUpward =
+        spaceBelow - POPOVER_GAP - VIEWPORT_PADDING < panelHeight
+        && rect.top > spaceBelow;
+      const top = opensUpward
+        ? Math.max(VIEWPORT_PADDING, rect.top - panelHeight - POPOVER_GAP)
+        : Math.min(rect.bottom + POPOVER_GAP, window.innerHeight - VIEWPORT_PADDING);
+      const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - panelWidth - VIEWPORT_PADDING);
+      const left = Math.min(Math.max(rect.left, VIEWPORT_PADDING), maxLeft);
+      const maxHeight = opensUpward
+        ? Math.max(120, rect.top - POPOVER_GAP - VIEWPORT_PADDING)
+        : Math.max(120, window.innerHeight - top - VIEWPORT_PADDING);
+
+      setPanelPosition({ top, left, minWidth, maxWidth, maxHeight });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open, options.length]);
+
+  const toggleOpen = () => {
     setOpen((o) => !o);
   };
 
   const selectedOption = options.find((o) => o.value === value);
   const displayLabel = selectedOption?.label;
+  const portalContainer =
+    typeof document !== 'undefined'
+      ? ref.current?.closest('[role="dialog"]') ?? document.body
+      : null;
 
-  const panel = (
-    <div
-      className={cn(
-        'absolute left-0 z-50 rounded-xl bg-white dark:bg-[#1c1c1f] shadow-lg border border-foreground/[0.08] py-1',
-        openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
-        size === 'sm' ? 'min-w-max' : 'min-w-full',
-      )}
-    >
-      {options.map((opt) => (
-        <button
-          key={`${opt.value}-${opt.label}`}
-          type="button"
-          disabled={opt.disabled}
-          onClick={() => {
-            onValueChange(opt.value);
-            setOpen(false);
-          }}
+  const panel = open && portalContainer
+    ? createPortal(
+        <div
+          ref={panelRef}
           className={cn(
-            'w-full text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-            size === 'sm'
-              ? 'px-3 py-1.5 text-xs font-semibold'
-              : 'px-3 py-2 text-sm font-medium',
-            value === opt.value && !opt.disabled
-              ? 'bg-primary/10 text-primary dark:bg-[#5D3FD3]/20 dark:text-violet-300'
-              : 'text-foreground hover:bg-foreground/[0.05]',
+            'fixed z-50 max-w-[calc(100vw-24px)] overflow-y-auto rounded-xl bg-white dark:bg-[#1c1c1f] shadow-lg border border-foreground/[0.08] py-1',
+            size === 'sm' && 'w-max',
           )}
+          style={{
+            top: panelPosition?.top ?? 0,
+            left: panelPosition?.left ?? 0,
+            minWidth: panelPosition?.minWidth,
+            maxWidth: panelPosition?.maxWidth,
+            maxHeight: panelPosition?.maxHeight,
+            visibility: panelPosition ? 'visible' : 'hidden',
+            pointerEvents: 'auto',
+          }}
         >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
+          {options.map((opt) => (
+            <button
+              key={`${opt.value}-${opt.label}`}
+              type="button"
+              disabled={opt.disabled}
+              onClick={() => {
+                onValueChange(opt.value);
+                setOpen(false);
+              }}
+              className={cn(
+                'w-full text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+                size === 'sm'
+                  ? 'px-3 py-1.5 text-xs font-semibold'
+                  : 'px-3 py-2 text-sm font-medium',
+                value === opt.value && !opt.disabled
+                  ? 'bg-primary/10 text-primary dark:bg-[#5D3FD3]/20 dark:text-violet-300'
+                  : 'text-foreground hover:bg-foreground/[0.05]',
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        portalContainer,
+      )
+    : null;
 
   if (size === 'sm') {
     return (
@@ -115,7 +181,7 @@ export function CustomSelect({
             )}
           />
         </button>
-        {open && panel}
+        {panel}
       </div>
     );
   }
@@ -143,7 +209,7 @@ export function CustomSelect({
           )}
         />
       </button>
-      {open && panel}
+      {panel}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@kairos/ui';
 import { Check, Award } from 'lucide-react';
+import { formatShortDate } from '@/lib/date-format';
 import { STAGES } from './stage-config';
 import type { EnrollmentCardData } from './types';
 
@@ -24,7 +25,7 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {
           {stage?.label ?? enrollment.stage}
         </span>
         <span className="text-sm text-muted-foreground">
-          Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+          Enrolled {formatShortDate(enrollment.enrolledAt)}
         </span>
       </div>
 

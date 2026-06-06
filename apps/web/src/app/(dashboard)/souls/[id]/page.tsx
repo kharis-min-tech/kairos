@@ -8,6 +8,7 @@ import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitl
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
+import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 
 interface FollowUpRecord {
   id: string;
@@ -52,6 +53,13 @@ const URGENCY_LEVELS = [
   { value: 'AMBER', label: 'AMBER - Monitor', color: 'text-amber-700' },
   { value: 'RED', label: 'RED - Critical', color: 'text-rose-700' },
 ];
+
+function todayIso(): string {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
 
 export default function SoulDetailPage() {
   const params = useParams();
@@ -282,13 +290,13 @@ export default function SoulDetailPage() {
             )}
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Captured: {new Date(currentSoul.createdAt).toLocaleDateString()}</span>
+              <span>Captured: {formatShortDate(currentSoul.createdAt)}</span>
             </div>
             {currentSoul.lastFollowUpDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  Last Follow-up: {new Date(currentSoul.lastFollowUpDate).toLocaleDateString()}
+                  Last Follow-up: {formatShortDate(currentSoul.lastFollowUpDate)}
                   {currentSoul.daysSinceLastFollowUp !== null && currentSoul.daysSinceLastFollowUp !== undefined && (
                     <span className={currentSoul.daysSinceLastFollowUp >= 2 ? 'text-destructive ml-1' : 'ml-1'}>
                       ({currentSoul.daysSinceLastFollowUp} day{currentSoul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago)
@@ -468,6 +476,7 @@ export default function SoulDetailPage() {
                   onChange={(v) =>
                     setFollowUpForm((prev) => ({ ...prev, nextFollowUpDate: v }))
                   }
+                  minDate={todayIso()}
                 />
               </div>
 
@@ -523,7 +532,7 @@ export default function SoulDetailPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          By {followUp.memberName} on {new Date(followUp.followUpDate).toLocaleString()}
+                          By {followUp.memberName} on {formatShortDateTime(followUp.followUpDate)}
                         </p>
                       </div>
                       {followUp.durationMinutes && (
@@ -537,7 +546,7 @@ export default function SoulDetailPage() {
                     )}
                     {followUp.nextFollowUpDate && (
                       <p className="text-xs text-muted-foreground">
-                        Next follow-up: {new Date(followUp.nextFollowUpDate).toLocaleDateString()}
+                        Next follow-up: {formatShortDate(followUp.nextFollowUpDate)}
                       </p>
                     )}
                   </div>

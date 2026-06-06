@@ -273,7 +273,7 @@ export async function sendInterviewScheduledEmail(
   details: { scheduledAt: Date; format: 'in_person' | 'virtual'; location?: string | null },
 ): Promise<void> {
   const transport = await createTransport();
-  const when = details.scheduledAt.toLocaleString();
+  const when = details.scheduledAt.toLocaleString('en-GB');
   const formatLabel = details.format === 'virtual' ? 'Virtual' : 'In Person';
 
   const info = await transport.sendMail({
@@ -312,7 +312,7 @@ export async function sendOfferExtendedEmail(
 ): Promise<void> {
   const transport = await createTransport();
   const expiresLabel = details.expiresAt
-    ? `This offer expires on <strong>${details.expiresAt.toLocaleDateString()}</strong>.`
+    ? `This offer expires on <strong>${details.expiresAt.toLocaleDateString('en-GB')}</strong>.`
     : '';
 
   const info = await transport.sendMail({

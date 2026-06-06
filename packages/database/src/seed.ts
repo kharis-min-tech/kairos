@@ -14,6 +14,9 @@ import {
   members,
   roles,
   memberRoles,
+  memberHealthRecords,
+  services,
+  serviceAttendance,
   branchLeadership,
   fellowships,
   fellowshipMembers,
@@ -423,17 +426,88 @@ async function seed() {
     .returning();
   console.log(`✓ 17 members (1 admin, 4 pastors, 2 leaders, 5 regular, 3 multi-branch, 1 pending, 1 unverified)`);  // alexJohnson, amaBoateng, abenaOsei
 
+  // Minor (child) with a guardian link — exercises the under-16 data-protection
+  // feature. Emma Thompson (regular London member) is the guardian; she sees the
+  // full record via the guardian link, leaderSarah sees it via the Safeguarding
+  // Lead role (assigned below), and any other London member gets a redacted view.
+  // Children carry NOT-NULL email + passwordHash like any member shell, but are
+  // typed 'child' and blocked from logging in (see auth/service.ts).
+  const guardianEmma = regularMembers[0]!;
+  const [childLily] = await db
+    .insert(members)
+    .values({
+      firstName: 'Lily',
+      lastName: 'Thompson',
+      email: 'lily.thompson@temp.kairos.local',
+      gender: 'Female',
+      dateOfBirth: '2015-09-14', // ~10 years old → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: guardianEmma.id,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    })
+    .returning();
+  console.log(`✓ 1 minor (child) linked to a guardian`);
+
+  // Minor with NO guardian — surfaces immediately on the safeguarding-review
+  // page with a "No guardian" (guardianStatus 'none') flag.
+  await db
+    .insert(members)
+    .values({
+      firstName: 'Noah',
+      lastName: 'Adeyemi',
+      email: 'noah.adeyemi@temp.kairos.local',
+      gender: 'Male',
+      dateOfBirth: '2014-03-02', // ~11 → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: null,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    });
+  console.log(`✓ 1 minor (child) with no guardian`);
+
+  // Login-ready minor — verified + approved so a login attempt reaches the
+  // minor-login block (rather than tripping the email-not-verified check first).
+  // Use this account to demo that minors are refused at sign-in.
+  await db
+    .insert(members)
+    .values({
+      firstName: 'Maya',
+      lastName: 'Bello',
+      email: 'maya.bello@kairos.local',
+      gender: 'Female',
+      dateOfBirth: '2012-11-20', // ~13 → under 16
+      homeBranchId: london!.id,
+      guardianMemberId: guardianEmma.id,
+      memberType: 'child',
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    });
+  console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
+
   // ── 4. Roles ────────────────────────────────────────────────
-  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole] = await db
+  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole] = await db
     .insert(roles)
     .values([
       { roleName: 'Worship Lead', description: 'Leads worship during services' },
       { roleName: 'Youth Coordinator', description: 'Coordinates youth programs and activities' },
       { roleName: 'Media Team', description: 'Handles audio/visual and online streaming' },
       { roleName: 'Welcome Team', description: 'Greets and assists visitors at services' },
+      {
+        roleName: 'Safeguarding Lead',
+        description: 'Authorised to view and manage safeguarding and health records for minors',
+      },
     ])
     .returning();
-  console.log(`✓ 4 roles`);
+  console.log(`✓ 5 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -757,8 +831,83 @@ async function seed() {
     { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id },
     { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id },
     { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id },
+    // Safeguarding Lead in London — grants full access to London minors' records.
+    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id },
   ]);
-  console.log(`✓ 4 member-role assignments`);
+  console.log(`✓ 5 member-role assignments`);
+
+  // ── 5b. Minor health record ─────────────────────────────────
+  // Health/safeguarding record for Lily (the seeded child). Visible only to
+  // admin/pastor, her guardian (Emma), and London Safeguarding Leads (Sarah).
+  await db.insert(memberHealthRecords).values({
+    memberId: childLily!.id,
+    branchId: london!.id,
+    medicalConditions: 'Mild asthma',
+    allergies: 'Peanuts, tree nuts',
+    medications: 'Salbutamol inhaler (as needed)',
+    dietaryNeeds: 'Nut-free meals only',
+    additionalNotes: 'Carries a reliever inhaler in her bag; notify guardian for any reaction.',
+    photoMediaConsent: true,
+    medicalTreatmentConsent: true,
+    dataProcessingConsent: false,
+    consentRecordedBy: pastorLondon!.id,
+    consentDate: '2026-01-15',
+  });
+  console.log(`✓ 1 minor health record`);
+
+  // ── 5c. Service attendance (Sunday/Special services, present-only) ──
+  // Present-only model: rows exist ONLY for attendees (Present/Late/Virtual);
+  // absence is inferred. London has 5 active 'member'-type people (Daniel, James,
+  // Sarah, Emma, Alex Johnson). We record some of them across 3 services so the
+  // reports demo: trends (multiple weeks), first-time visitor, and missing-members
+  // (Alex Johnson is never recorded → shows as missing).
+  const serviceDaysAgo = (n: number, hour = 10) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    d.setHours(hour, 0, 0, 0);
+    return d;
+  };
+
+  const [svcLastSunday, svcPrevSunday, svcWatchnight] = await db
+    .insert(services)
+    .values([
+      { branchId: london!.id, serviceDate: serviceDaysAgo(3), serviceType: 'Sunday', topic: 'Faith that moves mountains', preacherId: pastorLondon!.id, expectedAttendance: 120, createdBy: pastorLondon!.id },
+      { branchId: london!.id, serviceDate: serviceDaysAgo(10), serviceType: 'Sunday', topic: 'The Good Shepherd', preacherId: pastorLondon!.id, expectedAttendance: 120, createdBy: pastorLondon!.id },
+      { branchId: london!.id, serviceDate: serviceDaysAgo(17, 21), serviceType: 'Special', serviceTitle: 'Watchnight Service', topic: 'Crossing Over', preacherId: pastorLondon!.id, createdBy: pastorLondon!.id },
+    ])
+    .returning();
+
+  // First-time visitor captured at the most recent Sunday — minted as a visitor shell.
+  const [serviceVisitor] = await db
+    .insert(members)
+    .values({
+      firstName: 'Grace',
+      lastName: 'Newcomer',
+      email: 'grace.newcomer@temp.kairos.local',
+      homeBranchId: london!.id,
+      memberType: 'visitor',
+      passwordHash: password,
+      emailVerified: false,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+    })
+    .returning();
+
+  await db.insert(serviceAttendance).values([
+    // Last Sunday: Emma + Sarah present, Daniel virtual, James late, plus a first-time visitor. (Alex absent → inferred.)
+    { serviceId: svcLastSunday!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: leaderSarah!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: admin!.id, attendanceStatus: 'Virtual', recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: pastorLondon!.id, attendanceStatus: 'Late', arrivalTime: serviceDaysAgo(3, 11), recordedBy: pastorLondon!.id },
+    { serviceId: svcLastSunday!.id, memberId: serviceVisitor!.id, attendanceStatus: 'Present', isFirstTimeVisitor: true, recordedBy: pastorLondon!.id },
+    // Previous Sunday: lighter turnout.
+    { serviceId: svcPrevSunday!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcPrevSunday!.id, memberId: admin!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    // Watchnight (Special): Sarah + Emma.
+    { serviceId: svcWatchnight!.id, memberId: leaderSarah!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+    { serviceId: svcWatchnight!.id, memberId: regularMembers[0]!.id, attendanceStatus: 'Present', recordedBy: pastorLondon!.id },
+  ]);
+  console.log(`✓ 3 services + 9 attendance records (1 first-time visitor)`);
 
   // ── 6. Branch Leadership ────────────────────────────────────
   await db.insert(branchLeadership).values([
@@ -782,6 +931,11 @@ async function seed() {
         description: 'Wednesday evening small group Bible study',
         leaderId: leaderSarah!.id,
         meetingSchedule: 'Every Wednesday, 7:00 PM',
+        meetingDay: 'Wednesday',
+        meetingTime: '19:00',
+        latitude: 51.4934,
+        longitude: -0.0998,
+        country: 'United Kingdom',
       },
       {
         fellowshipName: 'Kharis Express London',
@@ -790,6 +944,11 @@ async function seed() {
         description: 'Friday evening young professionals fellowship',
         leaderId: pastorLondon!.id,
         meetingSchedule: 'Every Friday, 6:30 PM',
+        meetingDay: 'Friday',
+        meetingTime: '18:30',
+        latitude: 51.5074,
+        longitude: -0.1278,
+        country: 'United Kingdom',
       },
       {
         fellowshipName: 'Accra K-Group Alpha',
@@ -798,6 +957,11 @@ async function seed() {
         description: 'Thursday evening house fellowship',
         leaderId: leaderDavid!.id,
         meetingSchedule: 'Every Thursday, 6:00 PM',
+        meetingDay: 'Thursday',
+        meetingTime: '18:00',
+        latitude: 5.6037,
+        longitude: -0.1870,
+        country: 'Ghana',
       },
       {
         fellowshipName: 'New Breeds Accra',
@@ -806,6 +970,11 @@ async function seed() {
         description: 'New members integration fellowship',
         leaderId: pastorAccra!.id,
         meetingSchedule: 'Every Saturday, 10:00 AM',
+        meetingDay: 'Saturday',
+        meetingTime: '10:00',
+        latitude: 5.6145,
+        longitude: -0.2053,
+        country: 'Ghana',
       },
       {
         fellowshipName: 'Kumasi K-Group',
@@ -814,6 +983,11 @@ async function seed() {
         description: 'Tuesday evening small group fellowship',
         leaderId: pastorKumasi!.id,
         meetingSchedule: 'Every Tuesday, 6:30 PM',
+        meetingDay: 'Tuesday',
+        meetingTime: '18:30',
+        latitude: 6.6885,
+        longitude: -1.6244,
+        country: 'Ghana',
       },
     ])
     .returning();
@@ -1105,6 +1279,22 @@ async function seed() {
   console.log('  Pastor:  yaw.kwarteng@kairos.local    (Kumasi)');
   console.log('  Pending: new.applicant@kairos.local   (London)');
   console.log('  Unverified: unverified@kairos.local   (London)');
+  console.log('');
+  console.log('Under-16 data-protection demo (3 London minors):');
+  console.log('  • Lily Thompson  — child, guardian = Emma Thompson, has a health record.');
+  console.log('      emma.thompson@kairos.local   (guardian)        → full record + health');
+  console.log('      sarah.williams@kairos.local  (Safeguarding Lead) → full record + health');
+  console.log('      any other London member                        → REDACTED (name only)');
+  console.log('  • Noah Adeyemi   — child, NO guardian → shows "No guardian" on /members/safeguarding.');
+  console.log('  • Maya Bello     — child, verified+approved → demos the minor-login block:');
+  console.log('      try logging in as maya.bello@kairos.local → refused ("belongs to a minor").');
+  console.log('  • Deactivate Emma to make Lily show as "Guardian inactive" on the review page.');
+  console.log('');
+  console.log('Service attendance demo (London, 3 services):');
+  console.log('  • 2 Sundays + 1 Watchnight (Special). Present/Late/Virtual recorded; absence inferred.');
+  console.log('  • Grace Newcomer is a first-time visitor (visitor shell) at the last Sunday.');
+  console.log('  • Alex Johnson is never recorded → appears under Reports → missing members.');
+  console.log('  • As admin/pastor the create-service form lets you pick any branch.');
 
   process.exit(0);
 }

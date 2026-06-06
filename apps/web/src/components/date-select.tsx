@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   addMonths,
@@ -15,6 +16,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
+import { formatShortDate } from '@/lib/date-format';
 
 /**
  * DateSelect — the application's standard date picker.
@@ -33,6 +35,16 @@ import {
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const POPOVER_WIDTH = 280;
+const POPOVER_GAP = 8;
+const VIEWPORT_PADDING = 12;
+
+interface PopoverPosition {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+}
 
 function parseIso(iso: string): Date | null {
   if (!iso) return null;
@@ -79,7 +91,9 @@ export function DateSelect({
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'day' | 'month' | 'year'>('day');
   const [viewMonth, setViewMonth] = useState<Date>(() => parseIso(value) ?? new Date());
+  const [popoverPosition, setPopoverPosition] = useState<PopoverPosition | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   // Keep the calendar's view month in sync when the external value changes
   // (e.g. form reset).
@@ -91,7 +105,10 @@ export function DateSelect({
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedTrigger = wrapperRef.current?.contains(target);
+      const clickedPopover = popoverRef.current?.contains(target);
+      if (!clickedTrigger && !clickedPopover) {
         setOpen(false);
         setView('day');
       }
@@ -110,6 +127,45 @@ export function DateSelect({
     };
   }, [open]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const trigger = wrapperRef.current?.getBoundingClientRect();
+      if (!trigger) return;
+
+      const popoverHeight = popoverRef.current?.getBoundingClientRect().height ?? 360;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const width = Math.min(POPOVER_WIDTH, viewportWidth - VIEWPORT_PADDING * 2);
+      const maxLeft = Math.max(VIEWPORT_PADDING, viewportWidth - width - VIEWPORT_PADDING);
+      const left = Math.min(
+        Math.max(trigger.left, VIEWPORT_PADDING),
+        maxLeft,
+      );
+
+      const spaceBelow = viewportHeight - trigger.bottom - POPOVER_GAP - VIEWPORT_PADDING;
+      const spaceAbove = trigger.top - POPOVER_GAP - VIEWPORT_PADDING;
+      const opensUpward = spaceBelow < popoverHeight && spaceAbove > spaceBelow;
+      const top = opensUpward
+        ? Math.max(VIEWPORT_PADDING, trigger.top - popoverHeight - POPOVER_GAP)
+        : Math.min(trigger.bottom + POPOVER_GAP, viewportHeight - VIEWPORT_PADDING);
+      const availableHeight = opensUpward
+        ? Math.max(160, trigger.top - POPOVER_GAP - VIEWPORT_PADDING)
+        : Math.max(160, viewportHeight - top - VIEWPORT_PADDING);
+
+      setPopoverPosition({ top, left, width, maxHeight: availableHeight });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open, view, viewMonth]);
+
   const min = effectiveMinDate ? parseIso(effectiveMinDate) : null;
   const max = effectiveMaxDate ? parseIso(effectiveMaxDate) : null;
   const selected = parseIso(value);
@@ -120,12 +176,11 @@ export function DateSelect({
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
 
-  const display = value
-    ? (() => {
-        const [y, m, d] = value.split('-');
-        return `${m}/${d}/${y}`;
-      })()
-    : '';
+  const display = value ? formatShortDate(value, '') : '';
+  const portalContainer =
+    typeof document !== 'undefined'
+      ? wrapperRef.current?.closest('[role="dialog"]') ?? document.body
+      : null;
 
   const isDayDisabled = (d: Date) => {
     if (min && isBefore(d, min)) return true;
@@ -190,10 +245,20 @@ export function DateSelect({
           </>
         )}
       </button>
-      {open && (
-        <div
-          className={`absolute ${variant === 'pill' ? 'left-0' : 'left-0 right-0'} top-[calc(100%+8px)] z-50 w-[280px] rounded bg-card p-4 shadow-ambient-lg dark:bg-[#1a1a1f]`}
-        >
+      {open && portalContainer &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            className="fixed z-50 w-[280px] overflow-y-auto rounded bg-card p-4 shadow-ambient-lg dark:bg-[#1a1a1f]"
+            style={{
+              top: popoverPosition?.top ?? 0,
+              left: popoverPosition?.left ?? 0,
+              width: popoverPosition?.width,
+              maxHeight: popoverPosition?.maxHeight,
+              visibility: popoverPosition ? 'visible' : 'hidden',
+              pointerEvents: 'auto',
+            }}
+          >
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <button
@@ -361,8 +426,9 @@ export function DateSelect({
               Today
             </button>
           </div>
-        </div>
-      )}
+          </div>,
+          portalContainer,
+        )}
     </div>
   );
 }

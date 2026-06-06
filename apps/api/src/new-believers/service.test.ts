@@ -394,5 +394,137 @@ describe('createEnrollment', () => {
   });
 });
 
+// ── getHealthSummary ──────────────────────────────────────
+
+describe('getHealthSummary', () => {
+  it('returns the trend window, funnel buckets, and stale count for an admin', async () => {
+    // Three select calls, in order: trend → funnel → stale+active counts
+    setupSelectSequence(
+      // 1) attendanceTrend rows (newest-first)
+      [
+        {
+          sessionId: 's1',
+          sessionDate: '2026-05-15T10:00:00.000Z',
+          sessionStage: 'session-1',
+          topic: 'Foundations of Faith',
+          attended: 8,
+          eligible: 10,
+        },
+        {
+          sessionId: 's2',
+          sessionDate: '2026-05-08T10:00:00.000Z',
+          sessionStage: 'session-2',
+          topic: 'Who is a Christian',
+          attended: 5,
+          eligible: 10,
+        },
+      ],
+      // 2) stage funnel rows
+      [
+        { stage: 'session-1', count: 3 },
+        { stage: 'session-2', count: 2 },
+        { stage: 'integrated', count: 1 },
+      ],
+      // 3) [{ staleCount, activeCount }]
+      [{ staleCount: 2, activeCount: 6 }],
+    );
+
+    const { getHealthSummary } = await import('./service');
+    const result = await getHealthSummary(mockDb, adminAuth, { branchId });
+
+    expect(result.attendanceTrend).toHaveLength(2);
+    expect(result.attendanceTrend[0]).toMatchObject({
+      sessionId: 's1',
+      attended: 8,
+      eligible: 10,
+      attendanceRate: 0.8,
+    });
+    // Funnel fills all 7 stages with 0 defaults for missing keys
+    expect(result.stageFunnel).toEqual({
+      enrolled: 0,
+      'session-1': 3,
+      'session-2': 2,
+      'session-3': 0,
+      'session-4': 0,
+      completed: 0,
+      integrated: 1,
+    });
+    expect(result.stale).toEqual({ count: 2, thresholdDays: 7 });
+    expect(result.summary.activeEnrollments).toBe(6);
+    // (0.8 + 0.5) / 2 = 0.65
+    expect(result.summary.avgAttendanceRate).toBeCloseTo(0.65, 5);
+  });
+
+  it('returns null avgAttendanceRate and empty funnel buckets for an empty branch', async () => {
+    setupSelectSequence(
+      [],                              // no sessions
+      [],                              // no enrollments
+      [{ staleCount: 0, activeCount: 0 }],
+    );
+
+    const { getHealthSummary } = await import('./service');
+    const result = await getHealthSummary(mockDb, adminAuth, { branchId });
+
+    expect(result.attendanceTrend).toEqual([]);
+    expect(result.summary.avgAttendanceRate).toBeNull();
+    expect(result.summary.activeEnrollments).toBe(0);
+    expect(result.stale).toEqual({ count: 0, thresholdDays: 7 });
+    // Funnel still includes all 7 stages with 0
+    expect(Object.values(result.stageFunnel).every((v) => v === 0)).toBe(true);
+    expect(Object.keys(result.stageFunnel)).toHaveLength(7);
+  });
+
+  it('treats a session with zero eligible attendees as 0 attendance rate (no NaN)', async () => {
+    setupSelectSequence(
+      [
+        {
+          sessionId: 's1',
+          sessionDate: '2026-05-15T10:00:00.000Z',
+          sessionStage: 'session-1',
+          topic: 'Foundations of Faith',
+          attended: 0,
+          eligible: 0,
+        },
+      ],
+      [],
+      [{ staleCount: 0, activeCount: 0 }],
+    );
+
+    const { getHealthSummary } = await import('./service');
+    const result = await getHealthSummary(mockDb, adminAuth, { branchId });
+
+    expect(result.attendanceTrend[0]?.attendanceRate).toBe(0);
+    // Average of a single 0-rate session is 0, not null
+    expect(result.summary.avgAttendanceRate).toBe(0);
+  });
+
+  it('silently scopes a leader request that targets a foreign branch (no leak)', async () => {
+    // Service must coerce non-admin/non-pastor queries to auth.branchId before running anything.
+    setupSelectSequence(
+      [],
+      [],
+      [{ staleCount: 0, activeCount: 0 }],
+    );
+
+    const { getHealthSummary } = await import('./service');
+    // Leader of `branchId` requests data for `otherBranchId` — silently scoped to their own.
+    const result = await getHealthSummary(mockDb, leaderAuth, { branchId: otherBranchId });
+    expect(result.summary.activeEnrollments).toBe(0);
+  });
+
+  it('allows a pastor to query any branch', async () => {
+    setupSelectSequence(
+      [],
+      [{ stage: 'session-1', count: 4 }],
+      [{ staleCount: 1, activeCount: 4 }],
+    );
+
+    const { getHealthSummary } = await import('./service');
+    const result = await getHealthSummary(mockDb, pastorAuth, { branchId: otherBranchId });
+    expect(result.summary.activeEnrollments).toBe(4);
+    expect(result.stageFunnel['session-1']).toBe(4);
+  });
+});
+
 // passthrough to prevent unused var
 void teacherId;

@@ -18,6 +18,11 @@ import type {
   RotaInstanceStatus,
   RotaAssignmentStatus,
   RotaSwapRequestStatus,
+  MemberType,
+  FormType,
+  FormSubmissionStatus,
+  ServiceType,
+  ServiceAttendanceStatus,
 } from './enums';
 
 // ── Base ───────────────────────────────────────────────────
@@ -88,6 +93,8 @@ export interface Member extends BaseEntity {
   emergencyContactRelationship: string | null;
   approvalStatus: MemberApprovalStatus;
   systemRole: SystemRole;
+  memberType: MemberType;
+  guardianMemberId: string | null;
   emailVerified: boolean;
   mustChangePassword: boolean;
   mattermostUserId: string | null;
@@ -149,6 +156,11 @@ export interface Fellowship extends BaseEntity {
   leaderId: string | null;
   coLeaderId: string | null;
   meetingSchedule: string | null;
+  meetingDay: string | null;
+  meetingTime: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  country: string | null;
   isActive: boolean;
 }
 
@@ -394,6 +406,30 @@ export interface NewBelieverAttendance {
 export interface NewBelieverAttendanceWithMember extends NewBelieverAttendance {
   memberFirstName: string;
   memberLastName: string;
+}
+
+// ── New Believers — programme-health insights ─────────────
+
+export interface NewBelieverAttendanceTrendPoint {
+  sessionId: string;
+  sessionDate: string;
+  sessionStage: string;
+  topic: string | null;
+  attended: number;
+  eligible: number;
+  attendanceRate: number;
+}
+
+export type NewBelieverStageFunnel = Record<
+  'enrolled' | 'session-1' | 'session-2' | 'session-3' | 'session-4' | 'completed' | 'integrated',
+  number
+>;
+
+export interface NewBelieverHealthSummary {
+  attendanceTrend: NewBelieverAttendanceTrendPoint[];
+  stageFunnel: NewBelieverStageFunnel;
+  stale: { count: number; thresholdDays: number };
+  summary: { avgAttendanceRate: number | null; activeEnrollments: number };
 }
 // ── Departments (global catalogue) ─────────────────────────
 
@@ -676,4 +712,139 @@ export interface RotaSwapRequestWithDetails extends RotaSwapRequest {
   requesterLastName: string;
   proposedFirstName?: string | null;
   proposedLastName?: string | null;
+}
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export interface AltarCallPayload {
+  todaysDate: string; // ISO date string
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface BaptismPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export type TestimonyCategory =
+  | 'Business'
+  | 'Career/Job'
+  | 'Deliverance'
+  | 'Education'
+  | 'Financial'
+  | 'Health/Healing'
+  | 'Marriage/Family'
+  | 'Salvation'
+  | 'Unusual Favour'
+  | 'Other';
+
+export interface TestimonyPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  todaysDate: string; // ISO date string
+  dateOfTestimony: string; // ISO date string
+  category: TestimonyCategory;
+  details: string;
+  shareAnonymously: boolean;
+  happyToShareSunday: boolean;
+  acknowledged: boolean;
+}
+
+export interface BabyNamingPayload {
+  babyFullName: string;
+  dateOfBirth: string; // ISO date string
+  gender?: 'Male' | 'Female';
+  fathersName: string;
+  mothersName: string;
+  parentContactPhone: string;
+  parentContactEmail?: string;
+  preferredCeremonyDate?: string; // ISO date string
+  additionalNotes?: string;
+}
+
+export interface BabyDedicationPayload {
+  babyFullName: string;
+  dateOfBirth: string; // ISO date string
+  gender?: 'Male' | 'Female';
+  fathersName: string;
+  mothersName: string;
+  parentsAreMembers?: boolean;
+  parentContactPhone: string;
+  parentContactEmail?: string;
+  preferredDedicationDate?: string; // ISO date string
+  additionalNotes?: string;
+}
+
+export type FormSubmissionPayload =
+  | AltarCallPayload
+  | BaptismPayload
+  | TestimonyPayload
+  | BabyNamingPayload
+  | BabyDedicationPayload;
+
+export interface FormSubmission extends BaseEntity {
+  formType: FormType;
+  branchId: string;
+  submittedBy: string;
+  subjectMemberId: string | null;
+  payload: FormSubmissionPayload;
+  status: FormSubmissionStatus;
+  linkedEntityType: string | null;
+  linkedEntityId: string | null;
+  notes: string | null;
+}
+
+// ── Member Health Record ───────────────────────────────────
+// Sensitive, 1:1 with a member. Consent flags are nullable: null = not yet
+// recorded, distinct from an explicit true/false answer.
+
+export interface MemberHealthRecord extends BaseEntity {
+  memberId: string;
+  branchId: string;
+  medicalConditions: string | null;
+  allergies: string | null;
+  medications: string | null;
+  dietaryNeeds: string | null;
+  additionalNotes: string | null;
+  photoMediaConsent: boolean | null;
+  medicalTreatmentConsent: boolean | null;
+  dataProcessingConsent: boolean | null;
+  consentRecordedBy: string | null;
+  consentDate: string | null; // ISO date string
+  isActive: boolean;
+}
+
+// ── Service & Service Attendance ───────────────────────────
+// Service-level attendance (Sunday / Midweek / Special), distinct from
+// fellowship-meeting attendance. serviceDate is a timestamp so two services on
+// the same day (e.g. 9am + 11am) are distinguishable.
+
+export interface Service extends BaseEntity {
+  branchId: string;
+  serviceDate: Date;
+  serviceType: ServiceType;
+  serviceTitle: string | null;
+  topic: string | null;
+  preacherId: string | null;
+  expectedAttendance: number | null;
+  createdBy: string;
+  isActive: boolean;
+}
+
+// Present-only model: a row exists only for attendees. No 'Absent' status.
+// Composite PK (serviceId, memberId), no surrogate id, no createdAt — so it
+// does not extend BaseEntity.
+export interface ServiceAttendance {
+  serviceId: string;
+  memberId: string;
+  attendanceStatus: ServiceAttendanceStatus;
+  arrivalTime: Date | null;
+  isFirstTimeVisitor: boolean;
+  recordedBy: string;
+  recordedAt: Date;
+  updatedAt: Date;
 }

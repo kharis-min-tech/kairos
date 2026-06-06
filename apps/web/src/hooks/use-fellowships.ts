@@ -299,3 +299,13 @@ export function useDeleteFellowshipFollowup() {
     },
   });
 }
+
+export function useFellowshipsMap() {
+  return useQuery({
+    queryKey: ['fellowships', 'map'],
+    queryFn: async () => {
+      const res = await api.fellowships.map();
+      return res.data!;
+    },
+  });
+}

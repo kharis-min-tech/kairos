@@ -19,6 +19,7 @@ export async function getMemberGrowth(db: Database, auth: AuthContext) {
 
   const conditions = [
     gte(members.createdAt, sql`CURRENT_DATE - INTERVAL '6 months'`),
+    eq(members.memberType, 'member'),
   ];
   if (scopedBranchId) {
     conditions.push(eq(members.homeBranchId, scopedBranchId));

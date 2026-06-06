@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams, CreateMemberRequest } from '@kairos/types';
+import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, MemberListParams, CreateMemberRequest, UpsertHealthRecordRequest } from '@kairos/types';
 
 // ── Member queries ─────────────────────────────────────────
 
@@ -88,6 +88,57 @@ export function useCreateMember() {
       return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}
+
+// ── Member Health Record (minor safeguarding) ──────────────
+
+/**
+ * Fetches the safeguarding health record for a minor. Pass `enabled` as
+ * `isMinor && !redacted` so the request is only made when the viewer has
+ * safeguarding access — otherwise the API would 403.
+ */
+export function useMemberHealthRecord(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['members', id, 'health-record'],
+    queryFn: async () => {
+      const res = await api.members.getHealthRecord(id);
+      return res.data ?? null;
+    },
+    enabled: !!id && enabled,
+  });
+}
+
+export function useUpsertMemberHealthRecord(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: UpsertHealthRecordRequest) => {
+      const res = await api.members.upsertHealthRecord(id, data);
+      return res.data ?? null;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', id, 'health-record'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
+  });
+}
+
+// ── Safeguarding review ────────────────────────────────────
+
+/**
+ * Lists active minors whose guardian is missing ('none') or deactivated
+ * ('inactive'), for safeguarding follow-up. The endpoint is gated server-side
+ * to admin/pastor or a branch Safeguarding Lead — a viewer without access gets
+ * a 403, which surfaces as `error`/`isError` so the page can render an access
+ * state rather than an empty list.
+ */
+export function useUnguardedMinors(branchId?: string) {
+  return useQuery({
+    queryKey: ['members', 'unguarded-minors', branchId ?? null],
+    queryFn: async () => {
+      const res = await api.members.listUnguardedMinors(branchId ? { branchId } : undefined);
+      return res.data!;
+    },
   });
 }
 

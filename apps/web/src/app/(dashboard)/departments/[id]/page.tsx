@@ -29,8 +29,9 @@ import { FollowupsTab } from './_components/followups-tab';
 import { UniformTab } from './_components/uniform-tab';
 import { RotaTab } from './_components/rota-tab';
 import { RecruitmentTab } from './_components/recruitment-tab';
+import { MyRotaTab } from './_components/my-rota-tab';
 
-type Tab = 'overview' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
+type Tab = 'overview' | 'my-rota' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
 const OPEN_STATUSES = [
   'applied',
@@ -47,6 +48,32 @@ const STAGE_LABELS: Record<string, string> = {
   offered: 'Offer pending your response',
   probation: 'On probation',
 };
+
+function RestrictedNotice({ message }: { message: string }) {
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+        <svg
+          className="mb-3 h-10 w-10 text-muted-foreground/40"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+          />
+        </svg>
+        <p className="font-medium">{message}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Join this department to view this information.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -116,6 +143,7 @@ export default function DepartmentDetailPage() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
+    ...(isMemberOfDept ? [{ key: 'my-rota' as const, label: 'My Rota' }] : []),
     ...(!isRestrictedView
       ? ([
           { key: 'members' as const, label: `Members${members ? ` (${members.length})` : ''}` },
@@ -346,6 +374,9 @@ export default function DepartmentDetailPage() {
       )}
 
       {activeTab === 'members' && (
+        isRestrictedView ? (
+          <RestrictedNotice message="Members list is private" />
+        ) : (
         <div className="space-y-4">
           {isAdminOrPastor && (
             <div className="flex items-center gap-3">
@@ -450,42 +481,59 @@ export default function DepartmentDetailPage() {
             </Card>
           )}
         </div>
+        )
       )}
 
       {activeTab === 'followups' && (
-        <FollowupsTab
-          branchDeptId={dept.id}
-          members={members ?? []}
-          canManage={
-            isAdminOrPastor ||
-            dept.leadMemberId === user?.id ||
-            dept.deputyMemberId === user?.id
-          }
-        />
+        isRestrictedView ? (
+          <RestrictedNotice message="Follow-up notes are private" />
+        ) : (
+          <FollowupsTab
+            branchDeptId={dept.id}
+            members={members ?? []}
+            canManage={
+              isAdminOrPastor ||
+              dept.leadMemberId === user?.id ||
+              dept.deputyMemberId === user?.id
+            }
+          />
+        )
       )}
 
       {activeTab === 'uniform' && (
-        <UniformTab
-          branchDeptId={dept.id}
-          canManage={
-            isAdminOrPastor ||
-            dept.leadMemberId === user?.id ||
-            dept.deputyMemberId === user?.id
-          }
-        />
+        isRestrictedView ? (
+          <RestrictedNotice message="Uniform schedule is private" />
+        ) : (
+          <UniformTab
+            branchDeptId={dept.id}
+            canManage={
+              isAdminOrPastor ||
+              dept.leadMemberId === user?.id ||
+              dept.deputyMemberId === user?.id
+            }
+          />
+        )
+      )}
+
+      {activeTab === 'my-rota' && isMemberOfDept && (
+        <MyRotaTab branchDepartmentId={dept.id} />
       )}
 
       {activeTab === 'rota' && (
-        <RotaTab
-          branchDeptId={dept.id}
-          members={members ?? []}
-          canManage={
-            isAdminOrPastor ||
-            dept.leadMemberId === user?.id ||
-            dept.deputyMemberId === user?.id
-          }
-          currentUserId={user?.id}
-        />
+        isRestrictedView ? (
+          <RestrictedNotice message="Rota details are private" />
+        ) : (
+          <RotaTab
+            branchDeptId={dept.id}
+            members={members ?? []}
+            canManage={
+              isAdminOrPastor ||
+              dept.leadMemberId === user?.id ||
+              dept.deputyMemberId === user?.id
+            }
+            currentUserId={user?.id}
+          />
+        )
       )}
 
       {activeTab === 'recruitment' && isAdminOrPastor && (

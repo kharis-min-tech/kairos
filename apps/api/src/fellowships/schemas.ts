@@ -16,6 +16,11 @@ export const createFellowshipSchema = z.object({
   leaderId: z.string().uuid().optional(),
   coLeaderId: z.string().uuid().optional(),
   meetingSchedule: z.string().max(200).optional(),
+  meetingDay: z.string().max(20).optional(),
+  meetingTime: z.string().max(10).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  country: z.string().max(100).optional(),
 });
 
 export const updateFellowshipSchema = createFellowshipSchema.partial();

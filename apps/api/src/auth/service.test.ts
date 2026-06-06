@@ -111,6 +111,23 @@ describe('signup', () => {
     expect(mockInsert).toHaveBeenCalled();
   });
 
+  it('refuses self-registration when the date of birth implies under 16', async () => {
+    const { signup } = await import('./service');
+
+    setupSelectChain([]); // email check — no existing account
+
+    await expect(signup(mockDb, {
+      firstName: 'Tim',
+      lastName: 'Young',
+      email: 'tim@example.com',
+      homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
+      password: 'StrongPass123!',
+      dateOfBirth: '2015-01-01',
+    })).rejects.toThrow('under 16 cannot create their own account');
+
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it('persists secondary branch fields when provided', async () => {
     const { signup } = await import('./service');
 
@@ -217,6 +234,26 @@ describe('login', () => {
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
       .rejects.toThrow('pending approval');
+  });
+
+  it('should reject a minor (memberType child) from signing in', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, memberType: 'child' }]);
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+      .rejects.toThrow('belongs to a minor');
+  });
+
+  it('should reject a minor (DOB under 16) from signing in', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, dateOfBirth: '2015-01-01' }]);
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+      .rejects.toThrow('belongs to a minor');
   });
 
   it('should reject admin trying to login as pastor', async () => {

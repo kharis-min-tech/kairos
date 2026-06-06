@@ -9,6 +9,8 @@ import {
   assignRoleSchema,
   listMembersQuerySchema,
   createMemberSchema,
+  upsertHealthRecordSchema,
+  unguardedMinorsQuerySchema,
 } from './schemas';
 import {
   listMembers,
@@ -26,6 +28,9 @@ import {
   exportMembersCsv,
   listRoles,
   switchActiveBranch,
+  getHealthRecord,
+  upsertHealthRecord,
+  listUnguardedMinors,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 
@@ -88,6 +93,18 @@ membersRouter.get('/roles', requireRole('admin'), async (c) => {
   return c.json(successResponse(allRoles));
 });
 
+// ── Safeguarding review ────────────────────────────────────
+// Static path — must precede '/:id' so it isn't captured as an id.
+membersRouter.get(
+  '/safeguarding/unguarded-minors',
+  zValidator('query', unguardedMinorsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await listUnguardedMinors(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
 membersRouter.get('/:id', async (c) => {
   const auth = getAuth(c);
   const member = await getMember(db, c.req.param('id'), auth);
@@ -131,6 +148,20 @@ membersRouter.post('/:id/approve', requireRole('admin', 'pastor'), zValidator('j
   const { approved } = c.req.valid('json');
   const member = await approveMember(db, c.req.param('id'), approved, auth);
   return c.json(successResponse(member));
+});
+
+// ── Health Records (minor data protection) ────────────────
+
+membersRouter.get('/:id/health-record', async (c) => {
+  const auth = getAuth(c);
+  const record = await getHealthRecord(db, c.req.param('id'), auth);
+  return c.json(successResponse(record));
+});
+
+membersRouter.put('/:id/health-record', zValidator('json', upsertHealthRecordSchema), async (c) => {
+  const auth = getAuth(c);
+  const record = await upsertHealthRecord(db, c.req.param('id'), c.req.valid('json'), auth);
+  return c.json(successResponse(record, 'Health record saved'));
 });
 
 // ── Roles ──────────────────────────────────────────────────

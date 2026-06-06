@@ -84,7 +84,7 @@ function resizeImageToBase64(file: File, maxDim = 800, quality = 0.85): Promise<
 function formatDateLong(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return iso;
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -96,7 +96,7 @@ function formatMonthShort(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return '';
   return new Date(y, m - 1, d)
-    .toLocaleDateString(undefined, { month: 'short' })
+    .toLocaleDateString('en-GB', { month: 'short' })
     .toUpperCase();
 }
 
@@ -109,7 +109,7 @@ function formatWeekdayShort(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return '';
   return new Date(y, m - 1, d)
-    .toLocaleDateString(undefined, { weekday: 'short' })
+    .toLocaleDateString('en-GB', { weekday: 'short' })
     .toUpperCase();
 }
 

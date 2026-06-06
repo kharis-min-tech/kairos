@@ -24,6 +24,7 @@ import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
+import { formatDate, formatShortDate } from '@/lib/date-format';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
@@ -516,7 +517,7 @@ export default function FellowshipDetailPage() {
                           {meeting.meetingTitle || 'Meeting'}
                         </CardTitle>
                         <CardDescription>
-                          {new Date(meeting.meetingDate).toLocaleDateString()}
+                          {formatShortDate(meeting.meetingDate)}
                           {meeting.location && ` · ${meeting.location}`}
                           {meeting.durationMinutes && ` · ${meeting.durationMinutes} min`}
                         </CardDescription>
@@ -599,7 +600,7 @@ export default function FellowshipDetailPage() {
             const latestPresent = summary[summary.length - 1]?.present ?? 0;
 
             const chartData = summary.map((s) => ({
-              date: new Date(s.meetingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              date: formatDate(s.meetingDate, { month: 'short', day: 'numeric' }),
               rate: s.total > 0 ? Math.round((s.present / s.total) * 100) : 0,
             }));
 
@@ -659,7 +660,7 @@ export default function FellowshipDetailPage() {
                       return (
                         <div key={s.meetingId}>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="font-medium">{new Date(s.meetingDate).toLocaleDateString()}</span>
+                            <span className="font-medium">{formatShortDate(s.meetingDate)}</span>
                             <span className="text-muted-foreground">{s.present}/{s.total} ({pct}%)</span>
                           </div>
                           <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">

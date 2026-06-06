@@ -11,6 +11,7 @@ import {
   subMonths,
 } from 'date-fns';
 import { DateSelect } from '@/components/date-select';
+import { formatShortDate } from '@/lib/date-format';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
 type DatePreset = 'week' | '1M' | '3M' | '6M' | 'custom';
@@ -293,7 +294,7 @@ export function UnifiedDashboard({
           )}
           {dateFrom && dateTo && (
             <p className="text-xs text-muted-foreground">
-              Showing data from {new Date(dateFrom).toLocaleDateString()} to {new Date(dateTo).toLocaleDateString()}
+              Showing data from {formatShortDate(dateFrom)} to {formatShortDate(dateTo)}
             </p>
           )}
           {onProgramChange && (

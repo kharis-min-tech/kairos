@@ -8,13 +8,20 @@ import {
   useDepartments,
   useDeactivateDepartment,
   useGlobalDepartments,
+  useMyDepartments,
+  useMyDepartmentJoinRequests,
 } from '@/hooks/use-departments';
 import { useMyProfile } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
-import { MyRequestsPanel } from './_components/my-requests-panel';
+import {
+  MyDepartmentsView,
+  type ProbationStatus,
+} from './_components/my-departments-view';
+import { MyOffersBanner } from './_components/my-offers-banner';
+import { MyApplicationsList } from './_components/my-applications-list';
 
 interface ListParams {
   page?: number;
@@ -44,10 +51,35 @@ function DepartmentsContent() {
     activeRole === 'admin' ? params : { ...params, branchId: profile?.homeBranchId };
 
   const { data: result, isLoading, error } = useDepartments(fetchParams);
+  const { data: myDepts } = useMyDepartments();
+  const { data: joinRequests } = useMyDepartmentJoinRequests();
   const deactivate = useDeactivateDepartment();
 
-  const departments = result?.data;
+  // For the member view, dedupe the "browse all" grid against the user's own
+  // active memberships so they don't see the same cards twice.
+  const myDeptIdSet = new Set((myDepts ?? []).map((d) => d.id));
+  const isMemberRole = activeRole === 'member';
+  const rawDepartments = result?.data;
+  const departments = isMemberRole
+    ? rawDepartments?.filter((d) => !myDeptIdSet.has(d.id))
+    : rawDepartments;
   const pagination = result?.meta;
+
+  // Partition join requests by status for the member-view sub-tabs.
+  const offers = (joinRequests ?? []).filter((r) => r.status === 'offered');
+  const pendingApplications = (joinRequests ?? []).filter((r) =>
+    ['applied', 'interview_scheduled', 'interviewed'].includes(r.status),
+  );
+  const probationByDeptId = new Map<string, ProbationStatus>(
+    (joinRequests ?? [])
+      .filter((r) => r.status === 'probation')
+      .map((r) => [r.branchDepartmentId, { endDate: r.probationEndDate }]),
+  );
+
+  const membershipCount = myDepts?.length ?? 0;
+  const applicationCount = pendingApplications.length;
+  const showSubTabs = isMemberRole && applicationCount > 0;
+  const [memberSubTab, setMemberSubTab] = useState<'memberships' | 'applications'>('memberships');
 
   if (isLoading) {
     return (
@@ -65,14 +97,20 @@ function DepartmentsContent() {
     );
   }
 
+  const isMemberView = isMemberRole;
+
   return (
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Departments</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isMemberView ? 'My Departments' : 'Departments'}
+          </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Ministry teams{pagination ? ` — ${pagination.total} total` : ''}
+            {isMemberView
+              ? 'Your active department memberships and upcoming duties.'
+              : `Ministry teams${pagination ? ` — ${pagination.total} total` : ''}`}
           </p>
         </div>
         {(activeRole === 'admin' || activeRole === 'pastor') && (
@@ -82,8 +120,62 @@ function DepartmentsContent() {
         )}
       </div>
 
-      {/* Member-facing: my open join requests / offers */}
-      <MyRequestsPanel />
+      {/* Offers — pinned at the top for any user; only renders when offers exist. */}
+      {isMemberView && <MyOffersBanner offers={offers} />}
+
+      {/* Member-only primary surface: Memberships / Applications sub-tabs (when applicable) + Browse heading */}
+      {isMemberView && (
+        <>
+          {showSubTabs && (
+            <div role="tablist" className="flex flex-wrap gap-1 border-b border-border/40">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={memberSubTab === 'memberships'}
+                onClick={() => setMemberSubTab('memberships')}
+                className={[
+                  '-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                  memberSubTab === 'memberships'
+                    ? 'border-[#5D3FD3] text-[#5D3FD3]'
+                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                ].join(' ')}
+              >
+                Memberships ({membershipCount})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={memberSubTab === 'applications'}
+                onClick={() => setMemberSubTab('applications')}
+                className={[
+                  '-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                  memberSubTab === 'applications'
+                    ? 'border-[#5D3FD3] text-[#5D3FD3]'
+                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                ].join(' ')}
+              >
+                Applications ({applicationCount})
+              </button>
+            </div>
+          )}
+
+          {(!showSubTabs || memberSubTab === 'memberships') && (
+            <MyDepartmentsView probationByDeptId={probationByDeptId} />
+          )}
+          {showSubTabs && memberSubTab === 'applications' && (
+            <MyApplicationsList items={pendingApplications} />
+          )}
+
+          <div className="pt-2">
+            <h2 className="text-base font-semibold tracking-tight">
+              Browse other departments at your branch
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Request to join any of the teams below.
+            </p>
+          </div>
+        </>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">

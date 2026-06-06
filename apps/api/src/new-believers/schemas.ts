@@ -87,3 +87,7 @@ export const listSessionsQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   upcoming: z.coerce.boolean().optional(),
 });
+
+export const healthQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
+});

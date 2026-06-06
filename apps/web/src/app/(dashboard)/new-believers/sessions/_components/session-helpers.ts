@@ -19,7 +19,7 @@ export function isUpcomingSession(sessionDate: string | Date): boolean {
 }
 
 export function formatSessionDate(sessionDate: string | Date): string {
-  return new Date(sessionDate).toLocaleDateString(undefined, {
+  return new Date(sessionDate).toLocaleDateString('en-GB', {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -28,7 +28,7 @@ export function formatSessionDate(sessionDate: string | Date): string {
 }
 
 export function formatShortSessionDate(sessionDate: string | Date): string {
-  return new Date(sessionDate).toLocaleDateString(undefined, {
+  return new Date(sessionDate).toLocaleDateString('en-GB', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

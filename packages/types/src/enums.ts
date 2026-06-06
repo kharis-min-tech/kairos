@@ -185,3 +185,52 @@ export const RotaSwapRequestStatus = {
 } as const;
 export type RotaSwapRequestStatus =
   (typeof RotaSwapRequestStatus)[keyof typeof RotaSwapRequestStatus];
+
+// ── Members ────────────────────────────────────────────────
+
+export const MemberType = {
+  Member: 'member',
+  Prospect: 'prospect',
+  Visitor: 'visitor',
+  Child: 'child',
+} as const;
+export type MemberType = (typeof MemberType)[keyof typeof MemberType];
+
+// ── Forms & Data Capture ───────────────────────────────────
+
+export const FormType = {
+  AltarCall: 'altar_call',
+  Baptism: 'baptism',
+  Testimony: 'testimony',
+  BabyNaming: 'baby_naming',
+  BabyDedication: 'baby_dedication',
+  FirstTimeVisitor: 'first_time_visitor',
+} as const;
+export type FormType = (typeof FormType)[keyof typeof FormType];
+
+export const FormSubmissionStatus = {
+  New: 'new',
+  Reviewed: 'reviewed',
+  Converted: 'converted',
+  Dismissed: 'dismissed',
+} as const;
+export type FormSubmissionStatus =
+  (typeof FormSubmissionStatus)[keyof typeof FormSubmissionStatus];
+
+// ── Service Attendance ─────────────────────────────────────
+
+export const ServiceType = {
+  Sunday: 'Sunday',
+  Midweek: 'Midweek',
+  Special: 'Special',
+} as const;
+export type ServiceType = (typeof ServiceType)[keyof typeof ServiceType];
+
+// Present-only model: a row exists only for attendees, so there is no 'Absent'.
+export const ServiceAttendanceStatus = {
+  Present: 'Present',
+  Late: 'Late',
+  Virtual: 'Virtual',
+} as const;
+export type ServiceAttendanceStatus =
+  (typeof ServiceAttendanceStatus)[keyof typeof ServiceAttendanceStatus];

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { formatShortDate } from '@/lib/date-format';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -340,8 +341,8 @@ export default function BranchDetailPage() {
                     <tr key={leader.id}>
                       <td className="py-2 pr-4">{leader.memberFirstName} {leader.memberLastName}</td>
                       <td className="py-2 pr-4">{leader.role}</td>
-                      <td className="py-2 pr-4">{leader.startDate ? new Date(leader.startDate).toLocaleDateString() : '—'}</td>
-                      <td className="py-2 pr-4">{leader.endDate ? new Date(leader.endDate).toLocaleDateString() : '—'}</td>
+                      <td className="py-2 pr-4">{leader.startDate ? formatShortDate(leader.startDate) : '—'}</td>
+                      <td className="py-2 pr-4">{leader.endDate ? formatShortDate(leader.endDate) : '—'}</td>
                       <td className="py-2">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                           leader.isCurrent ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'

@@ -20,6 +20,7 @@ import {
   Radar,
 } from 'recharts';
 
+import { formatDate, formatShortDate } from '@/lib/date-format';
 import type { DashboardAnalytics, RagCounts } from './types';
 
 interface AnalyticalDashboardProps {
@@ -90,7 +91,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
             <XAxis
               dataKey="date"
               stroke="#94a3b8"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={(value) => formatDate(value, { month: 'short', day: 'numeric' })}
             />
             <YAxis stroke="#94a3b8" />
             <Tooltip
@@ -100,7 +101,7 @@ export function AnalyticalDashboard({ analytics }: AnalyticalDashboardProps) {
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString()}
+              labelFormatter={(value) => formatShortDate(value)}
             />
             <Legend />
             <Area

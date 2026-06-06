@@ -28,3 +28,22 @@ export { rotaPoolMembers, rotaPoolMembersRelations } from './rota-pool-members';
 export { rotaInstances, rotaInstancesRelations } from './rota-instances';
 export { rotaAssignments, rotaAssignmentsRelations } from './rota-assignments';
 export { rotaSwapRequests, rotaSwapRequestsRelations } from './rota-swap-requests';
+export { formSubmissions, formSubmissionsRelations } from './form-submissions';
+export {
+  memberHealthRecords,
+  memberHealthRecordsRelations,
+  type MemberHealthRecord,
+  type NewMemberHealthRecord,
+} from './member-health-records';
+export {
+  services,
+  servicesRelations,
+  type Service,
+  type NewService,
+} from './services';
+export {
+  serviceAttendance,
+  serviceAttendanceRelations,
+  type ServiceAttendance,
+  type NewServiceAttendance,
+} from './service-attendance';

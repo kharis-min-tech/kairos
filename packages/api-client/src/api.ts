@@ -18,6 +18,11 @@ import type {
   ApproveMemberRequest,
   AssignRoleRequest,
   MemberListParams,
+  MemberWithBranchProtected,
+  MemberDetailProtected,
+  UpsertHealthRecordRequest,
+  HealthRecordResponse,
+  UnguardedMinor,
   CreateFellowshipRequest,
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
@@ -33,6 +38,7 @@ import type {
   AdminDashboardStats,
   BranchDashboardStats,
   MemberDashboardStats,
+  FellowshipDashboardStats,
   CreateMemberRequest,
   CreateMemberResponse,
   ChangePasswordRequest,
@@ -45,6 +51,7 @@ import type {
   NewBelieverEnrollmentWithMember,
   NewBelieverSession,
   NewBelieverAttendanceWithMember,
+  NewBelieverHealthSummary,
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
   EnrollmentListParams,
@@ -54,7 +61,38 @@ import type {
   UpdateNewBelieverSessionRequest,
   RecordNewBelieverAttendanceRequest,
   SessionListParams,
+  // Forms & Data Capture
+  FormSubmission,
+  SubmitFormRequest,
+  FormMemberSearchParams,
+  FormMemberSearchResult,
+  ListFormSubmissionsParams,
+  UpdateFormSubmissionRequest,
+  ExportFormSubmissionsParams,
+  DormantProspect,
+  ListDormantProspectsParams,
+  ArchiveProspectsRequest,
+  ArchiveProspectsResult,
+  // Attendance
+  CreateServiceRequest,
+  UpdateServiceRequest,
+  ServiceListParams,
+  ServiceSummary,
+  ServiceWithDetail,
+  RosterParams,
+  RosterEntry,
+  RecordServiceAttendanceRequest,
+  RecordAttendanceResult,
+  ServiceAttendanceRow,
+  AttendanceTrendPoint,
+  AttendanceTrendsParams,
+  MissingMember,
+  MissingMembersParams,
+  BranchAttendanceRate,
+  BranchAttendanceParams,
 } from '@kairos/types';
+
+import type { FormType } from '@kairos/types';
 
 import type {
   Branch,
@@ -62,7 +100,6 @@ import type {
   Region,
   BranchLeadershipWithMember,
   Member,
-  MemberWithBranch,
   MemberRole,
   MemberRoleWithDetails,
   Fellowship,
@@ -178,10 +215,10 @@ export function createApiClient(
         if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
         if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
-        return client.get<ApiResponse<PaginatedResponse<MemberWithBranch>>>(`/api/members${query ? `?${query}` : ''}`);
+        return client.get<ApiResponse<PaginatedResponse<MemberWithBranchProtected>>>(`/api/members${query ? `?${query}` : ''}`);
       },
       get: (id: string) =>
-        client.get<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`),
+        client.get<ApiResponse<MemberDetailProtected>>(`/api/members/${encodeURIComponent(id)}`),
       update: (id: string, data: UpdateMemberRequest) =>
         client.patch<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}`, data),
       approve: (id: string, data: ApproveMemberRequest) =>
@@ -202,6 +239,16 @@ export function createApiClient(
         client.get<ApiResponse<Member>>('/api/members/me'),
       switchActiveBranch: (id: string) =>
         client.patch<ApiResponse<SwitchActiveBranchResponse>>(`/api/members/${encodeURIComponent(id)}/active-branch`, {}),
+      getHealthRecord: (id: string) =>
+        client.get<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`),
+      upsertHealthRecord: (id: string, data: UpsertHealthRecordRequest) =>
+        client.put<ApiResponse<HealthRecordResponse>>(`/api/members/${encodeURIComponent(id)}/health-record`, data),
+      listUnguardedMinors: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<UnguardedMinor[]>>(`/api/members/safeguarding/unguarded-minors${query ? `?${query}` : ''}`);
+      },
       roles: {
         listAll: () =>
           client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),
@@ -225,6 +272,8 @@ export function createApiClient(
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<FellowshipWithBranch>>>(`/api/fellowships${query ? `?${query}` : ''}`);
       },
+      map: () =>
+        client.get<ApiResponse<FellowshipWithBranch[]>>('/api/fellowships/map'),
       get: (id: string) =>
         client.get<ApiResponse<FellowshipWithBranch>>(`/api/fellowships/${encodeURIComponent(id)}`),
       create: (data: CreateFellowshipRequest) =>
@@ -690,6 +739,8 @@ export function createApiClient(
         client.get<ApiResponse<AdminDashboardStats>>('/api/analytics/admin'),
       branchStats: () =>
         client.get<ApiResponse<BranchDashboardStats>>('/api/analytics/branch'),
+      fellowshipStats: () =>
+        client.get<ApiResponse<FellowshipDashboardStats>>('/api/analytics/fellowship'),
       memberStats: () =>
         client.get<ApiResponse<MemberDashboardStats>>('/api/analytics/member'),
     },
@@ -849,6 +900,12 @@ export function createApiClient(
       },
     },
     newBelievers: {
+      health: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const q = qs.toString();
+        return client.get<ApiResponse<NewBelieverHealthSummary>>(`/api/new-believers/health${q ? `?${q}` : ''}`);
+      },
       enrollments: {
         list: (params?: EnrollmentListParams) => {
           const qs = new URLSearchParams();
@@ -894,6 +951,114 @@ export function createApiClient(
     messaging: {
       getCredentials: () =>
         client.get<ApiResponse<{ email: string; password: string }>>('/api/messaging/login-token'),
+    },
+
+    forms: {
+      // Submit a form (any logged-in member). Branch is forced server-side.
+      submit: (formType: FormType, data: SubmitFormRequest) =>
+        client.post<ApiResponse<FormSubmission>>(`/api/forms/${encodeURIComponent(formType)}/submit`, data),
+
+      // Typeahead for the altar-call search-and-select.
+      memberSearch: (params: FormMemberSearchParams) => {
+        const qs = new URLSearchParams();
+        qs.set('q', params.q);
+        if (params.branchId) qs.set('branchId', params.branchId);
+        return client.get<ApiResponse<FormMemberSearchResult[]>>(`/api/forms/member-search?${qs.toString()}`);
+      },
+
+      submissions: {
+        list: (params?: ListFormSubmissionsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.formType) qs.set('formType', params.formType);
+          if (params?.status) qs.set('status', params.status);
+          if (params?.from) qs.set('from', params.from);
+          if (params?.to) qs.set('to', params.to);
+          const q = qs.toString();
+          return client.get<ApiResponse<FormSubmission[]>>(`/api/forms/submissions${q ? `?${q}` : ''}`);
+        },
+        get: (id: string) =>
+          client.get<ApiResponse<FormSubmission>>(`/api/forms/submissions/${encodeURIComponent(id)}`),
+        update: (id: string, data: UpdateFormSubmissionRequest) =>
+          client.patch<ApiResponse<FormSubmission>>(`/api/forms/submissions/${encodeURIComponent(id)}`, data),
+        exportCsv: (params: ExportFormSubmissionsParams) => {
+          const qs = new URLSearchParams();
+          qs.set('formType', params.formType);
+          if (params.branchId) qs.set('branchId', params.branchId);
+          if (params.status) qs.set('status', params.status);
+          if (params.from) qs.set('from', params.from);
+          if (params.to) qs.set('to', params.to);
+          return client.getBlob(`/api/forms/submissions/export?${qs.toString()}`);
+        },
+      },
+
+      prospects: {
+        dormant: (params?: ListDormantProspectsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          const q = qs.toString();
+          return client.get<ApiResponse<DormantProspect[]>>(`/api/forms/prospects/dormant${q ? `?${q}` : ''}`);
+        },
+        archive: (data: ArchiveProspectsRequest) =>
+          client.post<ApiResponse<ArchiveProspectsResult>>('/api/forms/prospects/archive', data),
+      },
+    },
+
+    attendance: {
+      listServices: (params?: ServiceListParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.type) qs.set('type', params.type);
+        if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+        if (params?.dateTo) qs.set('dateTo', params.dateTo);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<ServiceSummary>>>(`/api/attendance/services${query ? `?${query}` : ''}`);
+      },
+      getService: (id: string) =>
+        client.get<ApiResponse<ServiceWithDetail>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+      createService: (data: CreateServiceRequest) =>
+        client.post<ApiResponse<ServiceSummary>>('/api/attendance/services', data),
+      updateService: (id: string, data: UpdateServiceRequest) =>
+        client.patch<ApiResponse<ServiceSummary>>(`/api/attendance/services/${encodeURIComponent(id)}`, data),
+      deleteService: (id: string) =>
+        client.delete<ApiResponse<ServiceSummary>>(`/api/attendance/services/${encodeURIComponent(id)}`),
+
+      roster: (serviceId: string, params?: RosterParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.search) qs.set('search', params.search);
+        const query = qs.toString();
+        return client.get<ApiResponse<PaginatedResponse<RosterEntry>>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/roster${query ? `?${query}` : ''}`);
+      },
+      recordAttendance: (serviceId: string, data: RecordServiceAttendanceRequest) =>
+        client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
+      listAttendance: (serviceId: string) =>
+        client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
+
+      trends: (params?: AttendanceTrendsParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<AttendanceTrendPoint[]>>(`/api/attendance/reports/trends${query ? `?${query}` : ''}`);
+      },
+      missingMembers: (params?: MissingMembersParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.services) qs.set('services', String(params.services));
+        const query = qs.toString();
+        return client.get<ApiResponse<MissingMember[]>>(`/api/attendance/reports/missing-members${query ? `?${query}` : ''}`);
+      },
+      byBranch: (params?: BranchAttendanceParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<BranchAttendanceRate[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
+      },
     },
   };
 }

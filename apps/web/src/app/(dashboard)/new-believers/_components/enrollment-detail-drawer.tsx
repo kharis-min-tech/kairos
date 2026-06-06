@@ -17,6 +17,7 @@ import {
 } from '@kairos/ui';
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
+import { formatShortDate } from '@/lib/date-format';
 import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
 import type { EnrollmentDetail } from './types';
 import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
@@ -165,7 +166,7 @@ export function EnrollmentDetailDrawer({
                 {stage?.label ?? enrollment.stage}
               </span>
               <span className="text-xs text-muted-foreground">
-                · Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                · Enrolled {formatShortDate(enrollment.enrolledAt)}
               </span>
             </div>
 
@@ -230,7 +231,7 @@ export function EnrollmentDetailDrawer({
                       <div>
                         <p className="font-medium">{a.topic ?? 'Session'}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(a.sessionDate).toLocaleDateString()}
+                          {formatShortDate(a.sessionDate)}
                         </p>
                       </div>
                       <span
