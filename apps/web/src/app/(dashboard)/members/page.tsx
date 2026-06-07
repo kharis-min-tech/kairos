@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
+import { useConfirm } from '@/components/confirm-dialog';
 
 export default function MembersPage() {
   const user = useAuthStore((s) => s.user);
@@ -49,6 +50,7 @@ export default function MembersPage() {
   const deactivate = useDeactivateMember();
   const { data: branches } = useBranches();
   const { data: pendingResult } = useMembers({ approvalStatus: 'pending', limit: 1 });
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function handleExport() {
     setExportLoading(true);
@@ -90,6 +92,7 @@ export default function MembersPage() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
@@ -229,14 +232,19 @@ export default function MembersPage() {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault();
-                                if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
-                                  deactivate.mutate(member.id, {
-                                    onSuccess: () => toast.success('Member removed from system.'),
-                                    onError: () => toast.error('Failed to deactivate member. Please try again.'),
-                                  });
-                                }
+                                const ok = await confirm({
+                                  title: `Deactivate ${member.firstName} ${member.lastName}?`,
+                                  description: 'They will be removed from the active directory. You can reactivate them later from their profile.',
+                                  confirmLabel: 'Deactivate',
+                                  variant: 'destructive',
+                                });
+                                if (!ok) return;
+                                deactivate.mutate(member.id, {
+                                  onSuccess: () => toast.success('Member removed from system.'),
+                                  onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                                });
                               }}
                             >
                               Deactivate

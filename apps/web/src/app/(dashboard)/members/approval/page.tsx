@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMembers, useApproveMember } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { useConfirm } from '@/components/confirm-dialog';
 import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';
@@ -20,6 +21,7 @@ export default function MemberApprovalPage() {
 
   const { data: result, isLoading } = useMembers({ approvalStatus: 'pending' }, isAdmin);
   const approveMember = useApproveMember();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   if (user !== null && !isAdmin) return null;
 
@@ -27,6 +29,7 @@ export default function MemberApprovalPage() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
@@ -72,19 +75,23 @@ export default function MemberApprovalPage() {
                   <div className="flex flex-shrink-0 gap-2">
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                      variant="destructive"
                       disabled={approveMember.isPending}
-                      onClick={() => {
-                        if (confirm(`Reject ${member.firstName} ${member.lastName}?`)) {
-                          approveMember.mutate(
-                            { id: member.id, data: { approved: false } },
-                            {
-                              onSuccess: () => toast.success('Registration rejected.'),
-                              onError: () => toast.error('Failed to reject registration. Please try again.'),
-                            },
-                          );
-                        }
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: `Reject ${member.firstName} ${member.lastName}?`,
+                          description: 'Their registration request will be marked as rejected.',
+                          confirmLabel: 'Reject',
+                          variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        approveMember.mutate(
+                          { id: member.id, data: { approved: false } },
+                          {
+                            onSuccess: () => toast.success('Registration rejected.'),
+                            onError: () => toast.error('Failed to reject registration. Please try again.'),
+                          },
+                        );
                       }}
                     >
                       Reject

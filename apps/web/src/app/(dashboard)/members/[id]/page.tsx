@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { Lock } from 'lucide-react';
 import { SafeguardingSection } from './_components/safeguarding-section';
+import { useConfirm } from '@/components/confirm-dialog';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export default function MemberDetailPage() {
   const isPastor = activeRole === 'pastor';
   const canManage = isAdmin || isPastor;
   const isSelf = user?.id === id;
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const [selectedFellowshipId, setSelectedFellowshipId] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState('');
@@ -73,6 +75,7 @@ export default function MemberDetailPage() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div className="flex-1">
@@ -120,16 +123,20 @@ export default function MemberDetailPage() {
                 <Button
                   size="sm"
                   className="bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={() => {
-                    if (confirm(`Approve ${member.firstName} ${member.lastName}?`)) {
-                      approve.mutate(
-                        { id, data: { approved: true } },
-                        {
-                          onSuccess: () => toast.success('Member approved.'),
-                          onError: () => toast.error('Failed to approve. Please try again.'),
-                        },
-                      );
-                    }
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Approve ${member.firstName} ${member.lastName}?`,
+                      description: 'They will be able to sign in once approved.',
+                      confirmLabel: 'Approve',
+                    });
+                    if (!ok) return;
+                    approve.mutate(
+                      { id, data: { approved: true } },
+                      {
+                        onSuccess: () => toast.success('Member approved.'),
+                        onError: () => toast.error('Failed to approve. Please try again.'),
+                      },
+                    );
                   }}
                 >
                   Approve
@@ -139,13 +146,18 @@ export default function MemberDetailPage() {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => {
-                    if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
-                      deactivate.mutate(member.id, {
-                        onSuccess: () => router.push('/members'),
-                        onError: () => toast.error('Failed to deactivate member. Please try again.'),
-                      });
-                    }
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Deactivate ${member.firstName} ${member.lastName}?`,
+                      description: 'They will be removed from the active directory. You can reactivate them later.',
+                      confirmLabel: 'Deactivate',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    deactivate.mutate(member.id, {
+                      onSuccess: () => router.push('/members'),
+                      onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                    });
                   }}
                 >
                   Deactivate
@@ -155,13 +167,17 @@ export default function MemberDetailPage() {
                 <Button
                   size="sm"
                   className="bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={() => {
-                    if (confirm(`Reactivate ${member.firstName} ${member.lastName}?`)) {
-                      reactivate.mutate(member.id, {
-                        onSuccess: () => toast.success('Member reactivated.'),
-                        onError: () => toast.error('Failed to reactivate. Please try again.'),
-                      });
-                    }
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Reactivate ${member.firstName} ${member.lastName}?`,
+                      description: 'They will appear back in the active directory.',
+                      confirmLabel: 'Reactivate',
+                    });
+                    if (!ok) return;
+                    reactivate.mutate(member.id, {
+                      onSuccess: () => toast.success('Member reactivated.'),
+                      onError: () => toast.error('Failed to reactivate. Please try again.'),
+                    });
                   }}
                 >
                   Reactivate
@@ -235,16 +251,21 @@ export default function MemberDetailPage() {
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => {
-                        if (confirm(`Remove role "${role.roleName}"?`)) {
-                          removeRole.mutate(
-                            { memberId: id, roleAssignmentId: role.id },
-                            {
-                              onSuccess: () => toast.success('Role removed.'),
-                              onError: () => toast.error('Failed to remove role. Please try again.'),
-                            },
-                          );
-                        }
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: `Remove "${role.roleName}"?`,
+                          description: `This will revoke the ${role.roleName} role from ${member.firstName} ${member.lastName} at ${role.branchName}.`,
+                          confirmLabel: 'Remove role',
+                          variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        removeRole.mutate(
+                          { memberId: id, roleAssignmentId: role.id },
+                          {
+                            onSuccess: () => toast.success('Role removed.'),
+                            onError: () => toast.error('Failed to remove role. Please try again.'),
+                          },
+                        );
                       }}
                     >
                       Remove
