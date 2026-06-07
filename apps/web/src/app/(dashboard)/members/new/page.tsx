@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -13,11 +13,18 @@ import type { CreateMemberRequest } from '@kairos/types';
 
 export default function AddMemberPage() {
   const router = useRouter();
-  const { activeRole } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const isAdmin = user?.systemRole === 'admin';
+  const canCreate = isAdmin || activeRole === 'pastor';
   const createMember = useCreateMember();
   const { data: branches } = useBranches();
 
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user !== null && !canCreate) router.replace('/dashboard');
+  }, [user, canCreate, router]);
 
   const {
     register,
@@ -30,11 +37,7 @@ export default function AddMemberPage() {
   const dobValue = watch('dateOfBirth') ?? '';
   const secondaryBranchId = watch('secondaryBranchId');
 
-  // Route guard
-  if (activeRole === 'member') {
-    router.replace('/dashboard');
-    return null;
-  }
+  if (user !== null && !canCreate) return null;
 
   async function onSubmit(data: CreateMemberRequest) {
     try {
@@ -268,12 +271,19 @@ export default function AddMemberPage() {
               </div>
               <div>
                 <Label htmlFor="systemRole">System Role</Label>
-                <CustomSelect
-                  id="systemRole"
-                  value={watch('systemRole') ?? 'member'}
-                  onValueChange={(v) => setValue('systemRole', v as 'member' | 'pastor' | 'admin')}
-                  options={[{ value: 'member', label: 'Member' }, { value: 'pastor', label: 'Pastor' }, { value: 'admin', label: 'Admin' }]}
-                />
+                {isAdmin ? (
+                  <CustomSelect
+                    id="systemRole"
+                    value={watch('systemRole') ?? 'member'}
+                    onValueChange={(v) => setValue('systemRole', v as 'member' | 'pastor' | 'admin')}
+                    options={[{ value: 'member', label: 'Member' }, { value: 'pastor', label: 'Pastor' }, { value: 'admin', label: 'Admin' }]}
+                  />
+                ) : (
+                  <Input id="systemRole" value="Member" disabled className="mt-1 cursor-not-allowed" />
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {isAdmin ? 'Promote new admins or pastors here.' : 'Only admins can assign pastor or admin roles.'}
+                </p>
               </div>
             </div>
             {/* Secondary branch */}
