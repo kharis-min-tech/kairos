@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-screen">
       {/* Left branding panel — hidden on mobile */}
-      <div className="relative hidden w-[480px] flex-col justify-between overflow-hidden p-10 shadow-[2px_0_12px_-4px_rgba(0,0,0,0.08)] [background:radial-gradient(ellipse_at_50%_50%,_rgba(109,40,217,0.18)_0%,_rgba(93,63,211,0.10)_40%,_rgba(109,40,217,0.04)_70%,_transparent_100%),_white] dark:shadow-[8px_0_30px_-10px_rgba(0,0,0,0.5)] dark:[background:radial-gradient(ellipse_at_50%_50%,_#1e1050_0%,_#150d35_30%,_#0c0a1a_55%,_#07060e_75%,_#050408_100%)] lg:flex">
+      <div className="relative hidden w-[480px] flex-col justify-between overflow-hidden p-10 shadow-[2px_0_12px_-4px_rgba(0,0,0,0.08)] [background:radial-gradient(ellipse_at_50%_50%,_rgba(93,63,211,0.18)_0%,_rgba(93,63,211,0.10)_40%,_rgba(93,63,211,0.04)_70%,_transparent_100%),_white] dark:shadow-[8px_0_30px_-10px_rgba(0,0,0,0.5)] dark:[background:radial-gradient(ellipse_at_50%_50%,_#1e1050_0%,_#150d35_30%,_#0c0a1a_55%,_#07060e_75%,_#050408_100%)] lg:flex">
 
         {/* Top — Logo + name */}
         <div className="relative z-10 flex items-center gap-3">
