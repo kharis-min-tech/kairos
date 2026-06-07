@@ -105,11 +105,15 @@ export default function SignupPage() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [branches, setBranches] = useState<{ id: string; branchName: string }[]>([]);
+  const [branchesLoadFailed, setBranchesLoadFailed] = useState(false);
 
   useEffect(() => {
-    api.branches.listPublic().then((res) => {
-      if (res.data) setBranches(res.data);
-    }).catch(() => {});
+    api.branches
+      .listPublic()
+      .then((res) => {
+        if (res.data) setBranches(res.data);
+      })
+      .catch(() => setBranchesLoadFailed(true));
   }, []);
 
   const {
@@ -272,11 +276,16 @@ export default function SignupPage() {
                       id="homeBranchId"
                       value={field.value ?? ''}
                       onValueChange={field.onChange}
-                      placeholder="Select a branch..."
+                      placeholder={branchesLoadFailed ? 'Unable to load branches' : branches.length === 0 ? 'Loading branches…' : 'Select a branch...'}
                       options={branches.map((b) => ({ value: b.id, label: b.branchName }))}
                     />
                   )}
                 />
+                {branchesLoadFailed && (
+                  <p className="text-xs text-destructive">
+                    Couldn&apos;t reach the server. Refresh the page or try again shortly.
+                  </p>
+                )}
                 {errors.homeBranchId && (
                   <p className="text-xs text-destructive">{errors.homeBranchId.message}</p>
                 )}

@@ -173,9 +173,24 @@ function ResetPasswordContent() {
   );
 }
 
+function ResetPasswordSkeleton() {
+  return (
+    <>
+      <KharisCardHeader heading="Reset password" subtitle="Loading…" />
+      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="space-y-5 animate-pulse" aria-busy="true" aria-live="polite">
+          <div className="h-11 rounded-lg bg-muted/40" />
+          <div className="h-11 rounded-lg bg-muted/40" />
+          <div className="h-11 rounded-lg bg-muted/30" />
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>
+    <Suspense fallback={<ResetPasswordSkeleton />}>
       <ResetPasswordContent />
     </Suspense>
   );

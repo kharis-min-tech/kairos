@@ -205,9 +205,24 @@ function VerifyEmailContent() {
   );
 }
 
+function VerifyEmailSkeleton() {
+  return (
+    <>
+      <KharisCardHeader heading="Verify your email" subtitle="Loading…" />
+      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="flex justify-center gap-2 animate-pulse" aria-busy="true" aria-live="polite">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-12 w-12 rounded-lg bg-muted/40" />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>
+    <Suspense fallback={<VerifyEmailSkeleton />}>
       <VerifyEmailContent />
     </Suspense>
   );
