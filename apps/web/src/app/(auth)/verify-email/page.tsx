@@ -123,8 +123,8 @@ function VerifyEmailContent() {
       <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {error}
@@ -145,15 +145,22 @@ function VerifyEmailContent() {
               </p>
 
               {/* OTP Boxes */}
-              <div className="flex justify-center gap-2" onPaste={handlePaste}>
+              <div
+                role="group"
+                aria-label="6-character verification code"
+                className="flex justify-center gap-2"
+                onPaste={handlePaste}
+              >
                 {digits.map((digit, i) => (
                   <input
                     key={i}
                     ref={(el) => { inputRefs.current[i] = el; }}
                     type="text"
                     inputMode="text"
+                    autoComplete={i === 0 ? 'one-time-code' : 'off'}
                     maxLength={1}
                     value={digit}
+                    aria-label={`Verification code digit ${i + 1}`}
                     onChange={(e) => handleChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
                     className="h-12 w-12 rounded-lg border border-muted-foreground/15 bg-background text-center text-lg font-bold text-foreground outline-none transition-colors focus:border-[#5D3FD3] focus:ring-1 focus:ring-[#5D3FD3]/20"

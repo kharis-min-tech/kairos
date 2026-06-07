@@ -52,11 +52,19 @@ const STEPS = ['Personal Info', 'Contact & Branch', 'Create Password'] as const;
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center justify-between">
+    <div
+      className="flex items-center justify-between"
+      role="progressbar"
+      aria-valuenow={currentStep + 1}
+      aria-valuemin={1}
+      aria-valuemax={STEPS.length}
+      aria-valuetext={`Step ${currentStep + 1} of ${STEPS.length}: ${STEPS[currentStep]}`}
+    >
       {STEPS.map((label, i) => (
         <div key={label} className="flex items-center">
           <div className="flex flex-col items-center gap-1">
             <div
+              aria-current={i === currentStep ? 'step' : undefined}
               className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${
                 i < currentStep
                   ? 'bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white shadow-md shadow-[#5d3fd3]/30'
@@ -66,7 +74,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               }`}
             >
               {i < currentStep ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
@@ -79,6 +87,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
           </div>
           {i < STEPS.length - 1 && (
             <div
+              aria-hidden="true"
               className={`mx-2 mb-4 h-0.5 w-8 rounded-full transition-colors sm:w-12 ${
                 i < currentStep ? 'bg-gradient-to-r from-[#451ebb] to-[#5d3fd3]' : 'bg-muted'
               }`}
@@ -153,8 +162,8 @@ export default function SignupPage() {
       <CardContent className="pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {error}
