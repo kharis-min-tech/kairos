@@ -19,6 +19,7 @@ export default function MembersPage() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
   const isPastor = activeRole === 'pastor';
+  const isMemberView = activeRole === 'member';
   // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
   // the page itself enforces real access via the API (403 for unauthorized leaders).
   const canSeeSafeguarding = isAdmin || isPastor || activeRole === 'leader';
@@ -183,9 +184,11 @@ export default function MembersPage() {
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => {
+              const isSelf = member.id === user?.id;
+              const showFullDetails = !isMemberView || isSelf;
               const statusCls =
                 member.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]'
+                : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]'
                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-400';
               return (
                 <Link key={member.id} href={`/members/${member.id}`}>
@@ -203,39 +206,45 @@ export default function MembersPage() {
                           <CardTitle className="truncate text-base">
                             {member.firstName} {member.lastName}
                           </CardTitle>
-                          <CardDescription className="truncate">{member.branchName}</CardDescription>
+                          {showFullDetails && (
+                            <CardDescription className="truncate">{member.branchName}</CardDescription>
+                          )}
                         </div>
-                        <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
-                          {member.approvalStatus}
-                        </span>
+                        {showFullDetails && (
+                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
+                            {member.approvalStatus}
+                          </span>
+                        )}
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        <p className="truncate">{member.email}</p>
-                        {member.phone && <p>{member.phone}</p>}
-                        <p className="text-xs capitalize">{member.systemRole}</p>
-                      </div>
-                      {(isAdmin || isPastor) && (
-                        <div className="mt-4">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
-                              deactivate.mutate(member.id, {
-                                onSuccess: () => toast.success('Member removed from system.'),
-                                onError: () => toast.error('Failed to deactivate member. Please try again.'),
-                              });
-                              }
-                            }}
-                          >
-                            Deactivate
-                          </Button>
+                    {showFullDetails && (
+                      <CardContent className="pt-0">
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p className="truncate">{member.email}</p>
+                          {member.phone && <p>{member.phone}</p>}
+                          <p className="text-xs capitalize">{member.systemRole}</p>
                         </div>
-                      )}
-                    </CardContent>
+                        {(isAdmin || isPastor) && (
+                          <div className="mt-4">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (confirm(`Deactivate ${member.firstName} ${member.lastName}?`)) {
+                                  deactivate.mutate(member.id, {
+                                    onSuccess: () => toast.success('Member removed from system.'),
+                                    onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                                  });
+                                }
+                              }}
+                            >
+                              Deactivate
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    )}
                   </Card>
                 </Link>
               );

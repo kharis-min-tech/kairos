@@ -29,6 +29,7 @@ export default function MemberDetailPage() {
   const isAdmin = user?.systemRole === 'admin';
   const isPastor = activeRole === 'pastor';
   const canManage = isAdmin || isPastor;
+  const isSelf = user?.id === id;
 
   const [selectedFellowshipId, setSelectedFellowshipId] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState('');
@@ -107,8 +108,14 @@ export default function MemberDetailPage() {
             </div>
           </div>
         </div>
-        {canManage && (
-          <div className="flex gap-2">
+        <div className="flex gap-2">
+          {isSelf && (
+            <Link href="/profile">
+              <Button size="sm" variant="outline">Edit my profile</Button>
+            </Link>
+          )}
+          {canManage && (
+            <>
               {member.approvalStatus === 'pending' && (
                 <Button
                   size="sm"
@@ -160,8 +167,9 @@ export default function MemberDetailPage() {
                   Reactivate
                 </Button>
               )}
-            </div>
+            </>
           )}
+        </div>
       </div>
 
       {/* Profile Info */}
