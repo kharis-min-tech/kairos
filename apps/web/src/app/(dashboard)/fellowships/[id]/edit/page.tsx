@@ -68,7 +68,16 @@ export default function EditFellowshipPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
+  const canEdit = activeRole === 'admin' || activeRole === 'pastor';
+
+  // Mirrors the detail-page Edit button gating: members + leaders go back to detail.
+  useEffect(() => {
+    if (user !== null && !canEdit) {
+      router.replace(`/fellowships/${id}`);
+    }
+  }, [user, canEdit, id, router]);
 
   const { data: fellowship, isLoading: fellowshipLoading } = useFellowship(id);
   const updateFellowship = useUpdateFellowship();
@@ -125,6 +134,10 @@ export default function EditFellowshipPage() {
       // error surfaced via updateFellowship.error in JSX
     }
   };
+
+  if (user !== null && !canEdit) {
+    return null;
+  }
 
   if (fellowshipLoading) {
     return (
