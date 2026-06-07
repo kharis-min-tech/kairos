@@ -28,6 +28,29 @@ const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ),
 });
 
+function FellowshipsListSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <div className="h-8 w-48 animate-pulse rounded bg-muted/60" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="h-4 w-2/3 animate-pulse rounded bg-muted/60" />
+              <div className="h-5 w-16 animate-pulse rounded-full bg-muted/40" />
+            </div>
+            <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-muted/40" />
+            <div className="mt-4 space-y-2">
+              <div className="h-3 w-3/4 animate-pulse rounded bg-muted/40" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-muted/40" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const FELLOWSHIP_TYPES = [
   { label: 'All', value: '' },
   { label: 'K-Groups', value: FellowshipType.KGroups },
@@ -76,17 +99,15 @@ function FellowshipsContent() {
   const pagination = result?.meta;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading fellowships...</p>
-      </div>
-    );
+    return <FellowshipsListSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Failed to load fellowships. Please try again.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : 'Failed to load fellowships. Please try again.'}
+        </p>
       </div>
     );
   }
@@ -302,7 +323,7 @@ function FellowshipsContent() {
 
 export default function FellowshipsPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading...</p></div>}>
+    <Suspense fallback={<FellowshipsListSkeleton />}>
       <FellowshipsContent />
     </Suspense>
   );

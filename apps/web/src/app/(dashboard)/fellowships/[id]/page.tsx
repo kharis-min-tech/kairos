@@ -30,6 +30,31 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tool
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
 
+function FellowshipDetailSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <div>
+        <div className="mb-2 h-4 w-32 animate-pulse rounded bg-muted/40" />
+        <div className="h-8 w-2/3 animate-pulse rounded bg-muted/60" />
+        <div className="mt-2 h-4 w-1/3 animate-pulse rounded bg-muted/40" />
+      </div>
+      <div className="flex gap-2 border-b border-border/40 pb-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-6 w-20 animate-pulse rounded bg-muted/40" />
+        ))}
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4">
+            <div className="h-3 w-24 animate-pulse rounded bg-muted/40" />
+            <div className="mt-2 h-5 w-3/4 animate-pulse rounded bg-muted/60" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function FellowshipDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -71,11 +96,7 @@ export default function FellowshipDetailPage() {
   const isRestrictedView = !isAdminOrPastor && !isMemberOfFellowship;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading fellowship...</p>
-      </div>
-    );
+    return <FellowshipDetailSkeleton />;
   }
 
   if (error || !fellowship) {
@@ -87,8 +108,10 @@ export default function FellowshipDetailPage() {
           </svg>
           Back to Fellowships
         </Link>
-        <div className="rounded-lg bg-rose-50 p-4">
-          <p className="text-sm text-rose-700">Fellowship not found.</p>
+        <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+          <p className="text-sm text-destructive">
+            {error instanceof Error ? error.message : 'Fellowship not found.'}
+          </p>
         </div>
       </div>
     );

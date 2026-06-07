@@ -141,16 +141,30 @@ export default function EditFellowshipPage() {
 
   if (fellowshipLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading fellowship...</p>
+      <div className="mx-auto max-w-2xl space-y-6" aria-busy="true" aria-live="polite">
+        <div>
+          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-muted/40" />
+          <div className="h-8 w-2/3 animate-pulse rounded bg-muted/60" />
+          <div className="mt-2 h-4 w-1/3 animate-pulse rounded bg-muted/40" />
+        </div>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-3 w-32 animate-pulse rounded bg-muted/40" />
+                <div className="h-10 w-full animate-pulse rounded bg-muted/40" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!fellowship) {
     return (
-      <div className="rounded-lg bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Fellowship not found.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm text-destructive">Fellowship not found.</p>
       </div>
     );
   }
