@@ -15,10 +15,19 @@ import {
   AreaChart,
   RadarChart,
   PolarGrid,
-  PolarAngleAxis,
+  PolarAngleAxis as PolarAngleAxisRaw,
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
+import type { FC } from 'react';
+
+// recharts 3.x ships a return type (ReactNode) that React 19's JSX runtime
+// rejects (expects ReactElement | null). Other Polar* exports compile clean;
+// only PolarAngleAxis trips TS2786. Cast to a permissive FC to satisfy JSX.
+const PolarAngleAxis = PolarAngleAxisRaw as unknown as FC<{
+  dataKey?: string;
+  stroke?: string;
+}>;
 
 import { formatDate, formatShortDate } from '@/lib/date-format';
 import type { DashboardAnalytics, RagCounts } from './types';
