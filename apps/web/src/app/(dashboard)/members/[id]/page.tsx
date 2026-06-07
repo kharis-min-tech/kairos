@@ -49,24 +49,21 @@ export default function MemberDetailPage() {
   const alreadyInFellowship = currentFellowships.length > 0;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading member...</p>
-      </div>
-    );
+    return <MemberDetailSkeleton />;
   }
 
   if (error || !member) {
+    const message = error instanceof Error ? error.message : 'Member not found or access denied.';
     return (
-      <div className="rounded-lg bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Member not found or access denied.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm text-destructive">{message}</p>
       </div>
     );
   }
 
   const statusCls =
     member.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-700'
-    : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-amber-700'
+    : member.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]'
     : 'bg-rose-100 text-rose-700';
 
   // When the member is a minor and the viewer lacks safeguarding access, the API
@@ -386,6 +383,30 @@ export default function MemberDetailPage() {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function MemberDetailSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <div className="flex items-center gap-4 pb-6">
+        <div className="h-16 w-16 animate-pulse rounded-full bg-muted/60" />
+        <div className="flex-1 space-y-2">
+          <div className="h-6 w-1/3 animate-pulse rounded bg-muted/60" />
+          <div className="h-4 w-24 animate-pulse rounded bg-muted/40" />
+        </div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-6 space-y-3">
+            <div className="h-5 w-1/3 animate-pulse rounded bg-muted/60" />
+            {Array.from({ length: 4 }).map((__, j) => (
+              <div key={j} className="h-4 w-full animate-pulse rounded bg-muted/40" />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

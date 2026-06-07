@@ -120,8 +120,8 @@ export default function AddMemberPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Error banner */}
         {createMember.isError && (
-          <div className="flex items-center gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             {createMember.error instanceof Error ? createMember.error.message : 'Failed to create member'}
@@ -142,7 +142,7 @@ export default function AddMemberPage() {
                   className="mt-1"
                   {...register('firstName', { required: 'First name is required' })}
                 />
-                {errors.firstName && <p className="mt-1 text-xs text-rose-600">{errors.firstName.message}</p>}
+                {errors.firstName && <p className="mt-1 text-xs text-destructive">{errors.firstName.message}</p>}
               </div>
               <div>
                 <Label htmlFor="lastName">Last Name *</Label>
@@ -151,7 +151,7 @@ export default function AddMemberPage() {
                   className="mt-1"
                   {...register('lastName', { required: 'Last name is required' })}
                 />
-                {errors.lastName && <p className="mt-1 text-xs text-rose-600">{errors.lastName.message}</p>}
+                {errors.lastName && <p className="mt-1 text-xs text-destructive">{errors.lastName.message}</p>}
               </div>
             </div>
             <div>
@@ -167,12 +167,12 @@ export default function AddMemberPage() {
                   className="mt-1"
                   {...register('email', { required: 'Email is required' })}
                 />
-                {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email.message}</p>}
+                {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
               </div>
               <div>
                 <Label htmlFor="phone">Phone Number *</Label>
                 <Input id="phone" type="tel" className="mt-1" {...register('phone', { required: 'Phone number is required' })} />
-                {errors.phone && <p className="mt-1 text-xs text-rose-600">{errors.phone.message}</p>}
+                {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -185,7 +185,7 @@ export default function AddMemberPage() {
                   placeholder="Select gender"
                   options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
                 />
-                {errors.gender && <p className="mt-1 text-xs text-rose-600">{errors.gender.message}</p>}
+                {errors.gender && <p className="mt-1 text-xs text-destructive">{errors.gender.message}</p>}
               </div>
               <div>
                 <Label>Date of Birth</Label>
@@ -267,7 +267,7 @@ export default function AddMemberPage() {
                   placeholder="Select a branch"
                   options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
-                {errors.homeBranchId && <p className="mt-1 text-xs text-rose-600">{errors.homeBranchId.message}</p>}
+                {errors.homeBranchId && <p className="mt-1 text-xs text-destructive">{errors.homeBranchId.message}</p>}
               </div>
               <div>
                 <Label htmlFor="systemRole">System Role</Label>
@@ -323,8 +323,8 @@ export default function AddMemberPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#5D3FD3]/15 text-[#5D3FD3]">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                 </svg>

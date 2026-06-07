@@ -19,7 +19,7 @@ export default function MemberApprovalPage() {
     if (user !== null && !isAdmin) router.replace('/members');
   }, [user, isAdmin, router]);
 
-  const { data: result, isLoading } = useMembers({ approvalStatus: 'pending' }, isAdmin);
+  const { data: result, isLoading, error } = useMembers({ approvalStatus: 'pending' }, isAdmin);
   const approveMember = useApproveMember();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -45,7 +45,29 @@ export default function MemberApprovalPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading...</p>
+        <Card>
+          <CardContent className="space-y-3 py-6" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="h-11 w-11 animate-pulse rounded-full bg-muted/60" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted/60" />
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted/40" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-16 animate-pulse rounded bg-muted/40" />
+                  <div className="h-8 w-20 animate-pulse rounded bg-muted/40" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+          <p className="text-sm text-destructive">
+            {error instanceof Error ? error.message : 'Failed to load pending registrations.'}
+          </p>
+        </div>
       ) : members.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center">
@@ -59,7 +81,7 @@ export default function MemberApprovalPage() {
             return (
               <Card key={member.id}>
                 <CardContent className="flex items-center gap-4 py-4">
-                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#f8b537]/15 text-sm font-bold text-amber-700">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#f8b537]/15 text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">
                     {initials}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -104,7 +126,7 @@ export default function MemberApprovalPage() {
                         approveMember.mutate(
                           { id: member.id, data: { approved: true } },
                           {
-                            onSuccess: () => toast.success('Member approved and notified.'),
+                            onSuccess: () => toast.success('Member approved.'),
                             onError: () => toast.error('Failed to approve member. Please try again.'),
                           },
                         );

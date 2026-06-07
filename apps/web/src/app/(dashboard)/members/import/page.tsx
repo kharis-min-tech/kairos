@@ -106,11 +106,13 @@ export default function MembersImportPage() {
           <CardDescription>Select your filled-in CSV file</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 transition-colors hover:border-primary/50 hover:bg-muted/50"
+          <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
+            aria-label={file ? `Selected file: ${file.name}. Click to change.` : 'Choose CSV file'}
+            className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 transition-colors hover:border-primary/50 hover:bg-muted/50 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           >
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
             {file ? (
@@ -118,17 +120,17 @@ export default function MembersImportPage() {
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">Click to select a CSV file</p>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleFileChange}
+          />
 
           {error && (
-            <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+            <div role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -150,16 +152,16 @@ export default function MembersImportPage() {
             <CardTitle>Import Complete</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-3">
-              <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-3 rounded-lg bg-emerald-500/10 p-3">
+              <svg className="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm font-medium text-emerald-700">{result.imported} member(s) imported successfully</p>
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{result.imported} member(s) imported successfully</p>
             </div>
             {result.errors.length > 0 && (
               <div className="space-y-1">
-                <p className="text-sm font-medium text-rose-700">Errors ({result.errors.length} rows skipped):</p>
-                <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg bg-rose-50 p-3 text-xs text-rose-700">
+                <p className="text-sm font-medium text-destructive">Errors ({result.errors.length} rows skipped):</p>
+                <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
                   {result.errors.map((e, i) => (
                     <li key={i}>{e}</li>
                   ))}
