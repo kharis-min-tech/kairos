@@ -39,12 +39,12 @@ function todayIso(): string {
 }
 
 const STATUS_TONE: Record<string, string> = {
-  Successful: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  Interested: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  'No Answer': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  'Call Back Later': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  'Wrong Number': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  'Not Interested': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+  Successful: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  Interested: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  'No Answer': 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
+  'Call Back Later': 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
+  'Wrong Number': 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+  'Not Interested': 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
 };
 
 interface FellowshipFollowupsTabProps {

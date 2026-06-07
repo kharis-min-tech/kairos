@@ -205,7 +205,7 @@ export default function FellowshipDetailPage() {
           </Button>
         )}
         {hasPendingRequest && (
-          <span className="shrink-0 self-center rounded-full bg-[#f8b537]/15 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-[#f8b537]">
+          <span className="shrink-0 self-center rounded-full bg-[#f8b537]/15 px-3 py-1.5 text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
             Request Pending
           </span>
         )}
@@ -273,8 +273,8 @@ export default function FellowshipDetailPage() {
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
                 <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                   fellowship.isActive
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-rose-100 text-rose-700'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                 }`}>
                   {fellowship.isActive ? 'Active' : 'Inactive'}
                 </span>
@@ -358,7 +358,7 @@ export default function FellowshipDetailPage() {
                           }}
                           disabled={addMember.isPending}
                           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-muted disabled:opacity-50">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-xs font-bold text-violet-600 dark:text-violet-400">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/15 text-xs font-bold text-[#5D3FD3] dark:text-[#a392ed]">
                             {((m.firstName?.[0] ?? '') + (m.lastName?.[0] ?? '')).toUpperCase() || '?'}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -648,7 +648,7 @@ export default function FellowshipDetailPage() {
                   <Card>
                     <CardContent className="py-4">
                       <p className="text-sm font-medium text-muted-foreground">Total Meetings</p>
-                      <p className="mt-1 text-2xl font-bold text-violet-600 dark:text-violet-400">{totalMeetings}</p>
+                      <p className="mt-1 text-2xl font-bold text-[#5D3FD3] dark:text-[#a392ed]">{totalMeetings}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -763,7 +763,7 @@ export default function FellowshipDetailPage() {
                       .catch(() => toast.error('Some requests could not be rejected. Please try again.'));
                   }}
                   disabled={reviewJoinRequest.isPending}
-                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
                 >
                   Reject selected
                 </button>
@@ -843,14 +843,16 @@ export default function FellowshipDetailPage() {
                               },
                             )}
                             disabled={reviewJoinRequest.isPending}
-                            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                            className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
                           >
                             Reject
                           </button>
                         </div>
                       ) : (
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                          req.status === 'approved'
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                         }`}>
                           {req.status === 'approved' ? 'Approved' : 'Rejected'}
                         </span>
