@@ -26,6 +26,7 @@ import {
 } from '@/hooks/use-fellowships';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import type { FellowshipMemberWithDetails } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 const CONTACT_METHODS = Object.values(ContactMethod);
 const CONTACT_STATUSES = Object.values(ContactStatus);
@@ -68,6 +69,7 @@ export function FellowshipFollowupsTab({
   const { data: overdue } = useOverdueFellowshipFollowups(fellowshipId, 1);
   const createFollowup = useCreateFellowshipFollowup();
   const deleteFollowup = useDeleteFellowshipFollowup();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const memberOptions = useMemo(
     () =>
@@ -115,6 +117,7 @@ export function FellowshipFollowupsTab({
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
         <CardHeader className="space-y-3 pb-3">
           <div>
@@ -307,18 +310,23 @@ export function FellowshipFollowupsTab({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (confirm('Delete this followup?')) {
-                        deleteFollowup.mutate(
-                          { fellowshipId, followupId: followup.id },
-                          {
-                            onSuccess: () => toast.success('Followup deleted.'),
-                            onError: () => toast.error('Failed to delete.'),
-                          },
-                        );
-                      }
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: 'Delete this followup?',
+                        description: 'The contact record will be permanently removed.',
+                        confirmLabel: 'Delete',
+                        variant: 'destructive',
+                      });
+                      if (!ok) return;
+                      deleteFollowup.mutate(
+                        { fellowshipId, followupId: followup.id },
+                        {
+                          onSuccess: () => toast.success('Followup deleted.'),
+                          onError: () => toast.error('Failed to delete.'),
+                        },
+                      );
                     }}
-                    className="text-xs text-rose-600 hover:underline dark:text-rose-400"
+                    className="text-xs text-destructive hover:underline"
                   >
                     Delete
                   </button>

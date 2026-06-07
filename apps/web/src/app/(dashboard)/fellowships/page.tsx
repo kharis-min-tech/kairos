@@ -14,6 +14,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import type { FellowshipListParams } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import type { FellowshipWithBranch } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ssr: false,
@@ -69,6 +70,7 @@ function FellowshipsContent() {
 
   const { data: result, isLoading, error } = useFellowships(fetchParams);
   const deleteFellowship = useDeleteFellowship();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const fellowships = result?.data;
   const pagination = result?.meta;
@@ -91,6 +93,7 @@ function FellowshipsContent() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
@@ -239,15 +242,20 @@ function FellowshipsContent() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (confirm(`Deactivate ${fellowship.fellowshipName}?`)) {
-                              deleteFellowship.mutate(fellowship.id, {
-                                onSuccess: () => toast.success('Fellowship deactivated.'),
-                                onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
-                              });
-                            }
+                            const ok = await confirm({
+                              title: `Deactivate ${fellowship.fellowshipName}?`,
+                              description: 'It will be hidden from the directory. You can restore it from the API if needed.',
+                              confirmLabel: 'Deactivate',
+                              variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            deleteFellowship.mutate(fellowship.id, {
+                              onSuccess: () => toast.success('Fellowship deactivated.'),
+                              onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
+                            });
                           }}
                         >
                           Deactivate

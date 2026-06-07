@@ -25,6 +25,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
 import { formatDate, formatShortDate } from '@/lib/date-format';
+import { useConfirm } from '@/components/confirm-dialog';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
@@ -55,6 +56,7 @@ export default function FellowshipDetailPage() {
   const { data: joinRequests } = useFellowshipJoinRequests(id);
   const createJoinRequest = useCreateJoinRequest();
   const reviewJoinRequest = useReviewJoinRequest();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   // Pre-load as soon as we have a branchId so data is ready when the panel opens
   const { data: branchMembersData, isLoading: branchMembersLoading } = useMembers(
@@ -110,6 +112,7 @@ export default function FellowshipDetailPage() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div className="min-w-0 flex-1">
@@ -132,16 +135,21 @@ export default function FellowshipDetailPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => {
-                if (confirm(`Deactivate "${fellowship.fellowshipName}"? This cannot be undone.`)) {
-                  deleteFellowship.mutate(id, {
-                    onSuccess: () => {
-                      toast.success('Fellowship deactivated.');
-                      router.push('/fellowships');
-                    },
-                    onError: () => toast.error('Failed to deactivate. Please try again.'),
-                  });
-                }
+              onClick={async () => {
+                const ok = await confirm({
+                  title: `Deactivate "${fellowship.fellowshipName}"?`,
+                  description: 'The fellowship will be hidden from the directory. Members will lose access to its meetings and history.',
+                  confirmLabel: 'Deactivate',
+                  variant: 'destructive',
+                });
+                if (!ok) return;
+                deleteFellowship.mutate(id, {
+                  onSuccess: () => {
+                    toast.success('Fellowship deactivated.');
+                    router.push('/fellowships');
+                  },
+                  onError: () => toast.error('Failed to deactivate. Please try again.'),
+                });
               }}
               disabled={deleteFellowship.isPending}
             >
@@ -376,18 +384,24 @@ export default function FellowshipDetailPage() {
                       </div>
                       {isAdminOrPastor && member.isActive && (
                         <button
-                          className="flex-shrink-0 rounded p-1 text-rose-400 hover:bg-rose-50 hover:text-rose-600"
-                          onClick={(e) => {
+                          aria-label={`Remove ${member.memberFirstName} ${member.memberLastName} from this fellowship`}
+                          className="flex-shrink-0 rounded p-1 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            if (confirm(`Remove ${member.memberFirstName} from this fellowship?`)) {
-                                removeMember.mutate(
-                                  { fellowshipId: id, memberId: member.memberId },
-                                  {
-                                    onSuccess: () => toast.success('Member removed from system.'),
-                                    onError: () => toast.error('Failed to remove member. Please try again.'),
-                                  },
-                                );
-                            }
+                            const ok = await confirm({
+                              title: `Remove ${member.memberFirstName} from this fellowship?`,
+                              description: 'They will no longer appear in this fellowship’s roster. You can re-add them later.',
+                              confirmLabel: 'Remove',
+                              variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            removeMember.mutate(
+                              { fellowshipId: id, memberId: member.memberId },
+                              {
+                                onSuccess: () => toast.success('Member removed from this fellowship.'),
+                                onError: () => toast.error('Failed to remove member. Please try again.'),
+                              },
+                            );
                           }}
                         >
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
