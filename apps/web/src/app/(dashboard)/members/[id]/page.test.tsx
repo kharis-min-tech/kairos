@@ -10,10 +10,12 @@ vi.mock('next/navigation', () => ({
 }));
 
 // ── auth store: admin so canManage = true ──────────────────
-const authState = () => ({ user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' });
+let auth: { user: { id: string; systemRole: string }; activeRole: string } = {
+  user: { id: 'admin-1', systemRole: 'admin' },
+  activeRole: 'admin',
+};
 vi.mock('@/lib/auth-store', () => ({
-  useAuthStore: (selector?: (s: ReturnType<typeof authState>) => unknown) =>
-    selector ? selector(authState()) : authState(),
+  useAuthStore: (selector?: (s: typeof auth) => unknown) => (selector ? selector(auth) : auth),
 }));
 
 // ── hooks ──────────────────────────────────────────────────
@@ -90,6 +92,7 @@ const fullRecord = {
 beforeEach(() => {
   vi.clearAllMocks();
   healthData = undefined;
+  auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
 });
 
 describe('MemberDetailPage — minor protection', () => {
@@ -150,5 +153,40 @@ describe('MemberDetailPage — minor protection', () => {
     expect(screen.getByText(/photo & media/i).closest('div')).toHaveTextContent(/granted/i);
     expect(screen.getByText(/medical treatment/i).closest('div')).toHaveTextContent(/declined/i);
     expect(screen.getByText(/data processing/i).closest('div')).toHaveTextContent(/not recorded/i);
+  });
+});
+
+describe('MemberDetailPage — self-edit + fellowship request flow', () => {
+  it('shows "Edit my profile" CTA when viewing own profile', () => {
+    auth = { user: { id: 'member-1', systemRole: 'member' }, activeRole: 'member' };
+    memberData = { ...baseMember, dateOfBirth: '1990-01-01' };
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.getByText(/Edit my profile/i)).toBeInTheDocument();
+  });
+
+  it('does NOT show "Edit my profile" CTA when viewing someone else', () => {
+    auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
+    memberData = { ...baseMember, dateOfBirth: '1990-01-01' };
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.queryByText(/Edit my profile/i)).not.toBeInTheDocument();
+  });
+
+  it('member viewing own profile with no fellowship sees the join-request CTA', () => {
+    auth = { user: { id: 'member-1', systemRole: 'member' }, activeRole: 'member' };
+    memberData = { ...baseMember, dateOfBirth: '1990-01-01' };
+    render(<MemberDetailPage />, { wrapper });
+    // Unique CardDescription for the no-fellowship self case
+    expect(screen.getByText(/You haven't joined a fellowship yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/send a join request/i)).toBeInTheDocument();
+    // CardDescription for the manager assign case must NOT be present
+    expect(screen.queryByText(/Assign this member to a fellowship/i)).toBeNull();
+  });
+
+  it('admin viewing a member with no fellowship sees the Assign control', () => {
+    auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
+    memberData = { ...baseMember, dateOfBirth: '1990-01-01' };
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.getByText(/Assign this member to a fellowship/i)).toBeInTheDocument();
+    expect(screen.queryByText(/send a join request/i)).toBeNull();
   });
 });

@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { MemberWithBranch } from '@kairos/types';
 
+const replace = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace }),
 }));
 
 let authState: { user: { id: string; systemRole: string; homeBranchId: string } | null; activeRole: string | null } = {
@@ -53,6 +54,7 @@ const baseMember = {
 };
 
 beforeEach(() => {
+  replace.mockClear();
   members = [
     {
       ...baseMember,
@@ -94,37 +96,20 @@ describe('MembersPage — persona CTAs', () => {
     expect(screen.queryByText(/Approval Queue/i)).toBeNull();
   });
 
-  it('leader sees only Safeguarding review (no add/import/export/approval)', () => {
+  it('leader is redirected away (Members not in their nav)', async () => {
     authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
     render(<MembersPage />, { wrapper });
-    expect(screen.queryByText(/Add Member/i)).toBeNull();
-    expect(screen.queryByText(/Import CSV/i)).toBeNull();
-    expect(screen.queryByText(/Export CSV/i)).toBeNull();
-    expect(screen.queryByText(/Approval Queue/i)).toBeNull();
-    expect(screen.getByText(/Safeguarding review/i)).toBeDefined();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/dashboard'));
   });
 
-  it('member sees no management CTAs', () => {
+  it('member is redirected away (Members not in their nav)', async () => {
     authState = { user: { id: 'self-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<MembersPage />, { wrapper });
-    expect(screen.queryByText(/Add Member/i)).toBeNull();
-    expect(screen.queryByText(/Import CSV/i)).toBeNull();
-    expect(screen.queryByText(/Export CSV/i)).toBeNull();
-    expect(screen.queryByText(/Approval Queue/i)).toBeNull();
-    expect(screen.queryByText(/Safeguarding review/i)).toBeNull();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/dashboard'));
   });
 });
 
-describe('MembersPage — member-persona redaction', () => {
-  it('redacts other-member email, phone, role and Deactivate button for members', () => {
-    authState = { user: { id: 'self-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
-    render(<MembersPage />, { wrapper });
-    // Self card shows nothing extra anyway (no management) but other person's email/phone hidden
-    expect(screen.queryByText('other@b.com')).toBeNull();
-    expect(screen.queryByText('555-0102')).toBeNull();
-    expect(screen.queryAllByText(/Deactivate/i)).toHaveLength(0);
-  });
-
+describe('MembersPage — admin/pastor card details', () => {
   it('shows full details for non-member viewers', () => {
     authState = { user: { id: 'admin-1', systemRole: 'admin', homeBranchId: 'b-1' }, activeRole: 'admin' };
     render(<MembersPage />, { wrapper });

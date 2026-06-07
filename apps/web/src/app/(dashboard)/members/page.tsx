@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
 import { useFellowships } from '@/hooks/use-fellowships';
@@ -41,11 +42,19 @@ function MembersListSkeleton() {
 }
 
 export default function MembersPage() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
   const isPastor = activeRole === 'pastor';
   const isMemberView = activeRole === 'member';
+  // Mirrors the dashboard-layout nav gating: members + leaders don't surface
+  // the Members tab. Block direct URL access too so behaviour matches the nav.
+  useEffect(() => {
+    if (user !== null && (isMemberView || activeRole === 'leader')) {
+      router.replace('/dashboard');
+    }
+  }, [user, isMemberView, activeRole, router]);
   // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
   // the page itself enforces real access via the API (403 for unauthorized leaders).
   const canSeeSafeguarding = isAdmin || isPastor || activeRole === 'leader';
@@ -97,6 +106,10 @@ export default function MembersPage() {
 
   function handleSearch() {
     setParams((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
+  }
+
+  if (user !== null && (isMemberView || activeRole === 'leader')) {
+    return null;
   }
 
   if (isLoading) {

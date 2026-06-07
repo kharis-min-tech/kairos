@@ -310,14 +310,16 @@ export default function MemberDetailPage() {
           )}
         </CardContent>
       </Card>
-      {(canManage || user?.id === id) && (
+      {(canManage || isSelf) && (
         <Card>
           <CardHeader>
             <CardTitle>Fellowships</CardTitle>
             <CardDescription>
               {alreadyInFellowship
-                ? 'This member\'s fellowship membership'
-                : 'Assign this member to a fellowship in their branch'}
+                ? (isSelf ? 'Your fellowship membership' : 'This member\'s fellowship membership')
+                : canManage
+                  ? 'Assign this member to a fellowship in their branch'
+                  : 'You haven\'t joined a fellowship yet'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -340,15 +342,15 @@ export default function MemberDetailPage() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : canManage ? (
               <>
                 {addToFellowship.isSuccess && (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                  <div className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">
                     Member added to fellowship successfully.
                   </div>
                 )}
                 {addToFellowship.error && (
-                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  <div role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                     {addToFellowship.error instanceof Error
                       ? addToFellowship.error.message
                       : 'Could not add member to fellowship.'}
@@ -361,7 +363,8 @@ export default function MemberDetailPage() {
                     placeholder="Select a fellowship…"
                     options={(fellowshipsData?.data ?? []).filter((f) => f.isActive).map((f) => ({ value: f.id, label: f.fellowshipName }))}
                   />
-                  <button
+                  <Button
+                    variant="success"
                     disabled={!selectedFellowshipId || addToFellowship.isPending}
                     onClick={() => {
                       if (!selectedFellowshipId) return;
@@ -370,15 +373,23 @@ export default function MemberDetailPage() {
                         { onSuccess: () => setSelectedFellowshipId('') }
                       );
                     }}
-                    className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {addToFellowship.isPending ? 'Adding…' : 'Assign'}
-                  </button>
+                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   To view or remove fellowship memberships, open the fellowship&apos;s Members tab.
                 </p>
               </>
+            ) : (
+              <div className="space-y-3 rounded-lg bg-[#5D3FD3]/5 p-4">
+                <p className="text-sm text-muted-foreground">
+                  Browse the fellowships at your branch and send a join request to one that fits your schedule.
+                </p>
+                <Link href="/fellowships">
+                  <Button size="sm" variant="outline">Browse fellowships</Button>
+                </Link>
+              </div>
             )}
           </CardContent>
         </Card>
