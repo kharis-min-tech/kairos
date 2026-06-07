@@ -6,13 +6,14 @@ import type { UpdateMemberRequest, ApproveMemberRequest, AssignRoleRequest, Memb
 
 // ── Member queries ─────────────────────────────────────────
 
-export function useMembers(params?: MemberListParams) {
+export function useMembers(params?: MemberListParams, enabled: boolean = true) {
   return useQuery({
     queryKey: ['members', params],
     queryFn: async () => {
       const res = await api.members.list(params);
       return res.data!;
     },
+    enabled,
   });
 }
 

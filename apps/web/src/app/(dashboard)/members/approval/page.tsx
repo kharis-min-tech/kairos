@@ -1,14 +1,27 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMembers, useApproveMember } from '@/hooks/use-members';
+import { useAuthStore } from '@/lib/auth-store';
 import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';
 import Link from 'next/link';
 
 export default function MemberApprovalPage() {
-  const { data: result, isLoading } = useMembers({ approvalStatus: 'pending' });
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.systemRole === 'admin';
+
+  useEffect(() => {
+    if (user !== null && !isAdmin) router.replace('/members');
+  }, [user, isAdmin, router]);
+
+  const { data: result, isLoading } = useMembers({ approvalStatus: 'pending' }, isAdmin);
   const approveMember = useApproveMember();
+
+  if (user !== null && !isAdmin) return null;
 
   const members = result?.data ?? [];
 

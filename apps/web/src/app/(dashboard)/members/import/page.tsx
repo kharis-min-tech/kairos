@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function MembersImportPage() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const canImport = user?.systemRole === 'admin' || activeRole === 'pastor';
+
+  useEffect(() => {
+    if (user !== null && !canImport) router.replace('/members');
+  }, [user, canImport, router]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +44,8 @@ export default function MembersImportPage() {
       setIsLoading(false);
     }
   }
+
+  if (user !== null && !canImport) return null;
 
   async function handleDownloadTemplate() {
     const csvContent = [
