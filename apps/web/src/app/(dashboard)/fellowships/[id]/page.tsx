@@ -212,10 +212,14 @@ export default function FellowshipDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 border-b border-border/40">
+      <div role="tablist" aria-label="Fellowship sections" className="flex flex-wrap gap-1 border-b border-border/40">
         {tabs.map((tab) => (
           <button
             key={tab.key}
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            id={`tab-${tab.key}`}
+            aria-controls={`tabpanel-${tab.key}`}
             onClick={() => setActiveTab(tab.key)}
             className={
               (activeTab === tab.key
