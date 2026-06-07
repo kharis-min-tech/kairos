@@ -13,7 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 180 4% 11%;
 
-    --primary: 263 70% 50%;
+    /* Modern Sanctuary brand: #5D3FD3 */
+    --primary: 255 64% 54%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
@@ -22,7 +23,8 @@
     --muted: 0 0% 95%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 38 92% 50%;
+    /* Modern Sanctuary gold: #f8b537 */
+    --accent: 39 93% 59%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 347 77% 50%;
@@ -33,7 +35,7 @@
 
     --border: 0 0% 92%;
     --input: 256 10% 81%;
-    --ring: 263 70% 50%;
+    --ring: 255 64% 54%;
 
     --radius: 0.25rem;
   }
@@ -48,7 +50,7 @@
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 94%;
 
-    --primary: 263 70% 62%;
+    --primary: 255 64% 62%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 13%;
@@ -57,7 +59,7 @@
     --muted: 0 0% 11%;
     --muted-foreground: 0 0% 58%;
 
-    --accent: 38 90% 55%;
+    --accent: 39 90% 64%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 347 70% 58%;
@@ -68,7 +70,7 @@
 
     --border: 0 0% 14%;
     --input: 256 8% 25%;
-    --ring: 263 70% 62%;
+    --ring: 255 64% 62%;
   }
 }
 
@@ -143,10 +145,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 20px rgba(93, 63, 211, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+    box-shadow: 0 0 40px rgba(93, 63, 211, 0.6);
   }
 }
 
