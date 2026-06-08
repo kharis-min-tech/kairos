@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button, Card, CardContent } from '@kairos/ui';
 import { useWithdrawDepartmentJoinRequest } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 const STATUS_LABELS: Record<string, string> = {
   applied: 'Applied · awaiting review',
@@ -31,6 +32,7 @@ function formatDateTime(value: string | Date | null) {
 
 export function MyApplicationsList({ items }: Props) {
   const withdraw = useWithdrawDepartmentJoinRequest();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   if (items.length === 0) {
     return (
@@ -45,8 +47,14 @@ export function MyApplicationsList({ items }: Props) {
     );
   }
 
-  const handleWithdraw = (branchDeptId: string, requestId: string) => {
-    if (!confirm('Withdraw your application?')) return;
+  const handleWithdraw = async (branchDeptId: string, requestId: string, departmentName: string) => {
+    const ok = await confirm({
+      title: `Withdraw your application to ${departmentName}?`,
+      description: 'Your application will be cancelled. You can apply again later.',
+      confirmLabel: 'Withdraw',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     withdraw.mutate(
       { branchDeptId, requestId },
       {
@@ -59,6 +67,7 @@ export function MyApplicationsList({ items }: Props) {
 
   return (
     <Card>
+      {confirmDialog}
       <CardContent className="p-0">
         <ul className="divide-y divide-border/40">
           {items.map((req) => {
@@ -86,7 +95,7 @@ export function MyApplicationsList({ items }: Props) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleWithdraw(req.branchDepartmentId, req.id)}
+                  onClick={() => handleWithdraw(req.branchDepartmentId, req.id, req.departmentName)}
                   disabled={withdraw.isPending}
                 >
                   Withdraw

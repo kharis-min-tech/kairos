@@ -30,6 +30,7 @@ import { UniformTab } from './_components/uniform-tab';
 import { RotaTab } from './_components/rota-tab';
 import { RecruitmentTab } from './_components/recruitment-tab';
 import { MyRotaTab } from './_components/my-rota-tab';
+import { useConfirm } from '@/components/confirm-dialog';
 
 type Tab = 'overview' | 'my-rota' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
@@ -88,6 +89,7 @@ export default function DepartmentDetailPage() {
   const { data: joinRequests } = useDepartmentJoinRequests(id);
   const addMember = useAddDepartmentMember();
   const removeMember = useRemoveDepartmentMember();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const createJoinRequest = useCreateDepartmentJoinRequest();
   const respondOffer = useRespondToDepartmentOffer();
   const withdrawRequest = useWithdrawDepartmentJoinRequest();
@@ -173,6 +175,7 @@ export default function DepartmentDetailPage() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div className="min-w-0 flex-1">
@@ -455,20 +458,21 @@ export default function DepartmentDetailPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                `Remove ${m.memberFirstName} ${m.memberLastName} from ${dept.departmentName}?`,
-                              )
-                            ) {
-                              removeMember.mutate(
-                                { branchDeptId: id, memberId: m.memberId },
-                                {
-                                  onSuccess: () => toast.success('Member removed.'),
-                                  onError: () => toast.error('Failed to remove member.'),
-                                },
-                              );
-                            }
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: `Remove ${m.memberFirstName} ${m.memberLastName}?`,
+                              description: `They will no longer appear in ${dept.departmentName}. You can re-add them later.`,
+                              confirmLabel: 'Remove',
+                              variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            removeMember.mutate(
+                              { branchDeptId: id, memberId: m.memberId },
+                              {
+                                onSuccess: () => toast.success('Member removed.'),
+                                onError: () => toast.error('Failed to remove member.'),
+                              },
+                            );
                           }}
                         >
                           Remove

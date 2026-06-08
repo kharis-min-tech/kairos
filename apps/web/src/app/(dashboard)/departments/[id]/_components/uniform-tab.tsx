@@ -25,6 +25,7 @@ import {
 } from '@/hooks/use-departments';
 import { UniformGenderTarget } from '@kairos/types';
 import type { DepartmentUniformOutfit, DepartmentUniformScheduleWithOutfit } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 const GENDER_TARGETS = Object.values(UniformGenderTarget);
 
@@ -326,8 +327,15 @@ function OutfitCard({
   branchDeptId: string;
 }) {
   const deactivate = useDeactivateOutfit();
-  const handleArchive = () => {
-    if (!confirm(`Archive “${outfit.name}”?`)) return;
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  const handleArchive = async () => {
+    const ok = await confirm({
+      title: `Archive “${outfit.name}”?`,
+      description: 'The outfit will no longer be available for new uniform schedules.',
+      confirmLabel: 'Archive',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     deactivate.mutate(
       { branchDeptId, outfitId: outfit.id },
       {
@@ -338,6 +346,7 @@ function OutfitCard({
   };
   return (
     <div className="flex flex-col overflow-hidden rounded-[4px] bg-surface-container-lowest">
+      {confirmDialog}
       <div className="aspect-square w-full bg-surface-container-low">
         <img
           src={outfit.imageUrl}
@@ -383,8 +392,15 @@ function AssignmentCard({
   highlight?: boolean;
 }) {
   const remove = useRemoveUniformAssignment();
-  const handleRemove = () => {
-    if (!confirm(`Remove uniform assignment for ${formatDateLong(assignment.serviceDate)}?`)) return;
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  const handleRemove = async () => {
+    const ok = await confirm({
+      title: `Remove uniform assignment for ${formatDateLong(assignment.serviceDate)}?`,
+      description: 'The assignment will be cleared from the schedule. You can add it again later.',
+      confirmLabel: 'Remove',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     remove.mutate(
       { branchDeptId, assignmentId: assignment.id },
       {
@@ -398,6 +414,7 @@ function AssignmentCard({
     <div
       className={`flex gap-3 rounded-[4px] p-3 ${highlight ? 'bg-white/60 dark:bg-black/20' : 'bg-surface-container-lowest'}`}
     >
+      {confirmDialog}
       <div
         className={`flex w-14 shrink-0 flex-col items-center justify-center rounded-[4px] py-2 text-center ${
           isToday

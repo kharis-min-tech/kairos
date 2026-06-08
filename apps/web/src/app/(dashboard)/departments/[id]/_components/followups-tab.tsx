@@ -26,6 +26,7 @@ import {
 } from '@/hooks/use-departments';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import type { DepartmentMemberWithDetails } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 const CONTACT_METHODS = Object.values(ContactMethod);
 const CONTACT_STATUSES = Object.values(ContactStatus);
@@ -65,6 +66,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
   const { data: overdue } = useOverdueFollowups(branchDeptId, 1);
   const createFollowup = useCreateDepartmentFollowup();
   const deleteFollowup = useDeleteDepartmentFollowup();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const memberOptions = useMemo(
     () =>
@@ -99,6 +101,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Overdue panel */}
       {canManage && (
         <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
@@ -308,18 +311,23 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                   {canManage && (
                     <button
                       type="button"
-                      onClick={() => {
-                        if (confirm('Delete this followup?')) {
-                          deleteFollowup.mutate(
-                            { branchDeptId, followupId: f.id },
-                            {
-                              onSuccess: () => toast.success('Followup deleted.'),
-                              onError: () => toast.error('Failed to delete.'),
-                            },
-                          );
-                        }
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: 'Delete this followup?',
+                          description: 'The contact record will be permanently removed.',
+                          confirmLabel: 'Delete',
+                          variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        deleteFollowup.mutate(
+                          { branchDeptId, followupId: f.id },
+                          {
+                            onSuccess: () => toast.success('Followup deleted.'),
+                            onError: () => toast.error('Failed to delete.'),
+                          },
+                        );
                       }}
-                      className="text-xs text-rose-600 hover:underline dark:text-rose-400"
+                      className="text-xs text-destructive hover:underline"
                     >
                       Delete
                     </button>

@@ -11,6 +11,7 @@ import {
 } from '@kairos/ui';
 import { useRespondToDepartmentOffer } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface Props {
   offers: MyDepartmentJoinRequest[];
@@ -31,6 +32,7 @@ function formatDateTime(value: string | Date | null) {
 
 export function MyOffersBanner({ offers }: Props) {
   const respond = useRespondToDepartmentOffer();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   if (offers.length === 0) return null;
 
@@ -45,8 +47,14 @@ export function MyOffersBanner({ offers }: Props) {
     );
   };
 
-  const handleDecline = (branchDeptId: string, requestId: string) => {
-    if (!confirm('Decline this offer?')) return;
+  const handleDecline = async (branchDeptId: string, requestId: string, departmentName: string) => {
+    const ok = await confirm({
+      title: `Decline the offer from ${departmentName}?`,
+      description: 'You won’t be added to this department. You can apply again later if you change your mind.',
+      confirmLabel: 'Decline',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'declined' } },
       {
@@ -59,6 +67,7 @@ export function MyOffersBanner({ offers }: Props) {
 
   return (
     <div className="space-y-3">
+      {confirmDialog}
       {offers.map((req) => {
         const expires = formatDateTime(req.offerExpiresAt);
         return (
@@ -95,7 +104,7 @@ export function MyOffersBanner({ offers }: Props) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDecline(req.branchDepartmentId, req.id)}
+                  onClick={() => handleDecline(req.branchDepartmentId, req.id, req.departmentName)}
                   disabled={respond.isPending}
                 >
                   Decline

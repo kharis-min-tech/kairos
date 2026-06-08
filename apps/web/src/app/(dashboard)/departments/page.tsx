@@ -22,6 +22,7 @@ import {
 } from './_components/my-departments-view';
 import { MyOffersBanner } from './_components/my-offers-banner';
 import { MyApplicationsList } from './_components/my-applications-list';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface ListParams {
   page?: number;
@@ -54,6 +55,7 @@ function DepartmentsContent() {
   const { data: myDepts } = useMyDepartments();
   const { data: joinRequests } = useMyDepartmentJoinRequests();
   const deactivate = useDeactivateDepartment();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   // For the member view, dedupe the "browse all" grid against the user's own
   // active memberships so they don't see the same cards twice.
@@ -101,6 +103,7 @@ function DepartmentsContent() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
@@ -263,19 +266,20 @@ function DepartmentsContent() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.preventDefault();
-                            if (
-                              confirm(`Deactivate ${dept.departmentName} at ${dept.branchName}?`)
-                            ) {
-                              deactivate.mutate(dept.id, {
-                                onSuccess: () => toast.success('Department deactivated.'),
-                                onError: () =>
-                                  toast.error(
-                                    'Failed to deactivate department. Please try again.',
-                                  ),
-                              });
-                            }
+                            const ok = await confirm({
+                              title: `Deactivate ${dept.departmentName} at ${dept.branchName}?`,
+                              description: 'The department will be hidden from the directory and members will lose access.',
+                              confirmLabel: 'Deactivate',
+                              variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            deactivate.mutate(dept.id, {
+                              onSuccess: () => toast.success('Department deactivated.'),
+                              onError: () =>
+                                toast.error('Failed to deactivate department. Please try again.'),
+                            });
                           }}
                         >
                           Deactivate

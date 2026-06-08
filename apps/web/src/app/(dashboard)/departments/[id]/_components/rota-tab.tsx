@@ -39,6 +39,7 @@ import {
   useRotaSwapRequests,
   useReviewRotaSwapRequest,
 } from '@/hooks/use-departments';
+import { useConfirm } from '@/components/confirm-dialog';
 import type {
   DepartmentMemberWithDetails,
   RotaInstanceWithSummary,
@@ -578,6 +579,7 @@ function InstanceDetail({
   const updateStatus = useUpdateRotaInstanceStatus();
   const createSwap = useCreateRotaSwapRequest();
   const regenerate = useRegenerateRotaInstance();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const memberOptions = useMemo(
     () => [
@@ -603,6 +605,7 @@ function InstanceDetail({
 
   return (
     <div className="space-y-4">
+      {confirmDialog}
       {canManage && (
         <div className="flex flex-wrap items-center gap-2">
           <Label className="text-xs text-muted-foreground">Status:</Label>
@@ -625,8 +628,14 @@ function InstanceDetail({
             <Button
               variant="outline"
               disabled={regenerate.isPending}
-              onClick={() => {
-                if (!confirm('Re-pick all assignments for this service? Existing picks will be replaced.')) return;
+              onClick={async () => {
+                const ok = await confirm({
+                  title: 'Re-pick all assignments for this service?',
+                  description: 'Existing picks will be replaced with a fresh fair-rotation pass.',
+                  confirmLabel: 'Regenerate',
+                  variant: 'destructive',
+                });
+                if (!ok) return;
                 regenerate.mutate(
                   { branchDeptId, instanceId },
                   {
@@ -932,6 +941,7 @@ function TemplateCard({
   onToggle: () => void;
 }) {
   const deactivate = useDeactivateRotaTemplate();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const weekdayLabel = WEEKDAYS.find((w) => w.value === String(template.weekday))?.label ?? '';
   const time = formatTimeShort(template.defaultStartTime);
   const isDraft = template.lastGeneratedAt === null;
@@ -941,6 +951,7 @@ function TemplateCard({
 
   return (
     <Card className={`rounded ${!template.isActive ? 'opacity-60' : ''}`}>
+      {confirmDialog}
       <CardHeader className="space-y-2 pb-3">
         <div className="flex items-start justify-between gap-2">
           <button
@@ -979,9 +990,15 @@ function TemplateCard({
               variant="ghost"
               size="sm"
               title="Archive template"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                if (!confirm(`Archive template "${template.name}"?`)) return;
+                const ok = await confirm({
+                  title: `Archive template "${template.name}"?`,
+                  description: 'No new services will be generated from this template. Existing rotas keep working.',
+                  confirmLabel: 'Archive',
+                  variant: 'destructive',
+                });
+                if (!ok) return;
                 deactivate.mutate(
                   { branchDeptId, templateId: template.id },
                   {
@@ -1042,6 +1059,7 @@ function SlotsManager({
   const { data: slots } = useRotaSlots(branchDeptId, templateId);
   const create = useCreateRotaSlot();
   const remove = useDeleteRotaSlot();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [roleName, setRoleName] = useState('');
   const [positions, setPositions] = useState(1);
 
@@ -1058,6 +1076,7 @@ function SlotsManager({
 
   return (
     <div className="space-y-3">
+      {confirmDialog}
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Slots
       </h4>
@@ -1082,8 +1101,14 @@ function SlotsManager({
               {canManage && (
                 <Button
                   variant="ghost"
-                  onClick={() => {
-                    if (!confirm(`Delete slot "${s.roleName}"?`)) return;
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Delete slot "${s.roleName}"?`,
+                      description: 'The role definition is removed. Existing assignments are not changed.',
+                      confirmLabel: 'Delete',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, slotId: s.id });
                   }}
                 >
@@ -1158,6 +1183,7 @@ function PoolManager({
   const { data: pool } = useRotaPool(branchDeptId, templateId);
   const add = useAddRotaPoolMember();
   const remove = useRemoveRotaPoolMember();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [memberId, setMemberId] = useState('');
 
   const inPool = useMemo(() => new Set((pool ?? []).map((p) => p.memberId)), [pool]);
@@ -1174,6 +1200,7 @@ function PoolManager({
 
   return (
     <div className="space-y-3">
+      {confirmDialog}
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Rotation Pool
       </h4>
@@ -1209,8 +1236,14 @@ function PoolManager({
               {canManage && (
                 <Button
                   variant="ghost"
-                  onClick={() => {
-                    if (!confirm('Remove from pool?')) return;
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Remove ${p.memberFirstName} from the pool?`,
+                      description: 'They will no longer be auto-scheduled for this template.',
+                      confirmLabel: 'Remove',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, poolMemberId: p.id });
                   }}
                 >
