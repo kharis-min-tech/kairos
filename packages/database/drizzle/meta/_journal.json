@@ -169,6 +169,13 @@
       "when": 1780300000000,
       "tag": "0023_souls_program_attribution",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1781300000000,
+      "tag": "0024_mentor_followups",
+      "breakpoints": true
     }
   ]
 }

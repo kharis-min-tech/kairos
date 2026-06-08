@@ -15,6 +15,12 @@ export { souls, soulsRelations } from './souls';
 export { followUps, followUpsRelations } from './follow-ups';
 export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
 export { newBelieverEnrollments, newBelieverSessions, newBelieverAttendance } from './new-believers';
+export {
+  mentorFollowups,
+  mentorFollowupsRelations,
+  type MentorFollowup,
+  type NewMentorFollowup,
+} from './mentor-followups';
 export { departments, departmentsRelations } from './departments';
 export { branchDepartments, branchDepartmentsRelations } from './branch-departments';
 export { departmentMembers, departmentMembersRelations } from './department-members';
