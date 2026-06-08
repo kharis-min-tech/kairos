@@ -28,6 +28,7 @@ import {
   useEnrollmentAlerts,
   useUpdateEnrollment,
   useBulkAdvanceEnrollments,
+  useMyNewBelieverHats,
 } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMembers } from '@/hooks/use-members';
@@ -42,6 +43,8 @@ import { EnrollmentCardDragPreview } from './_components/enrollment-card';
 import { EnrollDialog } from './_components/enroll-dialog';
 import { EnrollmentDetailDrawer } from './_components/enrollment-detail-drawer';
 import { MemberJourneyView } from './_components/member-journey-view';
+import { MyTeachingTab } from './_components/my-teaching-tab';
+import { MyMenteesTab } from './_components/my-mentees-tab';
 
 type PendingStageMove = {
   enrollmentId: string;
@@ -50,12 +53,21 @@ type PendingStageMove = {
   memberName: string;
 };
 
+type PersonalTab = 'enrollment' | 'teaching' | 'mentees';
+
 function NewBelieversContent() {
   const { activeRole, user } = useAuthStore();
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
-  const canEdit = isAdminOrPastor || activeRole === 'leader';
-  const isMember = activeRole === 'member';
   const queryClient = useQueryClient();
+
+  // Persona "hats" — admin/pastor always get the full Kanban; everyone else falls back to
+  // personal tabs that surface only the rows where they wear a hat (student/teacher/mentor).
+  const { data: hats } = useMyNewBelieverHats({ enabled: !isAdminOrPastor });
+  const isOperatorMode =
+    isAdminOrPastor || !!hats?.isNbLeader || !!hats?.hasTeacherRole;
+  const canEdit = isOperatorMode;
+  const isPersonalMode = !isOperatorMode;
+  const [personalTab, setPersonalTab] = useState<PersonalTab>('enrollment');
 
   // Selection state for bulk advance (souls-pattern)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -99,9 +111,30 @@ function NewBelieversContent() {
     [result?.data],
   );
   const alerts = alertsResult?.data ?? [];
-  const myEnrollment = isMember
+  const myEnrollment = isPersonalMode
     ? enrollments.find((e) => e.memberId === user?.id)
     : null;
+  const taughtEnrollments = useMemo(
+    () => (isPersonalMode ? enrollments.filter((e) => e.teacherId === user?.id) : []),
+    [isPersonalMode, enrollments, user?.id],
+  );
+  const mentoredEnrollments = useMemo(
+    () => (isPersonalMode ? enrollments.filter((e) => e.mentorId === user?.id) : []),
+    [isPersonalMode, enrollments, user?.id],
+  );
+  const personalTabs: PersonalTab[] = isPersonalMode
+    ? ([
+        myEnrollment ? 'enrollment' : null,
+        taughtEnrollments.length > 0 ? 'teaching' : null,
+        mentoredEnrollments.length > 0 ? 'mentees' : null,
+      ].filter(Boolean) as PersonalTab[])
+    : [];
+  const activePersonalTab: PersonalTab | null =
+    personalTabs.length === 0
+      ? null
+      : personalTabs.includes(personalTab)
+        ? personalTab
+        : (personalTabs[0] ?? null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -363,13 +396,18 @@ function NewBelieversContent() {
     ? STAGES.find((s) => s.value === pendingStageMove.toStage)
     : undefined;
 
-  if (isMember) {
+  if (isPersonalMode) {
+    const tabLabel: Record<PersonalTab, string> = {
+      enrollment: 'My Enrollment',
+      teaching: `My Teaching${taughtEnrollments.length ? ` (${taughtEnrollments.length})` : ''}`,
+      mentees: `My Mentees${mentoredEnrollments.length ? ` (${mentoredEnrollments.length})` : ''}`,
+    };
     return (
       <div className="container mx-auto py-6 space-y-6">
         <header>
           <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers</h1>
           <p className="text-muted-foreground">
-            Your journey through the New Believers programme
+            Your personal view of the New Believers programme
           </p>
         </header>
 
@@ -379,9 +417,7 @@ function NewBelieversContent() {
             <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
             <span className="sr-only">Loading your progress</span>
           </div>
-        ) : myEnrollment ? (
-          <MemberJourneyView enrollment={myEnrollment} />
-        ) : (
+        ) : personalTabs.length === 0 ? (
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="text-sm font-medium text-muted-foreground">
               You are not currently enrolled in the New Believers programme.
@@ -389,6 +425,49 @@ function NewBelieversContent() {
             <p className="mt-1 text-xs text-muted-foreground">
               Speak to your pastor or branch leader to get started.
             </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {personalTabs.length > 1 && (
+              <div
+                role="tablist"
+                aria-label="My New Believers view"
+                className="inline-flex rounded-lg border bg-muted/40 p-1"
+              >
+                {personalTabs.map((t) => (
+                  <button
+                    key={t}
+                    role="tab"
+                    type="button"
+                    aria-selected={activePersonalTab === t}
+                    aria-controls={`nb-tab-${t}`}
+                    onClick={() => setPersonalTab(t)}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      activePersonalTab === t
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {tabLabel[t]}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div
+              role="tabpanel"
+              id={`nb-tab-${activePersonalTab}`}
+              aria-label={activePersonalTab ? tabLabel[activePersonalTab] : undefined}
+            >
+              {activePersonalTab === 'enrollment' && myEnrollment && (
+                <MemberJourneyView enrollment={myEnrollment} />
+              )}
+              {activePersonalTab === 'teaching' && (
+                <MyTeachingTab enrollments={taughtEnrollments} />
+              )}
+              {activePersonalTab === 'mentees' && (
+                <MyMenteesTab enrollments={mentoredEnrollments} />
+              )}
+            </div>
           </div>
         )}
       </div>

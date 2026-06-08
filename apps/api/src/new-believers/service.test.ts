@@ -283,30 +283,6 @@ describe('getEnrollment persona scope', () => {
 // ── Mentor follow-ups ─────────────────────────────────────
 
 describe('createMentorFollowup', () => {
-  const baseRow = {
-    id: enrollmentId,
-    memberId: 'mentee-1',
-    branchId,
-    teacherId: null,
-    mentorId: memberId,
-    stage: 'session-1',
-    enrolledAt: new Date(),
-    completedAt: null,
-    sessionCompletedAt: null,
-    sessionFeedback: null,
-    joinedDepartmentId: null,
-    notes: null,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    memberFirstName: 'A',
-    memberLastName: 'B',
-    teacherFirstName: null,
-    teacherLastName: null,
-    mentorFirstName: null,
-    mentorLastName: null,
-  };
-
   function setupInsert(returnedRow: unknown) {
     (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain([returnedRow]));
   }
@@ -317,7 +293,7 @@ describe('createMentorFollowup', () => {
     setupInsert({ id: 'fu-1', enrollmentId, mentorMemberId: memberId, note: 'good chat' });
     const { createMentorFollowup } = await import('./service');
     const result = await createMentorFollowup(mockDb, memberAuth, enrollmentId, { note: 'good chat' });
-    expect(result.id).toBe('fu-1');
+    expect(result?.id).toBe('fu-1');
   });
 
   it('a non-mentor member without NB-leader / Teacher role is denied', async () => {
@@ -337,7 +313,7 @@ describe('createMentorFollowup', () => {
     setupInsert({ id: 'fu-2', enrollmentId, mentorMemberId: 'other-mentor', note: 'admin note' });
     const { createMentorFollowup } = await import('./service');
     const result = await createMentorFollowup(mockDb, adminAuth, enrollmentId, { note: 'admin note' });
-    expect(result.id).toBe('fu-2');
+    expect(result?.id).toBe('fu-2');
   });
 
   it('NotFound when the enrollment does not exist', async () => {
@@ -358,7 +334,7 @@ describe('deleteMentorFollowup', () => {
     setupUpdate();
     const { deleteMentorFollowup } = await import('./service');
     const result = await deleteMentorFollowup(mockDb, memberAuth, 'fu-1');
-    expect(result.id).toBe('fu-1');
+    expect(result?.id).toBe('fu-1');
   });
 
   it('a different member without NB-leader role is denied', async () => {
@@ -381,7 +357,7 @@ describe('deleteMentorFollowup', () => {
     setupUpdate();
     const { deleteMentorFollowup } = await import('./service');
     const result = await deleteMentorFollowup(mockDb, pastorAuth, 'fu-1');
-    expect(result.id).toBe('fu-1');
+    expect(result?.id).toBe('fu-1');
   });
 });
 

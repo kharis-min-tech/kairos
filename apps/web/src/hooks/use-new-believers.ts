@@ -145,6 +145,20 @@ export function useNewBelieversHealth(branchId?: string) {
   });
 }
 
+// ── Caller hats (drives /new-believers tabs vs Kanban) ────
+
+export function useMyNewBelieverHats(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['new-believers', 'me'],
+    queryFn: async () => {
+      const res = await api.newBelievers.me();
+      return res.data!;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 60_000,
+  });
+}
+
 // ── Mentor follow-ups ─────────────────────────────────────
 
 export function useMentorFollowups(enrollmentId: string) {

@@ -30,6 +30,7 @@ import {
   listMentorFollowups,
   createMentorFollowup,
   deleteMentorFollowup,
+  getNewBelieverHats,
 } from './service';
 
 export const newBelieversRouter = new Hono();
@@ -49,6 +50,26 @@ newBelieversRouter.get(
     return c.json(successResponse(result));
   },
 );
+
+// ── Caller "hats" — drives /new-believers page mode (Kanban vs tabs) ──
+
+newBelieversRouter.get('/me', async (c) => {
+  const auth = getAuth(c);
+  // Without a branch the answer is empty. Admins without a branch get a flag-only payload.
+  if (!auth.branchId) {
+    return c.json(
+      successResponse({
+        isNbLeader: false,
+        hasTeacherRole: false,
+        taughtEnrollmentIds: [] as string[],
+        mentoredEnrollmentIds: [] as string[],
+        ownEnrollmentIds: [] as string[],
+      }),
+    );
+  }
+  const hats = await getNewBelieverHats(db, auth, auth.branchId);
+  return c.json(successResponse(hats));
+});
 
 // ── Enrollments ────────────────────────────────────────────
 

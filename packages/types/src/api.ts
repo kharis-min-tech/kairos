@@ -617,6 +617,14 @@ export interface CreateMentorFollowupRequest {
   contactedAt?: string;
 }
 
+export interface NewBelieverHats {
+  isNbLeader: boolean;
+  hasTeacherRole: boolean;
+  taughtEnrollmentIds: string[];
+  mentoredEnrollmentIds: string[];
+  ownEnrollmentIds: string[];
+}
+
 export interface BulkAdvanceEnrollmentsRequest {
   enrollmentIds: string[];
   targetStage: string;

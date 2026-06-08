@@ -58,6 +58,7 @@ import type {
   BulkAdvanceEnrollmentsRequest,
   MentorFollowupItem,
   CreateMentorFollowupRequest,
+  NewBelieverHats,
   BulkAdvanceEnrollmentsResult,
   CreateNewBelieverSessionRequest,
   UpdateNewBelieverSessionRequest,
@@ -910,6 +911,7 @@ export function createApiClient(
         const q = qs.toString();
         return client.get<ApiResponse<NewBelieverHealthSummary>>(`/api/new-believers/health${q ? `?${q}` : ''}`);
       },
+      me: () => client.get<ApiResponse<NewBelieverHats>>('/api/new-believers/me'),
       enrollments: {
         list: (params?: EnrollmentListParams) => {
           const qs = new URLSearchParams();
