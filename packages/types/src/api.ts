@@ -465,6 +465,8 @@ export interface CreateProgramRequest {
   city?: string;
   description?: string;
   coordinatorId?: string;
+  fellowshipId?: string | null;
+  branchDepartmentId?: string | null;
 }
 
 export interface UpdateProgramRequest {
@@ -474,6 +476,8 @@ export interface UpdateProgramRequest {
   city?: string;
   description?: string;
   coordinatorId?: string;
+  fellowshipId?: string | null;
+  branchDepartmentId?: string | null;
   notes?: string;
   isCompleted?: boolean;
 }
@@ -505,6 +509,8 @@ export interface CaptureSoulRequest {
   gender?: 'Male' | 'Female';
   ageRange?: string;
   notes?: string;
+  fellowshipId?: string | null;
+  branchDepartmentId?: string | null;
 }
 
 export interface UpdateSoulStatusRequest {
@@ -534,6 +540,9 @@ export interface ListSoulsParams {
   dateFrom?: string;
   dateTo?: string;
   overdueOnly?: 'true' | 'false';
+  branchId?: string;
+  fellowshipId?: string;
+  branchDepartmentId?: string;
 }
 
 export interface ConversionResult {

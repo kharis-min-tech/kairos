@@ -11,6 +11,9 @@ export const createProgramSchema = z.object({
   description: z.string().optional(),
   coordinatorId: z.string().optional(), // Can be UUID or "KHARIS"
   branchId: z.string().uuid('Invalid branch ID').optional(), // Required for Admin, auto-set for Pastor
+  // Optional attribution: program is organized for/by this fellowship or department.
+  fellowshipId: z.string().uuid().nullable().optional(),
+  branchDepartmentId: z.string().uuid().nullable().optional(),
   notes: z.string().optional(),
   isOpenToAllBranches: z.boolean().optional(),
 });
@@ -23,6 +26,8 @@ export const updateProgramSchema = z.object({
   city: z.string().max(100).optional(),
   description: z.string().optional(),
   coordinatorId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().nullable().optional(),
+  branchDepartmentId: z.string().uuid().nullable().optional(),
   notes: z.string().optional(),
   isCompleted: z.boolean().optional(),
   isOpenToAllBranches: z.boolean().optional(),
@@ -61,6 +66,9 @@ export const captureSoulSchema = z.object({
   gender: z.enum(['Male', 'Female']).optional(),
   ageRange: z.string().max(20).optional(),
   notes: z.string().optional(),
+  // Optional direct attribution — captured on behalf of this fellowship/dept.
+  fellowshipId: z.string().uuid().nullable().optional(),
+  branchDepartmentId: z.string().uuid().nullable().optional(),
 });
 
 export const updateSoulStatusSchema = z.object({
@@ -85,6 +93,10 @@ export const listSoulsQuerySchema = z.object({
   assignedMemberId: z.string().uuid().optional(),
   outreachId: z.string().uuid().optional(),
   overdueOnly: z.coerce.boolean().optional(),
+  // Persona-aware filters layered on top of role scope.
+  branchId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
+  branchDepartmentId: z.string().uuid().optional(),
 });
 
 // ── Follow-ups ─────────────────────────────────────────────

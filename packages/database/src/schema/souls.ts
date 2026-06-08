@@ -3,6 +3,8 @@ import { relations } from 'drizzle-orm';
 import { outreachPrograms } from './outreach-programs';
 import { members } from './members';
 import { followUps } from './follow-ups';
+import { fellowships } from './fellowships';
+import { branchDepartments } from './branch-departments';
 
 export const souls = pgTable('souls', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -17,6 +19,10 @@ export const souls = pgTable('souls', {
   ageRange: varchar('age_range', { length: 20 }),
   assignedMemberId: uuid('assigned_member_id').references(() => members.id, { onDelete: 'set null' }),
   convertedToMemberId: uuid('converted_to_member_id').references(() => members.id, { onDelete: 'set null' }),
+  // Optional direct attribution: this soul was captured on behalf of a specific
+  // fellowship or department (e.g. solo street evangelism by a K-Group leader).
+  fellowshipId: uuid('fellowship_id').references(() => fellowships.id, { onDelete: 'set null' }),
+  branchDepartmentId: uuid('branch_department_id').references(() => branchDepartments.id, { onDelete: 'set null' }),
   status: varchar('status', { length: 30 }).default('New').notNull(),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -28,6 +34,8 @@ export const souls = pgTable('souls', {
   statusIdx: index('idx_souls_status').on(table.status),
   phoneIdx: index('idx_souls_phone').on(table.phone),
   emailIdx: index('idx_souls_email').on(table.email),
+  fellowshipIdIdx: index('idx_souls_fellowship_id').on(table.fellowshipId),
+  branchDepartmentIdIdx: index('idx_souls_branch_department_id').on(table.branchDepartmentId),
 }));
 
 export const soulsRelations = relations(souls, ({ one, many }) => ({

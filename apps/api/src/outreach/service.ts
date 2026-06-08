@@ -27,6 +27,8 @@ export async function createProgram(
     description?: string;
     coordinatorId?: string;
     branchId?: string;
+    fellowshipId?: string | null;
+    branchDepartmentId?: string | null;
     notes?: string;
     isOpenToAllBranches?: boolean;
   },
@@ -115,6 +117,8 @@ export async function createProgram(
       coordinatorId: finalCoordinatorId,
       coordinatorName: finalCoordinatorName,
       createdBy: auth.memberId ?? null,
+      fellowshipId: input.fellowshipId ?? null,
+      branchDepartmentId: input.branchDepartmentId ?? null,
       notes: input.notes ?? null,
       totalSoulsReached: 0,
       isCompleted: false,

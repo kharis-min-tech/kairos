@@ -267,6 +267,8 @@ export interface OutreachProgram extends BaseEntity {
   coordinatorId: string | null;
   coordinatorName?: string | null;
   createdBy?: string | null;
+  fellowshipId?: string | null;
+  branchDepartmentId?: string | null;
   totalSoulsReached: number;
   notes: string | null;
   isCompleted: boolean;
@@ -300,6 +302,8 @@ export interface Soul extends BaseEntity {
   ageRange: string | null;
   assignedMemberId: string | null;
   convertedToMemberId: string | null;
+  fellowshipId?: string | null;
+  branchDepartmentId?: string | null;
   status: SoulStatus;
   notes: string | null;
 }

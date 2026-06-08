@@ -1,6 +1,15 @@
-import { eq, and, or, ilike, count, sql, inArray, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, inArray, exists, type SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { souls, members, outreachPrograms } from '@kairos/database';
+import {
+  souls,
+  members,
+  outreachPrograms,
+  outreachParticipants,
+  fellowships,
+  fellowshipMembers,
+  branchDepartments,
+  departmentMembers,
+} from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import {
   NotFoundError,
@@ -28,6 +37,8 @@ export async function captureSoul(
     gender?: 'Male' | 'Female';
     ageRange?: string;
     notes?: string;
+    fellowshipId?: string | null;
+    branchDepartmentId?: string | null;
   },
   auth: AuthContext,
 ) {
@@ -44,6 +55,8 @@ export async function captureSoul(
       gender: input.gender ?? null,
       ageRange: input.ageRange ?? null,
       assignedMemberId: auth.memberId,
+      fellowshipId: input.fellowshipId ?? null,
+      branchDepartmentId: input.branchDepartmentId ?? null,
       status: 'New',
       notes: input.notes ?? null,
     })
@@ -124,6 +137,9 @@ export async function listSouls(
     assignedMemberId?: string;
     outreachId?: string;
     overdueOnly?: boolean;
+    branchId?: string;
+    fellowshipId?: string;
+    branchDepartmentId?: string;
   },
 ) {
   const effectiveRole = auth.activeRole ?? auth.systemRole;
@@ -133,20 +149,196 @@ export async function listSouls(
   if (effectiveRole === 'member') {
     // Members see only souls assigned to them
     conditions.push(eq(souls.assignedMemberId, auth.memberId));
-  } else if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
-    // Pastors and Leaders see souls from their branch (via outreach program or assigned member)
+  } else if (effectiveRole === 'pastor') {
+    // Pastors see souls from their branch — via the program OR via the assignee.
     conditions.push(
       or(
         eq(outreachPrograms.branchId, auth.branchId),
         eq(members.homeBranchId, auth.branchId),
       )!,
     );
+  } else if (effectiveRole === 'leader') {
+    // Leaders see souls connected to fellowships / departments they lead OR co-lead.
+    // Connection paths (any one is enough):
+    //   1. The soul is assigned to ME directly.
+    //   2. The soul is assigned to a member of one of MY fellowships/depts.
+    //   3. The soul's outreach program coordinator is a member of one of MY groups.
+    //   4. The soul's outreach program has a participant who is a member of one of MY groups.
+    //   5. The outreach program OR the soul itself is directly attributed to one of MY groups.
+    const ledFellowshipIds = (
+      await db
+        .select({ id: fellowships.id })
+        .from(fellowships)
+        .where(
+          and(
+            eq(fellowships.isActive, true),
+            or(
+              eq(fellowships.leaderId, auth.memberId),
+              eq(fellowships.coLeaderId, auth.memberId),
+            )!,
+          ),
+        )
+    ).map((r) => r.id);
+
+    const ledDepartmentIds = (
+      await db
+        .select({ id: branchDepartments.id })
+        .from(branchDepartments)
+        .where(
+          and(
+            eq(branchDepartments.isActive, true),
+            or(
+              eq(branchDepartments.leadMemberId, auth.memberId),
+              eq(branchDepartments.deputyMemberId, auth.memberId),
+            )!,
+          ),
+        )
+    ).map((r) => r.id);
+
+    if (ledFellowshipIds.length === 0 && ledDepartmentIds.length === 0) {
+      // Leader doesn't lead any group — fall back to own-assigned souls.
+      conditions.push(eq(souls.assignedMemberId, auth.memberId));
+    } else {
+      const groupMemberIds = sql`(
+        SELECT ${fellowshipMembers.memberId} FROM ${fellowshipMembers}
+        WHERE ${fellowshipMembers.isActive} = true
+        ${ledFellowshipIds.length > 0
+          ? sql`AND ${inArray(fellowshipMembers.fellowshipId, ledFellowshipIds)}`
+          : sql`AND false`}
+        UNION
+        SELECT ${departmentMembers.memberId} FROM ${departmentMembers}
+        WHERE ${departmentMembers.isActive} = true
+        ${ledDepartmentIds.length > 0
+          ? sql`AND ${inArray(departmentMembers.branchDepartmentId, ledDepartmentIds)}`
+          : sql`AND false`}
+      )`;
+
+      const orParts: SQL[] = [
+        // Path 1: assigned to me
+        eq(souls.assignedMemberId, auth.memberId),
+        // Path 2: assigned to a group member
+        sql`${souls.assignedMemberId} IN ${groupMemberIds}`,
+        // Path 3: program coordinator is a group member
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(outreachPrograms)
+            .where(
+              and(
+                eq(outreachPrograms.id, souls.outreachId),
+                sql`${outreachPrograms.coordinatorId} IN ${groupMemberIds}`,
+              ),
+            ),
+        ),
+        // Path 4: program has a participant who is a group member
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(outreachParticipants)
+            .where(
+              and(
+                eq(outreachParticipants.outreachId, souls.outreachId),
+                sql`${outreachParticipants.memberId} IN ${groupMemberIds}`,
+              ),
+            ),
+        ),
+      ];
+      // Path 5a: direct attribution on the soul itself
+      if (ledFellowshipIds.length > 0) {
+        orParts.push(inArray(souls.fellowshipId, ledFellowshipIds));
+      }
+      if (ledDepartmentIds.length > 0) {
+        orParts.push(inArray(souls.branchDepartmentId, ledDepartmentIds));
+      }
+      // Path 5b: direct attribution on the program
+      const programAttributionConds: SQL[] = [];
+      if (ledFellowshipIds.length > 0) {
+        programAttributionConds.push(inArray(outreachPrograms.fellowshipId, ledFellowshipIds));
+      }
+      if (ledDepartmentIds.length > 0) {
+        programAttributionConds.push(
+          inArray(outreachPrograms.branchDepartmentId, ledDepartmentIds),
+        );
+      }
+      if (programAttributionConds.length > 0) {
+        orParts.push(
+          exists(
+            db
+              .select({ one: sql`1` })
+              .from(outreachPrograms)
+              .where(
+                and(
+                  eq(outreachPrograms.id, souls.outreachId),
+                  or(...programAttributionConds)!,
+                ),
+              ),
+          ),
+        );
+      }
+      conditions.push(or(...orParts)!);
+    }
   }
   // Admin sees all
 
   // Filters
   if (query.status) {
     conditions.push(eq(souls.status, query.status));
+  }
+
+  // Branch filter — useful for admin (and harmless for everyone else; their role
+  // scope already constrains the result, this just narrows further).
+  if (query.branchId) {
+    conditions.push(
+      or(
+        eq(outreachPrograms.branchId, query.branchId),
+        eq(members.homeBranchId, query.branchId),
+      )!,
+    );
+  }
+
+  // Fellowship attribution filter — covers BOTH direct soul attribution AND
+  // the soul being assigned to a member of that fellowship.
+  if (query.fellowshipId) {
+    conditions.push(
+      or(
+        eq(souls.fellowshipId, query.fellowshipId),
+        eq(outreachPrograms.fellowshipId, query.fellowshipId),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(fellowshipMembers)
+            .where(
+              and(
+                eq(fellowshipMembers.memberId, souls.assignedMemberId),
+                eq(fellowshipMembers.fellowshipId, query.fellowshipId),
+                eq(fellowshipMembers.isActive, true),
+              ),
+            ),
+        ),
+      )!,
+    );
+  }
+
+  // Department attribution filter — symmetric to fellowship.
+  if (query.branchDepartmentId) {
+    conditions.push(
+      or(
+        eq(souls.branchDepartmentId, query.branchDepartmentId),
+        eq(outreachPrograms.branchDepartmentId, query.branchDepartmentId),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(departmentMembers)
+            .where(
+              and(
+                eq(departmentMembers.memberId, souls.assignedMemberId),
+                eq(departmentMembers.branchDepartmentId, query.branchDepartmentId),
+                eq(departmentMembers.isActive, true),
+              ),
+            ),
+        ),
+      )!,
+    );
   }
 
   if (query.assignedMemberId) {
