@@ -77,4 +77,18 @@ describe('FellowshipsPage — persona CTAs', () => {
     render(<FellowshipsPage />, { wrapper });
     expect(screen.queryByText(/\+ New Fellowship/i)).toBeNull();
   });
+
+  it('leader with empty list sees the leader empty-state copy, not the generic one', () => {
+    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
+    render(<FellowshipsPage />, { wrapper });
+    expect(screen.getByText(/You don’t lead a fellowship/i)).toBeDefined();
+    expect(screen.queryByText(/^No fellowships found\.$/)).toBeNull();
+  });
+
+  it('member with empty list sees the generic empty-state copy', () => {
+    authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
+    render(<FellowshipsPage />, { wrapper });
+    expect(screen.getByText(/No fellowships found/i)).toBeDefined();
+    expect(screen.queryByText(/You don’t lead a fellowship/i)).toBeNull();
+  });
 });

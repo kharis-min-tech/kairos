@@ -134,6 +134,21 @@ describe('listFellowships', () => {
     expect(result.data).toEqual([]);
     expect(mockDb.select).toHaveBeenCalled();
   });
+
+  it('scopes leaders to fellowships they lead or co-lead', async () => {
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
+    const ledFellowship = { ...sampleFellowship, leaderId: 'leader-1' };
+    setupSelectSequence([ledFellowship], [{ value: 1 }]);
+    const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.data).toEqual([ledFellowship]);
+  });
+
+  it('returns empty list for a leader who does not lead any fellowship (e.g. department-only leader)', async () => {
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
+    setupSelectSequence([], [{ value: 0 }]);
+    const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.data).toEqual([]);
+  });
 });
 
 // ── getFellowship ─────────────────────────────────────────

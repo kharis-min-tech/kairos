@@ -212,8 +212,17 @@ function FellowshipsContent() {
 
       {!fellowships || fellowships.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No fellowships found.</p>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            {activeRole === 'leader' ? (
+              <>
+                <p className="font-medium">You don’t lead a fellowship</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  The leader view shows fellowships you lead or co-lead. Switch to your member view to browse and request to join one.
+                </p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">No fellowships found.</p>
+            )}
           </CardContent>
         </Card>
       ) : (

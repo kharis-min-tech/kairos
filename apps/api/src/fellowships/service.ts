@@ -1,4 +1,4 @@
-import { eq, and, count, sql, exists } from 'drizzle-orm';
+import { eq, and, or, count, sql, exists } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   fellowships,
@@ -48,10 +48,21 @@ export async function listFellowships(
 ) {
   const conditions = [eq(fellowships.isActive, true)];
 
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+    if (query.branchId) {
+      conditions.push(eq(fellowships.branchId, query.branchId));
+    }
+  } else if (auth.systemRole === 'leader') {
+    // Leaders see only fellowships they lead or co-lead, scoped to their branch.
     conditions.push(eq(fellowships.branchId, auth.branchId));
-  } else if (query.branchId) {
-    conditions.push(eq(fellowships.branchId, query.branchId));
+    conditions.push(
+      or(
+        eq(fellowships.leaderId, auth.memberId),
+        eq(fellowships.coLeaderId, auth.memberId),
+      )!,
+    );
+  } else {
+    conditions.push(eq(fellowships.branchId, auth.branchId));
   }
 
   if (query.fellowshipType) {
