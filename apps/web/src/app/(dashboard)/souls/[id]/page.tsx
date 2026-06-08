@@ -50,9 +50,9 @@ const CONTACT_STATUSES = [
 ];
 
 const URGENCY_LEVELS = [
-  { value: 'GREEN', label: 'GREEN - On Track', color: 'text-emerald-700' },
-  { value: 'AMBER', label: 'AMBER - Monitor', color: 'text-amber-700' },
-  { value: 'RED', label: 'RED - Critical', color: 'text-rose-700' },
+  { value: 'GREEN', label: 'GREEN - On Track', color: 'text-emerald-600 dark:text-emerald-400' },
+  { value: 'AMBER', label: 'AMBER - Monitor', color: 'text-[#9a6b04] dark:text-[#f8b537]' },
+  { value: 'RED', label: 'RED - Critical', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
 function todayIso(): string {
@@ -510,28 +510,28 @@ export default function SoulDetailPage() {
             ) : (
               followUps.map((followUp) => {
                 // Manual urgency level takes priority over automatic RAG
-                let ragStatus = { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
+                let ragStatus = { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                 
                 if (followUp.urgencyLevel) {
                   // Use manual urgency level set by worker
                   if (followUp.urgencyLevel === 'RED') {
-                    ragStatus = { label: 'Critical (Manual)', bgColor: 'bg-rose-100', textColor: 'text-rose-700', borderColor: 'border-l-rose-500' };
+                    ragStatus = { label: 'Critical (Manual)', bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
                   } else if (followUp.urgencyLevel === 'AMBER') {
-                    ragStatus = { label: 'Monitor (Manual)', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
+                    ragStatus = { label: 'Monitor (Manual)', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                   } else if (followUp.urgencyLevel === 'GREEN') {
-                    ragStatus = { label: 'On Track (Manual)', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
+                    ragStatus = { label: 'On Track (Manual)', bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
                   }
                 } else {
                   // Fall back to automatic RAG based on contact status
                   const getFollowUpRAG = (contactStatus: string) => {
                     if (contactStatus === 'Successful') {
-                      return { label: 'On Track', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-l-emerald-500' };
+                      return { label: 'On Track', bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
                     } else if (contactStatus === 'No Answer' || contactStatus === 'Busy') {
-                      return { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
+                      return { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                     } else if (contactStatus === 'Wrong Number' || contactStatus === 'Declined') {
-                      return { label: 'Critical', bgColor: 'bg-rose-100', textColor: 'text-rose-700', borderColor: 'border-l-rose-500' };
+                      return { label: 'Critical', bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
                     }
-                    return { label: 'Monitor', bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-l-amber-500' };
+                    return { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                   };
                   ragStatus = getFollowUpRAG(followUp.contactStatus);
                 }

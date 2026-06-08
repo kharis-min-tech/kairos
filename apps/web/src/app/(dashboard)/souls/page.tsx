@@ -47,8 +47,8 @@ type RAGLabel = 'Critical' | 'Monitor' | 'On Track';
 
 // RAG Status: Red/Amber/Green based on follow-up timing
 function getRAGStatus(status: string, daysSinceLastFollowUp: number | null | undefined) {
-    const CRITICAL = { label: 'Critical' as RAGLabel, bgColor: 'bg-rose-100 dark:bg-rose-950/50', textColor: 'text-rose-700 dark:text-rose-300', borderColor: 'border-l-rose-500', dotColor: 'bg-rose-500' };
-    const MONITOR  = { label: 'Monitor'  as RAGLabel, bgColor: 'bg-amber-100 dark:bg-amber-950/50', textColor: 'text-amber-700 dark:text-amber-300', borderColor: 'border-l-amber-500', dotColor: 'bg-amber-500' };
+    const CRITICAL = { label: 'Critical' as RAGLabel, bgColor: 'bg-rose-500/10 dark:bg-rose-500/15', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500', dotColor: 'bg-rose-500' };
+    const MONITOR  = { label: 'Monitor'  as RAGLabel, bgColor: 'bg-[#f8b537]/15 dark:bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]', dotColor: 'bg-[#f8b537]' };
     const ON_TRACK = { label: 'On Track' as RAGLabel, bgColor: 'bg-emerald-100 dark:bg-emerald-950/50', textColor: 'text-emerald-700 dark:text-emerald-300', borderColor: 'border-l-emerald-500', dotColor: 'bg-emerald-500' };
 
     // Converted, Not Interested, Lost Contact = GREEN (no follow-up needed)
@@ -145,10 +145,10 @@ function SoulCard({
               <span
                 className={`mt-1.5 inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                   disposition === 'Interested'
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                     : disposition === 'Not Interested'
-                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
-                      : 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300'
+                      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                      : 'bg-slate-500/15 text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {disposition}
@@ -702,7 +702,7 @@ export default function SoulsKanbanPage() {
                           onClick={() => { setSourceFilter(source); setSourceDropdownOpen(false); }}
                           className={`w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors ${
                             sourceFilter === source
-                              ? 'bg-primary/10 text-primary dark:bg-[#5D3FD3]/20 dark:text-violet-300'
+                              ? 'bg-primary/10 text-primary dark:bg-[#5D3FD3]/20 dark:text-[#a392ed]'
                               : 'text-foreground hover:bg-foreground/[0.05]'
                           }`}
                         >

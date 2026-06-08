@@ -184,21 +184,21 @@ export default function CreateProgramPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg shadow-ambient max-w-md w-full mx-4 p-6 space-y-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <span className="text-2xl font-bold text-amber-600">!</span>
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#f8b537]/15 flex items-center justify-center">
+                <span className="text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">!</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2">Branch-Specific Program</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   You have selected <span className="font-semibold text-foreground">{selectedCoordinator?.firstName} {selectedCoordinator?.lastName}</span> as the coordinator.
                 </p>
-                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-amber-900">
+                <div className="bg-[#f8b537]/10 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-[#7a5a00] dark:text-[#f8b537]">
                     <strong>Important:</strong> This program will ONLY be visible to members of <span className="font-semibold">{selectedCoordinator?.firstName}'s branch</span>. Pastors and leaders from other branches will NOT be able to see or register for this program.
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  To make this program available to all branches, select <span className="font-semibold text-amber-600">Kharis</span> as the coordinator instead.
+                  To make this program available to all branches, select <span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">Kharis</span> as the coordinator instead.
                 </p>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function CreateProgramPage() {
           />
           {isAdmin && (
             <p className="text-sm text-muted-foreground">
-              Note: Select <span className="font-semibold text-amber-600">Kharis</span> as coordinator to allow pastors and leaders from all branches to register for this program
+              Note: Select <span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">Kharis</span> as coordinator to allow pastors and leaders from all branches to register for this program
             </p>
           )}
         </div>
