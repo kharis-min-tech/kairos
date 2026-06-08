@@ -110,9 +110,6 @@ export function EnrollDialog({
       toast.success('Member enrolled in New Believers programme');
       onOpenChange(false);
     } catch (err: unknown) {
-      // Surface the full error to DevTools so we can diagnose 500s that
-      // come back as the generic 'Something went wrong' fallback.
-      console.error('createEnrollment failed:', err);
       const apiStatus = (err as { status?: number } | null)?.status;
       const fallback = apiStatus ? `Failed to enroll member (HTTP ${apiStatus})` : 'Failed to enroll member';
       toast.error(err instanceof Error && err.message ? err.message : fallback);

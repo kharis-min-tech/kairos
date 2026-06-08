@@ -9,6 +9,7 @@ import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
 import { useMembers } from '@/hooks/use-members';
 import { useDepartments } from '@/hooks/use-departments';
 import { useAuthStore } from '@/lib/auth-store';
+import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate } from '@/lib/date-format';
 import {
   Button,
@@ -41,6 +42,7 @@ export default function EnrollmentDetailPage() {
   const { activeRole, user } = useAuthStore();
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
   const canEdit = isAdminOrPastor || activeRole === 'leader';
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const { data, isLoading, error } = useEnrollment(id);
   const enrollment = data as EnrollmentDetail | undefined;
@@ -181,7 +183,13 @@ export default function EnrollmentDetailPage() {
   }
 
   async function handleDeactivate() {
-    if (!confirm('Are you sure you want to deactivate this enrollment?')) return;
+    const ok = await confirm({
+      title: 'Deactivate enrollment?',
+      description: 'This member will be removed from the active pipeline. You can re-enrol them later if needed.',
+      confirmLabel: 'Deactivate',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await updateEnrollment.mutateAsync({ id, data: { isActive: false } });
       toast.success('Enrollment deactivated');
@@ -691,6 +699,8 @@ export default function EnrollmentDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }
