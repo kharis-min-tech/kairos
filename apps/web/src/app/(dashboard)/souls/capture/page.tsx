@@ -7,12 +7,23 @@ import { useApi } from '@/hooks/useApi';
 import { Button, CustomSelect, Input, Label, Textarea } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { useFellowships } from '@/hooks/use-fellowships';
+import { useMyDepartments } from '@/hooks/use-departments';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function CaptureSoulPage() {
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
   const { captureSoul } = useSoulsStore();
+
+  const user = useAuthStore((s) => s.user);
+  const { data: myFellowshipsResult } = useFellowships(
+    user?.id ? { memberId: user.id, limit: 100 } : undefined,
+  );
+  const { data: myDepartmentsData } = useMyDepartments();
+  const myFellowships = myFellowshipsResult?.data ?? [];
+  const myDepartments = myDepartmentsData ?? [];
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,6 +36,8 @@ export default function CaptureSoulPage() {
     ageRange: '',
     notes: '',
     outreachId: '',
+    fellowshipId: '',
+    branchDepartmentId: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,6 +104,8 @@ export default function CaptureSoulPage() {
         gender: formData.gender || undefined,
         ageRange: formData.ageRange || undefined,
         notes: formData.notes || undefined,
+        fellowshipId: formData.fellowshipId || null,
+        branchDepartmentId: formData.branchDepartmentId || null,
       };
 
       const soul = await captureSoul(api, data);
@@ -112,6 +127,8 @@ export default function CaptureSoulPage() {
         ageRange: '',
         notes: '',
         outreachId: '',
+        fellowshipId: '',
+        branchDepartmentId: '',
       });
 
       // Optionally navigate to soul detail
@@ -260,6 +277,32 @@ export default function CaptureSoulPage() {
           />
           <p className="text-xs text-muted-foreground">Leave blank if this was a personal/solo encounter.</p>
         </div>
+
+        {/* Optional attribution — captured on behalf of a fellowship or dept. */}
+        {(myFellowships.length > 0 || myDepartments.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fellowshipId">On behalf of fellowship (Optional)</Label>
+              <CustomSelect
+                id="fellowshipId"
+                value={formData.fellowshipId}
+                onValueChange={(v) => handleChange('fellowshipId', v)}
+                placeholder="None"
+                options={myFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="branchDepartmentId">On behalf of department (Optional)</Label>
+              <CustomSelect
+                id="branchDepartmentId"
+                value={formData.branchDepartmentId}
+                onValueChange={(v) => handleChange('branchDepartmentId', v)}
+                placeholder="None"
+                options={myDepartments.map((d) => ({ value: d.id, label: d.departmentName }))}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="notes">Notes (Optional)</Label>

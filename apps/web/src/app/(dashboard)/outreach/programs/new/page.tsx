@@ -9,6 +9,8 @@ import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+import { useFellowships } from '@/hooks/use-fellowships';
+import { useMyDepartments } from '@/hooks/use-departments';
 
 function todayIso(): string {
   const today = new Date();
@@ -35,6 +37,13 @@ export default function CreateProgramPage() {
     }
   }, [user, canCreate, router]);
 
+  const { data: myFellowshipsResult } = useFellowships(
+    user?.id ? { memberId: user.id, limit: 100 } : undefined,
+  );
+  const { data: myDepartmentsData } = useMyDepartments();
+  const myFellowships = myFellowshipsResult?.data ?? [];
+  const myDepartments = myDepartmentsData ?? [];
+
   const [formData, setFormData] = useState({
     programName: '',
     programDate: '',
@@ -46,6 +55,8 @@ export default function CreateProgramPage() {
     branchId: '',
     notes: '',
     isOpenToAllBranches: false,
+    fellowshipId: '',
+    branchDepartmentId: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -135,6 +146,8 @@ export default function CreateProgramPage() {
         branchId: formData.branchId || undefined,
         notes: formData.notes || undefined,
         isOpenToAllBranches: formData.isOpenToAllBranches,
+        fellowshipId: formData.fellowshipId || null,
+        branchDepartmentId: formData.branchDepartmentId || null,
       };
 
       const program = await createProgram(api, data);
@@ -336,6 +349,32 @@ export default function CreateProgramPage() {
             rows={4}
           />
         </div>
+
+        {/* Optional attribution — organized for a fellowship or department. */}
+        {(myFellowships.length > 0 || myDepartments.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fellowshipId">Organized for fellowship (Optional)</Label>
+              <CustomSelect
+                id="fellowshipId"
+                value={formData.fellowshipId}
+                onValueChange={(v) => handleChange('fellowshipId', v)}
+                placeholder="None"
+                options={myFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="branchDepartmentId">Organized for department (Optional)</Label>
+              <CustomSelect
+                id="branchDepartmentId"
+                value={formData.branchDepartmentId}
+                onValueChange={(v) => handleChange('branchDepartmentId', v)}
+                placeholder="None"
+                options={myDepartments.map((d) => ({ value: d.id, label: d.departmentName }))}
+              />
+            </div>
+          </div>
+        )}
 
         {isAdmin && (
           <div className="space-y-2">
