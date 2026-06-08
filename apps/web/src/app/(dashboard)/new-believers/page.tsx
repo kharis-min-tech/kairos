@@ -374,8 +374,10 @@ function NewBelieversContent() {
         </header>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading your progress...</p>
+          <div aria-busy="true" aria-live="polite" className="space-y-3">
+            <div className="h-24 animate-pulse rounded-lg bg-muted/60" />
+            <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
+            <span className="sr-only">Loading your progress</span>
           </div>
         ) : myEnrollment ? (
           <MemberJourneyView enrollment={myEnrollment} />
@@ -489,8 +491,15 @@ function NewBelieversContent() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading pipeline...</p>
+        <div aria-busy="true" aria-live="polite" className="flex gap-4 overflow-x-auto pb-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="w-72 shrink-0 space-y-2 rounded-lg border bg-card p-3">
+              <div className="h-4 w-24 animate-pulse rounded bg-muted/60" />
+              <div className="h-20 animate-pulse rounded bg-muted/60" />
+              <div className="h-20 animate-pulse rounded bg-muted/60" />
+            </div>
+          ))}
+          <span className="sr-only">Loading pipeline</span>
         </div>
       ) : (
         <DndContext

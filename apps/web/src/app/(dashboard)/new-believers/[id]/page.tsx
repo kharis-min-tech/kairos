@@ -201,16 +201,32 @@ export default function EnrollmentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading enrollment...</p>
+      <div aria-busy="true" aria-live="polite" className="container mx-auto py-6 space-y-6">
+        <div className="h-4 w-32 animate-pulse rounded bg-muted/60" />
+        <div className="space-y-2">
+          <div className="h-9 w-72 animate-pulse rounded bg-muted/60" />
+          <div className="h-4 w-96 animate-pulse rounded bg-muted/60" />
+        </div>
+        <div className="h-2 w-full animate-pulse rounded-full bg-muted/60" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <div className="h-64 animate-pulse rounded-lg bg-muted/60" />
+            <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-32 animate-pulse rounded-lg bg-muted/60" />
+            <div className="h-32 animate-pulse rounded-lg bg-muted/60" />
+          </div>
+        </div>
+        <span className="sr-only">Loading enrollment</span>
       </div>
     );
   }
 
   if (error || !enrollment) {
     return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Enrollment not found.</p>
+      <div role="alert" className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+        <p className="text-sm font-medium text-destructive">Enrollment not found.</p>
         <Link href="/new-believers" className="mt-2 inline-flex items-center gap-1 text-sm text-[#5D3FD3] hover:underline">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to New Believers
         </Link>
