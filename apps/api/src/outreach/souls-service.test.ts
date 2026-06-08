@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureSoul, updateSoulStatus, listSouls, reassignSoul } from './souls-service';
+import { captureSoul, updateSoulStatus, listSouls, reassignSoul, getSoul } from './souls-service';
 import type { Database } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { TEST_IDS } from '../test-helpers';
@@ -507,6 +507,100 @@ describe('Souls Service', () => {
       await expect(
         reassignSoul(mockDb, 'soul-1', { assignedMemberId: 'new-member' }, pastorAuth)
       ).rejects.toThrow(ForbiddenError);
+    });
+  });
+
+  describe('getSoul', () => {
+    function mockSoulRow(soul: Record<string, unknown>) {
+      return vi.fn(() => ({
+        from: vi.fn(() => ({
+          leftJoin: vi.fn(() => ({
+            leftJoin: vi.fn(() => ({
+              where: vi.fn().mockResolvedValue([soul]),
+            })),
+          })),
+        })),
+      }));
+    }
+
+    it('member assigned to the soul can read it', async () => {
+      mockDb.select = mockSoulRow({
+        id: 'soul-1',
+        assignedMemberId: memberAuth.memberId,
+      });
+      const result = await getSoul(mockDb, 'soul-1', memberAuth);
+      expect(result.id).toBe('soul-1');
+    });
+
+    it('member NOT assigned to the soul gets ForbiddenError', async () => {
+      mockDb.select = mockSoulRow({
+        id: 'soul-1',
+        assignedMemberId: 'someone-else',
+      });
+      await expect(getSoul(mockDb, 'soul-1', memberAuth)).rejects.toThrow(ForbiddenError);
+    });
+
+    it('pastor in the soul\'s branch can read it', async () => {
+      let call = 0;
+      mockDb.select = vi.fn(() => {
+        call += 1;
+        if (call === 1) {
+          // first select: the soul row
+          return {
+            from: vi.fn(() => ({
+              leftJoin: vi.fn(() => ({
+                leftJoin: vi.fn(() => ({
+                  where: vi.fn().mockResolvedValue([{ id: 'soul-1', assignedMemberId: null }]),
+                })),
+              })),
+            })),
+          };
+        }
+        // second select: the scope query
+        return {
+          from: vi.fn(() => ({
+            leftJoin: vi.fn(() => ({
+              leftJoin: vi.fn(() => ({
+                where: vi.fn().mockResolvedValue([
+                  { programBranchId: TEST_IDS.branchId, assigneeBranchId: null },
+                ]),
+              })),
+            })),
+          })),
+        };
+      });
+      const result = await getSoul(mockDb, 'soul-1', pastorAuth);
+      expect(result.id).toBe('soul-1');
+    });
+
+    it('pastor in a different branch is blocked with ForbiddenError', async () => {
+      let call = 0;
+      mockDb.select = vi.fn(() => {
+        call += 1;
+        if (call === 1) {
+          return {
+            from: vi.fn(() => ({
+              leftJoin: vi.fn(() => ({
+                leftJoin: vi.fn(() => ({
+                  where: vi.fn().mockResolvedValue([{ id: 'soul-1', assignedMemberId: null }]),
+                })),
+              })),
+            })),
+          };
+        }
+        return {
+          from: vi.fn(() => ({
+            leftJoin: vi.fn(() => ({
+              leftJoin: vi.fn(() => ({
+                where: vi.fn().mockResolvedValue([
+                  { programBranchId: TEST_IDS.branch2Id, assigneeBranchId: TEST_IDS.branch2Id },
+                ]),
+              })),
+            })),
+          })),
+        };
+      });
+      await expect(getSoul(mockDb, 'soul-1', pastorAuth)).rejects.toThrow(ForbiddenError);
     });
   });
 });

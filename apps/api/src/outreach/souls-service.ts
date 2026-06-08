@@ -284,6 +284,26 @@ export async function getSoul(
     throw new ForbiddenError('You can only access souls assigned to you');
   }
 
+  // Branch isolation for pastor/leader — they must not see souls outside their branch,
+  // either via the soul's outreach program OR via an assignee from another branch.
+  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+    // Need branchIds for both the program and the assignee.
+    const [scope] = await db
+      .select({
+        programBranchId: outreachPrograms.branchId,
+        assigneeBranchId: members.homeBranchId,
+      })
+      .from(souls)
+      .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .leftJoin(members, eq(souls.assignedMemberId, members.id))
+      .where(eq(souls.id, soulId));
+    const inBranch =
+      scope?.programBranchId === auth.branchId || scope?.assigneeBranchId === auth.branchId;
+    if (!inBranch) {
+      throw new ForbiddenError('You can only access souls from your branch');
+    }
+  }
+
   return soul;
 }
 
