@@ -56,6 +56,8 @@ import type {
   UpdateEnrollmentRequest,
   EnrollmentListParams,
   BulkAdvanceEnrollmentsRequest,
+  MentorFollowupItem,
+  CreateMentorFollowupRequest,
   BulkAdvanceEnrollmentsResult,
   CreateNewBelieverSessionRequest,
   UpdateNewBelieverSessionRequest,
@@ -918,6 +920,7 @@ export function createApiClient(
           if (params?.sortBy) qs.set('sortBy', params.sortBy);
           if (params?.page) qs.set('page', String(params.page));
           if (params?.limit) qs.set('limit', String(params.limit));
+          if (params?.mentorId) qs.set('mentorId', params.mentorId);
           const q = qs.toString();
           return client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>(`/api/new-believers/enrollments${q ? `?${q}` : ''}`);
         },
@@ -931,6 +934,12 @@ export function createApiClient(
           client.post<ApiResponse<NewBelieverEnrollment>>('/api/new-believers/enrollments', data),
         update: (id: string, data: UpdateEnrollmentRequest) =>
           client.patch<ApiResponse<NewBelieverEnrollment>>(`/api/new-believers/enrollments/${id}`, data),
+        listMentorFollowups: (enrollmentId: string) =>
+          client.get<ApiResponse<MentorFollowupItem[]>>(`/api/new-believers/enrollments/${enrollmentId}/mentor-followups`),
+        createMentorFollowup: (enrollmentId: string, data: CreateMentorFollowupRequest) =>
+          client.post<ApiResponse<MentorFollowupItem>>(`/api/new-believers/enrollments/${enrollmentId}/mentor-followups`, data),
+        deleteMentorFollowup: (followupId: string) =>
+          client.delete<ApiResponse<{ id: string }>>(`/api/new-believers/mentor-followups/${followupId}`),
       },
       sessions: {
         list: (params?: SessionListParams) => {

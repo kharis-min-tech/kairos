@@ -11,6 +11,7 @@ import type {
   UpdateNewBelieverSessionRequest,
   RecordNewBelieverAttendanceRequest,
   SessionListParams,
+  CreateMentorFollowupRequest,
 } from '@kairos/types';
 
 // ── Enrollment queries ─────────────────────────────────────
@@ -141,6 +142,51 @@ export function useNewBelieversHealth(branchId?: string) {
       return res.data!;
     },
     staleTime: 60_000,
+  });
+}
+
+// ── Mentor follow-ups ─────────────────────────────────────
+
+export function useMentorFollowups(enrollmentId: string) {
+  return useQuery({
+    queryKey: ['new-believers', 'enrollments', enrollmentId, 'mentor-followups'],
+    queryFn: async () => {
+      const res = await api.newBelievers.enrollments.listMentorFollowups(enrollmentId);
+      return res.data!;
+    },
+    enabled: !!enrollmentId,
+  });
+}
+
+export function useCreateMentorFollowup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      enrollmentId,
+      data,
+    }: {
+      enrollmentId: string;
+      data: CreateMentorFollowupRequest;
+    }) => {
+      const res = await api.newBelievers.enrollments.createMentorFollowup(enrollmentId, data);
+      return res.data!;
+    },
+    onSuccess: (_res, { enrollmentId }) => {
+      qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments', enrollmentId, 'mentor-followups'] });
+    },
+  });
+}
+
+export function useDeleteMentorFollowup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ followupId }: { followupId: string; enrollmentId: string }) => {
+      const res = await api.newBelievers.enrollments.deleteMentorFollowup(followupId);
+      return res.data!;
+    },
+    onSuccess: (_res, { enrollmentId }) => {
+      qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments', enrollmentId, 'mentor-followups'] });
+    },
   });
 }
 

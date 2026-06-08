@@ -591,10 +591,30 @@ export interface EnrollmentListParams {
   branchId?: string;
   stage?: string;
   teacherId?: string;
+  mentorId?: string;
   stale?: boolean;
   sortBy?: 'date-added' | 'name' | 'last-activity';
   page?: number;
   limit?: number;
+}
+
+export interface MentorFollowupItem {
+  id: string;
+  enrollmentId: string;
+  mentorMemberId: string;
+  note: string;
+  contactedAt: string;
+  createdBy: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  mentorFirstName: string | null;
+  mentorLastName: string | null;
+}
+
+export interface CreateMentorFollowupRequest {
+  note: string;
+  contactedAt?: string;
 }
 
 export interface BulkAdvanceEnrollmentsRequest {

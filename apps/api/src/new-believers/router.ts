@@ -13,6 +13,7 @@ import {
   listSessionsQuerySchema,
   bulkAdvanceSchema,
   healthQuerySchema,
+  createMentorFollowupSchema,
 } from './schemas';
 import {
   listEnrollments,
@@ -26,6 +27,9 @@ import {
   recordSessionAttendance,
   getSessionAttendance,
   getHealthSummary,
+  listMentorFollowups,
+  createMentorFollowup,
+  deleteMentorFollowup,
 } from './service';
 
 export const newBelieversRouter = new Hono();
@@ -158,3 +162,27 @@ newBelieversRouter.post(
     return c.json(successResponse(result, 'Attendance recorded'));
   }
 );
+
+// ── Mentor follow-ups (nested under enrollment) ───────────
+
+newBelieversRouter.get('/enrollments/:id/mentor-followups', async (c) => {
+  const auth = getAuth(c);
+  const rows = await listMentorFollowups(db, auth, c.req.param('id')!);
+  return c.json(successResponse(rows));
+});
+
+newBelieversRouter.post(
+  '/enrollments/:id/mentor-followups',
+  zValidator('json', createMentorFollowupSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const row = await createMentorFollowup(db, auth, c.req.param('id')!, c.req.valid('json'));
+    return c.json(successResponse(row), 201);
+  },
+);
+
+newBelieversRouter.delete('/mentor-followups/:id', async (c) => {
+  const auth = getAuth(c);
+  const result = await deleteMentorFollowup(db, auth, c.req.param('id')!);
+  return c.json(successResponse(result));
+});

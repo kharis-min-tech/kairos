@@ -280,6 +280,111 @@ describe('getEnrollment persona scope', () => {
   });
 });
 
+// ── Mentor follow-ups ─────────────────────────────────────
+
+describe('createMentorFollowup', () => {
+  const baseRow = {
+    id: enrollmentId,
+    memberId: 'mentee-1',
+    branchId,
+    teacherId: null,
+    mentorId: memberId,
+    stage: 'session-1',
+    enrolledAt: new Date(),
+    completedAt: null,
+    sessionCompletedAt: null,
+    sessionFeedback: null,
+    joinedDepartmentId: null,
+    notes: null,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    memberFirstName: 'A',
+    memberLastName: 'B',
+    teacherFirstName: null,
+    teacherLastName: null,
+    mentorFirstName: null,
+    mentorLastName: null,
+  };
+
+  function setupInsert(returnedRow: unknown) {
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain([returnedRow]));
+  }
+
+  it('the assigned mentor can create a follow-up on their mentee', async () => {
+    // select: enrollment lookup (the one used to check mentorId) → success
+    setupSelectSequence([{ id: enrollmentId, branchId, mentorId: memberId }]);
+    setupInsert({ id: 'fu-1', enrollmentId, mentorMemberId: memberId, note: 'good chat' });
+    const { createMentorFollowup } = await import('./service');
+    const result = await createMentorFollowup(mockDb, memberAuth, enrollmentId, { note: 'good chat' });
+    expect(result.id).toBe('fu-1');
+  });
+
+  it('a non-mentor member without NB-leader / Teacher role is denied', async () => {
+    setupSelectSequence(
+      [{ id: enrollmentId, branchId, mentorId: 'other-mentor' }],
+      [], // not NB-leader
+      [], // no Teacher role
+    );
+    const { createMentorFollowup } = await import('./service');
+    await expect(
+      createMentorFollowup(mockDb, memberAuth, enrollmentId, { note: 'sneaky' }),
+    ).rejects.toThrow(/assigned mentor|NB leader|pastor\/admin/i);
+  });
+
+  it('admin can write a follow-up even when not the assigned mentor', async () => {
+    setupSelectSequence([{ id: enrollmentId, branchId, mentorId: 'other-mentor' }]);
+    setupInsert({ id: 'fu-2', enrollmentId, mentorMemberId: 'other-mentor', note: 'admin note' });
+    const { createMentorFollowup } = await import('./service');
+    const result = await createMentorFollowup(mockDb, adminAuth, enrollmentId, { note: 'admin note' });
+    expect(result.id).toBe('fu-2');
+  });
+
+  it('NotFound when the enrollment does not exist', async () => {
+    setupSelectSequence([]); // enrollment lookup returns nothing
+    const { createMentorFollowup } = await import('./service');
+    await expect(
+      createMentorFollowup(mockDb, adminAuth, enrollmentId, { note: 'x' }),
+    ).rejects.toThrow(/Enrollment/);
+  });
+});
+
+describe('deleteMentorFollowup', () => {
+  it('the author can soft-delete their own follow-up', async () => {
+    setupSelectSequence(
+      [{ id: 'fu-1', enrollmentId, createdBy: memberId }],
+      [{ id: enrollmentId, branchId, mentorId: memberId }],
+    );
+    setupUpdate();
+    const { deleteMentorFollowup } = await import('./service');
+    const result = await deleteMentorFollowup(mockDb, memberAuth, 'fu-1');
+    expect(result.id).toBe('fu-1');
+  });
+
+  it('a different member without NB-leader role is denied', async () => {
+    setupSelectSequence(
+      [{ id: 'fu-1', enrollmentId, createdBy: 'someone-else' }],
+      [{ id: enrollmentId, branchId, mentorId: memberId }],
+      [], // not NB-leader
+    );
+    const { deleteMentorFollowup } = await import('./service');
+    await expect(deleteMentorFollowup(mockDb, memberAuth, 'fu-1')).rejects.toThrow(
+      /author|NB leader|pastor\/admin/i,
+    );
+  });
+
+  it('pastor can delete any follow-up in their branch', async () => {
+    setupSelectSequence(
+      [{ id: 'fu-1', enrollmentId, createdBy: 'someone-else' }],
+      [{ id: enrollmentId, branchId, mentorId: 'someone-else' }],
+    );
+    setupUpdate();
+    const { deleteMentorFollowup } = await import('./service');
+    const result = await deleteMentorFollowup(mockDb, pastorAuth, 'fu-1');
+    expect(result.id).toBe('fu-1');
+  });
+});
+
 // ── advanceStage (updateEnrollment with stage change) ─────
 
 describe('updateEnrollment stage advancement', () => {

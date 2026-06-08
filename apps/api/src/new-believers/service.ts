@@ -9,6 +9,7 @@ import {
   roles,
   branchDepartments,
   departments,
+  mentorFollowups,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail } from '@kairos/utils';
@@ -1096,4 +1097,139 @@ export async function autoEnroll(
       stage: 'session-1',
     });
   }
+}
+
+// ── Mentor follow-ups ─────────────────────────────────────
+
+/**
+ * Whether the caller can write a mentor follow-up against `enrollmentId`.
+ * Allowed: the assigned mentor on the row, the NB-dept leader, the NB-Teacher
+ * role holder, pastor, or admin. Anyone else → ForbiddenError.
+ */
+async function enforceMentorFollowupWrite(
+  db: Database,
+  auth: AuthContext,
+  enrollment: { id: string; branchId: string; mentorId: string | null },
+) {
+  enforceBranchScope(auth, enrollment.branchId);
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (enrollment.mentorId === auth.memberId) return;
+  const [isNbLeader, hasTeacherRole] = await Promise.all([
+    isNewBelieversDeptLeader(db, auth.memberId, enrollment.branchId),
+    isNewBelieverTeacher(db, auth.memberId, enrollment.branchId),
+  ]);
+  if (!isNbLeader && !hasTeacherRole) {
+    throw new ForbiddenError('Only the assigned mentor, NB leader, or pastor/admin can write follow-ups');
+  }
+}
+
+export async function listMentorFollowups(
+  db: Database,
+  auth: AuthContext,
+  enrollmentId: string,
+) {
+  // Read access piggy-backs on getEnrollment's persona scope (throws on cross-persona)
+  await getEnrollment(db, auth, enrollmentId);
+
+  const rows = await db
+    .select({
+      id: mentorFollowups.id,
+      enrollmentId: mentorFollowups.enrollmentId,
+      mentorMemberId: mentorFollowups.mentorMemberId,
+      note: mentorFollowups.note,
+      contactedAt: mentorFollowups.contactedAt,
+      createdBy: mentorFollowups.createdBy,
+      isActive: mentorFollowups.isActive,
+      createdAt: mentorFollowups.createdAt,
+      updatedAt: mentorFollowups.updatedAt,
+      mentorFirstName: members.firstName,
+      mentorLastName: members.lastName,
+    })
+    .from(mentorFollowups)
+    .leftJoin(members, eq(mentorFollowups.mentorMemberId, members.id))
+    .where(and(eq(mentorFollowups.enrollmentId, enrollmentId), eq(mentorFollowups.isActive, true)))
+    .orderBy(desc(mentorFollowups.contactedAt));
+  return rows;
+}
+
+export async function createMentorFollowup(
+  db: Database,
+  auth: AuthContext,
+  enrollmentId: string,
+  data: { note: string; contactedAt?: string },
+) {
+  const [enrollment] = await db
+    .select({
+      id: newBelieverEnrollments.id,
+      branchId: newBelieverEnrollments.branchId,
+      mentorId: newBelieverEnrollments.mentorId,
+    })
+    .from(newBelieverEnrollments)
+    .where(eq(newBelieverEnrollments.id, enrollmentId))
+    .limit(1);
+  if (!enrollment) throw new NotFoundError('Enrollment');
+
+  await enforceMentorFollowupWrite(db, auth, enrollment);
+
+  // The followup author is the mentor on the row by default; if a non-mentor
+  // (NB-leader / pastor / admin) writes it on behalf of someone, the row still
+  // records the assigned mentor so the audit trail follows the mentee, not
+  // whoever happened to be filling in the form.
+  const mentorMemberId = enrollment.mentorId ?? auth.memberId;
+
+  const [created] = await db
+    .insert(mentorFollowups)
+    .values({
+      enrollmentId,
+      mentorMemberId,
+      note: data.note,
+      contactedAt: data.contactedAt ? new Date(data.contactedAt) : new Date(),
+      createdBy: auth.memberId,
+    })
+    .returning();
+  return created;
+}
+
+export async function deleteMentorFollowup(
+  db: Database,
+  auth: AuthContext,
+  followupId: string,
+) {
+  const [row] = await db
+    .select({
+      id: mentorFollowups.id,
+      enrollmentId: mentorFollowups.enrollmentId,
+      createdBy: mentorFollowups.createdBy,
+    })
+    .from(mentorFollowups)
+    .where(eq(mentorFollowups.id, followupId))
+    .limit(1);
+  if (!row) throw new NotFoundError('Follow-up');
+
+  const [enrollment] = await db
+    .select({
+      id: newBelieverEnrollments.id,
+      branchId: newBelieverEnrollments.branchId,
+      mentorId: newBelieverEnrollments.mentorId,
+    })
+    .from(newBelieverEnrollments)
+    .where(eq(newBelieverEnrollments.id, row.enrollmentId))
+    .limit(1);
+  if (!enrollment) throw new NotFoundError('Enrollment');
+
+  enforceBranchScope(auth, enrollment.branchId);
+
+  // Only the author, NB-dept leader, pastor, or admin can soft-delete.
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && row.createdBy !== auth.memberId) {
+    const isNbLeader = await isNewBelieversDeptLeader(db, auth.memberId, enrollment.branchId);
+    if (!isNbLeader) {
+      throw new ForbiddenError('Only the author, NB leader, or pastor/admin can delete this follow-up');
+    }
+  }
+
+  await db
+    .update(mentorFollowups)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(mentorFollowups.id, followupId));
+  return { id: followupId };
 }

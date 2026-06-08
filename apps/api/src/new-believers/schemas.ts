@@ -93,3 +93,8 @@ export const listSessionsQuerySchema = z.object({
 export const healthQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
 });
+
+export const createMentorFollowupSchema = z.object({
+  note: z.string().min(1).max(2000),
+  contactedAt: z.string().min(1).optional(),
+});
