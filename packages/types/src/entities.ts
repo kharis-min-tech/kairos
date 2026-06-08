@@ -184,6 +184,11 @@ export interface FellowshipMemberWithDetails extends FellowshipMember {
   memberFirstName: string;
   memberLastName: string;
   memberPhotoUrl?: string | null;
+  /**
+   * Active New Believers enrollment stage for this member in the fellowship's branch,
+   * or null if the member is not currently enrolled / the caller is not privileged.
+   */
+  nbStage?: string | null;
 }
 
 // ── Fellowship Meeting ─────────────────────────────────────
@@ -490,6 +495,11 @@ export interface DepartmentMemberWithDetails extends DepartmentMember {
   memberPhotoUrl?: string | null;
   memberEmail?: string | null;
   memberPhone?: string | null;
+  /**
+   * Active New Believers enrollment stage for this member in the department's branch,
+   * or null if the member is not currently enrolled / the caller is not privileged.
+   */
+  nbStage?: string | null;
 }
 
 // ── Department Join Request ────────────────────────────────

@@ -8,6 +8,7 @@ import {
   fellowshipJoinRequests,
   members,
   branches,
+  newBelieverEnrollments,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import {
@@ -288,7 +289,7 @@ export async function listFellowshipMembers(db: Database, auth: AuthContext, fel
     if (!activeMembership) return [];
   }
 
-  return db
+  const rows = await db
     .select({
       id: fellowshipMembers.id,
       fellowshipId: fellowshipMembers.fellowshipId,
@@ -299,12 +300,27 @@ export async function listFellowshipMembers(db: Database, auth: AuthContext, fel
       joinDate: fellowshipMembers.joinDate,
       isActive: fellowshipMembers.isActive,
       notes: fellowshipMembers.notes,
+      // Joined NB enrollment for the current branch — null for members with no active enrollment.
+      // Surfaced to the fellowship leader/co-leader (and admin/pastor) as a "NB Stage" chip.
+      nbStage: newBelieverEnrollments.stage,
     })
     .from(fellowshipMembers)
     .innerJoin(members, eq(fellowshipMembers.memberId, members.id))
+    .leftJoin(
+      newBelieverEnrollments,
+      and(
+        eq(newBelieverEnrollments.memberId, members.id),
+        eq(newBelieverEnrollments.branchId, fellowship.branchId),
+        eq(newBelieverEnrollments.isActive, true),
+      ),
+    )
     .where(
       and(eq(fellowshipMembers.fellowshipId, fellowship.id), eq(fellowshipMembers.isActive, true)),
     );
+
+  // Peer members (non-privileged) don't get to see each other's NB stage.
+  if (isPrivileged) return rows;
+  return rows.map((r) => ({ ...r, nbStage: null }));
 }
 
 export async function addFellowshipMember(

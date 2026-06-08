@@ -450,7 +450,9 @@ describe('listDepartmentMembers', () => {
     // 1) getBranchDepartment, 2) check active membership, 3) roster query
     setupSelectSequence([sampleBranchDept], [{ id: 'dm-1' }], memberRows);
     const result = await listDepartmentMembers(mockDb, memberAuth, branchDeptId);
-    expect(result).toEqual([{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: null, memberPhone: null }]);
+    expect(result).toEqual([
+      { id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: null, memberPhone: null, nbStage: null },
+    ]);
   });
 
   it('returns empty for non-member', async () => {

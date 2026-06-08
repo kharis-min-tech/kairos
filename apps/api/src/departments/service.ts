@@ -8,6 +8,7 @@ import {
   departmentJoinRequests,
   members,
   branches,
+  newBelieverEnrollments,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import {
@@ -464,9 +465,20 @@ export async function listDepartmentMembers(
       notes: departmentMembers.notes,
       createdAt: departmentMembers.createdAt,
       updatedAt: departmentMembers.updatedAt,
+      // NB enrollment stage for this member in this branch (null if not enrolled).
+      // Surfaced as a "NB Stage" chip on the roster for privileged callers.
+      nbStage: newBelieverEnrollments.stage,
     })
     .from(departmentMembers)
     .innerJoin(members, eq(departmentMembers.memberId, members.id))
+    .leftJoin(
+      newBelieverEnrollments,
+      and(
+        eq(newBelieverEnrollments.memberId, members.id),
+        eq(newBelieverEnrollments.branchId, bd.branchId),
+        eq(newBelieverEnrollments.isActive, true),
+      ),
+    )
     .where(
       and(
         eq(departmentMembers.branchDepartmentId, bd.id),
@@ -475,10 +487,10 @@ export async function listDepartmentMembers(
     )
     .orderBy(members.lastName, members.firstName);
 
-  // Peer members only see name + photo. Privileged callers (admin/pastor/lead/deputy)
-  // keep email + phone for rota contact purposes.
+  // Peer members only see name + photo + no NB stage. Privileged callers (admin/pastor/lead/deputy)
+  // keep email + phone + NB stage for rota / discipleship-tracking purposes.
   if (isPrivileged) return rows;
-  return rows.map((r) => ({ ...r, memberEmail: null, memberPhone: null }));
+  return rows.map((r) => ({ ...r, memberEmail: null, memberPhone: null, nbStage: null }));
 }
 
 export async function addDepartmentMember(

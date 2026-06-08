@@ -26,6 +26,7 @@ import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
 import { formatDate, formatShortDate } from '@/lib/date-format';
 import { useConfirm } from '@/components/confirm-dialog';
+import { NbStageChip } from '@/components/nb-stage-chip';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
@@ -405,9 +406,11 @@ export default function FellowshipDetailPage() {
                         <p className="truncate font-medium">
                           {member.memberFirstName} {member.memberLastName}
                         </p>
-                        {/* <span className={`text-xs font-medium ${member.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {member.isActive ? 'Active' : 'Inactive'}
-                        </span> */}
+                        {member.nbStage && (
+                          <div className="mt-0.5">
+                            <NbStageChip stage={member.nbStage} />
+                          </div>
+                        )}
                       </div>
                       {isAdminOrPastor && member.isActive && (
                         <button

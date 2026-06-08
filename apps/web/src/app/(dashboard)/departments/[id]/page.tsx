@@ -31,6 +31,7 @@ import { RotaTab } from './_components/rota-tab';
 import { RecruitmentTab } from './_components/recruitment-tab';
 import { MyRotaTab } from './_components/my-rota-tab';
 import { useConfirm } from '@/components/confirm-dialog';
+import { NbStageChip } from '@/components/nb-stage-chip';
 
 type Tab = 'overview' | 'my-rota' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
@@ -476,9 +477,12 @@ export default function DepartmentDetailPage() {
                           <p className="text-sm font-medium">
                             {m.memberFirstName} {m.memberLastName}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            Joined {m.joinDate}
-                          </p>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                            <p className="text-xs text-muted-foreground">
+                              Joined {m.joinDate}
+                            </p>
+                            {m.nbStage && <NbStageChip stage={m.nbStage} />}
+                          </div>
                         </div>
                       </div>
                       {isAdminOrPastor && (
