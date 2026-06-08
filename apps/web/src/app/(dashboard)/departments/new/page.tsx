@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -38,7 +39,16 @@ type FormValues = z.infer<typeof schema>;
 export default function NewDepartmentPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
+  const canCreate = activeRole === 'admin' || activeRole === 'pastor';
+
+  // Mirrors list-page persona gating: only admins + pastors can create departments.
+  useEffect(() => {
+    if (user !== null && !canCreate) {
+      router.replace('/departments');
+    }
+  }, [user, canCreate, router]);
 
   const createDepartment = useCreateDepartment();
   const { data: branches, isLoading: branchesLoading } = useBranches();
@@ -77,6 +87,10 @@ export default function NewDepartmentPage() {
       // surfaced via createDepartment.error
     }
   };
+
+  if (user !== null && !canCreate) {
+    return null;
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
