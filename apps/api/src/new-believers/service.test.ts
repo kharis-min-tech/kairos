@@ -139,6 +139,145 @@ describe('listEnrollments', () => {
     expect(result.total).toBe(1);
     expect(result.data).toHaveLength(1);
   });
+
+  // ── Persona scope (non-admin / non-pastor) ────────────────
+
+  it('non-admin / non-pastor: checks NB-dept-leader + NB-Teacher role before listing', async () => {
+    // 1: isNewBelieversDeptLeader → not a leader
+    // 2: isNewBelieverTeacher → does not hold the role
+    // 3: main rows query (returns nothing — personaOr makes the where row-scoped)
+    // 4: count
+    setupSelectSequence([], [], [], [{ total: 0 }]);
+    const { listEnrollments } = await import('./service');
+    const result = await listEnrollments(mockDb, memberAuth, { page: 1, limit: 20 });
+    expect(result.total).toBe(0);
+    // 4 selects = persona ladder ran + row query + count
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(4);
+  });
+
+  it('NB-dept leader sees the full branch (no row-level persona OR)', async () => {
+    // 1: isNewBelieversDeptLeader → leader hit
+    // 2: isNewBelieverTeacher → don't care, runs anyway via Promise.all
+    // 3: main rows query (full branch, 2 rows)
+    // 4: count
+    setupSelectSequence(
+      [{ id: 'bd-1' }],
+      [],
+      [
+        { id: enrollmentId, memberId, branchId, stage: 'enrolled', memberFirstName: 'A', memberLastName: 'B' },
+        { id: enrollment2Id, memberId: 'other-member', branchId, stage: 'session-1', memberFirstName: 'C', memberLastName: 'D' },
+      ],
+      [{ total: 2 }],
+    );
+    const { listEnrollments } = await import('./service');
+    const result = await listEnrollments(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.total).toBe(2);
+    expect(result.data).toHaveLength(2);
+  });
+
+  it('NB-Teacher role holder sees the full branch', async () => {
+    // 1: isNewBelieversDeptLeader → not a leader
+    // 2: isNewBelieverTeacher → holds the role
+    // 3: main rows + 4: count
+    setupSelectSequence(
+      [],
+      [{ id: 'mr-1' }],
+      [{ id: enrollmentId, memberId, branchId, stage: 'enrolled', memberFirstName: 'A', memberLastName: 'B' }],
+      [{ total: 1 }],
+    );
+    const { listEnrollments } = await import('./service');
+    const result = await listEnrollments(mockDb, memberAuth, { page: 1, limit: 20 });
+    expect(result.total).toBe(1);
+  });
+
+  it('non-admin member with no branch context returns empty without leaking', async () => {
+    const memberNoBranch = { ...memberAuth, branchId: undefined as unknown as string };
+    setupSelectSequence([], [], [], [{ total: 0 }]);
+    const { listEnrollments } = await import('./service');
+    const result = await listEnrollments(mockDb, memberNoBranch, { page: 1, limit: 20 });
+    expect(result.total).toBe(0);
+    expect(result.data).toEqual([]);
+    // No DB calls — short-circuit before persona ladder
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0);
+  });
+});
+
+// ── getEnrollment persona scope ───────────────────────────
+
+describe('getEnrollment persona scope', () => {
+  const baseEnrollmentRow = {
+    id: enrollmentId,
+    memberId,
+    branchId,
+    teacherId: null,
+    mentorId: null,
+    stage: 'session-1',
+    enrolledAt: new Date(),
+    completedAt: null,
+    sessionCompletedAt: null,
+    sessionFeedback: null,
+    joinedDepartmentId: null,
+    notes: null,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    memberFirstName: 'A',
+    memberLastName: 'B',
+    teacherFirstName: null,
+    teacherLastName: null,
+    mentorFirstName: null,
+    mentorLastName: null,
+  };
+
+  it('admin can read any enrollment', async () => {
+    setupSelectSequence([baseEnrollmentRow], []);
+    const { getEnrollment } = await import('./service');
+    const result = await getEnrollment(mockDb, adminAuth, enrollmentId);
+    expect(result.id).toBe(enrollmentId);
+  });
+
+  it('student can read their own enrollment', async () => {
+    setupSelectSequence([baseEnrollmentRow], []);
+    const { getEnrollment } = await import('./service');
+    const result = await getEnrollment(mockDb, memberAuth, enrollmentId);
+    expect(result.id).toBe(enrollmentId);
+  });
+
+  it('teacher-on-row can read the enrollment they teach', async () => {
+    const taughtRow = { ...baseEnrollmentRow, memberId: 'other-member', teacherId: memberAuth.memberId };
+    setupSelectSequence([taughtRow], []);
+    const { getEnrollment } = await import('./service');
+    const result = await getEnrollment(mockDb, memberAuth, enrollmentId);
+    expect(result.id).toBe(enrollmentId);
+  });
+
+  it('mentor-on-row can read the enrollment they mentor', async () => {
+    const mentoredRow = { ...baseEnrollmentRow, memberId: 'other-member', mentorId: memberAuth.memberId };
+    setupSelectSequence([mentoredRow], []);
+    const { getEnrollment } = await import('./service');
+    const result = await getEnrollment(mockDb, memberAuth, enrollmentId);
+    expect(result.id).toBe(enrollmentId);
+  });
+
+  it('unrelated member without NB-leader / Teacher-role is denied', async () => {
+    // 1: row lookup (unrelated member to the row)
+    // 2: isNewBelieversDeptLeader → []
+    // 3: isNewBelieverTeacher → []
+    const otherRow = { ...baseEnrollmentRow, memberId: 'someone-else' };
+    setupSelectSequence([otherRow], [], []);
+    const { getEnrollment } = await import('./service');
+    await expect(getEnrollment(mockDb, memberAuth, enrollmentId)).rejects.toThrow(
+      /do not have access/i,
+    );
+  });
+
+  it('NB-dept leader can read any enrollment in their branch', async () => {
+    const otherRow = { ...baseEnrollmentRow, memberId: 'someone-else' };
+    setupSelectSequence([otherRow], [{ id: 'bd-1' }], [], []);
+    const { getEnrollment } = await import('./service');
+    const result = await getEnrollment(mockDb, leaderAuth, enrollmentId);
+    expect(result.id).toBe(enrollmentId);
+  });
 });
 
 // ── advanceStage (updateEnrollment with stage change) ─────

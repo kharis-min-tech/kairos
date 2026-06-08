@@ -1,4 +1,4 @@
-import { eq, and, asc, desc, lt, sql, count } from 'drizzle-orm';
+import { eq, and, or, asc, desc, lt, sql, count } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   newBelieverEnrollments,
@@ -7,6 +7,8 @@ import {
   members,
   memberRoles,
   roles,
+  branchDepartments,
+  departments,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail } from '@kairos/utils';
@@ -41,6 +43,85 @@ async function isNewBelieverTeacher(db: Database, memberId: string, branchId: st
     )
     .limit(1);
   return !!result;
+}
+
+/**
+ * Whether the given member leads (or deputies) the seeded "New Believers"
+ * branch_department in their branch — the persona granted full visibility
+ * across the entire NB pipeline.
+ */
+async function isNewBelieversDeptLeader(
+  db: Database,
+  memberId: string,
+  branchId: string,
+): Promise<boolean> {
+  const [result] = await db
+    .select({ id: branchDepartments.id })
+    .from(branchDepartments)
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(
+      and(
+        eq(branchDepartments.branchId, branchId),
+        eq(branchDepartments.isActive, true),
+        eq(departments.departmentName, 'New Believers'),
+        or(
+          eq(branchDepartments.leadMemberId, memberId),
+          eq(branchDepartments.deputyMemberId, memberId),
+        ),
+      ),
+    )
+    .limit(1);
+  return !!result;
+}
+
+/**
+ * What "hats" the given member wears in the NB pipeline for a branch.
+ * Used by listEnrollments + getEnrollment to scope visibility.
+ * Sets are checked top-down — admin/pastor short-circuit before we hit this.
+ */
+export async function getNewBelieverHats(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+): Promise<{
+  isNbLeader: boolean;
+  hasTeacherRole: boolean;
+  taughtEnrollmentIds: string[];
+  mentoredEnrollmentIds: string[];
+  ownEnrollmentIds: string[];
+}> {
+  const [isNbLeader, hasTeacherRole] = await Promise.all([
+    isNewBelieversDeptLeader(db, auth.memberId, branchId),
+    isNewBelieverTeacher(db, auth.memberId, branchId),
+  ]);
+
+  const rows = await db
+    .select({
+      id: newBelieverEnrollments.id,
+      memberId: newBelieverEnrollments.memberId,
+      teacherId: newBelieverEnrollments.teacherId,
+      mentorId: newBelieverEnrollments.mentorId,
+    })
+    .from(newBelieverEnrollments)
+    .where(
+      and(
+        eq(newBelieverEnrollments.branchId, branchId),
+        eq(newBelieverEnrollments.isActive, true),
+        or(
+          eq(newBelieverEnrollments.memberId, auth.memberId),
+          eq(newBelieverEnrollments.teacherId, auth.memberId),
+          eq(newBelieverEnrollments.mentorId, auth.memberId),
+        ),
+      ),
+    );
+
+  return {
+    isNbLeader,
+    hasTeacherRole,
+    taughtEnrollmentIds: rows.filter((r) => r.teacherId === auth.memberId).map((r) => r.id),
+    mentoredEnrollmentIds: rows.filter((r) => r.mentorId === auth.memberId).map((r) => r.id),
+    ownEnrollmentIds: rows.filter((r) => r.memberId === auth.memberId).map((r) => r.id),
+  };
 }
 
 async function enforceTeacherOrAbove(db: Database, auth: AuthContext, branchId: string) {
@@ -128,6 +209,7 @@ export async function listEnrollments(
     branchId?: string;
     stage?: string;
     teacherId?: string;
+    mentorId?: string;
     stale?: boolean;
     sortBy?: 'date-added' | 'name' | 'last-activity';
     page: number;
@@ -141,16 +223,43 @@ export async function listEnrollments(
 
   if (scopedBranchId) enforceBranchScope(auth, scopedBranchId);
 
-  const conditions: ReturnType<typeof eq>[] = [];
+  // Persona scope on the row set:
+  //   admin / pastor → full branch
+  //   NB-dept leader (lead/deputy of seeded "New Believers" branch_department) → full branch
+  //   "New Believers Teacher" named role → full branch (operator)
+  //   otherwise → only enrollments where the caller is student / teacher-on-row / mentor-on-row
+  const personaConditions: Array<ReturnType<typeof eq> | ReturnType<typeof or>> = [];
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    if (!scopedBranchId) {
+      // No branch context for a non-admin/non-pastor → return empty rather than leak.
+      return { data: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
+    }
+    const [isNbLeader, hasTeacherRole] = await Promise.all([
+      isNewBelieversDeptLeader(db, auth.memberId, scopedBranchId),
+      isNewBelieverTeacher(db, auth.memberId, scopedBranchId),
+    ]);
+    if (!isNbLeader && !hasTeacherRole) {
+      const personaOr = or(
+        eq(newBelieverEnrollments.memberId, auth.memberId),
+        eq(newBelieverEnrollments.teacherId, auth.memberId),
+        eq(newBelieverEnrollments.mentorId, auth.memberId),
+      );
+      if (personaOr) personaConditions.push(personaOr);
+    }
+  }
+
+  const conditions: Array<ReturnType<typeof eq> | ReturnType<typeof or>> = [];
   if (scopedBranchId) conditions.push(eq(newBelieverEnrollments.branchId, scopedBranchId));
   if (query.stage) conditions.push(eq(newBelieverEnrollments.stage, query.stage));
   if (query.teacherId) conditions.push(eq(newBelieverEnrollments.teacherId, query.teacherId));
+  if (query.mentorId) conditions.push(eq(newBelieverEnrollments.mentorId, query.mentorId));
   if (query.stale) {
     // Shared predicate — keep behaviour in lock-step with getHealthSummary.
     conditions.push(staleEnrollmentCondition());
   } else {
     conditions.push(eq(newBelieverEnrollments.isActive, true));
   }
+  conditions.push(...personaConditions);
 
   const offset = (query.page - 1) * query.limit;
 
@@ -253,6 +362,26 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
 
   if (!enrollment) throw new NotFoundError('Enrollment');
   enforceBranchScope(auth, enrollment.branchId);
+
+  // Persona check — branch alone isn't enough. A member can only read an enrollment
+  // if they are: the student on it, the teacher on it, the mentor on it,
+  // the NB-dept leader for the branch, or hold the "New Believers Teacher" role.
+  // Admin + pastor short-circuit.
+  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+    const isOwn =
+      enrollment.memberId === auth.memberId ||
+      enrollment.teacherId === auth.memberId ||
+      enrollment.mentorId === auth.memberId;
+    if (!isOwn) {
+      const [isNbLeader, hasTeacherRole] = await Promise.all([
+        isNewBelieversDeptLeader(db, auth.memberId, enrollment.branchId),
+        isNewBelieverTeacher(db, auth.memberId, enrollment.branchId),
+      ]);
+      if (!isNbLeader && !hasTeacherRole) {
+        throw new ForbiddenError('You do not have access to this enrollment');
+      }
+    }
+  }
 
   // Fetch attendance history for this enrollment
   const attendanceHistory = await db

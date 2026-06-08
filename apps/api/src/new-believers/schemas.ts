@@ -44,6 +44,7 @@ export const listEnrollmentsQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   stage: z.enum(stages).optional(),
   teacherId: z.string().uuid().optional(),
+  mentorId: z.string().uuid().optional(),
   stale: z.coerce.boolean().optional(), // only enrollments with no update in N days
   sortBy: z.enum(['date-added', 'name', 'last-activity']).optional(),
   page: z.coerce.number().int().positive().default(1),
