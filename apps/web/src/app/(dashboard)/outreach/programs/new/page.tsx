@@ -22,13 +22,18 @@ export default function CreateProgramPage() {
   const api = useApi();
   const { toast } = useToast();
   const { createProgram } = useOutreachStore();
-  const { activeRole } = useAuthStore();
+  const { activeRole, user } = useAuthStore();
 
   const isAdmin = activeRole === 'admin';
+  const canCreate =
+    activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
 
+  // Mirrors list-page persona gating: only admins, pastors, and leaders can create.
   useEffect(() => {
-    console.log('CreateProgramPage - activeRole:', activeRole, 'isAdmin:', isAdmin);
-  }, [activeRole, isAdmin]);
+    if (user !== null && !canCreate) {
+      router.replace('/outreach/programs');
+    }
+  }, [user, canCreate, router]);
 
   const [formData, setFormData] = useState({
     programName: '',
@@ -154,6 +159,10 @@ export default function CreateProgramPage() {
   };
 
   const selectedCoordinator = members.find(m => m.id === formData.coordinatorId);
+
+  if (user !== null && !canCreate) {
+    return null;
+  }
 
   return (
     <div className="container max-w-2xl mx-auto py-6 space-y-6">
