@@ -31,8 +31,8 @@ const GENDER_TARGETS = Object.values(UniformGenderTarget);
 
 const GENDER_TONE: Record<string, string> = {
   Male: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
-  Female: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  Unisex: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+  Female: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+  Unisex: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
 };
 
 function GenderPill({ value, className = '' }: { value: string; className?: string }) {
@@ -368,7 +368,7 @@ function OutfitCard({
             variant="ghost"
             onClick={handleArchive}
             disabled={deactivate.isPending}
-            className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-rose-600"
+            className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-destructive"
           >
             Archive
           </Button>
@@ -457,7 +457,7 @@ function AssignmentCard({
             variant="ghost"
             onClick={handleRemove}
             disabled={remove.isPending}
-            className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-rose-600"
+            className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-destructive"
           >
             Remove
           </Button>

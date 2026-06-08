@@ -633,9 +633,9 @@ function CandidateCard({
     footer?.tone === 'good'
       ? 'text-emerald-600'
       : footer?.tone === 'bad'
-      ? 'text-rose-600'
+      ? 'text-destructive'
       : footer?.tone === 'warn'
-      ? 'text-amber-600'
+      ? 'text-[#9a6b04] dark:text-[#f8b537]'
       : 'text-muted-foreground';
 
   const interviewerInitials = interviewer
@@ -931,8 +931,8 @@ function CandidateDetailDialog({
                         r.interviewOutcome === 'pass'
                           ? 'text-emerald-600 font-medium'
                           : r.interviewOutcome === 'fail'
-                          ? 'text-rose-600 font-medium'
-                          : 'text-amber-600 font-medium'
+                          ? 'text-destructive font-medium'
+                          : 'text-[#9a6b04] dark:text-[#f8b537] font-medium'
                       }
                     >
                       {r.interviewOutcome === 'pass'
@@ -964,13 +964,13 @@ function CandidateDetailDialog({
                       className={
                         r.offerResponse === 'accepted'
                           ? 'text-emerald-600 font-medium'
-                          : 'text-rose-600 font-medium'
+                          : 'text-destructive font-medium'
                       }
                     >
                       {r.offerResponse === 'accepted' ? 'Accepted' : 'Declined'}
                     </span>
                   ) : (
-                    <span className="text-amber-600">Awaiting</span>
+                    <span className="text-[#9a6b04] dark:text-[#f8b537]">Awaiting</span>
                   )
                 }
               />
@@ -997,8 +997,8 @@ function CandidateDetailDialog({
                         r.probationOutcome === 'passed'
                           ? 'text-emerald-600 font-medium'
                           : r.probationOutcome === 'failed'
-                          ? 'text-rose-600 font-medium'
-                          : 'text-amber-600 font-medium'
+                          ? 'text-destructive font-medium'
+                          : 'text-[#9a6b04] dark:text-[#f8b537] font-medium'
                       }
                     >
                       {r.probationOutcome === 'passed'

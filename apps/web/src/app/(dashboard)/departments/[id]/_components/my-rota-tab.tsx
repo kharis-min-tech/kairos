@@ -49,13 +49,13 @@ function statusBadgeClass(status: string): string {
       return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
     case 'tentative':
     case 'assigned':
-      return 'border-[#f8b537]/30 bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]';
+      return 'border-[#f8b537]/30 bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]';
     case 'swapped':
     case 'released':
       return 'border-foreground/10 bg-muted text-muted-foreground';
     case 'declined':
     case 'rejected':
-      return 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400';
+      return 'border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400';
     default:
       return 'border-[#5D3FD3]/30 bg-[#5D3FD3]/10 text-[#5D3FD3]';
   }

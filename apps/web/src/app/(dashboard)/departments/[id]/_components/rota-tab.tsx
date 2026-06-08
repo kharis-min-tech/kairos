@@ -59,12 +59,12 @@ const WEEKDAYS = [
 const STATUS_TONE: Record<string, string> = {
   Draft: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300',
   Published: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  Completed: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
-  Cancelled: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  Assigned: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+  Completed: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
+  Cancelled: 'bg-rose-500/15 text-destructive',
+  Assigned: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
   Confirmed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  Declined: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  Swapped: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  Declined: 'bg-rose-500/15 text-destructive',
+  Swapped: 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
   Open: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300',
 };
 
@@ -411,7 +411,7 @@ function ScheduleRow({
                     fullyStaffed
                       ? 'font-medium text-emerald-600 dark:text-emerald-400'
                       : understaffed
-                        ? 'font-medium text-rose-600 dark:text-rose-400'
+                        ? 'font-medium text-destructive'
                         : 'font-medium text-zinc-700 dark:text-zinc-300'
                   }
                 >
@@ -420,7 +420,7 @@ function ScheduleRow({
                 {open > 0 && (
                   <>
                     <span className="text-muted-foreground">•</span>
-                    <span className="text-rose-600 dark:text-rose-400">
+                    <span className="text-destructive">
                       {open} open
                     </span>
                   </>
@@ -1399,7 +1399,7 @@ function SwapsSection({
                             {r.requesterFirstName} {r.requesterLastName}
                           </p>
                           {r.roleName && (
-                            <span className="rounded-sm bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                            <span className="rounded-sm bg-[#5D3FD3]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#5D3FD3] dark:text-[#a392ed]">
                               {r.roleName}
                             </span>
                           )}

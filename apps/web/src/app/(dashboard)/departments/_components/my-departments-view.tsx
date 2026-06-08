@@ -114,7 +114,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
                   {probation && (
                     <Badge
                       variant="outline"
-                      className="shrink-0 border-[#f8b537]/30 bg-[#f8b537]/15 text-amber-700 dark:text-[#f8b537]"
+                      className="shrink-0 border-[#f8b537]/30 bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]"
                     >
                       On probation{probationEnds ? ` · ends ${probationEnds}` : ''}
                     </Badge>
