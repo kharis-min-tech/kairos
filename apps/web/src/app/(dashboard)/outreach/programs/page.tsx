@@ -210,11 +210,20 @@ export default function OutreachProgramsPage() {
           </TableHeader>
           <TableBody>
             {loading && filteredPrograms.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={canRegister ? 8 : 7} className="text-center py-8">
-                  Loading programs...
-                </TableCell>
-              </TableRow>
+              <>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <TableRow key={i} aria-busy="true">
+                    <TableCell colSpan={canRegister ? 8 : 7} className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-1/4 animate-pulse rounded bg-muted/60" />
+                        <div className="h-4 w-1/6 animate-pulse rounded bg-muted/40" />
+                        <div className="h-4 w-1/5 animate-pulse rounded bg-muted/40" />
+                        <div className="ml-auto h-7 w-16 animate-pulse rounded bg-muted/40" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
             ) : filteredPrograms.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={canRegister ? 8 : 7} className="text-center py-8">

@@ -246,16 +246,30 @@ export default function ProgramDetailPage() {
 
   if (loading && !program) {
     return (
-      <div className="container mx-auto py-6">
-        <p className="text-center text-muted-foreground">Loading program details...</p>
+      <div className="container max-w-5xl mx-auto py-6 space-y-6" aria-busy="true" aria-live="polite">
+        <div>
+          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-muted/40" />
+          <div className="h-8 w-2/3 animate-pulse rounded bg-muted/60" />
+          <div className="mt-2 h-4 w-1/3 animate-pulse rounded bg-muted/40" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-lg border border-border bg-card p-4">
+              <div className="h-3 w-24 animate-pulse rounded bg-muted/40" />
+              <div className="mt-2 h-5 w-3/4 animate-pulse rounded bg-muted/60" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!program) {
     return (
-      <div className="container mx-auto py-6">
-        <p className="text-center text-muted-foreground">Program not found</p>
+      <div role="alert" className="container mx-auto py-6">
+        <div className="rounded-lg bg-destructive/10 p-4">
+          <p className="text-sm text-destructive">Program not found.</p>
+        </div>
       </div>
     );
   }
