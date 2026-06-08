@@ -30,6 +30,9 @@ interface SoulFilters {
   assignedMemberId?: string;
   outreachId?: string;
   overdueOnly?: boolean;
+  branchId?: string;
+  fellowshipId?: string;
+  branchDepartmentId?: string;
 }
 
 interface SoulsState {

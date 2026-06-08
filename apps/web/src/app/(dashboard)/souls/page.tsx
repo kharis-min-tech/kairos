@@ -8,6 +8,9 @@ import { useApi } from '@/hooks/useApi';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Users, Check, ChevronDown } from 'lucide-react';
+import { useBranches } from '@/hooks/use-branches';
+import { useFellowships } from '@/hooks/use-fellowships';
+import { useDepartments } from '@/hooks/use-departments';
 import {
   DndContext,
   type DragEndEvent,
@@ -314,6 +317,16 @@ export default function SoulsKanbanPage() {
   const [loadingMembers, setLoadingMembers] = useState(false);
 
   const canBulkAssign = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
+  const isAdmin = activeRole === 'admin';
+  const isPastor = activeRole === 'pastor';
+  const isLeader = activeRole === 'leader';
+
+  // Filter dropdowns — sourced from API hooks (already branch-scoped per persona).
+  const { data: branches = [] } = useBranches();
+  const { data: fellowshipsResult } = useFellowships({ limit: 100 });
+  const { data: departmentsResult } = useDepartments({ limit: 100 });
+  const allFellowships = fellowshipsResult?.data ?? [];
+  const allDepartments = departmentsResult?.data ?? [];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -330,11 +343,13 @@ export default function SoulsKanbanPage() {
   }, [api, filters]);
 
   useEffect(() => {
-    // Fetch members when bulk assign modal opens
-    if (showBulkAssign && api && members.length === 0) {
+    // Fetch the member list when needed:
+    // - bulk-assign modal opens (any privileged role)
+    // - admin/pastor lands on the page so the "Any worker" filter can populate
+    if (api && members.length === 0 && (showBulkAssign || isAdmin || isPastor)) {
       fetchMembers();
     }
-  }, [showBulkAssign, api]);
+  }, [showBulkAssign, api, isAdmin, isPastor]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -573,6 +588,61 @@ export default function SoulsKanbanPage() {
             </div>
           )}
         </div>
+
+        {/* Persona-aware API filters — branch (admin), fellowship/dept (admin+pastor+leader), individual (admin+pastor) */}
+        {(isAdmin || isPastor || isLeader) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <CustomSelect
+                size="sm"
+                value={filters.branchId ?? ''}
+                onValueChange={(v) => setFilters({ branchId: v || undefined })}
+                placeholder="All Branches"
+                options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+              />
+            )}
+            <CustomSelect
+              size="sm"
+              value={filters.fellowshipId ?? ''}
+              onValueChange={(v) => setFilters({ fellowshipId: v || undefined })}
+              placeholder={isLeader ? 'My Fellowships' : 'All Fellowships'}
+              options={allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
+            />
+            <CustomSelect
+              size="sm"
+              value={filters.branchDepartmentId ?? ''}
+              onValueChange={(v) => setFilters({ branchDepartmentId: v || undefined })}
+              placeholder={isLeader ? 'My Departments' : 'All Departments'}
+              options={allDepartments.map((d) => ({
+                value: d.id,
+                label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
+              }))}
+            />
+            {(isAdmin || isPastor) && (
+              <CustomSelect
+                size="sm"
+                value={filters.assignedMemberId ?? ''}
+                onValueChange={(v) => setFilters({ assignedMemberId: v || undefined })}
+                placeholder="Any worker"
+                options={members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+              />
+            )}
+            {(filters.branchId ?? filters.fellowshipId ?? filters.branchDepartmentId ?? filters.assignedMemberId) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilters({
+                  branchId: undefined,
+                  fellowshipId: undefined,
+                  branchDepartmentId: undefined,
+                  assignedMemberId: undefined,
+                })}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* RAG Status Filter + Sort */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
