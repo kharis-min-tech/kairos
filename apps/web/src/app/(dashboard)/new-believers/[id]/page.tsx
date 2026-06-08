@@ -276,7 +276,7 @@ export default function EnrollmentDetailPage() {
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                 currentSessionDone
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                   : 'bg-[#f8b537]/20 text-[#f8b537]'
               }`}
             >
@@ -342,7 +342,7 @@ export default function EnrollmentDetailPage() {
               variant="outline"
               onClick={handleMarkComplete}
               disabled={updateEnrollment.isPending}
-              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+              className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"
             >
               <Check className="mr-1.5 h-4 w-4" /> Mark Session Complete
             </Button>
@@ -530,8 +530,8 @@ export default function EnrollmentDetailPage() {
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           a.attended
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300'
+                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                         }`}
                       >
                         {a.attended ? 'Present' : 'Absent'}
@@ -597,7 +597,7 @@ export default function EnrollmentDetailPage() {
                           <span
                             className={`ml-2 rounded-full px-1.5 py-0.5 text-xs font-medium ${
                               sessionDone
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                                 : 'bg-[#f8b537]/20 text-[#f8b537]'
                             }`}
                           >
@@ -661,7 +661,7 @@ export default function EnrollmentDetailPage() {
             <Button
               disabled={!markCompleteFeedback.trim() || updateEnrollment.isPending}
               onClick={handleConfirmMarkComplete}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600"
             >
               {updateEnrollment.isPending
                 ? 'Saving...'
