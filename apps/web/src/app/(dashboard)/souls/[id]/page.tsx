@@ -8,6 +8,7 @@ import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitl
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
+import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 
 interface FollowUpRecord {
@@ -66,6 +67,7 @@ export default function SoulDetailPage() {
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const { currentSoul, fetchSoul, updateSoulStatus } = useSoulsStore();
 
   const [followUpForm, setFollowUpForm] = useState({
@@ -200,9 +202,12 @@ export default function SoulDetailPage() {
   const handleConvert = async () => {
     if (!api || !currentSoul) return;
 
-    if (!confirm('Are you sure you want to convert this soul to a member?')) {
-      return;
-    }
+    const ok = await confirm({
+      title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to a member?`,
+      description: 'They will be added to the church directory. The soul record will be marked Converted and linked to the new member profile.',
+      confirmLabel: 'Convert',
+    });
+    if (!ok) return;
 
     setLoading(true);
     try {
@@ -241,6 +246,7 @@ export default function SoulDetailPage() {
 
   return (
     <div className="container max-w-4xl mx-auto py-6 space-y-6">
+      {confirmDialog}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />

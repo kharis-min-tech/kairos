@@ -9,6 +9,7 @@ import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface ProgramParticipant {
   memberId: string;
@@ -67,6 +68,7 @@ export default function ProgramDetailPage() {
   const api = useApi();
   const { toast } = useToast();
   const { activeRole, user } = useAuthStore();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -193,7 +195,12 @@ export default function ProgramDetailPage() {
   const handleMarkComplete = async () => {
     if (!api || !program) return;
 
-    if (!confirm('Mark this program as completed?')) return;
+    const ok = await confirm({
+      title: `Mark "${program.programName}" as completed?`,
+      description: 'The program will be archived. You can still view its souls and history.',
+      confirmLabel: 'Mark complete',
+    });
+    if (!ok) return;
 
     setLoading(true);
     try {
@@ -255,6 +262,7 @@ export default function ProgramDetailPage() {
 
   return (
     <div className="container max-w-5xl mx-auto py-6 space-y-6">
+      {confirmDialog}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
