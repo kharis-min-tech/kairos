@@ -1,4 +1,4 @@
-import { eq, and, count, sql, exists, ne, inArray } from 'drizzle-orm';
+import { eq, and, or, count, sql, exists, ne, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import {
@@ -136,10 +136,23 @@ export async function listBranchDepartments(
 ) {
   const conditions = [eq(branchDepartments.isActive, true)];
 
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+    if (query.branchId) {
+      conditions.push(eq(branchDepartments.branchId, query.branchId));
+    }
+  } else if (auth.systemRole === 'leader') {
+    // Leaders see only departments they lead or co-lead, scoped to their branch.
+    // A department-only leader who doesn't lead anything (e.g. a fellowship leader)
+    // gets an empty list.
     conditions.push(eq(branchDepartments.branchId, auth.branchId));
-  } else if (query.branchId) {
-    conditions.push(eq(branchDepartments.branchId, query.branchId));
+    conditions.push(
+      or(
+        eq(branchDepartments.leadMemberId, auth.memberId),
+        eq(branchDepartments.deputyMemberId, auth.memberId),
+      )!,
+    );
+  } else {
+    conditions.push(eq(branchDepartments.branchId, auth.branchId));
   }
 
   if (query.departmentId) {
@@ -435,7 +448,7 @@ export async function listDepartmentMembers(
     if (!active) return [];
   }
 
-  return db
+  const rows = await db
     .select({
       id: departmentMembers.id,
       branchDepartmentId: departmentMembers.branchDepartmentId,
@@ -461,6 +474,11 @@ export async function listDepartmentMembers(
       ),
     )
     .orderBy(members.lastName, members.firstName);
+
+  // Peer members only see name + photo. Privileged callers (admin/pastor/lead/deputy)
+  // keep email + phone for rota contact purposes.
+  if (isPrivileged) return rows;
+  return rows.map((r) => ({ ...r, memberEmail: null, memberPhone: null }));
 }
 
 export async function addDepartmentMember(

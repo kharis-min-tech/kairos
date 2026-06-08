@@ -211,8 +211,17 @@ function DepartmentsContent() {
 
       {!departments || departments.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No departments found.</p>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            {activeRole === 'leader' ? (
+              <>
+                <p className="font-medium">You don’t lead a department</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  The leader view shows departments you lead or co-lead. Switch to your member view to browse and apply to one.
+                </p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">No departments found.</p>
+            )}
           </CardContent>
         </Card>
       ) : (

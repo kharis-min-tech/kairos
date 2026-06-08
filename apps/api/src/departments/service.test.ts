@@ -230,6 +230,19 @@ describe('listBranchDepartments', () => {
     const result = await listBranchDepartments(mockDb, memberAuth, { page: 1, limit: 20 });
     expect(result.data).toEqual([]);
   });
+
+  it('scopes leaders to departments they lead or co-lead', async () => {
+    setupSelectSequence([sampleBranchDept], [{ value: 1 }]);
+    const result = await listBranchDepartments(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.data).toEqual([sampleBranchDept]);
+  });
+
+  it('returns empty list for a leader who leads no department (e.g. fellowship-only leader)', async () => {
+    setupSelectSequence([], [{ value: 0 }]);
+    const otherLeader = { memberId: 'other-leader', email: 'x@test.com', systemRole: 'leader' as const, branchId };
+    const result = await listBranchDepartments(mockDb, otherLeader, { page: 1, limit: 20 });
+    expect(result.data).toEqual([]);
+  });
 });
 
 // ── getBranchDepartment ───────────────────────────────────
@@ -418,19 +431,26 @@ describe('deactivateBranchDepartment', () => {
 // ── listDepartmentMembers ─────────────────────────────────
 
 describe('listDepartmentMembers', () => {
-  it('returns all members for admin', async () => {
-    const memberRows = [{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe' }];
+  it('returns full PII (email + phone) for admin', async () => {
+    const memberRows = [{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: 'jane@test.com', memberPhone: '555-0100' }];
     setupSelectSequence([sampleBranchDept], memberRows);
     const result = await listDepartmentMembers(mockDb, adminAuth, branchDeptId);
     expect(result).toEqual(memberRows);
   });
 
-  it('returns roster to active member', async () => {
-    const memberRows = [{ id: 'dm-1' }];
-    // 1) getBranchDepartment, 2) check active, 3) roster query
+  it('returns full PII for the department lead', async () => {
+    const memberRows = [{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: 'jane@test.com', memberPhone: '555-0100' }];
+    setupSelectSequence([sampleBranchDept], memberRows);
+    const result = await listDepartmentMembers(mockDb, leaderAuth, branchDeptId);
+    expect(result).toEqual(memberRows);
+  });
+
+  it('redacts email + phone for peer members (active but not lead)', async () => {
+    const memberRows = [{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: 'jane@test.com', memberPhone: '555-0100' }];
+    // 1) getBranchDepartment, 2) check active membership, 3) roster query
     setupSelectSequence([sampleBranchDept], [{ id: 'dm-1' }], memberRows);
     const result = await listDepartmentMembers(mockDb, memberAuth, branchDeptId);
-    expect(result).toEqual(memberRows);
+    expect(result).toEqual([{ id: 'dm-1', memberFirstName: 'Jane', memberLastName: 'Doe', memberEmail: null, memberPhone: null }]);
   });
 
   it('returns empty for non-member', async () => {
