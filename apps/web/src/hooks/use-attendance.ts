@@ -209,3 +209,17 @@ export function useDepartmentAttendance(branchDeptId: string, params?: { weeks?:
     staleTime: 60_000,
   });
 }
+
+// ── Fellowship service+meeting attendance (Phase 4b) ──────
+
+export function useFellowshipAttendance(fellowshipId: string, params?: { weeks?: number }, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['attendance', 'fellowship', fellowshipId, params],
+    queryFn: async () => {
+      const res = await api.attendance.fellowshipReport(fellowshipId, params);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!fellowshipId,
+    staleTime: 60_000,
+  });
+}

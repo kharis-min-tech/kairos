@@ -922,6 +922,36 @@ export interface DepartmentAttendanceReport {
   trend: Array<{ weekStart: string; attendees: number }>;
 }
 
+// Fellowship attendance combined report (Phase 4b).
+export interface FellowshipAttendanceMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  serviceAttendedCount: number;
+  serviceRate: number;
+  meetingAttendedCount: number;
+  meetingRate: number;
+}
+
+export interface FellowshipAttendanceReport {
+  fellowship: { id: string; name: string; branchName: string };
+  windowWeeks: number;
+  activeMembers: number;
+  services: {
+    totalServices: number;
+    distinctAttendees: number;
+    rate: number;
+    trend: Array<{ weekStart: string; attendees: number }>;
+  };
+  meetings: {
+    totalMeetings: number;
+    distinctAttendees: number;
+    rate: number;
+    lastMeeting: { id: string; date: string; attended: number; total: number } | null;
+  };
+  members: FellowshipAttendanceMember[];
+}
+
 // Member personal attendance snapshot — drives /me/attendance + dashboard card.
 export interface MyAttendanceSnapshot {
   windowWeeks: number;

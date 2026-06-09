@@ -8,6 +8,10 @@ import {
   branchDepartments,
   departments,
   departmentMembers,
+  fellowships,
+  fellowshipMembers,
+  fellowshipMeetings,
+  fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
@@ -1114,6 +1118,217 @@ export async function getDepartmentAttendance(
     rate: deptRate,
     members: perMember,
     trend,
+  };
+}
+
+/**
+ * Fellowship attendance report — combines TWO attendance streams for the
+ * fellowship's active members:
+ *   - service attendance (Sunday/midweek/special church services)
+ *   - fellowship-meeting attendance (the fellowship's own roll-call meetings)
+ *
+ * Visibility: fellowship leader / co-leader / admin / pastor.
+ */
+export async function getFellowshipAttendance(
+  db: Database,
+  auth: AuthContext,
+  fellowshipId: string,
+  query: { weeks: number },
+) {
+  const [fs] = await db
+    .select({
+      id: fellowships.id,
+      branchId: fellowships.branchId,
+      fellowshipName: fellowships.fellowshipName,
+      leaderId: fellowships.leaderId,
+      coLeaderId: fellowships.coLeaderId,
+      isActive: fellowships.isActive,
+      branchName: branches.branchName,
+    })
+    .from(fellowships)
+    .innerJoin(branches, eq(fellowships.branchId, branches.id))
+    .where(eq(fellowships.id, fellowshipId))
+    .limit(1);
+  if (!fs) throw new NotFoundError('Fellowship');
+  if (!fs.isActive) throw new NotFoundError('Fellowship');
+  enforceBranchScope(auth, fs.branchId);
+  const isLeadOrCo = fs.leaderId === auth.memberId || fs.coLeaderId === auth.memberId;
+  if (
+    auth.systemRole !== 'admin' &&
+    auth.systemRole !== 'pastor' &&
+    !isLeadOrCo
+  ) {
+    throw new ForbiddenError('Only the fellowship leader, pastor, or admin can view this');
+  }
+
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  // Active fellowship members.
+  const memberRows = await db
+    .select({
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(fellowshipMembers)
+    .innerJoin(members, eq(fellowshipMembers.memberId, members.id))
+    .where(
+      and(
+        eq(fellowshipMembers.fellowshipId, fellowshipId),
+        eq(fellowshipMembers.isActive, true),
+        eq(members.isActive, true),
+      ),
+    )
+    .orderBy(members.lastName, members.firstName);
+  const memberIds = memberRows.map((r) => r.memberId);
+  const activeMembers = memberRows.length;
+
+  // ── Services side ───────────────────────────────────────
+  const svcRows = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, fs.branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    );
+  const totalServices = svcRows.length;
+  let svcAttended: Map<string, number> = new Map();
+  let svcDistinct = 0;
+  let svcTrend: { weekStart: string; attendees: number }[] = [];
+  if (memberIds.length > 0 && totalServices > 0) {
+    const sids = svcRows.map((s) => s.id);
+    const rows = await db
+      .select({
+        memberId: serviceAttendance.memberId,
+        c: count(),
+      })
+      .from(serviceAttendance)
+      .where(
+        and(
+          inArray(serviceAttendance.serviceId, sids),
+          inArray(serviceAttendance.memberId, memberIds),
+        ),
+      )
+      .groupBy(serviceAttendance.memberId);
+    for (const r of rows) svcAttended.set(r.memberId, Number(r.c));
+    svcDistinct = svcAttended.size;
+    const trendRows = await db
+      .select({
+        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
+      })
+      .from(serviceAttendance)
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+      .where(
+        and(
+          inArray(serviceAttendance.serviceId, sids),
+          inArray(serviceAttendance.memberId, memberIds),
+        ),
+      )
+      .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
+      .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
+    svcTrend = trendRows.map((r) => ({
+      weekStart: (r.weekStart as Date).toISOString(),
+      attendees: Number(r.attendees),
+    }));
+  }
+  const svcRate = activeMembers === 0 ? 0 : svcDistinct / activeMembers;
+
+  // ── Meetings side ───────────────────────────────────────
+  const mtgRows = await db
+    .select({ id: fellowshipMeetings.id, meetingDate: fellowshipMeetings.meetingDate })
+    .from(fellowshipMeetings)
+    .where(
+      and(
+        eq(fellowshipMeetings.fellowshipId, fellowshipId),
+        gte(fellowshipMeetings.meetingDate, since),
+      ),
+    )
+    .orderBy(fellowshipMeetings.meetingDate);
+  const totalMeetings = mtgRows.length;
+  let mtgAttended: Map<string, number> = new Map();
+  let mtgDistinct = 0;
+  let lastMeeting: null | { id: string; date: string; attended: number; total: number } = null;
+  if (memberIds.length > 0 && totalMeetings > 0) {
+    const mids = mtgRows.map((m) => m.id);
+    const rows = await db
+      .select({
+        memberId: fellowshipMeetingAttendance.memberId,
+        c: count(),
+      })
+      .from(fellowshipMeetingAttendance)
+      .where(
+        and(
+          inArray(fellowshipMeetingAttendance.meetingId, mids),
+          inArray(fellowshipMeetingAttendance.memberId, memberIds),
+          eq(fellowshipMeetingAttendance.attendanceStatus, 'Present'),
+        ),
+      )
+      .groupBy(fellowshipMeetingAttendance.memberId);
+    for (const r of rows) mtgAttended.set(r.memberId, Number(r.c));
+    mtgDistinct = mtgAttended.size;
+
+    // Last-meeting attendance breakdown
+    const lastMtg = mtgRows[mtgRows.length - 1]!;
+    const lastAttRows = await db
+      .select({ c: count() })
+      .from(fellowshipMeetingAttendance)
+      .where(
+        and(
+          eq(fellowshipMeetingAttendance.meetingId, lastMtg.id),
+          eq(fellowshipMeetingAttendance.attendanceStatus, 'Present'),
+        ),
+      );
+    lastMeeting = {
+      id: lastMtg.id,
+      date: lastMtg.meetingDate.toISOString(),
+      attended: Number(lastAttRows[0]?.c ?? 0),
+      total: activeMembers,
+    };
+  }
+  const mtgRate = activeMembers === 0 ? 0 : mtgDistinct / activeMembers;
+
+  // Per-member combined breakdown.
+  const perMember = memberRows.map((m) => {
+    const sAtt = svcAttended.get(m.memberId) ?? 0;
+    const mAtt = mtgAttended.get(m.memberId) ?? 0;
+    return {
+      memberId: m.memberId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      serviceAttendedCount: sAtt,
+      serviceRate: totalServices === 0 ? 0 : sAtt / totalServices,
+      meetingAttendedCount: mAtt,
+      meetingRate: totalMeetings === 0 ? 0 : mAtt / totalMeetings,
+    };
+  });
+  // Sort ascending by service rate (concerning first), then meeting rate.
+  perMember.sort((a, b) => a.serviceRate - b.serviceRate || a.meetingRate - b.meetingRate);
+
+  return {
+    fellowship: {
+      id: fs.id,
+      name: fs.fellowshipName,
+      branchName: fs.branchName,
+    },
+    windowWeeks: query.weeks,
+    activeMembers,
+    services: {
+      totalServices,
+      distinctAttendees: svcDistinct,
+      rate: svcRate,
+      trend: svcTrend,
+    },
+    meetings: {
+      totalMeetings,
+      distinctAttendees: mtgDistinct,
+      rate: mtgRate,
+      lastMeeting,
+    },
+    members: perMember,
   };
 }
 

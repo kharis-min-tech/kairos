@@ -24,6 +24,7 @@ import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
+import { CombinedAttendanceSummary } from './_components/combined-attendance-summary';
 import { formatDate, formatShortDate } from '@/lib/date-format';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
@@ -615,6 +616,7 @@ export default function FellowshipDetailPage() {
 
       {activeTab === 'attendance' && (
         <div className="space-y-4">
+          {!isRestrictedView && <CombinedAttendanceSummary fellowshipId={id} />}
           {isRestrictedView ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">

@@ -115,6 +115,7 @@ import {
   getCohortDiff,
   getMyAttendance,
   getDepartmentAttendance,
+  getFellowshipAttendance,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -808,5 +809,66 @@ describe('getDepartmentAttendance', () => {
     expect(result.activeMembers).toBe(0);
     expect(result.rate).toBe(0);
     expect(result.members).toEqual([]);
+  });
+});
+
+// ── getFellowshipAttendance (Phase 4b) ────────────────────
+
+describe('getFellowshipAttendance', () => {
+  const fsId = 'fs-1';
+  const m1 = '550e8400-e29b-41d4-a716-446655440401';
+  const m2 = '550e8400-e29b-41d4-a716-446655440402';
+
+  const fsRow = {
+    id: fsId,
+    branchId,
+    fellowshipName: 'K-Group A',
+    leaderId: leaderAuth.memberId,
+    coLeaderId: null,
+    isActive: true,
+    branchName: 'London',
+  };
+
+  it('forbids a regular member who is not lead/co-lead/admin/pastor', async () => {
+    setupSelectSequence([fsRow]);
+    await expect(
+      getFellowshipAttendance(mockDb, memberAuth, fsId, { weeks: 12 }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('NotFound when the fellowship is missing or inactive', async () => {
+    setupSelectSequence([]);
+    await expect(
+      getFellowshipAttendance(mockDb, adminAuth, fsId, { weeks: 12 }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it('returns the combined report for the fellowship leader', async () => {
+    setupSelectSequence(
+      [fsRow],
+      // members
+      [{ memberId: m1, firstName: 'Ada', lastName: 'A' }, { memberId: m2, firstName: 'Bea', lastName: 'B' }],
+      // services in window
+      [{ id: 'svc-1' }, { id: 'svc-2' }],
+      // service grouped counts: m1 attended 2, m2 attended 1
+      [{ memberId: m1, c: 2 }, { memberId: m2, c: 1 }],
+      // service trend
+      [],
+      // meetings in window
+      [{ id: 'mtg-1', meetingDate: new Date('2026-05-26T10:00:00Z') }],
+      // meeting grouped counts: m1 attended 1
+      [{ memberId: m1, c: 1 }],
+      // last meeting present-count
+      [{ c: 1 }],
+    );
+    const result = await getFellowshipAttendance(mockDb, leaderAuth, fsId, { weeks: 12 });
+    expect(result.activeMembers).toBe(2);
+    expect(result.services.totalServices).toBe(2);
+    expect(result.services.distinctAttendees).toBe(2);
+    expect(result.services.rate).toBe(1); // 2 distinct of 2 active = 100%
+    expect(result.meetings.totalMeetings).toBe(1);
+    expect(result.meetings.distinctAttendees).toBe(1);
+    expect(result.meetings.rate).toBe(0.5);
+    expect(result.meetings.lastMeeting?.attended).toBe(1);
   });
 });

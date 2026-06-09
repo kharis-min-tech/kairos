@@ -34,6 +34,7 @@ import {
   getCohortDiff,
   getMyAttendance,
   getDepartmentAttendance,
+  getFellowshipAttendance,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -84,6 +85,21 @@ attendanceRouter.get(
       db,
       auth,
       c.req.param('branchDeptId')!,
+      c.req.valid('query'),
+    );
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/fellowship/:fellowshipId',
+  zValidator('query', groupAttendanceQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getFellowshipAttendance(
+      db,
+      auth,
+      c.req.param('fellowshipId')!,
       c.req.valid('query'),
     );
     return c.json(successResponse(result));
