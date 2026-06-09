@@ -167,7 +167,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                 )}
               />
               {errors.serviceDate && (
-                <p className="text-xs text-[#dc2626]">{errors.serviceDate.message}</p>
+                <p className="text-xs font-medium text-destructive">{errors.serviceDate.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -180,7 +180,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                 )}
               />
               {errors.serviceTime && (
-                <p className="text-xs text-[#dc2626]">{errors.serviceTime.message}</p>
+                <p className="text-xs font-medium text-destructive">{errors.serviceTime.message}</p>
               )}
             </div>
           </div>
@@ -212,7 +212,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
               Name the special service, e.g. Watchnight. Optional for Sunday and Midweek.
             </p>
             {errors.serviceTitle && (
-              <p className="text-xs text-[#dc2626]">{errors.serviceTitle.message}</p>
+              <p className="text-xs font-medium text-destructive">{errors.serviceTitle.message}</p>
             )}
           </div>
 
@@ -302,7 +302,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
       </Card>
 
       {submitError && (
-        <div className="rounded-lg bg-[#dc2626]/10 px-4 py-3 text-sm text-[#dc2626]">{submitError}</div>
+        <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{submitError}</div>
       )}
 
       <div className="flex justify-end">

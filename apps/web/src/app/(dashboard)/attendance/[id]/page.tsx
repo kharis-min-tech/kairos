@@ -1,13 +1,16 @@
 'use client';
 
-import { use } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { ChevronLeft, Users } from 'lucide-react';
 import { Card, CardContent, cn } from '@kairos/ui';
 import { useService } from '@/hooks/use-attendance';
+import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
 import { ServiceType } from '@kairos/types';
 import { CheckInPanel } from '../_components/check-in-panel';
+
+const WRITER_ROLES = ['admin', 'pastor', 'leader'];
 
 const TYPE_BADGE: Record<string, string> = {
   [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
@@ -20,9 +23,11 @@ function formatTime(iso: string): string {
   return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function CheckInPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function CheckInPage() {
+  const { id } = useParams<{ id: string }>();
   const { data: service, isLoading, isError, error } = useService(id);
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const canCheckIn = !!activeRole && WRITER_ROLES.includes(activeRole);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -36,7 +41,7 @@ export default function CheckInPage({ params }: { params: Promise<{ id: string }
       {isLoading ? (
         <div className="h-24 animate-pulse rounded-xl bg-foreground/5" />
       ) : isError ? (
-        <div className="rounded-lg bg-[#dc2626]/10 px-4 py-3 text-sm text-[#dc2626]">
+        <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
           {error instanceof Error ? error.message : 'Could not load this service.'}
         </div>
       ) : service ? (
@@ -71,7 +76,20 @@ export default function CheckInPage({ params }: { params: Promise<{ id: string }
             </CardContent>
           </Card>
 
-          <CheckInPanel serviceId={id} />
+          {canCheckIn ? (
+            <CheckInPanel serviceId={id} />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <p className="text-sm font-medium text-foreground">
+                  Check-in is only available to leaders, pastors, and admins.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Speak to your branch leadership if you need to record attendance.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </>
       ) : null}
     </div>

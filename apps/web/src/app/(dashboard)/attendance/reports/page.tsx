@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, UserX } from 'lucide-react';
 import {
   LineChart,
@@ -22,10 +23,21 @@ import {
 } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
 
+const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
+
 export default function AttendanceReportsPage() {
+  const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
   const [branchId, setBranchId] = useState('');
+
+  // Second-level guard: only admin/pastor/leader may view attendance reports.
+  // Members would otherwise hit a wall of 403s on each chart query.
+  useEffect(() => {
+    if (activeRole && !REPORT_READER_ROLES.includes(activeRole)) {
+      router.replace('/attendance');
+    }
+  }, [activeRole, router]);
 
   const { data: branches } = useBranches();
   const branchParam = branchId || undefined;
@@ -73,7 +85,7 @@ export default function AttendanceReportsPage() {
           {trends.isLoading ? (
             <div className="h-56 animate-pulse rounded-lg bg-foreground/5" />
           ) : trends.isError ? (
-            <p className="text-sm text-[#dc2626]">
+            <p role="alert" className="text-sm font-medium text-destructive">
               {trends.error instanceof Error ? trends.error.message : 'Could not load trends.'}
             </p>
           ) : chartData.length === 0 ? (
@@ -115,7 +127,7 @@ export default function AttendanceReportsPage() {
                 ))}
               </div>
             ) : missing.isError ? (
-              <p className="text-sm text-[#dc2626]">
+              <p role="alert" className="text-sm font-medium text-destructive">
                 {missing.error instanceof Error ? missing.error.message : 'Could not load this report.'}
               </p>
             ) : !missing.data || missing.data.length === 0 ? (
@@ -157,7 +169,7 @@ export default function AttendanceReportsPage() {
                 ))}
               </div>
             ) : byBranch.isError ? (
-              <p className="text-sm text-[#dc2626]">
+              <p role="alert" className="text-sm font-medium text-destructive">
                 {byBranch.error instanceof Error ? byBranch.error.message : 'Could not load this report.'}
               </p>
             ) : !byBranch.data || byBranch.data.length === 0 ? (

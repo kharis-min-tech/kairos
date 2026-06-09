@@ -136,7 +136,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
                   type="button"
                   aria-label={`Remove visitor ${v.firstName} ${v.lastName}`}
                   onClick={() => setVisitors((prev) => prev.filter((x) => x.key !== v.key))}
-                  className="text-muted-foreground hover:text-[#dc2626]"
+                  className="text-muted-foreground hover:text-destructive"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -156,7 +156,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
               ))}
             </div>
           ) : isError ? (
-            <div className="rounded-lg bg-[#dc2626]/10 px-4 py-3 text-sm text-[#dc2626]">
+            <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
               {error instanceof Error ? error.message : 'Could not load the roster.'}
             </div>
           ) : !roster || roster.data.length === 0 ? (
@@ -190,7 +190,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
           {saved !== null && (
             <span className="ml-3 font-medium text-[#16A34A]">Saved {saved} record{saved === 1 ? '' : 's'}.</span>
           )}
-          {saveError && <span className="ml-3 text-[#dc2626]">{saveError}</span>}
+          {saveError && <span role="alert" className="ml-3 font-medium text-destructive">{saveError}</span>}
         </div>
         <Button onClick={handleSave} disabled={record.isPending || markedCount === 0}>
           {record.isPending ? 'Saving…' : 'Save attendance'}
@@ -281,7 +281,7 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
             <TimeSelect value={arrivalTime} onValueChange={setArrivalTime} allowEmpty />
           </div>
         )}
-        {err && <p className="text-xs text-[#dc2626]">{err}</p>}
+        {err && <p className="text-xs font-medium text-destructive">{err}</p>}
         <div className="flex justify-end">
           <Button onClick={add}>
             <Plus className="mr-1.5 h-4 w-4" /> Add visitor

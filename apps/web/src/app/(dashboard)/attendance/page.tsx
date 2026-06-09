@@ -6,9 +6,12 @@ import { Plus, CalendarDays } from 'lucide-react';
 import { Button, Card, CardContent, CustomSelect, cn } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useServices } from '@/hooks/use-attendance';
+import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
 import { ServiceType } from '@kairos/types';
 import type { ServiceListParams } from '@kairos/types';
+
+const WRITER_ROLES = ['admin', 'pastor', 'leader'];
 
 const TYPE_OPTIONS = [
   { value: '', label: 'All types' },
@@ -24,6 +27,8 @@ const TYPE_BADGE: Record<string, string> = {
 };
 
 export default function AttendanceServicesPage() {
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const canRecord = !!activeRole && WRITER_ROLES.includes(activeRole);
   const [type, setType] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -46,16 +51,18 @@ export default function AttendanceServicesPage() {
           <h1 className="text-2xl font-bold text-foreground">Service Attendance</h1>
           <p className="text-sm text-muted-foreground">Sunday, midweek and special services.</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/attendance/reports">
-            <Button variant="outline">Reports</Button>
-          </Link>
-          <Link href="/attendance/new">
-            <Button>
-              <Plus className="mr-1.5 h-4 w-4" /> Record a service
-            </Button>
-          </Link>
-        </div>
+        {canRecord && (
+          <div className="flex gap-2">
+            <Link href="/attendance/reports">
+              <Button variant="outline">Reports</Button>
+            </Link>
+            <Link href="/attendance/new">
+              <Button>
+                <Plus className="mr-1.5 h-4 w-4" /> Record a service
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -95,7 +102,7 @@ export default function AttendanceServicesPage() {
           ))}
         </div>
       ) : isError ? (
-        <div className="rounded-lg bg-[#dc2626]/10 px-4 py-3 text-sm text-[#dc2626]">
+        <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
           {error instanceof Error ? error.message : 'Could not load services.'}
         </div>
       ) : services.length === 0 ? (
@@ -104,13 +111,17 @@ export default function AttendanceServicesPage() {
             <CalendarDays className="h-10 w-10 text-muted-foreground" />
             <p className="font-medium text-foreground">No services yet</p>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Record your first service to start checking in attendees.
+              {canRecord
+                ? 'Record your first service to start checking in attendees.'
+                : 'There are no services to view in your branch yet.'}
             </p>
-            <Link href="/attendance/new">
-              <Button>
-                <Plus className="mr-1.5 h-4 w-4" /> Record a service
-              </Button>
-            </Link>
+            {canRecord && (
+              <Link href="/attendance/new">
+                <Button>
+                  <Plus className="mr-1.5 h-4 w-4" /> Record a service
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : (

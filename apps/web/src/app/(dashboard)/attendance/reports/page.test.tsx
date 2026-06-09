@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-const authState = { activeRole: 'admin' };
+let authState: { activeRole: string | null } = { activeRole: 'admin' };
 vi.mock('@/lib/auth-store', () => ({
   useAuthStore: (selector?: (s: typeof authState) => unknown) =>
     selector ? selector(authState) : authState,
+}));
+
+const replace = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace }),
 }));
 
 vi.mock('@/hooks/use-branches', () => ({ useBranches: () => ({ data: [] }) }));
@@ -57,6 +62,11 @@ beforeEach(() => {
 });
 
 describe('AttendanceReportsPage', () => {
+  beforeEach(() => {
+    authState.activeRole = 'admin';
+    replace.mockClear();
+  });
+
   it('renders empty states when there is no data', () => {
     render(<AttendanceReportsPage />);
     expect(screen.getByText(/No attendance recorded yet/i)).toBeInTheDocument();
@@ -89,5 +99,20 @@ describe('AttendanceReportsPage', () => {
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('London')).toBeInTheDocument();
     expect(screen.getByText('80%')).toBeInTheDocument();
+  });
+
+  it('redirects a member away from the reports page', async () => {
+    authState = { activeRole: 'member' };
+    render(<AttendanceReportsPage />);
+    // useEffect runs synchronously in React 18+ test env after render
+    await Promise.resolve();
+    expect(replace).toHaveBeenCalledWith('/attendance');
+  });
+
+  it('allows a leader to view the reports page', async () => {
+    authState = { activeRole: 'leader' };
+    render(<AttendanceReportsPage />);
+    await Promise.resolve();
+    expect(replace).not.toHaveBeenCalled();
   });
 });
