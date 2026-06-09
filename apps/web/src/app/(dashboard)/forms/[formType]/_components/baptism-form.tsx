@@ -10,6 +10,7 @@ import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
 import { MemberSearchLink } from './member-search-link';
+import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -26,6 +27,7 @@ export function BaptismForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '' });
+  const [consentAck, setConsentAck] = useState(false);
 
   function set(field: keyof typeof form, value: string) {
     setForm((p) => ({ ...p, [field]: value }));
@@ -61,7 +63,12 @@ export function BaptismForm() {
     try {
       await submitForm.mutateAsync({
         formType: 'baptism',
-        data: { subjectMemberId, payload: parsed.data },
+        data: {
+          subjectMemberId,
+          payload: parsed.data,
+          consentGivenAt: new Date().toISOString(),
+          consentPolicyVersion: CONSENT_POLICY_VERSION,
+        },
       });
       setSubmitted(true);
     } catch {
@@ -73,6 +80,7 @@ export function BaptismForm() {
     setSubmitted(false);
     setErrors({});
     setSubjectMemberId(undefined);
+    setConsentAck(false);
     setForm({ firstName: '', lastName: '', phone: '' });
   }
 
@@ -134,6 +142,8 @@ export function BaptismForm() {
           <FieldError message={errors.phone} />
         </div>
 
+        <DisclaimerConsent checked={consentAck} onChange={setConsentAck} />
+
         {submitForm.isError ? (
           <p className="text-sm text-destructive">
             {submitForm.error instanceof Error
@@ -144,7 +154,7 @@ export function BaptismForm() {
 
         <Button
           type="submit"
-          disabled={submitForm.isPending}
+          disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
           {submitForm.isPending ? 'Submitting…' : 'Submit'}

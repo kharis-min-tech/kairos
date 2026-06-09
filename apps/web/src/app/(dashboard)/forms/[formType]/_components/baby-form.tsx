@@ -11,6 +11,7 @@ import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { MemberSearchLink } from './member-search-link';
+import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 
 const baseSchema = z.object({
   babyFullName: z.string().trim().min(1, 'Baby’s full name is required'),
@@ -46,6 +47,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
+  const [consentAck, setConsentAck] = useState(false);
   const [form, setForm] = useState({
     babyFullName: '',
     dateOfBirth: '',
@@ -122,7 +124,15 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
     }
 
     try {
-      await submitForm.mutateAsync({ formType: mode, data: { subjectMemberId, payload } });
+      await submitForm.mutateAsync({
+        formType: mode,
+        data: {
+          subjectMemberId,
+          payload,
+          consentGivenAt: new Date().toISOString(),
+          consentPolicyVersion: CONSENT_POLICY_VERSION,
+        },
+      });
       setSubmitted(true);
     } catch {
       // surfaced below
@@ -133,6 +143,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
     setSubmitted(false);
     setErrors({});
     setSubjectMemberId(undefined);
+    setConsentAck(false);
     setForm({
       babyFullName: '',
       dateOfBirth: '',
@@ -260,6 +271,8 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
           />
         </div>
 
+        <DisclaimerConsent checked={consentAck} onChange={setConsentAck} />
+
         {submitForm.isError ? (
           <p className="text-sm text-destructive">
             {submitForm.error instanceof Error
@@ -270,7 +283,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
 
         <Button
           type="submit"
-          disabled={submitForm.isPending}
+          disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
           {submitForm.isPending ? 'Submitting…' : 'Submit'}

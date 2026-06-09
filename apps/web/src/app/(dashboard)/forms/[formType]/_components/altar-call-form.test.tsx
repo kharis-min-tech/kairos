@@ -48,14 +48,27 @@ beforeEach(() => {
   submitMutate.mockResolvedValue({ id: 'sub-1' });
 });
 
+// Phase 2 — every form now blocks submit until the privacy-notice tickbox is acknowledged.
+// All existing tests that expect submit to fire need to tick consent first.
+async function tickConsent(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+}
+
 describe('AltarCallForm', () => {
   it('blocks submit and shows errors when required fields are empty', async () => {
     const user = userEvent.setup();
     render(<AltarCallForm />, { wrapper });
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(await screen.findByText(/First name is required/)).toBeInTheDocument();
     expect(screen.getByText(/Last name is required/)).toBeInTheDocument();
     expect(submitMutate).not.toHaveBeenCalled();
+  });
+
+  it('disables the submit button until the privacy-notice tickbox is acknowledged', async () => {
+    render(<AltarCallForm />, { wrapper });
+    const btn = screen.getByRole('button', { name: /^Submit$/ });
+    expect(btn).toHaveProperty('disabled', true);
   });
 
   it('submits a new contact (no subjectMemberId) with the payload shape', async () => {
@@ -64,6 +77,7 @@ describe('AltarCallForm', () => {
     await user.type(screen.getByLabelText(/First name/), 'James');
     await user.type(screen.getByLabelText(/Last name/), 'Smith');
     await user.type(screen.getByLabelText(/^Phone/), '07700900123');
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
@@ -91,6 +105,7 @@ describe('AltarCallForm', () => {
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
     expect(screen.getByLabelText(/Last name/)).toHaveValue('Lovelace');
 
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
     expect(submitMutate.mock.calls[0]![0].data.subjectMemberId).toBe('m-9');

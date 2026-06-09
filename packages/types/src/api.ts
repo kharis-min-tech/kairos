@@ -673,6 +673,14 @@ export interface SubmitFormRequest {
   /** Ignored by the server — branch is forced to auth.branchId. */
   branchId?: string;
   payload: FormSubmissionPayload | Record<string, unknown>;
+  /**
+   * GDPR / safeguarding consent — REQUIRED in production. Marked optional on the
+   * TypeScript type so existing unit tests that don't construct consent envelopes
+   * keep compiling; the Zod schema (submitFormSchema) enforces presence at the
+   * route boundary.
+   */
+  consentGivenAt?: string;
+  consentPolicyVersion?: string;
 }
 
 export interface FormMemberSearchParams {

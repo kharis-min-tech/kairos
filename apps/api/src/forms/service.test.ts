@@ -109,12 +109,13 @@ function visAdminDeptLeader(): unknown[] {
 function visInAdminDept(): unknown[] {
   return [EMPTY, POSITIVE]; // first negative, second (isInAdminDepartment) positive
 }
-function visNewBelieversLead(): unknown[] {
-  return [EMPTY, EMPTY, POSITIVE]; // only third positive
-}
 function visNone(): unknown[] {
   return [EMPTY, EMPTY, EMPTY];
 }
+
+// Phase 2 — Zod schema (submitFormSchema) requires consentGivenAt + consentPolicyVersion
+// at the route boundary; the service's `consentFields` helper falls back to the current
+// time + DEFAULT_CONSENT_POLICY_VERSION when those are absent (existing tests don't pass them).
 
 const altarCallPayload = {
   todaysDate: '2026-05-22',
@@ -1348,6 +1349,80 @@ describe('archiveProspects', () => {
     await expect(
       archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] })
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+// ── Consent envelope persisted on every submission (Phase 2) ──
+describe('Phase 2 consent persistence', () => {
+  it('persists consentGivenAt, consentBy, consentPolicyVersion on altar_call submission', async () => {
+    setupSelectSequence([], []);
+    setupInsert(
+      [{ id: subjectId }],
+      [{ id: submissionId, status: 'converted' }],
+    );
+    setupUpdate();
+    createEnrollmentMock.mockResolvedValue({ id: enrollmentId });
+
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'altar_call', {
+      payload: altarCallPayload,
+      consentGivenAt: '2026-06-09T11:22:33Z',
+      consentPolicyVersion: '2026-06-v1',
+    });
+
+    // The submission insert is the 2nd insert (shell mint is 1st).
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.consentBy).toBe(memberId);
+    expect(submission.consentPolicyVersion).toBe('2026-06-v1');
+    expect(submission.consentGivenAt).toBeInstanceOf(Date);
+    expect((submission.consentGivenAt as Date).toISOString()).toBe('2026-06-09T11:22:33.000Z');
+  });
+
+  it('persists consent on a baptism submission too', async () => {
+    setupSelectSequence([], []);
+    setupInsert([{ id: subjectId }], [{ id: submissionId }]);
+
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baptism', {
+      payload: { firstName: 'A', lastName: 'B', phone: '07123' },
+      consentGivenAt: '2026-06-09T10:00:00Z',
+      consentPolicyVersion: '2026-06-v1',
+    });
+
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.consentBy).toBe(memberId);
+    expect(submission.consentPolicyVersion).toBe('2026-06-v1');
+  });
+});
+
+// ── Schema-level consent enforcement (Phase 2) ───────────
+describe('Phase 2 schema enforces consent', () => {
+  it('submitFormSchema rejects bodies without consentGivenAt', async () => {
+    const { submitFormSchema } = await import('./schemas');
+    const result = submitFormSchema.safeParse({
+      payload: { firstName: 'A', lastName: 'B', phone: '07' },
+      consentPolicyVersion: '2026-06-v1',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('submitFormSchema rejects bodies without consentPolicyVersion', async () => {
+    const { submitFormSchema } = await import('./schemas');
+    const result = submitFormSchema.safeParse({
+      payload: { firstName: 'A', lastName: 'B', phone: '07' },
+      consentGivenAt: '2026-06-09T10:00:00Z',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('submitFormSchema accepts a body with both consent fields', async () => {
+    const { submitFormSchema } = await import('./schemas');
+    const result = submitFormSchema.safeParse({
+      payload: { firstName: 'A', lastName: 'B', phone: '07' },
+      consentGivenAt: '2026-06-09T10:00:00Z',
+      consentPolicyVersion: '2026-06-v1',
+    });
+    expect(result.success).toBe(true);
   });
 });
 

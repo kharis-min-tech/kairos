@@ -11,6 +11,7 @@ import { FORM_META, TESTIMONY_CATEGORIES } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { MemberSearchLink } from './member-search-link';
+import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -43,6 +44,7 @@ export function TestimonyForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
+  const [consentAck, setConsentAck] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -128,7 +130,12 @@ export function TestimonyForm() {
       await submitForm.mutateAsync({
         formType: 'testimony',
         // An anonymous testimony is never linked, even if a person was picked first.
-        data: { subjectMemberId: isAnonymous ? undefined : subjectMemberId, payload: candidate },
+        data: {
+          subjectMemberId: isAnonymous ? undefined : subjectMemberId,
+          payload: candidate,
+          consentGivenAt: new Date().toISOString(),
+          consentPolicyVersion: CONSENT_POLICY_VERSION,
+        },
       });
       setSubmitted(true);
     } catch {
@@ -140,6 +147,7 @@ export function TestimonyForm() {
     setSubmitted(false);
     setErrors({});
     setSubjectMemberId(undefined);
+    setConsentAck(false);
     setForm({
       firstName: '',
       lastName: '',
@@ -281,6 +289,8 @@ export function TestimonyForm() {
           <FieldError message={errors.acknowledged} />
         </div>
 
+        <DisclaimerConsent checked={consentAck} onChange={setConsentAck} />
+
         {submitForm.isError ? (
           <p className="text-sm text-destructive">
             {submitForm.error instanceof Error
@@ -291,7 +301,7 @@ export function TestimonyForm() {
 
         <Button
           type="submit"
-          disabled={submitForm.isPending}
+          disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
           {submitForm.isPending ? 'Submitting…' : 'Submit'}

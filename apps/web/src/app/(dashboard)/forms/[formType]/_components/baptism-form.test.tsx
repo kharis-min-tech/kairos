@@ -43,10 +43,15 @@ beforeEach(() => {
   submitMutate.mockResolvedValue({ id: 's-1' });
 });
 
+async function tickConsent(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+}
+
 describe('BaptismForm', () => {
   it('blocks submit when required fields are empty', async () => {
     const user = userEvent.setup();
     render(<BaptismForm />, { wrapper });
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(await screen.findByText(/First name is required/)).toBeInTheDocument();
     expect(submitMutate).not.toHaveBeenCalled();
@@ -58,13 +63,18 @@ describe('BaptismForm', () => {
     await user.type(screen.getByLabelText(/First name/), 'Mary');
     await user.type(screen.getByLabelText(/Last name/), 'Jane');
     await user.type(screen.getByLabelText(/^Phone/), '0701');
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
-    expect(submitMutate.mock.calls[0]![0]).toEqual({
+    expect(submitMutate.mock.calls[0]![0]).toMatchObject({
       formType: 'baptism',
-      data: { payload: { firstName: 'Mary', lastName: 'Jane', phone: '0701' } },
+      data: {
+        payload: { firstName: 'Mary', lastName: 'Jane', phone: '0701' },
+        consentPolicyVersion: '2026-06-v1',
+      },
     });
+    expect(submitMutate.mock.calls[0]![0].data.consentGivenAt).toBeTruthy();
     expect(await screen.findByText(/Baptism request submitted/)).toBeInTheDocument();
   });
 
@@ -96,6 +106,7 @@ describe('BaptismForm', () => {
 
     await user.type(screen.getByLabelText(/Find the baptism candidate/), 'ada');
     await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));

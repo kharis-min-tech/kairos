@@ -14,6 +14,11 @@ export const formSubmissions = pgTable('form_submissions', {
   linkedEntityType: varchar('linked_entity_type', { length: 50 }),
   linkedEntityId: uuid('linked_entity_id'),
   notes: text('notes'),
+  // GDPR consent — populated on every NEW submission (Phase 2). Nullable for
+  // backward compatibility with rows captured before the consent flow shipped.
+  consentGivenAt: timestamp('consent_given_at'),
+  consentBy: uuid('consent_by').references(() => members.id, { onDelete: 'set null' }),
+  consentPolicyVersion: varchar('consent_policy_version', { length: 20 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

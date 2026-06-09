@@ -223,12 +223,21 @@ export const payloadSchemaByFormType = {
 
 /** Build the body validator for POST /:formType/submit.
  *  payload is validated by the service against the route's formType (404 if
- *  formType is unknown); here we only enforce the envelope shape. */
+ *  formType is unknown); here we only enforce the envelope shape.
+ *  consentGivenAt + consentPolicyVersion are required for every NEW submission
+ *  (Phase 2 GDPR/safeguarding). consentBy is derived server-side from auth. */
 export const submitFormSchema = z.object({
   subjectMemberId: z.string().uuid().optional(),
   // branchId may be present on the wire but is ignored — auth.branchId is forced.
   branchId: z.string().uuid().optional(),
   payload: z.record(z.string(), z.unknown()),
+  consentGivenAt: z.string().datetime({
+    message: 'consentGivenAt is required (ISO timestamp of when the disclaimer was acknowledged)',
+  }),
+  consentPolicyVersion: z
+    .string()
+    .min(1)
+    .max(20, 'consentPolicyVersion is required (e.g. "2026-06-v1")'),
 });
 
 // ── Member typeahead search ────────────────────────────────

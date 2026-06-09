@@ -24,6 +24,7 @@ import {
 } from '@kairos/types';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
+import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 
 // ── Value model ─────────────────────────────────────────────
 //
@@ -111,6 +112,7 @@ export function DeclarativeForm({
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [consentAck, setConsentAck] = useState(false);
 
   // `now` is stable for one render of the form so age-based branches don't
   // flicker between keystrokes.
@@ -280,7 +282,12 @@ export function DeclarativeForm({
     try {
       await submitForm.mutateAsync({
         formType: definition.formType,
-        data: { subjectMemberId, payload: buildPayload() },
+        data: {
+          subjectMemberId,
+          payload: buildPayload(),
+          consentGivenAt: new Date().toISOString(),
+          consentPolicyVersion: CONSENT_POLICY_VERSION,
+        },
       });
       setSubmitted(true);
     } catch {
@@ -295,6 +302,7 @@ export function DeclarativeForm({
     setSubjectMemberId(undefined);
     setSearchTerm('');
     setSearchOpen(false);
+    setConsentAck(false);
   }
 
   const values = state.values as Record<string, unknown>;
@@ -577,6 +585,8 @@ export function DeclarativeForm({
             : renderRepeatable(block);
         })}
 
+        <DisclaimerConsent checked={consentAck} onChange={setConsentAck} />
+
         {submitForm.isError ? (
           <p className="text-sm text-destructive">
             {submitForm.error instanceof Error
@@ -587,7 +597,7 @@ export function DeclarativeForm({
 
         <Button
           type="submit"
-          disabled={submitForm.isPending}
+          disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
           {submitForm.isPending ? 'Submitting…' : 'Submit'}

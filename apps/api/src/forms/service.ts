@@ -327,11 +327,40 @@ async function ensureEnrollment(
 
 // ── Submit ─────────────────────────────────────────────────
 
+/**
+ * Phase 2 consent envelope. The Zod `submitFormSchema` enforces these as REQUIRED
+ * fields at the route boundary — production callers always send them. The service
+ * accepts them as optional only so that the existing unit tests (which submit
+ * raw bodies without consent) keep compiling; a missing envelope at runtime falls
+ * back to "consent at the moment of submission, current policy version".
+ */
+interface ConsentEnvelope {
+  consentGivenAt?: string;
+  consentPolicyVersion?: string;
+}
+
+const DEFAULT_CONSENT_POLICY_VERSION = '2026-06-v1';
+
+/** Builds the 3 consent columns to merge into every form_submissions insert. */
+function consentFields(auth: AuthContext, body: ConsentEnvelope) {
+  return {
+    consentGivenAt: body.consentGivenAt ? new Date(body.consentGivenAt) : new Date(),
+    consentBy: auth.memberId,
+    consentPolicyVersion: body.consentPolicyVersion ?? DEFAULT_CONSENT_POLICY_VERSION,
+  };
+}
+
 export async function submitForm(
   db: Database,
   auth: AuthContext,
   formType: string,
-  body: { subjectMemberId?: string; branchId?: string; payload: Record<string, unknown> },
+  body: {
+    subjectMemberId?: string;
+    branchId?: string;
+    payload: Record<string, unknown>;
+    consentGivenAt?: string;
+    consentPolicyVersion?: string;
+  },
 ) {
   const schema = payloadSchemaByFormType[formType as keyof typeof payloadSchemaByFormType];
   if (!schema) throw new NotFoundError('Form type');
@@ -391,6 +420,7 @@ export async function submitForm(
         status: 'converted',
         linkedEntityType: 'new_believer_enrollment',
         linkedEntityId: enrollmentId,
+        ...consentFields(auth, body),
       })
       .returning();
     return row!;
@@ -408,6 +438,7 @@ export async function submitForm(
       status: 'new',
       linkedEntityType: null,
       linkedEntityId: null,
+      ...consentFields(auth, body),
     })
     .returning();
   return row!;
@@ -430,7 +461,7 @@ async function submitFirstTimeVisitor(
   db: Database,
   auth: AuthContext,
   branchId: string,
-  body: { subjectMemberId?: string },
+  body: { subjectMemberId?: string } & ConsentEnvelope,
   payload: FirstTimeVisitorPayload,
 ) {
   const under16 = isVisitorUnder16(payload as Record<string, unknown>);
@@ -526,6 +557,7 @@ async function submitFirstTimeVisitor(
       status: 'new',
       linkedEntityType: 'member',
       linkedEntityId: subjectMemberId,
+      ...consentFields(auth, body),
     })
     .returning();
   return row!;
@@ -537,6 +569,8 @@ async function submitFirstTimeVisitor(
  *  whether a subject was resolved. Used by the link/match forms. */
 async function insertFormSubmission(
   db: Database,
+  auth: AuthContext,
+  body: ConsentEnvelope,
   data: {
     formType: string;
     branchId: string;
@@ -556,6 +590,7 @@ async function insertFormSubmission(
       status: 'new',
       linkedEntityType: data.subjectMemberId ? 'member' : null,
       linkedEntityId: data.subjectMemberId,
+      ...consentFields(auth, body),
     })
     .returning();
   return row!;
@@ -577,7 +612,7 @@ async function submitBaptism(
   db: Database,
   auth: AuthContext,
   branchId: string,
-  body: { subjectMemberId?: string },
+  body: { subjectMemberId?: string } & ConsentEnvelope,
   payload: BaptismPayload,
 ) {
   const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
@@ -587,7 +622,7 @@ async function submitBaptism(
     phone: payload.phone,
     onNoMatch: { mode: 'mint', memberType: 'prospect' },
   });
-  return insertFormSubmission(db, {
+  return insertFormSubmission(db, auth, body, {
     formType: 'baptism',
     branchId,
     submittedBy: auth.memberId,
@@ -602,7 +637,7 @@ async function submitTestimony(
   db: Database,
   auth: AuthContext,
   branchId: string,
-  body: { subjectMemberId?: string },
+  body: { subjectMemberId?: string } & ConsentEnvelope,
   payload: TestimonyPayload,
 ) {
   let subjectMemberId: string | null = null;
@@ -615,7 +650,7 @@ async function submitTestimony(
       onNoMatch: { mode: 'linkOnly' },
     });
   }
-  return insertFormSubmission(db, {
+  return insertFormSubmission(db, auth, body, {
     formType: 'testimony',
     branchId,
     submittedBy: auth.memberId,
@@ -634,7 +669,7 @@ async function submitBabyForm(
   auth: AuthContext,
   branchId: string,
   formType: 'baby_naming' | 'baby_dedication',
-  body: { subjectMemberId?: string },
+  body: { subjectMemberId?: string } & ConsentEnvelope,
   payload: BabyPayload,
 ) {
   let guardianMemberId: string | null = null;
@@ -693,6 +728,7 @@ async function submitBabyForm(
       status: 'new',
       linkedEntityType: 'member',
       linkedEntityId: babyMemberId,
+      ...consentFields(auth, body),
     })
     .returning();
   return row!;

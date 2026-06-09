@@ -43,6 +43,10 @@ beforeEach(() => {
   submitMutate.mockResolvedValue({ id: 's-1' });
 });
 
+async function tickConsent(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+}
+
 async function fillRequired(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/First name/), 'Ada');
   await user.type(screen.getByLabelText(/Last name/), 'Lovelace');
@@ -68,6 +72,7 @@ describe('TestimonyForm', () => {
     const user = userEvent.setup();
     render(<TestimonyForm />, { wrapper });
     await fillRequired(user);
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(
       await screen.findByText(/You must acknowledge before submitting/),
@@ -80,6 +85,7 @@ describe('TestimonyForm', () => {
     render(<TestimonyForm />, { wrapper });
     await fillRequired(user);
     await user.click(screen.getByLabelText(/Acknowledgement/));
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
@@ -98,6 +104,7 @@ describe('TestimonyForm', () => {
   it('blocks submit with validation errors when required fields are empty', async () => {
     const user = userEvent.setup();
     render(<TestimonyForm />, { wrapper });
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(await screen.findByText(/First name is required/)).toBeInTheDocument();
     expect(submitMutate).not.toHaveBeenCalled();
@@ -132,6 +139,7 @@ describe('TestimonyForm', () => {
     // Identity fields are pre-filled by the link.
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
     await fillRequiredExceptIdentity(user);
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
@@ -173,6 +181,7 @@ describe('TestimonyForm', () => {
       screen.getByText(/An anonymous testimony won’t be linked to a person’s record\./),
     ).toBeInTheDocument();
 
+    await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
     const call = submitMutate.mock.calls[0]![0];

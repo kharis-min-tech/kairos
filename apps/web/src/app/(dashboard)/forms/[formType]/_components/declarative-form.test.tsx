@@ -167,6 +167,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
     it('blocks submit and flags visible required fields when empty', async () => {
       const user = userEvent.setup();
       renderForm();
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       expect(await screen.findByText(/First name is required/)).toBeInTheDocument();
       expect(screen.getByText(/Last name is required/)).toBeInTheDocument();
@@ -180,6 +181,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
     it('does not require guardian fields while the guardian section is hidden', async () => {
       const user = userEvent.setup();
       renderForm();
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await screen.findByText(/First name is required/);
       // Guardian section is hidden, so no guardian-required errors appear.
@@ -191,6 +193,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       renderForm();
       await pickRadio(user, 'Are you under 16?', 'Yes');
       await screen.findByRole('heading', { name: 'Parent / guardian' });
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       expect(await screen.findByText(/Guardian name is required/)).toBeInTheDocument();
       expect(screen.getByText(/Guardian phone is required/)).toBeInTheDocument();
@@ -205,6 +208,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       renderForm();
       await user.click(screen.getByLabelText(/I came with one or more children/));
       await user.click(await screen.findByRole('button', { name: /Add child/i }));
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       // The added child row's required first/last name block submit.
       const errs = await screen.findAllByText(/First name is required/);
@@ -224,6 +228,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await user.type(screen.getByLabelText(/^Phone/), '07123456789');
       // dateOfBirth is required and uses DateSelect (popover) — to keep the test
       // at the behavior layer we leave it and assert it is the only blocker.
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
       // dateOfBirth is the sole remaining required gap.
@@ -255,6 +260,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await user.type(screen.getByLabelText(/^Phone/), '07123456789');
       await user.type(screen.getByLabelText(/How did you hear about us\?/), 'A friend');
 
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
 
@@ -304,6 +310,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await user.type(inputs[0]!, 'Kid');
       await user.type(inputs[1]!, 'Bakare');
 
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
 
@@ -338,6 +345,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       expect(screen.getByLabelText(/^Phone/)).toHaveValue('0700');
 
       await user.type(screen.getByLabelText(/Email/), 'ada@example.com');
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
       expect(submitMutate.mock.calls[0]![0].data.subjectMemberId).toBe('m-7');

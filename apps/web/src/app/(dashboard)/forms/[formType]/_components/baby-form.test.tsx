@@ -47,6 +47,7 @@ describe('BabyForm (naming)', () => {
   it('blocks submit when required fields are empty', async () => {
     const user = userEvent.setup();
     render(<BabyForm mode="baby_naming" />, { wrapper });
+    await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(await screen.findByText(/Baby’s full name is required/)).toBeInTheDocument();
     expect(submitMutate).not.toHaveBeenCalled();
@@ -63,6 +64,7 @@ describe('BabyForm (naming)', () => {
     // dateOfBirth via DateSelect — required. The DateSelect renders a trigger;
     // we set it through the typed text path by skipping (validation requires it).
     // Instead, we assert the validation error is shown then.
+    await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
     expect(await screen.findByText(/Date of birth is required/)).toBeInTheDocument();
     expect(submitMutate).not.toHaveBeenCalled();
@@ -100,6 +102,7 @@ describe('BabyForm (naming)', () => {
     await user.click(screen.getAllByRole('button', { name: /Select date/ })[0]!);
     await user.click(screen.getByRole('button', { name: /^Today$/ }));
 
+    await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
     await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
