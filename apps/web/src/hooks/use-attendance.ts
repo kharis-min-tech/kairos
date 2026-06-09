@@ -12,6 +12,7 @@ import type {
   MissingMembersParams,
   BranchAttendanceParams,
   AttendanceSummaryParams,
+  CohortDiffRequest,
 } from '@kairos/types';
 
 // ── Service queries ────────────────────────────────────────
@@ -168,5 +169,16 @@ export function useCanRecordAttendance(params?: { branchId?: string }) {
       return res.data!;
     },
     staleTime: 60_000,
+  });
+}
+
+// ── Cohort comparison (set-diff between 2 service selections) ──
+
+export function useCohortDiff() {
+  return useMutation({
+    mutationFn: async (data: CohortDiffRequest) => {
+      const res = await api.attendance.cohortDiff(data);
+      return res.data!;
+    },
   });
 }

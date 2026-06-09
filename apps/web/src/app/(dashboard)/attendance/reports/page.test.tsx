@@ -37,6 +37,16 @@ vi.mock('@/hooks/use-attendance', () => ({
   useAttendanceTrends: () => trends,
   useMissingMembers: () => missing,
   useAttendanceByBranch: () => byBranch,
+  // CohortCompareCard renders inside this page; stub its hooks too.
+  useServices: () => ({ data: { data: [], total: 0, page: 1, limit: 100 }, isLoading: false, isError: false, error: null }),
+  useCohortDiff: () => ({
+    data: undefined,
+    isSuccess: false,
+    isError: false,
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
 }));
 
 // Recharts' ResponsiveContainer needs layout; stub the chart pieces.

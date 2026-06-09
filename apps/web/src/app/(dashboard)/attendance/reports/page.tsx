@@ -22,6 +22,7 @@ import {
   useAttendanceByBranch,
 } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
+import { CohortCompareCard } from '../_components/cohort-compare-card';
 
 const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
 
@@ -201,6 +202,9 @@ export default function AttendanceReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cohort comparison — who came to A but missed B */}
+      <CohortCompareCard branchId={branchParam} />
     </div>
   );
 }

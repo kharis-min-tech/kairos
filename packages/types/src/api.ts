@@ -881,4 +881,22 @@ export interface AttendanceSummaryParams {
   weeks?: number;
 }
 
+export interface CohortDiffRequest {
+  presentInServiceIds: string[];
+  absentFromServiceIds: string[];
+  presentMode: 'any' | 'all';
+  absentMode: 'any' | 'all';
+  branchId?: string;
+}
+
+export interface CohortDiffMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface CohortDiffResult {
+  members: CohortDiffMember[];
+}
+
 export type { FormSubmission };

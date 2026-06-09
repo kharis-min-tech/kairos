@@ -112,6 +112,7 @@ import {
   getAttendanceByBranch,
   getAttendanceSummary,
   canRecordAttendance,
+  getCohortDiff,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -582,5 +583,92 @@ describe('canRecordAttendance', () => {
   it('non-admin caller cannot record in a foreign branch', async () => {
     const result = await canRecordAttendance(mockDb, memberAuth, otherBranchId);
     expect(result).toEqual({ canRecord: false });
+  });
+});
+
+// ── getCohortDiff (set-difference comparison) ─────────────
+
+describe('getCohortDiff', () => {
+  const svcA = '770e8400-e29b-41d4-a716-446655440101';
+  const svcB = '770e8400-e29b-41d4-a716-446655440102';
+  const m1 = '550e8400-e29b-41d4-a716-446655440001';
+  const m2 = '550e8400-e29b-41d4-a716-446655440002';
+  const m3 = '550e8400-e29b-41d4-a716-446655440003';
+
+  it('forbids a plain member', async () => {
+    await expect(
+      getCohortDiff(mockDb, memberAuth, {
+        presentInServiceIds: [svcA],
+        absentFromServiceIds: [],
+        presentMode: 'any',
+        absentMode: 'all',
+      }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('forbids services outside the caller branch', async () => {
+    // service-validation select returns fewer rows than requested
+    setupSelectSequence([{ id: svcA }]); // 1 row, but 2 ids requested
+    await expect(
+      getCohortDiff(mockDb, adminAuth, {
+        presentInServiceIds: [svcA, svcB],
+        absentFromServiceIds: [],
+        presentMode: 'any',
+        absentMode: 'all',
+      }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('returns members present in A (ANY) intersected with absent from B (ALL)', async () => {
+    // 1: service-validation (both valid)
+    // 2: presentMode=any rows  -> m1, m2 attended at least one of A
+    // 3: absentMode=all  -> attendedB distinct list, m1 attended B → m2 only is "absent from all of B"
+    // 4: all members in branch (used by absent-all bucket)
+    // 5: hydrate names
+    setupSelectSequence(
+      [{ id: svcA }, { id: svcB }],
+      [{ memberId: m1 }, { memberId: m2 }],          // present-any
+      [{ memberId: m1 }],                             // attendedB (m1 attended B)
+      [{ id: m1 }, { id: m2 }, { id: m3 }],           // all branch members
+      [{ memberId: m2, firstName: 'Bob', lastName: 'B' }], // hydrate
+    );
+    const result = await getCohortDiff(mockDb, adminAuth, {
+      presentInServiceIds: [svcA],
+      absentFromServiceIds: [svcB],
+      presentMode: 'any',
+      absentMode: 'all',
+    });
+    expect(result.members).toEqual([{ memberId: m2, firstName: 'Bob', lastName: 'B' }]);
+  });
+
+  it('returns empty when no members match', async () => {
+    setupSelectSequence(
+      [{ id: svcA }],
+      [], // present-any → no one attended A
+    );
+    const result = await getCohortDiff(mockDb, adminAuth, {
+      presentInServiceIds: [svcA],
+      absentFromServiceIds: [],
+      presentMode: 'any',
+      absentMode: 'all',
+    });
+    expect(result.members).toEqual([]);
+  });
+
+  it('presentMode=all keeps only members who attended every selected service', async () => {
+    setupSelectSequence(
+      [{ id: svcA }, { id: svcB }],
+      // grouped: m1 attended 2 of 2 → keep; m2 attended 1 of 2 → drop
+      [{ memberId: m1, c: 2 }, { memberId: m2, c: 1 }],
+      [{ memberId: m1, firstName: 'Ada', lastName: 'A' }],
+    );
+    const result = await getCohortDiff(mockDb, adminAuth, {
+      presentInServiceIds: [svcA, svcB],
+      absentFromServiceIds: [],
+      presentMode: 'all',
+      absentMode: 'all',
+    });
+    expect(result.members).toHaveLength(1);
+    expect(result.members[0]?.memberId).toBe(m1);
   });
 });

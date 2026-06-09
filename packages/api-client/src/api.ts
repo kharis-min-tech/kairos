@@ -95,6 +95,8 @@ import type {
   BranchAttendanceParams,
   AttendanceSummary,
   AttendanceSummaryParams,
+  CohortDiffRequest,
+  CohortDiffResult,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -1081,6 +1083,8 @@ export function createApiClient(
         const query = qs.toString();
         return client.get<ApiResponse<{ canRecord: boolean }>>(`/api/attendance/me/can-record${query ? `?${query}` : ''}`);
       },
+      cohortDiff: (body: CohortDiffRequest) =>
+        client.post<ApiResponse<CohortDiffResult>>('/api/attendance/reports/cohort-diff', body),
     },
   };
 }

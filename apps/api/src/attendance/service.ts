@@ -606,6 +606,169 @@ export async function getMissingMembers(
   }));
 }
 
+/**
+ * Cohort comparison — returns members "present in A" and "absent from B" across
+ * any 2 multi-selects of services. ANY/ALL semantics per set:
+ *   - ANY: attended at least one service in the set
+ *   - ALL: attended every service in the set
+ * Single-select inputs collapse: ANY and ALL produce the same answer.
+ *
+ * Both sets must belong to the caller's branch (admin can cross-branch).
+ */
+export async function getCohortDiff(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    presentInServiceIds: string[];
+    absentFromServiceIds: string[];
+    presentMode: 'any' | 'all';
+    absentMode: 'any' | 'all';
+    branchId?: string;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+
+  // Validate that every referenced service belongs to the scoped branch.
+  const allServiceIds = [
+    ...new Set([...query.presentInServiceIds, ...query.absentFromServiceIds]),
+  ];
+  if (allServiceIds.length > 0) {
+    const validServices = await db
+      .select({ id: services.id })
+      .from(services)
+      .where(
+        and(
+          inArray(services.id, allServiceIds),
+          eq(services.branchId, branchId),
+          eq(services.isActive, true),
+        ),
+      );
+    if (validServices.length !== allServiceIds.length) {
+      throw new ForbiddenError('One or more services are outside the caller branch');
+    }
+  }
+
+  // Build the "present in A" memberId set.
+  let presentMemberIds: Set<string> | null = null;
+  if (query.presentInServiceIds.length > 0) {
+    if (query.presentMode === 'all') {
+      // Members who attended every service in A.
+      const rows = await db
+        .select({
+          memberId: serviceAttendance.memberId,
+          c: count(serviceAttendance.serviceId),
+        })
+        .from(serviceAttendance)
+        .where(inArray(serviceAttendance.serviceId, query.presentInServiceIds))
+        .groupBy(serviceAttendance.memberId);
+      presentMemberIds = new Set(
+        rows
+          .filter((r) => Number(r.c) === query.presentInServiceIds.length)
+          .map((r) => r.memberId),
+      );
+    } else {
+      // ANY: attended at least one service in A.
+      const rows = await db
+        .select({ memberId: serviceAttendance.memberId })
+        .from(serviceAttendance)
+        .where(inArray(serviceAttendance.serviceId, query.presentInServiceIds));
+      presentMemberIds = new Set(rows.map((r) => r.memberId));
+    }
+  }
+
+  // Build the "absent from B" memberId predicate.
+  // ANY-absent: there exists at least one service in B the member didn't attend.
+  // ALL-absent (default semantic per UI): the member attended none of B.
+  let absentMemberIds: Set<string> | null = null;
+  if (query.absentFromServiceIds.length > 0) {
+    if (query.absentMode === 'any') {
+      // Members for whom at least one service in B has NO attendance row.
+      // Simplest read: take ALL members who appeared in B, count their distinct
+      // services in B, keep those whose count < |B|. Then UNION with members
+      // who appeared in NONE of B (the next bucket).
+      const rows = await db
+        .select({
+          memberId: serviceAttendance.memberId,
+          c: count(serviceAttendance.serviceId),
+        })
+        .from(serviceAttendance)
+        .where(inArray(serviceAttendance.serviceId, query.absentFromServiceIds))
+        .groupBy(serviceAttendance.memberId);
+      const partialAttendees = new Set(
+        rows
+          .filter((r) => Number(r.c) < query.absentFromServiceIds.length)
+          .map((r) => r.memberId),
+      );
+      // Plus everyone who appeared in zero services of B — we infer this from
+      // the full active-member set in branch.
+      const allMembers = await db
+        .select({ id: members.id })
+        .from(members)
+        .where(
+          and(
+            eq(members.isActive, true),
+            eq(members.homeBranchId, branchId),
+            eq(members.memberType, 'member'),
+          ),
+        );
+      const attendedAtLeastOne = new Set(rows.map((r) => r.memberId));
+      const noneOfB = allMembers
+        .map((m) => m.id)
+        .filter((id) => !attendedAtLeastOne.has(id));
+      absentMemberIds = new Set([...partialAttendees, ...noneOfB]);
+    } else {
+      // ALL-absent: members who attended NONE of B.
+      const attendedB = await db
+        .select({ memberId: serviceAttendance.memberId })
+        .from(serviceAttendance)
+        .where(inArray(serviceAttendance.serviceId, query.absentFromServiceIds))
+        .groupBy(serviceAttendance.memberId);
+      const attendedSet = new Set(attendedB.map((r) => r.memberId));
+      const allMembers = await db
+        .select({ id: members.id })
+        .from(members)
+        .where(
+          and(
+            eq(members.isActive, true),
+            eq(members.homeBranchId, branchId),
+            eq(members.memberType, 'member'),
+          ),
+        );
+      absentMemberIds = new Set(
+        allMembers.map((m) => m.id).filter((id) => !attendedSet.has(id)),
+      );
+    }
+  }
+
+  // Intersect the two predicates. If only one was provided, the other is "any".
+  let resultIds: string[];
+  if (presentMemberIds && absentMemberIds) {
+    resultIds = Array.from(presentMemberIds).filter((id) => absentMemberIds!.has(id));
+  } else if (presentMemberIds) {
+    resultIds = Array.from(presentMemberIds);
+  } else if (absentMemberIds) {
+    resultIds = Array.from(absentMemberIds);
+  } else {
+    resultIds = [];
+  }
+
+  if (resultIds.length === 0) return { members: [] };
+
+  // Hydrate names for the result list.
+  const rows = await db
+    .select({
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(members)
+    .where(and(inArray(members.id, resultIds), eq(members.isActive, true)))
+    .orderBy(members.lastName, members.firstName);
+
+  return { members: rows };
+}
+
 export async function getAttendanceByBranch(
   db: Database,
   auth: AuthContext,

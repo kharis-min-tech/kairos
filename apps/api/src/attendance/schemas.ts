@@ -113,3 +113,20 @@ export const summaryQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   weeks: z.coerce.number().int().positive().max(52).default(4),
 });
+
+// Cohort comparison — set-difference between any two service selections.
+// Returns members present in "A" (per `presentMode`) and absent from "B" (per `absentMode`).
+// Single-select inputs collapse: ANY and ALL produce the same answer.
+export const cohortDiffSchema = z
+  .object({
+    presentInServiceIds: z.array(z.string().uuid()).max(50).default([]),
+    absentFromServiceIds: z.array(z.string().uuid()).max(50).default([]),
+    presentMode: z.enum(['any', 'all']).default('any'),
+    absentMode: z.enum(['any', 'all']).default('any'),
+    branchId: z.string().uuid().optional(),
+  })
+  .refine(
+    (data) =>
+      data.presentInServiceIds.length > 0 || data.absentFromServiceIds.length > 0,
+    { message: 'At least one of presentInServiceIds or absentFromServiceIds is required' },
+  );

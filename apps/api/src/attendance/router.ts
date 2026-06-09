@@ -13,6 +13,7 @@ import {
   missingMembersQuerySchema,
   byBranchQuerySchema,
   summaryQuerySchema,
+  cohortDiffSchema,
 } from './schemas';
 import {
   createService,
@@ -28,6 +29,7 @@ import {
   getAttendanceByBranch,
   getAttendanceSummary,
   canRecordAttendance,
+  getCohortDiff,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -54,6 +56,17 @@ attendanceRouter.get(
   async (c) => {
     const auth = getAuth(c);
     const result = await getMissingMembers(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.post(
+  '/reports/cohort-diff',
+  requireRole('admin', 'pastor', 'leader'),
+  zValidator('json', cohortDiffSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getCohortDiff(db, auth, c.req.valid('json'));
     return c.json(successResponse(result));
   },
 );
