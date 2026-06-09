@@ -12,6 +12,7 @@ import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { MemberSearchLink } from './member-search-link';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
+import { BranchPicker } from './branch-picker';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -45,6 +46,7 @@ export function TestimonyForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [consentAck, setConsentAck] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -132,6 +134,7 @@ export function TestimonyForm() {
         // An anonymous testimony is never linked, even if a person was picked first.
         data: {
           subjectMemberId: isAnonymous ? undefined : subjectMemberId,
+          branchId: selectedBranchId,
           payload: candidate,
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -148,6 +151,7 @@ export function TestimonyForm() {
     setErrors({});
     setSubjectMemberId(undefined);
     setConsentAck(false);
+    setSelectedBranchId(undefined);
     setForm({
       firstName: '',
       lastName: '',
@@ -173,6 +177,8 @@ export function TestimonyForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
+        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
+
         <MemberSearchLink
           value={subjectMemberId}
           onSelect={selectExisting}

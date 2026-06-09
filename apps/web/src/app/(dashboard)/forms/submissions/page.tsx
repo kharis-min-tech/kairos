@@ -177,6 +177,7 @@ export default function SubmissionsPage() {
               <TableRow>
                 <TableHead>Subject</TableHead>
                 <TableHead>Form</TableHead>
+                <TableHead>Branch</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Submitted</TableHead>
               </TableRow>
@@ -201,6 +202,15 @@ export default function SubmissionsPage() {
                       )}
                     </TableCell>
                     <TableCell>{FORM_META[s.formType].title}</TableCell>
+                    <TableCell>
+                      {s.branchName ? (
+                        <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-xs font-medium text-[#5D3FD3]">
+                          {s.branchName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
                     </TableCell>

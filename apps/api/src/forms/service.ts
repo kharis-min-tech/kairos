@@ -7,6 +7,7 @@ import {
   branchDepartments,
   departments,
   departmentMembers,
+  branches,
 } from '@kairos/database';
 import type { AuthContext, FormType } from '@kairos/types';
 import { FormType as FormTypeEnum } from '@kairos/types';
@@ -378,8 +379,11 @@ export async function submitForm(
   }
   const payload = parsed.data;
 
-  // branchId is always forced to the caller's branch — client value is ignored.
-  const branchId = auth.branchId;
+  // Phase 3 — admin + pastor can capture for any branch via body.branchId;
+  // everyone else is pinned to their own branch (body value is ignored).
+  const isCrossBranchCapable = auth.systemRole === 'admin' || auth.systemRole === 'pastor';
+  const branchId =
+    isCrossBranchCapable && body.branchId ? body.branchId : auth.branchId;
   enforceBranchScope(auth, branchId);
 
   // Per-form matching policies. Each resolves a subject via the shared
@@ -826,6 +830,7 @@ export async function listSubmissions(
       id: formSubmissions.id,
       formType: formSubmissions.formType,
       branchId: formSubmissions.branchId,
+      branchName: branches.branchName,
       submittedBy: formSubmissions.submittedBy,
       subjectMemberId: formSubmissions.subjectMemberId,
       payload: formSubmissions.payload,
@@ -837,14 +842,33 @@ export async function listSubmissions(
       updatedAt: formSubmissions.updatedAt,
     })
     .from(formSubmissions)
+    .innerJoin(branches, eq(formSubmissions.branchId, branches.id))
     .where(and(...conditions))
     .orderBy(desc(formSubmissions.createdAt));
 }
 
 export async function getSubmission(db: Database, auth: AuthContext, id: string) {
   const [row] = await db
-    .select()
+    .select({
+      id: formSubmissions.id,
+      formType: formSubmissions.formType,
+      branchId: formSubmissions.branchId,
+      branchName: branches.branchName,
+      submittedBy: formSubmissions.submittedBy,
+      subjectMemberId: formSubmissions.subjectMemberId,
+      payload: formSubmissions.payload,
+      status: formSubmissions.status,
+      linkedEntityType: formSubmissions.linkedEntityType,
+      linkedEntityId: formSubmissions.linkedEntityId,
+      notes: formSubmissions.notes,
+      consentGivenAt: formSubmissions.consentGivenAt,
+      consentBy: formSubmissions.consentBy,
+      consentPolicyVersion: formSubmissions.consentPolicyVersion,
+      createdAt: formSubmissions.createdAt,
+      updatedAt: formSubmissions.updatedAt,
+    })
     .from(formSubmissions)
+    .innerJoin(branches, eq(formSubmissions.branchId, branches.id))
     .where(eq(formSubmissions.id, id))
     .limit(1);
   if (!row) throw new NotFoundError('Form submission');

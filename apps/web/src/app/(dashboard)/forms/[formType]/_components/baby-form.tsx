@@ -12,6 +12,7 @@ import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { MemberSearchLink } from './member-search-link';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
+import { BranchPicker } from './branch-picker';
 
 const baseSchema = z.object({
   babyFullName: z.string().trim().min(1, 'Baby’s full name is required'),
@@ -48,6 +49,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [consentAck, setConsentAck] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
   const [form, setForm] = useState({
     babyFullName: '',
     dateOfBirth: '',
@@ -128,6 +130,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
         formType: mode,
         data: {
           subjectMemberId,
+          branchId: selectedBranchId,
           payload,
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -144,6 +147,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
     setErrors({});
     setSubjectMemberId(undefined);
     setConsentAck(false);
+    setSelectedBranchId(undefined);
     setForm({
       babyFullName: '',
       dateOfBirth: '',
@@ -169,6 +173,8 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
+        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
+
         <MemberSearchLink
           value={subjectMemberId}
           onSelect={selectParent}

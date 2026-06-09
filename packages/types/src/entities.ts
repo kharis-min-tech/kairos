@@ -802,6 +802,8 @@ export type FormSubmissionPayload =
 export interface FormSubmission extends BaseEntity {
   formType: FormType;
   branchId: string;
+  /** Joined from branches.branchName on listSubmissions + getSubmission (Phase 4). */
+  branchName?: string;
   submittedBy: string;
   subjectMemberId: string | null;
   payload: FormSubmissionPayload;
@@ -809,6 +811,10 @@ export interface FormSubmission extends BaseEntity {
   linkedEntityType: string | null;
   linkedEntityId: string | null;
   notes: string | null;
+  /** GDPR consent envelope persisted on every submission since 2026-06-v1 (Phase 2). */
+  consentGivenAt?: string | null;
+  consentBy?: string | null;
+  consentPolicyVersion?: string | null;
 }
 
 // ── Member Health Record ───────────────────────────────────

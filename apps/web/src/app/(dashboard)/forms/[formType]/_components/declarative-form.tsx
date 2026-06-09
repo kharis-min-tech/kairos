@@ -25,6 +25,7 @@ import {
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
+import { BranchPicker } from './branch-picker';
 
 // ── Value model ─────────────────────────────────────────────
 //
@@ -113,6 +114,7 @@ export function DeclarativeForm({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [consentAck, setConsentAck] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
 
   // `now` is stable for one render of the form so age-based branches don't
   // flicker between keystrokes.
@@ -284,6 +286,7 @@ export function DeclarativeForm({
         formType: definition.formType,
         data: {
           subjectMemberId,
+          branchId: selectedBranchId,
           payload: buildPayload(),
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -303,6 +306,7 @@ export function DeclarativeForm({
     setSearchTerm('');
     setSearchOpen(false);
     setConsentAck(false);
+    setSelectedBranchId(undefined);
   }
 
   const values = state.values as Record<string, unknown>;
@@ -503,6 +507,8 @@ export function DeclarativeForm({
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-8">
+        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
+
         {/* Find existing person — link a returning/known visitor. */}
         <Card>
           <CardContent className="space-y-3 py-5">

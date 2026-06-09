@@ -99,6 +99,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
           </DialogTitle>
           <DialogDescription>
             Submitted {formatShortDate(submission.createdAt)}
+            {submission.branchName ? ` · ${submission.branchName} branch` : ''}
             {anonymous ? ' · (anonymous)' : ''}
           </DialogDescription>
         </DialogHeader>
