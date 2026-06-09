@@ -16,11 +16,11 @@ import {
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { Download } from 'lucide-react';
-import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
 import {
   useFormSubmissions,
   useExportFormSubmissions,
+  useMyFormCapabilities,
 } from '@/hooks/use-forms';
 import {
   FORM_META,
@@ -32,11 +32,10 @@ import {
 import { ReviewDrawer } from './_components/review-drawer';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
 
-const LEADER_ROLES = ['leader', 'pastor', 'admin'];
-
 export default function SubmissionsPage() {
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const isLeaderPlus = !!activeRole && LEADER_ROLES.includes(activeRole);
+  const { data: capabilities, isLoading: capLoading } = useMyFormCapabilities();
+  const visibleSet = capabilities?.visibleFormTypes ?? [];
+  const canSeeAny = visibleSet.length > 0;
 
   const [formType, setFormType] = useState<FormType | ''>('');
   const [status, setStatus] = useState<FormSubmissionStatus | ''>('');
@@ -52,16 +51,25 @@ export default function SubmissionsPage() {
       from: from || undefined,
       to: to || undefined,
     },
-    { enabled: isLeaderPlus },
+    { enabled: canSeeAny },
   );
   const exportCsv = useExportFormSubmissions();
 
-  if (!isLeaderPlus) {
+  if (capLoading) {
+    return (
+      <div aria-busy="true" aria-live="polite" className="space-y-3">
+        <div className="h-32 animate-pulse rounded-xl bg-muted/60" />
+        <span className="sr-only">Loading submissions</span>
+      </div>
+    );
+  }
+
+  if (!canSeeAny) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground">Not authorised</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You need leader access to review form submissions.
+          Form review is restricted to the Admin-department members, NB-department leader, pastors, and admins.
         </p>
       </div>
     );
@@ -117,7 +125,9 @@ export default function SubmissionsPage() {
               placeholder="All forms"
               options={[
                 { value: '', label: 'All forms' },
-                ...FORM_TYPES.map((t) => ({ value: t, label: FORM_META[t].title })),
+                ...FORM_TYPES
+                  .filter((t) => visibleSet.includes(t))
+                  .map((t) => ({ value: t, label: FORM_META[t].title })),
               ]}
             />
           </div>

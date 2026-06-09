@@ -13,6 +13,19 @@ import type {
   ArchiveProspectsRequest,
 } from '@kairos/types';
 
+// ── Caller capabilities (drives /forms landing + filter gating) ──
+
+export function useMyFormCapabilities() {
+  return useQuery({
+    queryKey: ['forms', 'me', 'capabilities'],
+    queryFn: async () => {
+      const res = await api.forms.myCapabilities();
+      return res.data!;
+    },
+    staleTime: 60_000,
+  });
+}
+
 // ── Submission (fill-out) mutation ─────────────────────────
 
 export function useSubmitForm() {

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent } from '@kairos/ui';
-import { useAuthStore } from '@/lib/auth-store';
+import { useMyFormCapabilities } from '@/hooks/use-forms';
 import {
   Flame,
   Droplets,
@@ -26,11 +26,11 @@ const FORM_ICONS: Record<FormType, React.ReactNode> = {
   baby_dedication: <HandHeart className="h-6 w-6" />,
 };
 
-const LEADER_ROLES = ['leader', 'pastor', 'admin'];
-
 export default function FormsLandingPage() {
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const isLeaderPlus = !!activeRole && LEADER_ROLES.includes(activeRole);
+  const { data: capabilities } = useMyFormCapabilities();
+  const canSeeSubmissions = (capabilities?.visibleFormTypes.length ?? 0) > 0;
+  const canSeeProspects = !!capabilities?.canSeeProspects;
+  const showAdminSection = canSeeSubmissions || canSeeProspects;
 
   return (
     <div className="space-y-8">
@@ -65,39 +65,43 @@ export default function FormsLandingPage() {
         })}
       </div>
 
-      {isLeaderPlus ? (
+      {showAdminSection ? (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Administration</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Link href="/forms/submissions" className="group">
-              <Card className="transition-shadow hover:shadow-ambient">
-                <CardContent className="flex items-center gap-4 py-5">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
-                    <ClipboardList className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">Submissions</h3>
-                    <p className="text-sm text-muted-foreground">Review, triage and export form submissions.</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
+            {canSeeSubmissions && (
+              <Link href="/forms/submissions" className="group">
+                <Card className="transition-shadow hover:shadow-ambient">
+                  <CardContent className="flex items-center gap-4 py-5">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+                      <ClipboardList className="h-5 w-5" />
+                    </span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">Submissions</h3>
+                      <p className="text-sm text-muted-foreground">Review, triage and export form submissions.</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
 
-            <Link href="/forms/prospects" className="group">
-              <Card className="transition-shadow hover:shadow-ambient">
-                <CardContent className="flex items-center gap-4 py-5">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
-                    <Archive className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">Dormant prospects</h3>
-                    <p className="text-sm text-muted-foreground">Bulk-archive stale form-created contact shells.</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
+            {canSeeProspects && (
+              <Link href="/forms/prospects" className="group">
+                <Card className="transition-shadow hover:shadow-ambient">
+                  <CardContent className="flex items-center gap-4 py-5">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+                      <Archive className="h-5 w-5" />
+                    </span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">Dormant prospects</h3>
+                      <p className="text-sm text-muted-foreground">Bulk-archive stale form-created contact shells.</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
           </div>
         </section>
       ) : null}

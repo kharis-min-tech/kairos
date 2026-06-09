@@ -19,30 +19,36 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@kairos/ui';
-import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
-import { useDormantProspects, useArchiveProspects } from '@/hooks/use-forms';
-
-const LEADER_ROLES = ['leader', 'pastor', 'admin'];
+import { useDormantProspects, useArchiveProspects, useMyFormCapabilities } from '@/hooks/use-forms';
 
 export default function ProspectsPage() {
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const isLeaderPlus = !!activeRole && LEADER_ROLES.includes(activeRole);
+  const { data: capabilities, isLoading: capLoading } = useMyFormCapabilities();
+  const canSeeProspects = !!capabilities?.canSeeProspects;
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data, isLoading, isError, error } = useDormantProspects(undefined, {
-    enabled: isLeaderPlus,
+    enabled: canSeeProspects,
   });
   const archive = useArchiveProspects();
 
-  if (!isLeaderPlus) {
+  if (capLoading) {
+    return (
+      <div aria-busy="true" aria-live="polite" className="space-y-3">
+        <div className="h-32 animate-pulse rounded-xl bg-muted/60" />
+        <span className="sr-only">Loading prospects</span>
+      </div>
+    );
+  }
+
+  if (!canSeeProspects) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground">Not authorised</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You need leader access to manage dormant prospects.
+          Dormant-prospect cleanup is restricted to the Admin-department leader, pastors, and admins.
         </p>
       </div>
     );

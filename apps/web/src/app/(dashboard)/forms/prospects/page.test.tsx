@@ -12,9 +12,14 @@ vi.mock('@/lib/auth-store', () => ({
 }));
 
 let prospects: DormantProspect[] = [];
+let capabilities: { visibleFormTypes: string[]; canSeeProspects: boolean } = {
+  visibleFormTypes: ['altar_call'],
+  canSeeProspects: true,
+};
 const archiveMutate = vi.fn();
 
 vi.mock('@/hooks/use-forms', () => ({
+  useMyFormCapabilities: () => ({ data: capabilities, isLoading: false }),
   useDormantProspects: () => ({
     data: prospects,
     isLoading: false,
@@ -47,12 +52,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   role = 'leader';
   prospects = rows;
+  capabilities = { visibleFormTypes: ['altar_call'], canSeeProspects: true };
   archiveMutate.mockResolvedValue({ archived: 1 });
 });
 
 describe('ProspectsPage', () => {
-  it('blocks plain members with a not-authorised state', () => {
-    role = 'member';
+  it('blocks a caller without canSeeProspects', () => {
+    capabilities = { visibleFormTypes: [], canSeeProspects: false };
     render(<ProspectsPage />, { wrapper });
     expect(screen.getByText(/Not authorised/)).toBeInTheDocument();
   });

@@ -87,8 +87,34 @@ const enrollmentId = '660e8400-0000-0000-0000-000000000006';
 const submissionId = '770e8400-0000-0000-0000-000000000007';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
+const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
 const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
+
+/**
+ * The Phase 1 read gates call `getVisibleFormTypes`, which for non-admin/non-pastor
+ * callers issues up to 3 dept-check SELECTs in this order:
+ *   1. isAdminDeptLeader
+ *   2. isInAdminDepartment
+ *   3. isNewBelieversDeptLeader
+ * Helpers below seed the select queue with the three results.
+ *
+ * For prospects flows, only #1 (isAdminDeptLeader) is consulted by `canSeeProspects`.
+ */
+const POSITIVE = [{ id: 'dept-stub' }];
+const EMPTY: unknown[] = [];
+function visAdminDeptLeader(): unknown[] {
+  return [POSITIVE]; // first dept-check returns positive → short-circuit
+}
+function visInAdminDept(): unknown[] {
+  return [EMPTY, POSITIVE]; // first negative, second (isInAdminDepartment) positive
+}
+function visNewBelieversLead(): unknown[] {
+  return [EMPTY, EMPTY, POSITIVE]; // only third positive
+}
+function visNone(): unknown[] {
+  return [EMPTY, EMPTY, EMPTY];
+}
 
 const altarCallPayload = {
   todaysDate: '2026-05-22',
@@ -1058,10 +1084,12 @@ describe('listSubmissions', () => {
     expect(rows.length).toBe(1);
   });
 
-  it('forbids a plain member from listing', async () => {
+  it('returns an empty list to a plain member (visible-form set is empty)', async () => {
+    // No dept memberships → visible set is [] → endpoint returns [] (does not throw).
+    setupSelectSequence(...visNone());
     const { listSubmissions } = await import('./service');
-    const { ForbiddenError } = await import('@kairos/utils');
-    await expect(listSubmissions(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
+    const rows = await listSubmissions(mockDb, memberAuth, {});
+    expect(rows).toEqual([]);
   });
 
   it('forbids a leader requesting another branch', async () => {
@@ -1088,11 +1116,27 @@ describe('listSubmissions', () => {
 
 // ── getSubmission ─────────────────────────────────────────
 describe('getSubmission', () => {
-  it('returns a submission in the caller branch', async () => {
-    setupSelectSequence([{ id: submissionId, branchId }]);
+  it('returns a submission for an Admin-dept leader', async () => {
+    // 1: select row, 2-?: dept-check ladder (positive on first → short-circuit)
+    setupSelectSequence([{ id: submissionId, branchId, formType: 'altar_call' }], ...visAdminDeptLeader());
     const { getSubmission } = await import('./service');
     const row = await getSubmission(mockDb, leaderAuth, submissionId);
     expect(row.id).toBe(submissionId);
+  });
+
+  it('forbids a plain member with no dept membership', async () => {
+    setupSelectSequence([{ id: submissionId, branchId, formType: 'altar_call' }], ...visNone());
+    const { getSubmission } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(getSubmission(mockDb, memberAuth, submissionId)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it('forbids an Admin-dept member trying to read a testimony (out-of-set form type)', async () => {
+    // Admin-dept member sees FRONT_DESK forms only — testimony is restricted to pastor+admin+admin-lead.
+    setupSelectSequence([{ id: submissionId, branchId, formType: 'testimony' }], ...visInAdminDept());
+    const { getSubmission } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(getSubmission(mockDb, memberAuth, submissionId)).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('throws NotFound when missing', async () => {
@@ -1112,8 +1156,11 @@ describe('getSubmission', () => {
 
 // ── updateSubmission ──────────────────────────────────────
 describe('updateSubmission', () => {
-  it('updates status + notes for a leader in branch', async () => {
-    setupSelectSequence([{ id: submissionId, branchId }]);
+  it('updates status + notes for an Admin-dept leader in branch', async () => {
+    setupSelectSequence(
+      [{ id: submissionId, branchId, formType: 'altar_call' }],
+      ...visAdminDeptLeader(),
+    );
     setupUpdate([{ id: submissionId, status: 'reviewed', notes: 'ok' }]);
     const { updateSubmission } = await import('./service');
     const row = await updateSubmission(mockDb, leaderAuth, submissionId, { status: 'reviewed', notes: 'ok' });
@@ -1172,7 +1219,17 @@ describe('exportSubmissionsToCSV', () => {
     expect(csv).toContain('Health/Healing');
   });
 
-  it('forbids a plain member from exporting', async () => {
+  it('forbids a plain member from exporting (testimony out of their visible set)', async () => {
+    setupSelectSequence(...visNone());
+    const { exportSubmissionsToCSV } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(
+      exportSubmissionsToCSV(mockDb, memberAuth, { formType: 'testimony' })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it('forbids an Admin-dept member exporting testimony (out of FRONT_DESK set)', async () => {
+    setupSelectSequence(...visInAdminDept());
     const { exportSubmissionsToCSV } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
     await expect(
@@ -1212,24 +1269,36 @@ describe('searchMembers', () => {
 
 // ── dormant prospects ─────────────────────────────────────
 describe('listDormantProspects', () => {
-  it('returns dormant prospects with enrollment flag for a leader', async () => {
-    setupSelectSequence([
-      {
-        id: subjectId,
-        firstName: 'Jane',
-        lastName: 'Doe',
-        phone: '07123',
-        createdAt: new Date('2026-01-01T00:00:00Z'),
-        enrollmentCount: 0,
-      },
-    ]);
+  it('returns dormant prospects with enrollment flag for an Admin-dept leader', async () => {
+    // canSeeProspects calls isAdminDeptLeader once; then the main query.
+    setupSelectSequence(
+      POSITIVE, // isAdminDeptLeader → positive
+      [
+        {
+          id: subjectId,
+          firstName: 'Jane',
+          lastName: 'Doe',
+          phone: '07123',
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+          enrollmentCount: 0,
+        },
+      ],
+    );
     const { listDormantProspects } = await import('./service');
     const rows = await listDormantProspects(mockDb, leaderAuth, {});
     expect(rows.length).toBe(1);
     expect(rows[0]!.hasEnrollment).toBe(false);
   });
 
-  it('forbids a plain member', async () => {
+  it('forbids a plain member (not the Admin-dept leader)', async () => {
+    setupSelectSequence(EMPTY); // isAdminDeptLeader → negative
+    const { listDormantProspects } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(listDormantProspects(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it('forbids an Admin-dept member who is NOT the leader', async () => {
+    setupSelectSequence(EMPTY); // isAdminDeptLeader returns nothing — even Admin-dept membership isn't enough
     const { listDormantProspects } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
     await expect(listDormantProspects(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
@@ -1279,5 +1348,57 @@ describe('archiveProspects', () => {
     await expect(
       archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] })
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+// ── getMyFormsCapabilities (Phase 1) ──────────────────────
+describe('getMyFormsCapabilities', () => {
+  it('admin sees all form types + prospects', async () => {
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, adminAuth);
+    expect(result.visibleFormTypes.length).toBe(6);
+    expect(result.canSeeProspects).toBe(true);
+  });
+
+  it('pastor sees all form types + prospects in own branch', async () => {
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, pastorAuth);
+    expect(result.visibleFormTypes.length).toBe(6);
+    expect(result.canSeeProspects).toBe(true);
+  });
+
+  it('Admin-dept leader sees all form types + prospects (branch-superuser)', async () => {
+    // getVisibleFormTypes runs the ladder; then canSeeProspects runs isAdminDeptLeader again.
+    setupSelectSequence(POSITIVE, POSITIVE);
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, leaderAuth);
+    expect(result.visibleFormTypes.length).toBe(6);
+    expect(result.canSeeProspects).toBe(true);
+  });
+
+  it('Admin-dept member (non-leader) sees FRONT_DESK forms only, no prospects', async () => {
+    // visibility ladder: isAdminDeptLeader → no, isInAdminDepartment → yes
+    // prospects ladder: isAdminDeptLeader → no
+    setupSelectSequence(EMPTY, POSITIVE, EMPTY);
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, memberAuth);
+    expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
+    expect(result.canSeeProspects).toBe(false);
+  });
+
+  it('NB-dept leader sees FRONT_DESK forms only, no prospects', async () => {
+    setupSelectSequence(EMPTY, EMPTY, POSITIVE, EMPTY);
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, memberAuth);
+    expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
+    expect(result.canSeeProspects).toBe(false);
+  });
+
+  it('a regular member with no dept memberships sees nothing', async () => {
+    setupSelectSequence(EMPTY, EMPTY, EMPTY, EMPTY);
+    const { getMyFormsCapabilities } = await import('./service');
+    const result = await getMyFormsCapabilities(mockDb, memberAuth);
+    expect(result.visibleFormTypes).toEqual([]);
+    expect(result.canSeeProspects).toBe(false);
   });
 });

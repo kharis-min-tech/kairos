@@ -20,6 +20,7 @@ import {
   exportSubmissionsToCSV,
   listDormantProspects,
   archiveProspects,
+  getMyFormsCapabilities,
 } from './service';
 
 export const formsRouter = new Hono();
@@ -27,6 +28,13 @@ export const formsRouter = new Hono();
 formsRouter.use('*', authMiddleware);
 
 // ── Static routes (declared BEFORE any /:id-style param) ────
+
+// Caller capabilities — drives /forms landing + /forms/submissions filter gating.
+formsRouter.get('/me/capabilities', async (c) => {
+  const auth = getAuth(c);
+  const result = await getMyFormsCapabilities(db, auth);
+  return c.json(successResponse(result));
+});
 
 // Member typeahead for the altar-call search-and-select. Any logged-in member.
 formsRouter.get(

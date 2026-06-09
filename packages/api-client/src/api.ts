@@ -76,6 +76,7 @@ import type {
   ListDormantProspectsParams,
   ArchiveProspectsRequest,
   ArchiveProspectsResult,
+  FormsCapabilities,
   // Attendance
   CreateServiceRequest,
   UpdateServiceRequest,
@@ -968,6 +969,10 @@ export function createApiClient(
     },
 
     forms: {
+      // Caller capabilities — drives /forms landing + filter gating.
+      myCapabilities: () =>
+        client.get<ApiResponse<FormsCapabilities>>('/api/forms/me/capabilities'),
+
       // Submit a form (any logged-in member). Branch is forced server-side.
       submit: (formType: FormType, data: SubmitFormRequest) =>
         client.post<ApiResponse<FormSubmission>>(`/api/forms/${encodeURIComponent(formType)}/submit`, data),

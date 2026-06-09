@@ -1,7 +1,15 @@
 import { eq, and, or, ilike, sql, desc, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { formSubmissions, members, newBelieverEnrollments } from '@kairos/database';
-import type { AuthContext } from '@kairos/types';
+import {
+  formSubmissions,
+  members,
+  newBelieverEnrollments,
+  branchDepartments,
+  departments,
+  departmentMembers,
+} from '@kairos/database';
+import type { AuthContext, FormType } from '@kairos/types';
+import { FormType as FormTypeEnum } from '@kairos/types';
 import {
   NotFoundError,
   ForbiddenError,
@@ -41,15 +49,136 @@ function enforceBranchScope(auth: AuthContext, branchId?: string) {
   }
 }
 
-/** Triage surfaces (list/detail/update/export/dormant) are leader-and-above. */
-function enforceLeaderOrAbove(auth: AuthContext) {
-  if (
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor' &&
-    auth.systemRole !== 'leader'
-  ) {
-    throw new ForbiddenError('Only leaders, pastors, or admins can perform this action');
+// ── Persona-scope helpers (Phase 1: per-form visibility matrix) ──
+
+/** Whether the caller is an active member of the seeded "Admin" branch_department in branchId. */
+async function isInAdminDepartment(
+  db: Database,
+  memberId: string,
+  branchId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: departmentMembers.id })
+    .from(departmentMembers)
+    .innerJoin(branchDepartments, eq(departmentMembers.branchDepartmentId, branchDepartments.id))
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(
+      and(
+        eq(departmentMembers.memberId, memberId),
+        eq(departmentMembers.isActive, true),
+        eq(branchDepartments.branchId, branchId),
+        eq(branchDepartments.isActive, true),
+        eq(departments.departmentName, 'Admin'),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
+
+/** Whether the caller is the lead or deputy of the seeded "Admin" branch_department in branchId. */
+async function isAdminDeptLeader(
+  db: Database,
+  memberId: string,
+  branchId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: branchDepartments.id })
+    .from(branchDepartments)
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(
+      and(
+        eq(branchDepartments.branchId, branchId),
+        eq(branchDepartments.isActive, true),
+        eq(departments.departmentName, 'Admin'),
+        or(
+          eq(branchDepartments.leadMemberId, memberId),
+          eq(branchDepartments.deputyMemberId, memberId),
+        ),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
+
+/** Whether the caller is the lead or deputy of the seeded "New Believers" branch_department in branchId. */
+async function isNewBelieversDeptLeader(
+  db: Database,
+  memberId: string,
+  branchId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: branchDepartments.id })
+    .from(branchDepartments)
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(
+      and(
+        eq(branchDepartments.branchId, branchId),
+        eq(branchDepartments.isActive, true),
+        eq(departments.departmentName, 'New Believers'),
+        or(
+          eq(branchDepartments.leadMemberId, memberId),
+          eq(branchDepartments.deputyMemberId, memberId),
+        ),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
+
+/** Form types reviewable by the "front-desk + discipleship" cluster. */
+const FRONT_DESK_FORMS: FormType[] = [
+  FormTypeEnum.AltarCall,
+  FormTypeEnum.FirstTimeVisitor,
+  FormTypeEnum.Baptism,
+];
+
+/** Form types reviewable only by Admin-dept leader, pastor, or admin. */
+const PASTOR_ONLY_FORMS: FormType[] = [
+  FormTypeEnum.BabyNaming,
+  FormTypeEnum.BabyDedication,
+  FormTypeEnum.Testimony,
+];
+
+const ALL_FORM_TYPES: FormType[] = [...FRONT_DESK_FORMS, ...PASTOR_ONLY_FORMS];
+
+/**
+ * Returns the set of form types the caller can READ in `branchId`.
+ *
+ *   - admin: all types in any branch (caller passes the target branchId via the query)
+ *   - pastor: all types in their own branch
+ *   - admin-dept leader/deputy in branchId: all types (branch-superuser for forms)
+ *   - admin-dept member in branchId: FRONT_DESK_FORMS only
+ *   - NB-dept lead/deputy in branchId: FRONT_DESK_FORMS only
+ *   - everyone else: empty
+ */
+async function getVisibleFormTypes(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+): Promise<FormType[]> {
+  if (auth.systemRole === 'admin') return ALL_FORM_TYPES;
+  // Pastor: only their own branch
+  if (auth.systemRole === 'pastor') {
+    return branchId === auth.branchId ? ALL_FORM_TYPES : [];
   }
+  // Anything else: must match caller's branch
+  if (!auth.branchId || branchId !== auth.branchId) return [];
+  if (await isAdminDeptLeader(db, auth.memberId, branchId)) return ALL_FORM_TYPES;
+  if (await isInAdminDepartment(db, auth.memberId, branchId)) return [...FRONT_DESK_FORMS];
+  if (await isNewBelieversDeptLeader(db, auth.memberId, branchId)) return [...FRONT_DESK_FORMS];
+  return [];
+}
+
+/** Prospects (dormant-shell cleanup) → admin-dept leader + pastor + admin only. */
+async function canSeeProspects(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+): Promise<boolean> {
+  if (auth.systemRole === 'admin') return true;
+  if (auth.systemRole === 'pastor') return branchId === auth.branchId;
+  if (!auth.branchId || branchId !== auth.branchId) return false;
+  return isAdminDeptLeader(db, auth.memberId, branchId);
 }
 
 /** Resolve the branch admins/pastors may target via query, else the caller's own. */
@@ -604,6 +733,29 @@ export async function searchMembers(
     .limit(MEMBER_SEARCH_LIMIT);
 }
 
+// ── Caller capabilities (drives /forms UI gating) ─────────
+
+/**
+ * Returns what form-review surfaces the caller can use in their own branch.
+ * Admin sees all types regardless of branch; others see the per-form matrix
+ * scoped to `auth.branchId`.
+ */
+export async function getMyFormsCapabilities(db: Database, auth: AuthContext) {
+  const branchId = auth.branchId;
+  if (!branchId && auth.systemRole !== 'admin') {
+    return { visibleFormTypes: [] as FormType[], canSeeProspects: false };
+  }
+  const targetBranchId = branchId ?? '';
+  // Admin without a branchId is the cross-branch superuser — visible set is all.
+  const visibleFormTypes = auth.systemRole === 'admin'
+    ? ALL_FORM_TYPES
+    : await getVisibleFormTypes(db, auth, targetBranchId);
+  const canSeeProspectsResult = auth.systemRole === 'admin'
+    ? true
+    : await canSeeProspects(db, auth, targetBranchId);
+  return { visibleFormTypes, canSeeProspects: canSeeProspectsResult };
+}
+
 // ── Submissions: list / get / update ───────────────────────
 
 function submissionFilters(branchId: string, query: ListSubmissionsQuery | ExportSubmissionsQuery) {
@@ -620,8 +772,18 @@ export async function listSubmissions(
   auth: AuthContext,
   query: ListSubmissionsQuery,
 ) {
-  enforceLeaderOrAbove(auth);
   const branchId = resolveScopedBranchId(auth, query.branchId);
+  const visible = await getVisibleFormTypes(db, auth, branchId);
+  if (visible.length === 0) return [];
+
+  // If the caller filtered by formType, enforce that it's within their visible set.
+  if (query.formType && !visible.includes(query.formType as FormType)) {
+    return [];
+  }
+
+  const conditions = submissionFilters(branchId, query);
+  // Hard-restrict to the caller's visible set (in addition to any explicit formType filter).
+  conditions.push(inArray(formSubmissions.formType, visible));
 
   return db
     .select({
@@ -639,12 +801,11 @@ export async function listSubmissions(
       updatedAt: formSubmissions.updatedAt,
     })
     .from(formSubmissions)
-    .where(and(...submissionFilters(branchId, query)))
+    .where(and(...conditions))
     .orderBy(desc(formSubmissions.createdAt));
 }
 
 export async function getSubmission(db: Database, auth: AuthContext, id: string) {
-  enforceLeaderOrAbove(auth);
   const [row] = await db
     .select()
     .from(formSubmissions)
@@ -652,6 +813,11 @@ export async function getSubmission(db: Database, auth: AuthContext, id: string)
     .limit(1);
   if (!row) throw new NotFoundError('Form submission');
   enforceBranchScope(auth, row.branchId);
+
+  const visible = await getVisibleFormTypes(db, auth, row.branchId);
+  if (!visible.includes(row.formType as FormType)) {
+    throw new ForbiddenError('You do not have access to this form submission');
+  }
   return row;
 }
 
@@ -661,14 +827,18 @@ export async function updateSubmission(
   id: string,
   data: UpdateSubmissionInput,
 ) {
-  enforceLeaderOrAbove(auth);
   const [existing] = await db
-    .select({ branchId: formSubmissions.branchId })
+    .select({ branchId: formSubmissions.branchId, formType: formSubmissions.formType })
     .from(formSubmissions)
     .where(eq(formSubmissions.id, id))
     .limit(1);
   if (!existing) throw new NotFoundError('Form submission');
   enforceBranchScope(auth, existing.branchId);
+
+  const visible = await getVisibleFormTypes(db, auth, existing.branchId);
+  if (!visible.includes(existing.formType as FormType)) {
+    throw new ForbiddenError('You do not have access to this form submission');
+  }
 
   const updateValues: Record<string, unknown> = { updatedAt: sql`NOW()` };
   if (data.status !== undefined) updateValues.status = data.status;
@@ -753,8 +923,11 @@ export async function exportSubmissionsToCSV(
   auth: AuthContext,
   query: ExportSubmissionsQuery,
 ): Promise<string> {
-  enforceLeaderOrAbove(auth);
   const branchId = resolveScopedBranchId(auth, query.branchId);
+  const visible = await getVisibleFormTypes(db, auth, branchId);
+  if (!visible.includes(query.formType as FormType)) {
+    throw new ForbiddenError('You do not have access to export this form type');
+  }
 
   const payloadColumns = EXPORT_COLUMNS[query.formType] ?? [];
 
@@ -811,8 +984,10 @@ export async function listDormantProspects(
   auth: AuthContext,
   query: { branchId?: string },
 ) {
-  enforceLeaderOrAbove(auth);
   const branchId = resolveScopedBranchId(auth, query.branchId);
+  if (!(await canSeeProspects(db, auth, branchId))) {
+    throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can view prospects');
+  }
 
   const rows = await db
     .select({
@@ -859,8 +1034,6 @@ export async function archiveProspects(
   auth: AuthContext,
   data: ArchiveProspectsInput,
 ) {
-  enforceLeaderOrAbove(auth);
-
   const rows = await db
     .select({
       id: members.id,
@@ -880,6 +1053,9 @@ export async function archiveProspects(
       throw new ForbiddenError('Only prospect members can be archived');
     }
     enforceBranchScope(auth, row.homeBranchId);
+    if (!(await canSeeProspects(db, auth, row.homeBranchId))) {
+      throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can archive prospects');
+    }
   }
 
   await db

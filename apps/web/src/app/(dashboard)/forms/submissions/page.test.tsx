@@ -14,10 +14,15 @@ vi.mock('@/lib/auth-store', () => ({
 
 let listParams: unknown;
 let submissions: FormSubmission[] = [];
+let capabilities: { visibleFormTypes: string[]; canSeeProspects: boolean } = {
+  visibleFormTypes: ['altar_call', 'first_time_visitor', 'baptism', 'testimony', 'baby_naming', 'baby_dedication'],
+  canSeeProspects: true,
+};
 const updateMutate = vi.fn();
 const exportMutate = vi.fn();
 
 vi.mock('@/hooks/use-forms', () => ({
+  useMyFormCapabilities: () => ({ data: capabilities, isLoading: false }),
   useFormSubmissions: (params: unknown) => {
     listParams = params;
     return { data: submissions, isLoading: false, isError: false, error: null };
@@ -85,13 +90,17 @@ beforeEach(() => {
   vi.clearAllMocks();
   role = 'leader';
   submissions = [baptism, anonTestimony];
+  capabilities = {
+    visibleFormTypes: ['altar_call', 'first_time_visitor', 'baptism', 'testimony', 'baby_naming', 'baby_dedication'],
+    canSeeProspects: true,
+  };
   updateMutate.mockResolvedValue({ id: 'sub-1' });
   exportMutate.mockResolvedValue(new Blob(['a'], { type: 'text/csv' }));
 });
 
 describe('SubmissionsPage', () => {
-  it('blocks plain members with a not-authorised state', () => {
-    role = 'member';
+  it('blocks a caller with an empty visible set', () => {
+    capabilities = { visibleFormTypes: [], canSeeProspects: false };
     render(<SubmissionsPage />, { wrapper });
     expect(screen.getByText(/Not authorised/)).toBeInTheDocument();
     expect(screen.queryByText(/Form Submissions/)).not.toBeInTheDocument();

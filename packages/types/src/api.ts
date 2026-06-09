@@ -975,3 +975,9 @@ export interface MyAttendanceSnapshot {
 }
 
 export type { FormSubmission };
+
+// Forms caller capabilities — drives /forms landing + /forms/submissions filter gating.
+export interface FormsCapabilities {
+  visibleFormTypes: FormType[];
+  canSeeProspects: boolean;
+}
