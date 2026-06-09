@@ -30,10 +30,11 @@ import { UniformTab } from './_components/uniform-tab';
 import { RotaTab } from './_components/rota-tab';
 import { RecruitmentTab } from './_components/recruitment-tab';
 import { MyRotaTab } from './_components/my-rota-tab';
+import { DepartmentAttendanceTab } from './_components/attendance-tab';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
 
-type Tab = 'overview' | 'my-rota' | 'members' | 'followups' | 'uniform' | 'rota' | 'recruitment';
+type Tab = 'overview' | 'my-rota' | 'members' | 'attendance' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
 const OPEN_STATUSES = [
   'applied',
@@ -167,6 +168,9 @@ export default function DepartmentDetailPage() {
     );
   }
 
+  const canSeeAttendanceTab =
+    isAdminOrPastor || dept?.leadMemberId === user?.id || dept?.deputyMemberId === user?.id;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
     ...(isMemberOfDept ? [{ key: 'my-rota' as const, label: 'My Rota' }] : []),
@@ -178,6 +182,7 @@ export default function DepartmentDetailPage() {
           { key: 'rota' as const, label: 'Rota' },
         ] as const)
       : []),
+    ...(canSeeAttendanceTab ? [{ key: 'attendance' as const, label: 'Attendance' }] : []),
     ...(isAdminOrPastor
       ? [
           {
@@ -552,6 +557,10 @@ export default function DepartmentDetailPage() {
 
       {activeTab === 'my-rota' && isMemberOfDept && (
         <MyRotaTab branchDepartmentId={dept.id} />
+      )}
+
+      {activeTab === 'attendance' && canSeeAttendanceTab && (
+        <DepartmentAttendanceTab branchDepartmentId={dept.id} />
       )}
 
       {activeTab === 'rota' && (

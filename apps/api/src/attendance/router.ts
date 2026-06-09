@@ -15,6 +15,7 @@ import {
   summaryQuerySchema,
   cohortDiffSchema,
   myAttendanceQuerySchema,
+  groupAttendanceQuerySchema,
 } from './schemas';
 import {
   createService,
@@ -32,6 +33,7 @@ import {
   canRecordAttendance,
   getCohortDiff,
   getMyAttendance,
+  getDepartmentAttendance,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -69,6 +71,21 @@ attendanceRouter.post(
   async (c) => {
     const auth = getAuth(c);
     const result = await getCohortDiff(db, auth, c.req.valid('json'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/department/:branchDeptId',
+  zValidator('query', groupAttendanceQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getDepartmentAttendance(
+      db,
+      auth,
+      c.req.param('branchDeptId')!,
+      c.req.valid('query'),
+    );
     return c.json(successResponse(result));
   },
 );

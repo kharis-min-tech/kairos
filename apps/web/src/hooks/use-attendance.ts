@@ -195,3 +195,17 @@ export function useMyAttendance(params?: { weeks?: number }) {
     staleTime: 60_000,
   });
 }
+
+// ── Department service-attendance report (Phase 4a) ───────
+
+export function useDepartmentAttendance(branchDeptId: string, params?: { weeks?: number }, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['attendance', 'department', branchDeptId, params],
+    queryFn: async () => {
+      const res = await api.attendance.departmentReport(branchDeptId, params);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!branchDeptId,
+    staleTime: 60_000,
+  });
+}

@@ -98,6 +98,7 @@ import type {
   CohortDiffRequest,
   CohortDiffResult,
   MyAttendanceSnapshot,
+  DepartmentAttendanceReport,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -1091,6 +1092,14 @@ export function createApiClient(
         if (params?.weeks) qs.set('weeks', String(params.weeks));
         const query = qs.toString();
         return client.get<ApiResponse<MyAttendanceSnapshot>>(`/api/attendance/me${query ? `?${query}` : ''}`);
+      },
+      departmentReport: (branchDeptId: string, params?: { weeks?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<DepartmentAttendanceReport>>(
+          `/api/attendance/reports/department/${encodeURIComponent(branchDeptId)}${query ? `?${query}` : ''}`,
+        );
       },
     },
   };

@@ -114,6 +114,7 @@ import {
   canRecordAttendance,
   getCohortDiff,
   getMyAttendance,
+  getDepartmentAttendance,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -739,5 +740,73 @@ describe('getMyAttendance', () => {
     );
     const result = await getMyAttendance(mockDb, memberAuth, { weeks: 12 });
     expect(result.currentStreak).toEqual({ kind: 'attended', length: 3 });
+  });
+});
+
+// ── getDepartmentAttendance (Phase 4a) ────────────────────
+
+describe('getDepartmentAttendance', () => {
+  const branchDeptId = 'bd-1';
+  const m1 = '550e8400-e29b-41d4-a716-446655440301';
+  const m2 = '550e8400-e29b-41d4-a716-446655440302';
+
+  const bdRow = {
+    id: branchDeptId,
+    branchId,
+    leadMemberId: leaderAuth.memberId,
+    deputyMemberId: null,
+    isActive: true,
+    departmentName: 'Choir',
+    branchName: 'London',
+  };
+
+  it('forbids a regular member who is not lead/deputy/admin/pastor', async () => {
+    setupSelectSequence([bdRow]);
+    await expect(
+      getDepartmentAttendance(mockDb, memberAuth, branchDeptId, { weeks: 12 }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('NotFound when the branch_department is missing or inactive', async () => {
+    setupSelectSequence([]);
+    await expect(
+      getDepartmentAttendance(mockDb, adminAuth, branchDeptId, { weeks: 12 }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it('returns the report for the dept lead', async () => {
+    setupSelectSequence(
+      [bdRow],
+      // active members in dept
+      [{ memberId: m1, firstName: 'Ada', lastName: 'A' }, { memberId: m2, firstName: 'Bea', lastName: 'B' }],
+      // services in window (1)
+      [{ id: 'svc-1', serviceDate: new Date('2026-05-26T10:00:00Z') }],
+      // grouped attendance: m1 Present
+      [{ memberId: m1, attendanceStatus: 'Present', c: 1 }],
+      // last attended timestamps
+      [{ memberId: m1, serviceDate: new Date('2026-05-26T10:00:00Z') }],
+      // trend
+      [{ weekStart: new Date('2026-05-25T00:00:00Z'), attendees: 1 }],
+    );
+    const result = await getDepartmentAttendance(mockDb, leaderAuth, branchDeptId, { weeks: 12 });
+    expect(result.activeMembers).toBe(2);
+    expect(result.distinctAttendees).toBe(1);
+    expect(result.totalServices).toBe(1);
+    expect(result.rate).toBe(0.5);
+    // Sorted by rate ascending → m2 (0%) first, m1 (100%) second
+    expect(result.members[0]?.memberId).toBe(m2);
+    expect(result.members[1]?.memberId).toBe(m1);
+  });
+
+  it('returns zero rate when the dept has no active members', async () => {
+    setupSelectSequence(
+      [bdRow],
+      [], // no active members
+      [{ id: 'svc-1', serviceDate: new Date('2026-05-26T10:00:00Z') }],
+    );
+    const result = await getDepartmentAttendance(mockDb, adminAuth, branchDeptId, { weeks: 12 });
+    expect(result.activeMembers).toBe(0);
+    expect(result.rate).toBe(0);
+    expect(result.members).toEqual([]);
   });
 });

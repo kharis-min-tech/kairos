@@ -924,6 +924,199 @@ export async function getMyAttendance(
   };
 }
 
+/**
+ * Department attendance report — service-attendance breakdown for the members
+ * of a branch_department over a window. Used by the dept leader / admin / pastor
+ * to see how their team is engaging with Sunday/midweek/special services.
+ *
+ * Visibility: dept lead / deputy / admin / pastor.
+ */
+export async function getDepartmentAttendance(
+  db: Database,
+  auth: AuthContext,
+  branchDepartmentId: string,
+  query: { weeks: number },
+) {
+  // Load the branch_department + its global department name, and enforce scope.
+  const [bd] = await db
+    .select({
+      id: branchDepartments.id,
+      branchId: branchDepartments.branchId,
+      leadMemberId: branchDepartments.leadMemberId,
+      deputyMemberId: branchDepartments.deputyMemberId,
+      isActive: branchDepartments.isActive,
+      departmentName: departments.departmentName,
+      branchName: branches.branchName,
+    })
+    .from(branchDepartments)
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .innerJoin(branches, eq(branchDepartments.branchId, branches.id))
+    .where(eq(branchDepartments.id, branchDepartmentId))
+    .limit(1);
+  if (!bd) throw new NotFoundError('Branch department');
+  if (!bd.isActive) throw new NotFoundError('Branch department');
+  enforceBranchScope(auth, bd.branchId);
+  const isLeadOrDeputy =
+    bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId;
+  if (
+    auth.systemRole !== 'admin' &&
+    auth.systemRole !== 'pastor' &&
+    !isLeadOrDeputy
+  ) {
+    throw new ForbiddenError('Only the department lead/deputy, pastor, or admin can view this');
+  }
+
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  // Active dept member roster (the denominator + per-row breakdown).
+  const memberRows = await db
+    .select({
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(departmentMembers)
+    .innerJoin(members, eq(departmentMembers.memberId, members.id))
+    .where(
+      and(
+        eq(departmentMembers.branchDepartmentId, branchDepartmentId),
+        eq(departmentMembers.isActive, true),
+        eq(members.isActive, true),
+      ),
+    )
+    .orderBy(members.lastName, members.firstName);
+
+  // Services in window for the branch.
+  const svcRows = await db
+    .select({ id: services.id, serviceDate: services.serviceDate })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, bd.branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .orderBy(services.serviceDate);
+
+  const totalServices = svcRows.length;
+  const memberIds = memberRows.map((r) => r.memberId);
+
+  // Per-(member, status) counts for the dept inside the window.
+  let attendanceCounts: { memberId: string; attendanceStatus: string; c: number }[] = [];
+  let lastAttended: Map<string, Date> = new Map();
+  if (memberIds.length > 0 && totalServices > 0) {
+    const serviceIds = svcRows.map((s) => s.id);
+    const rows = await db
+      .select({
+        memberId: serviceAttendance.memberId,
+        attendanceStatus: serviceAttendance.attendanceStatus,
+        c: count(),
+      })
+      .from(serviceAttendance)
+      .where(
+        and(
+          inArray(serviceAttendance.serviceId, serviceIds),
+          inArray(serviceAttendance.memberId, memberIds),
+        ),
+      )
+      .groupBy(serviceAttendance.memberId, serviceAttendance.attendanceStatus);
+    attendanceCounts = rows.map((r) => ({
+      memberId: r.memberId,
+      attendanceStatus: r.attendanceStatus,
+      c: Number(r.c),
+    }));
+
+    // Last attended timestamp per member.
+    const lastRows = await db
+      .select({
+        memberId: serviceAttendance.memberId,
+        serviceDate: services.serviceDate,
+      })
+      .from(serviceAttendance)
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+      .where(
+        and(
+          inArray(serviceAttendance.serviceId, serviceIds),
+          inArray(serviceAttendance.memberId, memberIds),
+        ),
+      );
+    for (const r of lastRows) {
+      const prev = lastAttended.get(r.memberId);
+      if (!prev || r.serviceDate > prev) lastAttended.set(r.memberId, r.serviceDate);
+    }
+  }
+
+  // Aggregate per-member rate from counts.
+  const perMember = memberRows.map((m) => {
+    const my = attendanceCounts.filter((r) => r.memberId === m.memberId);
+    const present = my.find((r) => r.attendanceStatus === 'Present')?.c ?? 0;
+    const late = my.find((r) => r.attendanceStatus === 'Late')?.c ?? 0;
+    const virtualc = my.find((r) => r.attendanceStatus === 'Virtual')?.c ?? 0;
+    const attendedCount = present + late + virtualc;
+    const rate = totalServices === 0 ? 0 : attendedCount / totalServices;
+    const last = lastAttended.get(m.memberId);
+    return {
+      memberId: m.memberId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      attendedCount,
+      lateCount: late,
+      totalServices,
+      rate,
+      lastAttendedAt: last ? last.toISOString() : null,
+    };
+  });
+
+  // Dept-level distinctAttendees and rate.
+  const distinctAttendees = new Set(attendanceCounts.map((r) => r.memberId)).size;
+  const activeMembers = memberRows.length;
+  const deptRate = activeMembers === 0 ? 0 : distinctAttendees / activeMembers;
+
+  // Weekly trend — distinct attendees per ISO week.
+  let trend: { weekStart: string; attendees: number }[] = [];
+  if (memberIds.length > 0 && totalServices > 0) {
+    const serviceIds = svcRows.map((s) => s.id);
+    const trendRows = await db
+      .select({
+        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
+      })
+      .from(serviceAttendance)
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+      .where(
+        and(
+          inArray(serviceAttendance.serviceId, serviceIds),
+          inArray(serviceAttendance.memberId, memberIds),
+        ),
+      )
+      .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
+      .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
+    trend = trendRows.map((r) => ({
+      weekStart: (r.weekStart as Date).toISOString(),
+      attendees: Number(r.attendees),
+    }));
+  }
+
+  // Sort per-member roster by rate ascending so concerning members surface first.
+  perMember.sort((a, b) => a.rate - b.rate);
+
+  return {
+    department: {
+      id: bd.id,
+      name: bd.departmentName,
+      branchName: bd.branchName,
+    },
+    windowWeeks: query.weeks,
+    totalServices,
+    distinctAttendees,
+    activeMembers,
+    rate: deptRate,
+    members: perMember,
+    trend,
+  };
+}
+
 export async function getAttendanceByBranch(
   db: Database,
   auth: AuthContext,

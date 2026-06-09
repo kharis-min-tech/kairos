@@ -119,6 +119,11 @@ export const myAttendanceQuerySchema = z.object({
   weeks: z.coerce.number().int().positive().max(52).default(12),
 });
 
+// Department / fellowship attendance breakdown (Phase 4a/b).
+export const groupAttendanceQuerySchema = z.object({
+  weeks: z.coerce.number().int().positive().max(52).default(12),
+});
+
 // Cohort comparison — set-difference between any two service selections.
 // Returns members present in "A" (per `presentMode`) and absent from "B" (per `absentMode`).
 // Single-select inputs collapse: ANY and ALL produce the same answer.

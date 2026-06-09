@@ -899,6 +899,29 @@ export interface CohortDiffResult {
   members: CohortDiffMember[];
 }
 
+// Department attendance breakdown (Phase 4a).
+export interface DepartmentAttendanceMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  attendedCount: number;
+  lateCount: number;
+  totalServices: number;
+  rate: number;
+  lastAttendedAt: string | null;
+}
+
+export interface DepartmentAttendanceReport {
+  department: { id: string; name: string; branchName: string };
+  windowWeeks: number;
+  totalServices: number;
+  distinctAttendees: number;
+  activeMembers: number;
+  rate: number;
+  members: DepartmentAttendanceMember[];
+  trend: Array<{ weekStart: string; attendees: number }>;
+}
+
 // Member personal attendance snapshot — drives /me/attendance + dashboard card.
 export interface MyAttendanceSnapshot {
   windowWeeks: number;
