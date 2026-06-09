@@ -101,14 +101,17 @@ describe('POST /api/attendance/services', () => {
     expect(res.status).toBe(201);
   });
 
-  it('rejects a plain member with 401 (requireRole)', async () => {
+  it('delegates persona gating to the service layer (no requireRole at router)', async () => {
+    // The router no longer gates by systemRole — the service-level enforceServiceWriter
+    // checks Admin-dept membership. Here we verify the request reaches the service.
+    svc.createService.mockResolvedValue(sampleService);
     const res = await app.request('/api/attendance/services', {
       method: 'POST',
       headers: { Authorization: `Bearer ${memberToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ serviceDate: '2026-05-24T09:00:00Z', serviceType: 'Sunday' }),
     });
-    expect(res.status).toBe(401);
-    expect(svc.createService).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
+    expect(svc.createService).toHaveBeenCalled();
   });
 
   it('rejects a Special service with no title (422 validation)', async () => {
@@ -149,13 +152,15 @@ describe('PATCH /api/attendance/services/:id', () => {
     expect(res.status).toBe(200);
   });
 
-  it('rejects a plain member', async () => {
+  it('delegates persona gating to the service layer (no requireRole at router)', async () => {
+    svc.updateService.mockResolvedValue({ ...sampleService, topic: 'Hope' });
     const res = await app.request(`/api/attendance/services/${serviceId}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${memberToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ topic: 'Hope' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    expect(svc.updateService).toHaveBeenCalled();
   });
 });
 
@@ -169,12 +174,14 @@ describe('DELETE /api/attendance/services/:id', () => {
     expect(res.status).toBe(200);
   });
 
-  it('rejects a plain member', async () => {
+  it('delegates persona gating to the service layer (no requireRole at router)', async () => {
+    svc.deleteService.mockResolvedValue({ ...sampleService, isActive: false });
     const res = await app.request(`/api/attendance/services/${serviceId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    expect(svc.deleteService).toHaveBeenCalled();
   });
 });
 
@@ -206,14 +213,15 @@ describe('POST /api/attendance/services/:id/records', () => {
     expect(res.status).toBe(201);
   });
 
-  it('rejects a plain member', async () => {
+  it('delegates persona gating to the service layer (no requireRole at router)', async () => {
+    svc.recordAttendance.mockResolvedValue({ recorded: 1 });
     const res = await app.request(`/api/attendance/services/${serviceId}/records`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${memberToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ entries: [{ memberId: TEST_IDS.memberId, status: 'Present' }] }),
     });
-    expect(res.status).toBe(401);
-    expect(svc.recordAttendance).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
+    expect(svc.recordAttendance).toHaveBeenCalled();
   });
 
   it('accepts a visitor entry shape', async () => {

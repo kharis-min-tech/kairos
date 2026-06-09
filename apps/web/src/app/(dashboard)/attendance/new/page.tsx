@@ -4,28 +4,29 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { useCreateService } from '@/hooks/use-attendance';
+import { useCreateService, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { useAuthStore } from '@/lib/auth-store';
 import { CreateServiceForm } from '../_components/create-service-form';
 import type { CreateServiceRequest } from '@kairos/types';
 
-const RECORDING_ROLES = ['admin', 'pastor', 'leader'];
-
 export default function NewServicePage() {
   const router = useRouter();
-  const activeRole = useAuthStore((s) => s.activeRole);
   const user = useAuthStore((s) => s.user);
   const createService = useCreateService();
+  const { data: canRecordResult, isLoading: canRecordLoading } = useCanRecordAttendance();
   const [error, setError] = useState<string | null>(null);
 
-  // Second-level guard: only recording roles may create a service.
+  // Second-level guard: only callers who can record (admin / pastor / Admin-dept member)
+  // may reach this page. Wait for the hook to settle before redirecting so we don't bounce
+  // a slow request.
   useEffect(() => {
-    if (activeRole && !RECORDING_ROLES.includes(activeRole)) {
-      router.replace('/dashboard');
+    if (canRecordLoading) return;
+    if (!canRecordResult?.canRecord) {
+      router.replace('/attendance');
     }
-  }, [activeRole, router]);
+  }, [canRecordLoading, canRecordResult, router]);
 
-  // admin/pastor may target any branch; leaders are pinned to their own.
+  // admin/pastor may target any branch; Admin-dept members are pinned to their own.
   const canPickBranch = user?.systemRole === 'admin' || user?.systemRole === 'pastor';
 
   async function handleSubmit(data: CreateServiceRequest) {

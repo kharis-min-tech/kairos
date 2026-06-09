@@ -5,13 +5,10 @@ import Link from 'next/link';
 import { Plus, CalendarDays } from 'lucide-react';
 import { Button, Card, CardContent, CustomSelect, cn } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
-import { useServices } from '@/hooks/use-attendance';
-import { useAuthStore } from '@/lib/auth-store';
+import { useServices, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
 import { ServiceType } from '@kairos/types';
 import type { ServiceListParams } from '@kairos/types';
-
-const WRITER_ROLES = ['admin', 'pastor', 'leader'];
 
 const TYPE_OPTIONS = [
   { value: '', label: 'All types' },
@@ -27,8 +24,8 @@ const TYPE_BADGE: Record<string, string> = {
 };
 
 export default function AttendanceServicesPage() {
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const canRecord = !!activeRole && WRITER_ROLES.includes(activeRole);
+  const { data: canRecordResult } = useCanRecordAttendance();
+  const canRecord = !!canRecordResult?.canRecord;
   const [type, setType] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');

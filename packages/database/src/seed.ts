@@ -518,6 +518,7 @@ async function seed() {
     hostDept,
     /* productionDept */, /* soundDept */, /* sanctuaryDept */,
     /* newBelieversDept */, /* welfareDept */, /* childrensDept */, /* designDept */, /* socialMediaDept */,
+    adminDept,
   ] = await db.insert(departments).values([
     { departmentName: 'Choir', description: 'Vocal worship ministry', iconKey: 'music' },
     { departmentName: 'Ushers', description: 'Welcome, seating and order', iconKey: 'users' },
@@ -532,11 +533,12 @@ async function seed() {
     { departmentName: "Children's Ministry", description: 'Sunday school and kids ministry', iconKey: 'baby' },
     { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
     { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
+    { departmentName: 'Admin', description: 'Service-day admin desk — takes attendance registers and first-timer captures', iconKey: 'clipboard' },
   ]).returning();
-  console.log(`✓ 13 global departments`);
+  console.log(`✓ 14 global departments`);
 
   // ── 4c. Branch Departments (smoke seed: 4 active instances) ─
-  const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon] = await db.insert(branchDepartments).values([
+  const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon, adminLondon] = await db.insert(branchDepartments).values([
     {
       branchId: london!.id,
       departmentId: choirDept!.id,
@@ -563,8 +565,16 @@ async function seed() {
       leadMemberId: leaderSarah!.id,
       description: 'London first-time guest host team — interviewing applicants.',
     },
+    {
+      // London admin desk — members here can record service attendance.
+      // Pastor + system admin retain write access as a fallback per the Admin-dept gate.
+      branchId: london!.id,
+      departmentId: adminDept!.id,
+      leadMemberId: leaderSarah!.id,
+      description: 'London admin desk — service-day registers and first-timer captures.',
+    },
   ]).returning();
-  console.log(`✓ 4 branch-department instances`);
+  console.log(`✓ 5 branch-department instances`);
 
   // ── 4d. Department Members (smoke seed) ─────────────────────
   await db.insert(departmentMembers).values([
@@ -574,8 +584,11 @@ async function seed() {
     { branchDepartmentId: choirLondon!.id, memberId: pastorLondon!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: leaderDavid!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: regularMembers[1]!.id },
+    // Admin-dept (London) — gives at least one non-pastor/non-admin caller write access.
+    // Reuse regularMembers[2] so logging in as that account demos the desk flow.
+    { branchDepartmentId: adminLondon!.id, memberId: regularMembers[2]!.id },
   ]);
-  console.log(`✓ 6 department member assignments`);
+  console.log(`✓ 7 department member assignments`);
 
   // ── 4e. Choir@London rich scenario ──────────────────────────
   // Demonstrates: join requests, followups (incl. overdue), uniform gallery + schedule,

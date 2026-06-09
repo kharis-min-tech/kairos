@@ -4,13 +4,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft, Users } from 'lucide-react';
 import { Card, CardContent, cn } from '@kairos/ui';
-import { useService } from '@/hooks/use-attendance';
-import { useAuthStore } from '@/lib/auth-store';
+import { useService, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
 import { ServiceType } from '@kairos/types';
 import { CheckInPanel } from '../_components/check-in-panel';
-
-const WRITER_ROLES = ['admin', 'pastor', 'leader'];
 
 const TYPE_BADGE: Record<string, string> = {
   [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
@@ -26,8 +23,10 @@ function formatTime(iso: string): string {
 export default function CheckInPage() {
   const { id } = useParams<{ id: string }>();
   const { data: service, isLoading, isError, error } = useService(id);
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const canCheckIn = !!activeRole && WRITER_ROLES.includes(activeRole);
+  const { data: canRecordResult } = useCanRecordAttendance(
+    service?.branchId ? { branchId: service.branchId } : undefined,
+  );
+  const canCheckIn = !!canRecordResult?.canRecord;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

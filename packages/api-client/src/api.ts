@@ -1075,6 +1075,12 @@ export function createApiClient(
         const query = qs.toString();
         return client.get<ApiResponse<AttendanceSummary>>(`/api/attendance/reports/summary${query ? `?${query}` : ''}`);
       },
+      canRecord: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<{ canRecord: boolean }>>(`/api/attendance/me/can-record${query ? `?${query}` : ''}`);
+      },
     },
   };
 }

@@ -27,6 +27,7 @@ import {
   getMissingMembers,
   getAttendanceByBranch,
   getAttendanceSummary,
+  canRecordAttendance,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -90,7 +91,6 @@ attendanceRouter.get('/services', zValidator('query', listServicesQuerySchema), 
 
 attendanceRouter.post(
   '/services',
-  requireRole('admin', 'pastor', 'leader'),
   zValidator('json', createServiceSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -113,7 +113,6 @@ attendanceRouter.get(
 
 attendanceRouter.post(
   '/services/:id/records',
-  requireRole('admin', 'pastor', 'leader'),
   zValidator('json', recordAttendanceSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -136,7 +135,6 @@ attendanceRouter.get('/services/:id', async (c) => {
 
 attendanceRouter.patch(
   '/services/:id',
-  requireRole('admin', 'pastor', 'leader'),
   zValidator('json', updateServiceSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -145,8 +143,17 @@ attendanceRouter.patch(
   },
 );
 
-attendanceRouter.delete('/services/:id', requireRole('admin', 'pastor', 'leader'), async (c) => {
+attendanceRouter.delete('/services/:id', async (c) => {
   const auth = getAuth(c);
   const result = await deleteService(db, auth, c.req.param('id')!);
   return c.json(successResponse(result, 'Service deleted'));
+});
+
+// ── Caller capability (drives /attendance UI gating) ──────
+
+attendanceRouter.get('/me/can-record', async (c) => {
+  const auth = getAuth(c);
+  const branchId = c.req.query('branchId');
+  const result = await canRecordAttendance(db, auth, branchId ?? undefined);
+  return c.json(successResponse(result));
 });

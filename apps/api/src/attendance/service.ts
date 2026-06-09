@@ -1,6 +1,14 @@
 import { eq, ne, and, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { services, serviceAttendance, members, branches } from '@kairos/database';
+import {
+  services,
+  serviceAttendance,
+  members,
+  branches,
+  branchDepartments,
+  departments,
+  departmentMembers,
+} from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
 import { createMemberShell } from '../lib/member-shell';
@@ -14,10 +22,52 @@ function enforceBranchScope(auth: AuthContext, branchId?: string) {
   }
 }
 
-/** Service create/update/delete is admin|pastor|leader. */
-function enforceServiceWriter(auth: AuthContext) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor' || auth.systemRole === 'leader') return;
-  throw new ForbiddenError('Only leaders, pastors, and admins can manage services');
+/**
+ * Whether the caller is an active member of the seeded "Admin" branch_department
+ * in the given branch. Used to grant attendance-write authority to admin-desk
+ * volunteers rather than to every system leader.
+ */
+async function isInAdminDepartment(
+  db: Database,
+  memberId: string,
+  branchId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: departmentMembers.id })
+    .from(departmentMembers)
+    .innerJoin(branchDepartments, eq(departmentMembers.branchDepartmentId, branchDepartments.id))
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(
+      and(
+        eq(departmentMembers.memberId, memberId),
+        eq(departmentMembers.isActive, true),
+        eq(branchDepartments.branchId, branchId),
+        eq(branchDepartments.isActive, true),
+        eq(departments.departmentName, 'Admin'),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
+
+/**
+ * Service create/update/delete + attendance writes are gated to:
+ *   - system admin / pastor (operational fallback)
+ *   - members of the "Admin" branch_department in the target branch (admin-desk volunteers)
+ *
+ * Any other role (including non-Admin-dept leaders like worship/hospitality leads)
+ * gets a Forbidden — leadership of an unrelated department doesn't grant register access.
+ */
+async function enforceServiceWriter(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+): Promise<void> {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (await isInAdminDepartment(db, auth.memberId, branchId)) return;
+  throw new ForbiddenError(
+    'Only admin-desk volunteers (Admin department), pastors, and admins can manage services',
+  );
 }
 
 /** Reports are admin|pastor|leader. */
@@ -65,11 +115,29 @@ interface AttendanceEntry {
   arrivalTime?: string;
 }
 
+/**
+ * Lightweight read used by the web to gate UI without exposing dept membership.
+ * Returns whether the caller can record attendance in their (or admin/pastor: a chosen) branch.
+ */
+export async function canRecordAttendance(
+  db: Database,
+  auth: AuthContext,
+  branchId?: string,
+): Promise<{ canRecord: boolean }> {
+  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+    return { canRecord: true };
+  }
+  if (!auth.branchId) return { canRecord: false };
+  const targetBranch = branchId ?? auth.branchId;
+  if (targetBranch !== auth.branchId) return { canRecord: false };
+  return { canRecord: await isInAdminDepartment(db, auth.memberId, targetBranch) };
+}
+
 // ── Service CRUD ───────────────────────────────────────────
 
 export async function createService(db: Database, auth: AuthContext, data: CreateServiceInput) {
-  enforceServiceWriter(auth);
   const branchId = resolveBranchId(auth, data.branchId);
+  await enforceServiceWriter(db, auth, branchId);
   const serviceDate = new Date(data.serviceDate);
 
   // Pre-check the (branchId, serviceDate, serviceType) unique constraint.
@@ -210,8 +278,8 @@ export async function updateService(
   id: string,
   data: Record<string, unknown>,
 ) {
-  enforceServiceWriter(auth);
   const existing = await getService(db, auth, id);
+  await enforceServiceWriter(db, auth, existing.branchId);
 
   const set: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (typeof data.serviceDate === 'string') set.serviceDate = new Date(data.serviceDate);
@@ -256,8 +324,8 @@ export async function updateService(
 }
 
 export async function deleteService(db: Database, auth: AuthContext, id: string) {
-  enforceServiceWriter(auth);
   const existing = await getService(db, auth, id);
+  await enforceServiceWriter(db, auth, existing.branchId);
 
   const [deleted] = await db
     .update(services)
@@ -340,8 +408,8 @@ export async function recordAttendance(
   serviceId: string,
   body: { entries: AttendanceEntry[] },
 ) {
-  enforceServiceWriter(auth);
   const svc = await getService(db, auth, serviceId);
+  await enforceServiceWriter(db, auth, svc.branchId);
 
   const rows: {
     serviceId: string;

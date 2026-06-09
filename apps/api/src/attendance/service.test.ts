@@ -63,6 +63,21 @@ const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRol
 const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
 const leaderOtherBranch = { memberId: '000-leader2', email: 'l2@test.com', systemRole: 'leader' as const, branchId: otherBranchId };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
+// Admin-desk volunteer: a regular member whose home branch has them on the Admin dept roster.
+// Distinct from `adminAuth` (which is a system admin, branch-agnostic).
+const adminDeptAuth = { memberId: '000-admin-dept', email: 'desk@test.com', systemRole: 'member' as const, branchId };
+
+/**
+ * The new `enforceServiceWriter` calls `isInAdminDepartment` for non-admin/non-pastor
+ * callers via a single SELECT. Pass `true` to make that SELECT return a row (caller IS
+ * in the Admin dept), `false` for no row.
+ *
+ * The dept-check select runs AFTER `getService`/whatever other selects the caller's path
+ * needs. Tests are responsible for ordering: `setupSelectSequence(...prior, deptCheck(true), ...next)`.
+ */
+function deptCheck(positive: boolean): unknown {
+  return positive ? [{ id: 'dm-stub' }] : [];
+}
 
 const sampleService = {
   id: serviceId,
@@ -96,6 +111,7 @@ import {
   getMissingMembers,
   getAttendanceByBranch,
   getAttendanceSummary,
+  canRecordAttendance,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -131,12 +147,13 @@ describe('createService', () => {
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
-  it('defaults branchId to auth.branchId for a non-admin leader', async () => {
-    setupSelectSequence([]);
+  it('defaults branchId to auth.branchId for an Admin-dept caller', async () => {
+    // dept-check positive, then duplicate-check returns nothing
+    setupSelectSequence(deptCheck(true), []);
     const insertSpy = vi.fn().mockReturnValue(createChain([sampleService]));
     (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
 
-    await createService(mockDb, leaderAuth, {
+    await createService(mockDb, adminDeptAuth, {
       serviceDate: '2026-05-24T09:00:00Z',
       serviceType: 'Sunday',
     });
@@ -144,10 +161,21 @@ describe('createService', () => {
     expect(insertSpy).toHaveBeenCalled();
   });
 
-  it('forbids a leader from creating a service in another branch', async () => {
+  it('forbids a non-admin caller from creating a service in another branch', async () => {
     await expect(
       createService(mockDb, leaderAuth, {
         branchId: otherBranchId,
+        serviceDate: '2026-05-24T09:00:00Z',
+        serviceType: 'Sunday',
+      }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('forbids a non-admin-dept leader (worship/hospitality/etc.) from creating a service', async () => {
+    // resolveBranchId returns own branch; dept-check returns empty (not in Admin dept).
+    setupSelectSequence(deptCheck(false));
+    await expect(
+      createService(mockDb, leaderAuth, {
         serviceDate: '2026-05-24T09:00:00Z',
         serviceType: 'Sunday',
       }),
@@ -209,7 +237,13 @@ describe('updateService', () => {
     expect(result.topic).toBe('Hope');
   });
 
-  it('forbids a plain member', async () => {
+  it('forbids a plain member (not in Admin dept)', async () => {
+    // getService -> dept-check empty -> Forbidden
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
+      [{ value: 0 }],
+      deptCheck(false),
+    );
     await expect(updateService(mockDb, memberAuth, serviceId, { topic: 'x' })).rejects.toMatchObject({
       statusCode: 403,
     });
@@ -246,7 +280,12 @@ describe('deleteService', () => {
     expect(result.isActive).toBe(false);
   });
 
-  it('forbids a plain member', async () => {
+  it('forbids a plain member (not in Admin dept)', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
+      [{ value: 0 }],
+      deptCheck(false),
+    );
     await expect(deleteService(mockDb, memberAuth, serviceId)).rejects.toMatchObject({ statusCode: 403 });
   });
 });
@@ -278,23 +317,38 @@ describe('getServiceRoster', () => {
 // ── recordAttendance ───────────────────────────────────────
 
 describe('recordAttendance', () => {
-  it('forbids a plain member', async () => {
+  it('forbids a plain member (not in Admin dept)', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      deptCheck(false), // not in Admin dept
+    );
     await expect(
       recordAttendance(mockDb, memberAuth, serviceId, { entries: [{ memberId, status: 'Present' }] }),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  it('upserts an existing-member entry (insert with onConflictDoUpdate, single row)', async () => {
+  it('forbids a non-admin-dept leader (e.g. worship leader)', async () => {
     setupSelectSequence(
       [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
-      [{ value: 0 }],
+      deptCheck(false),
+    );
+    await expect(
+      recordAttendance(mockDb, leaderAuth, serviceId, { entries: [{ memberId, status: 'Present' }] }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('upserts an existing-member entry for an Admin-dept caller (insert with onConflictDoUpdate, single row)', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      deptCheck(true), // is in Admin dept
+      [{ value: 0 }], // count
     );
     const onConflictSpy = vi.fn().mockReturnThis();
     const insertChain = createChain(undefined);
     insertChain.onConflictDoUpdate = onConflictSpy.mockReturnValue(insertChain);
     (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue(insertChain);
 
-    await recordAttendance(mockDb, leaderAuth, serviceId, {
+    await recordAttendance(mockDb, adminDeptAuth, serviceId, {
       entries: [{ memberId, status: 'Present' }],
     });
 
@@ -305,6 +359,7 @@ describe('recordAttendance', () => {
   it('links a visitor entry to an existing member when phone matches in-branch', async () => {
     setupSelectSequence(
       [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      deptCheck(true),
       [{ value: 0 }], // count
       [{ id: memberId }], // phone match
     );
@@ -312,7 +367,7 @@ describe('recordAttendance', () => {
     insertChain.onConflictDoUpdate = vi.fn().mockReturnValue(insertChain);
     (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue(insertChain);
 
-    await recordAttendance(mockDb, leaderAuth, serviceId, {
+    await recordAttendance(mockDb, adminDeptAuth, serviceId, {
       entries: [{ visitor: { firstName: 'Vee', lastName: 'Sitor', phone: '+447700900000' }, status: 'Present' }],
     });
 
@@ -322,6 +377,7 @@ describe('recordAttendance', () => {
   it('mints a visitor shell when no phone match (calls createMemberShell with memberType visitor)', async () => {
     setupSelectSequence(
       [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      deptCheck(true),
       [{ value: 0 }], // count
       [], // no phone match
     );
@@ -330,7 +386,7 @@ describe('recordAttendance', () => {
     insertChain.onConflictDoUpdate = vi.fn().mockReturnValue(insertChain);
     (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue(insertChain);
 
-    await recordAttendance(mockDb, leaderAuth, serviceId, {
+    await recordAttendance(mockDb, adminDeptAuth, serviceId, {
       entries: [{ visitor: { firstName: 'New', lastName: 'Guest', phone: '+447700900111' }, status: 'Present' }],
     });
 
@@ -344,6 +400,7 @@ describe('recordAttendance', () => {
   it('mints a visitor shell when visitor has no phone at all', async () => {
     setupSelectSequence(
       [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
+      deptCheck(true),
       [{ value: 0 }],
     );
     createMemberShellMock.mockResolvedValue(visitorMemberId);
@@ -351,7 +408,7 @@ describe('recordAttendance', () => {
     insertChain.onConflictDoUpdate = vi.fn().mockReturnValue(insertChain);
     (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue(insertChain);
 
-    await recordAttendance(mockDb, leaderAuth, serviceId, {
+    await recordAttendance(mockDb, adminDeptAuth, serviceId, {
       entries: [{ visitor: { firstName: 'No', lastName: 'Phone' }, status: 'Present' }],
     });
 
@@ -494,5 +551,36 @@ describe('getAttendanceSummary', () => {
     );
     const result = await getAttendanceSummary(mockDb, memberAuth, { weeks: 4 });
     expect(result.rate.rate).toBe(0.5);
+  });
+});
+
+// ── canRecordAttendance (drives UI gating) ────────────────
+
+describe('canRecordAttendance', () => {
+  it('admin always canRecord regardless of dept membership', async () => {
+    const result = await canRecordAttendance(mockDb, adminAuth);
+    expect(result).toEqual({ canRecord: true });
+  });
+
+  it('pastor always canRecord', async () => {
+    const result = await canRecordAttendance(mockDb, pastorAuth);
+    expect(result).toEqual({ canRecord: true });
+  });
+
+  it('admin-dept member can record in their own branch', async () => {
+    setupSelectSequence(deptCheck(true));
+    const result = await canRecordAttendance(mockDb, adminDeptAuth);
+    expect(result).toEqual({ canRecord: true });
+  });
+
+  it('non-admin-dept member cannot record', async () => {
+    setupSelectSequence(deptCheck(false));
+    const result = await canRecordAttendance(mockDb, memberAuth);
+    expect(result).toEqual({ canRecord: false });
+  });
+
+  it('non-admin caller cannot record in a foreign branch', async () => {
+    const result = await canRecordAttendance(mockDb, memberAuth, otherBranchId);
+    expect(result).toEqual({ canRecord: false });
   });
 });

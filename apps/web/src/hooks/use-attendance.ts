@@ -157,3 +157,16 @@ export function useRecordAttendance(serviceId: string) {
     },
   });
 }
+
+// ── Caller capability (drives UI gating: list page CTAs, /new route guard, [id] CheckInPanel) ──
+
+export function useCanRecordAttendance(params?: { branchId?: string }) {
+  return useQuery({
+    queryKey: ['attendance', 'me', 'can-record', params],
+    queryFn: async () => {
+      const res = await api.attendance.canRecord(params);
+      return res.data!;
+    },
+    staleTime: 60_000,
+  });
+}
