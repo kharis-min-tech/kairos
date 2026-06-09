@@ -8,6 +8,7 @@ import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMemberGrowth, useAttendanceTrend } from '@/hooks/use-reports';
+import { useMyAttendance } from '@/hooks/use-attendance';
 import { useAttendanceSummary, useAttendanceByBranch } from '@/hooks/use-attendance';
 import { useNewBelieversHealth, useEnrollments } from '@/hooks/use-new-believers';
 import {
@@ -419,8 +420,57 @@ function MemberStats() {
         <StatCard title="Attendance Rate" value={`${data.recentAttendance.rate}%`} sub="Last 30 days" accent="emerald" icon={<CheckIcon />} onClick={() => setEvidenceOpen('attendance')} />
         <StatCard title="Meetings Attended" value={`${data.recentAttendance.present}/${data.recentAttendance.total}`} sub="This period" accent="purple" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
       </div>
+      <MyServiceAttendanceCard />
       <MemberEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} data={data} />
     </>
+  );
+}
+
+/**
+ * Compact service-attendance card on the member dashboard linking to /me/attendance.
+ * Surfaces the rate over the last 12 weeks + current streak. Distinct from the
+ * existing fellowship-meeting attendance stat above.
+ */
+function MyServiceAttendanceCard() {
+  const { data, isLoading } = useMyAttendance({ weeks: 12 });
+  if (isLoading || !data) {
+    return <div className="mt-3 h-20 animate-pulse rounded-xl bg-foreground/[0.04]" />;
+  }
+  const ratePct = Math.round(data.rate * 100);
+  const rateTone =
+    data.servicesInWindow === 0
+      ? 'text-muted-foreground'
+      : data.rate >= 0.8
+        ? 'text-emerald-700 dark:text-emerald-400'
+        : data.rate >= 0.6
+          ? 'text-[#9a6b04] dark:text-[#f8b537]'
+          : 'text-destructive';
+  return (
+    <Link
+      href="/me/attendance"
+      className="mt-3 flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3 hover:bg-foreground/[0.02] transition-colors"
+    >
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          Service Attendance
+        </p>
+        <p className={`mt-0.5 text-2xl font-bold ${rateTone}`}>
+          {data.servicesInWindow === 0 ? '—' : `${ratePct}%`}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {data.servicesInWindow === 0
+            ? 'No services yet in window'
+            : `${data.attendedCount} of ${data.servicesInWindow} services attended`}
+        </p>
+      </div>
+      <div className="text-right text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">
+          {data.currentStreak.length}{' '}
+          {data.currentStreak.kind === 'attended' ? 'attended in a row' : 'missed in a row'}
+        </p>
+        <p className="mt-1 text-[#5D3FD3]">View details →</p>
+      </div>
+    </Link>
   );
 }
 

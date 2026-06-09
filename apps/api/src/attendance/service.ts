@@ -769,6 +769,161 @@ export async function getCohortDiff(
   return { members: rows };
 }
 
+/**
+ * Personal attendance snapshot for the caller — rate over a window, status split
+ * (Present-on-time / Late / Virtual / Missed), streak, last attended service,
+ * and a per-service history. Open to any authenticated member; branch-scoped to
+ * the caller's homeBranchId.
+ */
+export async function getMyAttendance(
+  db: Database,
+  auth: AuthContext,
+  query: { weeks: number },
+) {
+  if (!auth.branchId) {
+    return {
+      windowWeeks: query.weeks,
+      servicesInWindow: 0,
+      attendedCount: 0,
+      rate: 0,
+      presentOnTimeCount: 0,
+      lateCount: 0,
+      virtualCount: 0,
+      missedCount: 0,
+      currentStreak: { kind: 'attended' as const, length: 0 },
+      lastAttendedAt: null as string | null,
+      lastService: null as null | { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null },
+      history: [] as Array<{ serviceId: string; serviceDate: string; serviceType: string; status: string | null }>,
+    };
+  }
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  // All services in the caller's branch within the window.
+  const svcRows = await db
+    .select({
+      id: services.id,
+      serviceDate: services.serviceDate,
+      serviceType: services.serviceType,
+      serviceTitle: services.serviceTitle,
+    })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, auth.branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .orderBy(services.serviceDate);
+
+  const servicesInWindow = svcRows.length;
+  if (servicesInWindow === 0) {
+    return {
+      windowWeeks: query.weeks,
+      servicesInWindow: 0,
+      attendedCount: 0,
+      rate: 0,
+      presentOnTimeCount: 0,
+      lateCount: 0,
+      virtualCount: 0,
+      missedCount: 0,
+      currentStreak: { kind: 'attended' as const, length: 0 },
+      lastAttendedAt: null,
+      lastService: null,
+      history: [],
+    };
+  }
+
+  // Caller's attendance rows in the window.
+  const attRows = await db
+    .select({
+      serviceId: serviceAttendance.serviceId,
+      attendanceStatus: serviceAttendance.attendanceStatus,
+      arrivalTime: serviceAttendance.arrivalTime,
+      recordedAt: serviceAttendance.recordedAt,
+    })
+    .from(serviceAttendance)
+    .where(
+      and(
+        eq(serviceAttendance.memberId, auth.memberId),
+        inArray(
+          serviceAttendance.serviceId,
+          svcRows.map((s) => s.id),
+        ),
+      ),
+    );
+  const attBySvc = new Map(attRows.map((a) => [a.serviceId, a]));
+
+  // Build per-service history, oldest first.
+  const history = svcRows.map((s) => ({
+    serviceId: s.id,
+    serviceDate: s.serviceDate.toISOString(),
+    serviceType: s.serviceType,
+    status: attBySvc.get(s.id)?.attendanceStatus ?? null,
+  }));
+
+  // Status split.
+  let presentOnTimeCount = 0;
+  let lateCount = 0;
+  let virtualCount = 0;
+  let missedCount = 0;
+  for (const h of history) {
+    if (h.status === 'Present') presentOnTimeCount++;
+    else if (h.status === 'Late') lateCount++;
+    else if (h.status === 'Virtual') virtualCount++;
+    else missedCount++;
+  }
+  const attendedCount = presentOnTimeCount + lateCount + virtualCount;
+  const rate = attendedCount / servicesInWindow;
+
+  // Current streak — walk from most recent service backwards.
+  let streakKind: 'attended' | 'missed' = 'attended';
+  let streakLength = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const attended = !!history[i]!.status;
+    if (streakLength === 0) {
+      streakKind = attended ? 'attended' : 'missed';
+      streakLength = 1;
+      continue;
+    }
+    const sameKind = streakKind === 'attended' ? attended : !attended;
+    if (sameKind) streakLength++;
+    else break;
+  }
+
+  // Last attended service.
+  let lastAttendedAt: string | null = null;
+  let lastService: null | { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null } = null;
+  for (let i = svcRows.length - 1; i >= 0; i--) {
+    const s = svcRows[i]!;
+    if (attBySvc.has(s.id)) {
+      lastAttendedAt = s.serviceDate.toISOString();
+      lastService = {
+        id: s.id,
+        serviceDate: s.serviceDate.toISOString(),
+        serviceType: s.serviceType,
+        serviceTitle: s.serviceTitle,
+      };
+      break;
+    }
+  }
+
+  return {
+    windowWeeks: query.weeks,
+    servicesInWindow,
+    attendedCount,
+    rate,
+    presentOnTimeCount,
+    lateCount,
+    virtualCount,
+    missedCount,
+    currentStreak: { kind: streakKind, length: streakLength },
+    lastAttendedAt,
+    lastService,
+    history,
+  };
+}
+
 export async function getAttendanceByBranch(
   db: Database,
   auth: AuthContext,

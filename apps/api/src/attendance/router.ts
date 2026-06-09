@@ -14,6 +14,7 @@ import {
   byBranchQuerySchema,
   summaryQuerySchema,
   cohortDiffSchema,
+  myAttendanceQuerySchema,
 } from './schemas';
 import {
   createService,
@@ -30,6 +31,7 @@ import {
   getAttendanceSummary,
   canRecordAttendance,
   getCohortDiff,
+  getMyAttendance,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -162,7 +164,17 @@ attendanceRouter.delete('/services/:id', async (c) => {
   return c.json(successResponse(result, 'Service deleted'));
 });
 
-// ── Caller capability (drives /attendance UI gating) ──────
+// ── Caller capability + personal snapshot (drives UI) ────
+
+attendanceRouter.get(
+  '/me',
+  zValidator('query', myAttendanceQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getMyAttendance(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
 
 attendanceRouter.get('/me/can-record', async (c) => {
   const auth = getAuth(c);

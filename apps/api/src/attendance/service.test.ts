@@ -113,6 +113,7 @@ import {
   getAttendanceSummary,
   canRecordAttendance,
   getCohortDiff,
+  getMyAttendance,
 } from './service';
 
 // ── createService ──────────────────────────────────────────
@@ -670,5 +671,73 @@ describe('getCohortDiff', () => {
     });
     expect(result.members).toHaveLength(1);
     expect(result.members[0]?.memberId).toBe(m1);
+  });
+});
+
+// ── getMyAttendance (personal snapshot) ───────────────────
+
+describe('getMyAttendance', () => {
+  const s1 = '770e8400-e29b-41d4-a716-446655440201';
+  const s2 = '770e8400-e29b-41d4-a716-446655440202';
+  const s3 = '770e8400-e29b-41d4-a716-446655440203';
+
+  it('returns empty defaults when the caller has no branchId', async () => {
+    const noBranch = { ...memberAuth, branchId: undefined as unknown as string };
+    const result = await getMyAttendance(mockDb, noBranch, { weeks: 12 });
+    expect(result.servicesInWindow).toBe(0);
+    expect(result.rate).toBe(0);
+    expect(result.history).toEqual([]);
+  });
+
+  it('returns empty defaults when there are no services in the window', async () => {
+    setupSelectSequence([]);
+    const result = await getMyAttendance(mockDb, memberAuth, { weeks: 12 });
+    expect(result.servicesInWindow).toBe(0);
+  });
+
+  it('builds the rate + status split + streak from history', async () => {
+    // 3 services chronological. Caller attended s1 (Present), s2 (Late), missed s3.
+    const baseDate = new Date('2026-05-01T10:00:00Z');
+    setupSelectSequence(
+      [
+        { id: s1, serviceDate: baseDate, serviceType: 'Sunday', serviceTitle: null },
+        { id: s2, serviceDate: new Date(baseDate.getTime() + 7 * 86400000), serviceType: 'Sunday', serviceTitle: null },
+        { id: s3, serviceDate: new Date(baseDate.getTime() + 14 * 86400000), serviceType: 'Sunday', serviceTitle: null },
+      ],
+      [
+        { serviceId: s1, attendanceStatus: 'Present', arrivalTime: null, recordedAt: new Date() },
+        { serviceId: s2, attendanceStatus: 'Late', arrivalTime: null, recordedAt: new Date() },
+      ],
+    );
+    const result = await getMyAttendance(mockDb, memberAuth, { weeks: 12 });
+    expect(result.servicesInWindow).toBe(3);
+    expect(result.attendedCount).toBe(2);
+    expect(result.presentOnTimeCount).toBe(1);
+    expect(result.lateCount).toBe(1);
+    expect(result.virtualCount).toBe(0);
+    expect(result.missedCount).toBe(1);
+    expect(result.rate).toBeCloseTo(2 / 3, 5);
+    // Current streak: most recent service (s3) was missed → kind=missed, length=1
+    expect(result.currentStreak).toEqual({ kind: 'missed', length: 1 });
+    // Last attended = s2
+    expect(result.lastService?.id).toBe(s2);
+  });
+
+  it('computes a 3-in-a-row attended streak when the last 3 services were attended', async () => {
+    const baseDate = new Date('2026-05-01T10:00:00Z');
+    setupSelectSequence(
+      [
+        { id: s1, serviceDate: baseDate, serviceType: 'Sunday', serviceTitle: null },
+        { id: s2, serviceDate: new Date(baseDate.getTime() + 7 * 86400000), serviceType: 'Sunday', serviceTitle: null },
+        { id: s3, serviceDate: new Date(baseDate.getTime() + 14 * 86400000), serviceType: 'Sunday', serviceTitle: null },
+      ],
+      [
+        { serviceId: s1, attendanceStatus: 'Present', arrivalTime: null, recordedAt: new Date() },
+        { serviceId: s2, attendanceStatus: 'Present', arrivalTime: null, recordedAt: new Date() },
+        { serviceId: s3, attendanceStatus: 'Virtual', arrivalTime: null, recordedAt: new Date() },
+      ],
+    );
+    const result = await getMyAttendance(mockDb, memberAuth, { weeks: 12 });
+    expect(result.currentStreak).toEqual({ kind: 'attended', length: 3 });
   });
 });

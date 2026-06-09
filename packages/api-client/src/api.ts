@@ -97,6 +97,7 @@ import type {
   AttendanceSummaryParams,
   CohortDiffRequest,
   CohortDiffResult,
+  MyAttendanceSnapshot,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -1085,6 +1086,12 @@ export function createApiClient(
       },
       cohortDiff: (body: CohortDiffRequest) =>
         client.post<ApiResponse<CohortDiffResult>>('/api/attendance/reports/cohort-diff', body),
+      mine: (params?: { weeks?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        const query = qs.toString();
+        return client.get<ApiResponse<MyAttendanceSnapshot>>(`/api/attendance/me${query ? `?${query}` : ''}`);
+      },
     },
   };
 }

@@ -24,7 +24,10 @@ const navItems: NavItem[] = [
   { href: '/my-branch', label: 'My Branch', roles: ['pastor'] },
   { href: '/members', label: 'Members', roles: ['admin', 'pastor'] },
   { href: '/fellowships', label: 'Fellowships' },
-  { href: '/attendance', label: 'Attendance', roles: ['admin', 'pastor', 'leader'] },
+  // /attendance is open to all — page-level gating (canRecord) hides write CTAs from non-writers,
+  // and Admin-dept members (systemRole='member') need the entry point to reach the desk.
+  { href: '/attendance', label: 'Attendance' },
+  { href: '/me/attendance', label: 'My Attendance' },
   { href: '/reports', label: 'Reports' },
   { href: '/new-believers', label: 'New Believers' },
   { href: '/departments', label: 'Departments' },

@@ -899,4 +899,20 @@ export interface CohortDiffResult {
   members: CohortDiffMember[];
 }
 
+// Member personal attendance snapshot — drives /me/attendance + dashboard card.
+export interface MyAttendanceSnapshot {
+  windowWeeks: number;
+  servicesInWindow: number;
+  attendedCount: number;
+  rate: number; // 0..1
+  presentOnTimeCount: number;
+  lateCount: number;
+  virtualCount: number;
+  missedCount: number;
+  currentStreak: { kind: 'attended' | 'missed'; length: number };
+  lastAttendedAt: string | null;
+  lastService: { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null } | null;
+  history: Array<{ serviceId: string; serviceDate: string; serviceType: string; status: string | null }>;
+}
+
 export type { FormSubmission };

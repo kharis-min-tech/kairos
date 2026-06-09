@@ -182,3 +182,16 @@ export function useCohortDiff() {
     },
   });
 }
+
+// ── Caller's personal attendance snapshot (/me/attendance, dashboard card) ──
+
+export function useMyAttendance(params?: { weeks?: number }) {
+  return useQuery({
+    queryKey: ['attendance', 'me', 'snapshot', params],
+    queryFn: async () => {
+      const res = await api.attendance.mine(params);
+      return res.data!;
+    },
+    staleTime: 60_000,
+  });
+}
