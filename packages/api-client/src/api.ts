@@ -1056,6 +1056,8 @@ export function createApiClient(
         const qs = new URLSearchParams();
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
         return client.get<ApiResponse<AttendanceTrendPoint[]>>(`/api/attendance/reports/trends${query ? `?${query}` : ''}`);
       },
@@ -1063,6 +1065,8 @@ export function createApiClient(
         const qs = new URLSearchParams();
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.services) qs.set('services', String(params.services));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
         return client.get<ApiResponse<MissingMember[]>>(`/api/attendance/reports/missing-members${query ? `?${query}` : ''}`);
       },
@@ -1077,6 +1081,8 @@ export function createApiClient(
         const qs = new URLSearchParams();
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
         const query = qs.toString();
         return client.get<ApiResponse<AttendanceSummary>>(`/api/attendance/reports/summary${query ? `?${query}` : ''}`);
       },

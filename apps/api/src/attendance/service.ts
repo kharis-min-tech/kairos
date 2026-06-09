@@ -80,6 +80,59 @@ function enforceReportReader(auth: AuthContext) {
   throw new ForbiddenError('Only leaders, pastors, and admins can view attendance reports');
 }
 
+/**
+ * Resolve "the member-id scope" for a report given optional department/fellowship filters.
+ * Returns null when no filter is present (caller should use the unrestricted member predicate
+ * — typically "all active members of the branch"). When at least one filter is set, returns
+ * the intersection of matching member IDs.
+ *
+ * Used by trends / missing-members / summary endpoints (Phase 4c).
+ */
+async function resolveFilterMemberIds(
+  db: Database,
+  branchId: string,
+  filters: { departmentId?: string; fellowshipId?: string },
+): Promise<string[] | null> {
+  if (!filters.departmentId && !filters.fellowshipId) return null;
+
+  let deptIds: Set<string> | null = null;
+  if (filters.departmentId) {
+    const rows = await db
+      .select({ memberId: departmentMembers.memberId })
+      .from(departmentMembers)
+      .innerJoin(branchDepartments, eq(departmentMembers.branchDepartmentId, branchDepartments.id))
+      .where(
+        and(
+          eq(departmentMembers.branchDepartmentId, filters.departmentId),
+          eq(departmentMembers.isActive, true),
+          eq(branchDepartments.branchId, branchId), // enforce cross-branch isolation
+        ),
+      );
+    deptIds = new Set(rows.map((r) => r.memberId));
+  }
+
+  let fellowshipIds: Set<string> | null = null;
+  if (filters.fellowshipId) {
+    const rows = await db
+      .select({ memberId: fellowshipMembers.memberId })
+      .from(fellowshipMembers)
+      .innerJoin(fellowships, eq(fellowshipMembers.fellowshipId, fellowships.id))
+      .where(
+        and(
+          eq(fellowshipMembers.fellowshipId, filters.fellowshipId),
+          eq(fellowshipMembers.isActive, true),
+          eq(fellowships.branchId, branchId),
+        ),
+      );
+    fellowshipIds = new Set(rows.map((r) => r.memberId));
+  }
+
+  if (deptIds && fellowshipIds) {
+    return Array.from(deptIds).filter((id) => fellowshipIds!.has(id));
+  }
+  return Array.from(deptIds ?? fellowshipIds ?? new Set<string>());
+}
+
 /** Resolve which branch a write/report targets, enforcing scope for non-admin/pastor. */
 function resolveBranchId(auth: AuthContext, requested?: string): string {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
@@ -523,11 +576,28 @@ export async function listAttendance(db: Database, auth: AuthContext, serviceId:
 export async function getAttendanceTrends(
   db: Database,
   auth: AuthContext,
-  query: { branchId?: string; weeks: number },
+  query: { branchId?: string; weeks: number; departmentId?: string; fellowshipId?: string },
 ) {
   enforceReportReader(auth);
   const branchId = resolveBranchId(auth, query.branchId);
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const filterIds = await resolveFilterMemberIds(db, branchId, {
+    departmentId: query.departmentId,
+    fellowshipId: query.fellowshipId,
+  });
+  if (filterIds !== null && filterIds.length === 0) {
+    return [] as { weekStart: string; attendees: number; serviceCount: number }[];
+  }
+
+  const conditions = [
+    eq(services.branchId, branchId),
+    eq(services.isActive, true),
+    gte(services.serviceDate, since),
+  ];
+  if (filterIds !== null) {
+    conditions.push(inArray(serviceAttendance.memberId, filterIds));
+  }
 
   // Per ISO week: distinct attendees (Present + Late + Virtual all count as attended).
   const rows = await db
@@ -538,13 +608,7 @@ export async function getAttendanceTrends(
     })
     .from(services)
     .leftJoin(serviceAttendance, eq(serviceAttendance.serviceId, services.id))
-    .where(
-      and(
-        eq(services.branchId, branchId),
-        eq(services.isActive, true),
-        gte(services.serviceDate, since),
-      ),
-    )
+    .where(and(...conditions))
     .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
     .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
 
@@ -558,7 +622,7 @@ export async function getAttendanceTrends(
 export async function getMissingMembers(
   db: Database,
   auth: AuthContext,
-  query: { branchId?: string; services?: number },
+  query: { branchId?: string; services?: number; departmentId?: string; fellowshipId?: string },
 ) {
   enforceReportReader(auth);
   const branchId = resolveBranchId(auth, query.branchId);
@@ -580,6 +644,18 @@ export async function getMissingMembers(
     eq(members.homeBranchId, branchId),
     eq(members.memberType, 'member'),
   ];
+
+  // Optional department/fellowship filter — narrows the considered member set.
+  const filterIds = await resolveFilterMemberIds(db, branchId, {
+    departmentId: query.departmentId,
+    fellowshipId: query.fellowshipId,
+  });
+  if (filterIds !== null) {
+    if (filterIds.length === 0) {
+      return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
+    }
+    baseConditions.push(inArray(members.id, filterIds));
+  }
 
   let rows;
   if (recentServiceIds.length === 0) {
@@ -1419,13 +1495,30 @@ export async function getAttendanceByBranch(
 export async function getAttendanceSummary(
   db: Database,
   auth: AuthContext,
-  query: { branchId?: string; weeks: number },
+  query: { branchId?: string; weeks: number; departmentId?: string; fellowshipId?: string },
 ) {
   const scopeBranchId = auth.systemRole === 'admin' ? query.branchId : auth.branchId;
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
 
   const serviceConditions = [eq(services.isActive, true), gte(services.serviceDate, since)];
   if (scopeBranchId) serviceConditions.push(eq(services.branchId, scopeBranchId));
+
+  // Optional dept/fellowship filter narrows the considered member set.
+  const filterIds = scopeBranchId
+    ? await resolveFilterMemberIds(db, scopeBranchId, {
+        departmentId: query.departmentId,
+        fellowshipId: query.fellowshipId,
+      })
+    : null;
+  if (filterIds !== null && filterIds.length === 0) {
+    return {
+      statusBreakdown: { present: 0, late: 0, virtual: 0, total: 0 },
+      rate: { distinctAttendees: 0, activeMembers: 0, rate: 0 },
+    };
+  }
+  if (filterIds !== null) {
+    serviceConditions.push(inArray(serviceAttendance.memberId, filterIds));
+  }
 
   // 1) Status split (Present/Late/Virtual) — one row per status.
   const statusRows = await db
@@ -1448,10 +1541,16 @@ export async function getAttendanceSummary(
   const distinctAttendees = Number(distinctRows[0]?.value ?? 0);
 
   // 3) Active 'member'-type count in scope (rate denominator).
-  const activeConditions = [eq(members.isActive, true), eq(members.memberType, 'member')];
-  if (scopeBranchId) activeConditions.push(eq(members.homeBranchId, scopeBranchId));
-  const activeRows = await db.select({ value: count() }).from(members).where(and(...activeConditions));
-  const activeMembers = Number(activeRows[0]?.value ?? 0);
+  // When filtered, the denominator collapses to the filter set size.
+  let activeMembers: number;
+  if (filterIds !== null) {
+    activeMembers = filterIds.length;
+  } else {
+    const activeConditions = [eq(members.isActive, true), eq(members.memberType, 'member')];
+    if (scopeBranchId) activeConditions.push(eq(members.homeBranchId, scopeBranchId));
+    const activeRows = await db.select({ value: count() }).from(members).where(and(...activeConditions));
+    activeMembers = Number(activeRows[0]?.value ?? 0);
+  }
 
   const rate = activeMembers > 0 ? Math.min(1, distinctAttendees / activeMembers) : 0;
 

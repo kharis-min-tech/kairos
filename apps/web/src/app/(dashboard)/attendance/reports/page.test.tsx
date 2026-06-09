@@ -13,6 +13,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/hooks/use-branches', () => ({ useBranches: () => ({ data: [] }) }));
+vi.mock('@/hooks/use-departments', () => ({ useDepartments: () => ({ data: { data: [] } }) }));
+vi.mock('@/hooks/use-fellowships', () => ({ useFellowships: () => ({ data: { data: [] } }) }));
 
 let trends: { data?: unknown[]; isLoading: boolean; isError: boolean; error: null } = {
   data: [],

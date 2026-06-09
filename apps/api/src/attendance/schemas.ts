@@ -97,11 +97,15 @@ export const recordAttendanceSchema = z.object({
 export const trendsQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   weeks: z.coerce.number().int().positive().max(52).default(4),
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
 });
 
 export const missingMembersQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   services: z.coerce.number().int().positive().max(52).default(4),
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
 });
 
 export const byBranchQuerySchema = z.object({
@@ -112,6 +116,8 @@ export const byBranchQuerySchema = z.object({
 export const summaryQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   weeks: z.coerce.number().int().positive().max(52).default(4),
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
 });
 
 // Member personal attendance snapshot.

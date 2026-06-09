@@ -16,6 +16,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useBranches } from '@/hooks/use-branches';
+import { useDepartments } from '@/hooks/use-departments';
+import { useFellowships } from '@/hooks/use-fellowships';
 import {
   useAttendanceTrends,
   useMissingMembers,
@@ -31,6 +33,8 @@ export default function AttendanceReportsPage() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
   const [branchId, setBranchId] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const [fellowshipId, setFellowshipId] = useState('');
 
   // Second-level guard: only admin/pastor/leader may view attendance reports.
   // Members would otherwise hit a wall of 403s on each chart query.
@@ -42,14 +46,36 @@ export default function AttendanceReportsPage() {
 
   const { data: branches } = useBranches();
   const branchParam = branchId || undefined;
+  const departmentParam = departmentId || undefined;
+  const fellowshipParam = fellowshipId || undefined;
 
-  const trends = useAttendanceTrends({ branchId: branchParam, weeks: 12 });
-  const missing = useMissingMembers({ branchId: branchParam });
+  // Department + fellowship dropdowns sourced for the chosen branch (admin/pastor only).
+  const { data: deptList } = useDepartments(branchParam ? { branchId: branchParam } : undefined);
+  const { data: fellowList } = useFellowships(branchParam ? { branchId: branchParam } : undefined);
+
+  const trends = useAttendanceTrends({ branchId: branchParam, weeks: 12, departmentId: departmentParam, fellowshipId: fellowshipParam });
+  const missing = useMissingMembers({ branchId: branchParam, departmentId: departmentParam, fellowshipId: fellowshipParam });
   const byBranch = useAttendanceByBranch({ weeks: 4 });
 
   const branchOptions = [
     { value: '', label: 'All branches' },
     ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+  ];
+
+  // Dept + fellowship dropdown options. Both lists are paginated payloads ({data: [...]}).
+  const deptOptions = [
+    { value: '', label: 'All departments' },
+    ...((deptList?.data ?? []).map((d) => ({
+      value: d.id,
+      label: d.departmentName,
+    }))),
+  ];
+  const fellowshipOptions = [
+    { value: '', label: 'All fellowships' },
+    ...((fellowList?.data ?? []).map((f) => ({
+      value: f.id,
+      label: f.fellowshipName,
+    }))),
   ];
 
   const chartData = (trends.data ?? []).map((p) => ({
@@ -66,11 +92,19 @@ export default function AttendanceReportsPage() {
         >
           <ChevronLeft className="h-4 w-4" /> Back to services
         </Link>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <h1 className="text-2xl font-bold text-foreground">Attendance Reports</h1>
           {isAdminOrPastor && (
-            <div className="w-56">
-              <CustomSelect value={branchId} onValueChange={setBranchId} options={branchOptions} />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-44">
+                <CustomSelect value={branchId} onValueChange={setBranchId} options={branchOptions} />
+              </div>
+              <div className="w-44">
+                <CustomSelect value={departmentId} onValueChange={setDepartmentId} options={deptOptions} />
+              </div>
+              <div className="w-44">
+                <CustomSelect value={fellowshipId} onValueChange={setFellowshipId} options={fellowshipOptions} />
+              </div>
             </div>
           )}
         </div>

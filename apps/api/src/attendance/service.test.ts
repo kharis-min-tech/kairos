@@ -872,3 +872,47 @@ describe('getFellowshipAttendance', () => {
     expect(result.meetings.lastMeeting?.attended).toBe(1);
   });
 });
+
+// ── Phase 4c: filter dropdowns on summary/trends/missing ──
+
+describe('getAttendanceSummary with dept/fellowship filter', () => {
+  it('returns zero result when the filtered member set is empty', async () => {
+    // resolveFilterMemberIds runs first when departmentId is set; returns []
+    setupSelectSequence(
+      [], // dept-members lookup empty
+    );
+    const result = await getAttendanceSummary(mockDb, adminAuth, { weeks: 4, departmentId: 'dep-empty' });
+    expect(result.statusBreakdown.total).toBe(0);
+    expect(result.rate).toEqual({ distinctAttendees: 0, activeMembers: 0, rate: 0 });
+  });
+
+  it('uses the filter-set size as the denominator when a filter is set', async () => {
+    setupSelectSequence(
+      // dept-members lookup: 2 ids
+      [{ memberId: 'm1' }, { memberId: 'm2' }],
+      // status split
+      [{ status: 'Present', value: 2 }],
+      // distinct attendees
+      [{ value: 2 }],
+      // NB: activeMembers NOT queried because filterIds provided
+    );
+    const result = await getAttendanceSummary(mockDb, adminAuth, { weeks: 4, departmentId: 'dep-1' });
+    expect(result.rate.activeMembers).toBe(2);
+    expect(result.rate.distinctAttendees).toBe(2);
+    expect(result.rate.rate).toBe(1);
+  });
+});
+
+describe('getMissingMembers with dept/fellowship filter', () => {
+  it('returns empty when the filter set is empty', async () => {
+    // Order: resolveFilterMemberIds runs after the recentServices select. So:
+    // 1: recentServices (any)
+    // 2: dept-members lookup → empty filter set
+    setupSelectSequence(
+      [{ id: 'svc-1' }], // recent services
+      [], // dept-members (filter set empty)
+    );
+    const result = await getMissingMembers(mockDb, adminAuth, { branchId, services: 4, departmentId: 'dep-empty' });
+    expect(result).toEqual([]);
+  });
+});

@@ -833,6 +833,8 @@ export interface AttendanceTrendPoint {
 export interface AttendanceTrendsParams {
   branchId?: string;
   weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
 }
 
 export interface MissingMember {
@@ -845,6 +847,8 @@ export interface MissingMember {
 export interface MissingMembersParams {
   branchId?: string;
   services?: number;
+  departmentId?: string;
+  fellowshipId?: string;
 }
 
 export interface BranchAttendanceRate {
@@ -879,6 +883,8 @@ export interface AttendanceSummary {
 export interface AttendanceSummaryParams {
   branchId?: string;
   weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
 }
 
 export interface CohortDiffRequest {
