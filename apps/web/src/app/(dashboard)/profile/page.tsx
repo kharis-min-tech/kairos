@@ -105,7 +105,21 @@ export default function ProfilePage() {
     secondaryAddress?: string | null; secondaryCity?: string | null; secondaryPostalCode?: string | null;
     emergencyContactName?: string | null; emergencyContactRelationship?: string | null; emergencyContactPhone?: string | null;
     systemRole?: string; photoUrl?: string | null;
+    homeBranchId?: string | null;
   };
+
+  // Hooks for the friendly role / branch / community sections — MUST be called
+  // unconditionally, BEFORE any early return below, to satisfy rules-of-hooks.
+  const memberId = fullProfile?.id ?? null;
+  const profileSystemRole = profile?.systemRole ?? null;
+  const homeBranchId = fullProfile?.homeBranchId ?? null;
+  const roleLines = useFriendlyRoleLines({
+    systemRole: profileSystemRole,
+    memberId,
+    homeBranchId,
+  });
+  const { data: branchList } = useBranches();
+  const homeBranchName = branchList?.find((b) => b.id === homeBranchId)?.branchName ?? null;
 
   function openEditMode() {
     reset({
@@ -196,20 +210,6 @@ export default function ProfilePage() {
 
   const avatarUrl = photoPreview ?? (profile as { photoUrl?: string | null })?.photoUrl;
   const initials = ((profile?.firstName?.[0] ?? '') + (profile?.lastName?.[0] ?? '')).toUpperCase() || '?';
-
-  // Friendly role lines (replaces the raw `systemRole` exposure).
-  const memberId = fullProfile?.id ?? null;
-  const profileSystemRole = profile?.systemRole ?? null;
-  const homeBranchId =
-    (profile as { homeBranchId?: string | null } | null)?.homeBranchId ?? null;
-  const roleLines = useFriendlyRoleLines({
-    systemRole: profileSystemRole,
-    memberId,
-    homeBranchId,
-  });
-  // Branch lookup for the leadership-card pastor sub-label.
-  const { data: branchList } = useBranches();
-  const homeBranchName = branchList?.find((b) => b.id === homeBranchId)?.branchName ?? null;
 
   return (
     <div className="space-y-6">
