@@ -1,33 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useBranches, useDeleteBranch, useRegions } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { useConfirm } from '@/components/confirm-dialog';
 
 export default function BranchesPage() {
+  const router = useRouter();
+  const activeRole = useAuthStore((s) => s.activeRole);
   const { data: branches, isLoading, error } = useBranches();
   const { data: regions } = useRegions();
   const deleteBranch = useDeleteBranch();
-  const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.systemRole === 'admin';
+  const isAdmin = activeRole === 'admin';
   const [regionFilter, setRegionFilter] = useState('');
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
+  // Second-level guard — admin-only page (sidebar already filters, this catches
+  // direct URL access / stale bookmarks / programmatic redirects).
+  useEffect(() => {
+    if (activeRole && activeRole !== 'admin') router.replace('/');
+  }, [activeRole, router]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading branches...</p>
+      <div aria-busy="true" aria-live="polite" className="space-y-3">
+        <div className="h-9 w-40 animate-pulse rounded bg-muted/60" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-44 animate-pulse rounded-lg bg-muted/60" />
+          ))}
+        </div>
+        <span className="sr-only">Loading branches</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Failed to load branches. Please try again.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm font-medium text-destructive">Failed to load branches. Please try again.</p>
       </div>
     );
   }
@@ -79,7 +95,7 @@ export default function BranchesPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base leading-snug">{branch.branchName}</CardTitle>
-                    <span className="flex-shrink-0 rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-400">
+                    <span className="flex-shrink-0 rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-[#a78bfa]">
                       {branch.branchType}
                     </span>
                   </div>
@@ -96,14 +112,19 @@ export default function BranchesPage() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.preventDefault();
-                          if (confirm('Deactivate this branch?')) {
-                            deleteBranch.mutate(branch.id, {
-                              onSuccess: () => toast.success('Branch deactivated.'),
-                              onError: () => toast.error('Failed to deactivate branch. Please try again.'),
-                            });
-                          }
+                          const ok = await confirm({
+                            title: `Deactivate ${branch.branchName}?`,
+                            description: 'The branch will be hidden from active lists. You can reactivate it later.',
+                            confirmLabel: 'Deactivate',
+                            variant: 'destructive',
+                          });
+                          if (!ok) return;
+                          deleteBranch.mutate(branch.id, {
+                            onSuccess: () => toast.success('Branch deactivated.'),
+                            onError: () => toast.error('Failed to deactivate branch. Please try again.'),
+                          });
                         }}
                       >
                         Deactivate
@@ -116,6 +137,8 @@ export default function BranchesPage() {
           ))}
         </div>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

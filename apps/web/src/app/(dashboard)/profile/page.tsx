@@ -203,7 +203,7 @@ export default function ProfilePage() {
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/15 text-2xl font-bold text-violet-600 dark:text-violet-400">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#5D3FD3]/15 text-2xl font-bold text-[#5D3FD3] dark:text-[#a78bfa]">
                 {initials}
               </div>
             )}

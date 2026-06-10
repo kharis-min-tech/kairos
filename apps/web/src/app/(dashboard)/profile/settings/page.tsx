@@ -208,7 +208,8 @@ export default function SettingsPage() {
 
       {/* Log Out */}
       <Button
-        className="h-11 w-full rounded-lg bg-rose-600 font-semibold text-white hover:bg-rose-700"
+        variant="destructive"
+        className="h-11 w-full rounded-lg font-semibold"
         onClick={handleLogout}
       >
         Log Out

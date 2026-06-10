@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +9,7 @@ import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDes
 import { BranchType } from '@kairos/types';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
+import { useAuthStore } from '@/lib/auth-store';
 
 const schema = z.object({
   branchName: z.string().min(1, 'Branch name is required'),
@@ -25,8 +27,14 @@ type FormValues = z.infer<typeof schema>;
 
 export default function NewBranchPage() {
   const router = useRouter();
+  const activeRole = useAuthStore((s) => s.activeRole);
   const createBranch = useCreateBranch();
   const { data: regions, isLoading: regionsLoading } = useRegions();
+
+  // Second-level guard — admin-only.
+  useEffect(() => {
+    if (activeRole && activeRole !== 'admin') router.replace('/');
+  }, [activeRole, router]);
 
   const {
     register,

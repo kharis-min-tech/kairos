@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate } from '@/lib/date-format';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
@@ -52,6 +53,19 @@ export default function BranchDetailPage() {
   const removeLeadership = useRemoveLeadership();
   const assignLeadership = useAssignLeadership();
   const deleteBranch = useDeleteBranch();
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
+  // Second-level guard — admin or pastor-of-this-branch only. Members + leaders
+  // who somehow reach this URL (stale bookmark / direct entry) get bounced.
+  useEffect(() => {
+    if (!activeRole) return;
+    if (activeRole === 'admin') return;
+    if (activeRole === 'pastor' && myProfile?.homeBranchId === id) return;
+    // Don't redirect until myProfile has loaded for pastor — otherwise we may
+    // bounce them on the first render before homeBranchId is known.
+    if (activeRole === 'pastor' && !myProfile) return;
+    router.replace('/');
+  }, [activeRole, myProfile, id, router]);
 
   const {
     register,
@@ -94,13 +108,20 @@ export default function BranchDetailPage() {
   };
 
   if (isLoading) {
-    return <p className="py-12 text-center text-muted-foreground">Loading branch...</p>;
+    return (
+      <div aria-busy="true" aria-live="polite" className="mx-auto max-w-2xl space-y-6">
+        <div className="h-9 w-64 animate-pulse rounded bg-muted/60" />
+        <div className="h-72 animate-pulse rounded-lg bg-muted/60" />
+        <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
+        <span className="sr-only">Loading branch</span>
+      </div>
+    );
   }
 
   if (error || !branch) {
     return (
-      <div className="rounded-lg bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Branch not found or access denied.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm font-medium text-destructive">Branch not found or access denied.</p>
       </div>
     );
   }
@@ -207,12 +228,17 @@ export default function BranchDetailPage() {
                   type="button"
                   variant="destructive"
                   className="ml-auto"
-                  onClick={() => {
-                    if (confirm(`Deactivate branch "${branch?.branchName}"? This will affect all associated members and data.`)) {
-                      deleteBranch.mutate(id, {
-                        onSuccess: () => router.push('/admin/branches'),
-                      });
-                    }
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Deactivate ${branch?.branchName ?? 'this branch'}?`,
+                      description: 'The branch will be hidden from active lists. All associated members and data stay in place but are tagged inactive.',
+                      confirmLabel: 'Deactivate',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    deleteBranch.mutate(id, {
+                      onSuccess: () => router.push('/admin/branches'),
+                    });
                   }}
                 >
                   Deactivate Branch
@@ -378,17 +404,22 @@ export default function BranchDetailPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                      onClick={() => {
-                        if (confirm(`Remove ${leader.role} assignment?`)) {
-                          removeLeadership.mutate(
-                            { branchId: id, leadershipId: leader.id },
-                            {
-                              onSuccess: () => toast.success('Leader removed.'),
-                              onError: () => toast.error('Failed to remove leader. Please try again.'),
-                            },
-                          );
-                        }
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: `Remove ${leader.memberFirstName} ${leader.memberLastName} as ${leader.role}?`,
+                          description: 'You can reassign them later if needed.',
+                          confirmLabel: 'Remove',
+                          variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        removeLeadership.mutate(
+                          { branchId: id, leadershipId: leader.id },
+                          {
+                            onSuccess: () => toast.success('Leader removed.'),
+                            onError: () => toast.error('Failed to remove leader. Please try again.'),
+                          },
+                        );
                       }}
                     >
                       Remove
@@ -451,10 +482,10 @@ export default function BranchDetailPage() {
                           <td className="py-2">
                             <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                               member.approvalStatus === 'approved'
-                                ? 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                                 : member.approvalStatus === 'pending'
-                                  ? 'bg-[#f8b537]/15 text-amber-700'
-                                  : 'bg-rose-100 text-rose-700'
+                                  ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]'
+                                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                             }`}>
                               {member.approvalStatus}
                             </span>
@@ -469,6 +500,8 @@ export default function BranchDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

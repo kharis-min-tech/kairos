@@ -1,13 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useRegions, useCreateRegion } from '@/hooks/use-branches';
 import { Button, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { CONTINENTS, COUNTRIES_BY_CONTINENT } from '@/lib/countries';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function RegionsPage() {
+  const router = useRouter();
+  const activeRole = useAuthStore((s) => s.activeRole);
   const { data: regions, isLoading } = useRegions();
   const createRegion = useCreateRegion();
+
+  // Second-level guard — admin-only.
+  useEffect(() => {
+    if (activeRole && activeRole !== 'admin') router.replace('/');
+  }, [activeRole, router]);
 
   const [showDialog, setShowDialog] = useState(false);
   const [regionName, setRegionName] = useState('');
@@ -77,7 +86,7 @@ export default function RegionsPage() {
               </div>
             </div>
             {createRegion.error && (
-              <p className="text-sm text-rose-600">{(createRegion.error as Error).message}</p>
+              <p role="alert" className="text-sm font-medium text-destructive">{(createRegion.error as Error).message}</p>
             )}
             <div className="flex gap-2">
               <Button
@@ -96,8 +105,11 @@ export default function RegionsPage() {
 
       {/* Regions grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading regions...</p>
+        <div aria-busy="true" aria-live="polite" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-muted/60" />
+          ))}
+          <span className="sr-only">Loading regions</span>
         </div>
       ) : !regions || regions.length === 0 ? (
         <Card>
@@ -112,7 +124,7 @@ export default function RegionsPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base leading-snug">{region.regionName}</CardTitle>
-                  <span className="flex-shrink-0 rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-400">
+                  <span className="flex-shrink-0 rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-[#a78bfa]">
                     Region
                   </span>
                 </div>

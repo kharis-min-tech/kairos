@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useBranch, useBranchLeadership } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
@@ -8,9 +10,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kair
 import { Button } from '@kairos/ui';
 
 export default function MyBranchPage() {
+  const router = useRouter();
   const { user, activeRole } = useAuthStore();
   const branchId = user?.homeBranchId ?? '';
   const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+
+  // Second-level guard — sidebar gates to pastor; mirror that here for direct-URL access.
+  useEffect(() => {
+    if (activeRole && !isAdminOrPastor) router.replace('/');
+  }, [activeRole, isAdminOrPastor, router]);
 
   const { data: branch, isLoading: branchLoading } = useBranch(branchId);
   const { data: leadership, isLoading: leadershipLoading } = useBranchLeadership(branchId);
@@ -18,20 +26,27 @@ export default function MyBranchPage() {
 
   if (!branchId) {
     return (
-      <div className="rounded-lg bg-amber-50 p-4">
-        <p className="text-sm text-amber-700">No home branch assigned to your account.</p>
+      <div role="alert" className="rounded-lg bg-[#f8b537]/10 p-4">
+        <p className="text-sm font-medium text-[#9a6b04] dark:text-[#f8b537]">No home branch assigned to your account.</p>
       </div>
     );
   }
 
   if (branchLoading) {
-    return <p className="py-12 text-center text-muted-foreground">Loading branch...</p>;
+    return (
+      <div aria-busy="true" aria-live="polite" className="space-y-3">
+        <div className="h-9 w-56 animate-pulse rounded bg-muted/60" />
+        <div className="h-56 animate-pulse rounded-lg bg-muted/60" />
+        <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
+        <span className="sr-only">Loading branch</span>
+      </div>
+    );
   }
 
   if (!branch) {
     return (
-      <div className="rounded-lg bg-rose-50 p-4">
-        <p className="text-sm text-rose-700">Branch not found.</p>
+      <div role="alert" className="rounded-lg bg-destructive/10 p-4">
+        <p className="text-sm font-medium text-destructive">Branch not found.</p>
       </div>
     );
   }
@@ -89,7 +104,7 @@ export default function MyBranchPage() {
           <div>
             <p className="text-sm font-medium text-muted-foreground">Status</p>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              branch.isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+              branch.isActive ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
             }`}>
               {branch.isActive ? 'Active' : 'Inactive'}
             </span>
@@ -114,7 +129,7 @@ export default function MyBranchPage() {
                 const initials = ((leader.memberFirstName?.[0] ?? '') + (leader.memberLastName?.[0] ?? '')).toUpperCase() || '?';
                 return (
                   <div key={leader.id} className="flex items-center gap-3 rounded-lg bg-muted p-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-sm font-bold text-violet-600 dark:text-violet-400">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/15 text-sm font-bold text-[#5D3FD3] dark:text-[#a78bfa]">
                       {initials}
                     </div>
                     <div>
