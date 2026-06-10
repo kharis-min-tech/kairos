@@ -30,8 +30,8 @@ export default function SoulsDashboardPage() {
           const items = (res.data.data ?? []) as Array<{ id: string; programName: string }>;
           setPrograms(items.map((p) => ({ id: p.id, programName: p.programName })));
         }
-      } catch (error) {
-        console.error('Failed to load outreach programs:', error);
+      } catch {
+        // silent — programs filter falls back to empty list
       }
     })();
     return () => {
@@ -75,8 +75,8 @@ export default function SoulsDashboardPage() {
       if (followUpsRes.success && followUpsRes.data) {
         setFollowUpsData(followUpsRes.data);
       }
-    } catch (error) {
-      console.error('Failed to load dashboard:', error);
+    } catch {
+      // errors surface to the user via the UnifiedDashboard's own empty/loading states
     } finally {
       setLoading(false);
     }

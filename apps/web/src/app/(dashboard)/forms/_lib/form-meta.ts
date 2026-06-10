@@ -71,7 +71,7 @@ export const STATUS_META: Record<
   { label: string; className: string }
 > = {
   new: { label: 'New', className: 'bg-[#5D3FD3]/10 text-[#5D3FD3] border border-[#5D3FD3]/30' },
-  reviewed: { label: 'Reviewed', className: 'bg-[#D97706]/10 text-[#D97706] border border-[#D97706]/30' },
+  reviewed: { label: 'Reviewed', className: 'bg-[#f8b537]/10 text-[#9a6b04] dark:text-[#f8b537] border border-[#f8b537]/30' },
   converted: { label: 'Converted', className: 'bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/30' },
   dismissed: { label: 'Dismissed', className: 'bg-slate-400/10 text-slate-500 border border-slate-400/30' },
 };

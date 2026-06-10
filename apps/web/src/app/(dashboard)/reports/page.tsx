@@ -25,16 +25,16 @@ import {
 } from 'recharts';
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
-  New: '#6D28D9',
-  'Following Up': '#6D28D9',
-  Interested: '#6D28D9',
-  Converted: '#6D28D9',
-  'Not Interested': '#6D28D9',
-  'Lost Contact': '#6D28D9',
+  New: '#5D3FD3',
+  'Following Up': '#5D3FD3',
+  Interested: '#5D3FD3',
+  Converted: '#5D3FD3',
+  'Not Interested': '#5D3FD3',
+  'Lost Contact': '#5D3FD3',
 };
 
 const PRESET_PURPLE_SHADES: Record<string, string> = {
-  New: '#6D28D9',
+  New: '#5D3FD3',
   'Following Up': '#7C3AED',
   Interested: '#8B5CF6',
   Converted: '#A78BFA',
@@ -319,7 +319,7 @@ function MemberSoulsTab() {
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                             soul.status === 'Converted' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
                             soul.status === 'Following Up' ? 'bg-primary/10 text-primary' :
-                            soul.status === 'Interested' ? 'bg-amber-500/15 text-amber-600' :
+                            soul.status === 'Interested' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
                             'bg-muted text-muted-foreground'
                           }`}>{soul.status}</span>
                         </td>
@@ -352,7 +352,7 @@ function MemberSoulsTab() {
                   <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {myFunnelData.map((entry) => (
-                      <Cell key={entry.status} fill={statusColors[entry.status] ?? '#6D28D9'} />
+                      <Cell key={entry.status} fill={statusColors[entry.status] ?? '#5D3FD3'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -381,7 +381,7 @@ function MemberSoulsTab() {
                         </div>
                       </div>
                       <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: statusColors[item.status] ?? '#6D28D9' }} />
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: statusColors[item.status] ?? '#5D3FD3' }} />
                       </div>
                     </div>
                   );
@@ -412,7 +412,7 @@ function MemberSoulsTab() {
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                     soul.status === 'Converted' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
                     soul.status === 'Following Up' ? 'bg-primary/10 text-primary' :
-                    soul.status === 'Interested' ? 'bg-amber-500/15 text-amber-600' :
+                    soul.status === 'Interested' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
                     'bg-muted text-muted-foreground'
                   }`}>{soul.status}</span>
                 </div>
@@ -826,7 +826,7 @@ export default function ReportsPage() {
                     <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Average number of days from first contact to conversion</span>
                   </span>
                 </div>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-amber-600">{(effectiveOutreachAnalytics as any).overview.avgDaysToConversion > 0 ? `${(effectiveOutreachAnalytics as any).overview.avgDaysToConversion} days` : 'No data'}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{(effectiveOutreachAnalytics as any).overview.avgDaysToConversion > 0 ? `${(effectiveOutreachAnalytics as any).overview.avgDaysToConversion} days` : 'No data'}</p>
               </CardContent>
             </Card>
           </div>

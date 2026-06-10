@@ -140,7 +140,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       {NAV_ICONS[item.href]}
       {item.label}
       {item.badge && (
-        <span className="ml-auto rounded-full bg-[#6D28D9] px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+        <span className="ml-auto rounded-full bg-[#5D3FD3] px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
           {item.badge}
         </span>
       )}

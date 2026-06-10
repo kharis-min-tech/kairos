@@ -181,7 +181,7 @@ function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' |
                       <td className="py-2">
                         <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
                           m.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-400' :
-                          m.approvalStatus === 'pending' ? 'bg-amber-500/15 text-amber-400' :
+                          m.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
                           'bg-red-500/15 text-red-400'
                         }`}>{m.approvalStatus}</span>
                       </td>
@@ -314,7 +314,7 @@ function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowship
                       <td className="py-2">
                         <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
                           m.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-400' :
-                          m.approvalStatus === 'pending' ? 'bg-amber-500/15 text-amber-400' :
+                          m.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
                           'bg-red-500/15 text-red-400'
                         }`}>{m.approvalStatus}</span>
                       </td>
@@ -607,7 +607,7 @@ function UpcomingFellowships({ branchId }: { branchId?: string }) {
             const time = m?.[2] ?? f.meetingSchedule ?? '';
             return (
               <div key={f.id} className={`flex items-center gap-3 px-4 hover:bg-foreground/4 transition-colors ${isLast ? 'pt-3 pb-5' : 'py-3'}`}>
-                <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-md bg-[#6D28D9]/20 text-center">
+                <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-md bg-[#5D3FD3]/20 text-center">
                   <span className="text-[9px] font-bold uppercase text-[#a78bfa] leading-none">{dayAbbr}</span>
                   <span className="text-base font-bold text-[#a78bfa] leading-tight mt-0.5">{dayNum}</span>
                 </div>
@@ -655,7 +655,7 @@ function RecentActivity({ branchId, role }: { branchId?: string; role?: string }
             const isLast = i === items.length - 1;
             return (
             <div key={i} className={`flex items-start gap-3 px-4 hover:bg-foreground/4 transition-colors ${isLast ? 'pt-2.5 pb-5' : 'py-2.5'}`}>
-              <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#6D28D9]/20">
+              <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/20">
                 <svg className="h-3.5 w-3.5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
               </div>
               <div className="flex-1 min-w-0">
@@ -693,7 +693,7 @@ function PendingApprovalsPanel({ branchId }: { branchId?: string }) {
                   <p className="text-sm font-semibold text-foreground">{m.firstName} {m.lastName}</p>
                   <p className="text-[11px] text-muted-foreground">New member request</p>
                 </div>
-                <Link href={`/members/${m.id}`} className="rounded-full bg-[#6D28D9] px-3 py-1 text-xs font-bold text-white hover:bg-[#5b21b6] transition-colors">Review</Link>
+                <Link href={`/members/${m.id}`} className="rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors">Review</Link>
               </div>
             ))}
           </div>
@@ -1158,7 +1158,7 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
                         <tr key={b.id} className="border-b border-border/50">
                           <td className="py-2 text-foreground font-medium">{b.branchName}</td>
                           <td className="py-2 text-muted-foreground">{branchMembers.length}</td>
-                          <td className="py-2 text-[#6D28D9]">—</td>
+                          <td className="py-2 text-[#5D3FD3]">—</td>
                           <td className="py-2 text-[#10b981]">—</td>
                           <td className="py-2 text-[#f8b537]">—</td>
                         </tr>
@@ -1638,7 +1638,7 @@ function MemberMissionControlReports() {
     { name: `Late ${latePct}%`, value: Math.max(latePct, 0.1) },
     { name: `Absent ${absentPct}%`, value: Math.max(absentPct, 0.1) },
   ];
-  const DONUT = ['#6D28D9', '#10b981', '#f8b537'];
+  const DONUT = ['#5D3FD3', '#10b981', '#f8b537'];
 
   // Engagement gauge
   const engagementPct = attendanceRate;
@@ -1853,7 +1853,7 @@ function MissionSummary({ role }: { role: string }) {
     <div className="rounded-lg border border-border bg-card">
       <div className="flex flex-col items-center gap-3 px-5 py-4 sm:flex-row sm:justify-center sm:gap-4">
         <div className="flex items-center gap-3 sm:flex-shrink-0">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#6D28D9]/20">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/20">
             <svg className="h-5 w-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>
           </div>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Mission Summary</p>
@@ -1895,12 +1895,12 @@ export default function DashboardPage() {
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
             {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
           </h1>
-          <span className="mt-1.5 inline-block rounded-full border border-[#6D28D9]/40 bg-[#6D28D9]/15 px-2.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
+          <span className="mt-1.5 inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
             {roleLabel}
           </span>
         </div>
         {isLeadership && (
-          <Link href="/members" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6D28D9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5b21b6] transition-colors">
+          <Link href="/members" className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3FD3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#451ebb] transition-colors">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             New Entry
           </Link>
@@ -1934,7 +1934,7 @@ export default function DashboardPage() {
           <QuickActions role={activeRole ?? 'member'} />
           
           {/* Daily verse */}
-          <div className="rounded-xl border border-[#D97706]/20 bg-gradient-to-br from-card to-amber-50/10 dark:from-card dark:to-amber-950/20 p-4 shadow-lg">
+          <div className="rounded-xl border border-[#f8b537]/20 bg-gradient-to-br from-card to-[#f8b537]/5 dark:from-card dark:to-[#f8b537]/10 p-4 shadow-lg">
             <div className="mb-2 flex items-center gap-2">
               <svg className="h-5 w-5 text-[#f8b537]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />

@@ -327,8 +327,8 @@ export function DeclarativeForm({
           <label
             className={cn(
               'group flex cursor-pointer items-start gap-3 rounded-lg border border-input/15 bg-background/70 p-3 text-sm font-medium text-foreground transition-colors',
-              'hover:border-[#6D28D9]/35 hover:bg-[#6D28D9]/5',
-              'dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#6D28D9]/45 dark:hover:bg-[#6D28D9]/10',
+              'hover:border-[#5D3FD3]/35 hover:bg-[#5D3FD3]/5',
+              'dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#5D3FD3]/45 dark:hover:bg-[#5D3FD3]/10',
             )}
           >
             <Checkbox
