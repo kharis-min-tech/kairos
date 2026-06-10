@@ -5,9 +5,16 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
+import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
+import {
+  useFriendlyRoleLines,
+  WhereIBelongCard,
+  MyCommunityCard,
+  MyLeadershipCard,
+} from './_components/profile-sections';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -190,6 +197,20 @@ export default function ProfilePage() {
   const avatarUrl = photoPreview ?? (profile as { photoUrl?: string | null })?.photoUrl;
   const initials = ((profile?.firstName?.[0] ?? '') + (profile?.lastName?.[0] ?? '')).toUpperCase() || '?';
 
+  // Friendly role lines (replaces the raw `systemRole` exposure).
+  const memberId = fullProfile?.id ?? null;
+  const profileSystemRole = profile?.systemRole ?? null;
+  const homeBranchId =
+    (profile as { homeBranchId?: string | null } | null)?.homeBranchId ?? null;
+  const roleLines = useFriendlyRoleLines({
+    systemRole: profileSystemRole,
+    memberId,
+    homeBranchId,
+  });
+  // Branch lookup for the leadership-card pastor sub-label.
+  const { data: branchList } = useBranches();
+  const homeBranchName = branchList?.find((b) => b.id === homeBranchId)?.branchName ?? null;
+
   return (
     <div className="space-y-6">
       {/* Profile header */}
@@ -234,7 +255,11 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold tracking-tight">
               {profile?.firstName} {profile?.lastName}
             </h1>
-            <p className="mt-0.5 text-sm capitalize text-muted-foreground">{profile?.systemRole}</p>
+            <div className="mt-0.5 space-y-0.5">
+              {roleLines.map((line, i) => (
+                <p key={i} className="text-sm text-muted-foreground">{line}</p>
+              ))}
+            </div>
           </div>
           {!isEditing && (
             <div className="flex items-center gap-2">
@@ -409,7 +434,6 @@ export default function ProfilePage() {
                 <Field label="Phone" value={profile?.phone} />
                 <Field label="Gender" value={profile?.gender} />
                 <Field label="Date of Birth" value={(profile as { dateOfBirth?: string | null })?.dateOfBirth} />
-                <Field label="System Role" value={profile?.systemRole} />
               </dl>
             </CardContent>
           </Card>
@@ -427,38 +451,35 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {fullProfile?.secondaryBranchId && (
+          <WhereIBelongCard
+            homeBranchId={homeBranchId}
+            secondaryBranchId={fullProfile?.secondaryBranchId ?? null}
+            isAtSecondaryBranch={fullProfile?.isAtSecondaryBranch}
+            onSwitchBranch={fullProfile?.secondaryBranchId ? onSwitchBranch : undefined}
+            switchPending={switchBranch.isPending}
+            switchError={switchError}
+          />
+
+          <MyCommunityCard memberId={memberId} />
+
+          <MyLeadershipCard
+            memberId={memberId}
+            showAdminRole={profileSystemRole === 'admin'}
+            showPastorRole={profileSystemRole === 'pastor'}
+            homeBranchName={homeBranchName}
+          />
+
+          {fullProfile?.secondaryBranchId && (fullProfile.secondaryAddress || fullProfile.secondaryCity || fullProfile.secondaryPostalCode) && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Secondary Branch</CardTitle>
+                <CardTitle className="text-base">Secondary Address</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <dl className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Secondary Address" value={fullProfile.secondaryAddress} />
-                  <Field label="Secondary City" value={fullProfile.secondaryCity} />
-                  <Field label="Secondary Postal Code" value={fullProfile.secondaryPostalCode} />
+                  <Field label="Street Address" value={fullProfile.secondaryAddress} />
+                  <Field label="City" value={fullProfile.secondaryCity} />
+                  <Field label="Postal Code" value={fullProfile.secondaryPostalCode} />
                 </dl>
-                <div className="flex items-center justify-between border-t pt-3">
-                  <div>
-                    <p className="text-sm font-medium">Active Branch</p>
-                    <p className="text-xs text-muted-foreground">
-                      {fullProfile.isAtSecondaryBranch
-                        ? 'Currently at secondary branch'
-                        : 'Currently at home branch'}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg"
-                    onClick={onSwitchBranch}
-                    disabled={switchBranch.isPending}
-                  >
-                    {switchBranch.isPending ? 'Switching…' : 'Switch Branch'}
-                  </Button>
-                </div>
-                {switchError && <p className="text-sm text-destructive">{switchError}</p>}
               </CardContent>
             </Card>
           )}
