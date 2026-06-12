@@ -494,7 +494,7 @@ async function seed() {
   console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
 
   // ── 4. Roles ────────────────────────────────────────────────
-  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole] = await db
+  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole, branchSystemAdminRole] = await db
     .insert(roles)
     .values([
       { roleName: 'Worship Lead', description: 'Leads worship during services' },
@@ -505,9 +505,13 @@ async function seed() {
         roleName: 'Safeguarding Lead',
         description: 'Authorised to view and manage safeguarding and health records for minors',
       },
+      {
+        roleName: 'Branch System Admin',
+        description: 'Branch-level RBAC and access management. Can assign or revoke roles within the branch.',
+      },
     ])
     .returning();
-  console.log(`✓ 5 roles`);
+  console.log(`✓ 6 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -533,12 +537,12 @@ async function seed() {
     { departmentName: "Children's Ministry", description: 'Sunday school and kids ministry', iconKey: 'baby' },
     { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
     { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
-    { departmentName: 'Admin', description: 'Service-day admin desk — takes attendance registers and first-timer captures', iconKey: 'clipboard' },
+    { departmentName: 'Admin', description: 'Branch operations — operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
   ]).returning();
   console.log(`✓ 14 global departments`);
 
   // ── 4c. Branch Departments (smoke seed: 4 active instances) ─
-  const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon, adminLondon] = await db.insert(branchDepartments).values([
+  const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon, adminLondon, /* adminManchester */, /* adminAccra */] = await db.insert(branchDepartments).values([
     {
       branchId: london!.id,
       departmentId: choirDept!.id,
@@ -567,14 +571,31 @@ async function seed() {
     },
     {
       // London admin desk — members here can record service attendance.
+      // Lead = Branch Data Admin for London (operational authority).
       // Pastor + system admin retain write access as a fallback per the Admin-dept gate.
       branchId: london!.id,
       departmentId: adminDept!.id,
       leadMemberId: leaderSarah!.id,
       description: 'London admin desk — service-day registers and first-timer captures.',
     },
+    {
+      // Manchester admin desk — lead = Branch Data Admin for Manchester.
+      // Pastor Grace Mensah is the only seeded Manchester leader, so she doubles up here.
+      branchId: manchester!.id,
+      departmentId: adminDept!.id,
+      leadMemberId: pastorManchester!.id,
+      description: 'Manchester admin desk — service-day registers and first-timer captures.',
+    },
+    {
+      // Accra admin desk — lead = Branch Data Admin for Accra.
+      // David Appiah (leader) holds operational data admin authority here.
+      branchId: accra!.id,
+      departmentId: adminDept!.id,
+      leadMemberId: leaderDavid!.id,
+      description: 'Accra admin desk — service-day registers and first-timer captures.',
+    },
   ]).returning();
-  console.log(`✓ 5 branch-department instances`);
+  console.log(`✓ 7 branch-department instances`);
 
   // ── 4d. Department Members (smoke seed) ─────────────────────
   await db.insert(departmentMembers).values([
@@ -848,6 +869,20 @@ async function seed() {
     { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id },
   ]);
   console.log(`✓ 5 member-role assignments`);
+
+  // ── 5a. Branch System Admin assignments ─────────────────────
+  // Highest branch tier — can assign/revoke roles within their branch.
+  // London: Sarah (already Admin-dept lead → Data Admin) is also the System Admin
+  //   for test coverage of the highest branch tier on one account.
+  // Manchester: Pastor Grace doubles up (only seeded Manchester leader).
+  // Accra: Pastor Kwame is System Admin (pastor > leader David, who holds the
+  //   Branch Data Admin slot via Admin-dept lead). Demonstrates the hierarchy.
+  await db.insert(memberRoles).values([
+    { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id },
+    { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id },
+    { memberId: pastorAccra!.id, roleId: branchSystemAdminRole!.id, branchId: accra!.id },
+  ]);
+  console.log(`✓ 3 branch system admin assignments`);
 
   // ── 5b. Minor health record ─────────────────────────────────
   // Health/safeguarding record for Lily (the seeded child). Visible only to
