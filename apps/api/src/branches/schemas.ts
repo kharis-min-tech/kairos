@@ -37,3 +37,11 @@ export const assignLeadershipSchema = z.object({
 export const getLeadershipQuerySchema = z.object({
   includeHistory: z.coerce.boolean().optional().default(false),
 });
+
+/**
+ * Body for assigning the Branch System Admin role to a member.
+ * The branch is read from the URL param so the body stays minimal.
+ */
+export const assignBranchRoleSchema = z.object({
+  memberId: z.string().uuid('Invalid member ID'),
+});

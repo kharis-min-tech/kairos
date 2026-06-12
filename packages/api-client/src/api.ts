@@ -77,6 +77,11 @@ import type {
   ArchiveProspectsRequest,
   ArchiveProspectsResult,
   FormsCapabilities,
+  // Me / Leadership
+  MeLeadershipResponse,
+  // Branch role management
+  BranchRoleAssignment,
+  AssignBranchRoleRequest,
   // Attendance
   CreateServiceRequest,
   UpdateServiceRequest,
@@ -214,6 +219,19 @@ export function createApiClient(
         client.post<ApiResponse<BranchLeadershipWithMember>>(`/api/branches/${encodeURIComponent(branchId)}/leadership`, data),
       remove: (branchId: string, leadershipId: string) =>
         client.delete<ApiResponse<void>>(`/api/branches/${encodeURIComponent(branchId)}/leadership/${encodeURIComponent(leadershipId)}`),
+    },
+
+    branchRoles: {
+      // Branch System Admin assignment management. Gated by:
+      //   list   → requireBranchAdmin (any branch admin can view)
+      //   assign → requireBranchSystemAdmin
+      //   revoke → requireBranchSystemAdmin (+ last-active-BSA lockout guard)
+      list: (branchId: string) =>
+        client.get<ApiResponse<BranchRoleAssignment[]>>(`/api/branches/${encodeURIComponent(branchId)}/roles`),
+      assign: (branchId: string, data: AssignBranchRoleRequest) =>
+        client.post<ApiResponse<BranchRoleAssignment>>(`/api/branches/${encodeURIComponent(branchId)}/roles`, data),
+      revoke: (branchId: string, assignmentId: string) =>
+        client.delete<ApiResponse<BranchRoleAssignment>>(`/api/branches/${encodeURIComponent(branchId)}/roles/${encodeURIComponent(assignmentId)}`),
     },
 
     members: {
@@ -743,6 +761,8 @@ export function createApiClient(
           instanceStatus: string;
         }>>>(`/api/me/rota${query ? `?${query}` : ''}`);
       },
+      leadership: () =>
+        client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
     },
 
     analytics: {

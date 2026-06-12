@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import {
+  authMiddleware,
+  requireRole,
+  requireBranchAdmin,
+  requireBranchSystemAdmin,
+  getAuth,
+} from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -9,6 +15,7 @@ import {
   createRegionSchema,
   assignLeadershipSchema,
   getLeadershipQuerySchema,
+  assignBranchRoleSchema,
 } from './schemas';
 import {
   listBranches,
@@ -21,6 +28,9 @@ import {
   removeLeadership,
   listRegions,
   createRegion,
+  listBranchRoleAssignments,
+  assignBranchSystemAdmin,
+  revokeBranchSystemAdmin,
 } from './service';
 
 export const branchesRouter = new Hono();
@@ -61,18 +71,21 @@ branchesRouter.post('/', requireRole('admin'), zValidator('json', createBranchSc
   return c.json(successResponse(branch), 201);
 });
 
-branchesRouter.patch('/:id', requireRole('admin', 'pastor'), zValidator('json', updateBranchSchema), async (c) => {
+// Branch admins (system OR data) can edit operational branch info for their branch;
+// system admins retain global access. Migrated from requireRole('admin','pastor').
+branchesRouter.patch('/:id', requireBranchAdmin('id'), zValidator('json', updateBranchSchema), async (c) => {
   const auth = getAuth(c);
   const branch = await updateBranch(db, c.req.param('id'), c.req.valid('json'), auth);
   return c.json(successResponse(branch));
 });
 
+// Branch deactivation stays system-wide — it's destructive and cross-branch.
 branchesRouter.delete('/:id', requireRole('admin'), async (c) => {
   await deleteBranch(db, c.req.param('id')!);
   return c.json(successResponse(null, 'Branch deactivated'));
 });
 
-// ── Leadership ─────────────────────────────────────────────
+// ── Leadership (Main Pastor / Elder) ───────────────────────
 
 branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySchema), async (c) => {
   const auth = getAuth(c);
@@ -81,15 +94,47 @@ branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySche
   return c.json(successResponse(leadership));
 });
 
-branchesRouter.post('/:id/leadership', requireRole('admin'), zValidator('json', assignLeadershipSchema), async (c) => {
+// Appointing the Main Pastor / Elder is a branch-system-admin decision (and
+// global admins). Branch Data Admin alone is not enough. Migrated from
+// requireRole('admin').
+branchesRouter.post('/:id/leadership', requireBranchSystemAdmin('id'), zValidator('json', assignLeadershipSchema), async (c) => {
   const input = c.req.valid('json');
   const assignment = await assignLeadership(db, c.req.param('id'), input);
   return c.json(successResponse(assignment), 201);
 });
 
-branchesRouter.delete('/:id/leadership/:leadershipId', requireRole('admin'), async (c) => {
+branchesRouter.delete('/:id/leadership/:leadershipId', requireBranchSystemAdmin('id'), async (c) => {
   const leadershipId = c.req.param('leadershipId');
   if (!leadershipId) return c.json({ success: false, error: 'Leadership ID required' }, 400);
   await removeLeadership(db, c.req.param('id')!, leadershipId);
   return c.json(successResponse(null, 'Leadership assignment removed'));
+});
+
+// ── Branch System Admin role management ────────────────────
+
+// Any branch admin (system or data) can VIEW who holds BSA in their branch.
+branchesRouter.get('/:id/roles', requireBranchAdmin('id'), async (c) => {
+  const assignments = await listBranchRoleAssignments(db, c.req.param('id')!);
+  return c.json(successResponse(assignments));
+});
+
+// Only system admins or existing Branch System Admins can grant BSA.
+branchesRouter.post(
+  '/:id/roles',
+  requireBranchSystemAdmin('id'),
+  zValidator('json', assignBranchRoleSchema),
+  async (c) => {
+    const { memberId } = c.req.valid('json');
+    const assignment = await assignBranchSystemAdmin(db, c.req.param('id')!, memberId);
+    return c.json(successResponse(assignment), 201);
+  },
+);
+
+// Only system admins or existing Branch System Admins can revoke BSA.
+// Service-layer guard refuses to remove the last active BSA for the branch.
+branchesRouter.delete('/:id/roles/:assignmentId', requireBranchSystemAdmin('id'), async (c) => {
+  const assignmentId = c.req.param('assignmentId');
+  if (!assignmentId) return c.json({ success: false, error: 'Assignment ID required' }, 400);
+  const result = await revokeBranchSystemAdmin(db, c.req.param('id')!, assignmentId);
+  return c.json(successResponse(result, 'Branch System Admin assignment revoked'));
 });

@@ -232,3 +232,344 @@ describe('GET /api/branches/:id/leadership', () => {
     expect(body.data[0].role).toBe('Main Pastor');
   });
 });
+
+// ── POST /api/branches/:id/leadership ──────────────────────
+// Migrated to requireBranchSystemAdmin('id'). Branch Data Admin alone is
+// not enough; Branch System Admin OR system admin is required.
+
+describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
+  const sampleBranchRow = { id: TEST_IDS.branchId, isActive: true };
+  const sampleMemberRow = {
+    id: TEST_IDS.memberId,
+    firstName: 'Test',
+    lastName: 'Pastor',
+    email: 't@x',
+    isActive: true,
+  };
+
+  it('rejects a plain member with 401', async () => {
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('allows system admin to assign Main Pastor', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleBranchRow]))
+      .mockReturnValueOnce(chainTo([sampleMemberRow]))
+      .mockReturnValueOnce(chainTo([])); // existing duplicate check (none)
+    mockDb.update.mockReturnValueOnce(chainTo([])); // deactivate previous Main Pastor
+    mockDb.insert.mockReturnValueOnce(chainTo([sampleLeadership]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it('allows branch system admin of the requested branch', async () => {
+    const bsaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branchId,
+      branchSystemAdminBranchIds: [TEST_IDS.branchId],
+    });
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleBranchRow]))
+      .mockReturnValueOnce(chainTo([sampleMemberRow]))
+      .mockReturnValueOnce(chainTo([]));
+    mockDb.update.mockReturnValueOnce(chainTo([]));
+    mockDb.insert.mockReturnValueOnce(chainTo([sampleLeadership]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bsaToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects branch DATA admin alone (BSA is required)', async () => {
+    const bdaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branchId,
+      branchDataAdminBranchIds: [TEST_IDS.branchId],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bdaToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects branch system admin of a DIFFERENT branch', async () => {
+    const otherBsaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branch2Id,
+      branchSystemAdminBranchIds: [TEST_IDS.branch2Id],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${otherBsaToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+// ── GET /api/branches/:id/roles ────────────────────────────
+// Lists Branch System Admin assignments — gated by requireBranchAdmin
+// (any branch admin, system or data, can view).
+
+const sampleRoleAssignment = {
+  id: 'cc0e8400-0000-0000-0000-000000000005',
+  memberId: TEST_IDS.memberId,
+  memberFirstName: 'Sarah',
+  memberLastName: 'Okeke',
+  memberEmail: 'sarah@kairos.local',
+  roleName: 'Branch System Admin',
+  assignedDate: '2026-01-01',
+  isActive: true,
+};
+
+describe('GET /api/branches/:id/roles', () => {
+  it('returns 401 for plain member', async () => {
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns assignments for system admin', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([sampleRoleAssignment]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0].roleName).toBe('Branch System Admin');
+    expect(body.data[0].member.firstName).toBe('Sarah');
+  });
+
+  it('returns assignments for branch DATA admin of that branch (view-only is allowed)', async () => {
+    const bdaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branchId,
+      branchDataAdminBranchIds: [TEST_IDS.branchId],
+    });
+    mockDb.select.mockReturnValueOnce(chainTo([sampleRoleAssignment]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      headers: { Authorization: `Bearer ${bdaToken}` },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 401 for branch system admin of OTHER branch', async () => {
+    const otherBsaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branch2Id,
+      branchSystemAdminBranchIds: [TEST_IDS.branch2Id],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      headers: { Authorization: `Bearer ${otherBsaToken}` },
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+// ── POST /api/branches/:id/roles ───────────────────────────
+// Grants Branch System Admin — gated by requireBranchSystemAdmin.
+
+describe('POST /api/branches/:id/roles', () => {
+  const sampleBranchRow = { id: TEST_IDS.branchId, isActive: true };
+  const sampleMemberRow = {
+    id: TEST_IDS.memberId,
+    firstName: 'Sarah',
+    lastName: 'Okeke',
+    email: 'sarah@kairos.local',
+    isActive: true,
+  };
+  const sampleRoleRow = { id: TEST_IDS.roleId };
+  const insertedRow = {
+    id: 'cc0e8400-0000-0000-0000-000000000006',
+    memberId: TEST_IDS.memberId,
+    roleId: TEST_IDS.roleId,
+    branchId: TEST_IDS.branchId,
+    assignedDate: '2026-06-12',
+    isActive: true,
+  };
+
+  it('rejects plain member with 401', async () => {
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects branch DATA admin alone (BSA is required to grant)', async () => {
+    const bdaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branchId,
+      branchDataAdminBranchIds: [TEST_IDS.branchId],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bdaToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('allows system admin to assign', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleBranchRow]))    // branch lookup
+      .mockReturnValueOnce(chainTo([sampleMemberRow]))    // member lookup
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))      // role lookup
+      .mockReturnValueOnce(chainTo([]));                  // duplicate check
+    mockDb.insert.mockReturnValueOnce(chainTo([insertedRow]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId }),
+    });
+    expect(res.status).toBe(201);
+    const body = await res.json() as any;
+    expect(body.data.memberId).toBe(TEST_IDS.memberId);
+    expect(body.data.roleName).toBe('Branch System Admin');
+  });
+
+  it('returns 409 when member already holds the role for this branch', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleBranchRow]))
+      .mockReturnValueOnce(chainTo([sampleMemberRow]))
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))
+      .mockReturnValueOnce(chainTo([{ id: 'existing' }])); // duplicate exists
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId }),
+    });
+    expect(res.status).toBe(409);
+  });
+
+  it('rejects branch system admin of OTHER branch', async () => {
+    const otherBsaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branch2Id,
+      branchSystemAdminBranchIds: [TEST_IDS.branch2Id],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${otherBsaToken}` },
+      body: JSON.stringify({ memberId: TEST_IDS.memberId }),
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+// ── DELETE /api/branches/:id/roles/:assignmentId ───────────
+
+describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
+  const assignmentId = 'cc0e8400-0000-0000-0000-000000000007';
+  const sampleRoleRow = { id: TEST_IDS.roleId };
+  const sampleAssignment = {
+    id: assignmentId,
+    memberId: TEST_IDS.memberId,
+    branchId: TEST_IDS.branchId,
+    roleId: TEST_IDS.roleId,
+    isActive: true,
+    assignedDate: '2026-01-01',
+  };
+  const sampleMemberRow = {
+    id: TEST_IDS.memberId,
+    firstName: 'Sarah',
+    lastName: 'Okeke',
+    email: 'sarah@kairos.local',
+  };
+  const revokedRow = { ...sampleAssignment, isActive: false };
+
+  it('rejects plain member', async () => {
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects branch DATA admin alone', async () => {
+    const bdaToken = signTestToken({
+      systemRole: 'leader',
+      memberId: TEST_IDS.memberId,
+      branchId: TEST_IDS.branchId,
+      branchDataAdminBranchIds: [TEST_IDS.branchId],
+    });
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${bdaToken}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects revocation of the LAST active Branch System Admin (lockout guard)', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))         // role lookup
+      .mockReturnValueOnce(chainTo([sampleAssignment]))      // assignment lookup
+      .mockReturnValueOnce(chainTo([{ count: 1 }]));         // only one active BSA
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json() as any;
+    expect(body.message || body.error).toMatch(/last active/i);
+  });
+
+  it('allows revocation when more than one active BSA exists', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))         // role lookup
+      .mockReturnValueOnce(chainTo([sampleAssignment]))      // assignment lookup
+      .mockReturnValueOnce(chainTo([{ count: 2 }]))          // 2 active
+      .mockReturnValueOnce(chainTo([sampleMemberRow]));      // member info for envelope
+    mockDb.update.mockReturnValueOnce(chainTo([revokedRow]));
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data.isActive).toBe(false);
+  });
+
+  it('returns 404 when assignment does not exist', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([sampleRoleRow])) // role lookup
+      .mockReturnValueOnce(chainTo([]));             // assignment not found
+
+    const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(404);
+  });
+});
