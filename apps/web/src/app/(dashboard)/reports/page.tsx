@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { useQuery } from '@tanstack/react-query';
 import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAnalytics } from '@/hooks/use-reports';
 import { useMemberDashboard } from '@/hooks/use-dashboard';
-import { useFellowships } from '@/hooks/use-fellowships';
+import { useFellowships, useFellowshipMembers, useFellowshipMeetings, useFellowshipFollowups, useFellowshipJoinRequests } from '@/hooks/use-fellowships';
+import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups } from '@/hooks/use-departments';
+import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
+import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
 import {
   BarChart,
   Bar,
@@ -425,7 +428,15 @@ function MemberSoulsTab() {
   );
 }
 
-export default function ReportsPage() {
+// ── Branch-wide reports panel ─────────────────────────────
+//
+// Existing report content (Attendance / Growth / Outreach sub-tabs) for the
+// "My Branch" persona — admins, branch admins, and pastors. Plain members
+// also fall through to this panel via the legacy member layout (rendered as
+// `<BranchReportsPanel isLeadership={false}/>`), which preserves the original
+// behaviour of /reports prior to Phase 6.
+
+function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [statusColors, setStatusColorsRaw] = useState<Record<string, string>>(() => {
     if (typeof window !== 'undefined') {
@@ -446,8 +457,6 @@ export default function ReportsPage() {
     });
   };
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const isLeadership = activeRole === 'admin' || activeRole === 'pastor';
 
   const { data: growthData, isLoading: growthLoading } = useMemberGrowth();
   const { data: attendanceData, isLoading: attendanceLoading } = useAttendanceTrend();
@@ -503,35 +512,25 @@ export default function ReportsPage() {
     { key: 'outreach', label: 'Outreach' },
   ];
 
-  // Everyone sees the same layout — API scopes data by role
+  // Branch-wide layout — API scopes data by role
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports & Analytics</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Track church growth, attendance trends, and outreach — all in one calm view.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Tab pills */}
-          <div className="flex rounded-full border border-border bg-muted p-0.5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      {/* Sub-tab pills */}
+      <div className="flex items-center justify-end gap-2">
+        <div className="flex rounded-full border border-border bg-muted p-0.5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-foreground text-background shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -911,6 +910,518 @@ export default function ReportsPage() {
             </Card>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── My Fellowship reports ─────────────────────────────────
+//
+// Fellowship-scoped stats for a leader. When the user leads multiple
+// fellowships, a small picker dropdown surfaces above the panel; otherwise
+// the lone fellowship is selected automatically.
+//
+// TODO (analytics gap): there is no per-fellowship attendance-trend or
+// new-joins time-series endpoint today. The page reuses existing list
+// endpoints (members, meetings, followups, join-requests) and derives stats
+// in the browser. A proper fellowship-scoped analytics endpoint would
+// replace these per-fellowship hooks with a single aggregate call.
+
+function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {
+  const [selectedId, setSelectedId] = useState<string>(fellowships[0]?.id ?? '');
+  const selected = fellowships.find((f) => f.id === selectedId) ?? fellowships[0];
+
+  if (!selected) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          You don&apos;t currently lead any fellowships.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {fellowships.length > 1 && (
+        <div className="flex items-center gap-2">
+          <label htmlFor="fellowship-picker" className="text-xs font-medium text-muted-foreground">
+            Fellowship
+          </label>
+          <select
+            id="fellowship-picker"
+            value={selected.id}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:border-[#5D3FD3] focus:outline-none focus:ring-1 focus:ring-[#5D3FD3]"
+          >
+            {fellowships.map((f) => (
+              <option key={f.id} value={f.id}>{f.fellowshipName}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <FellowshipReportPanel fellowshipId={selected.id} fellowshipName={selected.fellowshipName} />
+    </div>
+  );
+}
+
+function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId: string; fellowshipName: string }) {
+  // Load on tab activation — one hook per data slice. Each enabled gate is
+  // already guarded by !!fellowshipId inside the hook so this is N=4, not N+1.
+  const membersQ = useFellowshipMembers(fellowshipId);
+  const meetingsQ = useFellowshipMeetings(fellowshipId);
+  const followupsQ = useFellowshipFollowups(fellowshipId);
+  const joinRequestsQ = useFellowshipJoinRequests(fellowshipId);
+
+  const isLoading = membersQ.isLoading || meetingsQ.isLoading || followupsQ.isLoading || joinRequestsQ.isLoading;
+
+  const members = membersQ.data ?? [];
+  const meetings = meetingsQ.data ?? [];
+  const followups = followupsQ.data ?? [];
+  const joinRequests = joinRequestsQ.data ?? [];
+
+  // Active vs. inactive — fellowship_members rows are active by default; we
+  // look at the .isActive field if present.
+  const activeMembers = members.filter((m: any) => m.isActive !== false).length;
+  const inactiveMembers = Math.max(0, members.length - activeMembers);
+
+  // Last-90-day meeting filter — meetings with a meetingDate inside the window.
+  const ninetyDaysAgo = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 90);
+    return d;
+  }, []);
+  const recentMeetings = meetings.filter((m: any) => {
+    if (!m.meetingDate) return false;
+    return new Date(m.meetingDate) >= ninetyDaysAgo;
+  });
+
+  // Open followups (status not "completed" or "closed").
+  const openFollowups = followups.filter((f: any) => {
+    const status = (f.status ?? '').toLowerCase();
+    return status !== 'completed' && status !== 'closed';
+  }).length;
+  const closedFollowups = followups.length - openFollowups;
+
+  // Join requests in the last 30 days that haven't been declined.
+  const thirtyDaysAgo = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d;
+  }, []);
+  const recentJoinRequests = joinRequests.filter((r: any) => {
+    if (!r.createdAt) return false;
+    return new Date(r.createdAt) >= thirtyDaysAgo;
+  }).length;
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}><CardContent className="py-8"><div className="h-16 animate-pulse rounded-md bg-muted" /></CardContent></Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Meeting attendance trend — number of meetings per week over last 90 days.
+  // We can't compute an attendance % without per-meeting attendance rows, so we
+  // show a count instead with a "scoped: fellowship" badge.
+  const meetingsByWeek = recentMeetings.reduce<Record<string, number>>((acc, m: any) => {
+    const date = new Date(m.meetingDate);
+    // Snap to Monday of the week.
+    const day = date.getDay();
+    const offset = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + offset);
+    const key = monday.toISOString().slice(0, 10);
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+  const meetingsTrend = Object.entries(meetingsByWeek)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([week, count]) => ({ week, count }));
+
+  return (
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ReportStatCard
+          title="Members"
+          value={members.length}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+          sub={`${activeMembers} active${inactiveMembers ? ` · ${inactiveMembers} inactive` : ''}`}
+        />
+        <ReportStatCard
+          title="Meetings (90d)"
+          value={recentMeetings.length}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
+          sub={recentMeetings.length === 0 ? 'None recorded' : 'Recorded meetings'}
+        />
+        <ReportStatCard
+          title="Follow-ups"
+          value={followups.length}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          sub={`${openFollowups} open · ${closedFollowups} closed`}
+        />
+        <ReportStatCard
+          title="New joins (30d)"
+          value={recentJoinRequests}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3" /></svg>}
+          sub={recentJoinRequests === 0 ? 'No new requests' : 'Join requests'}
+        />
+      </div>
+
+      {/* Meeting trend chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold">Meetings per week</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">Last 90 days — {fellowshipName}</p>
+            </div>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
+              Scoped: fellowship
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {meetingsTrend.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              No meetings in the last 90 days. Record meetings to see trends here.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={meetingsTrend} barSize={24}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                <Bar dataKey="count" name="Meetings" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Open followups breakdown */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Recent activity</CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {fellowshipName} · last 90 days
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-md border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Open follow-ups</p>
+              <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{openFollowups}</p>
+            </div>
+            <div className="rounded-md border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Closed follow-ups</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600">{closedFollowups}</p>
+            </div>
+            <div className="rounded-md border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Pending join requests</p>
+              <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{recentJoinRequests}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── My Department reports ─────────────────────────────────
+//
+// Department-scoped stats. Same shape as MyFellowshipReports: picker for
+// multi-department leaders, otherwise auto-select the only one.
+//
+// TODO (analytics gap): the service-attendance module ships a department-
+// scoped rate but no rota-instance count endpoint. We surface members,
+// follow-ups and join-requests via existing list endpoints.
+
+function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartment[] }) {
+  const [selectedId, setSelectedId] = useState<string>(departments[0]?.id ?? '');
+  const selected = departments.find((d) => d.id === selectedId) ?? departments[0];
+
+  if (!selected) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          You don&apos;t currently lead any departments.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {departments.length > 1 && (
+        <div className="flex items-center gap-2">
+          <label htmlFor="department-picker" className="text-xs font-medium text-muted-foreground">
+            Department
+          </label>
+          <select
+            id="department-picker"
+            value={selected.id}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:border-[#5D3FD3] focus:outline-none focus:ring-1 focus:ring-[#5D3FD3]"
+          >
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.departmentName}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <DepartmentReportPanel branchDeptId={selected.id} departmentName={selected.departmentName} />
+    </div>
+  );
+}
+
+function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId: string; departmentName: string }) {
+  const membersQ = useDepartmentMembers(branchDeptId);
+  const joinRequestsQ = useDepartmentJoinRequests(branchDeptId);
+  const followupsQ = useDepartmentFollowups(branchDeptId);
+
+  const isLoading = membersQ.isLoading || joinRequestsQ.isLoading || followupsQ.isLoading;
+
+  const members = membersQ.data ?? [];
+  const joinRequests = joinRequestsQ.data ?? [];
+  const followups = followupsQ.data ?? [];
+
+  // Probation vs active — department_members track probation state.
+  const probationMembers = members.filter((m: any) =>
+    (m.status ?? '').toLowerCase() === 'probation' || m.isProbation === true
+  ).length;
+  const activeMembers = Math.max(0, members.length - probationMembers);
+
+  // Pending join requests — status not declined/withdrawn/active.
+  const pendingJoinRequests = joinRequests.filter((r: any) => {
+    const status = (r.status ?? '').toLowerCase();
+    return status !== 'declined' && status !== 'withdrawn' && status !== 'active' && status !== 'rejected';
+  }).length;
+
+  // Open follow-ups.
+  const openFollowups = followups.filter((f: any) => {
+    const status = (f.status ?? '').toLowerCase();
+    return status !== 'completed' && status !== 'closed';
+  }).length;
+  const closedFollowups = followups.length - openFollowups;
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}><CardContent className="py-8"><div className="h-16 animate-pulse rounded-md bg-muted" /></CardContent></Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ReportStatCard
+          title="Members"
+          value={members.length}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197" /></svg>}
+          sub={probationMembers > 0 ? `${activeMembers} active · ${probationMembers} probation` : `${activeMembers} active`}
+        />
+        <ReportStatCard
+          title="Pending join requests"
+          value={pendingJoinRequests}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3" /></svg>}
+          sub={pendingJoinRequests === 0 ? 'All caught up' : 'Awaiting review'}
+        />
+        <ReportStatCard
+          title="Open follow-ups"
+          value={openFollowups}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          sub={`${closedFollowups} closed`}
+        />
+        <ReportStatCard
+          title="Rota"
+          value="—"
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
+          sub="No scoped endpoint yet"
+        />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold">Department snapshot</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{departmentName}</p>
+            </div>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
+              Scoped: department
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {members.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No members in this department yet. Approve a join request to get started.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Active members</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-600">{activeMembers}</p>
+              </div>
+              <div className="rounded-md border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">On probation</p>
+                <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{probationMembers}</p>
+              </div>
+              <div className="rounded-md border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Open follow-ups</p>
+                <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{openFollowups}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* TODO: service-attendance rate per department and rota-instance counts
+          require new aggregations on the API. Surface them once available. */}
+      <Card>
+        <CardContent className="pt-4 pb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Coming soon
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Service-attendance rate and upcoming rota counts will appear here once
+            department-scoped analytics ship.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Persona tabs ──────────────────────────────────────────
+//
+// Top-level persona selector for /reports. Mirrors the dashboard's
+// DualLeaderTabs button-row pattern (no @kairos/ui Tabs primitive yet).
+
+type PersonaKey = 'branch' | 'fellowship' | 'department';
+
+function PersonaTabs({
+  available,
+  active,
+  onChange,
+}: {
+  available: PersonaKey[];
+  active: PersonaKey;
+  onChange: (key: PersonaKey) => void;
+}) {
+  const labels: Record<PersonaKey, string> = {
+    branch: 'My Branch',
+    fellowship: 'My Fellowship',
+    department: 'My Department',
+  };
+  return (
+    <div className="inline-flex rounded-lg border border-border bg-card p-1" role="tablist">
+      {available.map((key) => (
+        <button
+          key={key}
+          type="button"
+          role="tab"
+          onClick={() => onChange(key)}
+          aria-pressed={active === key}
+          aria-selected={active === key}
+          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
+            active === key
+              ? 'bg-[#5D3FD3] text-white'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {labels[key]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Page orchestrator ─────────────────────────────────────
+
+export default function ReportsPage() {
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const bsaIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
+  const bdaIds = useAuthStore((s) => s.branchDataAdminBranchIds);
+
+  // useMyLeadership populates auth-store BSA/BDA + returns lead arrays.
+  const leadership = useMyLeadership();
+  const leadFellowships = leadership.data?.leadFellowships ?? [];
+  const coLeadFellowships = leadership.data?.coLeadFellowships ?? [];
+  const leadDepartments = leadership.data?.leadDepartments ?? [];
+  const deputyDepartments = leadership.data?.deputyDepartments ?? [];
+  const allLeadFellowships = [...leadFellowships, ...coLeadFellowships];
+  const allLeadDepartments = [...leadDepartments, ...deputyDepartments];
+
+  // Persona authority — branch admins inherit BSA/BDA from /api/me/leadership
+  // (mirrored into auth-store), so reading either is safe.
+  const isSystemAdmin = activeRole === 'admin';
+  const isBranchSystemAdmin = bsaIds.length > 0 || (leadership.data?.branchSystemAdminBranchIds.length ?? 0) > 0;
+  const isBranchDataAdmin = bdaIds.length > 0 || (leadership.data?.branchDataAdminBranchIds.length ?? 0) > 0;
+  const isBranchAdmin = isBranchSystemAdmin || isBranchDataAdmin;
+  const isPastor = activeRole === 'pastor';
+  const hasFellowshipLead = allLeadFellowships.length > 0;
+  const hasDepartmentLead = allLeadDepartments.length > 0;
+
+  const canSeeBranch = isSystemAdmin || isBranchAdmin || isPastor;
+  const canSeeFellowship = hasFellowshipLead;
+  const canSeeDepartment = hasDepartmentLead;
+
+  // Available persona tabs in priority order.
+  const availableTabs: PersonaKey[] = useMemo(() => {
+    const tabs: PersonaKey[] = [];
+    if (canSeeBranch) tabs.push('branch');
+    if (canSeeFellowship) tabs.push('fellowship');
+    if (canSeeDepartment) tabs.push('department');
+    return tabs;
+  }, [canSeeBranch, canSeeFellowship, canSeeDepartment]);
+
+  // Default tab — most-elevated persona the user holds.
+  const defaultTab: PersonaKey =
+    canSeeBranch ? 'branch' :
+    canSeeFellowship ? 'fellowship' :
+    canSeeDepartment ? 'department' :
+    'branch'; // plain members never see tabs; this fallback is a safety net.
+
+  const [persona, setPersona] = useState<PersonaKey>(defaultTab);
+
+  // Plain member path — no tabs, render the legacy member report layout
+  // (BranchReportsPanel reads activeRole internally to switch member/leadership stats).
+  const isPlainMember = !canSeeBranch && !canSeeFellowship && !canSeeDepartment;
+
+  return (
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Track church growth, attendance trends, and outreach — all in one calm view.
+          </p>
+        </div>
+        {!isPlainMember && availableTabs.length > 1 && (
+          <PersonaTabs available={availableTabs} active={persona} onChange={setPersona} />
+        )}
+      </div>
+
+      {/* Active persona panel */}
+      {isPlainMember && <BranchReportsPanel isLeadership={false} />}
+      {!isPlainMember && persona === 'branch' && <BranchReportsPanel isLeadership={true} />}
+      {!isPlainMember && persona === 'fellowship' && (
+        <MyFellowshipReports fellowships={allLeadFellowships} />
+      )}
+      {!isPlainMember && persona === 'department' && (
+        <MyDepartmentReports departments={allLeadDepartments} />
       )}
     </div>
   );
