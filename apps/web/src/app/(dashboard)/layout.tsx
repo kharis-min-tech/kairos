@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
+import { RoleSwitcherDropdown } from '@/components/role-switcher-dropdown';
 
 type NavItem = {
   href: string;
@@ -151,7 +152,16 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, activeRole, mustChangePassword, setUser, accessToken } = useAuthStore();
+  const {
+    user,
+    logout,
+    activeRole,
+    mustChangePassword,
+    setUser,
+    accessToken,
+    availableRoles,
+    setAvailableRoles,
+  } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Hydrate user profile from API after page refresh (user is not persisted in localStorage)
@@ -168,6 +178,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (profileData) setUser(profileData);
   }, [profileData, setUser]);
 
+  // Phase 3: if the caller upgraded from a pre-Phase-3 session (persisted
+  // token, no availableRoles), back-fill the role list so the header
+  // switcher can render without forcing a re-login. Doesn't block render.
+  const { data: rolesData } = useQuery({
+    queryKey: ['auth', 'available-roles'],
+    queryFn: async () => {
+      const res = await api.auth.availableRoles();
+      return res.data!;
+    },
+    enabled: !!accessToken && availableRoles.length === 0,
+  });
+
+  useEffect(() => {
+    if (rolesData) setAvailableRoles(rolesData);
+  }, [rolesData, setAvailableRoles]);
+
   useEffect(() => {
     if (mustChangePassword) {
       router.replace('/change-password');
@@ -182,10 +208,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const visibleNavItems = navItems.filter(
     (item) => !item.roles || (activeRole && item.roles.includes(activeRole)),
   );
-
-  const roleLabel = activeRole === 'admin' ? 'Administrator' :
-    activeRole === 'pastor' ? 'Pastor' :
-    activeRole === 'leader' ? 'Leader' : 'Member';
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
@@ -223,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p className="truncate text-sm font-medium text-foreground">
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+            <RoleSwitcherDropdown />
           </div>
           <Link
             href="/profile/settings"

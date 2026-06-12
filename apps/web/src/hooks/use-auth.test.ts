@@ -9,10 +9,11 @@ import {
   useForgotPassword,
   useResetPassword,
   useFinalizeRole,
+  useSwitchRole,
   persistAuthSuccess,
 } from './use-auth';
 import { useAuthStore } from '@/lib/auth-store';
-import type { Member } from '@kairos/types';
+import type { Member, RoleOption } from '@kairos/types';
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -23,9 +24,18 @@ vi.mock('@/lib/api', () => ({
       forgotPassword: vi.fn(),
       resetPassword: vi.fn(),
       finalizeRole: vi.fn(),
+      switchRole: vi.fn(),
     },
   },
 }));
+
+/** Mint a JWT-shaped string whose payload carries `scope`. The decoder
+ *  in auth-store only reads the payload — signature is irrelevant. */
+function fakeJwt(payload: Record<string, unknown>): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.sig`;
+}
 
 import { api } from '@/lib/api';
 
@@ -76,6 +86,8 @@ beforeEach(() => {
     refreshToken: null,
     user: null,
     activeRole: null,
+    scope: null,
+    availableRoles: [],
     mustChangePassword: false,
   });
 });
@@ -237,6 +249,118 @@ describe('persistAuthSuccess', () => {
     expect(state.user?.id).toBe('member-1');
     expect(state.mustChangePassword).toBe(true);
     expect(state.activeRole).toBe('leader');
+  });
+
+  it('decodes scope out of the access-token JWT payload', () => {
+    const jwt = fakeJwt({
+      memberId: 'm-1',
+      activeRole: 'leader',
+      scope: { kind: 'fellowship', id: 'f-99' },
+    });
+    persistAuthSuccess({
+      tokens: { accessToken: jwt, refreshToken: 'rt' },
+      member: mockMember as never,
+      activeRole: 'leader',
+    });
+    expect(useAuthStore.getState().scope).toEqual({ kind: 'fellowship', id: 'f-99' });
+  });
+
+  it('clears scope to null when the JWT has no scope claim', () => {
+    useAuthStore.setState({ scope: { kind: 'branch', id: 'b-stale' } });
+    const jwt = fakeJwt({ memberId: 'm-1', activeRole: 'admin' });
+    persistAuthSuccess({
+      tokens: { accessToken: jwt, refreshToken: 'rt' },
+      member: mockMember as never,
+      activeRole: 'admin',
+    });
+    expect(useAuthStore.getState().scope).toBeNull();
+  });
+
+  it('persists availableRoles when caller supplies them', () => {
+    const roles: RoleOption[] = [
+      { activeRole: 'admin', displayLabel: 'Admin', key: 'k-a' },
+      { activeRole: 'member', displayLabel: 'Member', key: 'k-m' },
+    ];
+    persistAuthSuccess({
+      tokens: { accessToken: 'at', refreshToken: 'rt' },
+      member: mockMember as never,
+      activeRole: 'admin',
+      availableRoles: roles,
+    });
+    expect(useAuthStore.getState().availableRoles).toEqual(roles);
+  });
+
+  it('leaves availableRoles untouched when caller omits them (single-role login path)', () => {
+    const existing: RoleOption[] = [
+      { activeRole: 'pastor', displayLabel: 'Pastor', key: 'k-p' },
+    ];
+    useAuthStore.setState({ availableRoles: existing });
+    persistAuthSuccess({
+      tokens: { accessToken: 'at', refreshToken: 'rt' },
+      member: mockMember as never,
+      activeRole: 'member',
+    });
+    expect(useAuthStore.getState().availableRoles).toEqual(existing);
+  });
+});
+
+describe('useSwitchRole', () => {
+  it('calls api.auth.switchRole with the picked option', async () => {
+    vi.mocked(api.auth.switchRole).mockResolvedValue({
+      data: {
+        tokens: { accessToken: 'at3', refreshToken: 'rt3' },
+        member: mockMember as never,
+      },
+    } as never);
+
+    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({
+        activeRole: 'leader',
+        scope: { kind: 'department', id: 'd-1' },
+        key: 'k-dept-1',
+      });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.auth.switchRole).toHaveBeenCalledWith({
+      activeRole: 'leader',
+      scope: { kind: 'department', id: 'd-1' },
+      key: 'k-dept-1',
+    });
+    expect(result.current.data?.tokens.accessToken).toBe('at3');
+  });
+
+  it('does NOT auto-persist — caller persists via persistAuthSuccess', async () => {
+    vi.mocked(api.auth.switchRole).mockResolvedValue({
+      data: {
+        tokens: { accessToken: 'at3', refreshToken: 'rt3' },
+        member: mockMember as never,
+      },
+    } as never);
+
+    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ activeRole: 'member', key: 'k-mem' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(useAuthStore.getState().accessToken).toBeNull();
+  });
+
+  it('surfaces error when switch-role rejects (stale option)', async () => {
+    vi.mocked(api.auth.switchRole).mockRejectedValue(new Error('Role selection is invalid'));
+
+    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ activeRole: 'pastor', key: 'k-stale' });
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Role selection is invalid');
   });
 });
 

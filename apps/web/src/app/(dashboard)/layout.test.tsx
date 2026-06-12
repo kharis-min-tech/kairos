@@ -18,9 +18,14 @@ vi.mock('@tanstack/react-query', () => ({
   useQuery: () => ({ data: undefined }),
 }));
 
-vi.mock('@/lib/api', () => ({ api: { members: { me: vi.fn() } } }));
+vi.mock('@/lib/api', () => ({
+  api: { members: { me: vi.fn() }, auth: { availableRoles: vi.fn() } },
+}));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => <div /> }));
 vi.mock('@/components/member-avatar', () => ({ MemberAvatar: () => <div /> }));
+vi.mock('@/components/role-switcher-dropdown', () => ({
+  RoleSwitcherDropdown: () => <div />,
+}));
 
 import DashboardLayout from './layout';
 
@@ -32,6 +37,8 @@ function makeState(role: string) {
     mustChangePassword: false,
     setUser: vi.fn(),
     accessToken: 'tok',
+    availableRoles: [],
+    setAvailableRoles: vi.fn(),
   };
 }
 

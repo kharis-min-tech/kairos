@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest';
-import { useAuthStore } from './auth-store';
-import type { Member } from '@kairos/types';
+import { decodeScopeFromAccessToken, useAuthStore } from './auth-store';
+import type { Member, RoleOption } from '@kairos/types';
 
 const mockMember: Member = {
   id: 'member-1',
@@ -36,12 +36,33 @@ const mockMember: Member = {
   updatedAt: new Date(),
 };
 
+const sampleRoles: RoleOption[] = [
+  { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
+  {
+    activeRole: 'leader',
+    scope: { kind: 'fellowship', id: 'f-1' },
+    displayLabel: 'Fellowship Lead — Joy',
+    key: 'k-lead-f1',
+  },
+];
+
+/** Mint a JWT-shaped string with the given payload. Signature is bogus —
+ *  the client-side decoder doesn't verify, it only reads the payload. */
+function fakeJwt(payload: Record<string, unknown>): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.sig`;
+}
+
 describe('useAuthStore', () => {
   beforeEach(() => {
     useAuthStore.setState({
       accessToken: null,
       refreshToken: null,
       user: null,
+      activeRole: null,
+      scope: null,
+      availableRoles: [],
       branchSystemAdminBranchIds: [],
       branchDataAdminBranchIds: [],
     });
@@ -60,6 +81,12 @@ describe('useAuthStore', () => {
     expect(branchDataAdminBranchIds).toEqual([]);
   });
 
+  it('has null scope and empty availableRoles in initial state', () => {
+    const { scope, availableRoles } = useAuthStore.getState();
+    expect(scope).toBeNull();
+    expect(availableRoles).toEqual([]);
+  });
+
   it('setBranchAdminAuthority stores both arrays', () => {
     useAuthStore.getState().setBranchAdminAuthority({
       branchSystemAdminBranchIds: ['b-1', 'b-2'],
@@ -71,6 +98,22 @@ describe('useAuthStore', () => {
     expect(state.branchDataAdminBranchIds).toEqual(['b-3']);
   });
 
+  it('setScope stores a fellowship scope', () => {
+    useAuthStore.getState().setScope({ kind: 'fellowship', id: 'f-1' });
+    expect(useAuthStore.getState().scope).toEqual({ kind: 'fellowship', id: 'f-1' });
+  });
+
+  it('setScope can clear back to null', () => {
+    useAuthStore.getState().setScope({ kind: 'branch', id: 'b-1' });
+    useAuthStore.getState().setScope(null);
+    expect(useAuthStore.getState().scope).toBeNull();
+  });
+
+  it('setAvailableRoles stores the role-option list', () => {
+    useAuthStore.getState().setAvailableRoles(sampleRoles);
+    expect(useAuthStore.getState().availableRoles).toEqual(sampleRoles);
+  });
+
   it('logout clears branch-admin authority too', () => {
     useAuthStore.setState({
       branchSystemAdminBranchIds: ['b-1'],
@@ -80,6 +123,17 @@ describe('useAuthStore', () => {
     const state = useAuthStore.getState();
     expect(state.branchSystemAdminBranchIds).toEqual([]);
     expect(state.branchDataAdminBranchIds).toEqual([]);
+  });
+
+  it('logout clears scope and availableRoles too', () => {
+    useAuthStore.setState({
+      scope: { kind: 'department', id: 'd-1' },
+      availableRoles: sampleRoles,
+    });
+    useAuthStore.getState().logout();
+    const state = useAuthStore.getState();
+    expect(state.scope).toBeNull();
+    expect(state.availableRoles).toEqual([]);
   });
 
   it('setTokens stores access and refresh tokens', () => {
@@ -117,5 +171,28 @@ describe('useAuthStore', () => {
     expect(accessToken).toBeNull();
     expect(refreshToken).toBeNull();
     expect(user).toBeNull();
+  });
+});
+
+describe('decodeScopeFromAccessToken', () => {
+  it('returns the scope from a JWT payload', () => {
+    const jwt = fakeJwt({
+      memberId: 'm-1',
+      email: 'a@b.c',
+      activeRole: 'leader',
+      scope: { kind: 'fellowship', id: 'f-1' },
+    });
+    expect(decodeScopeFromAccessToken(jwt)).toEqual({ kind: 'fellowship', id: 'f-1' });
+  });
+
+  it('returns null when the JWT has no scope claim', () => {
+    const jwt = fakeJwt({ memberId: 'm-1', activeRole: 'admin' });
+    expect(decodeScopeFromAccessToken(jwt)).toBeNull();
+  });
+
+  it('returns null for a malformed token', () => {
+    expect(decodeScopeFromAccessToken('not-a-jwt')).toBeNull();
+    expect(decodeScopeFromAccessToken('a.b')).toBeNull();
+    expect(decodeScopeFromAccessToken('a.@@@.c')).toBeNull();
   });
 });
