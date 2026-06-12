@@ -2,7 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { CreateBranchRequest, UpdateBranchRequest, CreateRegionRequest, AssignLeadershipRequest, GetLeadershipParams } from '@kairos/types';
+import type {
+  CreateBranchRequest,
+  UpdateBranchRequest,
+  CreateRegionRequest,
+  AssignLeadershipRequest,
+  GetLeadershipParams,
+  AssignBranchRoleRequest,
+} from '@kairos/types';
 
 // ── Branch queries ─────────────────────────────────────────
 
@@ -113,5 +120,53 @@ export function useRemoveLeadership() {
       await api.leadership.remove(branchId, leadershipId);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['leadership'] }),
+  });
+}
+
+// ── Branch System Admin role queries ───────────────────────
+//
+// These three wrap the /api/branches/:id/roles endpoints. Visibility on the
+// LIST endpoint is open to any branch admin (BSA or BDA); ASSIGN/REVOKE are
+// gated to BSA only on the server. The page UI hides the assign/revoke
+// controls from BDA-only callers as a UX nicety — the server is the
+// authoritative gate.
+
+export function useBranchRoles(branchId: string) {
+  return useQuery({
+    queryKey: ['branches', branchId, 'roles'],
+    queryFn: async () => {
+      const res = await api.branchRoles.list(branchId);
+      return res.data!;
+    },
+    enabled: !!branchId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useAssignBranchRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ branchId, data }: { branchId: string; data: AssignBranchRoleRequest }) => {
+      const res = await api.branchRoles.assign(branchId, data);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['branches', vars.branchId, 'roles'] });
+      qc.invalidateQueries({ queryKey: ['me', 'leadership'] });
+    },
+  });
+}
+
+export function useRevokeBranchRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ branchId, assignmentId }: { branchId: string; assignmentId: string }) => {
+      const res = await api.branchRoles.revoke(branchId, assignmentId);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['branches', vars.branchId, 'roles'] });
+      qc.invalidateQueries({ queryKey: ['me', 'leadership'] });
+    },
   });
 }

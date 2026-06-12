@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
@@ -34,10 +35,16 @@ export default function BranchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { activeRole } = useAuthStore();
+  const branchSystemAdminBranchIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
   const { data: myProfile } = useMyProfile();
   const isAdmin = activeRole === 'admin';
   const isPastor = activeRole === 'pastor';
+  const isBSAHere = branchSystemAdminBranchIds.includes(id);
   const canSeeMembers = isAdmin || (isPastor && myProfile?.homeBranchId === id);
+  // Discoverability for the Branch System Admin role page. Visible to system
+  // admins (anywhere) and to BSAs of THIS branch. The /roles page itself runs
+  // an independent guard, so this is purely a UX hint.
+  const canSeeRolesLink = isAdmin || isBSAHere;
   const [showHistory, setShowHistory] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [assignRole, setAssignRole] = useState<'Main Pastor' | 'Elder'>('Elder');
@@ -129,11 +136,16 @@ export default function BranchDetailPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Page header */}
-      <div className="flex items-start justify-between pb-6">
+      <div className="flex items-start justify-between gap-3 pb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{branch.branchName}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground capitalize">{branch.branchType} branch</p>
         </div>
+        {canSeeRolesLink && (
+          <Link href={`/admin/branches/${id}/roles`}>
+            <Button variant="outline" size="sm">Manage Admins</Button>
+          </Link>
+        )}
       </div>
 
       {/* Edit Form */}

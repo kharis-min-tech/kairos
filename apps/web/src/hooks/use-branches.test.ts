@@ -13,6 +13,9 @@ import {
   useBranchLeadership,
   useAssignLeadership,
   useRemoveLeadership,
+  useBranchRoles,
+  useAssignBranchRole,
+  useRevokeBranchRole,
 } from './use-branches';
 
 vi.mock('@/lib/api', () => ({
@@ -33,6 +36,11 @@ vi.mock('@/lib/api', () => ({
       assign: vi.fn(),
       remove: vi.fn(),
     },
+    branchRoles: {
+      list: vi.fn(),
+      assign: vi.fn(),
+      revoke: vi.fn(),
+    },
   },
 }));
 
@@ -41,6 +49,14 @@ import { api } from '@/lib/api';
 const mockBranch = { id: 'b1', branchName: 'Main Branch', regionId: 'r1', isActive: true };
 const mockRegion = { id: 'r1', regionName: 'East' };
 const mockLeader = { id: 'l1', memberId: 'm1', branchId: 'b1', role: 'Main Pastor', isCurrent: true };
+const mockBranchRole = {
+  id: 'br1',
+  memberId: 'm1',
+  member: { id: 'm1', firstName: 'Sarah', lastName: 'Williams', email: 'sarah@kairos.local' },
+  roleName: 'Branch System Admin',
+  assignedDate: '2026-01-01',
+  isActive: true,
+};
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -225,5 +241,128 @@ describe('useRemoveLeadership', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.leadership.remove).toHaveBeenCalledWith('b1', 'l1');
+  });
+});
+
+// ── useBranchRoles ─────────────────────────────────────────
+
+describe('useBranchRoles', () => {
+  it('calls api.branchRoles.list with branchId and uses keyed query', async () => {
+    vi.mocked(api.branchRoles.list).mockResolvedValue({ data: [mockBranchRole] } as never);
+
+    const { result } = renderHook(() => useBranchRoles('b1'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.branchRoles.list).toHaveBeenCalledWith('b1');
+    expect(result.current.data).toEqual([mockBranchRole]);
+  });
+
+  it('does not fetch when branchId is empty', () => {
+    const { result } = renderHook(() => useBranchRoles(''), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+// ── useAssignBranchRole ────────────────────────────────────
+
+describe('useAssignBranchRole', () => {
+  it('calls api.branchRoles.assign with branchId and memberId', async () => {
+    vi.mocked(api.branchRoles.assign).mockResolvedValue({ data: mockBranchRole } as never);
+
+    const { result } = renderHook(() => useAssignBranchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', data: { memberId: 'm1' } });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.branchRoles.assign).toHaveBeenCalledWith('b1', { memberId: 'm1' });
+  });
+
+  it('propagates API errors', async () => {
+    vi.mocked(api.branchRoles.assign).mockRejectedValue(new Error('Already assigned'));
+
+    const { result } = renderHook(() => useAssignBranchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', data: { memberId: 'm1' } });
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Already assigned');
+  });
+
+  it('invalidates branch-roles and me-leadership on success', async () => {
+    vi.mocked(api.branchRoles.assign).mockResolvedValue({ data: mockBranchRole } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useAssignBranchRole(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', data: { memberId: 'm1' } });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const keys = invalidateSpy.mock.calls.map((c) => (c[0] as { queryKey: unknown[] }).queryKey);
+    expect(keys).toContainEqual(['branches', 'b1', 'roles']);
+    expect(keys).toContainEqual(['me', 'leadership']);
+  });
+});
+
+// ── useRevokeBranchRole ────────────────────────────────────
+
+describe('useRevokeBranchRole', () => {
+  it('calls api.branchRoles.revoke with branchId and assignmentId', async () => {
+    vi.mocked(api.branchRoles.revoke).mockResolvedValue({ data: mockBranchRole } as never);
+
+    const { result } = renderHook(() => useRevokeBranchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', assignmentId: 'br1' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.branchRoles.revoke).toHaveBeenCalledWith('b1', 'br1');
+  });
+
+  it('propagates API errors (e.g. last-BSA guard)', async () => {
+    vi.mocked(api.branchRoles.revoke).mockRejectedValue(
+      new Error('Cannot revoke the last active Branch System Admin'),
+    );
+
+    const { result } = renderHook(() => useRevokeBranchRole(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', assignmentId: 'br1' });
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toMatch(/last active/i);
+  });
+
+  it('invalidates branch-roles and me-leadership on success', async () => {
+    vi.mocked(api.branchRoles.revoke).mockResolvedValue({ data: mockBranchRole } as never);
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children);
+
+    const { result } = renderHook(() => useRevokeBranchRole(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ branchId: 'b1', assignmentId: 'br1' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const keys = invalidateSpy.mock.calls.map((c) => (c[0] as { queryKey: unknown[] }).queryKey);
+    expect(keys).toContainEqual(['branches', 'b1', 'roles']);
+    expect(keys).toContainEqual(['me', 'leadership']);
   });
 });
