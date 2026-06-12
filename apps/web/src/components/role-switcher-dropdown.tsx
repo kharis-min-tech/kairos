@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RoleOption, RoleScope, SystemRole } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { persistAuthSuccess, useSwitchRole } from '@/hooks/use-auth';
@@ -54,6 +55,7 @@ export function RoleSwitcherDropdown({ className }: RoleSwitcherDropdownProps) {
   const availableRoles = useAuthStore((s) => s.availableRoles);
 
   const switchRole = useSwitchRole();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +134,10 @@ export function RoleSwitcherDropdown({ className }: RoleSwitcherDropdownProps) {
         // existing list, the server re-validates against fresh state
         // on every call so a stale option would have been rejected.
       });
+      // The new scope narrows getMyLeadership and most list/stats hooks.
+      // Drop the React Query cache so every page refetches against the
+      // new authority — router.refresh() only re-runs server components.
+      await qc.invalidateQueries();
       setOpen(false);
       setPendingKey(null);
       setFocusIndex(-1);

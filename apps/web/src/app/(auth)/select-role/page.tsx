@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { RoleOption } from '@kairos/types';
 import { persistAuthSuccess, useFinalizeRole } from '@/hooks/use-auth';
+import { useAuthStore } from '@/lib/auth-store';
 import { useRoleSelectionStore } from '@/lib/role-selection-store';
 import { KharisCardHeader } from '../kharis-logo';
 import { RoleIcon } from '../_role-icon';
@@ -21,18 +22,27 @@ export default function SelectRolePage() {
   const sessionToken = useRoleSelectionStore((s) => s.sessionToken);
   const availableRoles = useRoleSelectionStore((s) => s.availableRoles);
   const clearRoleSelection = useRoleSelectionStore((s) => s.clearRoleSelection);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in? The picker has no business here. Send to dashboard.
+  useEffect(() => {
+    if (accessToken) {
+      router.replace('/dashboard');
+    }
+  }, [accessToken, router]);
 
   // If the user lands here without going through `/login` first (direct
   // URL, refresh after the stash was cleared, back-button after success)
   // there's nothing to pick from — bounce back.
   useEffect(() => {
+    if (accessToken) return;
     if (!sessionToken || availableRoles.length === 0) {
       router.replace('/login');
     }
-  }, [sessionToken, availableRoles.length, router]);
+  }, [accessToken, sessionToken, availableRoles.length, router]);
 
   async function handlePick(opt: RoleOption) {
     if (!sessionToken) return;

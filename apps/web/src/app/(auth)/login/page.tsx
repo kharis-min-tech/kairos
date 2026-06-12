@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { persistAuthSuccess, useLogin } from '@/hooks/use-auth';
+import { useAuthStore } from '@/lib/auth-store';
 import { useRoleSelectionStore } from '@/lib/role-selection-store';
 import { KharisCardHeader } from '../kharis-logo';
 
@@ -23,8 +24,16 @@ export default function LoginPage() {
   const loginMutation = useLogin();
   const setRoleSelection = useRoleSelectionStore((s) => s.setRoleSelection);
   const clearRoleSelection = useRoleSelectionStore((s) => s.clearRoleSelection);
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in? No reason to be on /login — go to dashboard.
+  useEffect(() => {
+    if (accessToken) {
+      router.replace('/dashboard');
+    }
+  }, [accessToken, router]);
 
   // Any stale picker stash (back-button, lingering session) is gone the
   // moment the user lands here. Phase 2 contract: `/login` mount = reset.

@@ -31,6 +31,15 @@ export async function createRegion(db: Database, input: { regionName: string; co
 // ── Branch CRUD ────────────────────────────────────────────
 
 export async function listBranches(db: Database, auth: AuthContext) {
+  // When auth.scope narrows to a single branch (e.g. a BSA-of-Accra logged
+  // in scoped to Accra), the list must restrict to that branch even for
+  // systemRole='admin' — the scope is the authoritative narrowing.
+  const scopedBranchId =
+    auth.scope?.kind === 'branch' ? auth.scope.id : null;
+
+  const targetBranchId =
+    scopedBranchId ?? (auth.systemRole === 'admin' ? null : auth.branchId);
+
   const rows = await db
     .select({
       id: branches.id,
@@ -52,9 +61,9 @@ export async function listBranches(db: Database, auth: AuthContext) {
     .from(branches)
     .innerJoin(regions, eq(branches.regionId, regions.id))
     .where(
-      auth.systemRole === 'admin'
+      targetBranchId === null
         ? eq(branches.isActive, true)
-        : and(eq(branches.isActive, true), eq(branches.id, auth.branchId)),
+        : and(eq(branches.isActive, true), eq(branches.id, targetBranchId)),
     )
     .orderBy(branches.branchName);
 

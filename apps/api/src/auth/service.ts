@@ -22,7 +22,7 @@ import type {
 } from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
-import { computeAvailableRoles, roleOptionKey } from './role-options';
+import { computeAvailableRoles } from './role-options';
 import {
   NotFoundError,
   ConflictError,
@@ -367,13 +367,17 @@ export async function login(
   // Capture before we update so we know if this is their first login
   const isFirstLogin = member?.lastLoginAt === null;
 
+  // Uniform error for missing-account + wrong-password — keeps the login
+  // surface from leaking which emails are registered. Status-specific
+  // errors below (unverified / pending / minor) are post-credential and
+  // legitimately user-facing because they require correct credentials.
   if (!member) {
-    throw new UnauthorizedError('No account found with that email');
+    throw new UnauthorizedError('Invalid email or password');
   }
 
   const valid = await bcrypt.compare(password, member.passwordHash);
   if (!valid) {
-    throw new UnauthorizedError('Incorrect password');
+    throw new UnauthorizedError('Invalid email or password');
   }
 
   if (!member.emailVerified) {
@@ -491,12 +495,20 @@ export async function finalizeRole(
   //  - clients echoing back stale option lists,
   //  - clients tampering with activeRole/scope to gain unauthorized authority,
   //  - leadership changes between login and finalize.
-  const requestedKey = roleOptionKey(input.activeRole, input.scope);
-  if (requestedKey !== input.key) {
-    throw new UnauthorizedError('Role selection is invalid');
-  }
+  // The matched option's activeRole+scope MUST equal the input's. Catches
+  // a tampered payload like { key: 'leader:fellowship:X:lead', activeRole:
+  // 'admin', scope: undefined } — the key resolves to a legitimate option
+  // but the claimed authority doesn't.
   const match = availableRoles.find((opt) => opt.key === input.key);
   if (!match) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  if (match.activeRole !== input.activeRole) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  const matchScopeKey = match.scope ? `${match.scope.kind}:${match.scope.id}` : '';
+  const inputScopeKey = input.scope ? `${input.scope.kind}:${input.scope.id}` : '';
+  if (matchScopeKey !== inputScopeKey) {
     throw new UnauthorizedError('Role selection is invalid');
   }
 
@@ -543,12 +555,20 @@ export async function switchRole(
     homeBranchId: member.homeBranchId,
   });
 
-  const requestedKey = roleOptionKey(input.activeRole, input.scope);
-  if (requestedKey !== input.key) {
-    throw new UnauthorizedError('Role selection is invalid');
-  }
+  // The matched option's activeRole+scope MUST equal the input's. Catches
+  // a tampered payload like { key: 'leader:fellowship:X:lead', activeRole:
+  // 'admin', scope: undefined } — the key resolves to a legitimate option
+  // but the claimed authority doesn't.
   const match = availableRoles.find((opt) => opt.key === input.key);
   if (!match) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  if (match.activeRole !== input.activeRole) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  const matchScopeKey = match.scope ? `${match.scope.kind}:${match.scope.id}` : '';
+  const inputScopeKey = input.scope ? `${input.scope.kind}:${input.scope.id}` : '';
+  if (matchScopeKey !== inputScopeKey) {
     throw new UnauthorizedError('Role selection is invalid');
   }
 

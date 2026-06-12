@@ -224,7 +224,7 @@ describe('login', () => {
     setupSelectChain([]);
 
     await expect(login(mockDb, 'nope@example.com', 'password'))
-      .rejects.toThrow('No account found with that email');
+      .rejects.toThrow('Invalid email or password');
   });
 
   it('should throw UnauthorizedError for wrong password', async () => {
@@ -234,7 +234,7 @@ describe('login', () => {
     setupSelectChain([{ ...baseMember, passwordHash: hashed }]);
 
     await expect(login(mockDb, 'john@example.com', 'WrongPassword'))
-      .rejects.toThrow('Incorrect password');
+      .rejects.toThrow('Invalid email or password');
   });
 
   it('should throw ValidationError for unverified email', async () => {
@@ -584,7 +584,7 @@ describe('computeAvailableRoles', () => {
       scope: { kind: 'fellowship', id: fellowshipId },
       displayLabel: 'Fellowship Leader — K-Groups',
     });
-    expect(options[0]!.key).toBe(`leader:fellowship:${fellowshipId}`);
+    expect(options[0]!.key).toBe(`leader:fellowship:${fellowshipId}:lead`);
     expect(options[1]!.activeRole).toBe('member');
   });
 
@@ -777,7 +777,7 @@ describe('finalizeRole', () => {
     setupUpdateChain();
 
     const scope = { kind: 'fellowship' as const, id: fellowshipId };
-    const key = roleOptionKey('leader', scope);
+    const key = roleOptionKey('leader', scope, 'lead');
     const result = await finalizeRole(mockDb, {
       sessionToken,
       activeRole: 'leader',
@@ -911,7 +911,7 @@ describe('switchRole', () => {
     const result = await switchRole(mockDb, baseAuth, {
       activeRole: 'leader',
       scope,
-      key: roleOptionKey('leader', scope),
+      key: roleOptionKey('leader', scope, 'lead'),
     });
 
     const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
@@ -934,7 +934,7 @@ describe('switchRole', () => {
       switchRole(mockDb, baseAuth, {
         activeRole: 'leader',
         scope: { kind: 'fellowship', id: fellowshipId },
-        key: `leader:fellowship:${fellowshipId}`,
+        key: `leader:fellowship:${fellowshipId}:lead`,
       }),
     ).rejects.toThrow('Role selection is invalid');
   });

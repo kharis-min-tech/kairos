@@ -126,9 +126,17 @@ async function fetchLeadershipFootprint(
 }
 
 /** Build a stable key for a role option — the client echoes it back on finalize. */
-export function roleOptionKey(activeRole: SystemRole, scope?: RoleScope): string {
+/**
+ * `relation` disambiguates picker rows that share activeRole + scope —
+ * e.g. a member who is both lead AND co-lead of the same fellowship would
+ * otherwise hash to one key and lose a row to dedup. Not part of the
+ * scope payload because the JWT only carries `kind` + `id`; the relation
+ * matters only for picker display and finalize-key matching.
+ */
+export function roleOptionKey(activeRole: SystemRole, scope?: RoleScope, relation?: string): string {
   if (!scope) return activeRole;
-  return `${activeRole}:${scope.kind}:${scope.id}`;
+  const base = `${activeRole}:${scope.kind}:${scope.id}`;
+  return relation ? `${base}:${relation}` : base;
 }
 
 /**
@@ -223,7 +231,7 @@ export async function computeAvailableRoles(
       activeRole: 'leader',
       scope: { kind: 'fellowship', id: f.id },
       displayLabel: `Fellowship Leader — ${f.fellowshipName}`,
-      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }),
+      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }, 'lead'),
     });
   }
   for (const f of footprint.coLeadFellowships) {
@@ -231,7 +239,7 @@ export async function computeAvailableRoles(
       activeRole: 'leader',
       scope: { kind: 'fellowship', id: f.id },
       displayLabel: `Fellowship Co-Leader — ${f.fellowshipName}`,
-      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }),
+      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }, 'co_lead'),
     });
   }
   for (const d of footprint.leadDepartments) {
@@ -239,7 +247,7 @@ export async function computeAvailableRoles(
       activeRole: 'leader',
       scope: { kind: 'department', id: d.id },
       displayLabel: `Department Lead — ${d.departmentName}`,
-      key: roleOptionKey('leader', { kind: 'department', id: d.id }),
+      key: roleOptionKey('leader', { kind: 'department', id: d.id }, 'lead'),
     });
   }
   for (const d of footprint.deputyDepartments) {
@@ -247,7 +255,7 @@ export async function computeAvailableRoles(
       activeRole: 'leader',
       scope: { kind: 'department', id: d.id },
       displayLabel: `Department Deputy — ${d.departmentName}`,
-      key: roleOptionKey('leader', { kind: 'department', id: d.id }),
+      key: roleOptionKey('leader', { kind: 'department', id: d.id }, 'deputy'),
     });
   }
 

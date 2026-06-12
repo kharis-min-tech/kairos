@@ -300,6 +300,27 @@ describe('GET /api/auth/available-roles', () => {
     const res = await app.request('/api/auth/available-roles');
     expect(res.status).toBe(401);
   });
+
+  it('returns the caller role list for an authenticated request', async () => {
+    const token = signTestToken({ systemRole: 'admin', memberId: baseMember.id });
+    // Service path: member lookup + Promise.all of (BSA, BDA, fellowships,
+    // departments). 5 selects total. No branch-name fetch because the admin
+    // has no scoped branch IDs.
+    mockDb.select
+      .mockReturnValueOnce(chainTo([baseMember]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]));
+
+    const res = await app.request('/api/auth/available-roles', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as { data: { key: string; activeRole: string }[] };
+    // Plain admin with no extra footprint: 'Administrator' + 'Member'.
+    expect(body.data.map((o) => o.key)).toEqual(['admin', 'member']);
+  });
 });
 
 // ── GET /api/auth/me (protected) ───────────────────────────
