@@ -42,6 +42,8 @@ describe('useAuthStore', () => {
       accessToken: null,
       refreshToken: null,
       user: null,
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
     });
   });
 
@@ -50,6 +52,34 @@ describe('useAuthStore', () => {
     expect(accessToken).toBeNull();
     expect(refreshToken).toBeNull();
     expect(user).toBeNull();
+  });
+
+  it('has empty branch-admin authority arrays in initial state', () => {
+    const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = useAuthStore.getState();
+    expect(branchSystemAdminBranchIds).toEqual([]);
+    expect(branchDataAdminBranchIds).toEqual([]);
+  });
+
+  it('setBranchAdminAuthority stores both arrays', () => {
+    useAuthStore.getState().setBranchAdminAuthority({
+      branchSystemAdminBranchIds: ['b-1', 'b-2'],
+      branchDataAdminBranchIds: ['b-3'],
+    });
+
+    const state = useAuthStore.getState();
+    expect(state.branchSystemAdminBranchIds).toEqual(['b-1', 'b-2']);
+    expect(state.branchDataAdminBranchIds).toEqual(['b-3']);
+  });
+
+  it('logout clears branch-admin authority too', () => {
+    useAuthStore.setState({
+      branchSystemAdminBranchIds: ['b-1'],
+      branchDataAdminBranchIds: ['b-2'],
+    });
+    useAuthStore.getState().logout();
+    const state = useAuthStore.getState();
+    expect(state.branchSystemAdminBranchIds).toEqual([]);
+    expect(state.branchDataAdminBranchIds).toEqual([]);
   });
 
   it('setTokens stores access and refresh tokens', () => {
