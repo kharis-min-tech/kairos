@@ -1,9 +1,15 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
-import { members } from '@kairos/database';
+import {
+  members,
+  memberRoles,
+  roles,
+  branchDepartments,
+  departments,
+} from '@kairos/database';
 import type { AuthContext, AuthTokens, LoginResponse, MemberProfile } from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
@@ -78,6 +84,53 @@ export function generateTokenPair(authContext: AuthContext): { accessToken: stri
   return {
     accessToken: signAccessToken(authContext),
     refreshToken: signRefreshToken(authContext.memberId),
+  };
+}
+
+/**
+ * Look up the caller's Branch System Admin + Branch Data Admin authority
+ * so the access token + AuthContext encode it. System admins still drive
+ * authority through `systemRole`; these arrays are derived data only.
+ *
+ * Branch System Admin = `member_roles` JOIN `roles` (roleName = 'Branch System Admin'), active.
+ * Branch Data Admin   = `branch_departments` JOIN `departments` (departmentName = 'Admin'),
+ *                       where memberId matches leadMemberId or deputyMemberId, active.
+ */
+export async function resolveBranchAdminAuthority(
+  db: Database,
+  memberId: string,
+): Promise<{ branchSystemAdminBranchIds: string[]; branchDataAdminBranchIds: string[] }> {
+  const [bsaRows, bdaRows] = await Promise.all([
+    db
+      .select({ branchId: memberRoles.branchId })
+      .from(memberRoles)
+      .innerJoin(roles, eq(memberRoles.roleId, roles.id))
+      .where(
+        and(
+          eq(memberRoles.memberId, memberId),
+          eq(memberRoles.isActive, true),
+          eq(roles.roleName, 'Branch System Admin'),
+        ),
+      ),
+    db
+      .select({ branchId: branchDepartments.branchId })
+      .from(branchDepartments)
+      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .where(
+        and(
+          eq(branchDepartments.isActive, true),
+          eq(departments.departmentName, 'Admin'),
+          or(
+            eq(branchDepartments.leadMemberId, memberId),
+            eq(branchDepartments.deputyMemberId, memberId),
+          ),
+        ),
+      ),
+  ]);
+
+  return {
+    branchSystemAdminBranchIds: Array.from(new Set(bsaRows.map((r) => r.branchId))),
+    branchDataAdminBranchIds: Array.from(new Set(bdaRows.map((r) => r.branchId))),
   };
 }
 
@@ -233,12 +286,19 @@ export async function login(
     throw new UnauthorizedError(`You don't have ${activeRole} access`);
   }
 
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
+    db,
+    member.id,
+  );
+
   const authContext: AuthContext = {
     memberId: member.id,
     email: member.email,
     systemRole: memberRole,
     branchId: getActiveBranchId(member),
     activeRole,
+    branchSystemAdminBranchIds,
+    branchDataAdminBranchIds,
   };
 
   const accessToken = signAccessToken(authContext);
@@ -274,12 +334,19 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
     throw new UnauthorizedError('Member not found or inactive');
   }
 
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
+    db,
+    member.id,
+  );
+
   const authContext: AuthContext = {
     memberId: member.id,
     email: member.email,
     systemRole: member.systemRole as AuthContext['systemRole'],
     branchId: getActiveBranchId(member),
     activeRole: member.systemRole as AuthContext['systemRole'],
+    branchSystemAdminBranchIds,
+    branchDataAdminBranchIds,
   };
 
   return {

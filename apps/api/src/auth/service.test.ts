@@ -20,7 +20,28 @@ const mockDb = {
 } as unknown as import('@kairos/database').Database;
 
 function setupSelectChain(result: unknown[]) {
-  mockSelect.mockReturnValue({ from: mockFrom });
+  // First .select() returns the primary chain (used for the member lookup
+  // in login / refreshAccessToken). Subsequent .select() calls (for the
+  // branch-admin authority lookups added in 2026-06 RBAC work) get a
+  // chain that resolves to an empty array — those lookups are exercised
+  // in a dedicated test below.
+  let firstCall = true;
+  mockSelect.mockImplementation(() => {
+    if (firstCall) {
+      firstCall = false;
+      return { from: mockFrom };
+    }
+    // Empty-result chain that supports .from().innerJoin().where()
+    // as well as .from().where().limit() so both legacy and new
+    // service calls keep typechecking through.
+    const empty: Record<string, unknown> = {};
+    const passthrough = () => empty;
+    for (const m of ['from', 'innerJoin', 'where', 'limit', 'orderBy']) {
+      empty[m] = passthrough;
+    }
+    empty.then = (resolve: (v: unknown) => unknown) => resolve([]);
+    return empty;
+  });
   mockFrom.mockReturnValue({ where: mockWhere });
   mockWhere.mockReturnValue({ limit: mockLimit });
   mockLimit.mockReturnValue(Promise.resolve(result));
@@ -309,6 +330,34 @@ describe('login', () => {
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
     const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
     expect(decoded['branchId']).toBe(secondaryBranchId);
+  });
+});
+
+describe('resolveBranchAdminAuthority', () => {
+  it('returns deduplicated branch IDs from BSA role + Admin-dept membership', async () => {
+    const { resolveBranchAdminAuthority } = await import('./service');
+
+    const branchA = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    const branchB = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    const branchC = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+
+    // BSA query returns two rows (branchA twice → deduped), BDA returns one
+    let call = 0;
+    mockSelect.mockImplementation(() => {
+      call += 1;
+      const data = call === 1
+        ? [{ branchId: branchA }, { branchId: branchA }, { branchId: branchB }]
+        : [{ branchId: branchC }];
+      const chain: Record<string, unknown> = {};
+      const passthrough = () => chain;
+      for (const m of ['from', 'innerJoin', 'where']) chain[m] = passthrough;
+      chain.then = (resolve: (v: unknown) => unknown) => resolve(data);
+      return chain;
+    });
+
+    const result = await resolveBranchAdminAuthority(mockDb, 'mem-1');
+    expect(result.branchSystemAdminBranchIds.sort()).toEqual([branchA, branchB].sort());
+    expect(result.branchDataAdminBranchIds).toEqual([branchC]);
   });
 });
 

@@ -81,6 +81,20 @@ export interface AuthContext {
   systemRole: SystemRole;
   branchId: string;
   activeRole?: SystemRole;
+  /**
+   * Branch IDs where the caller holds the Branch System Admin role (via
+   * `member_roles` JOIN `roles` WHERE roleName = 'Branch System Admin').
+   * Populated at login/refresh; absent on legacy tokens. System admins get
+   * `[]` — their authority flows from `systemRole === 'admin'`, not this list.
+   */
+  branchSystemAdminBranchIds?: string[];
+  /**
+   * Branch IDs where the caller holds Branch Data Admin authority (derived
+   * from `branch_departments` for the 'Admin' global department where the
+   * caller is the lead or deputy). Populated at login/refresh; absent on
+   * legacy tokens.
+   */
+  branchDataAdminBranchIds?: string[];
 }
 
 // ── Member Profile ─────────────────────────────────────────
@@ -988,4 +1002,50 @@ export type { FormSubmission };
 export interface FormsCapabilities {
   visibleFormTypes: FormType[];
   canSeeProspects: boolean;
+}
+
+// ── /api/me/leadership — caller's leadership footprint ────────
+// Echoes the branch-admin authority lists from AuthContext and adds the
+// fellowship/department entities the caller leads or co-leads, so the web
+// layer can render "what I'm responsible for" at a glance.
+
+export interface MeLeadershipFellowship {
+  id: string;
+  fellowshipName: string;
+  branchId: string;
+}
+
+export interface MeLeadershipDepartment {
+  id: string;
+  departmentName: string;
+  branchId: string;
+}
+
+export interface MeLeadershipResponse {
+  branchSystemAdminBranchIds: string[];
+  branchDataAdminBranchIds: string[];
+  leadFellowships: MeLeadershipFellowship[];
+  coLeadFellowships: MeLeadershipFellowship[];
+  leadDepartments: MeLeadershipDepartment[];
+  deputyDepartments: MeLeadershipDepartment[];
+}
+
+// ── Branch role management — Branch System Admin assignments ─
+
+export interface BranchRoleAssignment {
+  id: string;
+  memberId: string;
+  member: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  roleName: string;
+  assignedDate: string;
+  isActive: boolean;
+}
+
+export interface AssignBranchRoleRequest {
+  memberId: string;
 }

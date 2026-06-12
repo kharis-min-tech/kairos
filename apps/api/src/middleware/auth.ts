@@ -38,6 +38,45 @@ export function requireRole(...roles: string[]) {
   };
 }
 
+/**
+ * Allow access for system admins OR any branch admin (Branch System Admin
+ * or Branch Data Admin) of the branch identified by `branchIdParam`. Used
+ * to gate branch-scoped operational writes (members, fellowships,
+ * departments, attendance) so branch admins can manage their own branch.
+ */
+export function requireBranchAdmin(branchIdParam = 'id') {
+  return async (c: Context, next: Next) => {
+    const auth = c.get('auth');
+    const branchId = c.req.param(branchIdParam);
+    if (!branchId) throw new UnauthorizedError('Branch ID required');
+    const bsa = auth.branchSystemAdminBranchIds ?? [];
+    const bda = auth.branchDataAdminBranchIds ?? [];
+    const ok =
+      auth.systemRole === 'admin' ||
+      bsa.includes(branchId) ||
+      bda.includes(branchId);
+    if (!ok) throw new UnauthorizedError('Insufficient permissions');
+    await next();
+  };
+}
+
+/**
+ * Allow access for system admins OR Branch System Admin of the branch
+ * identified by `branchIdParam`. Used to gate branch-tier role management
+ * and pastoral leadership appointments — Data Admin alone is not enough.
+ */
+export function requireBranchSystemAdmin(branchIdParam = 'id') {
+  return async (c: Context, next: Next) => {
+    const auth = c.get('auth');
+    const branchId = c.req.param(branchIdParam);
+    if (!branchId) throw new UnauthorizedError('Branch ID required');
+    const bsa = auth.branchSystemAdminBranchIds ?? [];
+    const ok = auth.systemRole === 'admin' || bsa.includes(branchId);
+    if (!ok) throw new UnauthorizedError('Insufficient permissions');
+    await next();
+  };
+}
+
 export function getAuth(c: Context): AuthContext {
   return c.get('auth');
 }

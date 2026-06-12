@@ -11,6 +11,8 @@ export function signTestToken(overrides: Partial<AuthContext> = {}): string {
     systemRole: 'admin',
     activeRole: 'admin',
     branchId: '660e8400-e29b-41d4-a716-446655440000',
+    branchSystemAdminBranchIds: [],
+    branchDataAdminBranchIds: [],
     ...overrides,
   } as AuthContext;
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
