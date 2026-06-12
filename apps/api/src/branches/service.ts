@@ -10,6 +10,7 @@ import {
 } from '@kairos/database';
 import type { AuthContext, BranchRoleAssignment } from '@kairos/types';
 import { NotFoundError, ConflictError, ValidationError, ForbiddenError } from '@kairos/utils';
+import { enforceScopeAllows } from '../lib/scope';
 
 const BRANCH_SYSTEM_ADMIN_ROLE = 'Branch System Admin';
 
@@ -493,6 +494,12 @@ export async function revokeBranchSystemAdmin(
 // ── Helpers ────────────────────────────────────────────────
 
 function enforceBranchAccess(auth: AuthContext, branchId: string) {
+  // Phase 4: a branch-scoped session (e.g. "Branch System Admin — London")
+  // is acting AS a single branch. Even system admins / multi-branch admins
+  // are narrowed to that branch for the lifetime of the token. Any access to
+  // a different branch is refused here — switch role to act elsewhere.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   if (auth.systemRole === 'admin') return;
   if (auth.systemRole === 'pastor' && auth.branchId === branchId) return;
   // Branch System / Data Admins also have access to the branches they admin,

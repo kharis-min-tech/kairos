@@ -63,6 +63,12 @@ export function requireBranchAdmin(branchIdParam = 'id') {
     const auth = c.get('auth');
     const branchId = c.req.param(branchIdParam);
     if (!branchId) throw new UnauthorizedError('Branch ID required');
+    // Phase 4: scope-bound branch sessions are narrowed at the gate. A token
+    // with scope=branch:X must be acting on branch X — any other branch in
+    // the URL is refused before we even check membership.
+    if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
+      throw new UnauthorizedError('Insufficient permissions');
+    }
     const bsa = auth.branchSystemAdminBranchIds ?? [];
     const bda = auth.branchDataAdminBranchIds ?? [];
     const ok =
@@ -85,6 +91,10 @@ export function requireBranchSystemAdmin(branchIdParam = 'id') {
     const auth = c.get('auth');
     const branchId = c.req.param(branchIdParam);
     if (!branchId) throw new UnauthorizedError('Branch ID required');
+    // Phase 4: scope-bound branch sessions can only act on their scoped branch.
+    if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
+      throw new UnauthorizedError('Insufficient permissions');
+    }
     const bsa = auth.branchSystemAdminBranchIds ?? [];
     const ok = auth.systemRole === 'admin' || bsa.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');

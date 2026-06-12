@@ -364,3 +364,52 @@ describe('removeLeadership', () => {
     ).rejects.toThrow('Leadership assignment not found');
   });
 });
+
+// ── Phase 4: scope-aware enforceBranchAccess ──────────────
+//
+// A branch-admin who logs in with scope=branch:X is acting AS that branch.
+// Even if they hold authority over multiple branches, this token narrows them
+// to just X — any other branch in the URL is refused.
+
+describe('scope=branch narrowing', () => {
+  const otherBranchId = '220e8400-0000-0000-0000-000000000099';
+
+  it('allows access when the URL branch matches the scope', async () => {
+    const { getBranch } = await import('./service');
+    setupSelect([sampleBranch]);
+    const auth = {
+      ...adminAuth,
+      scope: { kind: 'branch' as const, id: branchId },
+    };
+    const result = await getBranch(mockDb, branchId, auth);
+    expect(result).toEqual(sampleBranch);
+  });
+
+  it('refuses an admin acting on a different branch than their scope', async () => {
+    // Even a system admin gets narrowed by scope. The "Branch System Admin —
+    // London" picker option produces this exact token shape.
+    const { getBranch } = await import('./service');
+    const auth = {
+      ...adminAuth,
+      scope: { kind: 'branch' as const, id: branchId },
+    };
+    await expect(getBranch(mockDb, otherBranchId, auth)).rejects.toThrow(
+      /outside your current branch scope/,
+    );
+  });
+
+  it('refuses a branch-admin (BSA) acting on a different branch than their scope', async () => {
+    const { updateBranch } = await import('./service');
+    const auth = {
+      memberId: '000-bsa',
+      email: 'bsa@test.com',
+      systemRole: 'leader' as const,
+      branchId,
+      branchSystemAdminBranchIds: [branchId, otherBranchId],
+      scope: { kind: 'branch' as const, id: branchId },
+    };
+    await expect(
+      updateBranch(mockDb, otherBranchId, { branchName: 'Hack' }, auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+});

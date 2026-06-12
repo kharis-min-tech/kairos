@@ -9,6 +9,9 @@ import {
 import type { AuthContext } from '@kairos/types';
 
 function branchScope(auth: AuthContext) {
+  // Phase 4: scope=branch pins reports to the scoped branch even for system
+  // admins. Otherwise admin = church-wide, everyone else = home branch.
+  if (auth.scope?.kind === 'branch') return auth.scope.id;
   if (auth.systemRole === 'admin') return undefined;
   return auth.branchId;
 }

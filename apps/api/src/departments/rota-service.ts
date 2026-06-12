@@ -23,6 +23,7 @@ import {
   type FairnessPoolMember,
   type FairnessSlot,
 } from './rota-fairness';
+import { enforceScopeAllows } from '../lib/scope';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -43,13 +44,16 @@ async function loadBranchDepartment(db: Database, branchDeptId: string) {
 
 function enforceLeaderOrAbove(
   auth: AuthContext,
-  bd: { branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
+  bd: { id: string; branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
   const isLead =
     auth.systemRole === 'leader' &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
-  if (isLead) return;
+  if (isLead) {
+    enforceScopeAllows(auth, 'department', bd.id);
+    return;
+  }
   throw new ForbiddenError('Only department leads or above can perform this action');
 }
 
@@ -860,6 +864,12 @@ export async function createSwapRequest(
       (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId));
   if (!isOwner && !isLead) {
     throw new ForbiddenError('Only the assigned member or a department lead can request a swap');
+  }
+  // Scope guard: a lead acting under a department-scoped session can only act
+  // on assignments in their scoped department. Owners (the assigned member)
+  // are always allowed to request a swap on their own assignment regardless.
+  if (!isOwner && isLead) {
+    enforceScopeAllows(auth, 'department', bd.id);
   }
 
   // Prevent duplicate pending requests for the same assignment

@@ -20,6 +20,7 @@ import {
   sendJoinRequestApprovedEmail,
   sendJoinRequestRejectedEmail,
 } from '@kairos/utils';
+import { enforceScopeAllows } from '../lib/scope';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
@@ -28,15 +29,26 @@ function enforceBranchScope(auth: AuthContext, branchId?: string) {
   }
 }
 
+/**
+ * Gate writes that require fellowship leadership. System admins and pastors
+ * always pass. A `leader` whose memberId matches the fellowship lead or
+ * co-lead passes, UNLESS the request carries a fellowship scope tied to a
+ * different fellowship — in that case Phase 4's per-request narrowing
+ * (`enforceScopeAllows`) rejects so a scope-bound leader can't act on a
+ * fellowship outside their picked scope (even if they technically lead it).
+ */
 function enforceLeaderOrAbove(
   auth: AuthContext,
-  fellowship: { leaderId: string | null; coLeaderId: string | null },
+  fellowship: { id: string; leaderId: string | null; coLeaderId: string | null },
 ) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
   if (
     auth.systemRole === 'leader' &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId)
-  ) return;
+  ) {
+    enforceScopeAllows(auth, 'fellowship', fellowship.id);
+    return;
+  }
   throw new ForbiddenError('Only fellowship leaders or above can perform this action');
 }
 

@@ -59,7 +59,12 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
 // ── Branch Stats (pastor dashboard) ────────────────────────
 
 export async function getBranchStats(db: Database, auth: AuthContext) {
-  const branchId = auth.branchId;
+  // Phase 4: a scope=branch:X login is acting AS branch X, even if their
+  // member.homeBranchId differs. Render the stats against the scoped branch
+  // so the dashboard tile a scoped-branch-admin sees actually matches the
+  // role they picked at /select-role.
+  const branchId =
+    auth.scope?.kind === 'branch' ? auth.scope.id : auth.branchId;
 
   const [[memberCount], [fellowshipCount], [recentMeetingCount]] = await Promise.all([
     db
@@ -138,7 +143,15 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
 // ── Fellowship Stats (fellowship page summary) ─────────────
 
 export async function getFellowshipStats(db: Database, auth: AuthContext) {
-  const branchId = auth.systemRole === 'admin' ? undefined : auth.branchId;
+  // Phase 4: scope=branch pins the stats to the scoped branch even for system
+  // admins; otherwise admin sees church-wide and other roles see their own
+  // home branch.
+  const branchId =
+    auth.scope?.kind === 'branch'
+      ? auth.scope.id
+      : auth.systemRole === 'admin'
+        ? undefined
+        : auth.branchId;
 
   // Count active branches, members, fellowships
   const [[branchCount], [memberCount], [fellowshipCount]] = await Promise.all([

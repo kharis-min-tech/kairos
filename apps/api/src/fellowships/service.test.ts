@@ -592,3 +592,72 @@ describe('reviewJoinRequest', () => {
     ).rejects.toThrow('Join request not found or already reviewed');
   });
 });
+
+// ── Phase 4: scope-aware leader writes ────────────────────
+//
+// A `leader` who technically leads multiple fellowships but logs in with
+// scope=fellowship:F1 should ONLY be able to act on F1, not on any other
+// fellowship they lead. The system role + lead arm grants entry; the new
+// `enforceScopeAllows` inside `enforceLeaderOrAbove` narrows it.
+
+describe('scope-aware leader writes', () => {
+  const otherFellowshipId = '440e8400-0000-0000-0000-000000000099';
+
+  it('allows a fellowship-scoped leader to update their scoped fellowship', async () => {
+    // sampleFellowship.leaderId === memberId — so this leader is genuinely a
+    // fellowship leader; their scope matches, so the write goes through.
+    const scopedLeaderAuth = {
+      memberId,
+      email: 'lead@test.com',
+      systemRole: 'leader' as const,
+      branchId,
+      scope: { kind: 'fellowship' as const, id: fellowshipId },
+    };
+    // updateFellowship currently restricts to admin/pastor — so this case
+    // verifies enforceLeaderOrAbove via a leader-write surface that DOES
+    // allow leads, e.g. createMeeting.
+    setupSelect([sampleFellowship]);
+    setupInsert([sampleMeeting]);
+    const meeting = await createMeeting(mockDb, scopedLeaderAuth, fellowshipId, {
+      meetingDate: '2024-06-15T18:00:00Z',
+    });
+    expect(meeting).toBeDefined();
+  });
+
+  it('rejects a fellowship-scoped leader writing to a DIFFERENT fellowship they lead', async () => {
+    // Pretend the leader also leads `otherFellowshipId` — the row returned
+    // by getFellowship says so — but their scope is locked to fellowshipId.
+    // The scope narrowing must reject the cross-fellowship write.
+    const scopedLeaderAuth = {
+      memberId,
+      email: 'lead@test.com',
+      systemRole: 'leader' as const,
+      branchId,
+      scope: { kind: 'fellowship' as const, id: fellowshipId },
+    };
+    const otherFellowship = { ...sampleFellowship, id: otherFellowshipId };
+    setupSelect([otherFellowship]);
+
+    await expect(
+      createMeeting(mockDb, scopedLeaderAuth, otherFellowshipId, {
+        meetingDate: '2024-06-15T18:00:00Z',
+      }),
+    ).rejects.toThrow(/outside your current fellowship scope/);
+  });
+
+  it('admins are NOT narrowed by scope (system role overrides scope)', async () => {
+    // A scope on an admin/pastor token is an UI hint, not a security boundary —
+    // higher-tier authority still trumps the per-entity narrowing. Verifies the
+    // helper's early-return arm for admins.
+    const scopedAdminAuth = {
+      ...adminAuth,
+      scope: { kind: 'fellowship' as const, id: otherFellowshipId },
+    };
+    setupSelect([sampleFellowship]);
+    setupInsert([sampleMeeting]);
+    const meeting = await createMeeting(mockDb, scopedAdminAuth, fellowshipId, {
+      meetingDate: '2024-06-15T18:00:00Z',
+    });
+    expect(meeting).toBeDefined();
+  });
+});

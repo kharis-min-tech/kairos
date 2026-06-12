@@ -11,6 +11,22 @@ import type { AuthContext, MeLeadershipResponse } from '@kairos/types';
  *
  * The fellowships + departments queries are restricted to active rows so the
  * caller doesn't see entities they used to lead.
+ *
+ * ── Scope-aware filtering (Phase 4) ───────────────────────────────────
+ *
+ * When `auth.scope` is set, the user has picked a single role/entity at
+ * /select-role and is acting through it. We narrow the response so the
+ * dashboard + reports surfaces (which read this endpoint as their source of
+ * truth) only see the chosen entity:
+ *
+ *   - scope=fellowship:F  → leadFellowships/coLeadFellowships filtered to F;
+ *                          departments + branch-admin arrays emptied.
+ *   - scope=department:D  → mirror: only D in leadDepartments/deputyDepartments,
+ *                          others emptied.
+ *   - scope=branch:B      → branchSystemAdminBranchIds/branchDataAdminBranchIds
+ *                          filtered to just B (kept only if the user actually
+ *                          holds it); fellowship/department arrays emptied.
+ *   - scope=undefined     → unfiltered, legacy behavior.
  */
 export async function getMyLeadership(
   db: Database,
@@ -69,9 +85,45 @@ export async function getMyLeadership(
     .filter((r) => r.deputyMemberId === memberId)
     .map((r) => ({ id: r.id, departmentName: r.departmentName, branchId: r.branchId }));
 
+  const branchSystemAdminBranchIds = auth.branchSystemAdminBranchIds ?? [];
+  const branchDataAdminBranchIds = auth.branchDataAdminBranchIds ?? [];
+
+  // ── Scope-aware narrowing ────────────────────────────────────────────
+  const scope = auth.scope;
+  if (scope?.kind === 'fellowship') {
+    return {
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
+      leadFellowships: leadFellowships.filter((f) => f.id === scope.id),
+      coLeadFellowships: coLeadFellowships.filter((f) => f.id === scope.id),
+      leadDepartments: [],
+      deputyDepartments: [],
+    };
+  }
+  if (scope?.kind === 'department') {
+    return {
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
+      leadFellowships: [],
+      coLeadFellowships: [],
+      leadDepartments: leadDepartments.filter((d) => d.id === scope.id),
+      deputyDepartments: deputyDepartments.filter((d) => d.id === scope.id),
+    };
+  }
+  if (scope?.kind === 'branch') {
+    return {
+      branchSystemAdminBranchIds: branchSystemAdminBranchIds.filter((b) => b === scope.id),
+      branchDataAdminBranchIds: branchDataAdminBranchIds.filter((b) => b === scope.id),
+      leadFellowships: [],
+      coLeadFellowships: [],
+      leadDepartments: [],
+      deputyDepartments: [],
+    };
+  }
+
   return {
-    branchSystemAdminBranchIds: auth.branchSystemAdminBranchIds ?? [],
-    branchDataAdminBranchIds: auth.branchDataAdminBranchIds ?? [],
+    branchSystemAdminBranchIds,
+    branchDataAdminBranchIds,
     leadFellowships,
     coLeadFellowships,
     leadDepartments,

@@ -868,3 +868,78 @@ describe('listMyDepartments', () => {
     expect(result).toEqual(rows);
   });
 });
+
+// ── Phase 4: scope-aware leader writes ────────────────────
+//
+// A `leader` who technically leads multiple departments but logs in with
+// scope=department:D1 should ONLY act on D1. Same pattern as fellowships.
+
+describe('scope-aware leader writes', () => {
+  const otherBranchDeptId = '110e8400-0000-0000-0000-000000000099';
+
+  it('allows a department-scoped lead to add a member to their scoped department', async () => {
+    const scopedLeadAuth = {
+      ...leaderAuth,
+      scope: { kind: 'department' as const, id: branchDeptId },
+    };
+    // getBranchDepartment, then member lookup, then duplicate check, then
+    // active-count check, then prior-membership check, then insert.
+    setupSelectSequence(
+      [sampleBranchDept],
+      [{
+        id: memberAuth.memberId,
+        homeBranchId: branchId,
+        secondaryBranchId: null,
+        isAtSecondaryBranch: false,
+      }],
+      [], // no duplicate active
+      [{ value: 0 }], // active dept count
+      [], // no prior membership
+    );
+    setupInsert([{ id: 'dm-1' }]);
+    const result = await addDepartmentMember(mockDb, scopedLeadAuth, branchDeptId, {
+      memberId: memberAuth.memberId,
+    });
+    expect(result).toBeDefined();
+  });
+
+  it('rejects a department-scoped lead writing to a DIFFERENT department they lead', async () => {
+    const scopedLeadAuth = {
+      ...leaderAuth,
+      scope: { kind: 'department' as const, id: branchDeptId },
+    };
+    // The other dept lists the same person as lead — without scope they'd
+    // pass; with scope they must be rejected.
+    const otherBranchDept = { ...sampleBranchDept, id: otherBranchDeptId };
+    setupSelect([otherBranchDept]);
+    await expect(
+      addDepartmentMember(mockDb, scopedLeadAuth, otherBranchDeptId, {
+        memberId: memberAuth.memberId,
+      }),
+    ).rejects.toThrow(/outside your current department scope/);
+  });
+
+  it('admins ignore scope (system role overrides per-entity narrowing)', async () => {
+    const scopedAdminAuth = {
+      ...adminAuth,
+      scope: { kind: 'department' as const, id: otherBranchDeptId },
+    };
+    setupSelectSequence(
+      [sampleBranchDept],
+      [{
+        id: memberAuth.memberId,
+        homeBranchId: branchId,
+        secondaryBranchId: null,
+        isAtSecondaryBranch: false,
+      }],
+      [],
+      [{ value: 0 }],
+      [],
+    );
+    setupInsert([{ id: 'dm-1' }]);
+    const result = await addDepartmentMember(mockDb, scopedAdminAuth, branchDeptId, {
+      memberId: memberAuth.memberId,
+    });
+    expect(result).toBeDefined();
+  });
+});

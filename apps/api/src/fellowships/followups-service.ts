@@ -13,6 +13,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '@kairos/utils';
+import { enforceScopeAllows } from '../lib/scope';
 
 const DEFAULT_OVERDUE_DAYS = 7;
 
@@ -41,13 +42,16 @@ function enforceBranchScope(auth: AuthContext, fellowship: { branchId: string })
 
 function enforceLeaderOrAbove(
   auth: AuthContext,
-  fellowship: { leaderId: string | null; coLeaderId: string | null },
+  fellowship: { id: string; leaderId: string | null; coLeaderId: string | null },
 ) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
   const isFellowshipLead =
     auth.systemRole === 'leader' &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId);
-  if (isFellowshipLead) return;
+  if (isFellowshipLead) {
+    enforceScopeAllows(auth, 'fellowship', fellowship.id);
+    return;
+  }
   throw new ForbiddenError('Only fellowship leaders or above can perform this action');
 }
 

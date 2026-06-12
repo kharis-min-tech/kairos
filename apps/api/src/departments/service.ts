@@ -23,6 +23,7 @@ import {
   sendProbationStartedEmail,
   sendProbationPassedEmail,
 } from '@kairos/utils';
+import { enforceScopeAllows } from '../lib/scope';
 
 // ── Recruitment pipeline constants ─────────────────────────
 
@@ -55,12 +56,23 @@ function isLead(
   );
 }
 
+/**
+ * Gate writes that require department leadership. System admins and pastors
+ * always pass. A `leader` whose memberId matches the department lead or
+ * deputy passes, UNLESS the request carries a department scope tied to a
+ * different department — Phase 4's per-request narrowing
+ * (`enforceScopeAllows`) rejects so a scope-bound lead can't act on a
+ * department outside their picked scope (even if they technically lead it).
+ */
 function enforceLeaderOrAbove(
   auth: AuthContext,
-  bd: { leadMemberId: string | null; deputyMemberId: string | null },
+  bd: { id: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
-  if (isLead(auth, bd)) return;
+  if (isLead(auth, bd)) {
+    enforceScopeAllows(auth, 'department', bd.id);
+    return;
+  }
   throw new ForbiddenError('Only department leads or above can perform this action');
 }
 

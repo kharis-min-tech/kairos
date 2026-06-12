@@ -12,6 +12,7 @@ import {
   ForbiddenError,
   ValidationError,
 } from '@kairos/utils';
+import { enforceScopeAllows } from '../lib/scope';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -32,13 +33,16 @@ async function loadBranchDepartment(db: Database, branchDeptId: string) {
 
 function enforceLeaderOrAbove(
   auth: AuthContext,
-  bd: { branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
+  bd: { id: string; branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
   const isLead =
     auth.systemRole === 'leader' &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
-  if (isLead) return;
+  if (isLead) {
+    enforceScopeAllows(auth, 'department', bd.id);
+    return;
+  }
   throw new ForbiddenError('Only department leads or above can perform this action');
 }
 
