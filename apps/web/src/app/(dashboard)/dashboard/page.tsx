@@ -11,6 +11,8 @@ import { useMemberGrowth, useAttendanceTrend } from '@/hooks/use-reports';
 import { useMyAttendance } from '@/hooks/use-attendance';
 import { useAttendanceSummary, useAttendanceByBranch } from '@/hooks/use-attendance';
 import { useNewBelieversHealth, useEnrollments } from '@/hooks/use-new-believers';
+import { useMyLeadership } from '@/hooks/use-me';
+import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@kairos/ui';
@@ -405,6 +407,171 @@ function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowship
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ── Branch admin stats ─────────────────────────────────────
+//
+// Visually identical to PastorStats — the distinction is the label upstream
+// and the small "Branch Admin" chip. Pulls from the same branch dashboard
+// endpoint (scoped to the caller's home branch by the API).
+
+function BranchAdminStats() {
+  const { data, isLoading } = useBranchDashboard();
+  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | 'pending' | null>(null);
+
+  if (isLoading || !data) return <StatsSkeleton />;
+  return (
+    <>
+      <div className="mb-2 flex items-center gap-2">
+        <span className="inline-flex items-center gap-1 rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#a78bfa]">
+          Branch Admin
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Branch Members" value={data.totalMembers} sub="Active" accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} />
+        <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
+        <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
+        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
+      </div>
+      <PastorEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
+    </>
+  );
+}
+
+// ── Fellowship-leader stats ────────────────────────────────
+//
+// For each fellowship the caller leads (or co-leads), surface the fellowship
+// name + a quick link. We keep this card cheap: no per-fellowship N+1 fetches —
+// detail lives one click away on /fellowships/{id}.
+
+function FellowshipStats({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {
+  if (fellowships.length === 0) {
+    return (
+      <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-lg shadow-primary/5">
+        <p className="text-sm text-muted-foreground">You don't currently lead any fellowships.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">My Fellowships</p>
+        <Link href="/fellowships" className="text-xs font-medium text-[#a78bfa] hover:underline">All fellowships</Link>
+      </div>
+      <div className="divide-y divide-border">
+        {fellowships.map((f) => (
+          <div key={f.id} className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-foreground/4 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-[#5D3FD3]/20 text-[#a78bfa]">
+                <FellowshipsIcon />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{f.fellowshipName}</p>
+                <p className="text-xs text-muted-foreground">Fellowship lead</p>
+              </div>
+            </div>
+            <Link
+              href={`/fellowships/${f.id}`}
+              className="flex-shrink-0 rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors"
+            >
+              Open
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Department-lead stats ──────────────────────────────────
+
+function DepartmentStats({ departments }: { departments: MeLeadershipDepartment[] }) {
+  if (departments.length === 0) {
+    return (
+      <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-lg shadow-primary/5">
+        <p className="text-sm text-muted-foreground">You don't currently lead any departments.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">My Departments</p>
+        <Link href="/departments" className="text-xs font-medium text-[#a78bfa] hover:underline">All departments</Link>
+      </div>
+      <div className="divide-y divide-border">
+        {departments.map((d) => (
+          <div key={d.id} className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-foreground/4 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-[#f8b537]/20 text-[#f8b537]">
+                <MembersIcon />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{d.departmentName}</p>
+                <p className="text-xs text-muted-foreground">Department lead</p>
+              </div>
+            </div>
+            <Link
+              href={`/departments/${d.id}`}
+              className="flex-shrink-0 rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors"
+            >
+              Open
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Dual-leader tabs ───────────────────────────────────────
+//
+// Top-level "My Fellowship / My Department" tabs for the user who leads both.
+// Uses a simple controlled state — no `packages/ui` Tabs primitive yet.
+
+function DualLeaderTabs({
+  leadFellowships,
+  leadDepartments,
+}: {
+  leadFellowships: MeLeadershipFellowship[];
+  leadDepartments: MeLeadershipDepartment[];
+}) {
+  const [tab, setTab] = useState<'fellowship' | 'department'>('fellowship');
+  return (
+    <div className="space-y-3">
+      <div className="inline-flex rounded-lg border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => setTab('fellowship')}
+          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
+            tab === 'fellowship'
+              ? 'bg-[#5D3FD3] text-white'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          aria-pressed={tab === 'fellowship'}
+        >
+          My Fellowship
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('department')}
+          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
+            tab === 'department'
+              ? 'bg-[#5D3FD3] text-white'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          aria-pressed={tab === 'department'}
+        >
+          My Department
+        </button>
+      </div>
+      {tab === 'fellowship' ? (
+        <FellowshipStats fellowships={leadFellowships} />
+      ) : (
+        <DepartmentStats departments={leadDepartments} />
+      )}
+    </div>
   );
 }
 
@@ -1879,12 +2046,76 @@ function MissionSummary({ role }: { role: string }) {
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
+  const leadership = useMyLeadership();
+  const { data: branches } = useBranches();
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const roleLabel = activeRole === 'admin' ? 'Administrator' : activeRole === 'pastor' ? 'Pastor' : activeRole === 'leader' ? 'Fellowship Leader' : 'Member';
   const branchId = user?.homeBranchId;
-  const isLeadership = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
   const verse = getDailyVerse();
+
+  // ── Authority derived from the /api/me/leadership snapshot ──────────────
+  const isSystemAdmin = activeRole === 'admin';
+  const bsaIds = leadership.data?.branchSystemAdminBranchIds ?? [];
+  const bdaIds = leadership.data?.branchDataAdminBranchIds ?? [];
+  const isBranchSystemAdmin = bsaIds.length > 0;
+  const isBranchDataAdmin = bdaIds.length > 0;
+  const isBranchAdmin = isBranchSystemAdmin || isBranchDataAdmin;
+  const leadFellowships = leadership.data?.leadFellowships ?? [];
+  const coLeadFellowships = leadership.data?.coLeadFellowships ?? [];
+  const leadDepartments = leadership.data?.leadDepartments ?? [];
+  const deputyDepartments = leadership.data?.deputyDepartments ?? [];
+  const allLeadFellowships = [...leadFellowships, ...coLeadFellowships];
+  const allLeadDepartments = [...leadDepartments, ...deputyDepartments];
+  const hasFellowshipLead = allLeadFellowships.length > 0;
+  const hasDepartmentLead = allLeadDepartments.length > 0;
+
+  const isLeadership =
+    activeRole === 'admin' ||
+    activeRole === 'pastor' ||
+    activeRole === 'leader' ||
+    isBranchAdmin ||
+    hasFellowshipLead ||
+    hasDepartmentLead;
+
+  // Resolve a branch name for the home branch — used in the role label suffix.
+  // We only show the suffix when home branch IS one of the BSA/BDA branches,
+  // otherwise we'd be ascribing authority to the wrong branch.
+  const homeBranchName =
+    user?.homeBranchId && branches
+      ? branches.find((b) => b.id === user.homeBranchId)?.branchName
+      : undefined;
+  const homeBranchInBsa = !!user?.homeBranchId && bsaIds.includes(user.homeBranchId);
+  const homeBranchInBda = !!user?.homeBranchId && bdaIds.includes(user.homeBranchId);
+
+  // ── Role label — first match wins; higher authority overrides lower ────
+  let roleLabel: string;
+  if (activeRole === 'admin') {
+    roleLabel = 'Administrator';
+  } else if (isBranchSystemAdmin) {
+    roleLabel =
+      homeBranchInBsa && homeBranchName
+        ? `Branch System Admin — ${homeBranchName}`
+        : 'Branch System Admin';
+  } else if (isBranchDataAdmin) {
+    roleLabel =
+      homeBranchInBda && homeBranchName
+        ? `Branch Data Admin — ${homeBranchName}`
+        : 'Branch Data Admin';
+  } else if (activeRole === 'pastor') {
+    roleLabel = 'Pastor';
+  } else if (hasFellowshipLead && hasDepartmentLead) {
+    roleLabel = 'Fellowship & Department Lead';
+  } else if (hasFellowshipLead) {
+    const name = allLeadFellowships[0]?.fellowshipName;
+    roleLabel = name ? `Fellowship Leader — ${name}` : 'Fellowship Leader';
+  } else if (hasDepartmentLead) {
+    const name = allLeadDepartments[0]?.departmentName;
+    roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
+  } else if (activeRole === 'leader') {
+    roleLabel = 'Leader';
+  } else {
+    roleLabel = 'Member';
+  }
 
   return (
     <div className="space-y-3">
@@ -1907,9 +2138,27 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Stats */}
+      {/* Stats — forked by branch-admin authority, then fellowship/department
+          leadership, then activeRole. */}
       <div className="mb-10">
-        {activeRole === 'admin' ? <AdminStats /> : activeRole === 'pastor' || activeRole === 'leader' ? <PastorStats /> : <MemberStats />}
+        {isSystemAdmin ? (
+          <AdminStats />
+        ) : isBranchAdmin ? (
+          <BranchAdminStats />
+        ) : activeRole === 'pastor' ? (
+          <PastorStats />
+        ) : hasFellowshipLead && hasDepartmentLead ? (
+          <DualLeaderTabs
+            leadFellowships={allLeadFellowships}
+            leadDepartments={allLeadDepartments}
+          />
+        ) : hasFellowshipLead ? (
+          <FellowshipStats fellowships={allLeadFellowships} />
+        ) : hasDepartmentLead ? (
+          <DepartmentStats departments={allLeadDepartments} />
+        ) : (
+          <MemberStats />
+        )}
       </div>
 
       {/* Middle grid: Upcoming + Activity | Right panel */}
@@ -1920,9 +2169,17 @@ export default function DashboardPage() {
             <RecentActivity branchId={activeRole !== 'admin' ? branchId : undefined} role={activeRole ?? 'member'} />
           </div>
           
-          {/* Mission Control Reports — all roles, scoped by role */}
+          {/* Mission Control Reports — all roles, scoped by role.
+              NOTE: Fellowship/Department leaders fall through to the branch-scoped
+              report for now; finer-grained scoping is Phase 6 work. */}
           <div className="-mt-1">
-            {activeRole === 'admin' ? <AdminMissionControlReports /> : activeRole === 'pastor' || activeRole === 'leader' ? <BranchMissionControlReports /> : <MemberMissionControlReports />}
+            {isSystemAdmin ? (
+              <AdminMissionControlReports />
+            ) : isBranchAdmin || activeRole === 'pastor' || hasFellowshipLead || hasDepartmentLead ? (
+              <BranchMissionControlReports />
+            ) : (
+              <MemberMissionControlReports />
+            )}
           </div>
 
           {/* Mission Summary — all roles */}
@@ -1930,7 +2187,12 @@ export default function DashboardPage() {
         </div>
         
         <div className="space-y-4">
-          {isLeadership && <PendingApprovalsPanel branchId={activeRole !== 'admin' ? branchId : undefined} />}
+          {/* Pending approvals — admin sees all; branch admin/pastor see branch-
+              scoped. Fellowship/department leaders without branch authority
+              don't see this panel (Phase 6 may add a scoped variant). */}
+          {(isSystemAdmin || isBranchAdmin || activeRole === 'pastor') && (
+            <PendingApprovalsPanel branchId={isSystemAdmin ? undefined : branchId} />
+          )}
           <QuickActions role={activeRole ?? 'member'} />
           
           {/* Daily verse */}
