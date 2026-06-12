@@ -21,6 +21,9 @@ export const memberRoles = pgTable('member_roles', {
   index('idx_member_roles_branch_id').on(table.branchId),
   index('idx_member_roles_is_active').on(table.isActive),
   uniqueIndex('uq_member_roles_assignment').on(table.memberId, table.roleId, table.branchId, table.assignedDate),
+  uniqueIndex('uq_member_roles_active_assignment')
+    .on(table.memberId, table.roleId, table.branchId)
+    .where(sql`is_active = true`),
   sql`CHECK (end_date IS NULL OR end_date >= assigned_date)`,
 ]);
 

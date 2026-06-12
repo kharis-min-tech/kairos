@@ -6,13 +6,17 @@ const mockDb = {
   select: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
+  // Transactions invoke the callback with the same chainable mock — tests
+  // queue their `.select` / `.update` returns against mockDb regardless of
+  // whether the production code wraps the work in `db.transaction(...)`.
+  transaction: vi.fn(async (cb: (tx: typeof mockDb) => unknown) => await cb(mockDb)),
 };
 
 vi.mock('../db', () => ({ db: mockDb }));
 
 function chainTo(data: unknown) {
   const self: Record<string, unknown> = {};
-  for (const m of ['select', 'from', 'where', 'limit', 'offset', 'orderBy', 'innerJoin', 'leftJoin', 'set', 'values', 'returning']) {
+  for (const m of ['select', 'from', 'where', 'limit', 'offset', 'orderBy', 'innerJoin', 'leftJoin', 'set', 'values', 'returning', 'for']) {
     self[m] = vi.fn(() => self);
   }
   self.then = (resolve: (v: unknown) => unknown) => resolve(data);
@@ -530,10 +534,11 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
   });
 
   it('rejects revocation of the LAST active Branch System Admin (lockout guard)', async () => {
+    // Service queries inside db.transaction: role lookup, then a single
+    // FOR-UPDATE select of all active BSA rows in this branch+role.
     mockDb.select
-      .mockReturnValueOnce(chainTo([sampleRoleRow]))         // role lookup
-      .mockReturnValueOnce(chainTo([sampleAssignment]))      // assignment lookup
-      .mockReturnValueOnce(chainTo([{ count: 1 }]));         // only one active BSA
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))                                                    // role lookup
+      .mockReturnValueOnce(chainTo([{ id: assignmentId, memberId: sampleAssignment.memberId, assignedDate: '2026-01-01' }])); // only one active row, locked
 
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
       method: 'DELETE',
@@ -546,10 +551,12 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
 
   it('allows revocation when more than one active BSA exists', async () => {
     mockDb.select
-      .mockReturnValueOnce(chainTo([sampleRoleRow]))         // role lookup
-      .mockReturnValueOnce(chainTo([sampleAssignment]))      // assignment lookup
-      .mockReturnValueOnce(chainTo([{ count: 2 }]))          // 2 active
-      .mockReturnValueOnce(chainTo([sampleMemberRow]));      // member info for envelope
+      .mockReturnValueOnce(chainTo([sampleRoleRow]))                                                    // role lookup
+      .mockReturnValueOnce(chainTo([                                                                    // FOR UPDATE — two active rows
+        { id: assignmentId, memberId: sampleAssignment.memberId, assignedDate: '2026-01-01' },
+        { id: 'dd0e8400-0000-0000-0000-000000000008', memberId: 'other-member', assignedDate: '2026-01-02' },
+      ]))
+      .mockReturnValueOnce(chainTo([sampleMemberRow]));                                                 // member info for envelope
     mockDb.update.mockReturnValueOnce(chainTo([revokedRow]));
 
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
@@ -564,7 +571,7 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
   it('returns 404 when assignment does not exist', async () => {
     mockDb.select
       .mockReturnValueOnce(chainTo([sampleRoleRow])) // role lookup
-      .mockReturnValueOnce(chainTo([]));             // assignment not found
+      .mockReturnValueOnce(chainTo([]));             // no active rows match — assignment not found inside the transaction
 
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles/${assignmentId}`, {
       method: 'DELETE',

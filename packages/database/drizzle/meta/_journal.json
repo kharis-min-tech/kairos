@@ -183,6 +183,13 @@
       "when": 1782300000000,
       "tag": "0025_form_submission_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1783300000000,
+      "tag": "0026_member_roles_active_unique",
+      "breakpoints": true
     }
   ]
 }

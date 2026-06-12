@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { useQuery } from '@tanstack/react-query';
@@ -1393,6 +1393,20 @@ export default function ReportsPage() {
     'branch'; // plain members never see tabs; this fallback is a safety net.
 
   const [persona, setPersona] = useState<PersonaKey>(defaultTab);
+
+  // On first render leadership is still loading, so availableTabs is just
+  // ['branch'] (or empty) and persona locks to 'branch'. When data lands,
+  // re-sync to defaultTab only if the current persona isn't actually
+  // available — that way a manual tab click sticks but a stale initial
+  // selection gets corrected.
+  useEffect(() => {
+    if (!leadership.isSuccess) return;
+    if (!availableTabs.includes(persona)) {
+      setPersona(defaultTab);
+    }
+    // Intentionally omitting `persona` from deps so manual clicks aren't undone.
+
+  }, [leadership.isSuccess, availableTabs, defaultTab]);
 
   // Plain member path — no tabs, render the legacy member report layout
   // (BranchReportsPanel reads activeRole internally to switch member/leadership stats).

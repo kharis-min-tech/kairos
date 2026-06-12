@@ -39,10 +39,11 @@ export function requireRole(...roles: string[]) {
 }
 
 /**
- * Allow access for system admins OR any branch admin (Branch System Admin
- * or Branch Data Admin) of the branch identified by `branchIdParam`. Used
- * to gate branch-scoped operational writes (members, fellowships,
- * departments, attendance) so branch admins can manage their own branch.
+ * Allow access for system admins, pastors of THIS branch, OR any branch
+ * admin (Branch System Admin or Branch Data Admin) of the branch identified
+ * by `branchIdParam`. Used to gate branch-scoped operational writes
+ * (members, fellowships, departments, attendance) so anyone with branch-tier
+ * authority can manage their own branch.
  */
 export function requireBranchAdmin(branchIdParam = 'id') {
   return async (c: Context, next: Next) => {
@@ -53,6 +54,7 @@ export function requireBranchAdmin(branchIdParam = 'id') {
     const bda = auth.branchDataAdminBranchIds ?? [];
     const ok =
       auth.systemRole === 'admin' ||
+      (auth.systemRole === 'pastor' && auth.branchId === branchId) ||
       bsa.includes(branchId) ||
       bda.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');

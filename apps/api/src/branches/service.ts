@@ -385,10 +385,21 @@ export async function assignBranchSystemAdmin(
     throw new ConflictError('Member is already a Branch System Admin for this branch');
   }
 
-  const [created] = await db
-    .insert(memberRoles)
-    .values({ memberId, roleId, branchId })
-    .returning();
+  // Partial unique index `uq_member_roles_active_assignment` catches the
+  // race where two concurrent assigns both pass the duplicate check above.
+  // Translate Postgres error 23505 into the same friendly ConflictError.
+  let created;
+  try {
+    [created] = await db
+      .insert(memberRoles)
+      .values({ memberId, roleId, branchId })
+      .returning();
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+      throw new ConflictError('Member is already a Branch System Admin for this branch');
+    }
+    throw err;
+  }
   if (!created) throw new Error('Failed to create member role');
 
   return {
@@ -413,83 +424,77 @@ export async function revokeBranchSystemAdmin(
 ): Promise<BranchRoleAssignment> {
   const roleId = await getBranchSystemAdminRoleId(db);
 
-  // Find the assignment scoped to this branch + role
-  const [assignment] = await db
-    .select({
-      id: memberRoles.id,
-      memberId: memberRoles.memberId,
-      branchId: memberRoles.branchId,
-      roleId: memberRoles.roleId,
-      isActive: memberRoles.isActive,
-      assignedDate: memberRoles.assignedDate,
-    })
-    .from(memberRoles)
-    .where(
-      and(
-        eq(memberRoles.id, assignmentId),
-        eq(memberRoles.branchId, branchId),
-        eq(memberRoles.roleId, roleId),
-        eq(memberRoles.isActive, true),
-      ),
-    )
-    .limit(1);
+  // NOTE on JWT staleness: revoking BSA flips `is_active=false` on the role row,
+  // but the revoked admin's outstanding access tokens still carry the old
+  // branchSystemAdminBranchIds list until they expire (TTL window). Their
+  // authority disappears on next token refresh. If a tighter cut-off is ever
+  // required, gate via a tokenVersion column on members and bump it here.
+  return await db.transaction(async (tx) => {
+    // Lock all active BSA rows for this branch+role. Two concurrent revokes
+    // can't both observe `activeCount == 2` because the FOR UPDATE clause
+    // serialises them — the second waits for the first to commit, then sees
+    // the post-update state.
+    const activeRows = await tx
+      .select({
+        id: memberRoles.id,
+        memberId: memberRoles.memberId,
+        assignedDate: memberRoles.assignedDate,
+      })
+      .from(memberRoles)
+      .where(
+        and(
+          eq(memberRoles.branchId, branchId),
+          eq(memberRoles.roleId, roleId),
+          eq(memberRoles.isActive, true),
+        ),
+      )
+      .for('update');
 
-  if (!assignment) {
-    throw new NotFoundError('Branch System Admin assignment not found');
-  }
+    const target = activeRows.find((r) => r.id === assignmentId);
+    if (!target) {
+      throw new NotFoundError('Branch System Admin assignment not found');
+    }
+    if (activeRows.length <= 1) {
+      throw new ValidationError(
+        'Cannot revoke the last active Branch System Admin for this branch',
+      );
+    }
 
-  // Lockout guard: refuse to revoke the last active BSA in the branch
-  const countRows = await db
-    .select({ count: count() })
-    .from(memberRoles)
-    .where(
-      and(
-        eq(memberRoles.branchId, branchId),
-        eq(memberRoles.roleId, roleId),
-        eq(memberRoles.isActive, true),
-      ),
-    );
-  const activeCount = countRows[0]?.count ?? 0;
+    // Pull member display info for the response envelope
+    const [member] = await tx
+      .select({ id: members.id, firstName: members.firstName, lastName: members.lastName, email: members.email })
+      .from(members)
+      .where(eq(members.id, target.memberId))
+      .limit(1);
 
-  if (activeCount <= 1) {
-    throw new ValidationError(
-      'Cannot revoke the last active Branch System Admin for this branch',
-    );
-  }
+    const [updated] = await tx
+      .update(memberRoles)
+      .set({ isActive: false, endDate: sql`CURRENT_DATE`, updatedAt: new Date() })
+      .where(eq(memberRoles.id, assignmentId))
+      .returning();
+    if (!updated) throw new Error('Failed to revoke member role');
 
-  // Pull member display info for the response envelope
-  const [member] = await db
-    .select({ id: members.id, firstName: members.firstName, lastName: members.lastName, email: members.email })
-    .from(members)
-    .where(eq(members.id, assignment.memberId))
-    .limit(1);
-
-  const [updated] = await db
-    .update(memberRoles)
-    .set({ isActive: false, endDate: sql`CURRENT_DATE`, updatedAt: new Date() })
-    .where(eq(memberRoles.id, assignmentId))
-    .returning();
-  if (!updated) throw new Error('Failed to revoke member role');
-
-  return {
-    id: updated.id,
-    memberId: updated.memberId,
-    member: {
-      id: member?.id ?? assignment.memberId,
-      firstName: member?.firstName ?? '',
-      lastName: member?.lastName ?? '',
-      email: member?.email ?? '',
-    },
-    roleName: BRANCH_SYSTEM_ADMIN_ROLE,
-    assignedDate: updated.assignedDate,
-    isActive: updated.isActive,
-  };
+    return {
+      id: updated.id,
+      memberId: updated.memberId,
+      member: {
+        id: member?.id ?? target.memberId,
+        firstName: member?.firstName ?? '',
+        lastName: member?.lastName ?? '',
+        email: member?.email ?? '',
+      },
+      roleName: BRANCH_SYSTEM_ADMIN_ROLE,
+      assignedDate: updated.assignedDate,
+      isActive: updated.isActive,
+    };
+  });
 }
 
 // ── Helpers ────────────────────────────────────────────────
 
 function enforceBranchAccess(auth: AuthContext, branchId: string) {
   if (auth.systemRole === 'admin') return;
+  if (auth.systemRole === 'pastor' && auth.branchId === branchId) return;
   // Branch System / Data Admins also have access to the branches they admin,
   // even if it differs from their current activeBranch.
   const bsa = auth.branchSystemAdminBranchIds ?? [];

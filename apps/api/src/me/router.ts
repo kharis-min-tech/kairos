@@ -6,6 +6,7 @@ import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
 import { getMyLeadership } from './service';
+import { meLeadershipResponseSchema } from './schemas';
 
 export const meRouter = new Hono();
 
@@ -20,5 +21,9 @@ meRouter.get('/rota', zValidator('query', listMyRotaQuerySchema), async (c) => {
 meRouter.get('/leadership', async (c) => {
   const auth = getAuth(c);
   const leadership = await getMyLeadership(db, auth);
-  return c.json(successResponse(leadership));
+  // Validate the response shape — catches left-join edge cases (null
+  // fellowshipName / departmentName) at the API boundary rather than
+  // letting malformed JSON reach the client.
+  const validated = meLeadershipResponseSchema.parse(leadership);
+  return c.json(successResponse(validated));
 });
