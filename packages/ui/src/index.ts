@@ -47,3 +47,5 @@ export {
   DialogTitle,
   DialogDescription,
 } from './components/dialog';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
+export type { TabsProps, TabsTriggerProps, TabsContentProps } from './components/tabs';

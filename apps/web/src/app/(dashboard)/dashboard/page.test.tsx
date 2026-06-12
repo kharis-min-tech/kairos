@@ -274,9 +274,9 @@ describe('DashboardPage — stats fork', () => {
       leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
     };
     render(<DashboardPage />, { wrapper });
-    // Tab bar present
-    const fellowshipTab = screen.getByRole('button', { name: 'My Fellowship' });
-    const departmentTab = screen.getByRole('button', { name: 'My Department' });
+    // Tab bar present (Tabs primitive renders role="tab" per ARIA APG).
+    const fellowshipTab = screen.getByRole('tab', { name: 'My Fellowship' });
+    const departmentTab = screen.getByRole('tab', { name: 'My Department' });
     expect(fellowshipTab).toBeInTheDocument();
     expect(departmentTab).toBeInTheDocument();
     // Default tab — Fellowship panel

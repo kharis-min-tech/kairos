@@ -10,7 +10,7 @@ import { useFellowships, useFellowshipMembers, useFellowshipMeetings, useFellows
 import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups } from '@/hooks/use-departments';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
 import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
 import {
   BarChart,
@@ -1304,47 +1304,16 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
 
 // ── Persona tabs ──────────────────────────────────────────
 //
-// Top-level persona selector for /reports. Mirrors the dashboard's
-// DualLeaderTabs button-row pattern (no @kairos/ui Tabs primitive yet).
+// Persona keys for the top-level /reports tabs. Rendered inline at the call
+// site below using the @kairos/ui Tabs primitive — no wrapper component needed.
 
 type PersonaKey = 'branch' | 'fellowship' | 'department';
 
-function PersonaTabs({
-  available,
-  active,
-  onChange,
-}: {
-  available: PersonaKey[];
-  active: PersonaKey;
-  onChange: (key: PersonaKey) => void;
-}) {
-  const labels: Record<PersonaKey, string> = {
-    branch: 'My Branch',
-    fellowship: 'My Fellowship',
-    department: 'My Department',
-  };
-  return (
-    <div className="inline-flex rounded-lg border border-border bg-card p-1" role="tablist">
-      {available.map((key) => (
-        <button
-          key={key}
-          type="button"
-          role="tab"
-          onClick={() => onChange(key)}
-          aria-pressed={active === key}
-          aria-selected={active === key}
-          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
-            active === key
-              ? 'bg-[#5D3FD3] text-white'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {labels[key]}
-        </button>
-      ))}
-    </div>
-  );
-}
+const PERSONA_LABELS: Record<PersonaKey, string> = {
+  branch: 'My Branch',
+  fellowship: 'My Fellowship',
+  department: 'My Department',
+};
 
 // ── Page orchestrator ─────────────────────────────────────
 
@@ -1412,31 +1381,58 @@ export default function ReportsPage() {
   // (BranchReportsPanel reads activeRole internally to switch member/leadership stats).
   const isPlainMember = !canSeeBranch && !canSeeFellowship && !canSeeDepartment;
 
-  return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Track church growth, attendance trends, and outreach — all in one calm view.
-          </p>
-        </div>
-        {!isPlainMember && availableTabs.length > 1 && (
-          <PersonaTabs available={availableTabs} active={persona} onChange={setPersona} />
-        )}
-      </div>
-
-      {/* Active persona panel */}
-      {isPlainMember && <BranchReportsPanel isLeadership={false} />}
-      {!isPlainMember && persona === 'branch' && <BranchReportsPanel isLeadership={true} />}
-      {!isPlainMember && persona === 'fellowship' && (
-        <MyFellowshipReports fellowships={allLeadFellowships} />
-      )}
-      {!isPlainMember && persona === 'department' && (
-        <MyDepartmentReports departments={allLeadDepartments} />
-      )}
+  // Header tile is constant. The persona switch is the only branching variable
+  // — pull it out so the JSX stays readable.
+  const header = (
+    <div>
+      <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        Track church growth, attendance trends, and outreach — all in one calm view.
+      </p>
     </div>
+  );
+
+  if (isPlainMember) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">{header}</div>
+        <BranchReportsPanel isLeadership={false} />
+      </div>
+    );
+  }
+
+  // Leadership path — wrap the entire surface in <Tabs> so the pill row (in
+  // the header) and the active panel (below) share context. `className="contents"`
+  // makes Tabs layout-transparent; the surrounding `space-y-6` div continues to
+  // own vertical rhythm, preserving the prior visual layout pixel-for-pixel.
+  return (
+    <Tabs
+      value={persona}
+      onValueChange={(v) => setPersona(v as PersonaKey)}
+      className="contents"
+    >
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          {header}
+          {availableTabs.length > 1 && (
+            <TabsList aria-label="Reports persona">
+              {availableTabs.map((key) => (
+                <TabsTrigger key={key} value={key}>{PERSONA_LABELS[key]}</TabsTrigger>
+              ))}
+            </TabsList>
+          )}
+        </div>
+
+        {/* Active persona panel */}
+        <TabsContent value="branch"><BranchReportsPanel isLeadership={true} /></TabsContent>
+        <TabsContent value="fellowship">
+          <MyFellowshipReports fellowships={allLeadFellowships} />
+        </TabsContent>
+        <TabsContent value="department">
+          <MyDepartmentReports departments={allLeadDepartments} />
+        </TabsContent>
+      </div>
+    </Tabs>
   );
 }

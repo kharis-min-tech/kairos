@@ -15,6 +15,7 @@ import { useMyLeadership } from '@/hooks/use-me';
 import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
+  Tabs, TabsList, TabsTrigger, TabsContent,
 } from '@kairos/ui';
 import {
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -539,39 +540,18 @@ function DualLeaderTabs({
 }) {
   const [tab, setTab] = useState<'fellowship' | 'department'>('fellowship');
   return (
-    <div className="space-y-3">
-      <div className="inline-flex rounded-lg border border-border bg-card p-1">
-        <button
-          type="button"
-          onClick={() => setTab('fellowship')}
-          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
-            tab === 'fellowship'
-              ? 'bg-[#5D3FD3] text-white'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-          aria-pressed={tab === 'fellowship'}
-        >
-          My Fellowship
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('department')}
-          className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
-            tab === 'department'
-              ? 'bg-[#5D3FD3] text-white'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-          aria-pressed={tab === 'department'}
-        >
-          My Department
-        </button>
-      </div>
-      {tab === 'fellowship' ? (
+    <Tabs value={tab} onValueChange={(v) => setTab(v as 'fellowship' | 'department')}>
+      <TabsList aria-label="My leadership">
+        <TabsTrigger value="fellowship">My Fellowship</TabsTrigger>
+        <TabsTrigger value="department">My Department</TabsTrigger>
+      </TabsList>
+      <TabsContent value="fellowship">
         <FellowshipStats fellowships={leadFellowships} />
-      ) : (
+      </TabsContent>
+      <TabsContent value="department">
         <DepartmentStats departments={leadDepartments} />
-      )}
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 
