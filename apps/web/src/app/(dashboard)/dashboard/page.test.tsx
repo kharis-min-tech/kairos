@@ -23,15 +23,23 @@ const emptyLeadership: LeadershipFixture = {
   deputyDepartments: [],
 };
 
+type Scope =
+  | { kind: 'branch'; id: string }
+  | { kind: 'fellowship'; id: string }
+  | { kind: 'department'; id: string }
+  | null;
+
 let authState: {
   user: { id: string; firstName: string; homeBranchId?: string } | null;
   activeRole: string | null;
+  scope: Scope;
   branchSystemAdminBranchIds: string[];
   branchDataAdminBranchIds: string[];
   setBranchAdminAuthority: (a: unknown) => void;
 } = {
   user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
   activeRole: 'member',
+  scope: null,
   branchSystemAdminBranchIds: [],
   branchDataAdminBranchIds: [],
   setBranchAdminAuthority: vi.fn(),
@@ -134,6 +142,7 @@ function resetState() {
   authState = {
     user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
     activeRole: 'member',
+    scope: null,
     branchSystemAdminBranchIds: [],
     branchDataAdminBranchIds: [],
     setBranchAdminAuthority: vi.fn(),
@@ -336,5 +345,79 @@ describe('DashboardPage — PendingApprovalsPanel visibility', () => {
   it('hides for plain member', () => {
     render(<DashboardPage />, { wrapper });
     expect(screen.queryByText('Pending Approvals')).not.toBeInTheDocument();
+  });
+});
+
+// ── Phase 4: scope-aware dashboard fork ──────────────────────────────
+//
+// /api/me/leadership now scope-filters its response server-side. The
+// dashboard reads that filtered shape, so it doesn't need extra logic to
+// pick the right fork. These tests stand in for the end-to-end:
+//   - The mocked leadership data here represents what the API would return
+//     for a scope-bound login (single fellowship / department / branch).
+//   - The dashboard renders the expected single-tier fork.
+//   - The role label honors the scope choice instead of falling back to
+//     dual-role labels.
+
+describe('DashboardPage — scope-aware fork', () => {
+  beforeEach(resetState);
+
+  it('fellowship-scoped login: renders FellowshipStats with ONLY the scoped fellowship, never DualLeaderTabs', () => {
+    authState.activeRole = 'leader';
+    authState.scope = { kind: 'fellowship', id: 'f-1' };
+    // Server-side scope filtering empties the department arrays.
+    leadershipData = {
+      ...emptyLeadership,
+      leadFellowships: [{ id: 'f-1', fellowshipName: 'K-Groups Central', branchId: 'b-1' }],
+    };
+    render(<DashboardPage />, { wrapper });
+
+    // Single-fellowship view — FellowshipStats card visible.
+    expect(screen.getByText('My Fellowships')).toBeInTheDocument();
+    expect(screen.getAllByText('K-Groups Central').length).toBeGreaterThan(0);
+    // No DualLeaderTabs.
+    expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
+    // Role label reflects the scope choice.
+    expect(screen.getByText('Fellowship Leader — K-Groups Central')).toBeInTheDocument();
+  });
+
+  it('department-scoped login: renders DepartmentStats with ONLY the scoped department', () => {
+    authState.activeRole = 'leader';
+    authState.scope = { kind: 'department', id: 'd-1' };
+    leadershipData = {
+      ...emptyLeadership,
+      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+    };
+    render(<DashboardPage />, { wrapper });
+
+    expect(screen.getByText('My Departments')).toBeInTheDocument();
+    expect(screen.getAllByText('Worship').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('tab', { name: 'My Fellowship' })).not.toBeInTheDocument();
+    expect(screen.getByText('Department Lead — Worship')).toBeInTheDocument();
+  });
+
+  it('branch-scoped BSA login (activeRole=admin): renders BSA chip + branch-suffixed role label', () => {
+    // Per the picker contract in @kairos/types api.ts:
+    //   Branch System Admin → activeRole='admin', scope={branch:<branchId>}
+    authState.activeRole = 'admin';
+    authState.scope = { kind: 'branch', id: 'b-2' };
+    // The user holds BSA on the scoped branch (b-2). homeBranchId is b-1 —
+    // the role label should still suffix b-2 (Accra), not London.
+    leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-2'] };
+    render(<DashboardPage />, { wrapper });
+
+    // BranchAdminStats wins over AdminStats because isBranchAdmin is true.
+    expect(screen.getByText('Branch Admin')).toBeInTheDocument();
+    expect(screen.getAllByText('Branch Members').length).toBeGreaterThan(0);
+    expect(screen.getByText('Branch System Admin — Accra')).toBeInTheDocument();
+  });
+
+  it('branch-scoped pastor login: renders Pastor — {scoped branch} label', () => {
+    // A pastor who picks "Pastor — Accra" at /select-role hits this path,
+    // even though homeBranchId is b-1.
+    authState.activeRole = 'pastor';
+    authState.scope = { kind: 'branch', id: 'b-2' };
+    render(<DashboardPage />, { wrapper });
+    expect(screen.getByText('Pastor — Accra')).toBeInTheDocument();
   });
 });

@@ -23,15 +23,23 @@ const emptyLeadership: LeadershipFixture = {
   deputyDepartments: [],
 };
 
+type Scope =
+  | { kind: 'branch'; id: string }
+  | { kind: 'fellowship'; id: string }
+  | { kind: 'department'; id: string }
+  | null;
+
 let authState: {
   user: { id: string; firstName: string; homeBranchId?: string } | null;
   activeRole: string | null;
+  scope: Scope;
   branchSystemAdminBranchIds: string[];
   branchDataAdminBranchIds: string[];
   setBranchAdminAuthority: (a: unknown) => void;
 } = {
   user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
   activeRole: 'member',
+  scope: null,
   branchSystemAdminBranchIds: [],
   branchDataAdminBranchIds: [],
   setBranchAdminAuthority: vi.fn(),
@@ -116,6 +124,7 @@ function resetState() {
   authState = {
     user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
     activeRole: 'member',
+    scope: null,
     branchSystemAdminBranchIds: [],
     branchDataAdminBranchIds: [],
     setBranchAdminAuthority: vi.fn(),
@@ -326,5 +335,63 @@ describe('ReportsPage — department picker', () => {
     };
     render(<ReportsPage />, { wrapper });
     expect(screen.getByLabelText('Department')).toBeInTheDocument();
+  });
+});
+
+// ── Phase 4: scope-aware persona tabs ────────────────────────────────
+//
+// /api/me/leadership now scope-filters its response. A user logged in as
+// "Fellowship Leader — K-Groups Central" gets back a single-fellowship
+// leadership shape, so the reports page should:
+//   - show ONLY the "My Fellowship" tab,
+//   - not show the picker (only one fellowship in the list),
+//   - hide the branch + department tabs even if the user technically holds
+//     authority over them.
+
+describe('ReportsPage — scope-aware persona narrowing', () => {
+  beforeEach(resetState);
+
+  it('fellowship-scoped login: only "My Fellowship" tab (single-tab → row hidden), no picker', () => {
+    authState.activeRole = 'leader';
+    authState.scope = { kind: 'fellowship', id: 'f-1' };
+    // Server narrows leadership to a single fellowship — empty everything else.
+    leadershipData = {
+      ...emptyLeadership,
+      leadFellowships: [{ id: 'f-1', fellowshipName: 'K-Groups Central', branchId: 'b-1' }],
+    };
+    render(<ReportsPage />, { wrapper });
+
+    // Single available persona → tab row is suppressed (existing pattern).
+    expect(screen.queryByRole('tab', { name: 'My Branch' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
+    // Picker hidden — only one fellowship in the list.
+    expect(screen.queryByLabelText('Fellowship')).not.toBeInTheDocument();
+  });
+
+  it('department-scoped login: only "My Department" surface, no other tabs', () => {
+    authState.activeRole = 'leader';
+    authState.scope = { kind: 'department', id: 'd-1' };
+    leadershipData = {
+      ...emptyLeadership,
+      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+    };
+    render(<ReportsPage />, { wrapper });
+
+    expect(screen.queryByRole('tab', { name: 'My Branch' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'My Fellowship' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Department')).not.toBeInTheDocument();
+  });
+
+  it('branch-scoped login: only "My Branch" tab (single-tab → row hidden), other persona tabs absent', () => {
+    authState.activeRole = 'leader';
+    authState.scope = { kind: 'branch', id: 'b-1' };
+    leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-1'] };
+    render(<ReportsPage />, { wrapper });
+
+    // Branch is the sole available tab — row hidden by the page's >1 guard.
+    expect(screen.queryByRole('tab', { name: 'My Branch' })).not.toBeInTheDocument();
+    // Other tabs definitively absent.
+    expect(screen.queryByRole('tab', { name: 'My Fellowship' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
   });
 });

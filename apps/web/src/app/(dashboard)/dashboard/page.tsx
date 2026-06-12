@@ -2026,11 +2026,18 @@ function MissionSummary({ role }: { role: string }) {
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
+  // Phase 4: `scope` narrows the dashboard fork. /api/me/leadership already
+  // scope-filters its response server-side, so the existing arrays here are
+  // already narrowed. We still read scope directly to drive the role label
+  // and the branch name used in the "Branch System Admin — X" suffix.
+  const scope = useAuthStore((s) => s.scope);
   const leadership = useMyLeadership();
   const { data: branches } = useBranches();
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const branchId = user?.homeBranchId;
+  // Branch context for sub-panels. When scope is a branch, the user is acting
+  // AS that branch even if homeBranchId differs.
+  const branchId = scope?.kind === 'branch' ? scope.id : user?.homeBranchId;
   const verse = getDailyVerse();
 
   // ── Authority derived from the /api/me/leadership snapshot ──────────────
@@ -2057,9 +2064,14 @@ export default function DashboardPage() {
     hasFellowshipLead ||
     hasDepartmentLead;
 
-  // Resolve a branch name for the home branch — used in the role label suffix.
-  // We only show the suffix when home branch IS one of the BSA/BDA branches,
-  // otherwise we'd be ascribing authority to the wrong branch.
+  // Resolve a branch name for the role-label suffix. With scope=branch, pull
+  // the scoped branch directly; without scope, fall back to the legacy
+  // homeBranchId path (only valid when home branch is one of the BSA/BDA
+  // branches the user holds).
+  const scopeBranchName =
+    scope?.kind === 'branch' && branches
+      ? branches.find((b) => b.id === scope.id)?.branchName
+      : undefined;
   const homeBranchName =
     user?.homeBranchId && branches
       ? branches.find((b) => b.id === user.homeBranchId)?.branchName
@@ -2068,8 +2080,35 @@ export default function DashboardPage() {
   const homeBranchInBda = !!user?.homeBranchId && bdaIds.includes(user.homeBranchId);
 
   // ── Role label — first match wins; higher authority overrides lower ────
+  //
+  // Phase 4: when `scope` is set the user picked a specific role at
+  // /select-role. The label should reflect THAT choice, not the user's full
+  // authority. We branch on scope first; absent scope, fall through to the
+  // legacy ladder (which still resolves correctly because /api/me/leadership
+  // is unfiltered for unscoped sessions).
   let roleLabel: string;
-  if (activeRole === 'admin') {
+  if (scope?.kind === 'branch') {
+    // The scoped branch is the load-bearing identifier — pair it with the
+    // most-specific tier of authority the user holds on it.
+    const suffix = scopeBranchName ? ` — ${scopeBranchName}` : '';
+    if (activeRole === 'admin') {
+      roleLabel = isBranchSystemAdmin
+        ? `Branch System Admin${suffix}`
+        : `Administrator${suffix}`;
+    } else if (isBranchDataAdmin) {
+      roleLabel = `Branch Data Admin${suffix}`;
+    } else if (activeRole === 'pastor') {
+      roleLabel = `Pastor${suffix}`;
+    } else {
+      roleLabel = `Branch${suffix}`;
+    }
+  } else if (scope?.kind === 'fellowship') {
+    const name = allLeadFellowships[0]?.fellowshipName;
+    roleLabel = name ? `Fellowship Leader — ${name}` : 'Fellowship Leader';
+  } else if (scope?.kind === 'department') {
+    const name = allLeadDepartments[0]?.departmentName;
+    roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
+  } else if (activeRole === 'admin') {
     roleLabel = 'Administrator';
   } else if (isBranchSystemAdmin) {
     roleLabel =
@@ -2119,9 +2158,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats — forked by branch-admin authority, then fellowship/department
-          leadership, then activeRole. */}
+          leadership, then activeRole.
+
+          Phase 4: a branch-scoped session (scope.kind === 'branch') narrows
+          even a system admin down to a single-branch view. The BranchAdminStats
+          tile reads the scoped branch through the analytics API (which honors
+          auth.scope.id), so rendering it directly is correct. */}
       <div className="mb-10">
-        {isSystemAdmin ? (
+        {scope?.kind === 'branch' ? (
+          <BranchAdminStats />
+        ) : isSystemAdmin ? (
           <AdminStats />
         ) : isBranchAdmin ? (
           <BranchAdminStats />
