@@ -9,6 +9,11 @@ import type {
   ResetPasswordRequest,
   VerifyEmailRequest,
   RefreshRequest,
+  FinalizeRoleRequest,
+  FinalizeRoleResponse,
+  SwitchRoleRequest,
+  SwitchRoleResponse,
+  RoleOption,
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
@@ -172,8 +177,18 @@ export function createApiClient(
     auth: {
       signup: (data: SignupRequest) =>
         client.post<ApiResponse<{ member: MemberProfile; verificationToken: string }>>('/api/auth/signup', data),
+      // LoginResponse is a flat-with-flags shape: single-role users get
+      // tokens/member/isFirstLogin populated; multi-role users get
+      // roleSelectionRequired + sessionToken + availableRoles, and the
+      // caller must follow up with finalizeRole().
       login: (data: LoginRequest) =>
         client.post<ApiResponse<LoginResponse>>('/api/auth/login', data),
+      finalizeRole: (data: FinalizeRoleRequest) =>
+        client.post<ApiResponse<FinalizeRoleResponse>>('/api/auth/finalize-role', data),
+      switchRole: (data: SwitchRoleRequest) =>
+        client.post<ApiResponse<SwitchRoleResponse>>('/api/auth/switch-role', data),
+      availableRoles: () =>
+        client.get<ApiResponse<RoleOption[]>>('/api/auth/available-roles'),
       refresh: (data: RefreshRequest) =>
         client.post<ApiResponse<AuthTokens>>('/api/auth/refresh', data),
       verifyEmail: (data: VerifyEmailRequest) =>

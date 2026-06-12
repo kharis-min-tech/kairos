@@ -14,9 +14,14 @@ export function useLogin() {
       return res.data!;
     },
     onSuccess: (data, variables) => {
-      setTokens(data.tokens);
+      // Phase 1 of roadmap item 9 widened `LoginResponse` into a flat-with-
+      // flags shape so multi-role users can land on a role picker. Phase 2
+      // will branch this hook on `data.roleSelectionRequired`. Until then,
+      // every legacy caller still passes `activeRole`, which forces the
+      // server's direct-finalize path → tokens/member are populated.
+      setTokens(data.tokens!);
       setUser(data.member as never);
-      setMustChangePassword(data.member.mustChangePassword);
+      setMustChangePassword(data.member!.mustChangePassword);
       if (variables.activeRole) {
         setActiveRole(variables.activeRole);
       }

@@ -10,9 +10,19 @@ import {
   branchDepartments,
   departments,
 } from '@kairos/database';
-import type { AuthContext, AuthTokens, LoginResponse, MemberProfile } from '@kairos/types';
+import type {
+  AuthContext,
+  AuthTokens,
+  FinalizeRoleResponse,
+  LoginResponse,
+  MemberProfile,
+  RoleOption,
+  RoleScope,
+  SwitchRoleResponse,
+} from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
+import { computeAvailableRoles, roleOptionKey } from './role-options';
 import {
   NotFoundError,
   ConflictError,
@@ -28,6 +38,17 @@ const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-me';
 const JWT_REFRESH_SECRET = process.env['JWT_REFRESH_SECRET'] ?? 'dev-refresh-secret-change-me';
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
+// 5-minute window between credentials-pass and role-finalize. Long enough
+// for a thoughtful pick, short enough that a stolen sessionToken can't be
+// hoarded.
+const SESSION_TOKEN_EXPIRY = '5m';
+
+/** Payload shape of the short-lived role-selection JWT. */
+interface SessionTokenPayload {
+  /** Discriminator so authMiddleware can reject session tokens. */
+  kind: 'role-selection';
+  memberId: string;
+}
 
 function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
   return {
@@ -77,6 +98,40 @@ function signAccessToken(payload: AuthContext): string {
 
 function signRefreshToken(memberId: string): string {
   return jwt.sign({ memberId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+}
+
+/**
+ * Mint a short-lived session token carrying only the validated memberId.
+ * Signed with `JWT_SECRET` so the same key family covers it, but the
+ * `kind: 'role-selection'` discriminator means `authMiddleware` will refuse
+ * to treat it as an access token.
+ */
+function signSessionToken(memberId: string): string {
+  const payload: SessionTokenPayload = { kind: 'role-selection', memberId };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: SESSION_TOKEN_EXPIRY });
+}
+
+/**
+ * Verify a session token and return the memberId. Throws UnauthorizedError
+ * for any failure (expired, tampered, wrong kind). The `kind` check guards
+ * against an attacker passing an access token here to bypass role selection.
+ */
+function verifySessionToken(token: string): string {
+  let decoded: unknown;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch {
+    throw new UnauthorizedError('Session token expired or invalid. Please sign in again.');
+  }
+  if (
+    typeof decoded !== 'object' ||
+    decoded === null ||
+    (decoded as Record<string, unknown>)['kind'] !== 'role-selection' ||
+    typeof (decoded as Record<string, unknown>)['memberId'] !== 'string'
+  ) {
+    throw new UnauthorizedError('Session token expired or invalid. Please sign in again.');
+  }
+  return (decoded as SessionTokenPayload).memberId;
 }
 
 /** Generate a fresh access+refresh token pair for a given auth context. */
@@ -239,13 +294,69 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   };
 }
 
-/** Strict role check: activeRole must match member's systemRole (or be 'member') */
+/**
+ * Build the AuthContext + tokens for a successfully-authenticated member
+ * acting under the given activeRole + scope. Stamps `lastLoginAt` as a side
+ * effect. Used by the single-role login fast-path AND by `finalizeRole`.
+ */
+async function issueAuthenticatedSession(
+  db: Database,
+  member: typeof members.$inferSelect,
+  activeRole: SystemRole,
+  scope: RoleScope | undefined,
+): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
+    db,
+    member.id,
+  );
 
+  const authContext: AuthContext = {
+    memberId: member.id,
+    email: member.email,
+    systemRole: member.systemRole as SystemRole,
+    branchId: getActiveBranchId(member),
+    activeRole,
+    ...(scope ? { scope } : {}),
+    branchSystemAdminBranchIds,
+    branchDataAdminBranchIds,
+  };
+
+  const accessToken = signAccessToken(authContext);
+  const refreshToken = signRefreshToken(member.id);
+
+  await db
+    .update(members)
+    .set({ lastLoginAt: new Date() })
+    .where(eq(members.id, member.id));
+
+  return {
+    tokens: { accessToken, refreshToken },
+    member: toMemberProfile(member),
+  };
+}
+
+/**
+ * Two-step login:
+ *  1. Validate email + password + activation gates.
+ *  2. Compute the caller's available role options.
+ *  3. Branch:
+ *     - Legacy callers pass `activeRole` explicitly → validate against the
+ *       options list, finalize in one trip. Preserves backwards compatibility
+ *       with the existing web flow and all existing tests.
+ *     - New callers omit `activeRole`. If the member has only one option,
+ *       finalize directly. Otherwise return a `role-selection-required`
+ *       envelope with a 5-minute sessionToken — the caller follows up with
+ *       POST /api/auth/finalize-role.
+ *
+ * Important: we NEVER reveal what permission tiers exist to a visitor who
+ * hasn't authenticated. The role-selection envelope is only emitted AFTER
+ * the bcrypt check passes.
+ */
 export async function login(
   db: Database,
   email: string,
   password: string,
-  activeRole: SystemRole = 'member',
+  activeRole?: SystemRole,
 ): Promise<LoginResponse> {
   const [member] = await db
     .select()
@@ -281,39 +392,204 @@ export async function login(
     );
   }
 
-  const memberRole = member.systemRole as SystemRole;
-  if (activeRole !== 'member' && memberRole !== activeRole) {
-    throw new UnauthorizedError(`You don't have ${activeRole} access`);
+  const availableRoles = await computeAvailableRoles(db, {
+    memberId: member.id,
+    systemRole: member.systemRole as SystemRole,
+    homeBranchId: member.homeBranchId,
+  });
+
+  // ── Legacy / direct-finalize path ─────────────────────────
+  // Callers that send `activeRole` keep the old strict-match semantics. We
+  // still enforce that 'member' is a fallback every account has, and that
+  // any other activeRole the caller asks for must be present in the
+  // computed options.
+  if (activeRole !== undefined) {
+    if (activeRole === 'member') {
+      const session = await issueAuthenticatedSession(db, member, 'member', undefined);
+      return { ...session, isFirstLogin };
+    }
+    const memberSystemRole = member.systemRole as SystemRole;
+    if (memberSystemRole !== activeRole) {
+      // Preserve the old error message — there are tests asserting on it.
+      throw new UnauthorizedError(`You don't have ${activeRole} access`);
+    }
+    // The unscoped system role (admin / pastor / leader) matches the
+    // member's stored systemRole. Find the matching unscoped option to
+    // keep the JWT shape consistent with computeAvailableRoles.
+    const match = availableRoles.find(
+      (opt) => opt.activeRole === activeRole && opt.scope === undefined,
+    );
+    const session = await issueAuthenticatedSession(
+      db,
+      member,
+      activeRole,
+      match?.scope,
+    );
+    return { ...session, isFirstLogin };
   }
 
-  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
-    db,
-    member.id,
-  );
+  // ── Two-step path ────────────────────────────────────────
+  // Exactly one option → finalize directly, no picker needed. This is the
+  // most common case (plain members, single-fellowship leaders).
+  if (availableRoles.length === 1) {
+    const only = availableRoles[0]!;
+    const session = await issueAuthenticatedSession(db, member, only.activeRole, only.scope);
+    return { ...session, isFirstLogin };
+  }
 
-  const authContext: AuthContext = {
-    memberId: member.id,
-    email: member.email,
-    systemRole: memberRole,
-    branchId: getActiveBranchId(member),
-    activeRole,
-    branchSystemAdminBranchIds,
-    branchDataAdminBranchIds,
-  };
-
-  const accessToken = signAccessToken(authContext);
-  const refreshToken = signRefreshToken(member.id);
-
-  await db
-    .update(members)
-    .set({ lastLoginAt: new Date() })
-    .where(eq(members.id, member.id));
-
+  // Multiple options → return the role-selection envelope. The sessionToken
+  // is short-lived; the picker UI MUST call /finalize-role within 5 minutes
+  // or the user re-authenticates.
   return {
-    tokens: { accessToken, refreshToken },
-    member: toMemberProfile(member),
-    isFirstLogin,
+    roleSelectionRequired: true,
+    sessionToken: signSessionToken(member.id),
+    availableRoles,
   };
+}
+
+/**
+ * Step 2 of the two-step login. Verifies the sessionToken, re-computes the
+ * available role list from the trusted memberId (NEVER trusts the request's
+ * `availableRoles`), and finalizes the picked role + scope into an access
+ * token pair.
+ *
+ * The `key` field is the integrity check: it must exactly equal one of the
+ * server-recomputed options' keys. A tampered request that swaps `scope` or
+ * `activeRole` for an unauthorized combination will produce a mismatched
+ * key and be rejected.
+ */
+export async function finalizeRole(
+  db: Database,
+  input: {
+    sessionToken: string;
+    activeRole: SystemRole;
+    scope?: RoleScope;
+    key: string;
+  },
+): Promise<FinalizeRoleResponse> {
+  const memberId = verifySessionToken(input.sessionToken);
+
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.id, memberId), eq(members.isActive, true)))
+    .limit(1);
+
+  if (!member) {
+    throw new UnauthorizedError('Account no longer available');
+  }
+
+  const isFirstLogin = member.lastLoginAt === null;
+
+  const availableRoles = await computeAvailableRoles(db, {
+    memberId: member.id,
+    systemRole: member.systemRole as SystemRole,
+    homeBranchId: member.homeBranchId,
+  });
+
+  // Recompute the canonical key and require an exact match. This catches:
+  //  - clients echoing back stale option lists,
+  //  - clients tampering with activeRole/scope to gain unauthorized authority,
+  //  - leadership changes between login and finalize.
+  const requestedKey = roleOptionKey(input.activeRole, input.scope);
+  if (requestedKey !== input.key) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  const match = availableRoles.find((opt) => opt.key === input.key);
+  if (!match) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+
+  const session = await issueAuthenticatedSession(
+    db,
+    member,
+    match.activeRole,
+    match.scope,
+  );
+  return { ...session, isFirstLogin };
+}
+
+/**
+ * Mint a fresh access+refresh pair under a different activeRole + scope for
+ * an already-authenticated caller. Used by the header dropdown in Phase 3
+ * so the user can swap between e.g. "Fellowship Leader — K-Groups" and
+ * "Member" without signing back in.
+ *
+ * Re-validates against the caller's CURRENTLY available roles (recomputed
+ * from auth.memberId) — leadership revocations propagate immediately.
+ */
+export async function switchRole(
+  db: Database,
+  auth: AuthContext,
+  input: {
+    activeRole: SystemRole;
+    scope?: RoleScope;
+    key: string;
+  },
+): Promise<SwitchRoleResponse> {
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.id, auth.memberId), eq(members.isActive, true)))
+    .limit(1);
+
+  if (!member) {
+    throw new UnauthorizedError('Account no longer available');
+  }
+
+  const availableRoles = await computeAvailableRoles(db, {
+    memberId: member.id,
+    systemRole: member.systemRole as SystemRole,
+    homeBranchId: member.homeBranchId,
+  });
+
+  const requestedKey = roleOptionKey(input.activeRole, input.scope);
+  if (requestedKey !== input.key) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+  const match = availableRoles.find((opt) => opt.key === input.key);
+  if (!match) {
+    throw new UnauthorizedError('Role selection is invalid');
+  }
+
+  const session = await issueAuthenticatedSession(
+    db,
+    member,
+    match.activeRole,
+    match.scope,
+  );
+  return session;
+}
+
+/**
+ * Re-expose the available role list for the currently-authenticated caller.
+ * Lets the header dropdown render without making the client recompute. No
+ * sessionToken needed — caller is already authenticated through the access
+ * token.
+ */
+export async function listAvailableRolesForCurrent(
+  db: Database,
+  auth: AuthContext,
+): Promise<RoleOption[]> {
+  const [member] = await db
+    .select({
+      id: members.id,
+      systemRole: members.systemRole,
+      homeBranchId: members.homeBranchId,
+    })
+    .from(members)
+    .where(and(eq(members.id, auth.memberId), eq(members.isActive, true)))
+    .limit(1);
+
+  if (!member) {
+    throw new UnauthorizedError('Account no longer available');
+  }
+
+  return computeAvailableRoles(db, {
+    memberId: member.id,
+    systemRole: member.systemRole as SystemRole,
+    homeBranchId: member.homeBranchId,
+  });
 }
 
 export async function refreshAccessToken(db: Database, refreshToken: string): Promise<AuthTokens> {

@@ -84,7 +84,12 @@ export default function LoginPage() {
     setError(null);
     try {
       const result = await loginMutation.mutateAsync({ ...data, activeRole: selectedRole });
-      if (result.member.mustChangePassword) {
+      // Phase 1 of roadmap item 9 widened LoginResponse — multi-role users
+      // now get { roleSelectionRequired, sessionToken, availableRoles }.
+      // Phase 2 will route those callers to a picker page; until then the
+      // legacy role-tab path always passes activeRole, which guarantees
+      // `result.member` is populated by the server's direct-finalize arm.
+      if (result.member!.mustChangePassword) {
         router.push('/change-password');
       } else {
         router.push(result.isFirstLogin ? '/welcome' : '/dashboard');

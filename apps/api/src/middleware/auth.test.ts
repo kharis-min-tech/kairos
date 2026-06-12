@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Context } from 'hono';
+import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '@kairos/utils';
-import { requireBranchAdmin, requireBranchSystemAdmin, requireRole } from './auth';
+import { authMiddleware, requireBranchAdmin, requireBranchSystemAdmin, requireRole } from './auth';
 import type { AuthContext } from '@kairos/types';
 
 // ── Fixtures ────────────────────────────────────────────────
@@ -28,6 +29,73 @@ function makeCtx(auth: AuthContext, params: Record<string, string> = {}): Contex
     req: { param: (k: string) => params[k] },
   } as unknown as Context;
 }
+
+// ── authMiddleware ──────────────────────────────────────────
+
+/**
+ * Build a minimal Hono context that captures `set('auth', ...)` payloads
+ * and exposes Authorization-header lookup. Just enough surface for
+ * authMiddleware to do its work.
+ */
+function makeAuthCtx(authHeader?: string): { ctx: Context; getAuthPayload: () => AuthContext | undefined } {
+  let stored: AuthContext | undefined;
+  const ctx = {
+    req: { header: (k: string) => (k === 'Authorization' ? authHeader : undefined) },
+    set: (k: string, v: unknown) => {
+      if (k === 'auth') stored = v as AuthContext;
+    },
+  } as unknown as Context;
+  return { ctx, getAuthPayload: () => stored };
+}
+
+describe('authMiddleware', () => {
+  const JWT_SECRET = 'dev-secret-change-me';
+
+  it('rejects requests without a Bearer header', async () => {
+    const next = vi.fn();
+    const { ctx } = makeAuthCtx(undefined);
+    await expect(authMiddleware(ctx, next)).rejects.toThrow(UnauthorizedError);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('rejects a session token used as an access token', async () => {
+    // A holder of the short-lived role-selection sessionToken must NEVER
+    // be able to access protected endpoints. If this guard regresses, an
+    // attacker who intercepts a sessionToken could effectively pin a
+    // pending-role session as their access credential.
+    const sessionToken = jwt.sign(
+      { kind: 'role-selection', memberId: '11111111-1111-1111-1111-111111111111' },
+      JWT_SECRET,
+      { expiresIn: '5m' },
+    );
+    const next = vi.fn();
+    const { ctx } = makeAuthCtx(`Bearer ${sessionToken}`);
+    await expect(authMiddleware(ctx, next)).rejects.toThrow(
+      /cannot be used as an access token/,
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('accepts a normal access token and stores the auth payload', async () => {
+    const accessToken = jwt.sign(
+      {
+        memberId: '11111111-1111-1111-1111-111111111111',
+        email: 'user@kairos.local',
+        systemRole: 'member',
+        activeRole: 'member',
+        branchId: branchA,
+      },
+      JWT_SECRET,
+      { expiresIn: '15m' },
+    );
+    const next = vi.fn();
+    const { ctx, getAuthPayload } = makeAuthCtx(`Bearer ${accessToken}`);
+    await authMiddleware(ctx, next);
+    expect(next).toHaveBeenCalledOnce();
+    expect(getAuthPayload()?.memberId).toBe('11111111-1111-1111-1111-111111111111');
+    expect(getAuthPayload()?.activeRole).toBe('member');
+  });
+});
 
 // ── requireRole ─────────────────────────────────────────────
 

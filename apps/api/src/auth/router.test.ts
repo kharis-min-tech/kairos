@@ -233,6 +233,75 @@ describe('POST /api/auth/refresh', () => {
   });
 });
 
+// ── POST /api/auth/finalize-role ───────────────────────────
+
+describe('POST /api/auth/finalize-role', () => {
+  it('returns 400 when sessionToken missing', async () => {
+    const res = await app.request('/api/auth/finalize-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activeRole: 'member', key: 'member' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when activeRole is not a valid enum value', async () => {
+    const res = await app.request('/api/auth/finalize-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionToken: 'fake', activeRole: 'super-admin', key: 'k' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 for an expired sessionToken', async () => {
+    const expired = (await import('jsonwebtoken')).default.sign(
+      { kind: 'role-selection', memberId: TEST_IDS.memberId },
+      'dev-secret-change-me',
+      { expiresIn: '-1s' },
+    );
+
+    const res = await app.request('/api/auth/finalize-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionToken: expired, activeRole: 'member', key: 'member' }),
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
+// ── POST /api/auth/switch-role ─────────────────────────────
+
+describe('POST /api/auth/switch-role', () => {
+  it('returns 401 without an access token', async () => {
+    const res = await app.request('/api/auth/switch-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activeRole: 'member', key: 'member' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 for an invalid body', async () => {
+    const token = signTestToken();
+    const res = await app.request('/api/auth/switch-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ activeRole: 'invalid-role' }),
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
+// ── GET /api/auth/available-roles ──────────────────────────
+
+describe('GET /api/auth/available-roles', () => {
+  it('returns 401 without an access token', async () => {
+    const res = await app.request('/api/auth/available-roles');
+    expect(res.status).toBe(401);
+  });
+});
+
 // ── GET /api/auth/me (protected) ───────────────────────────
 
 describe('GET /api/auth/me', () => {

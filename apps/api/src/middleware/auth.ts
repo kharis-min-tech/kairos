@@ -18,12 +18,25 @@ export async function authMiddleware(c: Context, next: Next) {
   }
 
   const token = header.slice(7);
+  let payload: unknown;
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as AuthContext;
-    c.set('auth', payload);
+    payload = jwt.verify(token, JWT_SECRET);
   } catch {
     throw new UnauthorizedError('Invalid or expired token');
   }
+
+  // Reject the short-lived role-selection session token here. Without this
+  // guard a holder of a pending-role sessionToken could call protected
+  // endpoints with no activeRole / scope and bypass the picker entirely.
+  if (
+    typeof payload === 'object' &&
+    payload !== null &&
+    (payload as Record<string, unknown>)['kind'] === 'role-selection'
+  ) {
+    throw new UnauthorizedError('Session token cannot be used as an access token');
+  }
+
+  c.set('auth', payload as AuthContext);
 
   await next();
 }

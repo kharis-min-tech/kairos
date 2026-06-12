@@ -12,6 +12,8 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  finalizeRoleSchema,
+  switchRoleSchema,
 } from './schemas';
 import {
   signup,
@@ -22,6 +24,9 @@ import {
   resetPassword,
   getMe,
   changePassword,
+  finalizeRole,
+  switchRole,
+  listAvailableRolesForCurrent,
 } from './service';
 
 export const authRouter = new Hono();
@@ -41,6 +46,17 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
 authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
   const result = await login(db, body.email, body.password, body.activeRole);
+  // Message varies by result arm so the client can render appropriately
+  // without re-deriving from the shape.
+  const message = result.roleSelectionRequired ? 'Role selection required' : 'Login successful';
+  return c.json(successResponse(result, message));
+});
+
+// Step 2 of the two-step login: finalize the picked role + scope. Public —
+// authority comes from the short-lived sessionToken in the body.
+authRouter.post('/finalize-role', zValidator('json', finalizeRoleSchema), async (c) => {
+  const body = c.req.valid('json');
+  const result = await finalizeRole(db, body);
   return c.json(successResponse(result, 'Login successful'));
 });
 
@@ -92,4 +108,22 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   const { currentPassword, newPassword } = c.req.valid('json');
   await changePassword(db, auth, currentPassword, newPassword);
   return c.json(successResponse(undefined, 'Password changed successfully'));
+});
+
+// Phase 3 header-dropdown support: swap to a different available role
+// without re-authenticating. Re-validates against the caller's CURRENT
+// leadership footprint — revocations propagate instantly.
+authRouter.post('/switch-role', authMiddleware, zValidator('json', switchRoleSchema), async (c) => {
+  const auth = getAuth(c);
+  const body = c.req.valid('json');
+  const result = await switchRole(db, auth, body);
+  return c.json(successResponse(result, 'Role switched'));
+});
+
+// Expose the available role list to an authenticated caller so the header
+// dropdown can render without recomputing on the client.
+authRouter.get('/available-roles', authMiddleware, async (c) => {
+  const auth = getAuth(c);
+  const result = await listAvailableRolesForCurrent(db, auth);
+  return c.json(successResponse(result));
 });

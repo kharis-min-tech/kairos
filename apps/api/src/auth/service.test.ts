@@ -207,13 +207,13 @@ describe('login', () => {
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
 
-    expect(result.tokens.accessToken).toBeDefined();
-    expect(result.tokens.refreshToken).toBeDefined();
-    expect(result.member.email).toBe('john@example.com');
+    expect(result.tokens!.accessToken).toBeDefined();
+    expect(result.tokens!.refreshToken).toBeDefined();
+    expect(result.member!.email).toBe('john@example.com');
     expect(result.isFirstLogin).toBe(true);
 
     // Verify access token is valid JWT
-    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    const decoded = jwt.verify(result.tokens!.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
     expect(decoded['memberId']).toBe(baseMember.id);
     expect(decoded['email']).toBe('john@example.com');
     expect(decoded['systemRole']).toBe('member');
@@ -305,7 +305,7 @@ describe('login', () => {
     setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'member');
-    expect(result.tokens.accessToken).toBeDefined();
+    expect(result.tokens!.accessToken).toBeDefined();
   });
 
   it('should allow exact role match login', async () => {
@@ -316,7 +316,7 @@ describe('login', () => {
     setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'pastor');
-    expect(result.tokens.accessToken).toBeDefined();
+    expect(result.tokens!.accessToken).toBeDefined();
   });
 
   it('JWT branchId is secondaryBranchId when member is at secondary branch', async () => {
@@ -328,7 +328,7 @@ describe('login', () => {
     setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
-    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    const decoded = jwt.verify(result.tokens!.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
     expect(decoded['branchId']).toBe(secondaryBranchId);
   });
 });
@@ -507,5 +507,448 @@ describe('getMe', () => {
 
     await expect(getMe(mockDb, 'non-existent-id'))
       .rejects.toThrow('not found');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Two-step login (Phase 1 of roadmap item 9)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Test helper that wires a sequence of select-call results onto mockSelect.
+ * Each entry corresponds to one db.select() invocation in order. Each chain
+ * supports the methods used by service queries: from/where/limit/innerJoin/
+ * orderBy. Resolves via `.then`, so it works with `await`-driven selects
+ * regardless of whether they end in `.limit()` or not.
+ */
+function setupSelectSequence(results: unknown[][]) {
+  const queue = [...results];
+  mockSelect.mockImplementation(() => {
+    const data = queue.length > 0 ? queue.shift()! : [];
+    const chain: Record<string, unknown> = {};
+    const passthrough = () => chain;
+    for (const m of ['from', 'innerJoin', 'leftJoin', 'where', 'limit', 'orderBy']) {
+      chain[m] = passthrough;
+    }
+    chain.then = (resolve: (v: unknown) => unknown) => resolve(data);
+    return chain;
+  });
+}
+
+describe('computeAvailableRoles', () => {
+  it('plain member: returns only the member option', async () => {
+    const { computeAvailableRoles } = await import('./role-options');
+
+    setupSelectSequence([
+      [], // BSA roles
+      [], // BDA dept rows
+      [], // fellowship leadership rows
+      [], // department leadership rows
+      // no branches lookup needed — branchIdsNeeded is empty
+    ]);
+
+    const options = await computeAvailableRoles(mockDb, {
+      memberId: baseMember.id,
+      systemRole: 'member',
+      homeBranchId: baseMember.homeBranchId,
+    });
+
+    expect(options).toHaveLength(1);
+    expect(options[0]).toEqual({
+      activeRole: 'member',
+      displayLabel: 'Member',
+      key: 'member',
+    });
+  });
+
+  it('fellowship leader: emits fellowship leader option + member option', async () => {
+    const { computeAvailableRoles } = await import('./role-options');
+
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    setupSelectSequence([
+      [], // BSA
+      [], // BDA
+      [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }],
+      [], // dept leadership
+    ]);
+
+    const options = await computeAvailableRoles(mockDb, {
+      memberId: baseMember.id,
+      systemRole: 'member',
+      homeBranchId: baseMember.homeBranchId,
+    });
+
+    expect(options).toHaveLength(2);
+    expect(options[0]).toMatchObject({
+      activeRole: 'leader',
+      scope: { kind: 'fellowship', id: fellowshipId },
+      displayLabel: 'Fellowship Leader — K-Groups',
+    });
+    expect(options[0]!.key).toBe(`leader:fellowship:${fellowshipId}`);
+    expect(options[1]!.activeRole).toBe('member');
+  });
+
+  it('pastor: emits Administrator-tier-equivalent pastor option for the home branch', async () => {
+    const { computeAvailableRoles } = await import('./role-options');
+
+    setupSelectSequence([
+      [], // BSA
+      [], // BDA
+      [], // fellowship leadership
+      [], // dept leadership
+      [{ id: baseMember.homeBranchId, branchName: 'London' }], // branches lookup
+    ]);
+
+    const options = await computeAvailableRoles(mockDb, {
+      memberId: baseMember.id,
+      systemRole: 'pastor',
+      homeBranchId: baseMember.homeBranchId,
+    });
+
+    expect(options).toHaveLength(2);
+    expect(options[0]).toMatchObject({
+      activeRole: 'pastor',
+      scope: { kind: 'branch', id: baseMember.homeBranchId },
+      displayLabel: 'Pastor — London',
+    });
+    expect(options[1]!.activeRole).toBe('member');
+  });
+
+  it('branch system admin: emits BSA option (admin tier, branch-scoped) + member', async () => {
+    const { computeAvailableRoles } = await import('./role-options');
+
+    const branchA = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    setupSelectSequence([
+      [{ branchId: branchA }], // BSA
+      [], // BDA
+      [], // fellowship leadership
+      [], // dept leadership
+      [{ id: branchA, branchName: 'Manchester' }], // branches lookup
+    ]);
+
+    const options = await computeAvailableRoles(mockDb, {
+      memberId: baseMember.id,
+      systemRole: 'member',
+      homeBranchId: baseMember.homeBranchId,
+    });
+
+    expect(options).toHaveLength(2);
+    expect(options[0]).toMatchObject({
+      activeRole: 'admin',
+      scope: { kind: 'branch', id: branchA },
+      displayLabel: 'Branch System Admin — Manchester',
+    });
+    expect(options[0]!.key).toBe(`admin:branch:${branchA}`);
+  });
+
+  it('dual: BSA + fellowship leader produces all three options ordered admin > leader > member', async () => {
+    const { computeAvailableRoles } = await import('./role-options');
+
+    const branchA = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    setupSelectSequence([
+      [{ branchId: branchA }], // BSA
+      [], // BDA
+      [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }],
+      [], // dept leadership
+      [{ id: branchA, branchName: 'Manchester' }],
+    ]);
+
+    const options = await computeAvailableRoles(mockDb, {
+      memberId: baseMember.id,
+      systemRole: 'member',
+      homeBranchId: baseMember.homeBranchId,
+    });
+
+    expect(options.map((o) => o.activeRole)).toEqual(['admin', 'leader', 'member']);
+    expect(options[0]!.displayLabel).toBe('Branch System Admin — Manchester');
+    expect(options[1]!.displayLabel).toBe('Fellowship Leader — K-Groups');
+  });
+});
+
+describe('login (two-step)', () => {
+  it('legacy: activeRole sent + matches → direct finalize (back-compat)', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectSequence([
+      [{ ...baseMember, passwordHash: hashed, systemRole: 'pastor', lastLoginAt: new Date() }],
+      [], [], [], [], // computeAvailableRoles footprint
+      [{ id: baseMember.homeBranchId, branchName: 'London' }], // branches lookup for pastor
+    ]);
+    setupUpdateChain();
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', 'pastor');
+
+    expect(result.roleSelectionRequired).toBeUndefined();
+    expect(result.tokens).toBeDefined();
+    expect(result.member!.email).toBe('john@example.com');
+  });
+
+  it('no activeRole + single-role user (plain member) → direct finalize', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    setupSelectSequence([
+      [{ ...baseMember, passwordHash: hashed, lastLoginAt: null }],
+      [], [], [], [], // footprint queries — all empty
+      // no branches lookup — member has no scoped authority
+    ]);
+    setupUpdateChain();
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+
+    expect(result.roleSelectionRequired).toBeUndefined();
+    expect(result.tokens).toBeDefined();
+    expect(result.sessionToken).toBeUndefined();
+  });
+
+  it('no activeRole + multi-role user → role-selection-required envelope', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    setupSelectSequence([
+      [{ ...baseMember, passwordHash: hashed, lastLoginAt: new Date() }],
+      [], // BSA
+      [], // BDA
+      [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }],
+      [], // dept leadership
+      // no branches lookup needed (fellowship scope only)
+    ]);
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+
+    expect(result.roleSelectionRequired).toBe(true);
+    expect(result.sessionToken).toBeDefined();
+    expect(result.availableRoles).toBeDefined();
+    expect(result.availableRoles!.map((r) => r.activeRole)).toContain('leader');
+    expect(result.availableRoles!.map((r) => r.activeRole)).toContain('member');
+    expect(result.tokens).toBeUndefined();
+    expect(result.member).toBeUndefined();
+  });
+
+  it('multi-role envelope does NOT stamp lastLoginAt — only finalize-role does', async () => {
+    const { login } = await import('./service');
+
+    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    setupSelectSequence([
+      [{ ...baseMember, passwordHash: hashed, lastLoginAt: new Date() }],
+      [], [], [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }], [],
+    ]);
+    // Intentionally do NOT call setupUpdateChain — login should not touch
+    // members.lastLoginAt when it returns the role-selection envelope.
+
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+    expect(result.roleSelectionRequired).toBe(true);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('finalizeRole', () => {
+  it('issues access token with chosen activeRole + scope when key matches', async () => {
+    const { finalizeRole, computeAvailableRoles: _compute } = await import('./service').then(async (svc) => ({
+      finalizeRole: svc.finalizeRole,
+      computeAvailableRoles: (await import('./role-options')).computeAvailableRoles,
+    }));
+    void _compute;
+    const { roleOptionKey } = await import('./role-options');
+
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+
+    // Sign a valid session token first so verification succeeds.
+    const sessionToken = jwt.sign(
+      { kind: 'role-selection', memberId: baseMember.id },
+      'dev-secret-change-me',
+      { expiresIn: '5m' },
+    );
+
+    setupSelectSequence([
+      [{ ...baseMember, lastLoginAt: new Date() }], // member lookup
+      [], // BSA
+      [], // BDA
+      [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }],
+      [], // dept leadership
+      // issueAuthenticatedSession will call resolveBranchAdminAuthority → 2 more selects
+      [], // BSA in resolveBranchAdminAuthority
+      [], // BDA in resolveBranchAdminAuthority
+    ]);
+    setupUpdateChain();
+
+    const scope = { kind: 'fellowship' as const, id: fellowshipId };
+    const key = roleOptionKey('leader', scope);
+    const result = await finalizeRole(mockDb, {
+      sessionToken,
+      activeRole: 'leader',
+      scope,
+      key,
+    });
+
+    expect(result.tokens.accessToken).toBeDefined();
+    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    expect(decoded['activeRole']).toBe('leader');
+    expect(decoded['scope']).toEqual(scope);
+  });
+
+  it('rejects expired session token', async () => {
+    const { finalizeRole } = await import('./service');
+
+    // Expired = signed with a negative exp via a past iat. Easiest: sign with
+    // expiresIn '-1s' so jwt.verify throws TokenExpiredError.
+    const expired = jwt.sign(
+      { kind: 'role-selection', memberId: baseMember.id },
+      'dev-secret-change-me',
+      { expiresIn: '-1s' },
+    );
+
+    await expect(
+      finalizeRole(mockDb, {
+        sessionToken: expired,
+        activeRole: 'member',
+        key: 'member',
+      }),
+    ).rejects.toThrow('Session token expired or invalid');
+  });
+
+  it('rejects a session-token-shaped JWT whose kind is wrong', async () => {
+    const { finalizeRole } = await import('./service');
+
+    // An access-token-shaped JWT must NOT pass as a sessionToken — that
+    // would let an attacker who exfiltrated an access token bypass the
+    // finalize flow's role re-validation.
+    const accessTokenLike = jwt.sign(
+      { memberId: baseMember.id, systemRole: 'admin', email: 'x@y.z', branchId: 'b' },
+      'dev-secret-change-me',
+      { expiresIn: '5m' },
+    );
+
+    await expect(
+      finalizeRole(mockDb, {
+        sessionToken: accessTokenLike,
+        activeRole: 'member',
+        key: 'member',
+      }),
+    ).rejects.toThrow('Session token expired or invalid');
+  });
+
+  it('rejects key that is not in the available role list (tampered request)', async () => {
+    const { finalizeRole } = await import('./service');
+
+    const sessionToken = jwt.sign(
+      { kind: 'role-selection', memberId: baseMember.id },
+      'dev-secret-change-me',
+      { expiresIn: '5m' },
+    );
+
+    setupSelectSequence([
+      [{ ...baseMember, lastLoginAt: new Date() }], // member lookup
+      [], [], [], [], // footprint: empty → only 'member' option available
+    ]);
+
+    // User tries to claim admin authority they don't have.
+    await expect(
+      finalizeRole(mockDb, {
+        sessionToken,
+        activeRole: 'admin',
+        key: 'admin',
+      }),
+    ).rejects.toThrow('Role selection is invalid');
+  });
+
+  it('rejects when key does not match the activeRole+scope hash (handcrafted payload)', async () => {
+    const { finalizeRole } = await import('./service');
+
+    const sessionToken = jwt.sign(
+      { kind: 'role-selection', memberId: baseMember.id },
+      'dev-secret-change-me',
+      { expiresIn: '5m' },
+    );
+
+    setupSelectSequence([
+      [{ ...baseMember, lastLoginAt: new Date() }],
+      [], [], [], [],
+    ]);
+
+    // activeRole='member' with key='admin' — never a legal combination.
+    await expect(
+      finalizeRole(mockDb, {
+        sessionToken,
+        activeRole: 'member',
+        key: 'admin',
+      }),
+    ).rejects.toThrow('Role selection is invalid');
+  });
+});
+
+describe('switchRole', () => {
+  const baseAuth = {
+    memberId: baseMember.id,
+    email: baseMember.email,
+    systemRole: 'member' as const,
+    activeRole: 'member' as const,
+    branchId: baseMember.homeBranchId,
+    branchSystemAdminBranchIds: [],
+    branchDataAdminBranchIds: [],
+  };
+
+  it('mints a fresh token pair with the new activeRole + scope', async () => {
+    const { switchRole } = await import('./service');
+    const { roleOptionKey } = await import('./role-options');
+
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    setupSelectSequence([
+      [{ ...baseMember, lastLoginAt: new Date() }], // member lookup
+      [], [], // BSA, BDA
+      [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }],
+      [], // dept leadership
+      // resolveBranchAdminAuthority inside issueAuthenticatedSession
+      [], [],
+    ]);
+    setupUpdateChain();
+
+    const scope = { kind: 'fellowship' as const, id: fellowshipId };
+    const result = await switchRole(mockDb, baseAuth, {
+      activeRole: 'leader',
+      scope,
+      key: roleOptionKey('leader', scope),
+    });
+
+    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    expect(decoded['activeRole']).toBe('leader');
+    expect(decoded['scope']).toEqual(scope);
+  });
+
+  it('rejects switch to a role the caller no longer holds', async () => {
+    const { switchRole } = await import('./service');
+
+    // Caller's auth carries a fellowship-leader role, but the leadership
+    // table now shows them as not the leader (someone removed them).
+    setupSelectSequence([
+      [{ ...baseMember, lastLoginAt: new Date() }], // member lookup
+      [], [], [], [], // footprint: nothing → only 'member' available
+    ]);
+
+    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
+    await expect(
+      switchRole(mockDb, baseAuth, {
+        activeRole: 'leader',
+        scope: { kind: 'fellowship', id: fellowshipId },
+        key: `leader:fellowship:${fellowshipId}`,
+      }),
+    ).rejects.toThrow('Role selection is invalid');
+  });
+
+  it('rejects when the underlying member is deactivated', async () => {
+    const { switchRole } = await import('./service');
+
+    setupSelectSequence([[]]); // member lookup → empty (isActive=false filter)
+
+    await expect(
+      switchRole(mockDb, baseAuth, {
+        activeRole: 'member',
+        key: 'member',
+      }),
+    ).rejects.toThrow('Account no longer available');
   });
 });
