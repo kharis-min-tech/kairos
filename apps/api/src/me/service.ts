@@ -85,8 +85,7 @@ export async function getMyLeadership(
     .filter((r) => r.deputyMemberId === memberId)
     .map((r) => ({ id: r.id, departmentName: r.departmentName, branchId: r.branchId }));
 
-  const branchSystemAdminBranchIds = auth.branchSystemAdminBranchIds ?? [];
-  const branchDataAdminBranchIds = auth.branchDataAdminBranchIds ?? [];
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = auth;
 
   // ── Scope-aware narrowing ────────────────────────────────────────────
   const scope = auth.scope;

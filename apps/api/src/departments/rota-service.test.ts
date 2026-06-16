@@ -69,10 +69,10 @@ const instanceId = 'aa0e8400-0000-0000-0000-0000000000aa';
 const assignmentId = 'bb0e8400-0000-0000-0000-0000000000bb';
 const swapRequestId = 'cc0e8400-0000-0000-0000-0000000000cc';
 
-const leaderAuth = { memberId: 'lead-1', email: 'l@x', systemRole: 'leader' as const, branchId };
-const memberAuth = { memberId: memberId1, email: 'm@x', systemRole: 'member' as const, branchId };
-const adminAuth = { memberId: 'admin-1', email: 'a@x', systemRole: 'admin' as const, branchId: 'other' };
-const crossBranchAuth = { memberId: 'x', email: 'x@x', systemRole: 'leader' as const, branchId: 'other-br' };
+const leaderAuth = { memberId: 'lead-1', email: 'l@x', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId: memberId1, email: 'm@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const adminAuth = { memberId: 'admin-1', email: 'a@x', systemRole: 'admin' as const, branchId: 'other', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const crossBranchAuth = { memberId: 'x', email: 'x@x', systemRole: 'leader' as const, branchId: 'other-br', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 const sampleBd = {
   id: branchDeptId,

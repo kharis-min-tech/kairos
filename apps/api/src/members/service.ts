@@ -8,6 +8,7 @@ import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
+import { enforceScopeAllows } from '../lib/scope';
 import {
   NotFoundError,
   ForbiddenError,
@@ -422,6 +423,11 @@ export async function assignRole(
     throw new ForbiddenError('Only admins can assign roles');
   }
 
+  // Phase 5 hardening: a system admin who logged in scoped to a single branch
+  // (e.g. "Branch System Admin — London") cannot assign roles in a different
+  // branch without first switching role. The scope is the load-bearing intent.
+  enforceScopeAllows(auth, 'branch', input.branchId);
+
   // Verify member exists
   const [member] = await db
     .select({ id: members.id })
@@ -481,12 +487,17 @@ export async function removeRole(
   }
 
   const [assignment] = await db
-    .select({ id: memberRoles.id, memberId: memberRoles.memberId })
+    .select({ id: memberRoles.id, memberId: memberRoles.memberId, branchId: memberRoles.branchId })
     .from(memberRoles)
     .where(and(eq(memberRoles.id, roleAssignmentId), eq(memberRoles.isActive, true)));
 
   if (!assignment) throw new NotFoundError('Role assignment not found');
   if (assignment.memberId !== memberId) throw new ValidationError('Role assignment does not belong to this member');
+
+  // Phase 5 hardening: same scope intent as assignRole — refuse cross-branch
+  // revokes from a scope-bound session. Use the assignment's branchId because
+  // the URL does not carry one.
+  enforceScopeAllows(auth, 'branch', assignment.branchId);
 
   const [updated] = await db
     .update(memberRoles)
@@ -1032,6 +1043,8 @@ export async function switchActiveBranch(
     systemRole: member.systemRole as AuthContext['systemRole'],
     branchId: activeBranchId,
     activeRole: auth.activeRole,
+    branchSystemAdminBranchIds: auth.branchSystemAdminBranchIds,
+    branchDataAdminBranchIds: auth.branchDataAdminBranchIds,
   };
 
   const tokens = generateTokenPair(authContext);

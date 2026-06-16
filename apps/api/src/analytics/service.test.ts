@@ -41,8 +41,8 @@ const mockDb = {
 const branchId = '110e8400-0000-0000-0000-000000000001';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 
-const adminAuth: AuthContext = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin', branchId };
-const memberAuth: AuthContext = { memberId, email: 'member@test.com', systemRole: 'member', branchId };
+const adminAuth: AuthContext = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin', branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth: AuthContext = { memberId, email: 'member@test.com', systemRole: 'member', branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 beforeEach(() => {
   vi.clearAllMocks();

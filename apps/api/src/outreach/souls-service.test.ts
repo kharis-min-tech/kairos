@@ -20,6 +20,8 @@ describe('Souls Service', () => {
       systemRole: 'admin',
       activeRole: 'admin',
       branchId: TEST_IDS.branchId,
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
     };
     adminActingAsMemberAuth = {
       memberId: TEST_IDS.adminId,
@@ -27,6 +29,8 @@ describe('Souls Service', () => {
       systemRole: 'admin',
       activeRole: 'member',
       branchId: TEST_IDS.branchId,
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
     };
     pastorAuth = {
       memberId: TEST_IDS.pastorId,
@@ -34,6 +38,8 @@ describe('Souls Service', () => {
       systemRole: 'pastor',
       activeRole: 'pastor',
       branchId: TEST_IDS.branchId,
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
     };
     memberAuth = {
       memberId: TEST_IDS.memberId,
@@ -41,6 +47,8 @@ describe('Souls Service', () => {
       systemRole: 'member',
       activeRole: 'member',
       branchId: TEST_IDS.branchId,
+      branchSystemAdminBranchIds: [],
+      branchDataAdminBranchIds: [],
     };
   });
 

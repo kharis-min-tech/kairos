@@ -161,17 +161,19 @@ export interface AuthContext {
   /**
    * Branch IDs where the caller holds the Branch System Admin role (via
    * `member_roles` JOIN `roles` WHERE roleName = 'Branch System Admin').
-   * Populated at login/refresh; absent on legacy tokens. System admins get
-   * `[]` — their authority flows from `systemRole === 'admin'`, not this list.
+   * Populated at login/refresh. System admins get `[]` — their authority flows
+   * from `systemRole === 'admin'`, not this list. Required at the type level:
+   * legacy tokens that lack the field are normalised to `[]` by the auth
+   * middleware so consumers don't have to defend against `undefined`.
    */
-  branchSystemAdminBranchIds?: string[];
+  branchSystemAdminBranchIds: string[];
   /**
    * Branch IDs where the caller holds Branch Data Admin authority (derived
    * from `branch_departments` for the 'Admin' global department where the
-   * caller is the lead or deputy). Populated at login/refresh; absent on
-   * legacy tokens.
+   * caller is the lead or deputy). Populated at login/refresh. Legacy tokens
+   * are normalised to `[]` by the auth middleware.
    */
-  branchDataAdminBranchIds?: string[];
+  branchDataAdminBranchIds: string[];
 }
 
 // ── Member Profile ─────────────────────────────────────────

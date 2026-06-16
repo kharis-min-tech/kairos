@@ -76,11 +76,11 @@ const memberId = '330e8400-0000-0000-0000-000000000003';
 const departmentId = '550e8400-0000-0000-0000-000000000005';
 const requestId = '660e8400-0000-0000-0000-000000000006';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
-const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
-const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch' };
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 const sampleBranchDept = {
   id: branchDeptId,
@@ -239,7 +239,7 @@ describe('listBranchDepartments', () => {
 
   it('returns empty list for a leader who leads no department (e.g. fellowship-only leader)', async () => {
     setupSelectSequence([], [{ value: 0 }]);
-    const otherLeader = { memberId: 'other-leader', email: 'x@test.com', systemRole: 'leader' as const, branchId };
+    const otherLeader = { memberId: 'other-leader', email: 'x@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
     const result = await listBranchDepartments(mockDb, otherLeader, { page: 1, limit: 20 });
     expect(result.data).toEqual([]);
   });

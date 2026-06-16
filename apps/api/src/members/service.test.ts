@@ -60,10 +60,10 @@ const memberId = '330e8400-0000-0000-0000-000000000003';
 const roleId = '550e8400-0000-0000-0000-000000000005';
 const roleAssignmentId = '660e8400-0000-0000-0000-000000000006';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
-const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
-const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch' };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 const sampleMember = {
   id: memberId, firstName: 'John', lastName: 'Doe', email: 'john@test.com',
@@ -321,6 +321,27 @@ describe('assignRole', () => {
     await expect(assignRole(mockDb, memberId, { roleId, branchId }, adminAuth))
       .rejects.toThrow('Member already has this role in this branch');
   });
+
+  it('refuses cross-branch assignment from a branch-scoped admin', async () => {
+    const otherBranchId = '550e8400-0000-0000-0000-0000000000ff';
+    const scopedAuth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId: otherBranchId }, scopedAuth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('allows in-scope assignment for a branch-scoped admin', async () => {
+    const scopedAuth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId }],
+      [{ id: branchId }],
+      [],
+    );
+    setupInsert([{ id: roleAssignmentId, memberId, roleId, branchId, isActive: true }]);
+    const result = await assignRole(mockDb, memberId, { roleId, branchId }, scopedAuth);
+    expect(result).toBeDefined();
+  });
 });
 
 // ── removeRole ────────────────────────────────────────────
@@ -342,6 +363,26 @@ describe('removeRole', () => {
     setupSelect([]);
     await expect(removeRole(mockDb, memberId, roleAssignmentId, adminAuth))
       .rejects.toThrow('Role assignment not found');
+  });
+
+  it('refuses cross-branch revoke from a branch-scoped admin', async () => {
+    const otherBranchId = '550e8400-0000-0000-0000-0000000000ff';
+    // Assignment is owned by another branch; the scoped admin is locked to
+    // branchId. Scope check must fire after the membership lookup so the
+    // service knows which branch the assignment belongs to.
+    setupSelect([{ id: roleAssignmentId, memberId, branchId: otherBranchId }]);
+    const scopedAuth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      removeRole(mockDb, memberId, roleAssignmentId, scopedAuth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('allows in-scope revoke for a branch-scoped admin', async () => {
+    setupSelect([{ id: roleAssignmentId, memberId, branchId }]);
+    setupUpdate([{ id: roleAssignmentId, isActive: false }]);
+    const scopedAuth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    const result = await removeRole(mockDb, memberId, roleAssignmentId, scopedAuth);
+    expect(result).toBeDefined();
   });
 });
 
@@ -689,12 +730,12 @@ const minorMember = {
 };
 
 // Auth contexts for the various viewers.
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
-const guardianAuth = { memberId: guardianId, email: 'guardian@test.com', systemRole: 'member' as const, branchId };
-const sgLeadSameBranchAuth = { memberId: '000-sg-same', email: 'sg-same@test.com', systemRole: 'leader' as const, branchId };
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const guardianAuth = { memberId: guardianId, email: 'guardian@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const sgLeadSameBranchAuth = { memberId: '000-sg-same', email: 'sg-same@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 // Physically present in `branchId` (so the detail read gate passes) but only
 // holds the Safeguarding Lead role in a DIFFERENT branch (otherBranchId).
-const sgLeadOtherBranchAuth = { memberId: '000-sg-other', email: 'sg-other@test.com', systemRole: 'leader' as const, branchId };
+const sgLeadOtherBranchAuth = { memberId: '000-sg-other', email: 'sg-other@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 describe('getMember — minor redaction', () => {
   it('admin sees full minor record (not redacted)', async () => {

@@ -58,14 +58,14 @@ const serviceId = '770e8400-e29b-41d4-a716-446655440010';
 const memberId = '550e8400-e29b-41d4-a716-446655440002';
 const visitorMemberId = '550e8400-e29b-41d4-a716-4466554400ff';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
-const leaderOtherBranch = { memberId: '000-leader2', email: 'l2@test.com', systemRole: 'leader' as const, branchId: otherBranchId };
-const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderOtherBranch = { memberId: '000-leader2', email: 'l2@test.com', systemRole: 'leader' as const, branchId: otherBranchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 // Admin-desk volunteer: a regular member whose home branch has them on the Admin dept roster.
 // Distinct from `adminAuth` (which is a system admin, branch-agnostic).
-const adminDeptAuth = { memberId: '000-admin-dept', email: 'desk@test.com', systemRole: 'member' as const, branchId };
+const adminDeptAuth = { memberId: '000-admin-dept', email: 'desk@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 /**
  * The new `enforceServiceWriter` calls `isInAdminDepartment` for non-admin/non-pastor

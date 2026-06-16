@@ -159,7 +159,13 @@ export async function updateBranch(
   return updated;
 }
 
-export async function deleteBranch(db: Database, branchId: string) {
+export async function deleteBranch(db: Database, branchId: string, auth: AuthContext) {
+  // Defense-in-depth: middleware (requireRole('admin')) gates entry, but a
+  // scope-bound session (e.g. system admin who selected "Branch System Admin —
+  // London") must still be narrowed to its scoped branch even if the URL
+  // somehow references a different one.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   const [existing] = await db.select().from(branches).where(and(eq(branches.id, branchId), eq(branches.isActive, true)));
   if (!existing) throw new NotFoundError('Branch not found');
 
@@ -226,7 +232,13 @@ export async function assignLeadership(
   db: Database,
   branchId: string,
   input: { memberId: string; role: string; startDate?: string },
+  auth: AuthContext,
 ) {
+  // Defense-in-depth: requireBranchSystemAdmin('id') middleware already gates
+  // entry. This second check refuses cross-branch writes from a scope-bound
+  // session if the URL is ever decoupled from the middleware param.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   // Verify branch exists
   const [branch] = await db.select().from(branches).where(and(eq(branches.id, branchId), eq(branches.isActive, true)));
   if (!branch) throw new NotFoundError('Branch not found');
@@ -276,7 +288,10 @@ export async function assignLeadership(
   return assignment;
 }
 
-export async function removeLeadership(db: Database, branchId: string, leadershipId: string) {
+export async function removeLeadership(db: Database, branchId: string, leadershipId: string, auth: AuthContext) {
+  // Defense-in-depth: see assignLeadership above.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   const [existing] = await db
     .select()
     .from(branchLeadership)
@@ -359,7 +374,13 @@ export async function assignBranchSystemAdmin(
   db: Database,
   branchId: string,
   memberId: string,
+  auth: AuthContext,
 ): Promise<BranchRoleAssignment> {
+  // Defense-in-depth: requireBranchSystemAdmin('id') gates this at the router.
+  // The scope re-check refuses BSA grants targeting a different branch than
+  // the caller's scoped session.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   // Verify branch exists and is active
   const [branch] = await db
     .select({ id: branches.id })
@@ -431,7 +452,13 @@ export async function revokeBranchSystemAdmin(
   db: Database,
   branchId: string,
   assignmentId: string,
+  auth: AuthContext,
 ): Promise<BranchRoleAssignment> {
+  // Defense-in-depth: requireBranchSystemAdmin('id') gates this at the router.
+  // The scope re-check refuses BSA revokes targeting a different branch than
+  // the caller's scoped session.
+  enforceScopeAllows(auth, 'branch', branchId);
+
   const roleId = await getBranchSystemAdminRoleId(db);
 
   // NOTE on JWT staleness: revoking BSA flips `is_active=false` on the role row,
@@ -513,9 +540,12 @@ function enforceBranchAccess(auth: AuthContext, branchId: string) {
   if (auth.systemRole === 'pastor' && auth.branchId === branchId) return;
   // Branch System / Data Admins also have access to the branches they admin,
   // even if it differs from their current activeBranch.
-  const bsa = auth.branchSystemAdminBranchIds ?? [];
-  const bda = auth.branchDataAdminBranchIds ?? [];
-  if (bsa.includes(branchId) || bda.includes(branchId)) return;
+  if (
+    auth.branchSystemAdminBranchIds.includes(branchId) ||
+    auth.branchDataAdminBranchIds.includes(branchId)
+  ) {
+    return;
+  }
   if (auth.branchId !== branchId) {
     throw new ForbiddenError('Access denied to this branch');
   }

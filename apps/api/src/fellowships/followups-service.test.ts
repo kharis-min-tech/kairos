@@ -52,12 +52,12 @@ const memberAId = '111-mem-a';
 const memberBId = '222-mem-b';
 const followupId = '660e8400-0000-0000-0000-000000000099';
 
-const adminAuth = { memberId: '000-admin', email: 'a@x', systemRole: 'admin' as const, branchId };
-const pastorAuth = { memberId: '000-pastor', email: 'p@x', systemRole: 'pastor' as const, branchId };
-const memberAuth = { memberId: memberAId, email: 'm@x', systemRole: 'member' as const, branchId };
-const otherBranchLeaderAuth = { memberId: '000-o', email: 'o@x', systemRole: 'leader' as const, branchId: 'other-branch' };
-const leaderAuth = { memberId: '000-leader', email: 'l@x', systemRole: 'leader' as const, branchId };
-const nonFellowshipLeaderAuth = { memberId: '000-other-leader', email: 'ol@x', systemRole: 'leader' as const, branchId };
+const adminAuth = { memberId: '000-admin', email: 'a@x', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const pastorAuth = { memberId: '000-pastor', email: 'p@x', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId: memberAId, email: 'm@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const otherBranchLeaderAuth = { memberId: '000-o', email: 'o@x', systemRole: 'leader' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderAuth = { memberId: '000-leader', email: 'l@x', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const nonFellowshipLeaderAuth = { memberId: '000-other-leader', email: 'ol@x', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 const sampleFellowship = {
   id: fellowshipId,

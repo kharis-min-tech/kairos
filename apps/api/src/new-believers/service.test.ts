@@ -67,11 +67,11 @@ const enrollment2Id = '660e8400-0000-0000-0000-000000000007';
 const enrollment3Id = '660e8400-0000-0000-0000-000000000008';
 const sessionId = '770e8400-0000-0000-0000-000000000009';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId };
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId };
-const leaderOtherBranch = { memberId: '000-leader-b', email: 'leader-b@test.com', systemRole: 'leader' as const, branchId: otherBranchId };
-const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderOtherBranch = { memberId: '000-leader-b', email: 'leader-b@test.com', systemRole: 'leader' as const, branchId: otherBranchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 beforeEach(() => {
   vi.clearAllMocks();

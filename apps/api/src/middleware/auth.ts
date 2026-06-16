@@ -36,7 +36,14 @@ export async function authMiddleware(c: Context, next: Next) {
     throw new UnauthorizedError('Session token cannot be used as an access token');
   }
 
-  c.set('auth', payload as AuthContext);
+  // Phase 5 hardening: normalise legacy tokens so AuthContext consumers can
+  // treat branchSystemAdminBranchIds/branchDataAdminBranchIds as always-present
+  // arrays. Old tokens (issued before the branch-admin RBAC build) lack these
+  // fields entirely; default both to [] so the consumers don't need `?? []`.
+  const auth = payload as Partial<AuthContext> & AuthContext;
+  auth.branchSystemAdminBranchIds = auth.branchSystemAdminBranchIds ?? [];
+  auth.branchDataAdminBranchIds = auth.branchDataAdminBranchIds ?? [];
+  c.set('auth', auth);
 
   await next();
 }
@@ -69,13 +76,11 @@ export function requireBranchAdmin(branchIdParam = 'id') {
     if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
       throw new UnauthorizedError('Insufficient permissions');
     }
-    const bsa = auth.branchSystemAdminBranchIds ?? [];
-    const bda = auth.branchDataAdminBranchIds ?? [];
     const ok =
       auth.systemRole === 'admin' ||
       (auth.systemRole === 'pastor' && auth.branchId === branchId) ||
-      bsa.includes(branchId) ||
-      bda.includes(branchId);
+      auth.branchSystemAdminBranchIds.includes(branchId) ||
+      auth.branchDataAdminBranchIds.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');
     await next();
   };
@@ -95,8 +100,7 @@ export function requireBranchSystemAdmin(branchIdParam = 'id') {
     if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
       throw new UnauthorizedError('Insufficient permissions');
     }
-    const bsa = auth.branchSystemAdminBranchIds ?? [];
-    const ok = auth.systemRole === 'admin' || bsa.includes(branchId);
+    const ok = auth.systemRole === 'admin' || auth.branchSystemAdminBranchIds.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');
     await next();
   };

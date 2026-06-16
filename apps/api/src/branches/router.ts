@@ -81,7 +81,8 @@ branchesRouter.patch('/:id', requireBranchAdmin('id'), zValidator('json', update
 
 // Branch deactivation stays system-wide — it's destructive and cross-branch.
 branchesRouter.delete('/:id', requireRole('admin'), async (c) => {
-  await deleteBranch(db, c.req.param('id')!);
+  const auth = getAuth(c);
+  await deleteBranch(db, c.req.param('id')!, auth);
   return c.json(successResponse(null, 'Branch deactivated'));
 });
 
@@ -98,15 +99,17 @@ branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySche
 // global admins). Branch Data Admin alone is not enough. Migrated from
 // requireRole('admin').
 branchesRouter.post('/:id/leadership', requireBranchSystemAdmin('id'), zValidator('json', assignLeadershipSchema), async (c) => {
+  const auth = getAuth(c);
   const input = c.req.valid('json');
-  const assignment = await assignLeadership(db, c.req.param('id'), input);
+  const assignment = await assignLeadership(db, c.req.param('id'), input, auth);
   return c.json(successResponse(assignment), 201);
 });
 
 branchesRouter.delete('/:id/leadership/:leadershipId', requireBranchSystemAdmin('id'), async (c) => {
+  const auth = getAuth(c);
   const leadershipId = c.req.param('leadershipId');
   if (!leadershipId) return c.json({ success: false, error: 'Leadership ID required' }, 400);
-  await removeLeadership(db, c.req.param('id')!, leadershipId);
+  await removeLeadership(db, c.req.param('id')!, leadershipId, auth);
   return c.json(successResponse(null, 'Leadership assignment removed'));
 });
 
@@ -124,8 +127,9 @@ branchesRouter.post(
   requireBranchSystemAdmin('id'),
   zValidator('json', assignBranchRoleSchema),
   async (c) => {
+    const auth = getAuth(c);
     const { memberId } = c.req.valid('json');
-    const assignment = await assignBranchSystemAdmin(db, c.req.param('id')!, memberId);
+    const assignment = await assignBranchSystemAdmin(db, c.req.param('id')!, memberId, auth);
     return c.json(successResponse(assignment), 201);
   },
 );
@@ -133,8 +137,9 @@ branchesRouter.post(
 // Only system admins or existing Branch System Admins can revoke BSA.
 // Service-layer guard refuses to remove the last active BSA for the branch.
 branchesRouter.delete('/:id/roles/:assignmentId', requireBranchSystemAdmin('id'), async (c) => {
+  const auth = getAuth(c);
   const assignmentId = c.req.param('assignmentId');
   if (!assignmentId) return c.json({ success: false, error: 'Assignment ID required' }, 400);
-  const result = await revokeBranchSystemAdmin(db, c.req.param('id')!, assignmentId);
+  const result = await revokeBranchSystemAdmin(db, c.req.param('id')!, assignmentId, auth);
   return c.json(successResponse(result, 'Branch System Admin assignment revoked'));
 });

@@ -66,9 +66,9 @@ const branchId = '220e8400-0000-0000-0000-000000000002';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 const leadershipId = '440e8400-0000-0000-0000-000000000004';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId: branchId };
-const memberAuth = { memberId: '000-member', email: 'member@test.com', systemRole: 'member' as const, branchId: branchId };
-const otherBranchAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch-id' };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const memberAuth = { memberId: '000-member', email: 'member@test.com', systemRole: 'member' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const otherBranchAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch-id', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
 
 const sampleRegion = { id: regionId, regionName: 'North Region', country: 'Nigeria', createdAt: new Date(), updatedAt: new Date() };
 const sampleBranch = {
@@ -246,7 +246,7 @@ describe('deleteBranch', () => {
     setupSelectSequence([sampleBranch], [{ count: 0 }]);
     setupUpdate([{ ...sampleBranch, isActive: false }]);
 
-    const result = await deleteBranch(mockDb, branchId);
+    const result = await deleteBranch(mockDb, branchId, adminAuth);
     expect(result!.isActive).toBe(false);
   });
 
@@ -255,7 +255,7 @@ describe('deleteBranch', () => {
     setupSelectSequence([]);
 
     await expect(
-      deleteBranch(mockDb, 'nonexistent'),
+      deleteBranch(mockDb, 'nonexistent', adminAuth),
     ).rejects.toThrow('Branch not found');
   });
 
@@ -264,7 +264,7 @@ describe('deleteBranch', () => {
     setupSelectSequence([sampleBranch], [{ count: 5 }]);
 
     await expect(
-      deleteBranch(mockDb, branchId),
+      deleteBranch(mockDb, branchId, adminAuth),
     ).rejects.toThrow('Cannot deactivate branch with active members');
   });
 });
@@ -310,7 +310,7 @@ describe('assignLeadership', () => {
     setupUpdate(undefined);
     setupInsert([sampleLeadership]);
 
-    const result = await assignLeadership(mockDb, branchId, { memberId, role: 'Main Pastor' });
+    const result = await assignLeadership(mockDb, branchId, { memberId, role: 'Main Pastor' }, adminAuth);
     expect(result).toEqual(sampleLeadership);
   });
 
@@ -319,7 +319,7 @@ describe('assignLeadership', () => {
     setupSelectSequence([]);
 
     await expect(
-      assignLeadership(mockDb, 'bad-branch', { memberId, role: 'Elder' }),
+      assignLeadership(mockDb, 'bad-branch', { memberId, role: 'Elder' }, adminAuth),
     ).rejects.toThrow('Branch not found');
   });
 
@@ -328,7 +328,7 @@ describe('assignLeadership', () => {
     setupSelectSequence([sampleBranch], []);
 
     await expect(
-      assignLeadership(mockDb, branchId, { memberId: 'bad-member', role: 'Elder' }),
+      assignLeadership(mockDb, branchId, { memberId: 'bad-member', role: 'Elder' }, adminAuth),
     ).rejects.toThrow('Member not found or inactive');
   });
 
@@ -339,7 +339,7 @@ describe('assignLeadership', () => {
     setupUpdate(undefined);
 
     await expect(
-      assignLeadership(mockDb, branchId, { memberId, role: 'Main Pastor' }),
+      assignLeadership(mockDb, branchId, { memberId, role: 'Main Pastor' }, adminAuth),
     ).rejects.toThrow('Member already holds this role in this branch');
   });
 });
@@ -351,7 +351,7 @@ describe('removeLeadership', () => {
     const removed = { ...sampleLeadership, isCurrent: false, endDate: '2024-06-01' };
     setupUpdate([removed]);
 
-    const result = await removeLeadership(mockDb, branchId, leadershipId);
+    const result = await removeLeadership(mockDb, branchId, leadershipId, adminAuth);
     expect(result!.isCurrent).toBe(false);
   });
 
@@ -360,7 +360,7 @@ describe('removeLeadership', () => {
     setupSelect([]);
 
     await expect(
-      removeLeadership(mockDb, branchId, 'bad-id'),
+      removeLeadership(mockDb, branchId, 'bad-id', adminAuth),
     ).rejects.toThrow('Leadership assignment not found');
   });
 });
@@ -406,10 +406,65 @@ describe('scope=branch narrowing', () => {
       systemRole: 'leader' as const,
       branchId,
       branchSystemAdminBranchIds: [branchId, otherBranchId],
+      branchDataAdminBranchIds: [],
       scope: { kind: 'branch' as const, id: branchId },
     };
     await expect(
       updateBranch(mockDb, otherBranchId, { branchName: 'Hack' }, auth),
     ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  // Defense-in-depth: each of the five write functions middleware-gates on the
+  // branch param. Phase-5 hardening adds a service-side scope re-check so that
+  // a scope-bound session can't be tricked into writing to a different branch
+  // even if a hypothetical router refactor severs the middleware tie.
+
+  it('deleteBranch refuses cross-scope target', async () => {
+    const { deleteBranch } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      deleteBranch(mockDb, otherBranchId, auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('assignLeadership refuses cross-scope target', async () => {
+    const { assignLeadership } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      assignLeadership(mockDb, otherBranchId, { memberId, role: 'Elder' }, auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('removeLeadership refuses cross-scope target', async () => {
+    const { removeLeadership } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      removeLeadership(mockDb, otherBranchId, leadershipId, auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('assignBranchSystemAdmin refuses cross-scope target', async () => {
+    const { assignBranchSystemAdmin } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      assignBranchSystemAdmin(mockDb, otherBranchId, memberId, auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('revokeBranchSystemAdmin refuses cross-scope target', async () => {
+    const { revokeBranchSystemAdmin } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    await expect(
+      revokeBranchSystemAdmin(mockDb, otherBranchId, 'assign-1', auth),
+    ).rejects.toThrow(/outside your current branch scope/);
+  });
+
+  it('deleteBranch permits in-scope target', async () => {
+    const { deleteBranch } = await import('./service');
+    const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
+    setupSelectSequence([sampleBranch], [{ count: 0 }]);
+    setupUpdate([{ ...sampleBranch, isActive: false }]);
+    const result = await deleteBranch(mockDb, branchId, auth);
+    expect(result!.isActive).toBe(false);
   });
 });
