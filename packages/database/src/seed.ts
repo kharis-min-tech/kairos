@@ -509,9 +509,33 @@ async function seed() {
         roleName: 'Branch System Admin',
         description: 'Branch-level RBAC and access management. Can assign or revoke roles within the branch.',
       },
+      {
+        roleName: 'Branch Data Admin',
+        description: 'Branch-level data operations. Can edit branch settings and member data but not grant roles.',
+      },
+      {
+        roleName: 'Fellowship Leader',
+        description: 'Leads or co-leads a specific fellowship. Authority is scoped to that fellowship.',
+      },
+      {
+        roleName: 'Department Lead',
+        description: 'Leads a specific branch department. Authority is scoped to that department.',
+      },
+      {
+        roleName: 'Department Deputy',
+        description: 'Deputy of a specific branch department. Same write authority as the lead, scoped to that department.',
+      },
+      {
+        roleName: 'New Believers Mentor',
+        description: 'Mentors new believers in a branch. Authority is branch-scoped.',
+      },
+      {
+        roleName: 'New Believers Teacher',
+        description: 'Teaches new-believer sessions in a branch. Authority is branch-scoped.',
+      },
     ])
     .returning();
-  console.log(`✓ 6 roles`);
+  console.log(`✓ 12 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -861,12 +885,12 @@ async function seed() {
 
   // ── 5. Member Roles ─────────────────────────────────────────
   await db.insert(memberRoles).values([
-    { memberId: leaderSarah!.id, roleId: worshipLeadRole!.id, branchId: london!.id },
-    { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id },
-    { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id },
-    { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id },
+    { memberId: leaderSarah!.id, roleId: worshipLeadRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
+    { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
     // Safeguarding Lead in London — grants full access to London minors' records.
-    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id },
+    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
   ]);
   console.log(`✓ 5 member-role assignments`);
 
@@ -878,9 +902,9 @@ async function seed() {
   // Accra: Pastor Kwame is System Admin (pastor > leader David, who holds the
   //   Branch Data Admin slot via Admin-dept lead). Demonstrates the hierarchy.
   await db.insert(memberRoles).values([
-    { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id },
-    { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id },
-    { memberId: pastorAccra!.id, roleId: branchSystemAdminRole!.id, branchId: accra!.id },
+    { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
+    { memberId: pastorAccra!.id, roleId: branchSystemAdminRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
   ]);
   console.log(`✓ 3 branch system admin assignments`);
 

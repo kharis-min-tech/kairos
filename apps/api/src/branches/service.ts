@@ -423,7 +423,7 @@ export async function assignBranchSystemAdmin(
   try {
     [created] = await db
       .insert(memberRoles)
-      .values({ memberId, roleId, branchId })
+      .values({ memberId, roleId, branchId, scopeKind: 'branch', scopeId: branchId })
       .returning();
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {

@@ -26,6 +26,11 @@ const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'Branch System Admin': FunctionalRole.BranchAdmin,
   'Branch Data Admin': FunctionalRole.BranchDataAdmin,
   'Safeguarding Lead': FunctionalRole.SafeguardingLead,
+  'Fellowship Leader': FunctionalRole.FellowshipLeader,
+  'Department Lead': FunctionalRole.DepartmentLeader,
+  'Department Deputy': FunctionalRole.DepartmentDeputy,
+  'New Believers Mentor': FunctionalRole.NewBelieversMentor,
+  'New Believers Teacher': FunctionalRole.NewBelieversTeacher,
 };
 
 // ── resolveGrants ──────────────────────────────────────────

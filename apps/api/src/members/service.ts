@@ -469,6 +469,8 @@ export async function assignRole(
       memberId,
       roleId: input.roleId,
       branchId: input.branchId,
+      scopeKind: 'branch',
+      scopeId: input.branchId,
       notes: input.notes ?? null,
     })
     .returning();
