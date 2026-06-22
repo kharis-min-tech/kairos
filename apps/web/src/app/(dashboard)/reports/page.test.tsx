@@ -101,6 +101,16 @@ vi.mock('@/hooks/use-departments', () => ({
   useDepartmentMembers: () => ({ data: [], isLoading: false }),
   useDepartmentJoinRequests: () => ({ data: [], isLoading: false }),
   useDepartmentFollowups: () => ({ data: [], isLoading: false }),
+  useDepartmentRotaStats: () => ({
+    data: {
+      branchDepartmentId: 'd-1',
+      windowDays: 28,
+      upcomingCount: 6,
+      publishedCount: 4,
+      draftCount: 2,
+    },
+    isLoading: false,
+  }),
 }));
 
 vi.mock('@/hooks/use-attendance', () => ({
@@ -370,6 +380,20 @@ describe('ReportsPage — department service-attendance', () => {
     // Mock returns rate: 0.5, distinctAttendees: 5, activeMembers: 10, totalServices: 8.
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('5/10 attended · 8 services')).toBeInTheDocument();
+  });
+
+  it('surfaces upcoming rota counts from useDepartmentRotaStats', () => {
+    authState.activeRole = 'leader';
+    leadershipData = {
+      ...emptyLeadership,
+      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+    };
+    render(<ReportsPage />, { wrapper });
+
+    // Mock returns upcomingCount: 6, publishedCount: 4, draftCount: 2.
+    expect(screen.getByText('Upcoming rota')).toBeInTheDocument();
+    expect(screen.getByText('6')).toBeInTheDocument();
+    expect(screen.getByText('4 published · 2 draft')).toBeInTheDocument();
   });
 });
 

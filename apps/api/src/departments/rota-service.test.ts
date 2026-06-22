@@ -115,6 +115,7 @@ import {
   createSwapRequest,
   reviewSwapRequest,
   listMyUpcomingRota,
+  getRotaStats,
 } from './rota-service';
 
 // ── Templates ─────────────────────────────────────────────
@@ -597,6 +598,64 @@ describe('listMyUpcomingRota', () => {
     setupSelectSequence(rows);
     const result = await listMyUpcomingRota(mockDb, memberAuth, {});
     expect(result).toEqual(rows);
+  });
+});
+
+// ── Rota stats ────────────────────────────────────────────
+
+describe('getRotaStats', () => {
+  it('aggregates published/draft counts inside the window for the dept lead', async () => {
+    setupSelectSequence(
+      [sampleBd],
+      [
+        { status: 'Published', c: 3 },
+        { status: 'Draft', c: 2 },
+      ],
+    );
+    const result = await getRotaStats(mockDb, leaderAuth, branchDeptId, { windowDays: 28 });
+    expect(result.branchDepartmentId).toBe(branchDeptId);
+    expect(result.windowDays).toBe(28);
+    expect(result.upcomingCount).toBe(5);
+    expect(result.publishedCount).toBe(3);
+    expect(result.draftCount).toBe(2);
+  });
+
+  it('defaults windowDays to 28 when omitted', async () => {
+    setupSelectSequence([sampleBd], []);
+    const result = await getRotaStats(mockDb, leaderAuth, branchDeptId, {});
+    expect(result.windowDays).toBe(28);
+    expect(result.upcomingCount).toBe(0);
+  });
+
+  it('returns zero counts when no upcoming instances exist', async () => {
+    setupSelectSequence([sampleBd], []);
+    const result = await getRotaStats(mockDb, leaderAuth, branchDeptId, { windowDays: 14 });
+    expect(result.upcomingCount).toBe(0);
+    expect(result.publishedCount).toBe(0);
+    expect(result.draftCount).toBe(0);
+  });
+
+  it('forbids non-lead member from viewing stats', async () => {
+    setupSelectSequence([sampleBd]);
+    await expect(
+      getRotaStats(mockDb, memberAuth, branchDeptId, {}),
+    ).rejects.toThrow(/lead\/deputy/);
+  });
+
+  it('forbids access when the department is not in the caller branch', async () => {
+    setupSelectSequence([sampleBd]);
+    await expect(
+      getRotaStats(mockDb, crossBranchAuth, branchDeptId, {}),
+    ).rejects.toThrow(/your branch/);
+  });
+
+  it('admin can view stats for any department', async () => {
+    setupSelectSequence(
+      [sampleBd],
+      [{ status: 'Published', c: 1 }],
+    );
+    const result = await getRotaStats(mockDb, adminAuth, branchDeptId, {});
+    expect(result.publishedCount).toBe(1);
   });
 });
 

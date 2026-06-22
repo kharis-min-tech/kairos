@@ -983,6 +983,72 @@ export async function reviewSwapRequest(
   return updated!;
 }
 
+// ── Per-department rota stats (analytics) ──────────────────
+//
+// Lightweight aggregation for the reports page — counts upcoming
+// rota instances (any status), published-only, and drafts in a sliding
+// window starting today. Visibility matches getDepartmentAttendance:
+// lead / deputy / pastor / admin.
+
+export async function getRotaStats(
+  db: Database,
+  auth: AuthContext,
+  branchDeptId: string,
+  query: { windowDays?: number },
+) {
+  const bd = await loadBranchDepartment(db, branchDeptId);
+  if (!bd.isActive) throw new NotFoundError('Department not found');
+  enforceBranchScope(auth, bd);
+  const isLeadOrDeputy =
+    bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId;
+  if (
+    auth.systemRole !== 'admin' &&
+    auth.systemRole !== 'pastor' &&
+    !isLeadOrDeputy
+  ) {
+    throw new ForbiddenError('Only the department lead/deputy, pastor, or admin can view this');
+  }
+
+  const windowDays = query.windowDays ?? 28;
+  const today = new Date().toISOString().slice(0, 10);
+  const endDate = new Date(Date.now() + windowDays * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const rows = await db
+    .select({
+      status: rotaInstances.status,
+      c: sql<number>`count(*)::int`,
+    })
+    .from(rotaInstances)
+    .where(
+      and(
+        eq(rotaInstances.branchDepartmentId, branchDeptId),
+        gte(rotaInstances.serviceDate, today),
+        lte(rotaInstances.serviceDate, endDate),
+      ),
+    )
+    .groupBy(rotaInstances.status);
+
+  let publishedCount = 0;
+  let draftCount = 0;
+  let upcomingCount = 0;
+  for (const r of rows) {
+    const c = Number(r.c);
+    upcomingCount += c;
+    if (r.status === 'Published') publishedCount += c;
+    if (r.status === 'Draft') draftCount += c;
+  }
+
+  return {
+    branchDepartmentId: branchDeptId,
+    windowDays,
+    upcomingCount,
+    publishedCount,
+    draftCount,
+  };
+}
+
 // ── Member-facing aggregation ──────────────────────────────
 
 export async function listMyUpcomingRota(

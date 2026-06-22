@@ -233,6 +233,10 @@ export const listInstancesQuerySchema = z.object({
   to: z.string().regex(isoDateRegex).optional(),
 });
 
+export const rotaStatsQuerySchema = z.object({
+  windowDays: z.coerce.number().int().min(1).max(180).optional(),
+});
+
 export const listSwapRequestsQuerySchema = z.object({
   status: z.enum(['pending', 'approved', 'rejected', 'cancelled']).optional(),
 });

@@ -39,6 +39,7 @@ import {
   reviewSwapRequestSchema,
   listInstancesQuerySchema,
   listSwapRequestsQuerySchema,
+  rotaStatsQuerySchema,
 } from './schemas';
 import {
   listGlobalDepartments,
@@ -103,6 +104,7 @@ import {
   createSwapRequest,
   listSwapRequests,
   reviewSwapRequest,
+  getRotaStats,
 } from './rota-service';
 
 export const departmentsRouter = new Hono();
@@ -686,6 +688,16 @@ departmentsRouter.post(
 );
 
 // ── Rota instances ─────────────────────────────────────────
+
+departmentsRouter.get(
+  '/:id/rota-stats',
+  zValidator('query', rotaStatsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getRotaStats(db, auth, c.req.param('id')!, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
 
 departmentsRouter.get(
   '/:id/rota-instances',

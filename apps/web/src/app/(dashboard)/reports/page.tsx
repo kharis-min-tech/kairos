@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAnalytics } from '@/hooks/use-reports';
 import { useMemberDashboard } from '@/hooks/use-dashboard';
 import { useFellowships, useFellowshipMembers, useFellowshipMeetings, useFellowshipFollowups, useFellowshipJoinRequests } from '@/hooks/use-fellowships';
-import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups } from '@/hooks/use-departments';
+import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups, useDepartmentRotaStats } from '@/hooks/use-departments';
 import { useDepartmentAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
@@ -1185,13 +1185,15 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
   const joinRequestsQ = useDepartmentJoinRequests(branchDeptId);
   const followupsQ = useDepartmentFollowups(branchDeptId);
   const attendanceQ = useDepartmentAttendance(branchDeptId, { weeks: 12 });
+  const rotaStatsQ = useDepartmentRotaStats(branchDeptId, { windowDays: 28 });
 
-  const isLoading = membersQ.isLoading || joinRequestsQ.isLoading || followupsQ.isLoading || attendanceQ.isLoading;
+  const isLoading = membersQ.isLoading || joinRequestsQ.isLoading || followupsQ.isLoading || attendanceQ.isLoading || rotaStatsQ.isLoading;
 
   const members = membersQ.data ?? [];
   const joinRequests = joinRequestsQ.data ?? [];
   const followups = followupsQ.data ?? [];
   const attendance = attendanceQ.data;
+  const rotaStats = rotaStatsQ.data;
   const attendanceRatePct = attendance ? Math.round((attendance.rate ?? 0) * 100) : 0;
   const attendanceTrend = (attendance?.trend ?? []).map((p) => ({
     week: p.weekStart.slice(0, 10),
@@ -1219,8 +1221,8 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i}><CardContent className="py-8"><div className="h-16 animate-pulse rounded-md bg-muted" /></CardContent></Card>
         ))}
       </div>
@@ -1229,7 +1231,7 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <ReportStatCard
           title="Members"
           value={members.length}
@@ -1257,6 +1259,18 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
               ? attendance.totalServices === 0
                 ? `No services in last ${attendance.windowWeeks}w`
                 : `${attendance.distinctAttendees}/${attendance.activeMembers} attended · ${attendance.totalServices} services`
+              : 'Loading…'
+          }
+        />
+        <ReportStatCard
+          title="Upcoming rota"
+          value={rotaStats ? rotaStats.upcomingCount : '—'}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
+          sub={
+            rotaStats
+              ? rotaStats.upcomingCount === 0
+                ? `Nothing scheduled in next ${rotaStats.windowDays}d`
+                : `${rotaStats.publishedCount} published · ${rotaStats.draftCount} draft`
               : 'Loading…'
           }
         />
@@ -1299,8 +1313,7 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
       </Card>
 
       {/* Weekly attendance trend — distinct department members who attended
-          a service that week. Rota-instance counts will join here in a
-          follow-up (separate endpoint). */}
+          a service that week. */}
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

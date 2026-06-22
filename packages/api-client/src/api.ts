@@ -696,6 +696,21 @@ export function createApiClient(
             {},
           ),
 
+        rotaStats: (branchDeptId: string, params?: { windowDays?: number }) => {
+          const qs = new URLSearchParams();
+          if (params?.windowDays != null) qs.set('windowDays', String(params.windowDays));
+          const query = qs.toString();
+          return client.get<ApiResponse<{
+            branchDepartmentId: string;
+            windowDays: number;
+            upcomingCount: number;
+            publishedCount: number;
+            draftCount: number;
+          }>>(
+            `/api/departments/${encodeURIComponent(branchDeptId)}/rota-stats${query ? `?${query}` : ''}`,
+          );
+        },
+
         // Instances
         listInstances: (branchDeptId: string, params?: { from?: string; to?: string }) => {
           const qs = new URLSearchParams();

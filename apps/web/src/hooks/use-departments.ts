@@ -621,6 +621,24 @@ export function useRemoveUniformAssignment() {
   });
 }
 
+// ── Rota: Stats (analytics) ───────────────────────────────
+
+export function useDepartmentRotaStats(
+  branchDeptId: string,
+  params?: { windowDays?: number },
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['departments', branchDeptId, 'rota-stats', params?.windowDays ?? 28],
+    queryFn: async () => {
+      const res = await api.departments.rota.rotaStats(branchDeptId, params);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!branchDeptId,
+    staleTime: 60_000,
+  });
+}
+
 // ── Rota: Templates ────────────────────────────────────────
 
 export function useRotaTemplates(branchDeptId: string, params?: { includeArchived?: boolean }) {
