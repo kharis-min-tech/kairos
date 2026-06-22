@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signTestToken, TEST_IDS } from '../test-helpers';
+import { FunctionalRole, type Grant } from '@kairos/types';
 
-// RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
-// Router tests use partial-mock DBs, so we stub the resolver to return [].
-// Service-level capability behavior is covered by grants.test.ts.
+// RBAC Phase 1: authMiddleware calls resolveGrants on every request.
+// Router tests use partial-mock DBs, so we stub the resolver. Hoisted via
+// vi.hoisted so individual tests can override the return value when they
+// need to simulate a member holding a specific grant (BSA/BDA/etc.).
+const { resolveGrantsMock } = vi.hoisted(() => ({
+  resolveGrantsMock: vi.fn(async (): Promise<Grant[]> => []),
+}));
 vi.mock('../lib/grants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/grants')>();
   return {
     ...actual,
-    resolveGrants: vi.fn(async () => []),
+    resolveGrants: resolveGrantsMock,
   };
 });
 
@@ -294,6 +299,15 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
       branchId: TEST_IDS.branchId,
       branchSystemAdminBranchIds: [TEST_IDS.branchId],
     });
+    // Post-Phase-3f: BSA authority comes from explicit grants, not the
+    // legacy array. Mirror the token's BSA-on-this-branch into a grant.
+    resolveGrantsMock.mockResolvedValueOnce([
+      {
+        role: FunctionalRole.BranchAdmin,
+        scope: { kind: 'branch', id: TEST_IDS.branchId },
+        branchId: TEST_IDS.branchId,
+      },
+    ]);
     mockDb.select
       .mockReturnValueOnce(chainTo([sampleBranchRow]))
       .mockReturnValueOnce(chainTo([sampleMemberRow]))
@@ -383,6 +397,14 @@ describe('GET /api/branches/:id/roles', () => {
       branchId: TEST_IDS.branchId,
       branchDataAdminBranchIds: [TEST_IDS.branchId],
     });
+    // Post-Phase-3f: BDA authority comes from explicit grants.
+    resolveGrantsMock.mockResolvedValueOnce([
+      {
+        role: FunctionalRole.BranchDataAdmin,
+        scope: { kind: 'branch', id: TEST_IDS.branchId },
+        branchId: TEST_IDS.branchId,
+      },
+    ]);
     mockDb.select.mockReturnValueOnce(chainTo([sampleRoleAssignment]));
 
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {

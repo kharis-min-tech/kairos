@@ -1,11 +1,6 @@
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import {
-  memberRoles,
-  roles,
-  fellowships,
-  branchDepartments,
-} from '@kairos/database';
+import { memberRoles, roles } from '@kairos/database';
 import {
   type AuthContext,
   type Capability,
@@ -35,29 +30,26 @@ const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
 
 // ── resolveGrants ──────────────────────────────────────────
 //
-// Builds the active grant list for a member from three data sources:
-//   1. `member_roles JOIN roles` — explicit authority assignments
-//      (BranchAdmin / BranchDataAdmin / SafeguardingLead).
-//   2. `fellowships.leaderId` / `coLeaderId` — derived FellowshipLeader
-//      grants. Phase 3 will move these into member_roles via service-layer
-//      write-through; until then, the FK is the source of truth.
-//   3. `branch_departments.leadMemberId` / `deputyMemberId` — derived
-//      DepartmentLeader / DepartmentDeputy grants. Same Phase 3 caveat.
+// RBAC Phase 3f: `member_roles` is now the single source of truth. Each row
+// carries (member_id, role_id, branch_id, scope_kind, scope_id, is_active)
+// — together that's everything needed to mint a Grant. The legacy FK + Admin-
+// dept derivations were removed in this phase; service-layer write-through
+// (Phase 3c/3d) keeps `member_roles` in sync with fellowships.leaderId etc.
 //
-// Inactive rows (`is_active = false`) are excluded. The result is a flat
-// list of (role, scope, branchId) triples ready for `hasCapability` lookup.
+// Inactive rows (`is_active = false`) and unknown role names are excluded.
+// Result is a flat list of (role, scope, branchId) triples ready for
+// `hasCapability` lookup.
 
 export async function resolveGrants(
   db: Database,
   memberId: string,
 ): Promise<Grant[]> {
-  const out: Grant[] = [];
-
-  // 1) member_roles JOIN roles
-  const explicitRows = await db
+  const rows = await db
     .select({
       roleName: roles.roleName,
       branchId: memberRoles.branchId,
+      scopeKind: memberRoles.scopeKind,
+      scopeId: memberRoles.scopeId,
     })
     .from(memberRoles)
     .innerJoin(roles, eq(memberRoles.roleId, roles.id))
@@ -69,72 +61,20 @@ export async function resolveGrants(
       ),
     );
 
-  for (const row of explicitRows) {
+  const out: Grant[] = [];
+  for (const row of rows) {
     const fnRole = DB_ROLE_NAME_TO_FUNCTIONAL[row.roleName];
     if (!fnRole) continue;
+    const scopeKind = row.scopeKind as RoleScope['kind'];
+    if (scopeKind !== 'branch' && scopeKind !== 'fellowship' && scopeKind !== 'department') {
+      continue;
+    }
     out.push({
       role: fnRole,
-      scope: { kind: 'branch', id: row.branchId },
+      scope: { kind: scopeKind, id: row.scopeId },
       branchId: row.branchId,
     });
   }
-
-  // 2) Fellowship leadership FKs
-  const fellowshipRows = await db
-    .select({
-      id: fellowships.id,
-      branchId: fellowships.branchId,
-    })
-    .from(fellowships)
-    .where(
-      and(
-        eq(fellowships.isActive, true),
-        or(
-          eq(fellowships.leaderId, memberId),
-          eq(fellowships.coLeaderId, memberId),
-        ),
-      ),
-    );
-
-  for (const row of fellowshipRows) {
-    out.push({
-      role: FunctionalRole.FellowshipLeader,
-      scope: { kind: 'fellowship', id: row.id },
-      branchId: row.branchId,
-    });
-  }
-
-  // 3) Department leadership FKs
-  const deptRows = await db
-    .select({
-      id: branchDepartments.id,
-      branchId: branchDepartments.branchId,
-      leadMemberId: branchDepartments.leadMemberId,
-      deputyMemberId: branchDepartments.deputyMemberId,
-    })
-    .from(branchDepartments)
-    .where(
-      and(
-        eq(branchDepartments.isActive, true),
-        or(
-          eq(branchDepartments.leadMemberId, memberId),
-          eq(branchDepartments.deputyMemberId, memberId),
-        ),
-      ),
-    );
-
-  for (const row of deptRows) {
-    const role =
-      row.leadMemberId === memberId
-        ? FunctionalRole.DepartmentLeader
-        : FunctionalRole.DepartmentDeputy;
-    out.push({
-      role,
-      scope: { kind: 'department', id: row.id },
-      branchId: row.branchId,
-    });
-  }
-
   return out;
 }
 
@@ -145,7 +85,7 @@ export async function resolveGrants(
 //   - `systemRole === 'admin'` → always true. The break-glass platform owner
 //     bypasses everything; matches today's escape-hatch semantics and
 //     survives the rebuild.
-//   - `systemRole === 'pastor'` → always true. Phase 0/1/2 keep pastor's
+//   - `systemRole === 'pastor'` → always true. Phase 0-3 keep pastor's
 //     branch-scope-bypass behavior unchanged so gates can flip to capability
 //     checks without changing the effective access matrix. Phase 4 narrows
 //     pastors to `BranchAdmin@home_branch` via migration and removes this
@@ -188,34 +128,14 @@ export function hasCapability(
   return false;
 }
 
-// Convenience wrapper for AuthContext consumers post-Phase-1 (when grants
-// live on the auth payload).
-//
-// Phase 2 transitional fallback: until Phase 3 ships service-layer
-// write-through to `member_roles`, the legacy `branchSystemAdminBranchIds` /
-// `branchDataAdminBranchIds` arrays remain the canonical "this user holds
-// BSA/BDA in branch X" signal in tokens. Treat them as virtual grants here so
-// capability checks pass during the migration window. Phase 6 removes this.
+// RBAC Phase 3f: thin wrapper that reads `auth.grants` and delegates to
+// `hasCapability`. The Phase 2 legacy-array fallback was removed in this
+// phase — Phase 3e backfilled BSA/BDA into `member_roles`, so grants are
+// now the authoritative signal.
 export function authHasCapability(
   auth: AuthContext & { grants?: readonly Grant[] },
   cap: Capability,
   scope?: RoleScope & { branchId?: string },
 ): boolean {
-  if (hasCapability(auth.grants ?? [], auth.systemRole, cap, scope)) return true;
-
-  const targetBranchId =
-    scope?.kind === 'branch'
-      ? scope.id
-      : (scope as (RoleScope & { branchId?: string }) | undefined)?.branchId;
-  if (!targetBranchId) return false;
-
-  const bsaCaps = RoleCapabilities[FunctionalRole.BranchAdmin];
-  if (auth.branchSystemAdminBranchIds.includes(targetBranchId) && bsaCaps.includes(cap)) {
-    return true;
-  }
-  const bdaCaps = RoleCapabilities[FunctionalRole.BranchDataAdmin];
-  if (auth.branchDataAdminBranchIds.includes(targetBranchId) && bdaCaps.includes(cap)) {
-    return true;
-  }
-  return false;
+  return hasCapability(auth.grants ?? [], auth.systemRole, cap, scope);
 }

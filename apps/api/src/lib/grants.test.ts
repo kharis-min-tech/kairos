@@ -256,22 +256,18 @@ beforeEach(() => {
 describe('resolveGrants', () => {
   const memberId = 'M-1';
 
-  it('returns an empty list when the member has no assignments or leaderships', async () => {
-    setupSelectSequence([], [], []);
+  it('returns an empty list when the member has no member_roles rows', async () => {
+    setupSelectSequence([]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toEqual([]);
   });
 
-  it('maps member_roles rows for authority role names', async () => {
-    setupSelectSequence(
-      [
-        { roleName: 'Branch System Admin', branchId: 'B-1' },
-        { roleName: 'Branch Data Admin', branchId: 'B-2' },
-        { roleName: 'Safeguarding Lead', branchId: 'B-1' },
-      ],
-      [],
-      [],
-    );
+  it('maps branch-scoped authority rows', async () => {
+    setupSelectSequence([
+      { roleName: 'Branch System Admin', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' },
+      { roleName: 'Branch Data Admin', branchId: 'B-2', scopeKind: 'branch', scopeId: 'B-2' },
+      { roleName: 'Safeguarding Lead', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' },
+    ]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toContainEqual({
       role: FunctionalRole.BranchAdmin,
@@ -291,27 +287,19 @@ describe('resolveGrants', () => {
   });
 
   it('ignores operational/volunteer role names that are not authority bundles', async () => {
-    setupSelectSequence(
-      [
-        { roleName: 'Worship Lead', branchId: 'B-1' },
-        { roleName: 'Media Team', branchId: 'B-1' },
-      ],
-      [],
-      [],
-    );
+    setupSelectSequence([
+      { roleName: 'Worship Lead', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' },
+      { roleName: 'Media Team', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' },
+    ]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toEqual([]);
   });
 
-  it('derives FellowshipLeader from fellowships.leaderId / coLeaderId', async () => {
-    setupSelectSequence(
-      [],
-      [
-        { id: 'F-1', branchId: 'B-1' },
-        { id: 'F-2', branchId: 'B-2' },
-      ],
-      [],
-    );
+  it('maps fellowship-scoped FellowshipLeader rows', async () => {
+    setupSelectSequence([
+      { roleName: 'Fellowship Leader', branchId: 'B-1', scopeKind: 'fellowship', scopeId: 'F-1' },
+      { roleName: 'Fellowship Leader', branchId: 'B-2', scopeKind: 'fellowship', scopeId: 'F-2' },
+    ]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toEqual([
       {
@@ -327,15 +315,11 @@ describe('resolveGrants', () => {
     ]);
   });
 
-  it('derives DepartmentLeader vs DepartmentDeputy based on the FK match', async () => {
-    setupSelectSequence(
-      [],
-      [],
-      [
-        { id: 'D-1', branchId: 'B-1', leadMemberId: memberId, deputyMemberId: null },
-        { id: 'D-2', branchId: 'B-1', leadMemberId: 'other', deputyMemberId: memberId },
-      ],
-    );
+  it('maps department-scoped DepartmentLead vs DepartmentDeputy by role name', async () => {
+    setupSelectSequence([
+      { roleName: 'Department Lead', branchId: 'B-1', scopeKind: 'department', scopeId: 'D-1' },
+      { roleName: 'Department Deputy', branchId: 'B-1', scopeKind: 'department', scopeId: 'D-2' },
+    ]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toContainEqual({
       role: FunctionalRole.DepartmentLeader,
@@ -349,12 +333,20 @@ describe('resolveGrants', () => {
     });
   });
 
-  it('combines all three sources into one flat grant list', async () => {
-    setupSelectSequence(
-      [{ roleName: 'Safeguarding Lead', branchId: 'B-1' }],
-      [{ id: 'F-1', branchId: 'B-1' }],
-      [{ id: 'D-1', branchId: 'B-1', leadMemberId: memberId, deputyMemberId: null }],
-    );
+  it('skips rows with unrecognised scope kinds defensively', async () => {
+    setupSelectSequence([
+      { roleName: 'Branch System Admin', branchId: 'B-1', scopeKind: 'unknown', scopeId: 'X' },
+    ]);
+    const grants = await resolveGrants(mockDb, memberId);
+    expect(grants).toEqual([]);
+  });
+
+  it('returns mixed-scope grants from one query', async () => {
+    setupSelectSequence([
+      { roleName: 'Safeguarding Lead', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' },
+      { roleName: 'Fellowship Leader', branchId: 'B-1', scopeKind: 'fellowship', scopeId: 'F-1' },
+      { roleName: 'Department Lead', branchId: 'B-1', scopeKind: 'department', scopeId: 'D-1' },
+    ]);
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toHaveLength(3);
   });

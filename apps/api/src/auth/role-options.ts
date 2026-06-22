@@ -28,10 +28,12 @@ interface LeadershipFootprint {
 /**
  * Pull every leadership-bearing relationship for a member in parallel:
  *   - Branch System Admin (member_roles → roles WHERE roleName='Branch System Admin')
- *   - Branch Data Admin (branch_departments → departments WHERE departmentName='Admin'
- *                        + member is lead or deputy)
- *   - Fellowship leader / co-leader
- *   - Branch-department lead / deputy
+ *   - Branch Data Admin (member_roles → roles WHERE roleName='Branch Data Admin')
+ *     — RBAC Phase 3f cutover: previously derived from Admin-dept lead/deputy,
+ *     now read from member_roles after backfill (0028_backfill_member_roles_scope.sql).
+ *   - Fellowship leader / co-leader (kept here for the display-label join with
+ *     fellowshipName; resolveGrants reads grants from member_roles).
+ *   - Branch-department lead / deputy (same — kept for departmentName display).
  *
  * Returned as raw rows so `computeAvailableRoles` can format display labels
  * after the branch-name lookup.
@@ -53,21 +55,14 @@ async function fetchLeadershipFootprint(
         ),
       ),
     db
-      .select({
-        branchId: branchDepartments.branchId,
-        leadMemberId: branchDepartments.leadMemberId,
-        deputyMemberId: branchDepartments.deputyMemberId,
-      })
-      .from(branchDepartments)
-      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .select({ branchId: memberRoles.branchId })
+      .from(memberRoles)
+      .innerJoin(roles, eq(memberRoles.roleId, roles.id))
       .where(
         and(
-          eq(branchDepartments.isActive, true),
-          eq(departments.departmentName, 'Admin'),
-          or(
-            eq(branchDepartments.leadMemberId, memberId),
-            eq(branchDepartments.deputyMemberId, memberId),
-          ),
+          eq(memberRoles.memberId, memberId),
+          eq(memberRoles.isActive, true),
+          eq(roles.roleName, 'Branch Data Admin'),
         ),
       ),
     db
@@ -106,9 +101,10 @@ async function fetchLeadershipFootprint(
 
   return {
     branchSystemAdminBranchIds: Array.from(new Set(bsaRows.map((r) => r.branchId))),
-    // Branch Data Admin = lead OR deputy of the Admin department. Both
-    // tiers get pastor-equivalent authority within their branch (see
-    // requireBranchAdmin middleware).
+    // Branch Data Admin: post-Phase-3f, sourced from explicit `member_roles`
+    // rows tagged with role 'Branch Data Admin'. Both BSA and BDA grant
+    // pastor-equivalent authority within their branch via the capability
+    // mapping (see `RoleCapabilities` in @kairos/types/rbac).
     branchDataAdminBranchIds: Array.from(new Set(bdaRows.map((r) => r.branchId))),
     leadFellowships: fellowshipRows
       .filter((r) => r.leaderId === memberId)
