@@ -494,7 +494,20 @@ async function seed() {
   console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
 
   // ── 4. Roles ────────────────────────────────────────────────
-  const [worshipLeadRole, youthCoordRole, mediaTeamRole, welcomeTeamRole, safeguardingLeadRole, branchSystemAdminRole] = await db
+  const [
+    worshipLeadRole,
+    youthCoordRole,
+    mediaTeamRole,
+    welcomeTeamRole,
+    safeguardingLeadRole,
+    branchSystemAdminRole,
+    branchDataAdminRole,
+    fellowshipLeaderRole,
+    departmentLeadRole,
+    departmentDeputyRole,
+    /* newBelieversMentorRole */,
+    /* newBelieversTeacherRole */,
+  ] = await db
     .insert(roles)
     .values([
       { roleName: 'Worship Lead', description: 'Leads worship during services' },
@@ -1064,6 +1077,37 @@ async function seed() {
     ])
     .returning();
   console.log(`✓ 5 fellowships`);
+
+  // ── 7a. RBAC Phase 3e: mirror leadership FKs into member_roles ──
+  // Service-layer write-through (Phase 3c/3d) handles new fellowships and
+  // branch_departments. The seed inserts these rows directly via db.insert
+  // (not through the service), so it has to populate the matching grants
+  // itself. After `resolveGrants` cuts over in Phase 3f, missing rows here
+  // would mean missing capabilities at runtime — and tests would fail.
+  await db.insert(memberRoles).values([
+    // FellowshipLeader grants (one per leader/co-leader; only `leaderId` is
+    // set in the seed today).
+    { memberId: leaderSarah!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: kGroupLondon!.id },
+    { memberId: pastorLondon!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: expressLondon!.id },
+    { memberId: leaderDavid!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: kGroupAccra!.id },
+    { memberId: pastorAccra!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: newBreedsAccra!.id },
+    { memberId: pastorKumasi!.id, roleId: fellowshipLeaderRole!.id, branchId: kumasi!.id, scopeKind: 'fellowship', scopeId: kGroupKumasi!.id },
+    // DepartmentLead grants (no deputies seeded today; lead-only).
+    { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: choirLondon!.id },
+    { memberId: leaderDavid!.id, roleId: departmentLeadRole!.id, branchId: accra!.id, scopeKind: 'department', scopeId: ushersAccra!.id },
+    { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: hostTeamLondon!.id },
+    { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: adminLondon!.id },
+    // Branch Data Admin (derived from being the lead of the Admin dept).
+    // London → Sarah, Manchester → Grace, Accra → David.
+    { memberId: leaderSarah!.id, roleId: branchDataAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: pastorManchester!.id, roleId: branchDataAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
+    { memberId: leaderDavid!.id, roleId: branchDataAdminRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
+  ]);
+  console.log(`✓ 12 RBAC grants (FellowshipLeader/DepartmentLead/BDA)`);
+
+  // Department Deputy role is captured in the destructure for future seeds;
+  // none are assigned today. Silence the unused variable warning.
+  void departmentDeputyRole;
 
   // ── 8. Fellowship Members ───────────────────────────────────
   await db.insert(fellowshipMembers).values([
