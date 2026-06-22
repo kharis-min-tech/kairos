@@ -4,11 +4,13 @@ import { signTestToken, TEST_IDS } from '../test-helpers';
 // RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
 // Router tests use partial-mock DBs, so we stub the resolver to return [].
 // Service-level capability behavior is covered by grants.test.ts.
-vi.mock('../lib/grants', () => ({
-  resolveGrants: vi.fn(async () => []),
-  hasCapability: vi.fn(() => false),
-  authHasCapability: vi.fn(() => false),
-}));
+vi.mock('../lib/grants', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/grants')>();
+  return {
+    ...actual,
+    resolveGrants: vi.fn(async () => []),
+  };
+});
 
 // ── Mock the service layer ─────────────────────────────────
 const svc = {

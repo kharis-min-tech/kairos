@@ -184,12 +184,33 @@ export function hasCapability(
 }
 
 // Convenience wrapper for AuthContext consumers post-Phase-1 (when grants
-// live on the auth payload). Phase 0 callers can still call hasCapability
-// directly with explicit grants.
+// live on the auth payload).
+//
+// Phase 2 transitional fallback: until Phase 3 ships service-layer
+// write-through to `member_roles`, the legacy `branchSystemAdminBranchIds` /
+// `branchDataAdminBranchIds` arrays remain the canonical "this user holds
+// BSA/BDA in branch X" signal in tokens. Treat them as virtual grants here so
+// capability checks pass during the migration window. Phase 6 removes this.
 export function authHasCapability(
   auth: AuthContext & { grants?: readonly Grant[] },
   cap: Capability,
   scope?: RoleScope & { branchId?: string },
 ): boolean {
-  return hasCapability(auth.grants ?? [], auth.systemRole, cap, scope);
+  if (hasCapability(auth.grants ?? [], auth.systemRole, cap, scope)) return true;
+
+  const targetBranchId =
+    scope?.kind === 'branch'
+      ? scope.id
+      : (scope as (RoleScope & { branchId?: string }) | undefined)?.branchId;
+  if (!targetBranchId) return false;
+
+  const bsaCaps = RoleCapabilities[FunctionalRole.BranchAdmin];
+  if (auth.branchSystemAdminBranchIds.includes(targetBranchId) && bsaCaps.includes(cap)) {
+    return true;
+  }
+  const bdaCaps = RoleCapabilities[FunctionalRole.BranchDataAdmin];
+  if (auth.branchDataAdminBranchIds.includes(targetBranchId) && bdaCaps.includes(cap)) {
+    return true;
+  }
+  return false;
 }

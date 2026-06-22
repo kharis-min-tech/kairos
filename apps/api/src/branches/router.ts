@@ -3,10 +3,14 @@ import { zValidator } from '@hono/zod-validator';
 import {
   authMiddleware,
   requireRole,
-  requireBranchAdmin,
-  requireBranchSystemAdmin,
+  requireCapability,
   getAuth,
 } from '../middleware/auth';
+
+const branchScope = (c: import('hono').Context) => ({
+  kind: 'branch' as const,
+  id: c.req.param('id')!,
+});
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -72,8 +76,8 @@ branchesRouter.post('/', requireRole('admin'), zValidator('json', createBranchSc
 });
 
 // Branch admins (system OR data) can edit operational branch info for their branch;
-// system admins retain global access. Migrated from requireRole('admin','pastor').
-branchesRouter.patch('/:id', requireBranchAdmin('id'), zValidator('json', updateBranchSchema), async (c) => {
+// system admins retain global access. RBAC Phase 2: was requireBranchAdmin('id').
+branchesRouter.patch('/:id', requireCapability('branch:write', branchScope), zValidator('json', updateBranchSchema), async (c) => {
   const auth = getAuth(c);
   const branch = await updateBranch(db, c.req.param('id'), c.req.valid('json'), auth);
   return c.json(successResponse(branch));
@@ -96,16 +100,16 @@ branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySche
 });
 
 // Appointing the Main Pastor / Elder is a branch-system-admin decision (and
-// global admins). Branch Data Admin alone is not enough. Migrated from
-// requireRole('admin').
-branchesRouter.post('/:id/leadership', requireBranchSystemAdmin('id'), zValidator('json', assignLeadershipSchema), async (c) => {
+// global admins). Branch Data Admin alone is not enough. RBAC Phase 2: was
+// requireBranchSystemAdmin('id').
+branchesRouter.post('/:id/leadership', requireCapability('branch:rbac', branchScope), zValidator('json', assignLeadershipSchema), async (c) => {
   const auth = getAuth(c);
   const input = c.req.valid('json');
   const assignment = await assignLeadership(db, c.req.param('id'), input, auth);
   return c.json(successResponse(assignment), 201);
 });
 
-branchesRouter.delete('/:id/leadership/:leadershipId', requireBranchSystemAdmin('id'), async (c) => {
+branchesRouter.delete('/:id/leadership/:leadershipId', requireCapability('branch:rbac', branchScope), async (c) => {
   const auth = getAuth(c);
   const leadershipId = c.req.param('leadershipId');
   if (!leadershipId) return c.json({ success: false, error: 'Leadership ID required' }, 400);
@@ -116,7 +120,7 @@ branchesRouter.delete('/:id/leadership/:leadershipId', requireBranchSystemAdmin(
 // ── Branch System Admin role management ────────────────────
 
 // Any branch admin (system or data) can VIEW who holds BSA in their branch.
-branchesRouter.get('/:id/roles', requireBranchAdmin('id'), async (c) => {
+branchesRouter.get('/:id/roles', requireCapability('branch:write', branchScope), async (c) => {
   const assignments = await listBranchRoleAssignments(db, c.req.param('id')!);
   return c.json(successResponse(assignments));
 });
@@ -124,7 +128,7 @@ branchesRouter.get('/:id/roles', requireBranchAdmin('id'), async (c) => {
 // Only system admins or existing Branch System Admins can grant BSA.
 branchesRouter.post(
   '/:id/roles',
-  requireBranchSystemAdmin('id'),
+  requireCapability('branch:rbac', branchScope),
   zValidator('json', assignBranchRoleSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -136,7 +140,7 @@ branchesRouter.post(
 
 // Only system admins or existing Branch System Admins can revoke BSA.
 // Service-layer guard refuses to remove the last active BSA for the branch.
-branchesRouter.delete('/:id/roles/:assignmentId', requireBranchSystemAdmin('id'), async (c) => {
+branchesRouter.delete('/:id/roles/:assignmentId', requireCapability('branch:rbac', branchScope), async (c) => {
   const auth = getAuth(c);
   const assignmentId = c.req.param('assignmentId');
   if (!assignmentId) return c.json({ success: false, error: 'Assignment ID required' }, 400);

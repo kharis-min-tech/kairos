@@ -1,9 +1,9 @@
 import type { Context, Next } from 'hono';
 import jwt from 'jsonwebtoken';
-import type { AuthContext } from '@kairos/types';
+import type { AuthContext, Capability, RoleScope } from '@kairos/types';
 import { UnauthorizedError } from '@kairos/utils';
 import { db } from '../db';
-import { resolveGrants } from '../lib/grants';
+import { resolveGrants, authHasCapability } from '../lib/grants';
 
 const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-me';
 
@@ -112,6 +112,42 @@ export function requireBranchSystemAdmin(branchIdParam = 'id') {
     }
     const ok = auth.systemRole === 'admin' || auth.branchSystemAdminBranchIds.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');
+    await next();
+  };
+}
+
+/**
+ * RBAC Phase 2: capability-based gate middleware.
+ *
+ * `cap` is the required capability (e.g. `'branch:rbac'`). `scopeFn` optionally
+ * extracts the request-scoped entity to check against (typically the URL
+ * param) — without it, the gate passes as long as ANY grant carries `cap`.
+ *
+ * Scope narrowing: a scope-bound token (`auth.scope`) is refused if the
+ * URL targets a different entity of the same scope kind — same shape as
+ * the legacy `requireBranchAdmin`/`requireBranchSystemAdmin` checks.
+ *
+ * Admin + pastor still pass via `hasCapability`'s break-glass / transitional
+ * shim (removed in Phase 4).
+ */
+export function requireCapability(
+  cap: Capability,
+  scopeFn?: (c: Context) => (RoleScope & { branchId?: string }) | null,
+) {
+  return async (c: Context, next: Next) => {
+    const auth = c.get('auth');
+    const target = scopeFn?.(c) ?? undefined;
+    if (
+      target &&
+      auth.scope &&
+      auth.scope.kind === target.kind &&
+      auth.scope.id !== target.id
+    ) {
+      throw new UnauthorizedError('Insufficient permissions');
+    }
+    if (!authHasCapability(auth, cap, target)) {
+      throw new UnauthorizedError('Insufficient permissions');
+    }
     await next();
   };
 }
