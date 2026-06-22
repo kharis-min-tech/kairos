@@ -34,6 +34,11 @@ export const members = pgTable('members', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   approvalStatus: varchar('approval_status', { length: 20 }).default('pending').notNull(),
   systemRole: varchar('system_role', { length: 20 }).default('member').notNull(),
+  // RBAC Phase 4: honorific is a display-only title preserved across the
+  // pastor/elder/leader → member collapse. Populated by the migration for
+  // members who held those system roles before the cutover. New signups
+  // leave it null; admins can edit it via the member-profile UI.
+  honorific: varchar('honorific', { length: 50 }),
   memberType: varchar('member_type', { length: 20 }).default('member').notNull(),
   guardianMemberId: uuid('guardian_member_id').references((): AnyPgColumn => members.id, { onDelete: 'set null' }),
   passwordResetToken: varchar('password_reset_token', { length: 255 }),

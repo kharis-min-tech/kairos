@@ -159,7 +159,11 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'pastor',
+      // RBAC Phase 4: 'pastor' is now an honorific, not a permission.
+      // Branch admin access is granted explicitly via the BSA member_roles
+      // row below (5a).
+      systemRole: 'member',
+      honorific: 'Pastor',
       membershipDate: '2008-03-15',
     })
     .returning();
@@ -177,7 +181,8 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'pastor',
+      systemRole: 'member',
+      honorific: 'Pastor',
       membershipDate: '2015-06-01',
     })
     .returning();
@@ -195,7 +200,8 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'pastor',
+      systemRole: 'member',
+      honorific: 'Pastor',
       membershipDate: '2012-01-10',
     })
     .returning();
@@ -213,7 +219,8 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'pastor',
+      systemRole: 'member',
+      honorific: 'Pastor',
       membershipDate: '2018-09-01',
     })
     .returning();
@@ -232,7 +239,7 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'leader',
+      systemRole: 'member',
       membershipDate: '2010-01-01',
     })
     .returning();
@@ -250,7 +257,7 @@ async function seed() {
       passwordHash: password,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: 'leader',
+      systemRole: 'member',
       membershipDate: '2013-06-15',
     })
     .returning();
@@ -909,17 +916,17 @@ async function seed() {
 
   // ── 5a. Branch System Admin assignments ─────────────────────
   // Highest branch tier — can assign/revoke roles within their branch.
-  // London: Sarah (already Admin-dept lead → Data Admin) is also the System Admin
-  //   for test coverage of the highest branch tier on one account.
-  // Manchester: Pastor Grace doubles up (only seeded Manchester leader).
-  // Accra: Pastor Kwame is System Admin (pastor > leader David, who holds the
-  //   Branch Data Admin slot via Admin-dept lead). Demonstrates the hierarchy.
+  // RBAC Phase 4: 'pastor' is now an honorific (display only). Branch admin
+  // access is explicit — every pastor who needs branch authority gets a BSA
+  // grant here so the dev demo continues to work post-cutover.
   await db.insert(memberRoles).values([
     { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: pastorLondon!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
     { memberId: pastorAccra!.id, roleId: branchSystemAdminRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
+    { memberId: pastorKumasi!.id, roleId: branchSystemAdminRole!.id, branchId: kumasi!.id, scopeKind: 'branch', scopeId: kumasi!.id },
   ]);
-  console.log(`✓ 3 branch system admin assignments`);
+  console.log(`✓ 5 branch system admin assignments`);
 
   // ── 5b. Minor health record ─────────────────────────────────
   // Health/safeguarding record for Lily (the seeded child). Visible only to
