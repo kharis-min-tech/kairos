@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// RBAC Phase 3d: stub the lead/deputy-grant sync. Sync behavior covered in
+// role-sync.test.ts.
+vi.mock('../lib/role-sync', () => ({
+  syncDepartmentLeadGrants: vi.fn(async () => undefined),
+  syncDepartmentDeputyGrants: vi.fn(async () => undefined),
+}));
+
 // ── Flexible Drizzle mock builder ─────────────────────────
 function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};

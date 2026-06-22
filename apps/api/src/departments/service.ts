@@ -24,6 +24,7 @@ import {
   sendProbationPassedEmail,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
+import { syncDepartmentLeadGrants, syncDepartmentDeputyGrants } from '../lib/role-sync';
 
 // ── Recruitment pipeline constants ─────────────────────────
 
@@ -380,6 +381,18 @@ export async function createBranchDepartment(
     });
   }
 
+  // RBAC Phase 3d: mirror lead + deputy FKs into member_roles.
+  await syncDepartmentLeadGrants(db, {
+    branchDepartmentId: created!.id,
+    branchId: created!.branchId,
+    leadMemberId: created!.leadMemberId,
+  });
+  await syncDepartmentDeputyGrants(db, {
+    branchDepartmentId: created!.id,
+    branchId: created!.branchId,
+    deputyMemberId: created!.deputyMemberId,
+  });
+
   return created!;
 }
 
@@ -407,6 +420,22 @@ export async function updateBranchDepartment(
     .where(eq(branchDepartments.id, existing.id))
     .returning();
 
+  // RBAC Phase 3d: if leadership changed, sync member_roles.
+  if ('leadMemberId' in data) {
+    await syncDepartmentLeadGrants(db, {
+      branchDepartmentId: updated!.id,
+      branchId: updated!.branchId,
+      leadMemberId: updated!.leadMemberId,
+    });
+  }
+  if ('deputyMemberId' in data) {
+    await syncDepartmentDeputyGrants(db, {
+      branchDepartmentId: updated!.id,
+      branchId: updated!.branchId,
+      deputyMemberId: updated!.deputyMemberId,
+    });
+  }
+
   return updated!;
 }
 
@@ -431,6 +460,18 @@ export async function deactivateBranchDepartment(db: Database, auth: AuthContext
     .set({ isActive: false, endDate: sql`CURRENT_DATE`, updatedAt: new Date() })
     .where(eq(branchDepartments.id, existing.id))
     .returning();
+
+  // RBAC Phase 3d: deactivate all DepartmentLead/Deputy grants on this dept.
+  await syncDepartmentLeadGrants(db, {
+    branchDepartmentId: deactivated!.id,
+    branchId: deactivated!.branchId,
+    leadMemberId: null,
+  });
+  await syncDepartmentDeputyGrants(db, {
+    branchDepartmentId: deactivated!.id,
+    branchId: deactivated!.branchId,
+    deputyMemberId: null,
+  });
 
   return deactivated!;
 }

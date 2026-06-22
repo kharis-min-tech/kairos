@@ -12,6 +12,12 @@ vi.mock('../lib/grants', async (importOriginal) => {
   };
 });
 
+// RBAC Phase 3d: stub the lead/deputy-grant sync.
+vi.mock('../lib/role-sync', () => ({
+  syncDepartmentLeadGrants: vi.fn(async () => undefined),
+  syncDepartmentDeputyGrants: vi.fn(async () => undefined),
+}));
+
 // ── Mock db ────────────────────────────────────────────────
 const mockDb = {
   select: vi.fn(),
