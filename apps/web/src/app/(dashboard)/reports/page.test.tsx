@@ -103,6 +103,22 @@ vi.mock('@/hooks/use-departments', () => ({
   useDepartmentFollowups: () => ({ data: [], isLoading: false }),
 }));
 
+vi.mock('@/hooks/use-attendance', () => ({
+  useDepartmentAttendance: () => ({
+    data: {
+      department: { id: 'd-1', name: 'Worship', branchName: 'Central' },
+      windowWeeks: 12,
+      totalServices: 8,
+      distinctAttendees: 5,
+      activeMembers: 10,
+      rate: 0.5,
+      members: [],
+      trend: [{ weekStart: '2024-05-27T00:00:00.000Z', attendees: 4 }],
+    },
+    isLoading: false,
+  }),
+}));
+
 // useQuery is only used for the souls-tab inline call; we mock @tanstack/react-query
 // minimally to avoid hitting api.souls.list (the souls tab only renders for the
 // outreach sub-tab inside the leadership branch panel).
@@ -243,7 +259,7 @@ describe('ReportsPage — default tab selection', () => {
     };
     render(<ReportsPage />, { wrapper });
     // Only one persona → tab row is hidden, but the panel still renders.
-    expect(screen.getByText('Coming soon')).toBeInTheDocument();
+    expect(screen.getByText('Service attendance per week')).toBeInTheDocument();
   });
 });
 
@@ -261,12 +277,12 @@ describe('ReportsPage — tab switching', () => {
     };
     render(<ReportsPage />, { wrapper });
 
-    // Fellowship is the default — its "Coming soon" department footer is absent.
-    expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
+    // Fellowship is the default — the department attendance card is absent.
+    expect(screen.queryByText('Service attendance per week')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'My Department' }));
 
-    expect(screen.getByText('Coming soon')).toBeInTheDocument();
+    expect(screen.getByText('Service attendance per week')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'My Department' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('tab', { name: 'My Fellowship' }).getAttribute('aria-pressed')).toBe('false');
   });
@@ -335,6 +351,25 @@ describe('ReportsPage — department picker', () => {
     };
     render(<ReportsPage />, { wrapper });
     expect(screen.getByLabelText('Department')).toBeInTheDocument();
+  });
+});
+
+// ── Department panel: service-attendance wire-up ─────────────────────
+
+describe('ReportsPage — department service-attendance', () => {
+  beforeEach(resetState);
+
+  it('surfaces the rate% and roster summary from useDepartmentAttendance', () => {
+    authState.activeRole = 'leader';
+    leadershipData = {
+      ...emptyLeadership,
+      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+    };
+    render(<ReportsPage />, { wrapper });
+
+    // Mock returns rate: 0.5, distinctAttendees: 5, activeMembers: 10, totalServices: 8.
+    expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.getByText('5/10 attended · 8 services')).toBeInTheDocument();
   });
 });
 

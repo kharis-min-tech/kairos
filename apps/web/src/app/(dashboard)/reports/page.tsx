@@ -8,6 +8,7 @@ import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAn
 import { useMemberDashboard } from '@/hooks/use-dashboard';
 import { useFellowships, useFellowshipMembers, useFellowshipMeetings, useFellowshipFollowups, useFellowshipJoinRequests } from '@/hooks/use-fellowships';
 import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups } from '@/hooks/use-departments';
+import { useDepartmentAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
@@ -1138,9 +1139,8 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
 // Department-scoped stats. Same shape as MyFellowshipReports: picker for
 // multi-department leaders, otherwise auto-select the only one.
 //
-// TODO (analytics gap): the service-attendance module ships a department-
-// scoped rate but no rota-instance count endpoint. We surface members,
-// follow-ups and join-requests via existing list endpoints.
+// Service-attendance rate + weekly trend come from the existing department
+// attendance endpoint. Rota-instance counts still pending (separate endpoint).
 
 function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartment[] }) {
   const [selectedId, setSelectedId] = useState<string>(departments[0]?.id ?? '');
@@ -1184,12 +1184,19 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
   const membersQ = useDepartmentMembers(branchDeptId);
   const joinRequestsQ = useDepartmentJoinRequests(branchDeptId);
   const followupsQ = useDepartmentFollowups(branchDeptId);
+  const attendanceQ = useDepartmentAttendance(branchDeptId, { weeks: 12 });
 
-  const isLoading = membersQ.isLoading || joinRequestsQ.isLoading || followupsQ.isLoading;
+  const isLoading = membersQ.isLoading || joinRequestsQ.isLoading || followupsQ.isLoading || attendanceQ.isLoading;
 
   const members = membersQ.data ?? [];
   const joinRequests = joinRequestsQ.data ?? [];
   const followups = followupsQ.data ?? [];
+  const attendance = attendanceQ.data;
+  const attendanceRatePct = attendance ? Math.round((attendance.rate ?? 0) * 100) : 0;
+  const attendanceTrend = (attendance?.trend ?? []).map((p) => ({
+    week: p.weekStart.slice(0, 10),
+    attendees: p.attendees,
+  }));
 
   // Probation vs active — department_members track probation state.
   const probationMembers = members.filter((m: any) =>
@@ -1242,10 +1249,16 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
           sub={`${closedFollowups} closed`}
         />
         <ReportStatCard
-          title="Rota"
-          value="—"
-          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
-          sub="No scoped endpoint yet"
+          title="Service attendance"
+          value={attendance ? `${attendanceRatePct}%` : '—'}
+          icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          sub={
+            attendance
+              ? attendance.totalServices === 0
+                ? `No services in last ${attendance.windowWeeks}w`
+                : `${attendance.distinctAttendees}/${attendance.activeMembers} attended · ${attendance.totalServices} services`
+              : 'Loading…'
+          }
         />
       </div>
 
@@ -1285,17 +1298,39 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
         </CardContent>
       </Card>
 
-      {/* TODO: service-attendance rate per department and rota-instance counts
-          require new aggregations on the API. Surface them once available. */}
+      {/* Weekly attendance trend — distinct department members who attended
+          a service that week. Rota-instance counts will join here in a
+          follow-up (separate endpoint). */}
       <Card>
-        <CardContent className="pt-4 pb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-            Coming soon
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Service-attendance rate and upcoming rota counts will appear here once
-            department-scoped analytics ship.
-          </p>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold">Service attendance per week</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {attendance ? `Last ${attendance.windowWeeks} weeks · ${departmentName}` : departmentName}
+              </p>
+            </div>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
+              Scoped: department
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {attendanceTrend.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              No service attendance recorded in this window yet.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={attendanceTrend} barSize={24}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                <Bar dataKey="attendees" name="Attendees" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
     </div>
