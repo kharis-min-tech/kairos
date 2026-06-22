@@ -12,6 +12,12 @@ vi.mock('../lib/grants', async (importOriginal) => {
   };
 });
 
+// RBAC Phase 3c: stub the leader-grant sync — fellowship-service tests
+// don't drive its DB calls, and the helper is covered separately.
+vi.mock('../lib/role-sync', () => ({
+  syncFellowshipLeaderGrants: vi.fn(async () => undefined),
+}));
+
 // ── Mock db ────────────────────────────────────────────────
 const mockDb = {
   select: vi.fn(),

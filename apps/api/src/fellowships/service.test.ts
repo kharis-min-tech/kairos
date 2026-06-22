@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// RBAC Phase 3c: stub the leader-grant sync so service tests don't need to
+// wire up additional DB calls. Sync behavior is tested in role-sync.test.ts.
+vi.mock('../lib/role-sync', () => ({
+  syncFellowshipLeaderGrants: vi.fn(async () => undefined),
+}));
+
 // ── Flexible Drizzle mock builder ─────────────────────────
 function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};

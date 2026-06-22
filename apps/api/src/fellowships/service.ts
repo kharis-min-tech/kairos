@@ -22,6 +22,7 @@ import {
   sendJoinRequestRejectedEmail,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
+import { syncFellowshipLeaderGrants } from '../lib/role-sync';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
@@ -230,6 +231,16 @@ export async function createFellowship(
     });
   }
 
+  // RBAC Phase 3c: mirror leader/co-leader FKs into member_roles. The
+  // partial unique index handles concurrent inserts; nothing to await
+  // serially here beyond the helper's own work.
+  const leaderMemberIds = [data.leaderId, data.coLeaderId].filter((m): m is string => !!m);
+  await syncFellowshipLeaderGrants(db, {
+    fellowshipId: fellowship!.id,
+    branchId: data.branchId,
+    leaderMemberIds,
+  });
+
   return fellowship!;
 }
 
@@ -250,6 +261,20 @@ export async function updateFellowship(
     .set({ ...data, updatedAt: new Date() })
     .where(eq(fellowships.id, existing.id))
     .returning();
+
+  // RBAC Phase 3c: if leader/co-leader changed, sync member_roles. We always
+  // sync if either field appears in `data` — easier to reason about than
+  // tracking deltas, and idempotent.
+  if ('leaderId' in data || 'coLeaderId' in data) {
+    const leaderMemberIds = [updated!.leaderId, updated!.coLeaderId].filter(
+      (m): m is string => !!m,
+    );
+    await syncFellowshipLeaderGrants(db, {
+      fellowshipId: updated!.id,
+      branchId: updated!.branchId,
+      leaderMemberIds,
+    });
+  }
 
   return updated!;
 }
@@ -272,6 +297,15 @@ export async function deactivateFellowship(db: Database, auth: AuthContext, id: 
     .set({ isActive: false, updatedAt: new Date() })
     .where(eq(fellowships.id, existing.id))
     .returning();
+
+  // RBAC Phase 3c: deactivating the fellowship deactivates the FellowshipLeader
+  // grants attached to it. The FK itself stays — the grants are what gate
+  // capability checks.
+  await syncFellowshipLeaderGrants(db, {
+    fellowshipId: deactivated!.id,
+    branchId: deactivated!.branchId,
+    leaderMemberIds: [],
+  });
 
   return deactivated!;
 }
