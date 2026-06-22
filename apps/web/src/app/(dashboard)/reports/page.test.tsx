@@ -91,10 +91,19 @@ vi.mock('@/hooks/use-dashboard', () => ({
 
 vi.mock('@/hooks/use-fellowships', () => ({
   useFellowships: () => ({ data: { data: [] } }),
-  useFellowshipMembers: () => ({ data: [], isLoading: false }),
-  useFellowshipMeetings: () => ({ data: [], isLoading: false }),
-  useFellowshipFollowups: () => ({ data: [], isLoading: false }),
-  useFellowshipJoinRequests: () => ({ data: [], isLoading: false }),
+  useFellowshipStats: () => ({
+    data: {
+      fellowship: { id: 'f-1', name: 'Youth', branchName: 'Central' },
+      members: { total: 12, active: 10, inactive: 2 },
+      meetings: {
+        last90d: 4,
+        byWeek: [{ week: '2024-06-03', count: 2 }, { week: '2024-06-10', count: 2 }],
+      },
+      followups: { total: 6, open: 3, closed: 3 },
+      joinRequests: { recent30d: 5, pending: 1 },
+    },
+    isLoading: false,
+  }),
 }));
 
 vi.mock('@/hooks/use-departments', () => ({

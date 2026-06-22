@@ -1,10 +1,11 @@
-import { eq, and, or, count, sql, exists } from 'drizzle-orm';
+import { eq, and, or, count, sql, exists, gte } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   fellowships,
   fellowshipMembers,
   fellowshipMeetings,
   fellowshipMeetingAttendance,
+  fellowshipFollowups,
   fellowshipJoinRequests,
   members,
   branches,
@@ -556,6 +557,114 @@ export async function getMeetingAttendance(
     .from(fellowshipMeetingAttendance)
     .innerJoin(members, eq(fellowshipMeetingAttendance.memberId, members.id))
     .where(eq(fellowshipMeetingAttendance.meetingId, meetingId));
+}
+
+// ── Fellowship aggregate stats (analytics) ─────────────────
+//
+// Single round-trip aggregation for the reports page — replaces the 4
+// list-endpoint fan-out (members / meetings / followups / join-requests)
+// the FellowshipReportPanel previously stitched together client-side.
+// Visibility: fellowship leader / co-leader / pastor / admin.
+
+export async function getFellowshipStats(
+  db: Database,
+  auth: AuthContext,
+  fellowshipId: string,
+) {
+  const fellowship = await getFellowship(db, auth, fellowshipId);
+  const isLeadOrCo =
+    fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId;
+  if (
+    auth.systemRole !== 'admin' &&
+    auth.systemRole !== 'pastor' &&
+    !isLeadOrCo
+  ) {
+    throw new ForbiddenError('Only the fellowship lead/co-lead, pastor, or admin can view this');
+  }
+
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const memberRows = await db
+    .select({
+      total: count(),
+      active: sql<number>`COUNT(*) FILTER (WHERE ${fellowshipMembers.isActive} = true)::int`,
+    })
+    .from(fellowshipMembers)
+    .where(eq(fellowshipMembers.fellowshipId, fellowshipId));
+  const totalMembers = Number(memberRows[0]?.total ?? 0);
+  const activeMembers = Number(memberRows[0]?.active ?? 0);
+
+  const meetingRows = await db
+    .select({
+      week: sql<Date>`date_trunc('week', ${fellowshipMeetings.meetingDate})`.as('w'),
+      c: count(),
+    })
+    .from(fellowshipMeetings)
+    .where(
+      and(
+        eq(fellowshipMeetings.fellowshipId, fellowshipId),
+        gte(fellowshipMeetings.meetingDate, ninetyDaysAgo),
+      ),
+    )
+    .groupBy(sql`date_trunc('week', ${fellowshipMeetings.meetingDate})`)
+    .orderBy(sql`date_trunc('week', ${fellowshipMeetings.meetingDate})`);
+
+  let meetingsLast90d = 0;
+  const meetingsByWeek = meetingRows.map((r) => {
+    const c = Number(r.c);
+    meetingsLast90d += c;
+    return {
+      week: (r.week as Date).toISOString().slice(0, 10),
+      count: c,
+    };
+  });
+
+  const followupRows = await db
+    .select({
+      total: count(),
+      closed: sql<number>`COUNT(*) FILTER (WHERE LOWER(${fellowshipFollowups.contactStatus}) IN ('completed', 'closed'))::int`,
+    })
+    .from(fellowshipFollowups)
+    .where(eq(fellowshipFollowups.fellowshipId, fellowshipId));
+  const totalFollowups = Number(followupRows[0]?.total ?? 0);
+  const closedFollowups = Number(followupRows[0]?.closed ?? 0);
+
+  const joinRows = await db
+    .select({
+      recent: sql<number>`COUNT(*) FILTER (WHERE ${fellowshipJoinRequests.createdAt} >= ${thirtyDaysAgo} AND ${fellowshipJoinRequests.status} != 'rejected')::int`,
+      pending: sql<number>`COUNT(*) FILTER (WHERE ${fellowshipJoinRequests.status} = 'pending')::int`,
+    })
+    .from(fellowshipJoinRequests)
+    .where(eq(fellowshipJoinRequests.fellowshipId, fellowshipId));
+  const recentJoinRequests = Number(joinRows[0]?.recent ?? 0);
+  const pendingJoinRequests = Number(joinRows[0]?.pending ?? 0);
+
+  return {
+    fellowship: {
+      id: fellowship.id,
+      name: fellowship.fellowshipName,
+      branchName: fellowship.branchName,
+    },
+    members: {
+      total: totalMembers,
+      active: activeMembers,
+      inactive: Math.max(0, totalMembers - activeMembers),
+    },
+    meetings: {
+      last90d: meetingsLast90d,
+      byWeek: meetingsByWeek,
+    },
+    followups: {
+      total: totalFollowups,
+      open: Math.max(0, totalFollowups - closedFollowups),
+      closed: closedFollowups,
+    },
+    joinRequests: {
+      recent30d: recentJoinRequests,
+      pending: pendingJoinRequests,
+    },
+  };
 }
 
 export async function getAttendanceSummary(

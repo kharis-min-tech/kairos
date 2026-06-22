@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useQuery } from '@tanstack/react-query';
 import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAnalytics } from '@/hooks/use-reports';
 import { useMemberDashboard } from '@/hooks/use-dashboard';
-import { useFellowships, useFellowshipMembers, useFellowshipMeetings, useFellowshipFollowups, useFellowshipJoinRequests } from '@/hooks/use-fellowships';
+import { useFellowships, useFellowshipStats } from '@/hooks/use-fellowships';
 import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups, useDepartmentRotaStats } from '@/hooks/use-departments';
 import { useDepartmentAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
@@ -920,13 +920,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
 //
 // Fellowship-scoped stats for a leader. When the user leads multiple
 // fellowships, a small picker dropdown surfaces above the panel; otherwise
-// the lone fellowship is selected automatically.
-//
-// TODO (analytics gap): there is no per-fellowship attendance-trend or
-// new-joins time-series endpoint today. The page reuses existing list
-// endpoints (members, meetings, followups, join-requests) and derives stats
-// in the browser. A proper fellowship-scoped analytics endpoint would
-// replace these per-fellowship hooks with a single aggregate call.
+// the lone fellowship is selected automatically. Backed by a single
+// aggregate endpoint (/api/fellowships/:id/stats).
 
 function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {
   const [selectedId, setSelectedId] = useState<string>(fellowships[0]?.id ?? '');
@@ -967,55 +962,9 @@ function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellows
 }
 
 function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId: string; fellowshipName: string }) {
-  // Load on tab activation — one hook per data slice. Each enabled gate is
-  // already guarded by !!fellowshipId inside the hook so this is N=4, not N+1.
-  const membersQ = useFellowshipMembers(fellowshipId);
-  const meetingsQ = useFellowshipMeetings(fellowshipId);
-  const followupsQ = useFellowshipFollowups(fellowshipId);
-  const joinRequestsQ = useFellowshipJoinRequests(fellowshipId);
+  const statsQ = useFellowshipStats(fellowshipId);
 
-  const isLoading = membersQ.isLoading || meetingsQ.isLoading || followupsQ.isLoading || joinRequestsQ.isLoading;
-
-  const members = membersQ.data ?? [];
-  const meetings = meetingsQ.data ?? [];
-  const followups = followupsQ.data ?? [];
-  const joinRequests = joinRequestsQ.data ?? [];
-
-  // Active vs. inactive — fellowship_members rows are active by default; we
-  // look at the .isActive field if present.
-  const activeMembers = members.filter((m: any) => m.isActive !== false).length;
-  const inactiveMembers = Math.max(0, members.length - activeMembers);
-
-  // Last-90-day meeting filter — meetings with a meetingDate inside the window.
-  const ninetyDaysAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 90);
-    return d;
-  }, []);
-  const recentMeetings = meetings.filter((m: any) => {
-    if (!m.meetingDate) return false;
-    return new Date(m.meetingDate) >= ninetyDaysAgo;
-  });
-
-  // Open followups (status not "completed" or "closed").
-  const openFollowups = followups.filter((f: any) => {
-    const status = (f.status ?? '').toLowerCase();
-    return status !== 'completed' && status !== 'closed';
-  }).length;
-  const closedFollowups = followups.length - openFollowups;
-
-  // Join requests in the last 30 days that haven't been declined.
-  const thirtyDaysAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d;
-  }, []);
-  const recentJoinRequests = joinRequests.filter((r: any) => {
-    if (!r.createdAt) return false;
-    return new Date(r.createdAt) >= thirtyDaysAgo;
-  }).length;
-
-  if (isLoading) {
+  if (statsQ.isLoading || !statsQ.data) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -1025,23 +974,8 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
     );
   }
 
-  // Meeting attendance trend — number of meetings per week over last 90 days.
-  // We can't compute an attendance % without per-meeting attendance rows, so we
-  // show a count instead with a "scoped: fellowship" badge.
-  const meetingsByWeek = recentMeetings.reduce<Record<string, number>>((acc, m: any) => {
-    const date = new Date(m.meetingDate);
-    // Snap to Monday of the week.
-    const day = date.getDay();
-    const offset = (day === 0 ? -6 : 1 - day);
-    const monday = new Date(date);
-    monday.setDate(date.getDate() + offset);
-    const key = monday.toISOString().slice(0, 10);
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {});
-  const meetingsTrend = Object.entries(meetingsByWeek)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([week, count]) => ({ week, count }));
+  const { members, meetings, followups, joinRequests } = statsQ.data;
+  const meetingsTrend = meetings.byWeek;
 
   return (
     <div className="space-y-6">
@@ -1049,27 +983,27 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportStatCard
           title="Members"
-          value={members.length}
+          value={members.total}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
-          sub={`${activeMembers} active${inactiveMembers ? ` · ${inactiveMembers} inactive` : ''}`}
+          sub={`${members.active} active${members.inactive ? ` · ${members.inactive} inactive` : ''}`}
         />
         <ReportStatCard
           title="Meetings (90d)"
-          value={recentMeetings.length}
+          value={meetings.last90d}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
-          sub={recentMeetings.length === 0 ? 'None recorded' : 'Recorded meetings'}
+          sub={meetings.last90d === 0 ? 'None recorded' : 'Recorded meetings'}
         />
         <ReportStatCard
           title="Follow-ups"
-          value={followups.length}
+          value={followups.total}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          sub={`${openFollowups} open · ${closedFollowups} closed`}
+          sub={`${followups.open} open · ${followups.closed} closed`}
         />
         <ReportStatCard
           title="New joins (30d)"
-          value={recentJoinRequests}
+          value={joinRequests.recent30d}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3" /></svg>}
-          sub={recentJoinRequests === 0 ? 'No new requests' : 'Join requests'}
+          sub={joinRequests.recent30d === 0 ? 'No new requests' : `${joinRequests.pending} pending review`}
         />
       </div>
 
@@ -1117,15 +1051,15 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Open follow-ups</p>
-              <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{openFollowups}</p>
+              <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{followups.open}</p>
             </div>
             <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Closed follow-ups</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600">{closedFollowups}</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600">{followups.closed}</p>
             </div>
             <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Pending join requests</p>
-              <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{recentJoinRequests}</p>
+              <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{joinRequests.pending}</p>
             </div>
           </div>
         </CardContent>

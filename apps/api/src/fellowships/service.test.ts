@@ -113,6 +113,7 @@ import {
   recordAttendance,
   getMeetingAttendance,
   getAttendanceSummary,
+  getFellowshipStats,
   createJoinRequest,
   listJoinRequests,
   reviewJoinRequest,
@@ -663,5 +664,74 @@ describe('scope-aware leader writes', () => {
       meetingDate: '2024-06-15T18:00:00Z',
     });
     expect(meeting).toBeDefined();
+  });
+});
+
+// ── getFellowshipStats ────────────────────────────────────
+
+describe('getFellowshipStats', () => {
+  const leaderAuth = {
+    memberId,
+    email: 'leader@test.com',
+    systemRole: 'leader' as const,
+    branchId,
+    branchSystemAdminBranchIds: [],
+    branchDataAdminBranchIds: [],
+  };
+
+  it('aggregates members / meetings / followups / joinRequests for the leader', async () => {
+    setupSelectSequence(
+      [sampleFellowship],
+      [{ total: 12, active: 10 }],
+      [
+        { week: new Date('2024-06-03T00:00:00Z'), c: 2 },
+        { week: new Date('2024-06-10T00:00:00Z'), c: 1 },
+      ],
+      [{ total: 8, closed: 5 }],
+      [{ recent: 4, pending: 2 }],
+    );
+    const stats = await getFellowshipStats(mockDb, leaderAuth, fellowshipId);
+    expect(stats.fellowship.id).toBe(fellowshipId);
+    expect(stats.members).toEqual({ total: 12, active: 10, inactive: 2 });
+    expect(stats.meetings.last90d).toBe(3);
+    expect(stats.meetings.byWeek).toHaveLength(2);
+    expect(stats.meetings.byWeek[0]).toMatchObject({ count: 2 });
+    expect(stats.followups).toEqual({ total: 8, open: 3, closed: 5 });
+    expect(stats.joinRequests).toEqual({ recent30d: 4, pending: 2 });
+  });
+
+  it('returns zero counts cleanly when the fellowship has no activity', async () => {
+    setupSelectSequence(
+      [sampleFellowship],
+      [{ total: 0, active: 0 }],
+      [],
+      [{ total: 0, closed: 0 }],
+      [{ recent: 0, pending: 0 }],
+    );
+    const stats = await getFellowshipStats(mockDb, leaderAuth, fellowshipId);
+    expect(stats.members.total).toBe(0);
+    expect(stats.meetings.last90d).toBe(0);
+    expect(stats.meetings.byWeek).toEqual([]);
+    expect(stats.followups.total).toBe(0);
+    expect(stats.joinRequests.recent30d).toBe(0);
+  });
+
+  it('forbids access to a non-leader member', async () => {
+    setupSelect([{ ...sampleFellowship, leaderId: 'someone-else', coLeaderId: null }]);
+    await expect(
+      getFellowshipStats(mockDb, memberAuth, fellowshipId),
+    ).rejects.toThrow(/lead\/co-lead/);
+  });
+
+  it('admin can view any fellowship stats', async () => {
+    setupSelectSequence(
+      [sampleFellowship],
+      [{ total: 5, active: 5 }],
+      [],
+      [{ total: 0, closed: 0 }],
+      [{ recent: 0, pending: 0 }],
+    );
+    const stats = await getFellowshipStats(mockDb, adminAuth, fellowshipId);
+    expect(stats.members.total).toBe(5);
   });
 });

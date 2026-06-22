@@ -326,6 +326,14 @@ export function createApiClient(
         client.patch<ApiResponse<Fellowship>>(`/api/fellowships/${encodeURIComponent(id)}`, data),
       delete: (id: string) =>
         client.delete<ApiResponse<void>>(`/api/fellowships/${encodeURIComponent(id)}`),
+      stats: (fellowshipId: string) =>
+        client.get<ApiResponse<{
+          fellowship: { id: string; name: string; branchName: string | null };
+          members: { total: number; active: number; inactive: number };
+          meetings: { last90d: number; byWeek: Array<{ week: string; count: number }> };
+          followups: { total: number; open: number; closed: number };
+          joinRequests: { recent30d: number; pending: number };
+        }>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/stats`),
       members: {
         list: (fellowshipId: string) =>
           client.get<ApiResponse<FellowshipMemberWithDetails[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/members`),

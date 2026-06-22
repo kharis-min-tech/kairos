@@ -33,6 +33,7 @@ import {
   recordAttendance,
   getMeetingAttendance,
   getAttendanceSummary,
+  getFellowshipStats,
   createJoinRequest,
   listJoinRequests,
   reviewJoinRequest,
@@ -150,6 +151,12 @@ fellowshipsRouter.get('/:id/attendance/summary', async (c) => {
   const auth = getAuth(c);
   const summary = await getAttendanceSummary(db, auth, c.req.param('id')!);
   return c.json(successResponse(summary));
+});
+
+fellowshipsRouter.get('/:id/stats', async (c) => {
+  const auth = getAuth(c);
+  const stats = await getFellowshipStats(db, auth, c.req.param('id')!);
+  return c.json(successResponse(stats));
 });
 
 // ── Join Requests ──────────────────────────────────────────

@@ -71,6 +71,23 @@ export function useDeleteFellowship() {
   });
 }
 
+// ── Fellowship aggregate stats (analytics) ────────────────
+
+export function useFellowshipStats(
+  fellowshipId: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['fellowships', fellowshipId, 'stats'],
+    queryFn: async () => {
+      const res = await api.fellowships.stats(fellowshipId);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!fellowshipId,
+    staleTime: 60_000,
+  });
+}
+
 // ── Fellowship Members ─────────────────────────────────────
 
 export function useFellowshipMembers(fellowshipId: string) {
