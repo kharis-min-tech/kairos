@@ -1,6 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
+import { authMiddleware, requireCapability, getAuth } from '../middleware/auth';
+
+const fellowshipScope = (c: import('hono').Context) => ({
+  kind: 'fellowship' as const,
+  id: c.req.param('id')!,
+});
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -100,13 +105,13 @@ fellowshipsRouter.get('/:id/members', async (c) => {
   return c.json(successResponse(members));
 });
 
-fellowshipsRouter.post('/:id/members', requireRole('admin', 'pastor', 'leader'), zValidator('json', addMemberSchema), async (c) => {
+fellowshipsRouter.post('/:id/members', requireCapability('fellowship:write', fellowshipScope), zValidator('json', addMemberSchema), async (c) => {
   const auth = getAuth(c);
   const member = await addFellowshipMember(db, auth, c.req.param('id')!, c.req.valid('json'));
   return c.json(successResponse(member), 201);
 });
 
-fellowshipsRouter.delete('/:id/members/:memberId', requireRole('admin', 'pastor', 'leader'), async (c) => {
+fellowshipsRouter.delete('/:id/members/:memberId', requireCapability('fellowship:write', fellowshipScope), async (c) => {
   const auth = getAuth(c);
   const result = await removeFellowshipMember(db, auth, c.req.param('id')!, c.req.param('memberId')!);
   return c.json(successResponse(result, 'Member removed from fellowship'));
@@ -120,13 +125,13 @@ fellowshipsRouter.get('/:id/meetings', async (c) => {
   return c.json(successResponse(meetings));
 });
 
-fellowshipsRouter.post('/:id/meetings', requireRole('admin', 'pastor', 'leader'), zValidator('json', createMeetingSchema), async (c) => {
+fellowshipsRouter.post('/:id/meetings', requireCapability('fellowship:write', fellowshipScope), zValidator('json', createMeetingSchema), async (c) => {
   const auth = getAuth(c);
   const meeting = await createMeeting(db, auth, c.req.param('id')!, c.req.valid('json'));
   return c.json(successResponse(meeting), 201);
 });
 
-fellowshipsRouter.patch('/:id/meetings/:meetingId', requireRole('admin', 'pastor', 'leader'), zValidator('json', updateMeetingSchema), async (c) => {
+fellowshipsRouter.patch('/:id/meetings/:meetingId', requireCapability('fellowship:write', fellowshipScope), zValidator('json', updateMeetingSchema), async (c) => {
   const auth = getAuth(c);
   const meeting = await updateMeeting(db, auth, c.req.param('id')!, c.req.param('meetingId')!, c.req.valid('json'));
   return c.json(successResponse(meeting));
@@ -134,7 +139,7 @@ fellowshipsRouter.patch('/:id/meetings/:meetingId', requireRole('admin', 'pastor
 
 // ── Meeting Attendance ─────────────────────────────────────
 
-fellowshipsRouter.post('/:id/meetings/:meetingId/attendance', requireRole('admin', 'pastor', 'leader'), zValidator('json', recordAttendanceSchema), async (c) => {
+fellowshipsRouter.post('/:id/meetings/:meetingId/attendance', requireCapability('fellowship:write', fellowshipScope), zValidator('json', recordAttendanceSchema), async (c) => {
   const auth = getAuth(c);
   const { records } = c.req.valid('json');
   await recordAttendance(db, auth, c.req.param('id')!, c.req.param('meetingId')!, records);
@@ -226,7 +231,7 @@ fellowshipsRouter.get('/:id/members/:memberId/followups', async (c) => {
 
 fellowshipsRouter.post(
   '/:id/members/:memberId/followups',
-  requireRole('admin', 'pastor', 'leader'),
+  requireCapability('fellowship:write', fellowshipScope),
   zValidator('json', createFellowshipFollowupSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -243,7 +248,7 @@ fellowshipsRouter.post(
 
 fellowshipsRouter.patch(
   '/:id/followups/:followupId',
-  requireRole('admin', 'pastor', 'leader'),
+  requireCapability('fellowship:write', fellowshipScope),
   zValidator('json', updateFellowshipFollowupSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -260,7 +265,7 @@ fellowshipsRouter.patch(
 
 fellowshipsRouter.delete(
   '/:id/followups/:followupId',
-  requireRole('admin', 'pastor', 'leader'),
+  requireCapability('fellowship:write', fellowshipScope),
   async (c) => {
     const auth = getAuth(c);
     const result = await deleteFellowshipFollowup(

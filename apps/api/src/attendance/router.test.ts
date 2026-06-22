@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signTestToken, TEST_IDS } from '../test-helpers';
+import { FunctionalRole, type Grant } from '@kairos/types';
 
 // RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
-// Router tests use partial-mock DBs, so we stub the resolver to return [].
-// Service-level capability behavior is covered by grants.test.ts.
+// Hoisted helper so tests can stage a per-request grant list.
+const { resolveGrantsMock } = vi.hoisted(() => ({
+  resolveGrantsMock: vi.fn(async (): Promise<Grant[]> => []),
+}));
 vi.mock('../lib/grants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/grants')>();
   return {
     ...actual,
-    resolveGrants: vi.fn(async () => []),
+    resolveGrants: resolveGrantsMock,
   };
 });
 
@@ -262,6 +265,16 @@ describe('GET /api/attendance/services/:id/records', () => {
 
 describe('reports', () => {
   it('GET /reports/trends returns 200 for a leader', async () => {
+    // Post-Phase-4b: aggregate reports require ANY leader-tier capability.
+    // The token alone (systemRole: 'leader') carries no grants, so we
+    // stage a FellowshipLeader grant for this call.
+    resolveGrantsMock.mockResolvedValueOnce([
+      {
+        role: FunctionalRole.FellowshipLeader,
+        scope: { kind: 'fellowship', id: 'F-1' },
+        branchId: TEST_IDS.branchId,
+      },
+    ]);
     svc.getAttendanceTrends.mockResolvedValue([{ weekStart: '2026-05-18', attendees: 120, serviceCount: 2 }]);
     const res = await app.request('/api/attendance/reports/trends?weeks=4', {
       headers: { Authorization: `Bearer ${leaderToken}` },

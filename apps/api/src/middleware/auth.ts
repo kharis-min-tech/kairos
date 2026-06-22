@@ -152,6 +152,25 @@ export function requireCapability(
   };
 }
 
+/**
+ * Wide-gate variant of requireCapability: passes if the caller holds ANY of
+ * the listed capabilities, ignoring scope. Used for aggregate read endpoints
+ * (e.g. attendance reports) where the URL doesn't name a specific entity and
+ * the service layer scopes the result set by what the caller's grants allow.
+ */
+export function requireAnyCapability(...caps: Capability[]) {
+  return async (c: Context, next: Next) => {
+    const auth = c.get('auth');
+    for (const cap of caps) {
+      if (authHasCapability(auth, cap)) {
+        await next();
+        return;
+      }
+    }
+    throw new UnauthorizedError('Insufficient permissions');
+  };
+}
+
 export function getAuth(c: Context): AuthContext {
   return c.get('auth');
 }

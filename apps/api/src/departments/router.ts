@@ -1,6 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
+
+const departmentScope = (c: import('hono').Context) => ({
+  kind: 'department' as const,
+  id: c.req.param('id')!,
+});
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -205,7 +210,7 @@ departmentsRouter.get('/:id/members', async (c) => {
 
 departmentsRouter.post(
   '/:id/members',
-  requireRole('admin', 'pastor', 'leader'),
+  requireCapability('department:write', departmentScope),
   zValidator('json', addDepartmentMemberSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -216,7 +221,7 @@ departmentsRouter.post(
 
 departmentsRouter.delete(
   '/:id/members/:memberId',
-  requireRole('admin', 'pastor', 'leader'),
+  requireCapability('department:write', departmentScope),
   async (c) => {
     const auth = getAuth(c);
     const result = await removeDepartmentMember(

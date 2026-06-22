@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireAnyCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -45,7 +45,7 @@ attendanceRouter.use('*', authMiddleware);
 
 attendanceRouter.get(
   '/reports/trends',
-  requireRole('admin', 'pastor', 'leader'),
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
   zValidator('query', trendsQuerySchema),
   async (c) => {
     const auth = getAuth(c);
@@ -56,7 +56,7 @@ attendanceRouter.get(
 
 attendanceRouter.get(
   '/reports/missing-members',
-  requireRole('admin', 'pastor', 'leader'),
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
   zValidator('query', missingMembersQuerySchema),
   async (c) => {
     const auth = getAuth(c);
@@ -67,7 +67,7 @@ attendanceRouter.get(
 
 attendanceRouter.post(
   '/reports/cohort-diff',
-  requireRole('admin', 'pastor', 'leader'),
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
   zValidator('json', cohortDiffSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -108,7 +108,7 @@ attendanceRouter.get(
 
 attendanceRouter.get(
   '/reports/by-branch',
-  requireRole('admin', 'pastor', 'leader'),
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
   zValidator('query', byBranchQuerySchema),
   async (c) => {
     const auth = getAuth(c);
