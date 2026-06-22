@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -56,14 +56,14 @@ membersRouter.get('/', zValidator('query', listMembersQuerySchema), async (c) =>
   return c.json(successResponse(result));
 });
 
-membersRouter.post('/', requireRole('admin', 'pastor'), zValidator('json', createMemberSchema), async (c) => {
+membersRouter.post('/', requireCapability('branch:write'), zValidator('json', createMemberSchema), async (c) => {
   const auth = getAuth(c);
   const input = c.req.valid('json');
   const result = await createMember(db, input, auth);
   return c.json(successResponse(result, 'Member created'), 201);
 });
 
-membersRouter.post('/import', requireRole('admin', 'pastor'), async (c) => {
+membersRouter.post('/import', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
   const body = await c.req.parseBody();
   const file = body['file'];
@@ -75,7 +75,7 @@ membersRouter.post('/import', requireRole('admin', 'pastor'), async (c) => {
   return c.json(successResponse(result, 'Import complete'), 201);
 });
 
-membersRouter.get('/export', requireRole('admin', 'pastor'), async (c) => {
+membersRouter.get('/export', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
   const csv = await exportMembersCsv(db, auth);
   return new Response(csv, {
@@ -123,12 +123,12 @@ membersRouter.patch('/:id/active-branch', async (c) => {
   return c.json(successResponse(result, 'Active branch updated'));
 });
 
-membersRouter.delete('/:id', requireRole('admin', 'pastor'), async (c) => {
+membersRouter.delete('/:id', requireCapability('branch:write'), async (c) => {
   const member = await deactivateMember(db, c.req.param('id')!, getAuth(c));
   return c.json(successResponse(member, 'Member deactivated'));
 });
 
-membersRouter.post('/:id/reactivate', requireRole('admin', 'pastor'), async (c) => {
+membersRouter.post('/:id/reactivate', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
   const member = await reactivateMember(db, c.req.param('id')!, auth);
   return c.json(successResponse(member, 'Member reactivated'));
@@ -143,7 +143,7 @@ membersRouter.get('/:id/stats', async (c) => {
 
 // ── Approval ───────────────────────────────────────────────
 
-membersRouter.post('/:id/approve', requireRole('admin', 'pastor'), zValidator('json', approveMemberSchema), async (c) => {
+membersRouter.post('/:id/approve', requireCapability('member:approve'), zValidator('json', approveMemberSchema), async (c) => {
   const auth = getAuth(c);
   const { approved } = c.req.valid('json');
   const member = await approveMember(db, c.req.param('id'), approved, auth);

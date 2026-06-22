@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -74,19 +74,19 @@ fellowshipsRouter.get('/:id', async (c) => {
   return c.json(successResponse(fellowship));
 });
 
-fellowshipsRouter.post('/', requireRole('admin', 'pastor'), zValidator('json', createFellowshipSchema), async (c) => {
+fellowshipsRouter.post('/', requireCapability('branch:write'), zValidator('json', createFellowshipSchema), async (c) => {
   const auth = getAuth(c);
   const fellowship = await createFellowship(db, auth, c.req.valid('json'));
   return c.json(successResponse(fellowship), 201);
 });
 
-fellowshipsRouter.patch('/:id', requireRole('admin', 'pastor'), zValidator('json', updateFellowshipSchema), async (c) => {
+fellowshipsRouter.patch('/:id', requireCapability('branch:write'), zValidator('json', updateFellowshipSchema), async (c) => {
   const auth = getAuth(c);
   const fellowship = await updateFellowship(db, auth, c.req.param('id')!, c.req.valid('json'));
   return c.json(successResponse(fellowship));
 });
 
-fellowshipsRouter.delete('/:id', requireRole('admin', 'pastor'), async (c) => {
+fellowshipsRouter.delete('/:id', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
   const fellowship = await deactivateFellowship(db, auth, c.req.param('id')!);
   return c.json(successResponse(fellowship, 'Fellowship deactivated'));

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -170,7 +170,7 @@ departmentsRouter.get('/:id', async (c) => {
 
 departmentsRouter.post(
   '/',
-  requireRole('admin', 'pastor'),
+  requireCapability('branch:write'),
   zValidator('json', createBranchDepartmentSchema),
   async (c) => {
     const auth = getAuth(c);
@@ -189,7 +189,7 @@ departmentsRouter.patch(
   },
 );
 
-departmentsRouter.delete('/:id', requireRole('admin', 'pastor'), async (c) => {
+departmentsRouter.delete('/:id', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
   const dept = await deactivateBranchDepartment(db, auth, c.req.param('id')!);
   return c.json(successResponse(dept, 'Department deactivated'));

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import {
@@ -113,7 +113,7 @@ newBelieversRouter.get('/enrollments/:id', async (c) => {
 
 newBelieversRouter.post(
   '/enrollments',
-  requireRole('admin', 'pastor'),
+  requireCapability('branch:write'),
   zValidator('json', createEnrollmentSchema),
   async (c) => {
     const auth = getAuth(c);
