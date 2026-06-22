@@ -1,5 +1,6 @@
 import { eq, and, or, ilike, sql, desc, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   formSubmissions,
   members,
@@ -158,9 +159,9 @@ async function getVisibleFormTypes(
   branchId: string,
 ): Promise<FormType[]> {
   if (auth.systemRole === 'admin') return ALL_FORM_TYPES;
-  // Pastor: only their own branch
-  if (auth.systemRole === 'pastor') {
-    return branchId === auth.branchId ? ALL_FORM_TYPES : [];
+  // RBAC Phase 4b: branch-tier admins (BSA/BDA) — only their own branch.
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) {
+    return ALL_FORM_TYPES;
   }
   // Anything else: must match caller's branch
   if (!auth.branchId || branchId !== auth.branchId) return [];
@@ -177,14 +178,14 @@ async function canSeeProspects(
   branchId: string,
 ): Promise<boolean> {
   if (auth.systemRole === 'admin') return true;
-  if (auth.systemRole === 'pastor') return branchId === auth.branchId;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) return true;
   if (!auth.branchId || branchId !== auth.branchId) return false;
   return isAdminDeptLeader(db, auth.memberId, branchId);
 }
 
 /** Resolve the branch admins/pastors may target via query, else the caller's own. */
 function resolveScopedBranchId(auth: AuthContext, branchId?: string): string {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     return branchId ?? auth.branchId;
   }
   enforceBranchScope(auth, branchId);
@@ -381,7 +382,7 @@ export async function submitForm(
 
   // Phase 3 — admin + pastor can capture for any branch via body.branchId;
   // everyone else is pinned to their own branch (body value is ignored).
-  const isCrossBranchCapable = auth.systemRole === 'admin' || auth.systemRole === 'pastor';
+  const isCrossBranchCapable = authHasCapability(auth, 'branch:read');
   const branchId =
     isCrossBranchCapable && body.branchId ? body.branchId : auth.branchId;
   enforceBranchScope(auth, branchId);

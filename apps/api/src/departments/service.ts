@@ -1,6 +1,7 @@
 import { eq, and, or, count, sql, exists, ne, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   departments,
   branchDepartments,
@@ -39,7 +40,7 @@ const OPEN_STATUSES = [
 // ── Helpers ────────────────────────────────────────────────
 
 function enforceBranchScope(auth: AuthContext, branchId?: string | null) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (branchId && branchId !== auth.branchId) {
     throw new ForbiddenError(
       'This department belongs to a different branch. You can only join departments in your own branch.',
@@ -69,7 +70,7 @@ function enforceLeaderOrAbove(
   auth: AuthContext,
   bd: { id: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (isLead(auth, bd)) {
     enforceScopeAllows(auth, 'department', bd.id);
     return;
@@ -150,7 +151,7 @@ export async function listBranchDepartments(
 ) {
   const conditions = [eq(branchDepartments.isActive, true)];
 
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     if (query.branchId) {
       conditions.push(eq(branchDepartments.branchId, query.branchId));
     }
@@ -486,7 +487,7 @@ export async function listDepartmentMembers(
   const bd = await getBranchDepartment(db, auth, branchDepartmentId);
 
   const isPrivileged =
-    auth.systemRole === 'admin' || auth.systemRole === 'pastor' || isLead(auth, bd);
+    authHasCapability(auth, 'branch:read') || isLead(auth, bd);
 
   if (!isPrivileged) {
     const [active] = await db

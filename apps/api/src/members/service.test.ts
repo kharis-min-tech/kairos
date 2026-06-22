@@ -420,7 +420,7 @@ describe('deactivateMember', () => {
 
   it('rejects non-admin', async () => {
     await expect(deactivateMember(mockDb, memberId, memberAuth))
-      .rejects.toThrow('Only admins and pastors can deactivate members');
+      .rejects.toThrow('Only branch-tier admins can deactivate members');
   });
 
   it('pastor can deactivate member in same branch', async () => {
@@ -541,7 +541,7 @@ describe('reactivateMember', () => {
 
   it('throws ForbiddenError for non-admin', async () => {
     await expect(reactivateMember(mockDb, memberId, memberAuth))
-      .rejects.toThrow('Only admins and pastors can reactivate members');
+      .rejects.toThrow('Only branch-tier admins can reactivate members');
   });
 
   it('pastor can reactivate member in same branch', async () => {

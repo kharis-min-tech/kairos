@@ -1,6 +1,7 @@
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   fellowshipFollowups,
   fellowshipMembers,
@@ -34,7 +35,7 @@ async function loadFellowship(db: Database, fellowshipId: string) {
 }
 
 function enforceBranchScope(auth: AuthContext, fellowship: { branchId: string }) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (fellowship.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access fellowships in your branch');
   }
@@ -44,7 +45,7 @@ function enforceLeaderOrAbove(
   auth: AuthContext,
   fellowship: { id: string; leaderId: string | null; coLeaderId: string | null },
 ) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   const isFellowshipLead =
     auth.systemRole === 'leader' &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId);

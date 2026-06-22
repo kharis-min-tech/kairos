@@ -153,6 +153,19 @@ export function requireCapability(
 }
 
 /**
+ * Service-level helper: returns true if the caller holds any of the supplied
+ * capabilities (any scope). Companion to authHasCapability for cases where a
+ * single check needs to cover "branch-tier OR fellowship-tier OR department-
+ * tier" leadership.
+ */
+export function authHasAnyCapability(auth: AuthContext, ...caps: Capability[]): boolean {
+  for (const cap of caps) {
+    if (authHasCapability(auth, cap)) return true;
+  }
+  return false;
+}
+
+/**
  * Wide-gate variant of requireCapability: passes if the caller holds ANY of
  * the listed capabilities, ignoring scope. Used for aggregate read endpoints
  * (e.g. attendance reports) where the URL doesn't name a specific entity and

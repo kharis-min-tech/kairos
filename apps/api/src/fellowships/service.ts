@@ -1,5 +1,6 @@
 import { eq, and, or, count, sql, exists, gte } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   fellowships,
   fellowshipMembers,
@@ -25,7 +26,7 @@ import { enforceScopeAllows } from '../lib/scope';
 import { syncFellowshipLeaderGrants } from '../lib/role-sync';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (branchId && branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access fellowships in your branch');
   }
@@ -43,7 +44,7 @@ function enforceLeaderOrAbove(
   auth: AuthContext,
   fellowship: { id: string; leaderId: string | null; coLeaderId: string | null },
 ) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (
     auth.systemRole === 'leader' &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId)
@@ -63,7 +64,7 @@ export async function listFellowships(
 ) {
   const conditions = [eq(fellowships.isActive, true)];
 
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     if (query.branchId) {
       conditions.push(eq(fellowships.branchId, query.branchId));
     }
@@ -315,12 +316,11 @@ export async function deactivateFellowship(db: Database, auth: AuthContext, id: 
 export async function listFellowshipMembers(db: Database, auth: AuthContext, fellowshipId: string) {
   const fellowship = await getFellowship(db, auth, fellowshipId);
 
-  // Non-admin/pastor/leader members can only see the roster if they are active members themselves
+  // Non-admin/pastor/leader members can only see the roster if they are active members themselves.
+  // RBAC Phase 4b: branch-tier admins or this fellowship's leader pass.
   const isPrivileged =
-    auth.systemRole === 'admin' ||
-    auth.systemRole === 'pastor' ||
-    (auth.systemRole === 'leader' &&
-      (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId));
+    authHasCapability(auth, 'branch:read') ||
+    authHasCapability(auth, 'fellowship:read', { kind: 'fellowship', id: fellowship.id });
 
   if (!isPrivileged) {
     const [activeMembership] = await db

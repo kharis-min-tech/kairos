@@ -1,5 +1,6 @@
 import { eq, and, or, asc, desc, lt, sql, count } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   newBelieverEnrollments,
   newBelieverSessions,
@@ -126,7 +127,7 @@ export async function getNewBelieverHats(
 }
 
 async function enforceTeacherOrAbove(db: Database, auth: AuthContext, branchId: string) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   const isTeacher = await isNewBelieverTeacher(db, auth.memberId, branchId);
   if (!isTeacher) {
     throw new ForbiddenError('Only New Believers Teachers, pastors, or admins can perform this action');
@@ -943,7 +944,7 @@ export async function getHealthSummary(
   query: { branchId?: string },
 ): Promise<HealthSummary> {
   const scopedBranchId =
-    auth.systemRole === 'admin' || auth.systemRole === 'pastor'
+    authHasCapability(auth, 'branch:read')
       ? query.branchId
       : auth.branchId;
 
@@ -1112,7 +1113,7 @@ async function enforceMentorFollowupWrite(
   enrollment: { id: string; branchId: string; mentorId: string | null },
 ) {
   enforceBranchScope(auth, enrollment.branchId);
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (enrollment.mentorId === auth.memberId) return;
   const [isNbLeader, hasTeacherRole] = await Promise.all([
     isNewBelieversDeptLeader(db, auth.memberId, enrollment.branchId),

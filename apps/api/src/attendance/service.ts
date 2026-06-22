@@ -1,5 +1,6 @@
 import { eq, ne, and, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   services,
   serviceAttendance,
@@ -20,7 +21,7 @@ import { createMemberShell } from '../lib/member-shell';
 // ── Local auth helpers (per-module, not imported — see CLAUDE.md) ──
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (branchId && branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access attendance in your branch');
   }
@@ -67,7 +68,7 @@ async function enforceServiceWriter(
   auth: AuthContext,
   branchId: string,
 ): Promise<void> {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (await isInAdminDepartment(db, auth.memberId, branchId)) return;
   throw new ForbiddenError(
     'Only admin-desk volunteers (Admin department), pastors, and admins can manage services',
@@ -76,7 +77,7 @@ async function enforceServiceWriter(
 
 /** Reports are admin|pastor|leader. */
 function enforceReportReader(auth: AuthContext) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor' || auth.systemRole === 'leader') return;
+  if (authHasCapability(auth, 'branch:read') || auth.systemRole === 'leader') return;
   throw new ForbiddenError('Only leaders, pastors, and admins can view attendance reports');
 }
 
@@ -135,7 +136,7 @@ async function resolveFilterMemberIds(
 
 /** Resolve which branch a write/report targets, enforcing scope for non-admin/pastor. */
 function resolveBranchId(auth: AuthContext, requested?: string): string {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     return requested ?? auth.branchId;
   }
   if (requested && requested !== auth.branchId) {
@@ -181,7 +182,7 @@ export async function canRecordAttendance(
   auth: AuthContext,
   branchId?: string,
 ): Promise<{ canRecord: boolean }> {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     return { canRecord: true };
   }
   if (!auth.branchId) return { canRecord: false };

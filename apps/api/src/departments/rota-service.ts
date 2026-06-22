@@ -1,5 +1,6 @@
 import { eq, and, gte, lte, asc, desc, inArray, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   branchDepartments,
   rotaTemplates,
@@ -46,7 +47,7 @@ function enforceLeaderOrAbove(
   auth: AuthContext,
   bd: { id: string; branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   const isLead =
     auth.systemRole === 'leader' &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
@@ -58,7 +59,7 @@ function enforceLeaderOrAbove(
 }
 
 function enforceBranchScope(auth: AuthContext, bd: { branchId: string }) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (bd.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access departments in your branch');
   }
@@ -855,13 +856,12 @@ export async function createSwapRequest(
     .where(eq(rotaAssignments.id, assignmentId));
   if (!assignment || assignment.instanceId !== instanceId) throw new NotFoundError('Assignment not found');
 
-  // Only the assigned member, leader+, can request a swap
+  // Only the assigned member, leader+, can request a swap.
+  // RBAC Phase 4b: leadership comes from grants.
   const isOwner = assignment.memberId === auth.memberId;
   const isLead =
-    auth.systemRole === 'admin' ||
-    auth.systemRole === 'pastor' ||
-    (auth.systemRole === 'leader' &&
-      (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId));
+    authHasCapability(auth, 'branch:write') ||
+    authHasCapability(auth, 'department:write', { kind: 'department', id: bd.id });
   if (!isOwner && !isLead) {
     throw new ForbiddenError('Only the assigned member or a department lead can request a swap');
   }

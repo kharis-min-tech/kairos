@@ -1,5 +1,6 @@
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
+import { authHasCapability } from '../lib/grants';
 import {
   branchDepartments,
   departmentMembers,
@@ -35,7 +36,7 @@ function enforceLeaderOrAbove(
   auth: AuthContext,
   bd: { id: string; branchId: string; leadMemberId: string | null; deputyMemberId: string | null },
 ) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   const isLead =
     auth.systemRole === 'leader' &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
@@ -47,7 +48,7 @@ function enforceLeaderOrAbove(
 }
 
 function enforceBranchScope(auth: AuthContext, bd: { branchId: string }) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
+  if (authHasCapability(auth, 'branch:read')) return;
   if (bd.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only access departments in your branch');
   }

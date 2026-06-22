@@ -9,6 +9,7 @@ import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/typ
 import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import { enforceScopeAllows } from '../lib/scope';
+import { authHasCapability } from '../lib/grants';
 import {
   NotFoundError,
   ForbiddenError,
@@ -20,7 +21,8 @@ import {
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
-  if (auth.systemRole === 'pastor') return;
+  // RBAC Phase 4b: branch-tier admins can read members in branches they admin.
+  if (authHasCapability(auth, 'branch:read')) return;
   if (auth.memberId === memberId) return;
   throw new ForbiddenError('You can only access your own profile');
 }
@@ -57,7 +59,7 @@ async function getViewerSafeguardingBranches(
   db: Database,
   auth: AuthContext,
 ): Promise<Set<string>> {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') {
+  if (authHasCapability(auth, 'branch:read')) {
     return new Set();
   }
   const rows = await db
@@ -85,7 +87,7 @@ function hasSafeguardingAccessWith(
   member: SafeguardingSubject,
   safeguardingBranches: Set<string>,
 ): boolean {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return true;
+  if (authHasCapability(auth, 'branch:read')) return true;
   if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
   return safeguardingBranches.has(member.homeBranchId);
 }
@@ -99,7 +101,7 @@ async function hasSafeguardingAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
 ): Promise<boolean> {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return true;
+  if (authHasCapability(auth, 'branch:read')) return true;
   if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
   const branches = await getViewerSafeguardingBranches(db, auth);
   return branches.has(member.homeBranchId);
@@ -298,7 +300,7 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const isPrivileged = auth.systemRole === 'admin' || auth.systemRole === 'pastor';
+  const isPrivileged = authHasCapability(auth, 'branch:read');
   const isSelf = auth.memberId === memberId;
 
   // Admin/pastor and the member themselves always get the full record.
@@ -536,12 +538,14 @@ export async function deactivateMember(
   memberId: string,
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can deactivate members');
+  if (!authHasCapability(auth, 'branch:write')) {
+    throw new ForbiddenError('Only branch-tier admins can deactivate members');
   }
 
   const conditions = [eq(members.id, memberId), eq(members.isActive, true)];
-  if (auth.systemRole === 'pastor') {
+  // RBAC Phase 4b: non-platform-admins are narrowed to members in their
+  // active branch.
+  if (auth.systemRole !== 'admin') {
     conditions.push(eq(members.homeBranchId, auth.branchId));
   }
 
@@ -659,15 +663,16 @@ export async function reactivateMember(
   memberId: string,
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
-    throw new ForbiddenError('Only admins and pastors can reactivate members');
+  if (!authHasCapability(auth, 'branch:write')) {
+    throw new ForbiddenError('Only branch-tier admins can reactivate members');
   }
 
   const query = db
     .select({ id: members.id, isActive: members.isActive })
     .from(members)
     .where(
-      auth.systemRole === 'pastor'
+      // RBAC Phase 4b: non-platform-admins are narrowed to members in their branch.
+      auth.systemRole !== 'admin'
         ? and(eq(members.id, memberId), eq(members.homeBranchId, auth.branchId))
         : eq(members.id, memberId),
     );

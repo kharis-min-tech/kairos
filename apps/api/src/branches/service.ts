@@ -11,6 +11,7 @@ import {
 import type { AuthContext, BranchRoleAssignment } from '@kairos/types';
 import { NotFoundError, ConflictError, ValidationError, ForbiddenError } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
+import { authHasCapability } from '../lib/grants';
 
 const BRANCH_SYSTEM_ADMIN_ROLE = 'Branch System Admin';
 
@@ -537,13 +538,9 @@ function enforceBranchAccess(auth: AuthContext, branchId: string) {
   enforceScopeAllows(auth, 'branch', branchId);
 
   if (auth.systemRole === 'admin') return;
-  if (auth.systemRole === 'pastor' && auth.branchId === branchId) return;
-  // Branch System / Data Admins also have access to the branches they admin,
-  // even if it differs from their current activeBranch.
-  if (
-    auth.branchSystemAdminBranchIds.includes(branchId) ||
-    auth.branchDataAdminBranchIds.includes(branchId)
-  ) {
+  // RBAC Phase 4b: pastor narrowed via capability check. BSA/BDA also pass
+  // because their grants include branch:read on this branch.
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) {
     return;
   }
   if (auth.branchId !== branchId) {
