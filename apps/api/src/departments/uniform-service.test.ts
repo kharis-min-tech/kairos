@@ -51,10 +51,10 @@ const branchDeptId = '440e8400-0000-0000-0000-000000000004';
 const outfitId = '770e8400-0000-0000-0000-000000000077';
 const assignmentId = '880e8400-0000-0000-0000-000000000088';
 
-const adminAuth = { memberId: '000-admin', email: 'a@x', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const memberAuth = { memberId: '000-member', email: 'm@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const otherBranchAuth = { memberId: '000-o', email: 'o@x', systemRole: 'leader' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const leaderAuth = { memberId: '000-leader', email: 'l@x', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const adminAuth = { memberId: '000-admin', email: 'a@x', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const memberAuth = { memberId: '000-member', email: 'm@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const otherBranchAuth = { memberId: '000-o', email: 'o@x', systemRole: 'leader' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const leaderAuth = { memberId: '000-leader', email: 'l@x', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
 const sampleBd = {
   id: branchDeptId,

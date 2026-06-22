@@ -319,6 +319,10 @@ async function issueAuthenticatedSession(
     ...(scope ? { scope } : {}),
     branchSystemAdminBranchIds,
     branchDataAdminBranchIds,
+    // RBAC Phase 1: grants are populated fresh on every request by
+    // authMiddleware → resolveGrants. We don't bake them into the JWT
+    // because role assignments can change without re-issuing tokens.
+    grants: [],
   };
 
   const accessToken = signAccessToken(authContext);
@@ -643,6 +647,8 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
     activeRole: member.systemRole as AuthContext['systemRole'],
     branchSystemAdminBranchIds,
     branchDataAdminBranchIds,
+    // RBAC Phase 1: grants live outside the JWT; populated per-request.
+    grants: [],
   };
 
   return {

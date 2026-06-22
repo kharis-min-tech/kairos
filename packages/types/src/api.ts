@@ -1,5 +1,6 @@
 // ── API request/response types ─────────────────────────────
 
+import type { Grant } from './rbac';
 import type {
   SystemRole,
   FormType,
@@ -174,6 +175,18 @@ export interface AuthContext {
    * are normalised to `[]` by the auth middleware.
    */
   branchDataAdminBranchIds: string[];
+  /**
+   * Functional role grants (Phase 1 of the RBAC rebuild). Each entry pairs a
+   * named role bundle (FellowshipLeader, BranchAdmin, ...) with the scoped
+   * entity it applies to. Computed at JWT-validation time by
+   * `authMiddleware` via `resolveGrants(db, memberId)`. Old tokens that
+   * predate this field are normalised to `[]` so consumers don't have to
+   * defend against `undefined`.
+   *
+   * Until Phase 2 swaps gates over, this field coexists with the legacy
+   * `systemRole` / `requireRole(...)` checks and changes no behavior.
+   */
+  grants: Grant[];
 }
 
 // ── Member Profile ─────────────────────────────────────────

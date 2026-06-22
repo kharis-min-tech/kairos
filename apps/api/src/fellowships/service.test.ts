@@ -60,9 +60,9 @@ const fellowshipId = '440e8400-0000-0000-0000-000000000004';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 const meetingId = '550e8400-0000-0000-0000-000000000005';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
 const sampleFellowship = {
   id: fellowshipId,
@@ -137,7 +137,7 @@ describe('listFellowships', () => {
   });
 
   it('scopes leaders to fellowships they lead or co-lead', async () => {
-    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
     const ledFellowship = { ...sampleFellowship, leaderId: 'leader-1' };
     setupSelectSequence([ledFellowship], [{ value: 1 }]);
     const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
@@ -145,7 +145,7 @@ describe('listFellowships', () => {
   });
 
   it('returns empty list for a leader who does not lead any fellowship (e.g. department-only leader)', async () => {
-    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
     setupSelectSequence([], [{ value: 0 }]);
     const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
     expect(result.data).toEqual([]);
@@ -473,7 +473,7 @@ const sampleJoinRequest = {
   updatedAt: new Date(),
 };
 
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
 describe('createJoinRequest', () => {
   it('creates a join request for a member', async () => {
@@ -613,7 +613,7 @@ describe('scope-aware leader writes', () => {
       systemRole: 'leader' as const,
       branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
       scope: { kind: 'fellowship' as const, id: fellowshipId },
     };
     // updateFellowship currently restricts to admin/pastor — so this case
@@ -637,7 +637,7 @@ describe('scope-aware leader writes', () => {
       systemRole: 'leader' as const,
       branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
       scope: { kind: 'fellowship' as const, id: fellowshipId },
     };
     const otherFellowship = { ...sampleFellowship, id: otherFellowshipId };
@@ -676,7 +676,7 @@ describe('getFellowshipStats', () => {
     systemRole: 'leader' as const,
     branchId,
     branchSystemAdminBranchIds: [],
-    branchDataAdminBranchIds: [],
+    branchDataAdminBranchIds: [], grants: [],
   };
 
   it('aggregates members / meetings / followups / joinRequests for the leader', async () => {

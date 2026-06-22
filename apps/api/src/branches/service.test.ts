@@ -66,9 +66,9 @@ const branchId = '220e8400-0000-0000-0000-000000000002';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 const leadershipId = '440e8400-0000-0000-0000-000000000004';
 
-const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const memberAuth = { memberId: '000-member', email: 'member@test.com', systemRole: 'member' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
-const otherBranchAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch-id', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [] };
+const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const memberAuth = { memberId: '000-member', email: 'member@test.com', systemRole: 'member' as const, branchId: branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const otherBranchAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch-id', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
 const sampleRegion = { id: regionId, regionName: 'North Region', country: 'Nigeria', createdAt: new Date(), updatedAt: new Date() };
 const sampleBranch = {
@@ -406,7 +406,7 @@ describe('scope=branch narrowing', () => {
       systemRole: 'leader' as const,
       branchId,
       branchSystemAdminBranchIds: [branchId, otherBranchId],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
       scope: { kind: 'branch' as const, id: branchId },
     };
     await expect(

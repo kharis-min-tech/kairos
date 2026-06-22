@@ -2,8 +2,21 @@ import { describe, it, expect, vi } from 'vitest';
 import type { Context } from 'hono';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '@kairos/utils';
-import { authMiddleware, requireBranchAdmin, requireBranchSystemAdmin, requireRole } from './auth';
 import type { AuthContext } from '@kairos/types';
+
+// Stub the db singleton — middleware/auth.ts imports it for resolveGrants,
+// and the real db.ts module throws at import-time when DATABASE_URL is unset.
+vi.mock('../db', () => ({ db: {} }));
+// Stub the grant resolver — middleware calls it on every request; tests
+// drive the middleware directly and don't need real grant data.
+vi.mock('../lib/grants', () => ({
+  resolveGrants: vi.fn(async () => []),
+  hasCapability: vi.fn(() => false),
+  authHasCapability: vi.fn(() => false),
+}));
+
+const { authMiddleware, requireBranchAdmin, requireBranchSystemAdmin, requireRole } =
+  await import('./auth');
 
 // ── Fixtures ────────────────────────────────────────────────
 
@@ -18,6 +31,7 @@ function makeAuth(over: Partial<AuthContext> = {}): AuthContext {
     branchId: branchA,
     branchSystemAdminBranchIds: [],
     branchDataAdminBranchIds: [],
+    grants: [],
     ...over,
   };
 }

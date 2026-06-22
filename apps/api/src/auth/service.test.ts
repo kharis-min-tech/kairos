@@ -889,7 +889,7 @@ describe('switchRole', () => {
     activeRole: 'member' as const,
     branchId: baseMember.homeBranchId,
     branchSystemAdminBranchIds: [],
-    branchDataAdminBranchIds: [],
+    branchDataAdminBranchIds: [], grants: [],
   };
 
   it('mints a fresh token pair with the new activeRole + scope', async () => {

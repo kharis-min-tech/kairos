@@ -2,6 +2,8 @@ import type { Context, Next } from 'hono';
 import jwt from 'jsonwebtoken';
 import type { AuthContext } from '@kairos/types';
 import { UnauthorizedError } from '@kairos/utils';
+import { db } from '../db';
+import { resolveGrants } from '../lib/grants';
 
 const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-me';
 
@@ -43,6 +45,14 @@ export async function authMiddleware(c: Context, next: Next) {
   const auth = payload as Partial<AuthContext> & AuthContext;
   auth.branchSystemAdminBranchIds = auth.branchSystemAdminBranchIds ?? [];
   auth.branchDataAdminBranchIds = auth.branchDataAdminBranchIds ?? [];
+
+  // RBAC Phase 1: resolve functional role grants from member_roles + leadership
+  // FKs on every request. JWT itself stays minimal — grants change without
+  // re-issuing tokens (e.g. an admin grants a role mid-session, the user sees
+  // it on next call). Older tokens with no grants field still work — we just
+  // populate it freshly.
+  auth.grants = await resolveGrants(db, auth.memberId);
+
   c.set('auth', auth);
 
   await next();

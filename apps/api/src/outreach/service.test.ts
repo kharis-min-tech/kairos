@@ -20,7 +20,7 @@ describe('Outreach Programs Service', () => {
       activeRole: 'admin',
       branchId: TEST_IDS.branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
     };
     adminActingAsMemberAuth = {
       memberId: TEST_IDS.adminId,
@@ -29,7 +29,7 @@ describe('Outreach Programs Service', () => {
       activeRole: 'member',
       branchId: TEST_IDS.branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
     };
     pastorAuth = {
       memberId: TEST_IDS.pastorId,
@@ -38,7 +38,7 @@ describe('Outreach Programs Service', () => {
       activeRole: 'pastor',
       branchId: TEST_IDS.branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
     };
   });
 

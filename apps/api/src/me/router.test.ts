@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signTestToken, TEST_IDS } from '../test-helpers';
 
+// RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
+// Router tests use partial-mock DBs, so we stub the resolver to return [].
+// Service-level capability behavior is covered by grants.test.ts.
+vi.mock('../lib/grants', () => ({
+  resolveGrants: vi.fn(async () => []),
+  hasCapability: vi.fn(() => false),
+  authHasCapability: vi.fn(() => false),
+}));
+
 // ── Mock db ────────────────────────────────────────────────
 const mockDb = {
   select: vi.fn(),
@@ -323,7 +332,7 @@ describe('GET /api/me/leadership', () => {
       branchId: branchA,
       // User holds BSA only on branchA — scope=branchB would yield nothing
       branchSystemAdminBranchIds: [branchA],
-      branchDataAdminBranchIds: [],
+      branchDataAdminBranchIds: [], grants: [],
       scope: { kind: 'branch', id: branchB },
     });
 

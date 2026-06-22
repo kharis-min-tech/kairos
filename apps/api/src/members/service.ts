@@ -1045,6 +1045,8 @@ export async function switchActiveBranch(
     activeRole: auth.activeRole,
     branchSystemAdminBranchIds: auth.branchSystemAdminBranchIds,
     branchDataAdminBranchIds: auth.branchDataAdminBranchIds,
+    // RBAC Phase 1: grants live outside the JWT; populated per-request.
+    grants: [],
   };
 
   const tokens = generateTokenPair(authContext);
