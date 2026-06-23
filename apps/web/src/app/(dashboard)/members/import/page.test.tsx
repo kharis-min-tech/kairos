@@ -40,20 +40,6 @@ describe('MembersImportPage — route guard', () => {
     expect(screen.getByRole('heading', { name: 'Import Members' })).toBeDefined();
     expect(replace).not.toHaveBeenCalled();
   });
-
-  it.skip('TODO Phase 5: pastor sees the page', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor' }, activeRole: 'pastor' };
-    render(<MembersImportPage />, { wrapper });
-    expect(screen.getByRole('heading', { name: 'Import Members' })).toBeDefined();
-    expect(replace).not.toHaveBeenCalled();
-  });
-
-  it.skip('TODO Phase 5: leader is redirected to /members', async () => {
-    authState = { user: { id: 'l-1', systemRole: 'member' }, activeRole: 'leader' };
-    render(<MembersImportPage />, { wrapper });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/members'));
-  });
-
   it('member is redirected to /members', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<MembersImportPage />, { wrapper });

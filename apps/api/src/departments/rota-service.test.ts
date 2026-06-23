@@ -113,10 +113,8 @@ beforeEach(() => {
 import {
   listTemplates,
   createTemplate,
-  updateTemplate,
   listSlots,
   createSlot,
-  updateSlot,
   listPool,
   addPoolMember,
   removePoolMember,
@@ -169,17 +167,6 @@ describe('listTemplates', () => {
 });
 
 describe('createTemplate', () => {
-  it.skip('TODO Phase 5: lets leadcreate a template', async () => {
-    setupSelectSequence([sampleBd]);
-    setupInsertSequence([sampleTemplate]);
-    const result = await createTemplate(mockDb, leaderAuth, branchDeptId, {
-      name: 'Sunday Choir',
-      weekday: 0,
-      defaultStartTime: '10:00',
-    });
-    expect(result.id).toBe(templateId);
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
@@ -188,60 +175,14 @@ describe('createTemplate', () => {
   });
 });
 
-describe('updateTemplate', () => {
-  it.skip('TODO Phase 5: updates a template owned by the dep — needs grant-based mock', async () => {
-    setupSelectSequence([sampleBd], [sampleTemplate]);
-    setupUpdateSequence([{ ...sampleTemplate, name: 'New Name' }]);
-    const result = await updateTemplate(mockDb, leaderAuth, branchDeptId, templateId, {
-      name: 'New Name',
-    });
-    expect(result.name).toBe('New Name');
-  });
-
-  it.skip('TODO Phase 5: throws NotFoundError when template belongs to a different dep — needs grant-based mock', async () => {
-    setupSelectSequence([sampleBd], [{ ...sampleTemplate, branchDepartmentId: 'other-bd' }]);
-    await expect(
-      updateTemplate(mockDb, leaderAuth, branchDeptId, templateId, { name: 'Y' }),
-    ).rejects.toThrow('Rota template not found');
-  });
-});
-
 // ── Slots ─────────────────────────────────────────────────
 
 describe('createSlot', () => {
-  it.skip('TODO Phase 5: lets leadcreate a slot', async () => {
-    setupSelectSequence([sampleBd], [sampleTemplate]);
-    setupInsertSequence([{ id: slotId, templateId, roleName: 'Soprano', positionsRequired: 2 }]);
-    const result = await createSlot(mockDb, leaderAuth, branchDeptId, templateId, {
-      roleName: 'Soprano',
-      positionsRequired: 2,
-    });
-    expect(result.id).toBe(slotId);
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
       createSlot(mockDb, memberAuth, branchDeptId, templateId, { roleName: 'X' }),
     ).rejects.toThrow('Only department leads or above');
-  });
-});
-
-describe('updateSlot', () => {
-  it.skip('TODO Phase 5: updates an existing slo — needs grant-based mock', async () => {
-    setupSelectSequence([sampleBd], [sampleTemplate], [{ id: slotId, templateId }]);
-    setupUpdateSequence([{ id: slotId, roleName: 'Alto', positionsRequired: 1 }]);
-    const result = await updateSlot(mockDb, leaderAuth, branchDeptId, templateId, slotId, {
-      roleName: 'Alto',
-    });
-    expect(result.roleName).toBe('Alto');
-  });
-
-  it.skip('TODO Phase 5: throws NotFoundError when slot belongs to a different templat — needs grant-based mock', async () => {
-    setupSelectSequence([sampleBd], [sampleTemplate], [{ id: slotId, templateId: 'other-tpl' }]);
-    await expect(
-      updateSlot(mockDb, leaderAuth, branchDeptId, templateId, slotId, { roleName: 'Y' }),
-    ).rejects.toThrow('Slot not found');
   });
 });
 
@@ -257,15 +198,6 @@ describe('listSlots', () => {
 // ── Pool ──────────────────────────────────────────────────
 
 describe('addPoolMember', () => {
-  it.skip('TODO Phase 5: adds a new pool membe — needs grant-based mock', async () => {
-    setupSelectSequence([sampleBd], [sampleTemplate], []);
-    setupInsertSequence([{ id: poolMemberId, memberId: memberId1 }]);
-    const result = await addPoolMember(mockDb, leaderAuth, branchDeptId, templateId, {
-      memberId: memberId1,
-    });
-    expect(result.id).toBe(poolMemberId);
-  });
-
   it('rejects when member is already in pool', async () => {
     setupSelectSequence([sampleBd], [sampleTemplate], [{ id: poolMemberId, isActive: true }]);
     await expect(
@@ -446,23 +378,6 @@ describe('updateInstanceStatus', () => {
 });
 
 describe('updateAssignment (manual override)', () => {
-  it.skip('TODO Phase 5: lets leadreassign a slot to another member', async () => {
-    setupSelectSequence(
-      [sampleBd],
-      [{ id: assignmentId, instanceId }],
-    );
-    setupUpdateSequence([{ id: assignmentId, memberId: memberId2, status: 'Assigned' }]);
-    const result = await updateAssignment(
-      mockDb,
-      leaderAuth,
-      branchDeptId,
-      instanceId,
-      assignmentId,
-      { memberId: memberId2 },
-    );
-    expect(result.memberId).toBe(memberId2);
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(

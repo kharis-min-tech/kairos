@@ -73,14 +73,6 @@ describe('NewBelieversPage — persona surface', () => {
     expect(screen.getByText(/Enrol Member/i)).toBeDefined();
     expect(screen.getByText(/Journey tracking from enrolment/i)).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: pastor sees the Enrol Member CTA', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    mockHats = { isNbLeader: false, hasTeacherRole: false, taughtEnrollmentIds: [], mentoredEnrollmentIds: [], ownEnrollmentIds: [] };
-    render(<NewBelieversPage />, { wrapper });
-    expect(screen.getByText(/Enrol Member/i)).toBeDefined();
-  });
-
   it('NB-dept leader (a non-admin/pastor) sees the Kanban (operator mode), NOT the Enrol CTA', () => {
     authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
     mockHats = { isNbLeader: true, hasTeacherRole: false, taughtEnrollmentIds: [], mentoredEnrollmentIds: [], ownEnrollmentIds: [] };

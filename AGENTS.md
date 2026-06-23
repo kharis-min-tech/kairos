@@ -26,12 +26,13 @@ If these conflict with running code, inspect the implementation and update the d
 
 The original rebuild MVP focused on Auth, Branches, Members, and Fellowships. The current codebase also includes Departments, Reports/Analytics, Outreach Programs, Souls Pipeline, New Believers, rota, and uniform workflows. Do not assume a four-module-only app when planning navigation, permissions, or shared types.
 
-Core roles:
+Authorization model (RBAC rebuild, 2026-06):
 
-- `admin`: global access.
-- `pastor`: branch management access.
-- `leader`: fellowship/department leadership access where explicitly allowed.
-- `member`: self-service and public/branch-visible data.
+- `systemRole` collapsed to two values: `admin` (global) and `member` (everyone else).
+- Real authority comes from **functional grants** in `member_roles`: `BranchAdmin`, `BranchDataAdmin`, `FellowshipLeader`, `DepartmentLeader`, `DepartmentDeputy`, `SafeguardingLead`, `NewBelieversMentor`, `NewBelieversTeacher`. Each grant pairs a role bundle with a `scope_kind` + `scope_id` (branch / fellowship / department).
+- Capabilities (`branch:write`, `fellowship:write`, `safeguarding:read`, …) are computed from grants at request time. Gate code with `requireCapability(cap, scopeFn?)` on the API and `useCapabilities().has(cap, scope?)` in the web app.
+- `pastor` is now a display-only honorific (`members.honorific`) — not a permission carrier. A "Pastor" who only leads a fellowship sees only fellowship-leader things.
+- There is no in-app role switcher and no login-then-select-role step; login mints one token whose `grants[]` claim drives all UI affordances.
 
 ## Workspace Map
 
@@ -64,7 +65,7 @@ Current API routes are mounted under `/api/*` in `apps/api/src/app.ts`, not `/v1
 
 - Module folders usually contain `schemas.ts`, `service.ts`, `router.ts`, and focused tests.
 - Use `zValidator` or Zod schemas at route boundaries.
-- Use `authMiddleware`, `requireRole`, and `getAuth` from `apps/api/src/middleware/auth.ts`.
+- Use `authMiddleware`, `requireCapability`, `requireAnyCapability`, and `getAuth` from `apps/api/src/middleware/auth.ts`. Service files use the inline helpers `enforceBranchScope(auth, branchId?)` and `enforceLeaderOrAbove(auth, entity)`. The legacy `requireRole(...)` is gone — gate on capabilities, not role names.
 - Use shared errors from `@kairos/utils` and return via `successResponse`.
 - Keep business rules in services; keep routers thin.
 - Register static routes like `/import`, `/export`, `/roles`, and `/me` before `/:id` routes.

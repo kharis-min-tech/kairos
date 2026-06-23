@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AuthTokens, Member, RoleOption, RoleScope } from '@kairos/types';
+import type { AuthTokens, Member, RoleScope } from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
 
 interface BranchAdminAuthority {
@@ -15,17 +15,9 @@ interface AuthState {
   activeRole: SystemRole | null;
   /**
    * Optional scope tying the activeRole to a specific entity. Mirrored from
-   * the access-token JWT payload at every persist (login / finalize-role /
-   * switch-role). Phase 4 will use this to narrow page-level filters.
+   * the access-token JWT payload at login. Used to narrow page-level filters.
    */
   scope: RoleScope | null;
-  /**
-   * The caller's full set of role options (computed server-side from their
-   * leadership footprint). Drives the header role switcher. Persisted so a
-   * page reload doesn't blank the dropdown — the list is bounded by the
-   * user's authority so the payload stays small.
-   */
-  availableRoles: RoleOption[];
   mustChangePassword: boolean;
   /**
    * Branch IDs where the caller holds the Branch System Admin role. Populated
@@ -44,7 +36,6 @@ interface AuthState {
   setUser: (user: Member | null) => void;
   setActiveRole: (role: SystemRole) => void;
   setScope: (scope: RoleScope | null) => void;
-  setAvailableRoles: (roles: RoleOption[]) => void;
   setMustChangePassword: (val: boolean) => void;
   setBranchAdminAuthority: (authority: BranchAdminAuthority) => void;
   logout: () => void;
@@ -58,7 +49,6 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       activeRole: null,
       scope: null,
-      availableRoles: [],
       mustChangePassword: false,
       branchSystemAdminBranchIds: [],
       branchDataAdminBranchIds: [],
@@ -67,7 +57,6 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       setActiveRole: (role) => set({ activeRole: role }),
       setScope: (scope) => set({ scope }),
-      setAvailableRoles: (roles) => set({ availableRoles: roles }),
       setMustChangePassword: (val) => set({ mustChangePassword: val }),
       setBranchAdminAuthority: ({ branchSystemAdminBranchIds, branchDataAdminBranchIds }) =>
         set({ branchSystemAdminBranchIds, branchDataAdminBranchIds }),
@@ -78,7 +67,6 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           activeRole: null,
           scope: null,
-          availableRoles: [],
           mustChangePassword: false,
           branchSystemAdminBranchIds: [],
           branchDataAdminBranchIds: [],
@@ -91,7 +79,6 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         activeRole: state.activeRole,
         scope: state.scope,
-        availableRoles: state.availableRoles,
         branchSystemAdminBranchIds: state.branchSystemAdminBranchIds,
         branchDataAdminBranchIds: state.branchDataAdminBranchIds,
       }),

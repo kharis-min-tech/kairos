@@ -65,10 +65,8 @@ const teacherId = '550e8400-0000-0000-0000-000000000005';
 const enrollmentId = '660e8400-0000-0000-0000-000000000006';
 const enrollment2Id = '660e8400-0000-0000-0000-000000000007';
 const enrollment3Id = '660e8400-0000-0000-0000-000000000008';
-const sessionId = '770e8400-0000-0000-0000-000000000009';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const leaderOtherBranch = { memberId: '000-leader-b', email: 'leader-b@test.com', systemRole: 'member' as const, branchId: otherBranchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
@@ -349,14 +347,14 @@ describe('deleteMentorFollowup', () => {
     );
   });
 
-  it('pastor can delete any follow-up in their branch', async () => {
+  it('admin can delete any follow-up', async () => {
     setupSelectSequence(
       [{ id: 'fu-1', enrollmentId, createdBy: 'someone-else' }],
       [{ id: enrollmentId, branchId, mentorId: 'someone-else' }],
     );
     setupUpdate();
     const { deleteMentorFollowup } = await import('./service');
-    const result = await deleteMentorFollowup(mockDb, pastorAuth, 'fu-1');
+    const result = await deleteMentorFollowup(mockDb, adminAuth, 'fu-1');
     expect(result?.id).toBe('fu-1');
   });
 });
@@ -533,59 +531,6 @@ describe('bulkAdvance', () => {
   });
 });
 
-// ── recordSessionAttendance ───────────────────────────────
-
-describe('recordSessionAttendance', () => {
-  it.skip('TODO Phase 5: rewrite for new grant-based access — records attendance for active enrollments in the session stage', async () => {
-    setupSelectSequence(
-      [{ branchId, sessionStage: 'session-1' }],
-      [{ branchId, stage: 'session-1', isActive: true }],
-      [],
-    );
-    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain());
-
-    const { recordSessionAttendance } = await import('./service');
-    const result = await recordSessionAttendance(mockDb, pastorAuth, sessionId, [
-      { enrollmentId, attended: true },
-    ]);
-
-    expect(result).toEqual({ recorded: 1 });
-    expect(mockDb.insert).toHaveBeenCalledTimes(1);
-  });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — rejects attendance records for enrollments in a different current stage', async () => {
-    setupSelectSequence(
-      [{ branchId, sessionStage: 'session-1' }],
-      [{ branchId, stage: 'session-2', isActive: true }],
-      [],
-    );
-
-    const { recordSessionAttendance } = await import('./service');
-    await expect(
-      recordSessionAttendance(mockDb, pastorAuth, sessionId, [
-        { enrollmentId, attended: true },
-      ]),
-    ).rejects.toThrow(/only be recorded for active session-1 enrollments/);
-  });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — allows correcting existing attendance after the enrollment has advanced', async () => {
-    setupSelectSequence(
-      [{ branchId, sessionStage: 'session-1' }],
-      [{ branchId, stage: 'session-2', isActive: true }],
-      [{ enrollmentId }],
-    );
-    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain());
-
-    const { recordSessionAttendance } = await import('./service');
-    const result = await recordSessionAttendance(mockDb, pastorAuth, sessionId, [
-      { enrollmentId, attended: false },
-    ]);
-
-    expect(result).toEqual({ recorded: 1 });
-    expect(mockDb.insert).toHaveBeenCalledTimes(1);
-  });
-});
-
 // ── createEnrollment branch scope ─────────────────────────
 
 describe('createEnrollment', () => {
@@ -595,14 +540,6 @@ describe('createEnrollment', () => {
       createEnrollment(mockDb, leaderAuth, { memberId, branchId }),
     ).rejects.toThrow('Only admins or pastors');
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — refuses a pastor creating an enrollment in another branch', async () => {
-    const { createEnrollment } = await import('./service');
-    await expect(
-      createEnrollment(mockDb, pastorAuth, { memberId, branchId: otherBranchId }),
-    ).rejects.toThrow('only access new believers data');
-  });
-
   it('admin can create an enrollment in any branch', async () => {
     // isNewBelieverTeacher → []; activeTeaching → []; activeMentoring → []; duplicate-check → []
     setupSelectSequence([], [], [], []);
@@ -732,7 +669,7 @@ describe('getHealthSummary', () => {
     expect(result.summary.activeEnrollments).toBe(0);
   });
 
-  it('allows a pastor to query any branch', async () => {
+  it('allows an admin to query any branch', async () => {
     setupSelectSequence(
       [],
       [{ stage: 'session-1', count: 4 }],
@@ -740,7 +677,7 @@ describe('getHealthSummary', () => {
     );
 
     const { getHealthSummary } = await import('./service');
-    const result = await getHealthSummary(mockDb, pastorAuth, { branchId: otherBranchId });
+    const result = await getHealthSummary(mockDb, adminAuth, { branchId: otherBranchId });
     expect(result.summary.activeEnrollments).toBe(4);
     expect(result.stageFunnel['session-1']).toBe(4);
   });

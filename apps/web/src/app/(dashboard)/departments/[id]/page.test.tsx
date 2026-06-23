@@ -85,13 +85,6 @@ describe('DepartmentDetailPage — persona CTAs', () => {
     expect(screen.getByRole('tab', { name: /Members/i })).toBeDefined();
     expect(screen.queryByRole('button', { name: /Request to Join/i })).toBeNull();
   });
-
-  it.skip('TODO Phase 5: pastor sees the Members tab', () => {
-    auth = { user: { id: 'p-1', systemRole: 'member' }, activeRole: 'pastor' };
-    render(<DepartmentDetailPage />, { wrapper });
-    expect(screen.getByRole('tab', { name: /Members/i })).toBeDefined();
-  });
-
   it('non-member sees Request to Join + no privileged tabs', () => {
     auth = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<DepartmentDetailPage />, { wrapper });

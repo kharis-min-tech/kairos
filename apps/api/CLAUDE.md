@@ -8,7 +8,7 @@ Three files per module, always: `router.ts`, `service.ts`, `schemas.ts`. Tests s
 
 **`service.ts`** — Business logic, Drizzle queries, authorization helpers, side effects (email, etc.). Functions accept `(db, auth, ...args)` so they're trivially unit-testable. Throw typed errors from `@kairos/utils`; never return `{error, data}` tuples.
 
-**`router.ts`** — Hono router. Mounts middleware (`authMiddleware`, `requireRole`), validates with `zValidator`, calls a service function, wraps the result in `successResponse(...)`. Routers must stay thin — no business logic.
+**`router.ts`** — Hono router. Mounts middleware (`authMiddleware`, `requireCapability`/`requireAnyCapability`), validates with `zValidator`, calls a service function, wraps the result in `successResponse(...)`. Routers must stay thin — no business logic.
 
 ## Patterns to copy
 
@@ -17,7 +17,7 @@ Three files per module, always: `router.ts`, `service.ts`, `schemas.ts`. Tests s
 ```ts
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, getAuth } from '../middleware/auth';
+import { authMiddleware, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import { createXSchema, /* ... */ } from './schemas';
@@ -32,11 +32,19 @@ xRouter.get('/', zValidator('query', listXQuerySchema), async (c) => {
   return c.json(successResponse(result));
 });
 
-xRouter.post('/', requireRole('admin', 'pastor'), zValidator('json', createXSchema), async (c) => {
-  const auth = getAuth(c);
-  const created = await createX(db, auth, c.req.valid('json'));
-  return c.json(successResponse(created), 201);
-});
+// Scope-bound gate: closure reads the body and tells requireCapability
+// which branch the write targets, so a BranchAdmin grant for branch A
+// can't be used to write to branch B.
+xRouter.post(
+  '/',
+  zValidator('json', createXSchema),
+  requireCapability('branch:write', (c) => ({ kind: 'branch', id: c.req.valid('json').branchId })),
+  async (c) => {
+    const auth = getAuth(c);
+    const created = await createX(db, auth, c.req.valid('json'));
+    return c.json(successResponse(created), 201);
+  },
+);
 ```
 
 ### Service shape
@@ -49,15 +57,20 @@ import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
-  if (auth.systemRole === 'admin' || auth.systemRole === 'pastor') return;
-  if (branchId && branchId !== auth.branchId) {
-    throw new ForbiddenError('You can only access X in your branch');
+  // System admin bypasses scope checks. Everyone else needs an explicit grant
+  // for the target branch.
+  if (auth.systemRole === 'admin') return;
+  if (branchId && !authHasCapability(auth, 'branch:write', { kind: 'branch', id: branchId })) {
+    throw new ForbiddenError('You cannot access X in this branch');
   }
 }
 
 export async function listX(db: Database, auth: AuthContext, query: ListXQuery) {
   const conditions = [eq(xs.isActive, true)];
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  // Non-admins see only the branches their grants cover. Use the
+  // capability check rather than systemRole — `authHasCapability` walks
+  // the grants and returns true for any branch the caller can read.
+  if (auth.systemRole !== 'admin') {
     conditions.push(eq(xs.branchId, auth.branchId));
   } else if (query.branchId) {
     conditions.push(eq(xs.branchId, query.branchId));
@@ -72,19 +85,19 @@ export async function listX(db: Database, auth: AuthContext, query: ListXQuery) 
 - **Wire the route in `app.ts`** the moment the router exists. The triplet (`router → api-client → hook`) is not complete until the router is mounted.
 - **Public routes** live in `app.ts` directly (e.g. `/api/public/branches`). Anything under a `xxxRouter.use('*', authMiddleware)` is authenticated.
 - **Order static paths before `/:id`** in the router, otherwise `/import`, `/export`, `/me` get caught by the param.
-- **Branch-scoped reads** filter by `auth.branchId` for non-admin/non-pastor. Define `enforceBranchScope` locally in the service file (not imported) — it varies enough per module that DRY here hurts.
+- **Branch-scoped reads** filter by `auth.branchId` for non-admins. Define `enforceBranchScope` locally in the service file (not imported) — it varies enough per module that DRY here hurts. Cross-branch reach comes from grants, checked via `authHasCapability(auth, cap, scope)`.
 - **Leader writes** in fellowships/departments use a local `enforceLeaderOrAbove(auth, entity)` helper. Look at `fellowships/service.ts` for the pattern.
 - **Pagination contract**: `page` (1-indexed), `limit`, `search`, `sortBy`, `sortOrder`. Return `{ items, total, page, limit }` shaped via `paginatedResponse`. Keep parameter names consistent across modules.
 - **Email side effects** go through `@kairos/utils` mailer functions. The local mailer logs the Ethereal preview URL — don't roll your own SMTP.
 - **`getDb()` doesn't exist here** — the singleton is `db` from `apps/api/src/db.ts`. Import that.
 - **Listing endpoints** that join across tables: use Drizzle `leftJoin` and select specific columns. Don't `SELECT *` and reshape in JS.
 - **Mutations always return the affected entity** (or list for batch ops), shaped consistently with the list endpoint.
-- **`requireRole(...)`** takes `'admin' | 'pastor' | 'leader' | 'member'` strings. Any new role must also be added to `@kairos/types` `SystemRole` enum first.
+- **Gate on capabilities, not role names.** `requireCapability('cap', scopeFn?)` and `requireAnyCapability(...caps)` are the only standard gates — `requireRole(...)` is gone. Adding a new capability means extending the `Capability` union and `RoleCapabilities` map in `@kairos/types/rbac`.
 
 ## Tests
 
 - `service.test.ts` mocks the Drizzle `db` object. Test happy path + each error path (NotFound, Forbidden, Conflict, Validation) + branch isolation for each non-admin role + soft-delete behavior.
-- `router.test.ts` tests via a mocked service. Asserts on status codes, response shape, and that the right middleware combination ran (`requireRole` rejections produce 401/403).
+- `router.test.ts` tests via a mocked service. Asserts on status codes, response shape, and that the right middleware combination ran (`requireCapability` rejections produce 403; missing auth produces 401).
 - Write the failing test first. Then the service. Then wire the router. Don't reverse this order.
 
 ## Things commonly gotten wrong

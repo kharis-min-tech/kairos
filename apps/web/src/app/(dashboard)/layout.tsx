@@ -160,8 +160,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     mustChangePassword,
     setUser,
     accessToken,
-    availableRoles,
-    setAvailableRoles,
   } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -178,22 +176,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (profileData) setUser(profileData);
   }, [profileData, setUser]);
-
-  // Phase 3: if the caller upgraded from a pre-Phase-3 session (persisted
-  // token, no availableRoles), back-fill the role list so the header
-  // switcher can render without forcing a re-login. Doesn't block render.
-  const { data: rolesData } = useQuery({
-    queryKey: ['auth', 'available-roles'],
-    queryFn: async () => {
-      const res = await api.auth.availableRoles();
-      return res.data!;
-    },
-    enabled: !!accessToken && availableRoles.length === 0,
-  });
-
-  useEffect(() => {
-    if (rolesData) setAvailableRoles(rolesData);
-  }, [rolesData, setAvailableRoles]);
 
   useEffect(() => {
     if (mustChangePassword) {

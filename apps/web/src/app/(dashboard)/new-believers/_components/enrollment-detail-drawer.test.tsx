@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -185,111 +184,6 @@ describe('EnrollmentDetailDrawer', () => {
     // Two "Not assigned" spots — one for teacher, one for mentor
     expect(screen.getAllByText('Not assigned')).toHaveLength(2);
   });
-
-  it.skip('TODO Phase 5: renders the CustomSelect pickers in edit mode for a leader', () => {
-    render(
-      <EnrollmentDetailDrawer
-        enrollmentId="enr-1"
-        onClose={() => {}}
-        branchMembers={branchMembers}
-      />,
-      { wrapper },
-    );
-    expect(screen.getByText(/Assign teacher/i)).toBeInTheDocument();
-    expect(screen.getByText(/Assign mentor/i)).toBeInTheDocument();
-  });
-
-  it.skip('TODO Phase 5: fires the reassign mutation when the teacher CustomSelect changes (edit mode)', async () => {
-    const user = userEvent.setup();
-    render(
-      <EnrollmentDetailDrawer
-        enrollmentId="enr-1"
-        onClose={() => {}}
-        branchMembers={branchMembers}
-      />,
-      { wrapper },
-    );
-
-    // Open the teacher select and click Grace
-    await user.click(screen.getByText(/Assign teacher/i));
-    await user.click(screen.getByRole('button', { name: 'Grace Hopper' }));
-
-    await waitFor(() => {
-      expect(updateMutateAsync).toHaveBeenCalledTimes(1);
-    });
-    expect(updateMutateAsync).toHaveBeenCalledWith({
-      id: 'enr-1',
-      data: { teacherId: 'm-2' },
-    });
-  });
-
-  it.skip('TODO Phase 5: asks for session feedback before advancing an incomplete session', async () => {
-    const user = userEvent.setup();
-    render(
-      <EnrollmentDetailDrawer
-        enrollmentId="enr-1"
-        onClose={() => {}}
-        branchMembers={branchMembers}
-      />,
-      { wrapper },
-    );
-
-    // Current stage is session-1 → next is session-2
-    const advanceBtn = screen.getByRole('button', { name: /Advance to Session 2/i });
-    expect(advanceBtn).toBeInTheDocument();
-
-    await user.click(advanceBtn);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Session Feedback Required/i })).toBeInTheDocument();
-    });
-    expect(updateMutateAsync).not.toHaveBeenCalled();
-
-    await user.type(
-      screen.getByPlaceholderText(/How did the session go/i),
-      'Ada understands the session and is ready to continue.',
-    );
-    await user.click(screen.getByRole('button', { name: /Confirm & Advance/i }));
-
-    await waitFor(() => {
-      expect(updateMutateAsync).toHaveBeenCalledWith({
-        id: 'enr-1',
-        data: {
-          stage: 'session-2',
-          sessionCompletedAt: { 'session-1': expect.any(String) },
-          sessionFeedback: {
-            'session-1': 'Ada understands the session and is ready to continue.',
-          },
-        },
-      });
-    });
-  });
-
-  it.skip('TODO Phase 5: advances directly when session completion feedback already exists', async () => {
-    const user = userEvent.setup();
-    enrollmentData = makeEnrollment({
-      sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
-      sessionFeedback: { 'session-1': 'Completed well.' },
-    });
-
-    render(
-      <EnrollmentDetailDrawer
-        enrollmentId="enr-1"
-        onClose={() => {}}
-        branchMembers={branchMembers}
-      />,
-      { wrapper },
-    );
-
-    await user.click(screen.getByRole('button', { name: /Advance to Session 2/i }));
-
-    await waitFor(() => {
-      expect(updateMutateAsync).toHaveBeenCalledWith({
-        id: 'enr-1',
-        data: { stage: 'session-2' },
-      });
-    });
-  });
-
   it('hides the "Advance" button for non-leader roles', () => {
     useAuthStore.setState({ activeRole: 'member' });
     render(
@@ -318,19 +212,5 @@ describe('EnrollmentDetailDrawer', () => {
     expect(
       screen.queryByRole('button', { name: /Advance to/i }),
     ).not.toBeInTheDocument();
-  });
-
-  it.skip('TODO Phase 5: disables the "Advance" button while a mutation is pending', () => {
-    updateIsPending = true;
-    render(
-      <EnrollmentDetailDrawer
-        enrollmentId="enr-1"
-        onClose={() => {}}
-        branchMembers={branchMembers}
-      />,
-      { wrapper },
-    );
-    const btn = screen.getByRole('button', { name: /Advance to Session 2/i });
-    expect(btn).toBeDisabled();
   });
 });

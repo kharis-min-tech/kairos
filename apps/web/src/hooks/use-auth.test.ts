@@ -21,8 +21,6 @@ vi.mock('@/lib/api', () => ({
       verifyEmail: vi.fn(),
       forgotPassword: vi.fn(),
       resetPassword: vi.fn(),
-      finalizeRole: vi.fn(),
-      switchRole: vi.fn(),
     },
   },
 }));
@@ -85,7 +83,6 @@ beforeEach(() => {
     user: null,
     activeRole: null,
     scope: null,
-    availableRoles: [],
     mustChangePassword: false,
   });
 });
@@ -129,31 +126,6 @@ describe('useLogin', () => {
     // Page-side persist is now responsible; hook stays a thin wrapper.
     expect(useAuthStore.getState().accessToken).toBeNull();
     expect(result.current.data?.tokens?.accessToken).toBe('at');
-  });
-
-  it('returns the role-selection envelope when roleSelectionRequired is true', async () => {
-    vi.mocked(api.auth.login).mockResolvedValue({
-      data: {
-        roleSelectionRequired: true,
-        sessionToken: 'sess-token-xyz',
-        availableRoles: [
-          { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
-          { activeRole: 'leader' as any, scope: { kind: 'fellowship', id: 'f1' }, displayLabel: 'Fellowship Lead', key: 'k-lead' },
-        ],
-      },
-    } as never);
-
-    const { result } = renderHook(() => useLogin(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({ email: 'multi@example.com', password: 'pass123' });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.roleSelectionRequired).toBe(true);
-    expect(result.current.data?.sessionToken).toBe('sess-token-xyz');
-    expect(result.current.data?.availableRoles).toHaveLength(2);
-    expect(useAuthStore.getState().accessToken).toBeNull();
   });
 
   it('surfaces error when api.auth.login rejects', async () => {

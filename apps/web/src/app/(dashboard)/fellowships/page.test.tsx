@@ -58,33 +58,11 @@ describe('FellowshipsPage — persona CTAs', () => {
     expect(screen.getByText(/\+ New Fellowship/i)).toBeDefined();
     expect(screen.getByText(/All Branches/i)).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: pastor sees + New Fellowship but no branch filter', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<FellowshipsPage />, { wrapper });
-    expect(screen.getByText(/\+ New Fellowship/i)).toBeDefined();
-    expect(screen.queryByText(/All Branches/i)).toBeNull();
-  });
-
-  it.skip('TODO Phase 5: leader does NOT see + New Fellowship', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<FellowshipsPage />, { wrapper });
-    expect(screen.queryByText(/\+ New Fellowship/i)).toBeNull();
-  });
-
   it('member does NOT see + New Fellowship', () => {
     authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<FellowshipsPage />, { wrapper });
     expect(screen.queryByText(/\+ New Fellowship/i)).toBeNull();
   });
-
-  it.skip('TODO Phase 5: leader with empty list sees the leader empty-state copy, not the generic one', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<FellowshipsPage />, { wrapper });
-    expect(screen.getByText(/You don’t lead a fellowship/i)).toBeDefined();
-    expect(screen.queryByText(/^No fellowships found\.$/)).toBeNull();
-  });
-
   it('member with empty list sees the generic empty-state copy', () => {
     authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<FellowshipsPage />, { wrapper });

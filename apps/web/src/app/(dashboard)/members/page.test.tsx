@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { MemberWithBranch } from '@kairos/types';
@@ -76,32 +76,6 @@ beforeEach(() => {
 });
 
 describe('MembersPage — persona CTAs', () => {
-  it.skip('TODO Phase 5: admin sees Add Member, Import CSV, Export CSV, Safeguarding, Approval Queue', () => {
-    authState = { user: { id: 'admin-1', systemRole: 'admin', homeBranchId: 'b-1' }, activeRole: 'admin' };
-    render(<MembersPage />, { wrapper });
-    expect(screen.getByText(/Add Member/i)).toBeDefined();
-    expect(screen.getByText(/Import CSV/i)).toBeDefined();
-    expect(screen.getByText(/Export CSV/i)).toBeDefined();
-    expect(screen.getByText(/Safeguarding review/i)).toBeDefined();
-    expect(screen.getByText(/Approval Queue/i)).toBeDefined();
-  });
-
-  it.skip('TODO Phase 5: pastor sees Add/Import/Export and Safeguarding but NOT Approval Queue', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<MembersPage />, { wrapper });
-    expect(screen.getByText(/Add Member/i)).toBeDefined();
-    expect(screen.getByText(/Import CSV/i)).toBeDefined();
-    expect(screen.getByText(/Export CSV/i)).toBeDefined();
-    expect(screen.getByText(/Safeguarding review/i)).toBeDefined();
-    expect(screen.queryByText(/Approval Queue/i)).toBeNull();
-  });
-
-  it.skip('TODO Phase 5: leader is redirected away (Members not in their nav)', async () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<MembersPage />, { wrapper });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/dashboard'));
-  });
-
   it('member is redirected away (Members not in their nav)', async () => {
     authState = { user: { id: 'self-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<MembersPage />, { wrapper });
@@ -109,11 +83,3 @@ describe('MembersPage — persona CTAs', () => {
   });
 });
 
-describe('MembersPage — admin/pastor card details', () => {
-  it.skip('TODO Phase 5: shows full details for non-member viewers', () => {
-    authState = { user: { id: 'admin-1', systemRole: 'admin', homeBranchId: 'b-1' }, activeRole: 'admin' };
-    render(<MembersPage />, { wrapper });
-    expect(screen.getByText('other@b.com')).toBeDefined();
-    expect(screen.getByText('555-0102')).toBeDefined();
-  });
-});

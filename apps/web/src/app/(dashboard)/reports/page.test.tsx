@@ -185,19 +185,6 @@ describe('ReportsPage — persona tab visibility', () => {
     // With a single available persona we hide the tab row to avoid noise.
     expect(screen.queryByRole('tab', { name: 'My Branch' })).not.toBeInTheDocument();
   });
-
-  it.skip('TODO Phase 5: pastor + fellowship leader: shows both "My Branch" and "My Fellowship"', () => {
-    authState.activeRole = 'pastor';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-    };
-    render(<ReportsPage />, { wrapper });
-    expect(screen.getByRole('tab', { name: 'My Branch' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'My Fellowship' })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
-  });
-
   it('branch system admin: shows "My Branch" tab (BSA from leadership data)', () => {
     authState.activeRole = 'leader';
     leadershipData = {
@@ -240,48 +227,6 @@ describe('ReportsPage — persona tab visibility', () => {
   });
 });
 
-// ── Default tab selection ──────────────────────────────────
-
-describe('ReportsPage — default tab selection', () => {
-  beforeEach(resetState);
-
-  it.skip('TODO Phase 5: pastor + fellowship lead: defaults to "My Branch" (most-elevated wins)', () => {
-    authState.activeRole = 'pastor';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-    };
-    render(<ReportsPage />, { wrapper });
-    const branchTab = screen.getByRole('tab', { name: 'My Branch' });
-    expect(branchTab.getAttribute('aria-pressed')).toBe('true');
-  });
-
-  it.skip('TODO Phase 5: fellowship-only leader: defaults to "My Fellowship"', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
-    };
-    render(<ReportsPage />, { wrapper });
-    const fellowshipTab = screen.getByRole('tab', { name: 'My Fellowship' });
-    const departmentTab = screen.getByRole('tab', { name: 'My Department' });
-    expect(fellowshipTab.getAttribute('aria-pressed')).toBe('true');
-    expect(departmentTab.getAttribute('aria-pressed')).toBe('false');
-  });
-
-  it.skip('TODO Phase 5: department-only leader: defaults to "My Department"', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
-    };
-    render(<ReportsPage />, { wrapper });
-    // Only one persona → tab row is hidden, but the panel still renders.
-    expect(screen.getByText('Service attendance per week')).toBeInTheDocument();
-  });
-});
-
 // ── Tab switching ──────────────────────────────────────────
 
 describe('ReportsPage — tab switching', () => {
@@ -304,22 +249,6 @@ describe('ReportsPage — tab switching', () => {
     expect(screen.getByText('Service attendance per week')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'My Department' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('tab', { name: 'My Fellowship' }).getAttribute('aria-pressed')).toBe('false');
-  });
-
-  it.skip('TODO Phase 5: clicking "My Branch" switches back to the branch panel — needs pastor → grants conversion', () => {
-    authState.activeRole = 'pastor';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-    };
-    render(<ReportsPage />, { wrapper });
-
-    // Default is branch.
-    fireEvent.click(screen.getByRole('tab', { name: 'My Fellowship' }));
-    expect(screen.getByRole('tab', { name: 'My Fellowship' }).getAttribute('aria-pressed')).toBe('true');
-
-    fireEvent.click(screen.getByRole('tab', { name: 'My Branch' }));
-    expect(screen.getByRole('tab', { name: 'My Branch' }).getAttribute('aria-pressed')).toBe('true');
   });
 });
 

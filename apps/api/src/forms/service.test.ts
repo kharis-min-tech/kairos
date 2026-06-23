@@ -87,7 +87,6 @@ const enrollmentId = '660e8400-0000-0000-0000-000000000006';
 const submissionId = '770e8400-0000-0000-0000-000000000007';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
@@ -1434,14 +1433,6 @@ describe('getMyFormsCapabilities', () => {
     expect(result.visibleFormTypes.length).toBe(6);
     expect(result.canSeeProspects).toBe(true);
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — pastor sees all form types + prospects in own branch', async () => {
-    const { getMyFormsCapabilities } = await import('./service');
-    const result = await getMyFormsCapabilities(mockDb, pastorAuth);
-    expect(result.visibleFormTypes.length).toBe(6);
-    expect(result.canSeeProspects).toBe(true);
-  });
-
   it('Admin-dept leader sees all form types + prospects (branch-superuser)', async () => {
     // getVisibleFormTypes runs the ladder; then canSeeProspects runs isAdminDeptLeader again.
     setupSelectSequence(POSITIVE, POSITIVE);

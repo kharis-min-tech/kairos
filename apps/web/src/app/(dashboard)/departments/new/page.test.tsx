@@ -51,20 +51,6 @@ describe('NewDepartmentPage — route guard', () => {
     expect(screen.getByRole('heading', { name: 'New Department' })).toBeDefined();
     expect(replace).not.toHaveBeenCalled();
   });
-
-  it.skip('TODO Phase 5: pastor sees the form', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<NewDepartmentPage />, { wrapper });
-    expect(screen.getByRole('heading', { name: 'New Department' })).toBeDefined();
-    expect(replace).not.toHaveBeenCalled();
-  });
-
-  it.skip('TODO Phase 5: leader is redirected to /departments', async () => {
-    authState = { user: { id: 'l-1', systemRole: 'member' }, activeRole: 'leader' };
-    render(<NewDepartmentPage />, { wrapper });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/departments'));
-  });
-
   it('member is redirected to /departments', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<NewDepartmentPage />, { wrapper });

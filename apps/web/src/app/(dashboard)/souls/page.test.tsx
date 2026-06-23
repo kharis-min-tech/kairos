@@ -66,33 +66,6 @@ beforeEach(() => {
 });
 
 describe('SoulsKanbanPage — persona filters', () => {
-  it.skip('TODO Phase 5: admin sees Branch + Fellowships + Departments + worker filter', () => {
-    authState = { user: { id: 'admin-1', systemRole: 'admin', homeBranchId: 'b-1' }, activeRole: 'admin' };
-    render(<SoulsKanbanPage />, { wrapper });
-    expect(screen.getByText(/All Branches/i)).toBeDefined();
-    expect(screen.getByText(/All Fellowships/i)).toBeDefined();
-    expect(screen.getByText(/All Departments/i)).toBeDefined();
-    expect(screen.getByText(/Any worker/i)).toBeDefined();
-  });
-
-  it.skip('TODO Phase 5: pastor sees Fellowships + Departments + worker filter, NOT branch filter', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<SoulsKanbanPage />, { wrapper });
-    expect(screen.queryByText(/All Branches/i)).toBeNull();
-    expect(screen.getByText(/All Fellowships/i)).toBeDefined();
-    expect(screen.getByText(/All Departments/i)).toBeDefined();
-    expect(screen.getByText(/Any worker/i)).toBeDefined();
-  });
-
-  it.skip('TODO Phase 5: leader sees the My-narrowing fellowship/department filters', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<SoulsKanbanPage />, { wrapper });
-    expect(screen.getByText(/My Fellowships/i)).toBeDefined();
-    expect(screen.getByText(/My Departments/i)).toBeDefined();
-    expect(screen.queryByText(/Any worker/i)).toBeNull();
-    expect(screen.queryByText(/All Branches/i)).toBeNull();
-  });
-
   it('member sees NO persona filters (their existing program/source filter handles it)', () => {
     authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<SoulsKanbanPage />, { wrapper });

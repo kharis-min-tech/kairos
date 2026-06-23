@@ -43,7 +43,6 @@ export interface SignupRequest {
 export interface LoginRequest {
   email: string;
   password: string;
-  activeRole?: SystemRole;
 }
 
 export interface AuthTokens {
@@ -51,80 +50,17 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-// ── Two-step login: role enumeration ───────────────────────
-// A "role option" is one row in the picker shown to multi-role users after
-// credentials succeed. The server pre-formats `displayLabel` so the UI never
-// has to compose strings like "Pastor — London" from raw data.
-//
-// `activeRole` stays in the existing 4-value SystemRole enum. The optional
-// `scope` narrows the authority onto a specific branch / fellowship /
-// department. Mapping (Phase 1 ↔ Phase 4 contract):
-//
-//   System Admin                → activeRole='admin',  no scope
-//   Pastor                      → activeRole='pastor', scope={branch:homeBranchId}
-//   Branch System Admin         → activeRole='admin',  scope={branch:<branchId>}
-//   Branch Data Admin           → activeRole='pastor', scope={branch:<branchId>}
-//   Fellowship Lead / Co-lead   → activeRole='leader', scope={fellowship:<id>}
-//   Department Lead / Deputy    → activeRole='leader', scope={department:<id>}
-//   Plain Member                → activeRole='member', no scope
-
+// RoleScope narrows authority to a specific entity. Stamped into the JWT
+// alongside each grant; the client decodes it for UI affordances.
 export type RoleScope =
   | { kind: 'branch'; id: string }
   | { kind: 'fellowship'; id: string }
   | { kind: 'department'; id: string };
 
-export interface RoleOption {
-  /** The activeRole the JWT will carry — stays in the existing 4-value enum. */
-  activeRole: SystemRole;
-  /** Optional scope tying the activeRole to a specific entity. */
-  scope?: RoleScope;
-  /** Server-formatted label for the picker, e.g. "Branch System Admin — London". */
-  displayLabel: string;
-  /** Stable id for client keying and finalize calls. Hash of activeRole+scope. */
-  key: string;
-}
-
-/**
- * Login response is a flat shape with an optional role-selection envelope.
- * Single-role users get the `authenticated` arm (tokens/member/isFirstLogin
- * populated, no roleSelectionRequired flag). Multi-role users get the
- * `role-selection-required` arm — `sessionToken` + `availableRoles` populated,
- * tokens/member empty. The flat shape keeps existing callers compiling: code
- * that did `result.tokens` keeps working for the single-role path, and new
- * code can branch on `result.roleSelectionRequired`.
- */
 export interface LoginResponse {
-  tokens?: AuthTokens;
-  member?: MemberProfile;
-  isFirstLogin?: boolean;
-  roleSelectionRequired?: boolean;
-  /** Short-lived (5-minute) JWT that only authorises the finalize-role call. */
-  sessionToken?: string;
-  availableRoles?: RoleOption[];
-}
-
-export interface FinalizeRoleRequest {
-  sessionToken: string;
-  activeRole: SystemRole;
-  scope?: RoleScope;
-  key: string;
-}
-
-export interface FinalizeRoleResponse {
   tokens: AuthTokens;
   member: MemberProfile;
   isFirstLogin: boolean;
-}
-
-export interface SwitchRoleRequest {
-  activeRole: SystemRole;
-  scope?: RoleScope;
-  key: string;
-}
-
-export interface SwitchRoleResponse {
-  tokens: AuthTokens;
-  member: MemberProfile;
 }
 
 export interface RefreshRequest {

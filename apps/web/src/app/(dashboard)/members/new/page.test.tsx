@@ -43,16 +43,6 @@ describe('AddMemberPage — persona', () => {
     expect(screen.getByLabelText('System Role')).toBeDefined();
     expect(screen.getByText(/Promote new admins or pastors/i)).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: pastor sees Member-only disabled field and helper copy', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor' }, activeRole: 'pastor' };
-    render(<AddMemberPage />, { wrapper });
-    const field = screen.getByLabelText('System Role') as HTMLInputElement;
-    expect(field.value).toBe('Member');
-    expect(field).toBeDisabled();
-    expect(screen.getByText(/Only admins can assign/i)).toBeDefined();
-  });
-
   it('member is redirected away', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<AddMemberPage />, { wrapper });

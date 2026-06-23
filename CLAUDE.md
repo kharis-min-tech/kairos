@@ -44,6 +44,8 @@ When writing new UI: use Modern Sanctuary arbitrary values (`bg-[#5D3FD3]`, `tex
 - **`packages/ui/src/components/`** is shared. `apps/web/src/components/` is app-only. New design-system primitives go in the package; one-off compositions stay in the app.
 - **`(auth)` and `(dashboard)`** are App Router route groups (parentheses). Don't try to route to `/auth/login` — it's `/login` under the `(auth)/` group.
 - **`@kairos/database` exports schemas by name** — `members`, `fellowships`, etc. — from `packages/database/src/index.ts`. Import from the package, not the file path.
+- **There is no `pastor` or `leader` `systemRole` anymore.** `SystemRole` is `'admin' | 'member'`. Authority lives in grants in `member_roles` (`BranchAdmin`, `FellowshipLeader`, …). Gate with `requireCapability(cap, scopeFn?)` on the API and `useCapabilities().has(cap, scope?)` in the web app. `pastor` only survives as `members.honorific` — a display title with zero permission weight.
+- **No role switcher, no role-selection step at login.** `/api/auth/finalize-role`, `/api/auth/switch-role`, `/api/auth/available-roles`, `apps/web/src/app/(auth)/select-role/`, and `useRoleSelectionStore` are all gone. Old planning docs that reference them are stale.
 
 ## When the user asks for a plan
 

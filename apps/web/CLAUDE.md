@@ -61,7 +61,7 @@ Query keys: the module name as a stable string, plus params/id. Mutation `onSucc
 - **Server Components by default.** Only add `'use client'` when the file uses hooks, state, event handlers, or browser APIs. Pages that consume our hooks are almost always client components.
 - **Forms**: React Hook Form + Zod resolver. Mirror the API schema in a frontend Zod schema so the two can drift independently when needed but stay in shape.
 - **Loading + error states** are required for every `useQuery`-driven view. Skeleton loaders > spinners. Error messages must surface the API error message when present.
-- **Route guards**: dashboard layout reads `useAuthStore.getState().activeRole` (or the equivalent hook) and redirects on mismatch. Admin/pastor-only routes (e.g. `/reports`, `/members/new`, `/admin/*`) check inside the page on mount as a second-level guard.
+- **Route guards**: pages call `useCapabilities()` and gate render/redirect on `caps.has(cap, scope?)`. The dashboard layout still keeps a coarse `activeRole === 'admin'` check for the admin-only nav, but the fine-grained "can this user see this CTA / page" decisions live on capabilities. Admin-only routes (e.g. `/reports`, `/members/new`, `/admin/*`) check inside the page on mount as a second-level guard.
 - **Mutations**: on success, route via `router.push(...)` or close a dialog — never set up a `setTimeout` to wait for the cache. TanStack Query's invalidation handles refresh.
 
 ## State, in order of preference
@@ -83,9 +83,9 @@ No Redux. No Jotai. No Context-as-state. If you reach for one of these, you're p
 
 ## Auth flow
 
-`auth-store.ts` holds `accessToken`, `refreshToken`, `user`, `activeRole`. The api-client gets a callback that reads `accessToken` on every request and refreshes via `refreshToken` on 401. On terminal auth failure the store logs out and redirects to `/login`.
+`auth-store.ts` holds `accessToken`, `refreshToken`, `user`, `activeRole`, `scope`. The api-client gets a callback that reads `accessToken` on every request and refreshes via `refreshToken` on 401. On terminal auth failure the store logs out and redirects to `/login`.
 
-`activeRole` governs which dashboard the user lands on after login — see the role-selector UX on `/login`.
+`activeRole` mirrors the JWT's `systemRole` (`admin` or `member`). It governs the coarse dashboard chrome; fine-grained CTAs use `useCapabilities()` which decodes grants out of the access-token payload. Login is single-step — no role selection — and there is no in-app role switcher.
 
 ## Tests
 

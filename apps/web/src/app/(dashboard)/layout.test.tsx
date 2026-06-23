@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 vi.mock('@/lib/api', () => ({
-  api: { members: { me: vi.fn() }, auth: { availableRoles: vi.fn() } },
+  api: { members: { me: vi.fn() } },
 }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => <div /> }));
 vi.mock('@/components/member-avatar', () => ({ MemberAvatar: () => <div /> }));
@@ -34,8 +34,6 @@ function makeState(role: string) {
     mustChangePassword: false,
     setUser: vi.fn(),
     accessToken: 'tok',
-    availableRoles: [],
-    setAvailableRoles: vi.fn(),
   };
 }
 

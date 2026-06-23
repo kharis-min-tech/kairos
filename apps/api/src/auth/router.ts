@@ -40,14 +40,9 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
 
 authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
-  const result = await login(db, body.email, body.password, body.activeRole);
-  // Message varies by result arm so the client can render appropriately
-  // without re-deriving from the shape.
-  const message = result.roleSelectionRequired ? 'Role selection required' : 'Login successful';
-  return c.json(successResponse(result, message));
+  const result = await login(db, body.email, body.password);
+  return c.json(successResponse(result, 'Login successful'));
 });
-
-// RBAC Phase 5/6: /finalize-role removed — login is single-step.
 
 authRouter.post('/refresh', zValidator('json', refreshSchema), async (c) => {
   const body = c.req.valid('json');
@@ -98,6 +93,3 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   await changePassword(db, auth, currentPassword, newPassword);
   return c.json(successResponse(undefined, 'Password changed successfully'));
 });
-
-// RBAC Phase 5/6: /switch-role and /available-roles removed — capabilities
-// derive from the access token's grants array; no in-app role switcher.

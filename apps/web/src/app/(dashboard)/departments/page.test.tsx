@@ -67,29 +67,9 @@ describe('DepartmentsPage — persona CTAs', () => {
     render(<DepartmentsPage />, { wrapper });
     expect(screen.getByText(/\+ New Department/i)).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: pastor sees + New Department', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<DepartmentsPage />, { wrapper });
-    expect(screen.getByText(/\+ New Department/i)).toBeDefined();
-  });
-
-  it.skip('TODO Phase 5: leader does NOT see + New Department', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<DepartmentsPage />, { wrapper });
-    expect(screen.queryByText(/\+ New Department/i)).toBeNull();
-  });
-
   it('member does NOT see + New Department', () => {
     authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<DepartmentsPage />, { wrapper });
     expect(screen.queryByText(/\+ New Department/i)).toBeNull();
-  });
-
-  it.skip('TODO Phase 5: leader with empty list sees the leader empty-state copy', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<DepartmentsPage />, { wrapper });
-    expect(screen.getByText(/You don’t lead a department/i)).toBeDefined();
-    expect(screen.queryByText(/^No departments found\.$/)).toBeNull();
   });
 });

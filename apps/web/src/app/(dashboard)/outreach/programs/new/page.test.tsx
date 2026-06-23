@@ -61,19 +61,6 @@ describe('CreateProgramPage — route guard', () => {
     expect(screen.getByRole('heading', { name: /Create.*Program|New Program/i })).toBeDefined();
     expect(replace).not.toHaveBeenCalled();
   });
-
-  it.skip('TODO Phase 5: pastor sees the form', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<CreateProgramPage />, { wrapper });
-    expect(replace).not.toHaveBeenCalled();
-  });
-
-  it.skip('TODO Phase 5: leader sees the form (leaders can create programs)', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member' }, activeRole: 'leader' };
-    render(<CreateProgramPage />, { wrapper });
-    expect(replace).not.toHaveBeenCalled();
-  });
-
   it('member is redirected to /outreach/programs', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<CreateProgramPage />, { wrapper });

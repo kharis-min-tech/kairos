@@ -41,7 +41,6 @@ const { createApp } = await import('../app');
 const app = createApp();
 
 const adminToken = signTestToken({ systemRole: 'admin' });
-const pastorToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId });
 const memberToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 
 const sampleFellowship = {
@@ -143,31 +142,6 @@ describe('POST /api/fellowships', () => {
     });
 
     expect(res.status).toBe(401);
-  });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — should create fellowship as pastor', async () => {
-    // createFellowship: validate branch → validate leader → insert fellowship → auto-join leader
-    mockDb.select
-      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.branchId, isActive: true }]))   // branch exists
-      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.pastorId, isActive: true }]));   // leader exists
-    mockDb.insert
-      .mockReturnValueOnce(chainTo([sampleFellowship]))  // insert fellowship
-      .mockReturnValueOnce(chainTo([{}]));                 // auto-join leader as member
-
-    const res = await app.request('/api/fellowships', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${pastorToken}` },
-      body: JSON.stringify({
-        fellowshipName: 'K-Group Alpha',
-        fellowshipType: 'K-Groups',
-        branchId: TEST_IDS.branchId,
-        leaderId: TEST_IDS.pastorId,
-      }),
-    });
-
-    expect(res.status).toBe(201);
-    const body = await res.json() as any;
-    expect(body.success).toBe(true);
   });
 });
 

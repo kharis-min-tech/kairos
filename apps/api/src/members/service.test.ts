@@ -61,7 +61,6 @@ const roleId = '550e8400-0000-0000-0000-000000000005';
 const roleAssignmentId = '660e8400-0000-0000-0000-000000000006';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
@@ -246,14 +245,6 @@ describe('approveMember', () => {
     const result = await approveMember(mockDb, memberId, true, adminAuth);
     expect(result).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — rejects member', async () => {
-    setupSelect([{ id: memberId, approvalStatus: 'pending' }]);
-    setupUpdate([{ ...sampleMemberFull, approvalStatus: 'rejected' }]);
-    const result = await approveMember(mockDb, memberId, false, pastorAuth);
-    expect(result).toBeDefined();
-  });
-
   it('rejects non-admin/pastor', async () => {
     await expect(approveMember(mockDb, memberId, true, memberAuth))
       .rejects.toThrow('Only admins and pastors can approve members');
@@ -422,14 +413,6 @@ describe('deactivateMember', () => {
     await expect(deactivateMember(mockDb, memberId, memberAuth))
       .rejects.toThrow('Only branch-tier admins can deactivate members');
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — pastor can deactivate member in same branch', async () => {
-    setupSelect([{ id: memberId }]);
-    setupUpdate([{ ...sampleMemberFull, isActive: false }]);
-    const result = await deactivateMember(mockDb, memberId, pastorAuth);
-    expect(result).toBeDefined();
-  });
-
   it('throws NotFoundError for missing member', async () => {
     setupSelect([]);
     await expect(deactivateMember(mockDb, memberId, adminAuth))
@@ -483,14 +466,6 @@ describe('createMember', () => {
     expect(result.generatedPassword).toBeDefined();
     expect(typeof result.generatedPassword).toBe('string');
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — allows pastor to create members', async () => {
-    setupSelectSequence([], []);
-    setupInsert([createdMember]);
-    const result = await createMember(mockDb, createInput, pastorAuth);
-    expect(result.member).toEqual(createdMember);
-  });
-
   it('creates a member with secondary branch fields', async () => {
     setupSelectSequence([], []);
     const createdWithSecondary = {
@@ -543,15 +518,6 @@ describe('reactivateMember', () => {
     await expect(reactivateMember(mockDb, memberId, memberAuth))
       .rejects.toThrow('Only branch-tier admins can reactivate members');
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — pastor can reactivate member in same branch', async () => {
-    setupSelect([{ id: memberId, isActive: false }]);
-    const reactivated = { ...sampleMemberFull, isActive: true, approvalStatus: 'approved' };
-    setupUpdate([reactivated]);
-    const result = await reactivateMember(mockDb, memberId, pastorAuth);
-    expect(result).toEqual(reactivated);
-  });
-
   it('throws NotFoundError for missing member', async () => {
     setupSelect([]);
     await expect(reactivateMember(mockDb, memberId, adminAuth))

@@ -21,37 +21,9 @@ export const signupSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-// activeRole is OPTIONAL in the two-step flow. Legacy callers (and tests)
-// that send it still get the direct-finalize path; new callers omit it and
-// receive either a direct finalize (single-role user) or a role-selection
-// envelope (multi-role user).
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
-  activeRole: z.enum(['admin', 'member']).optional(),
-});
-
-// A scope identifies the entity an activeRole is acting through. Branch
-// scopes pair with admin/pastor; fellowship/department scopes pair with
-// leader. The combination is re-validated against the caller's available
-// role options on every finalize/switch.
-export const roleScopeSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('branch'), id: z.string().uuid() }),
-  z.object({ kind: z.literal('fellowship'), id: z.string().uuid() }),
-  z.object({ kind: z.literal('department'), id: z.string().uuid() }),
-]);
-
-export const finalizeRoleSchema = z.object({
-  sessionToken: z.string().min(1, 'Session token is required'),
-  activeRole: z.enum(['admin', 'member']),
-  scope: roleScopeSchema.optional(),
-  key: z.string().min(1, 'Role key is required'),
-});
-
-export const switchRoleSchema = z.object({
-  activeRole: z.enum(['admin', 'member']),
-  scope: roleScopeSchema.optional(),
-  key: z.string().min(1, 'Role key is required'),
 });
 
 export const refreshSchema = z.object({

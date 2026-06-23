@@ -35,14 +35,6 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('MyBranchPage — pastor-or-admin route guard', () => {
-  it.skip('TODO Phase 5: allows pastor (no redirect)', async () => {
-    authState = { user: { homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    replace.mockClear();
-    render(<MyBranchPage />, { wrapper });
-    await Promise.resolve();
-    expect(replace).not.toHaveBeenCalled();
-  });
-
   it('allows admin (no redirect — they may inspect any branch)', async () => {
     authState = { user: { homeBranchId: 'b-1' }, activeRole: 'admin' };
     replace.mockClear();

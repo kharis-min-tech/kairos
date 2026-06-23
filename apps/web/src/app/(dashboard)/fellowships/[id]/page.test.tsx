@@ -84,14 +84,6 @@ describe('FellowshipDetailPage — persona CTAs', () => {
     expect(screen.getByRole('button', { name: /Deactivate/i })).toBeDefined();
     expect(screen.queryByRole('button', { name: /Request to Join/i })).toBeNull();
   });
-
-  it.skip('TODO Phase 5: pastor sees Edit and Deactivate', () => {
-    auth = { user: { id: 'p-1', systemRole: 'member' }, activeRole: 'pastor' };
-    render(<FellowshipDetailPage />, { wrapper });
-    expect(screen.getByRole('link', { name: 'Edit' })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Deactivate/i })).toBeDefined();
-  });
-
   it('non-member sees Request to Join (no Edit/Deactivate)', () => {
     auth = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<FellowshipDetailPage />, { wrapper });

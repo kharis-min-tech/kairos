@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest';
 import { decodeScopeFromAccessToken, useAuthStore } from './auth-store';
-import type { Member, RoleOption } from '@kairos/types';
+import type { Member } from '@kairos/types';
 
 const mockMember: Member = {
   id: 'member-1',
@@ -36,16 +36,6 @@ const mockMember: Member = {
   updatedAt: new Date(),
 };
 
-const sampleRoles: RoleOption[] = [
-  { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
-  {
-    activeRole: 'leader' as any,
-    scope: { kind: 'fellowship', id: 'f-1' },
-    displayLabel: 'Fellowship Lead — Joy',
-    key: 'k-lead-f1',
-  },
-];
-
 /** Mint a JWT-shaped string with the given payload. Signature is bogus —
  *  the client-side decoder doesn't verify, it only reads the payload. */
 function fakeJwt(payload: Record<string, unknown>): string {
@@ -62,7 +52,6 @@ describe('useAuthStore', () => {
       user: null,
       activeRole: null,
       scope: null,
-      availableRoles: [],
       branchSystemAdminBranchIds: [],
       branchDataAdminBranchIds: [],
     });
@@ -81,10 +70,9 @@ describe('useAuthStore', () => {
     expect(branchDataAdminBranchIds).toEqual([]);
   });
 
-  it('has null scope and empty availableRoles in initial state', () => {
-    const { scope, availableRoles } = useAuthStore.getState();
+  it('has null scope in initial state', () => {
+    const { scope } = useAuthStore.getState();
     expect(scope).toBeNull();
-    expect(availableRoles).toEqual([]);
   });
 
   it('setBranchAdminAuthority stores both arrays', () => {
@@ -109,11 +97,6 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().scope).toBeNull();
   });
 
-  it('setAvailableRoles stores the role-option list', () => {
-    useAuthStore.getState().setAvailableRoles(sampleRoles);
-    expect(useAuthStore.getState().availableRoles).toEqual(sampleRoles);
-  });
-
   it('logout clears branch-admin authority too', () => {
     useAuthStore.setState({
       branchSystemAdminBranchIds: ['b-1'],
@@ -125,15 +108,13 @@ describe('useAuthStore', () => {
     expect(state.branchDataAdminBranchIds).toEqual([]);
   });
 
-  it('logout clears scope and availableRoles too', () => {
+  it('logout clears scope too', () => {
     useAuthStore.setState({
       scope: { kind: 'department', id: 'd-1' },
-      availableRoles: sampleRoles,
     });
     useAuthStore.getState().logout();
     const state = useAuthStore.getState();
     expect(state.scope).toBeNull();
-    expect(state.availableRoles).toEqual([]);
   });
 
   it('setTokens stores access and refresh tokens', () => {

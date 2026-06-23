@@ -34,10 +34,6 @@ function setupSelectSequence(...results: unknown[]) {
   });
 }
 
-function setupInsert(result: unknown) {
-  (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => createChain(result));
-}
-
 function setupUpdate(result: unknown = undefined) {
   (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => createChain(result));
 }
@@ -98,16 +94,6 @@ describe('listOutfits', () => {
 });
 
 describe('createOutfit', () => {
-  it.skip('TODO Phase 5: lets leadupload outfit', async () => {
-    setupSelectSequence([sampleBd]);
-    setupInsert([{ id: outfitId, name: 'Sunday Whites' }]);
-    const result = await createOutfit(mockDb, leaderAuth, branchDeptId, {
-      name: 'Sunday Whites',
-      imageUrl: 'https://example.com/x.jpg',
-    });
-    expect(result.id).toBe(outfitId);
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
@@ -203,35 +189,6 @@ describe('listSchedule', () => {
 });
 
 describe('assignSchedule', () => {
-  it.skip('TODO Phase 5: creates assignment for active outfi — needs grant-based mock', async () => {
-    setupSelectSequence(
-      [sampleBd],
-      [{ id: outfitId, branchDepartmentId: branchDeptId, isActive: true }],
-      [], // no conflict
-    );
-    setupInsert([{ id: assignmentId, serviceDate: '2026-05-10' }]);
-    const result = await assignSchedule(mockDb, leaderAuth, branchDeptId, {
-      outfitId,
-      serviceDate: '2026-05-10',
-    });
-    expect(result.id).toBe(assignmentId);
-  });
-
-  it.skip('TODO Phase 5: throws ConflictError when slot already assigne — needs grant-based mock', async () => {
-    setupSelectSequence(
-      [sampleBd],
-      [{ id: outfitId, branchDepartmentId: branchDeptId, isActive: true }],
-      [{ id: 'existing-assignment' }],
-    );
-    await expect(
-      assignSchedule(mockDb, leaderAuth, branchDeptId, {
-        outfitId,
-        serviceDate: '2026-05-10',
-        genderTarget: 'Unisex',
-      }),
-    ).rejects.toThrow('already assigned');
-  });
-
   it('throws ConflictError when outfit is archived', async () => {
     setupSelectSequence(
       [sampleBd],

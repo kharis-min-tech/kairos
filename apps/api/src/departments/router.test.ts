@@ -198,34 +198,6 @@ describe('POST /api/departments', () => {
     });
     expect(res.status).toBe(401);
   });
-
-  it.skip('TODO Phase 5: rewrite for new grant-based access — creates dept as pastor', async () => {
-    // branch, dept, lead member, one-active check
-    mockDb.select
-      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.branchId }]))
-      .mockReturnValueOnce(chainTo([{ id: departmentId }]))
-      .mockReturnValueOnce(chainTo([{
-        id: TEST_IDS.pastorId,
-        homeBranchId: TEST_IDS.branchId,
-        secondaryBranchId: null,
-        isAtSecondaryBranch: false,
-      }]))
-      .mockReturnValueOnce(chainTo([])); // no existing
-    mockDb.insert
-      .mockReturnValueOnce(chainTo([{ id: branchDeptId }]))
-      .mockReturnValueOnce(chainTo([{}])); // auto-add lead
-
-    const res = await app.request('/api/departments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${pastorToken}` },
-      body: JSON.stringify({
-        branchId: TEST_IDS.branchId,
-        departmentId,
-        leadMemberId: TEST_IDS.pastorId,
-      }),
-    });
-    expect(res.status).toBe(201);
-  });
 });
 
 // ── DELETE /api/departments/:id ────────────────────────────

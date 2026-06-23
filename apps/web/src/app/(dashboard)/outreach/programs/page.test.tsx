@@ -55,19 +55,6 @@ describe('OutreachProgramsPage — persona CTAs', () => {
     render(<OutreachProgramsPage />, { wrapper });
     expect(screen.getByText(/Create Program/i)).toBeDefined();
   });
-
-  it.skip('TODO Phase 5: pastor sees + Create Program', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<OutreachProgramsPage />, { wrapper });
-    expect(screen.getByText(/Create Program/i)).toBeDefined();
-  });
-
-  it.skip('TODO Phase 5: leader sees + Create Program', () => {
-    authState = { user: { id: 'l-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'leader' };
-    render(<OutreachProgramsPage />, { wrapper });
-    expect(screen.getByText(/Create Program/i)).toBeDefined();
-  });
-
   it('member does NOT see + Create Program', () => {
     authState = { user: { id: 'm-1', systemRole: 'member', homeBranchId: 'b-1' }, activeRole: 'member' };
     render(<OutreachProgramsPage />, { wrapper });

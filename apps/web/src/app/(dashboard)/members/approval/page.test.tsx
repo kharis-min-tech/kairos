@@ -39,13 +39,6 @@ describe('MemberApprovalPage — route guard', () => {
     expect(screen.getByText('Approval Queue')).toBeDefined();
     expect(replace).not.toHaveBeenCalled();
   });
-
-  it.skip('TODO Phase 5: pastor is redirected to /members', async () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor' } };
-    render(<MemberApprovalPage />, { wrapper });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/members'));
-  });
-
   it('member is redirected to /members', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' } };
     render(<MemberApprovalPage />, { wrapper });

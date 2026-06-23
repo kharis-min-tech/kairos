@@ -499,23 +499,6 @@ describe('Souls Service', () => {
         reassignSoul(mockDb, 'soul-1', { assignedMemberId: 'invalid-member' }, adminAuth)
       ).rejects.toThrow(ValidationError);
     });
-
-    it.skip('TODO Phase 5: should enforce branch constraints for Pasto — needs grant-based mock', async () => {
-      mockDb.select = vi.fn(() => ({
-        from: vi.fn(() => ({
-          leftJoin: vi.fn(() => ({
-            where: vi.fn().mockResolvedValue([{
-              id: 'soul-1',
-              branchId: TEST_IDS.branch2Id, // Different branch
-            }]),
-          })),
-        })),
-      }));
-
-      await expect(
-        reassignSoul(mockDb, 'soul-1', { assignedMemberId: 'new-member' }, pastorAuth)
-      ).rejects.toThrow(ForbiddenError);
-    });
   });
 
   describe('getSoul', () => {
@@ -579,36 +562,6 @@ describe('Souls Service', () => {
       });
       const result = await getSoul(mockDb, 'soul-1', pastorAuth);
       expect(result.id).toBe('soul-1');
-    });
-
-    it.skip('TODO Phase 5: pastor in a different branch is blocke with ForbiddenError — needs grant-based mock', async () => {
-      let call = 0;
-      mockDb.select = vi.fn(() => {
-        call += 1;
-        if (call === 1) {
-          return {
-            from: vi.fn(() => ({
-              leftJoin: vi.fn(() => ({
-                leftJoin: vi.fn(() => ({
-                  where: vi.fn().mockResolvedValue([{ id: 'soul-1', assignedMemberId: null }]),
-                })),
-              })),
-            })),
-          };
-        }
-        return {
-          from: vi.fn(() => ({
-            leftJoin: vi.fn(() => ({
-              leftJoin: vi.fn(() => ({
-                where: vi.fn().mockResolvedValue([
-                  { programBranchId: TEST_IDS.branch2Id, assigneeBranchId: TEST_IDS.branch2Id },
-                ]),
-              })),
-            })),
-          })),
-        };
-      });
-      await expect(getSoul(mockDb, 'soul-1', pastorAuth)).rejects.toThrow(ForbiddenError);
     });
   });
 });

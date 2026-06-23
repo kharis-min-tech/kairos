@@ -3,7 +3,7 @@ import { createProgram, listPrograms } from './service';
 import type { Database } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { TEST_IDS } from '../test-helpers';
-import { ConflictError, ValidationError, ForbiddenError } from '@kairos/utils';
+import { ConflictError, ValidationError } from '@kairos/utils';
 
 describe('Outreach Programs Service', () => {
   let mockDb: any;
@@ -122,17 +122,6 @@ describe('Outreach Programs Service', () => {
       const insertCall = insertMock.mock.calls[0];
       expect(insertCall).toBeDefined();
     });
-
-    it.skip('TODO Phase 5: should require branch_id for Admin user — needs grant-based mock', async () => {
-      const input = {
-        programName: 'Regional Outreach',
-        programDate: '2024-06-01',
-        location: 'Stadium',
-      };
-
-      await expect(createProgram(mockDb, input, adminAuth)).rejects.toThrow(ValidationError);
-    });
-
     it('should detect case-insensitive duplicate program names', async () => {
       const input = {
         programName: 'Easter Outreach',
@@ -166,17 +155,6 @@ describe('Outreach Programs Service', () => {
       });
 
       await expect(createProgram(mockDb, input, adminAuth)).rejects.toThrow(ValidationError);
-    });
-
-    it.skip('TODO Phase 5: should enforce branch isolation for Pasto — needs grant-based mock', async () => {
-      const input = {
-        programName: 'Cross-Branch Outreach',
-        programDate: '2024-08-01',
-        location: 'Plaza',
-        branchId: TEST_IDS.branch2Id, // Different branch
-      };
-
-      await expect(createProgram(mockDb, input, pastorAuth)).rejects.toThrow(ForbiddenError);
     });
   });
 

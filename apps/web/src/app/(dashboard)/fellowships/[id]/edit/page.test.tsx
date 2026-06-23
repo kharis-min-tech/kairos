@@ -65,19 +65,6 @@ describe('EditFellowshipPage — route guard', () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it.skip('TODO Phase 5: pastor sees the edit form', () => {
-    authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
-    render(<EditFellowshipPage />, { wrapper });
-    expect(screen.getByRole('heading', { name: 'Edit Fellowship' })).toBeDefined();
-    expect(replace).not.toHaveBeenCalled();
-  });
-
-  it.skip('TODO Phase 5: leader is redirected to /fellowships/[id]', async () => {
-    authState = { user: { id: 'l-1', systemRole: 'member' }, activeRole: 'leader' };
-    render(<EditFellowshipPage />, { wrapper });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/fellowships/fellowship-1'));
-  });
-
   it('member is redirected to /fellowships/[id]', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<EditFellowshipPage />, { wrapper });

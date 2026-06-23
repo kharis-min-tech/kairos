@@ -53,7 +53,6 @@ const memberBId = '222-mem-b';
 const followupId = '660e8400-0000-0000-0000-000000000099';
 
 const adminAuth = { memberId: '000-admin', email: 'a@x', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'p@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const memberAuth = { memberId: memberAId, email: 'm@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const otherBranchAuth = { memberId: '000-o', email: 'o@x', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const leaderAuth = { memberId: '000-leader', email: 'l@x', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
@@ -93,17 +92,6 @@ describe('createFollowup', () => {
     });
     expect(result.id).toBe(followupId);
   });
-
-  it.skip('TODO Phase 5: lets the dept lead log a followup', async () => {
-    setupSelectSequence([sampleBd], [{ id: 'dm-1' }]);
-    setupInsert([{ id: followupId }]);
-    const result = await createFollowup(mockDb, leaderAuth, branchDeptId, memberAId, {
-      contactMethod: 'Email',
-      contactStatus: 'Successful',
-    });
-    expect(result.id).toBe(followupId);
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
@@ -209,13 +197,6 @@ describe('deleteFollowup', () => {
 // ── listFollowupsForMember ────────────────────────────────
 
 describe('listFollowupsForMember', () => {
-  it.skip('TODO Phase 5: returns history for lead — needs grant-based mock', async () => {
-    const rows = [{ id: followupId, memberId: memberAId, contactedAt: new Date() }];
-    setupSelectSequence([sampleBd], rows);
-    const result = await listFollowupsForMember(mockDb, leaderAuth, branchDeptId, memberAId);
-    expect(result).toEqual(rows);
-  });
-
   it('throws ForbiddenError for member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
@@ -275,16 +256,6 @@ describe('listOverdueFollowups', () => {
     const result = await listOverdueFollowups(mockDb, adminAuth, branchDeptId);
     expect(result).toEqual([]);
   });
-
-  it.skip('TODO Phase 5: uses default 7-day threshold when not specified — needs grant-based mock', async () => {
-    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-    const roster = [{ memberId: memberAId, firstName: 'A', lastName: 'A', photoUrl: null, email: 'a@x' }];
-    const lastFollowups = [{ memberId: memberAId, lastContactedAt: fiveDaysAgo }];
-    setupSelectSequence([sampleBd], roster, lastFollowups);
-    const result = await listOverdueFollowups(mockDb, pastorAuth, branchDeptId);
-    expect(result).toEqual([]); // 5 days < 7 day threshold
-  });
-
   it('throws ForbiddenError for regular member', async () => {
     setupSelectSequence([sampleBd]);
     await expect(
