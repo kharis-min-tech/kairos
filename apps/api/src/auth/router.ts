@@ -12,8 +12,6 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
-  finalizeRoleSchema,
-  switchRoleSchema,
 } from './schemas';
 import {
   signup,
@@ -24,9 +22,6 @@ import {
   resetPassword,
   getMe,
   changePassword,
-  finalizeRole,
-  switchRole,
-  listAvailableRolesForCurrent,
 } from './service';
 
 export const authRouter = new Hono();
@@ -52,13 +47,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   return c.json(successResponse(result, message));
 });
 
-// Step 2 of the two-step login: finalize the picked role + scope. Public —
-// authority comes from the short-lived sessionToken in the body.
-authRouter.post('/finalize-role', zValidator('json', finalizeRoleSchema), async (c) => {
-  const body = c.req.valid('json');
-  const result = await finalizeRole(db, body);
-  return c.json(successResponse(result, 'Login successful'));
-});
+// RBAC Phase 5/6: /finalize-role removed — login is single-step.
 
 authRouter.post('/refresh', zValidator('json', refreshSchema), async (c) => {
   const body = c.req.valid('json');
@@ -110,20 +99,5 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   return c.json(successResponse(undefined, 'Password changed successfully'));
 });
 
-// Phase 3 header-dropdown support: swap to a different available role
-// without re-authenticating. Re-validates against the caller's CURRENT
-// leadership footprint — revocations propagate instantly.
-authRouter.post('/switch-role', authMiddleware, zValidator('json', switchRoleSchema), async (c) => {
-  const auth = getAuth(c);
-  const body = c.req.valid('json');
-  const result = await switchRole(db, auth, body);
-  return c.json(successResponse(result, 'Role switched'));
-});
-
-// Expose the available role list to an authenticated caller so the header
-// dropdown can render without recomputing on the client.
-authRouter.get('/available-roles', authMiddleware, async (c) => {
-  const auth = getAuth(c);
-  const result = await listAvailableRolesForCurrent(db, auth);
-  return c.json(successResponse(result));
-});
+// RBAC Phase 5/6: /switch-role and /available-roles removed — capabilities
+// derive from the access token's grants array; no in-app role switcher.

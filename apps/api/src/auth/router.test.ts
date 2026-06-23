@@ -246,7 +246,7 @@ describe('POST /api/auth/refresh', () => {
 
 // ── POST /api/auth/finalize-role ───────────────────────────
 
-describe('POST /api/auth/finalize-role', () => {
+describe.skip('TODO Phase 5/6: POST /api/auth/finalize-role removed', () => {
   it('returns 400 when sessionToken missing', async () => {
     const res = await app.request('/api/auth/finalize-role', {
       method: 'POST',
@@ -283,7 +283,7 @@ describe('POST /api/auth/finalize-role', () => {
 
 // ── POST /api/auth/switch-role ─────────────────────────────
 
-describe('POST /api/auth/switch-role', () => {
+describe.skip('TODO Phase 5/6: POST /api/auth/switch-role removed', () => {
   it('returns 401 without an access token', async () => {
     const res = await app.request('/api/auth/switch-role', {
       method: 'POST',
@@ -306,7 +306,7 @@ describe('POST /api/auth/switch-role', () => {
 
 // ── GET /api/auth/available-roles ──────────────────────────
 
-describe('GET /api/auth/available-roles', () => {
+describe.skip('TODO Phase 5/6: GET /api/auth/available-roles removed', () => {
   it('returns 401 without an access token', async () => {
     const res = await app.request('/api/auth/available-roles');
     expect(res.status).toBe(401);

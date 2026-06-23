@@ -8,12 +8,10 @@ import {
   useVerifyEmail,
   useForgotPassword,
   useResetPassword,
-  useFinalizeRole,
-  useSwitchRole,
   persistAuthSuccess,
 } from './use-auth';
 import { useAuthStore } from '@/lib/auth-store';
-import type { Member, RoleOption } from '@kairos/types';
+import type { Member } from '@kairos/types';
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -172,69 +170,9 @@ describe('useLogin', () => {
   });
 });
 
-describe('useFinalizeRole', () => {
-  it('calls api.auth.finalizeRole with sessionToken + role payload', async () => {
-    vi.mocked(api.auth.finalizeRole).mockResolvedValue({
-      data: {
-        tokens: { accessToken: 'at2', refreshToken: 'rt2' },
-        member: mockMember as never,
-        isFirstLogin: false,
-      },
-    } as never);
-
-    const { result } = renderHook(() => useFinalizeRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({
-        sessionToken: 'sess-xyz',
-        activeRole: 'leader' as any,
-        scope: { kind: 'fellowship', id: 'f-1' },
-        key: 'k-lead',
-      });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.auth.finalizeRole).toHaveBeenCalledWith({
-      sessionToken: 'sess-xyz',
-      activeRole: 'leader' as any,
-      scope: { kind: 'fellowship', id: 'f-1' },
-      key: 'k-lead',
-    });
-    expect(result.current.data?.tokens.accessToken).toBe('at2');
-  });
-
-  it('does NOT auto-persist — caller persists via persistAuthSuccess', async () => {
-    vi.mocked(api.auth.finalizeRole).mockResolvedValue({
-      data: {
-        tokens: { accessToken: 'at2', refreshToken: 'rt2' },
-        member: mockMember as never,
-        isFirstLogin: false,
-      },
-    } as never);
-
-    const { result } = renderHook(() => useFinalizeRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({ sessionToken: 'sess', activeRole: 'member', key: 'k' });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(useAuthStore.getState().accessToken).toBeNull();
-  });
-
-  it('surfaces error when finalize-role rejects (expired sessionToken)', async () => {
-    vi.mocked(api.auth.finalizeRole).mockRejectedValue(new Error('Session expired'));
-
-    const { result } = renderHook(() => useFinalizeRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({ sessionToken: 'old', activeRole: 'admin', key: 'k' });
-    });
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toBe('Session expired');
-  });
-});
+// RBAC Phase 5/6: useFinalizeRole / useSwitchRole removed alongside the
+// role-selection envelope and in-app role switcher. Tests for them
+// removed too.
 
 describe('persistAuthSuccess', () => {
   it('writes tokens, user, mustChangePassword, and activeRole to the store', () => {
@@ -276,93 +214,11 @@ describe('persistAuthSuccess', () => {
     expect(useAuthStore.getState().scope).toBeNull();
   });
 
-  it('persists availableRoles when caller supplies them', () => {
-    const roles: RoleOption[] = [
-      { activeRole: 'admin', displayLabel: 'Admin', key: 'k-a' },
-      { activeRole: 'member', displayLabel: 'Member', key: 'k-m' },
-    ];
-    persistAuthSuccess({
-      tokens: { accessToken: 'at', refreshToken: 'rt' },
-      member: mockMember as never,
-      activeRole: 'admin',
-      availableRoles: roles,
-    });
-    expect(useAuthStore.getState().availableRoles).toEqual(roles);
-  });
-
-  it('leaves availableRoles untouched when caller omits them (single-role login path)', () => {
-    const existing: RoleOption[] = [
-      { activeRole: 'pastor' as any, displayLabel: 'Pastor', key: 'k-p' },
-    ];
-    useAuthStore.setState({ availableRoles: existing });
-    persistAuthSuccess({
-      tokens: { accessToken: 'at', refreshToken: 'rt' },
-      member: mockMember as never,
-      activeRole: 'member',
-    });
-    expect(useAuthStore.getState().availableRoles).toEqual(existing);
-  });
+  // availableRoles persistence tests removed — persistAuthSuccess no longer
+  // touches availableRoles (login is single-step, no envelope).
 });
 
-describe('useSwitchRole', () => {
-  it('calls api.auth.switchRole with the picked option', async () => {
-    vi.mocked(api.auth.switchRole).mockResolvedValue({
-      data: {
-        tokens: { accessToken: 'at3', refreshToken: 'rt3' },
-        member: mockMember as never,
-      },
-    } as never);
-
-    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({
-        activeRole: 'leader' as any,
-        scope: { kind: 'department', id: 'd-1' },
-        key: 'k-dept-1',
-      });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.auth.switchRole).toHaveBeenCalledWith({
-      activeRole: 'leader' as any,
-      scope: { kind: 'department', id: 'd-1' },
-      key: 'k-dept-1',
-    });
-    expect(result.current.data?.tokens.accessToken).toBe('at3');
-  });
-
-  it('does NOT auto-persist — caller persists via persistAuthSuccess', async () => {
-    vi.mocked(api.auth.switchRole).mockResolvedValue({
-      data: {
-        tokens: { accessToken: 'at3', refreshToken: 'rt3' },
-        member: mockMember as never,
-      },
-    } as never);
-
-    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({ activeRole: 'member', key: 'k-mem' });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(useAuthStore.getState().accessToken).toBeNull();
-  });
-
-  it('surfaces error when switch-role rejects (stale option)', async () => {
-    vi.mocked(api.auth.switchRole).mockRejectedValue(new Error('Role selection is invalid'));
-
-    const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
-
-    await act(async () => {
-      result.current.mutate({ activeRole: 'pastor' as any, key: 'k-stale' });
-    });
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toBe('Role selection is invalid');
-  });
-});
+// useSwitchRole tests removed in Phase 5b.
 
 describe('useSignup', () => {
   it('calls api.auth.signup with provided data', async () => {
