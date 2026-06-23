@@ -151,26 +151,26 @@ describe('persistAuthSuccess', () => {
     persistAuthSuccess({
       tokens: { accessToken: 'at', refreshToken: 'rt' },
       member: { ...mockMember, mustChangePassword: true } as never,
-      activeRole: 'leader' as any,
+      activeRole: 'member',
     });
     const state = useAuthStore.getState();
     expect(state.accessToken).toBe('at');
     expect(state.refreshToken).toBe('rt');
     expect(state.user?.id).toBe('member-1');
     expect(state.mustChangePassword).toBe(true);
-    expect(state.activeRole).toBe('leader');
+    expect(state.activeRole).toBe('member');
   });
 
   it('decodes scope out of the access-token JWT payload', () => {
     const jwt = fakeJwt({
       memberId: 'm-1',
-      activeRole: 'leader' as any,
+      activeRole: 'member',
       scope: { kind: 'fellowship', id: 'f-99' },
     });
     persistAuthSuccess({
       tokens: { accessToken: jwt, refreshToken: 'rt' },
       member: mockMember as never,
-      activeRole: 'leader' as any,
+      activeRole: 'member',
     });
     expect(useAuthStore.getState().scope).toEqual({ kind: 'fellowship', id: 'f-99' });
   });

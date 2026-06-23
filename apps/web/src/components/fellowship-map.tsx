@@ -447,7 +447,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     const { latitude, longitude } = focusedFellowship;
     const branchFallback = branchName ? BRANCH_LOCATIONS[branchName] : undefined;
     const coords: [number, number] | null =
-      latitude != null && longitude != null
+      latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined
         ? [latitude, longitude]
         : (branchFallback ?? null);
 
@@ -1035,6 +1035,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       )}
 
       {/* Custom styles */}
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx global>{`
         .leaflet-container {
           background: ${isDark ? '#0a0a12' : '#aad3df'} !important;

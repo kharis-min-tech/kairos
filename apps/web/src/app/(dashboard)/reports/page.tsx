@@ -7,13 +7,13 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useQuery } from '@tanstack/react-query';
 import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAnalytics } from '@/hooks/use-reports';
 import { useMemberDashboard } from '@/hooks/use-dashboard';
-import { useFellowships, useFellowshipStats } from '@/hooks/use-fellowships';
+import { useFellowshipStats } from '@/hooks/use-fellowships';
 import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups, useDepartmentRotaStats } from '@/hooks/use-departments';
 import { useDepartmentAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
-import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
+import type { MeLeadershipFellowship, MeLeadershipDepartment, MemberDashboardStats, FellowshipMeeting, Soul } from '@kairos/types';
 import {
   BarChart,
   Bar,
@@ -83,7 +83,7 @@ function ReportStatCard({ title, value, sub, icon, trend, onClick }: {
 
 type Tab = 'attendance' | 'outreach' | 'growth';
 
-function MemberTopFellowships({ memberData }: { memberData: any }) {
+function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats | undefined }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data: meetingsData } = useQuery({
     queryKey: ['fellowship-meetings', expandedId],
@@ -110,10 +110,10 @@ function MemberTopFellowships({ memberData }: { memberData: any }) {
           <p className="text-sm text-muted-foreground">No fellowships joined yet.</p>
         ) : (
           <div className="space-y-3">
-            {myFellowships.map((f: any) => {
+            {myFellowships.map((f) => {
               const count = myFellowships.length > 0 ? Math.max(1, Math.round(totalPresent / myFellowships.length)) : 0;
               const isExpanded = expandedId === f.fellowshipId;
-              const meetings = (meetingsData as any[]) ?? [];
+              const meetings: FellowshipMeeting[] = meetingsData ?? [];
               return (
                 <div key={f.fellowshipId}>
                   <div
@@ -139,13 +139,13 @@ function MemberTopFellowships({ memberData }: { memberData: any }) {
                       {meetings.length === 0 ? (
                         <p className="text-xs text-muted-foreground">No meetings recorded yet.</p>
                       ) : (
-                        meetings.slice(0, 8).map((m: any) => (
+                        meetings.slice(0, 8).map((m) => (
                           <div key={m.id} className="flex items-center justify-between text-xs">
                             <span className="text-foreground font-medium">
                               {m.meetingDate ? new Date(m.meetingDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                             </span>
                             <span className="text-muted-foreground">
-                              {m.meetingTime ?? (m.meetingDate ? new Date(m.meetingDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—')}
+                              {m.meetingDate ? new Date(m.meetingDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'}
                             </span>
                           </div>
                         ))
@@ -191,15 +191,15 @@ function MemberSoulsTab() {
     enabled: !!memberId,
   });
 
-  const souls = (soulsData as any)?.data ?? [];
-  const converted = souls.filter((s: any) => s.status === 'Converted');
-  const active = souls.filter((s: any) => s.status !== 'Converted' && s.status !== 'Not Interested' && s.status !== 'Lost Contact');
+  const souls = ((soulsData as { data?: Soul[] } | undefined)?.data ?? []) as Soul[];
+  const converted = souls.filter((s) => s.status === 'Converted');
+  const active = souls.filter((s) => s.status !== 'Converted' && s.status !== 'Not Interested' && s.status !== 'Lost Contact');
   const totalSouls = souls.length;
   const conversionRate = totalSouls > 0 ? Math.round((converted.length / totalSouls) * 100) : 0;
 
   // Status distribution for charts
   const statusCounts: Record<string, number> = {};
-  souls.forEach((s: any) => { statusCounts[s.status] = (statusCounts[s.status] ?? 0) + 1; });
+  souls.forEach((s) => { statusCounts[s.status] = (statusCounts[s.status] ?? 0) + 1; });
   const myFunnelData = Object.entries(statusCounts).map(([status, count]) => ({ status, count }));
   const myStatusData = [...myFunnelData].sort((a, b) => b.count - a.count);
 
@@ -293,14 +293,14 @@ function MemberSoulsTab() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">
-                {evidenceFilter === 'converted' ? `Souls Won (${converted.length})` : evidenceFilter === 'active' ? `Active Follow-ups (${active.length})` : evidenceFilter === 'all' ? `All Souls (${totalSouls})` : `${evidenceFilter} (${souls.filter((s: any) => s.status === evidenceFilter).length})`}
+                {evidenceFilter === 'converted' ? `Souls Won (${converted.length})` : evidenceFilter === 'active' ? `Active Follow-ups (${active.length})` : evidenceFilter === 'all' ? `All Souls (${totalSouls})` : `${evidenceFilter} (${souls.filter((s) => s.status === evidenceFilter).length})`}
               </CardTitle>
               <button onClick={() => setEvidenceFilter(null)} className="text-xs text-muted-foreground hover:text-foreground">✕ Close</button>
             </div>
           </CardHeader>
           <CardContent>
             {(() => {
-              const list = evidenceFilter === 'converted' ? converted : evidenceFilter === 'active' ? active : evidenceFilter === 'all' ? souls : souls.filter((s: any) => s.status === evidenceFilter);
+              const list = evidenceFilter === 'converted' ? converted : evidenceFilter === 'active' ? active : evidenceFilter === 'all' ? souls : souls.filter((s) => s.status === evidenceFilter);
               return list.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">No souls in this category yet.</p>
               ) : (
@@ -315,7 +315,7 @@ function MemberSoulsTab() {
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((soul: any, i: number) => (
+                    {list.map((soul, i) => (
                       <tr key={soul.id} className="border-b border-border/50">
                         <td className="py-2 text-muted-foreground text-xs">{i + 1}</td>
                         <td className="py-2 font-medium">{soul.firstName} {soul.lastName}</td>
@@ -408,7 +408,7 @@ function MemberSoulsTab() {
             <p className="py-8 text-center text-sm text-muted-foreground">No souls assigned to you yet. Participate in outreach programs to get souls assigned.</p>
           ) : (
             <div className="space-y-2">
-              {souls.map((soul: any) => (
+              {souls.map((soul) => (
                 <div key={soul.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
                   <div>
                     <p className="text-sm font-medium">{soul.firstName} {soul.lastName}</p>
@@ -464,7 +464,6 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   const { data: attendanceData, isLoading: attendanceLoading } = useAttendanceTrend();
   const { data: outreachOverview, isLoading: outreachLoading } = useOutreachOverview();
   const { data: outreachAnalytics } = useOutreachAnalytics();
-  const { data: _fellowshipsResult } = useFellowships({ page: 1, limit: 20 });
   const { data: memberData } = useMemberDashboard();
 
   // ── Real data ──────────────────────────────────────────────
@@ -555,7 +554,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           title="Souls Reached"
           value={totalSouls}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>}
-          trend={effectiveOutreachAnalytics ? { direction: (effectiveOutreachAnalytics as any).overview.conversionRate > 0 ? 'up' : 'flat', label: `${(effectiveOutreachAnalytics as any).overview.conversionRate}% conversion` } : undefined}
+          trend={effectiveOutreachAnalytics ? { direction: effectiveOutreachAnalytics.overview.conversionRate > 0 ? 'up' : 'flat', label: `${effectiveOutreachAnalytics.overview.conversionRate}% conversion` } : undefined}
         />
         <ReportStatCard
           title="Growth Months"
@@ -803,7 +802,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Souls currently being followed up by your team</span>
                   </span>
                 </div>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-primary">{(effectiveOutreachAnalytics as any).overview.activeFollowUps ?? '—'}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-primary">{effectiveOutreachAnalytics.overview.activeFollowUps ?? '—'}</p>
               </CardContent>
             </Card>
             <Card>
@@ -815,7 +814,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Percentage of souls that moved from New to Converted</span>
                   </span>
                 </div>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">{`${(effectiveOutreachAnalytics as any).overview.conversionRate}%`}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">{`${effectiveOutreachAnalytics.overview.conversionRate}%`}</p>
               </CardContent>
             </Card>
             <Card>
@@ -827,7 +826,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Average number of days from first contact to conversion</span>
                   </span>
                 </div>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{(effectiveOutreachAnalytics as any).overview.avgDaysToConversion > 0 ? `${(effectiveOutreachAnalytics as any).overview.avgDaysToConversion} days` : 'No data'}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{effectiveOutreachAnalytics.overview.avgDaysToConversion > 0 ? `${effectiveOutreachAnalytics.overview.avgDaysToConversion} days` : 'No data'}</p>
               </CardContent>
             </Card>
           </div>
@@ -895,17 +894,17 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           </div>
 
           {/* Trend alert */}
-          { (effectiveOutreachAnalytics as any).overview.conversionRate > 0 && (
+          { effectiveOutreachAnalytics.overview.conversionRate > 0 && (
             <Card>
               <CardContent className="pt-4 pb-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Trend Alert</p>
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
-                    <span className="font-semibold">{(effectiveOutreachAnalytics as any).overview.converted} souls</span> converted out of{' '}
-                    <span className="font-semibold">{(effectiveOutreachAnalytics as any).overview.totalSouls} total</span> — a{' '}
-                    <span className="font-semibold text-emerald-600">{(effectiveOutreachAnalytics as any).overview.conversionRate}% conversion rate</span>.
-                    Average time to conversion is <span className="font-semibold">{(effectiveOutreachAnalytics as any).overview.avgDaysToConversion} days</span>.
+                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.converted} souls</span> converted out of{' '}
+                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.totalSouls} total</span> — a{' '}
+                    <span className="font-semibold text-emerald-600">{effectiveOutreachAnalytics.overview.conversionRate}% conversion rate</span>.
+                    Average time to conversion is <span className="font-semibold">{effectiveOutreachAnalytics.overview.avgDaysToConversion} days</span>.
                   </p>
                 </div>
               </CardContent>
@@ -1136,20 +1135,21 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
   }));
 
   // Probation vs active — department_members track probation state.
-  const probationMembers = members.filter((m: any) =>
-    (m.status ?? '').toLowerCase() === 'probation' || m.isProbation === true
-  ).length;
+  const probationMembers = members.filter((m) => {
+    const row = m as { status?: string; isProbation?: boolean };
+    return (row.status ?? '').toLowerCase() === 'probation' || row.isProbation === true;
+  }).length;
   const activeMembers = Math.max(0, members.length - probationMembers);
 
   // Pending join requests — status not declined/withdrawn/active.
-  const pendingJoinRequests = joinRequests.filter((r: any) => {
-    const status = (r.status ?? '').toLowerCase();
+  const pendingJoinRequests = joinRequests.filter((r) => {
+    const status = ((r as { status?: string }).status ?? '').toLowerCase();
     return status !== 'declined' && status !== 'withdrawn' && status !== 'active' && status !== 'rejected';
   }).length;
 
   // Open follow-ups.
-  const openFollowups = followups.filter((f: any) => {
-    const status = (f.status ?? '').toLowerCase();
+  const openFollowups = followups.filter((f) => {
+    const status = ((f as { status?: string }).status ?? '').toLowerCase();
     return status !== 'completed' && status !== 'closed';
   }).length;
   const closedFollowups = followups.length - openFollowups;

@@ -66,8 +66,8 @@ beforeEach(() => {
   enrollmentLoading = false;
   updateIsPending = false;
   updateMutateAsync.mockResolvedValue({});
-  // Default to leader role for "can edit" tests
-  useAuthStore.setState({ activeRole: 'leader' as any });
+  // Default to admin for "can edit" tests — admin shim in useCapabilities grants every capability.
+  useAuthStore.setState({ activeRole: 'admin' });
 });
 
 describe('EnrollmentDetailDrawer', () => {

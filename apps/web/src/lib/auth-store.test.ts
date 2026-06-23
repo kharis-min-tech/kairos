@@ -160,7 +160,7 @@ describe('decodeScopeFromAccessToken', () => {
     const jwt = fakeJwt({
       memberId: 'm-1',
       email: 'a@b.c',
-      activeRole: 'leader' as any,
+      activeRole: 'member',
       scope: { kind: 'fellowship', id: 'f-1' },
     });
     expect(decodeScopeFromAccessToken(jwt)).toEqual({ kind: 'fellowship', id: 'f-1' });

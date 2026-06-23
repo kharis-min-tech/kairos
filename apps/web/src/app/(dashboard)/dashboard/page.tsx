@@ -13,7 +13,7 @@ import { useMyAttendance } from '@/hooks/use-attendance';
 import { useAttendanceSummary, useAttendanceByBranch } from '@/hooks/use-attendance';
 import { useNewBelieversHealth, useEnrollments } from '@/hooks/use-new-believers';
 import { useMyLeadership } from '@/hooks/use-me';
-import type { MeLeadershipFellowship, MeLeadershipDepartment } from '@kairos/types';
+import type { MeLeadershipFellowship, MeLeadershipDepartment, NewBelieverHealthSummary, NewBelieverEnrollmentWithMember } from '@kairos/types';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   Tabs, TabsList, TabsTrigger, TabsContent,
@@ -1176,7 +1176,7 @@ function AdminMissionControlReports() {
             <div className="mt-3 w-full space-y-1">
               <div className="flex items-center justify-between text-[9px]">
                 <span className="text-muted-foreground">Avg Attendance</span>
-                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate != null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
+                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
               </div>
               <div className="flex items-center justify-between text-[9px]">
                 <span className="text-muted-foreground">Stale</span>
@@ -1210,7 +1210,7 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
   engagementLabel: string;
   totalMembers: number;
   branchData: { name: string; label: string; count: number }[];
-  nbHealth?: { attendanceTrend: { sessionId: string; sessionDate: string }[]; stageFunnel: Record<string, number>; stale: { count: number; thresholdDays: number }; summary: { avgAttendanceRate: number | null; activeEnrollments: number } } | null;
+  nbHealth?: NewBelieverHealthSummary | null;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: membersData } = useMembers({ limit: 100 });
@@ -1219,8 +1219,8 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
   const { data: activeEnrollmentsRes } = useEnrollments({ limit: 50 }, { enabled: type === 'newBelievers' });
   const allMembers = membersData?.data ?? [];
   const allBranches = branchesListData ?? [];
-  const staleList = (staleEnrollmentsRes as any)?.data as any[] ?? [];
-  const activeList = (activeEnrollmentsRes as any)?.data as any[] ?? [];
+  const staleList = staleEnrollmentsRes?.data ?? [];
+  const activeList = activeEnrollmentsRes?.data ?? [];
 
   // Filter members by search
   const filteredMembers = searchQuery
@@ -1453,7 +1453,7 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
   );
 }
 
-function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: any; staleList: any[]; activeList: any[] }) {
+function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: NewBelieverHealthSummary | null | undefined; staleList: NewBelieverEnrollmentWithMember[]; activeList: NewBelieverEnrollmentWithMember[] }) {
   const [view, setView] = useState<'overview' | 'stale' | 'active'>('overview');
 
   return (
@@ -1465,7 +1465,7 @@ function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: a
           <p className="text-xs text-muted-foreground mt-1">Active Enrollments</p>
         </div>
         <div className="rounded-lg bg-muted p-4 text-center">
-          <p className="text-3xl font-bold text-emerald-400">{nbHealth?.summary.avgAttendanceRate != null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</p>
+          <p className="text-3xl font-bold text-emerald-400">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</p>
           <p className="text-xs text-muted-foreground mt-1">Avg Attendance</p>
         </div>
         <div className={`rounded-lg bg-muted p-4 text-center cursor-pointer transition-colors ${view === 'stale' ? 'ring-1 ring-rose-400' : 'hover:bg-muted/80'}`} onClick={() => setView(view === 'stale' ? 'overview' : 'stale')}>
@@ -1491,7 +1491,7 @@ function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: a
                 </tr>
               </thead>
               <tbody>
-                {staleList.map((e: any, i: number) => (
+                {staleList.map((e, i) => (
                   <tr key={e.id} className="border-b border-border/50">
                     <td className="py-2 text-muted-foreground/70 text-xs">{i + 1}</td>
                     <td className="py-2 text-foreground font-medium text-xs">{e.memberFirstName ?? '—'} {e.memberLastName ?? ''}</td>
@@ -1523,7 +1523,7 @@ function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: a
                 </tr>
               </thead>
               <tbody>
-                {activeList.map((e: any, i: number) => (
+                {activeList.map((e, i) => (
                   <tr key={e.id} className="border-b border-border/50">
                     <td className="py-2 text-muted-foreground/70 text-xs">{i + 1}</td>
                     <td className="py-2 text-foreground font-medium text-xs">{e.memberFirstName ?? '—'} {e.memberLastName ?? ''}</td>
@@ -1741,7 +1741,7 @@ function BranchMissionControlReports() {
             <div className="mt-3 w-full space-y-1">
               <div className="flex items-center justify-between text-[9px]">
                 <span className="text-muted-foreground">Avg Attendance</span>
-                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate != null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
+                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
               </div>
               <div className="flex items-center justify-between text-[9px]">
                 <span className="text-muted-foreground">Stale</span>

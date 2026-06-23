@@ -11,6 +11,7 @@ const makeMemberAuth = (branchId: string): AuthContext => ({
   activeRole: 'member',
   branchSystemAdminBranchIds: [],
   branchDataAdminBranchIds: [],
+  grants: [],
 });
 
 const makeAdminAuth = (): AuthContext => ({
@@ -21,6 +22,7 @@ const makeAdminAuth = (): AuthContext => ({
   activeRole: 'admin',
   branchSystemAdminBranchIds: [],
   branchDataAdminBranchIds: [],
+  grants: [],
 });
 
 describe('enforceBranchAccess', () => {
