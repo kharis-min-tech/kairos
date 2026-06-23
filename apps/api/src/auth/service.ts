@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
 import { eq, and, or, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
@@ -19,6 +19,7 @@ import type {
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
 import { resolveGrants } from '../lib/grants';
+import type { AuthSecrets } from '../lib/auth-secrets';
 import {
   NotFoundError,
   ConflictError,
@@ -30,10 +31,6 @@ import {
 } from '@kairos/utils';
 
 const SALT_ROUNDS = 10;
-const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-me';
-const JWT_REFRESH_SECRET = process.env['JWT_REFRESH_SECRET'] ?? 'dev-refresh-secret-change-me';
-const ACCESS_TOKEN_EXPIRY = '15m';
-const REFRESH_TOKEN_EXPIRY = '7d';
 
 function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
   return {
@@ -78,20 +75,34 @@ export function getActiveBranchId(member: { homeBranchId: string; secondaryBranc
   return member.homeBranchId;
 }
 
-function signAccessToken(payload: AuthContext): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
+async function signAccessToken(payload: AuthContext, secrets: AuthSecrets): Promise<string> {
+  const key = new TextEncoder().encode(secrets.accessSecret);
+  return new SignJWT(payload as unknown as Record<string, unknown>)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(secrets.accessTokenExpiry)
+    .sign(key);
 }
 
-function signRefreshToken(memberId: string): string {
-  return jwt.sign({ memberId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+async function signRefreshToken(memberId: string, secrets: AuthSecrets): Promise<string> {
+  const key = new TextEncoder().encode(secrets.refreshSecret);
+  return new SignJWT({ memberId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(secrets.refreshTokenExpiry)
+    .sign(key);
 }
 
 /** Generate a fresh access+refresh token pair for a given auth context. */
-export function generateTokenPair(authContext: AuthContext): { accessToken: string; refreshToken: string } {
-  return {
-    accessToken: signAccessToken(authContext),
-    refreshToken: signRefreshToken(authContext.memberId),
-  };
+export async function generateTokenPair(
+  authContext: AuthContext,
+  secrets: AuthSecrets,
+): Promise<{ accessToken: string; refreshToken: string }> {
+  const [accessToken, refreshToken] = await Promise.all([
+    signAccessToken(authContext, secrets),
+    signRefreshToken(authContext.memberId, secrets),
+  ]);
+  return { accessToken, refreshToken };
 }
 
 /**
@@ -249,6 +260,7 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
 async function issueAuthenticatedSession(
   db: Database,
   member: typeof members.$inferSelect,
+  secrets: AuthSecrets,
 ): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
   const [authority, grants] = await Promise.all([
     resolveBranchAdminAuthority(db, member.id),
@@ -267,8 +279,10 @@ async function issueAuthenticatedSession(
     grants,
   };
 
-  const accessToken = signAccessToken(authContext);
-  const refreshToken = signRefreshToken(member.id);
+  const [accessToken, refreshToken] = await Promise.all([
+    signAccessToken(authContext, secrets),
+    signRefreshToken(member.id, secrets),
+  ]);
 
   await db
     .update(members)
@@ -285,6 +299,7 @@ export async function login(
   db: Database,
   email: string,
   password: string,
+  secrets: AuthSecrets,
 ): Promise<LoginResponse> {
   const [member] = await db
     .select()
@@ -324,14 +339,23 @@ export async function login(
     );
   }
 
-  const session = await issueAuthenticatedSession(db, member);
+  const session = await issueAuthenticatedSession(db, member, secrets);
   return { ...session, isFirstLogin };
 }
 
-export async function refreshAccessToken(db: Database, refreshToken: string): Promise<AuthTokens> {
-  let payload: { memberId: string };
+export async function refreshAccessToken(
+  db: Database,
+  refreshToken: string,
+  secrets: AuthSecrets,
+): Promise<AuthTokens> {
+  const key = new TextEncoder().encode(secrets.refreshSecret);
+  let memberId: string;
   try {
-    payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { memberId: string };
+    const { payload } = await jwtVerify(refreshToken, key);
+    if (typeof payload['memberId'] !== 'string') {
+      throw new Error('invalid payload');
+    }
+    memberId = payload['memberId'];
   } catch {
     throw new UnauthorizedError('Invalid or expired refresh token');
   }
@@ -339,7 +363,7 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
   const [member] = await db
     .select()
     .from(members)
-    .where(and(eq(members.id, payload.memberId), eq(members.isActive, true)))
+    .where(and(eq(members.id, memberId), eq(members.isActive, true)))
     .limit(1);
 
   if (!member) {
@@ -363,10 +387,11 @@ export async function refreshAccessToken(db: Database, refreshToken: string): Pr
     grants: [],
   };
 
-  return {
-    accessToken: signAccessToken(authContext),
-    refreshToken: signRefreshToken(member.id),
-  };
+  const [accessToken, newRefreshToken] = await Promise.all([
+    signAccessToken(authContext, secrets),
+    signRefreshToken(member.id, secrets),
+  ]);
+  return { accessToken, refreshToken: newRefreshToken };
 }
 
 export async function verifyEmail(db: Database, token: string): Promise<void> {

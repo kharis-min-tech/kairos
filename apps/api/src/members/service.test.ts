@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { AuthSecrets } from '../lib/auth-secrets';
+
+const TEST_SECRETS: AuthSecrets = {
+  accessSecret: 'dev-secret-change-me',
+  refreshSecret: 'dev-refresh-secret-change-me',
+  accessTokenExpiry: '15m',
+  refreshTokenExpiry: '7d',
+};
 
 // ── Flexible Drizzle mock builder ─────────────────────────
 function createChain(result: unknown = []) {
@@ -637,7 +645,7 @@ describe('switchActiveBranch', () => {
   it('toggles from home to secondary, returns secondaryBranchId as activeBranchId', async () => {
     setupSelect([sampleMemberForSwitch]);
     setupUpdate([]);
-    const result = await switchActiveBranch(mockDb, memberAuth, memberId);
+    const result = await switchActiveBranch(mockDb, memberAuth, memberId, TEST_SECRETS);
     expect(result.isAtSecondaryBranch).toBe(true);
     expect(result.activeBranchId).toBe(secondaryBranchId);
     expect(result.tokens.accessToken).toBeDefined();
@@ -646,25 +654,25 @@ describe('switchActiveBranch', () => {
   it('toggles from secondary to home, returns homeBranchId as activeBranchId', async () => {
     setupSelect([{ ...sampleMemberForSwitch, isAtSecondaryBranch: true }]);
     setupUpdate([]);
-    const result = await switchActiveBranch(mockDb, memberAuth, memberId);
+    const result = await switchActiveBranch(mockDb, memberAuth, memberId, TEST_SECRETS);
     expect(result.isAtSecondaryBranch).toBe(false);
     expect(result.activeBranchId).toBe(branchId);
   });
 
   it('throws ForbiddenError when switching another member\'s branch', async () => {
-    await expect(switchActiveBranch(mockDb, otherAuth, memberId))
+    await expect(switchActiveBranch(mockDb, otherAuth, memberId, TEST_SECRETS))
       .rejects.toThrow('You can only switch your own active branch');
   });
 
   it('throws ValidationError when member has no secondaryBranchId', async () => {
     setupSelect([{ ...sampleMemberForSwitch, secondaryBranchId: null }]);
-    await expect(switchActiveBranch(mockDb, memberAuth, memberId))
+    await expect(switchActiveBranch(mockDb, memberAuth, memberId, TEST_SECRETS))
       .rejects.toThrow('No secondary branch assigned');
   });
 
   it('throws NotFoundError when member does not exist', async () => {
     setupSelect([]);
-    await expect(switchActiveBranch(mockDb, memberAuth, memberId))
+    await expect(switchActiveBranch(mockDb, memberAuth, memberId, TEST_SECRETS))
       .rejects.toThrow('Member not found');
   });
 });

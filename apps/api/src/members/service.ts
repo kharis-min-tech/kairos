@@ -8,6 +8,7 @@ import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
+import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -1006,6 +1007,7 @@ export async function switchActiveBranch(
   db: Database,
   auth: AuthContext,
   memberId: string,
+  secrets: AuthSecrets,
 ): Promise<SwitchActiveBranchResponse> {
   // Only the member themselves can toggle their active branch
   if (auth.memberId !== memberId) {
@@ -1056,7 +1058,7 @@ export async function switchActiveBranch(
     grants: [],
   };
 
-  const tokens = generateTokenPair(authContext);
+  const tokens = await generateTokenPair(authContext, secrets);
 
   return { tokens, isAtSecondaryBranch: nextIsAtSecondary, activeBranchId };
 }

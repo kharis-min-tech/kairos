@@ -1,6 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
+import type { AuthSecrets } from '../lib/auth-secrets';
+
+const TEST_SECRETS: AuthSecrets = {
+  accessSecret: 'dev-secret-change-me',
+  refreshSecret: 'dev-refresh-secret-change-me',
+  accessTokenExpiry: '15m',
+  refreshTokenExpiry: '7d',
+};
+
+async function verifyAccess(token: string): Promise<Record<string, unknown>> {
+  const key = new TextEncoder().encode(TEST_SECRETS.accessSecret);
+  const { payload } = await jwtVerify(token, key);
+  return payload as Record<string, unknown>;
+}
+
+async function signTestRefresh(memberId: string): Promise<string> {
+  const key = new TextEncoder().encode(TEST_SECRETS.refreshSecret);
+  return new SignJWT({ memberId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime(TEST_SECRETS.refreshTokenExpiry)
+    .sign(key);
+}
 
 // Mock database
 const mockSelect = vi.fn();
@@ -205,7 +227,7 @@ describe('login', () => {
     setupSelectChain([member]);
     setupUpdateChain();
 
-    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
 
     expect(result.tokens.accessToken).toBeDefined();
     expect(result.tokens.refreshToken).toBeDefined();
@@ -213,7 +235,7 @@ describe('login', () => {
     expect(result.isFirstLogin).toBe(true);
 
     // Verify access token is valid JWT
-    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    const decoded = await verifyAccess(result.tokens.accessToken);
     expect(decoded['memberId']).toBe(baseMember.id);
     expect(decoded['email']).toBe('john@example.com');
     expect(decoded['systemRole']).toBe('member');
@@ -223,7 +245,7 @@ describe('login', () => {
     const { login } = await import('./service');
     setupSelectChain([]);
 
-    await expect(login(mockDb, 'nope@example.com', 'password'))
+    await expect(login(mockDb, 'nope@example.com', 'password', TEST_SECRETS))
       .rejects.toThrow('Invalid email or password');
   });
 
@@ -233,7 +255,7 @@ describe('login', () => {
     const hashed = await bcrypt.hash('CorrectPass1!', 10);
     setupSelectChain([{ ...baseMember, passwordHash: hashed }]);
 
-    await expect(login(mockDb, 'john@example.com', 'WrongPassword'))
+    await expect(login(mockDb, 'john@example.com', 'WrongPassword', TEST_SECRETS))
       .rejects.toThrow('Invalid email or password');
   });
 
@@ -243,7 +265,7 @@ describe('login', () => {
     const hashed = await bcrypt.hash('MyPassword1!', 10);
     setupSelectChain([{ ...baseMember, passwordHash: hashed, emailVerified: false }]);
 
-    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
       .rejects.toThrow('Email not verified');
   });
 
@@ -253,7 +275,7 @@ describe('login', () => {
     const hashed = await bcrypt.hash('MyPassword1!', 10);
     setupSelectChain([{ ...baseMember, passwordHash: hashed, approvalStatus: 'pending' }]);
 
-    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
       .rejects.toThrow('pending approval');
   });
 
@@ -263,7 +285,7 @@ describe('login', () => {
     const hashed = await bcrypt.hash('MyPassword1!', 10);
     setupSelectChain([{ ...baseMember, passwordHash: hashed, memberType: 'child' }]);
 
-    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
       .rejects.toThrow('belongs to a minor');
   });
 
@@ -273,7 +295,7 @@ describe('login', () => {
     const hashed = await bcrypt.hash('MyPassword1!', 10);
     setupSelectChain([{ ...baseMember, passwordHash: hashed, dateOfBirth: '2015-01-01' }]);
 
-    await expect(login(mockDb, 'john@example.com', 'MyPassword1!'))
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
       .rejects.toThrow('belongs to a minor');
   });
 
@@ -284,7 +306,7 @@ describe('login', () => {
     setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'admin', lastLoginAt: new Date() }]);
     setupUpdateChain();
 
-    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
     expect(result.tokens.accessToken).toBeDefined();
   });
 
@@ -296,8 +318,8 @@ describe('login', () => {
     setupSelectChain([{ ...baseMember, passwordHash: hashed, secondaryBranchId, isAtSecondaryBranch: true, lastLoginAt: null }]);
     setupUpdateChain();
 
-    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
-    const decoded = jwt.verify(result.tokens.accessToken, 'dev-secret-change-me') as Record<string, unknown>;
+    const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
+    const decoded = await verifyAccess(result.tokens.accessToken);
     expect(decoded['branchId']).toBe(secondaryBranchId);
   });
 });
@@ -334,12 +356,11 @@ describe('refreshAccessToken', () => {
   it('should return new tokens for valid refresh token', async () => {
     const { refreshAccessToken } = await import('./service');
 
-    const refreshSecret = 'dev-refresh-secret-change-me';
-    const token = jwt.sign({ memberId: baseMember.id }, refreshSecret, { expiresIn: '7d' });
+    const token = await signTestRefresh(baseMember.id);
 
     setupSelectChain([baseMember]);
 
-    const result = await refreshAccessToken(mockDb, token);
+    const result = await refreshAccessToken(mockDb, token, TEST_SECRETS);
 
     expect(result.accessToken).toBeDefined();
     expect(result.refreshToken).toBeDefined();
@@ -348,19 +369,18 @@ describe('refreshAccessToken', () => {
   it('should throw UnauthorizedError for invalid refresh token', async () => {
     const { refreshAccessToken } = await import('./service');
 
-    await expect(refreshAccessToken(mockDb, 'invalid-token'))
+    await expect(refreshAccessToken(mockDb, 'invalid-token', TEST_SECRETS))
       .rejects.toThrow('Invalid or expired refresh token');
   });
 
   it('should throw UnauthorizedError for inactive member', async () => {
     const { refreshAccessToken } = await import('./service');
 
-    const refreshSecret = 'dev-refresh-secret-change-me';
-    const token = jwt.sign({ memberId: baseMember.id }, refreshSecret, { expiresIn: '7d' });
+    const token = await signTestRefresh(baseMember.id);
 
     setupSelectChain([]);
 
-    await expect(refreshAccessToken(mockDb, token))
+    await expect(refreshAccessToken(mockDb, token, TEST_SECRETS))
       .rejects.toThrow('Member not found or inactive');
   });
 });

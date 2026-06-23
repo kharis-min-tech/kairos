@@ -61,9 +61,9 @@ const branchDeptId = '440e8400-0000-0000-0000-000000000004';
 const departmentId = '550e8400-0000-0000-0000-000000000005';
 const requestId = '660e8400-0000-0000-0000-000000000006';
 
-const adminToken = signTestToken({ systemRole: 'admin' });
-const pastorToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId });
-const memberToken = signTestToken({
+const adminToken = await signTestToken({ systemRole: 'admin' });
+const pastorToken = await signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId });
+const memberToken = await signTestToken({
   systemRole: 'member',
   memberId: TEST_IDS.memberId,
   branchId: TEST_IDS.branchId,

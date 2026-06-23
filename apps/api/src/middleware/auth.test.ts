@@ -1,8 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Context } from 'hono';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { UnauthorizedError } from '@kairos/utils';
 import type { AuthContext } from '@kairos/types';
+
+async function signTestJwt(
+  payload: Record<string, unknown>,
+  secret: string,
+  expiresIn: string,
+): Promise<string> {
+  const key = new TextEncoder().encode(secret);
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime(expiresIn)
+    .sign(key);
+}
 
 // Stub the db singleton — middleware/auth.ts imports it for resolveGrants,
 // and the real db.ts module throws at import-time when DATABASE_URL is unset.
@@ -77,10 +89,10 @@ describe('authMiddleware', () => {
     // be able to access protected endpoints. If this guard regresses, an
     // attacker who intercepts a sessionToken could effectively pin a
     // pending-role session as their access credential.
-    const sessionToken = jwt.sign(
+    const sessionToken = await signTestJwt(
       { kind: 'role-selection', memberId: '11111111-1111-1111-1111-111111111111' },
       JWT_SECRET,
-      { expiresIn: '5m' },
+      '5m',
     );
     const next = vi.fn();
     const { ctx } = makeAuthCtx(`Bearer ${sessionToken}`);
@@ -91,7 +103,7 @@ describe('authMiddleware', () => {
   });
 
   it('accepts a normal access token and stores the auth payload', async () => {
-    const accessToken = jwt.sign(
+    const accessToken = await signTestJwt(
       {
         memberId: '11111111-1111-1111-1111-111111111111',
         email: 'user@kairos.local',
@@ -100,7 +112,7 @@ describe('authMiddleware', () => {
         branchId: branchA,
       },
       JWT_SECRET,
-      { expiresIn: '15m' },
+      '15m',
     );
     const next = vi.fn();
     const { ctx, getAuthPayload } = makeAuthCtx(`Bearer ${accessToken}`);

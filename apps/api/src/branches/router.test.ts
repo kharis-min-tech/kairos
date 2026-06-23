@@ -42,9 +42,9 @@ function chainTo(data: unknown) {
 const { createApp } = await import('../app');
 const app = createApp();
 
-const adminToken = signTestToken({ systemRole: 'admin' });
-const pastorToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId });
-const memberToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
+const adminToken = await signTestToken({ systemRole: 'admin' });
+const pastorToken = await signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId });
+const memberToken = await signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 
 const sampleRegion = {
   id: TEST_IDS.regionId,
@@ -293,7 +293,7 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
   });
 
   it('allows branch system admin of the requested branch', async () => {
-    const bsaToken = signTestToken({
+    const bsaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branchId,
@@ -324,7 +324,7 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
   });
 
   it('rejects branch DATA admin alone (BSA is required)', async () => {
-    const bdaToken = signTestToken({
+    const bdaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branchId,
@@ -339,7 +339,7 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
   });
 
   it('rejects branch system admin of a DIFFERENT branch', async () => {
-    const otherBsaToken = signTestToken({
+    const otherBsaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branch2Id,
@@ -391,7 +391,7 @@ describe('GET /api/branches/:id/roles', () => {
   });
 
   it('returns assignments for branch DATA admin of that branch (view-only is allowed)', async () => {
-    const bdaToken = signTestToken({
+    const bdaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branchId,
@@ -414,7 +414,7 @@ describe('GET /api/branches/:id/roles', () => {
   });
 
   it('returns 401 for branch system admin of OTHER branch', async () => {
-    const otherBsaToken = signTestToken({
+    const otherBsaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branch2Id,
@@ -459,7 +459,7 @@ describe('POST /api/branches/:id/roles', () => {
   });
 
   it('rejects branch DATA admin alone (BSA is required to grant)', async () => {
-    const bdaToken = signTestToken({
+    const bdaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branchId,
@@ -508,7 +508,7 @@ describe('POST /api/branches/:id/roles', () => {
   });
 
   it('rejects branch system admin of OTHER branch', async () => {
-    const otherBsaToken = signTestToken({
+    const otherBsaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branch2Id,
@@ -553,7 +553,7 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
   });
 
   it('rejects branch DATA admin alone', async () => {
-    const bdaToken = signTestToken({
+    const bdaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: TEST_IDS.branchId,

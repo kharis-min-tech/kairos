@@ -256,7 +256,7 @@ describe('GET /api/auth/me', () => {
     const selectChain = chainTo([baseMember]);
     mockDb.select.mockReturnValueOnce(selectChain);
 
-    const token = signTestToken();
+    const token = await signTestToken();
     const res = await app.request('/api/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     });

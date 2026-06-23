@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import type { AuthContext } from '@kairos/types';
 
 const JWT_SECRET = 'dev-secret-change-me';
 
 /** Sign a JWT for use in functional tests */
-export function signTestToken(overrides: Partial<AuthContext> = {}): string {
+export async function signTestToken(overrides: Partial<AuthContext> = {}): Promise<string> {
   const payload: AuthContext = {
     memberId: '550e8400-e29b-41d4-a716-446655440000',
     email: 'admin@kairos.local',
@@ -15,7 +15,12 @@ export function signTestToken(overrides: Partial<AuthContext> = {}): string {
     branchDataAdminBranchIds: [],
     ...overrides,
   } as AuthContext;
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  const key = new TextEncoder().encode(JWT_SECRET);
+  return new SignJWT(payload as unknown as Record<string, unknown>)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('15m')
+    .sign(key);
 }
 
 /** Create a chainable mock that resolves with the given data */

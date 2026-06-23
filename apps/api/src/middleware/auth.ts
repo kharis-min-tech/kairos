@@ -1,11 +1,10 @@
 import type { Context, Next } from 'hono';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 import type { AuthContext, Capability, RoleScope } from '@kairos/types';
 import { UnauthorizedError } from '@kairos/utils';
 import { db } from '../db';
 import { resolveGrants, authHasCapability } from '../lib/grants';
-
-const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-me';
+import { getAuthSecrets } from '../lib/auth-secrets';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -20,9 +19,12 @@ export async function authMiddleware(c: Context, next: Next) {
   }
 
   const token = header.slice(7);
+  const { accessSecret } = getAuthSecrets(c);
+  const key = new TextEncoder().encode(accessSecret);
   let payload: unknown;
   try {
-    payload = jwt.verify(token, JWT_SECRET);
+    const result = await jwtVerify(token, key);
+    payload = result.payload;
   } catch {
     throw new UnauthorizedError('Invalid or expired token');
   }

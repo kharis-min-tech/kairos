@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { getAuthSecrets } from '../lib/auth-secrets';
 import { successResponse } from '@kairos/utils';
 import {
   updateMemberSchema,
@@ -119,7 +120,7 @@ membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) =>
 
 membersRouter.patch('/:id/active-branch', async (c) => {
   const auth = getAuth(c);
-  const result = await switchActiveBranch(db, auth, c.req.param('id'));
+  const result = await switchActiveBranch(db, auth, c.req.param('id'), getAuthSecrets(c));
   return c.json(successResponse(result, 'Active branch updated'));
 });
 

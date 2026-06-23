@@ -51,8 +51,8 @@ function chainToParallel(listData: unknown[]) {
 const { createApp } = await import('../app');
 const app = createApp();
 
-const adminToken = signTestToken({ systemRole: 'admin' });
-const memberToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
+const adminToken = await signTestToken({ systemRole: 'admin' });
+const memberToken = await signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 
 const sampleMember = {
   id: TEST_IDS.memberId,

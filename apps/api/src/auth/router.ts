@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { db } from '../db';
 import { authMiddleware, getAuth } from '../middleware/auth';
+import { getAuthSecrets } from '../lib/auth-secrets';
 import { successResponse } from '@kairos/utils';
 import {
   signupSchema,
@@ -40,13 +41,13 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
 
 authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
-  const result = await login(db, body.email, body.password);
+  const result = await login(db, body.email, body.password, getAuthSecrets(c));
   return c.json(successResponse(result, 'Login successful'));
 });
 
 authRouter.post('/refresh', zValidator('json', refreshSchema), async (c) => {
   const body = c.req.valid('json');
-  const tokens = await refreshAccessToken(db, body.refreshToken);
+  const tokens = await refreshAccessToken(db, body.refreshToken, getAuthSecrets(c));
   return c.json(successResponse(tokens, 'Token refreshed'));
 });
 

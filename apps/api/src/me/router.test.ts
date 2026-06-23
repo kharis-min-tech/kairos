@@ -88,7 +88,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([])) // fellowships
       .mockReturnValueOnce(chainTo([])); // branch_departments
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -116,7 +116,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -139,7 +139,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow, fellowshipCoLeadRow]))
       .mockReturnValueOnce(chainTo([]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -164,7 +164,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -189,7 +189,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]));
 
-    const token = signTestToken({ systemRole: 'admin' });
+    const token = await signTestToken({ systemRole: 'admin' });
 
     const res = await app.request('/api/me/leadership', {
       headers: { Authorization: `Bearer ${token}` },
@@ -206,7 +206,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow, fellowshipCoLeadRow]))
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -240,7 +240,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow, fellowshipCoLeadRow]))
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -270,7 +270,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow, fellowshipCoLeadRow]))
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -300,7 +300,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow]))
       .mockReturnValueOnce(chainTo([leadDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -328,7 +328,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
@@ -353,7 +353,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([fellowshipLeaderRow, fellowshipCoLeadRow]))
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
-    const token = signTestToken({
+    const token = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
