@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateDepartment, useGlobalDepartments } from '@/hooks/use-departments';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
@@ -39,9 +40,9 @@ type FormValues = z.infer<typeof schema>;
 export default function NewDepartmentPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const activeRole = useAuthStore((s) => s.activeRole);
+  const caps = useCapabilities();
   const isAdmin = user?.systemRole === 'admin';
-  const canCreate = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const canCreate = caps.has('branch:write');
 
   // Mirrors list-page persona gating: only admins + pastors can create departments.
   useEffect(() => {

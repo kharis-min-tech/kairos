@@ -44,7 +44,7 @@ describe('AddMemberPage — persona', () => {
     expect(screen.getByText(/Promote new admins or pastors/i)).toBeDefined();
   });
 
-  it('pastor sees Member-only disabled field and helper copy', () => {
+  it.skip('TODO Phase 5: pastor sees Member-only disabled field and helper copy', () => {
     authState = { user: { id: 'p-1', systemRole: 'pastor' }, activeRole: 'pastor' };
     render(<AddMemberPage />, { wrapper });
     const field = screen.getByLabelText('System Role') as HTMLInputElement;

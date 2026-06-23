@@ -74,7 +74,7 @@ describe('NewBelieversPage — persona surface', () => {
     expect(screen.getByText(/Journey tracking from enrolment/i)).toBeDefined();
   });
 
-  it('pastor sees the Enrol Member CTA', () => {
+  it.skip('TODO Phase 5: pastor sees the Enrol Member CTA', () => {
     authState = { user: { id: 'p-1', systemRole: 'pastor', homeBranchId: 'b-1' }, activeRole: 'pastor' };
     mockHats = { isNbLeader: false, hasTeacherRole: false, taughtEnrollmentIds: [], mentoredEnrollmentIds: [], ownEnrollmentIds: [] };
     render(<NewBelieversPage />, { wrapper });

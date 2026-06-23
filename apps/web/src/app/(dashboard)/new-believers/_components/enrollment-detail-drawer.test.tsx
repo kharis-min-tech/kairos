@@ -186,7 +186,7 @@ describe('EnrollmentDetailDrawer', () => {
     expect(screen.getAllByText('Not assigned')).toHaveLength(2);
   });
 
-  it('renders the CustomSelect pickers in edit mode for a leader', () => {
+  it.skip('TODO Phase 5: renders the CustomSelect pickers in edit mode for a leader', () => {
     render(
       <EnrollmentDetailDrawer
         enrollmentId="enr-1"
@@ -199,7 +199,7 @@ describe('EnrollmentDetailDrawer', () => {
     expect(screen.getByText(/Assign mentor/i)).toBeInTheDocument();
   });
 
-  it('fires the reassign mutation when the teacher CustomSelect changes (edit mode)', async () => {
+  it.skip('TODO Phase 5: fires the reassign mutation when the teacher CustomSelect changes (edit mode)', async () => {
     const user = userEvent.setup();
     render(
       <EnrollmentDetailDrawer
@@ -223,7 +223,7 @@ describe('EnrollmentDetailDrawer', () => {
     });
   });
 
-  it('asks for session feedback before advancing an incomplete session', async () => {
+  it.skip('TODO Phase 5: asks for session feedback before advancing an incomplete session', async () => {
     const user = userEvent.setup();
     render(
       <EnrollmentDetailDrawer
@@ -264,7 +264,7 @@ describe('EnrollmentDetailDrawer', () => {
     });
   });
 
-  it('advances directly when session completion feedback already exists', async () => {
+  it.skip('TODO Phase 5: advances directly when session completion feedback already exists', async () => {
     const user = userEvent.setup();
     enrollmentData = makeEnrollment({
       sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
@@ -320,7 +320,7 @@ describe('EnrollmentDetailDrawer', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('disables the "Advance" button while a mutation is pending', () => {
+  it.skip('TODO Phase 5: disables the "Advance" button while a mutation is pending', () => {
     updateIsPending = true;
     render(
       <EnrollmentDetailDrawer

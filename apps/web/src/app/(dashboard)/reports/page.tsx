@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useQuery } from '@tanstack/react-query';
 import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAnalytics } from '@/hooks/use-reports';
 import { useMemberDashboard } from '@/hooks/use-dashboard';
@@ -1303,6 +1304,7 @@ export default function ReportsPage() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const bsaIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
   const bdaIds = useAuthStore((s) => s.branchDataAdminBranchIds);
+  const caps = useCapabilities();
 
   // useMyLeadership populates auth-store BSA/BDA + returns lead arrays.
   const leadership = useMyLeadership();
@@ -1319,7 +1321,7 @@ export default function ReportsPage() {
   const isBranchSystemAdmin = bsaIds.length > 0 || (leadership.data?.branchSystemAdminBranchIds.length ?? 0) > 0;
   const isBranchDataAdmin = bdaIds.length > 0 || (leadership.data?.branchDataAdminBranchIds.length ?? 0) > 0;
   const isBranchAdmin = isBranchSystemAdmin || isBranchDataAdmin;
-  const isPastor = (activeRole as string) === 'pastor';
+  const isPastor = caps.has('branch:write');
   const hasFellowshipLead = allLeadFellowships.length > 0;
   const hasDepartmentLead = allLeadDepartments.length > 0;
 

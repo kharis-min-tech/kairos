@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useFellowships, useDeleteFellowship } from '@/hooks/use-fellowships';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMyProfile } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
@@ -71,6 +72,7 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
 function FellowshipsContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
+  const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
   const { data: myProfile } = useMyProfile();
   const { data: branchesResult } = useBranches();
@@ -123,7 +125,7 @@ function FellowshipsContent() {
             Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
           </p>
         </div>
-        {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
+        {(caps.has('branch:write')) && (
           <Link href="/fellowships/new">
             <Button size="sm">+ New Fellowship</Button>
           </Link>
@@ -146,7 +148,7 @@ function FellowshipsContent() {
           </Button>
         </div>
 
-        {(activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader') && pagination && (
+        {((caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'))) && pagination && (
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 rounded-lg bg-[#5D3FD3]/10 px-3 py-1.5">
               <svg className="h-4 w-4 text-[#5D3FD3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -213,7 +215,7 @@ function FellowshipsContent() {
       {!fellowships || fellowships.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            {(activeRole as string) === 'leader' ? (
+            {(caps.has('fellowship:write') || caps.has('department:write')) ? (
               <>
                 <p className="font-medium">You don’t lead a fellowship</p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -267,7 +269,7 @@ function FellowshipsContent() {
                         </p>
                       )}
                     </div>
-                    {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
+                    {(caps.has('branch:write')) && (
                       <div className="mt-4">
                         <Button
                           variant="destructive"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
@@ -62,6 +63,7 @@ interface UnregisteredMember {
 }
 
 export default function ProgramDetailPage() {
+  const caps = useCapabilities();
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,8 +79,8 @@ export default function ProgramDetailPage() {
   const [highlightSection, setHighlightSection] = useState<string | null>(null);
 
   const isMember = activeRole === 'member';
-  const canManageProgram = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
-  const canRegister = activeRole === 'member' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const canManageProgram = (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
+  const canRegister = activeRole === 'member' || (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
   
   // Debug: Log user and program creator info
   useEffect(() => {

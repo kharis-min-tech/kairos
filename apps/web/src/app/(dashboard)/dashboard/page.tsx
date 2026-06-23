@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
 import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
@@ -2025,6 +2026,7 @@ function MissionSummary({ role }: { role: string }) {
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
   // Phase 4: `scope` narrows the dashboard fork. /api/me/leadership already
   // scope-filters its response server-side, so the existing arrays here are
@@ -2058,8 +2060,8 @@ export default function DashboardPage() {
 
   const isLeadership =
     activeRole === 'admin' ||
-    (activeRole as string) === 'pastor' ||
-    (activeRole as string) === 'leader' ||
+    caps.has('branch:write') ||
+    (caps.has('fellowship:write') || caps.has('department:write')) ||
     isBranchAdmin ||
     hasFellowshipLead ||
     hasDepartmentLead;
@@ -2097,7 +2099,7 @@ export default function DashboardPage() {
         : `Administrator${suffix}`;
     } else if (isBranchDataAdmin) {
       roleLabel = `Branch Data Admin${suffix}`;
-    } else if ((activeRole as string) === 'pastor') {
+    } else if (caps.has('branch:write')) {
       roleLabel = `Pastor${suffix}`;
     } else {
       roleLabel = `Branch${suffix}`;
@@ -2120,7 +2122,7 @@ export default function DashboardPage() {
       homeBranchInBda && homeBranchName
         ? `Branch Data Admin — ${homeBranchName}`
         : 'Branch Data Admin';
-  } else if ((activeRole as string) === 'pastor') {
+  } else if (caps.has('branch:write')) {
     roleLabel = 'Pastor';
   } else if (hasFellowshipLead && hasDepartmentLead) {
     roleLabel = 'Fellowship & Department Lead';
@@ -2130,7 +2132,7 @@ export default function DashboardPage() {
   } else if (hasDepartmentLead) {
     const name = allLeadDepartments[0]?.departmentName;
     roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
-  } else if ((activeRole as string) === 'leader') {
+  } else if ((caps.has('fellowship:write') || caps.has('department:write'))) {
     roleLabel = 'Leader';
   } else {
     roleLabel = 'Member';
@@ -2171,7 +2173,7 @@ export default function DashboardPage() {
           <AdminStats />
         ) : isBranchAdmin ? (
           <BranchAdminStats />
-        ) : (activeRole as string) === 'pastor' ? (
+        ) : caps.has('branch:write') ? (
           <PastorStats />
         ) : hasFellowshipLead && hasDepartmentLead ? (
           <DualLeaderTabs
@@ -2201,7 +2203,7 @@ export default function DashboardPage() {
           <div className="-mt-1">
             {isSystemAdmin ? (
               <AdminMissionControlReports />
-            ) : isBranchAdmin || (activeRole as string) === 'pastor' || hasFellowshipLead || hasDepartmentLead ? (
+            ) : isBranchAdmin || caps.has('branch:write') || hasFellowshipLead || hasDepartmentLead ? (
               <BranchMissionControlReports />
             ) : (
               <MemberMissionControlReports />
@@ -2216,7 +2218,7 @@ export default function DashboardPage() {
           {/* Pending approvals — admin sees all; branch admin/pastor see branch-
               scoped. Fellowship/department leaders without branch authority
               don't see this panel (Phase 6 may add a scoped variant). */}
-          {(isSystemAdmin || isBranchAdmin || (activeRole as string) === 'pastor') && (
+          {(isSystemAdmin || isBranchAdmin || caps.has('branch:write')) && (
             <PendingApprovalsPanel branchId={isSystemAdmin ? undefined : branchId} />
           )}
           <QuickActions role={activeRole ?? 'member'} />

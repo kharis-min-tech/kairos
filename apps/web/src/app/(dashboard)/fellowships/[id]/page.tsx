@@ -19,6 +19,7 @@ import {
   useReviewJoinRequest,
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect, NumberStepper } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
@@ -58,10 +59,11 @@ function FellowshipDetailSkeleton() {
 }
 
 export default function FellowshipDetailPage() {
+  const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const { user } = useAuthStore();
+  const isAdminOrPastor = caps.has('branch:write');
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');

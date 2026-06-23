@@ -4,16 +4,18 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useBranch, useBranchLeadership } from '@/hooks/use-branches';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { Button } from '@kairos/ui';
 
 export default function MyBranchPage() {
+  const caps = useCapabilities();
   const router = useRouter();
   const { user, activeRole } = useAuthStore();
   const branchId = user?.homeBranchId ?? '';
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const isAdminOrPastor = caps.has('branch:write');
 
   // Second-level guard — sidebar gates to pastor; mirror that here for direct-URL access.
   useEffect(() => {

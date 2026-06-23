@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useFellowship, useUpdateFellowship } from '@/hooks/use-fellowships';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
@@ -68,9 +69,9 @@ export default function EditFellowshipPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const activeRole = useAuthStore((s) => s.activeRole);
+  const caps = useCapabilities();
   const isAdmin = user?.systemRole === 'admin';
-  const canEdit = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const canEdit = caps.has('branch:write');
 
   // Mirrors the detail-page Edit button gating: members + leaders go back to detail.
   useEffect(() => {

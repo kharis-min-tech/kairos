@@ -15,6 +15,7 @@ import {
   useWithdrawDepartmentJoinRequest,
 } from '@/hooks/use-departments';
 import { useMembers } from '@/hooks/use-members';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import {
   Card,
   CardContent,
@@ -104,9 +105,10 @@ function RestrictedNotice({ message }: { message: string }) {
 }
 
 export default function DepartmentDetailPage() {
+  const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
-  const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const { user } = useAuthStore();
+  const isAdminOrPastor = caps.has('branch:write');
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberToAdd, setMemberToAdd] = useState<string>('');

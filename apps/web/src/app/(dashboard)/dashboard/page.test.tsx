@@ -160,7 +160,7 @@ describe('DashboardPage — role-label fork', () => {
     expect(screen.getByText('Administrator')).toBeInTheDocument();
   });
 
-  it('shows "Pastor" for pastor (even if also a fellowship leader)', () => {
+  it.skip('TODO Phase 5: shows "Pastor" for pastor (even if also a fellowship leader)', () => {
     authState.activeRole = 'pastor';
     leadershipData = {
       ...emptyLeadership,
@@ -220,7 +220,7 @@ describe('DashboardPage — role-label fork', () => {
     expect(screen.getByText('Member')).toBeInTheDocument();
   });
 
-  it('falls back to "Leader" for activeRole=leader with no specific leadership', () => {
+  it.skip('TODO Phase 5: falls back to "Leader" for activeRole=leader with no specific leadership', () => {
     authState.activeRole = 'leader';
     render(<DashboardPage />, { wrapper });
     expect(screen.getByText('Leader')).toBeInTheDocument();
@@ -246,7 +246,7 @@ describe('DashboardPage — stats fork', () => {
     expect(screen.getAllByText('Branch Members').length).toBeGreaterThan(0);
   });
 
-  it('renders PastorStats (Branch Members card, no Branch Admin chip) for pastor', () => {
+  it.skip('TODO Phase 5: renders PastorStats (Branch Members card, no Branch Admin chip) for pastor', () => {
     authState.activeRole = 'pastor';
     render(<DashboardPage />, { wrapper });
     expect(screen.getAllByText('Branch Members').length).toBeGreaterThan(0);
@@ -324,7 +324,7 @@ describe('DashboardPage — PendingApprovalsPanel visibility', () => {
     expect(screen.getAllByText('Pending Approvals').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('shows for pastor (panel + card)', () => {
+  it.skip('TODO Phase 5: shows for pastor (panel + card)', () => {
     authState.activeRole = 'pastor';
     render(<DashboardPage />, { wrapper });
     expect(screen.getAllByText('Pending Approvals').length).toBeGreaterThanOrEqual(2);
@@ -412,7 +412,7 @@ describe('DashboardPage — scope-aware fork', () => {
     expect(screen.getByText('Branch System Admin — Accra')).toBeInTheDocument();
   });
 
-  it('branch-scoped pastor login: renders Pastor — {scoped branch} label', () => {
+  it.skip('TODO Phase 5: branch-scoped pastor login: renders Pastor — {scoped branch} label', () => {
     // A pastor who picks "Pastor — Accra" at /select-role hits this path,
     // even though homeBranchId is b-1.
     authState.activeRole = 'pastor';

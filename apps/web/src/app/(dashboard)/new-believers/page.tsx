@@ -31,6 +31,7 @@ import {
   useMyNewBelieverHats,
 } from '@/hooks/use-new-believers';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers } from '@/hooks/use-members';
 import type { NewBelieverStageValue, EnrollmentListParams, UpdateEnrollmentRequest } from '@kairos/types';
 
@@ -57,7 +58,8 @@ type PersonalTab = 'enrollment' | 'teaching' | 'mentees';
 
 function NewBelieversContent() {
   const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const caps = useCapabilities();
+  const isAdminOrPastor = caps.has('branch:write');
   const queryClient = useQueryClient();
 
   // Persona "hats" — admin/pastor always get the full Kanban; everyone else falls back to

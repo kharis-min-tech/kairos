@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMembers, useDeactivateMember } from '@/hooks/use-members';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
@@ -44,20 +45,21 @@ function MembersListSkeleton() {
 export default function MembersPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const isPastor = (activeRole as string) === 'pastor';
+  const isPastor = caps.has('branch:write');
   const isMemberView = activeRole === 'member';
   // Mirrors the dashboard-layout nav gating: members + leaders don't surface
   // the Members tab. Block direct URL access too so behaviour matches the nav.
   useEffect(() => {
-    if (user !== null && (isMemberView || (activeRole as string) === 'leader')) {
+    if (user !== null && (isMemberView || (caps.has('fellowship:write') || caps.has('department:write')))) {
       router.replace('/dashboard');
     }
   }, [user, isMemberView, activeRole, router]);
   // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
   // the page itself enforces real access via the API (403 for unauthorized leaders).
-  const canSeeSafeguarding = isAdmin || isPastor || (activeRole as string) === 'leader';
+  const canSeeSafeguarding = isAdmin || isPastor || (caps.has('fellowship:write') || caps.has('department:write'));
   const [params, setParams] = useState<MemberListParams>({
     page: 1,
     limit: 20,
@@ -108,7 +110,7 @@ export default function MembersPage() {
     setParams((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
   }
 
-  if (user !== null && (isMemberView || (activeRole as string) === 'leader')) {
+  if (user !== null && (isMemberView || (caps.has('fellowship:write') || caps.has('department:write')))) {
     return null;
   }
 

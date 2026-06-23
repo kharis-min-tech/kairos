@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { ArrowLeft, Check, AlertTriangle, Award } from 'lucide-react';
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers } from '@/hooks/use-members';
 import { useDepartments } from '@/hooks/use-departments';
 import { useAuthStore } from '@/lib/auth-store';
@@ -37,11 +38,12 @@ import {
 import type { EnrollmentDetail, AttendanceLogItem } from '../_components/types';
 
 export default function EnrollmentDetailPage() {
+  const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
-  const canEdit = isAdminOrPastor || (activeRole as string) === 'leader';
+  const { user } = useAuthStore();
+  const isAdminOrPastor = caps.has('branch:write');
+  const canEdit = isAdminOrPastor || (caps.has('fellowship:write') || caps.has('department:write'));
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   const { data, isLoading, error } = useEnrollment(id);

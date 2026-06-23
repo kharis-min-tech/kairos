@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, useAssignLeadership, useRegions, useDeleteBranch } from '@/hooks/use-branches';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
@@ -36,9 +37,10 @@ export default function BranchDetailPage() {
   const router = useRouter();
   const { activeRole } = useAuthStore();
   const branchSystemAdminBranchIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
+  const caps = useCapabilities();
   const { data: myProfile } = useMyProfile();
   const isAdmin = activeRole === 'admin';
-  const isPastor = (activeRole as string) === 'pastor';
+  const isPastor = caps.has('branch:write');
   const isBSAHere = branchSystemAdminBranchIds.includes(id);
   const canSeeMembers = isAdmin || (isPastor && myProfile?.homeBranchId === id);
   // Discoverability for the Branch System Admin role page. Visible to system
@@ -67,10 +69,10 @@ export default function BranchDetailPage() {
   useEffect(() => {
     if (!activeRole) return;
     if (activeRole === 'admin') return;
-    if ((activeRole as string) === 'pastor' && myProfile?.homeBranchId === id) return;
+    if (caps.has('branch:write') && myProfile?.homeBranchId === id) return;
     // Don't redirect until myProfile has loaded for pastor — otherwise we may
     // bounce them on the first render before homeBranchId is known.
-    if ((activeRole as string) === 'pastor' && !myProfile) return;
+    if (caps.has('branch:write') && !myProfile) return;
     router.replace('/');
   }, [activeRole, myProfile, id, router]);
 

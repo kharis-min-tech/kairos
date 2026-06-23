@@ -42,10 +42,15 @@ function decodePayload(accessToken: string | null): JwtPayload | null {
  */
 export function useCapabilities() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  // The auth-store also exposes systemRole via `activeRole`. Tests set this
+  // directly without minting a real JWT, so we read both sources to stay
+  // robust to either path.
+  const storeRole = useAuthStore((s) => s.activeRole);
 
   return useMemo(() => {
     const payload = decodePayload(accessToken);
-    const systemRole = payload?.systemRole ?? 'member';
+    const systemRole: SystemRole =
+      payload?.systemRole ?? (storeRole as SystemRole | null) ?? 'member';
     const grants = payload?.grants ?? [];
 
     function has(
@@ -81,5 +86,5 @@ export function useCapabilities() {
     }
 
     return { has, grants, grantsOf, systemRole };
-  }, [accessToken]);
+  }, [accessToken, storeRole]);
 }

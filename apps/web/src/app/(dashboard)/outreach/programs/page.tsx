@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { Button, Input, Badge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@kairos/ui';
 import { Plus, Search, UserPlus, CheckCircle2, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -13,6 +14,7 @@ import { formatShortDate } from '@/lib/date-format';
 type ProgramTab = 'active' | 'completed';
 
 export default function OutreachProgramsPage() {
+  const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
@@ -31,9 +33,9 @@ export default function OutreachProgramsPage() {
   const [registering, setRegistering] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProgramTab>('active');
 
-  const canCreateProgram = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const canCreateProgram = (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
   const isMember = activeRole === 'member';
-  const canRegister = activeRole === 'member' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const canRegister = activeRole === 'member' || (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
 
   // Initialize - fetch programs with proper branch isolation
   useEffect(() => {
@@ -258,7 +260,7 @@ export default function OutreachProgramsPage() {
                   userCreatedProgram,
                   canRegisterForProgram,
                   isMember,
-                  shouldShowCreatorName: ((activeRole as string) === 'leader' || (activeRole as string) === 'pastor') && program.createdByName
+                  shouldShowCreatorName: ((caps.has('fellowship:write') || caps.has('department:write')) || caps.has('branch:write')) && program.createdByName
                 });
 
                 return (

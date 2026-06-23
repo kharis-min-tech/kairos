@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
@@ -294,6 +295,7 @@ function KanbanColumn({
 }
 
 export default function SoulsKanbanPage() {
+  const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
@@ -316,10 +318,10 @@ export default function SoulsKanbanPage() {
   const [members, setMembers] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
-  const canBulkAssign = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const canBulkAssign = (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
   const isAdmin = activeRole === 'admin';
-  const isPastor = (activeRole as string) === 'pastor';
-  const isLeader = (activeRole as string) === 'leader';
+  const isPastor = caps.has('branch:write');
+  const isLeader = (caps.has('fellowship:write') || caps.has('department:write'));
 
   // Filter dropdowns — sourced from API hooks (already branch-scoped per persona).
   const { data: branches = [] } = useBranches();

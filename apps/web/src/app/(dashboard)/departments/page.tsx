@@ -12,6 +12,7 @@ import {
   useMyDepartmentJoinRequests,
 } from '@/hooks/use-departments';
 import { useMyProfile } from '@/hooks/use-members';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
@@ -59,6 +60,7 @@ function DepartmentsListSkeleton() {
 function DepartmentsContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
+  const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
   const { data: myProfile } = useMyProfile();
   const { data: branchesResult } = useBranches();
@@ -139,7 +141,7 @@ function DepartmentsContent() {
               : `Ministry teams${pagination ? ` — ${pagination.total} total` : ''}`}
           </p>
         </div>
-        {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
+        {(caps.has('branch:write')) && (
           <Link href="/departments/new">
             <Button size="sm">+ New Department</Button>
           </Link>
@@ -238,7 +240,7 @@ function DepartmentsContent() {
       {!departments || departments.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            {(activeRole as string) === 'leader' ? (
+            {(caps.has('fellowship:write') || caps.has('department:write')) ? (
               <>
                 <p className="font-medium">You don’t lead a department</p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -284,7 +286,7 @@ function DepartmentsContent() {
                         <p className="line-clamp-2 pt-1">{dept.description}</p>
                       )}
                     </div>
-                    {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
+                    {(caps.has('branch:write')) && (
                       <div className="mt-4">
                         <Button
                           variant="destructive"

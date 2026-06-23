@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { api } from '@/lib/api';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAuthStore } from '@/lib/auth-store';
 
 export default function MembersImportPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const canImport = user?.systemRole === 'admin' || (activeRole as string) === 'pastor';
+  const caps = useCapabilities();
+  const canImport = user?.systemRole === 'admin' || caps.has('branch:write');
 
   useEffect(() => {
     if (user !== null && !canImport) router.replace('/members');

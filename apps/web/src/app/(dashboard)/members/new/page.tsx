@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useCreateMember } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
@@ -14,9 +15,9 @@ import type { CreateMemberRequest } from '@kairos/types';
 export default function AddMemberPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const activeRole = useAuthStore((s) => s.activeRole);
+  const caps = useCapabilities();
   const isAdmin = user?.systemRole === 'admin';
-  const canCreate = isAdmin || (activeRole as string) === 'pastor';
+  const canCreate = isAdmin || caps.has('branch:write');
   const createMember = useCreateMember();
   const { data: branches } = useBranches();
 

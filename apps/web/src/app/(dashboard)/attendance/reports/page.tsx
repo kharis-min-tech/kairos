@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { useDepartments } from '@/hooks/use-departments';
 import { useFellowships } from '@/hooks/use-fellowships';
@@ -31,7 +32,8 @@ const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
 export default function AttendanceReportsPage() {
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
-  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const caps = useCapabilities();
+  const isAdminOrPastor = caps.has('branch:write');
   const [branchId, setBranchId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [fellowshipId, setFellowshipId] = useState('');

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { Button, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ function todayIso(): string {
 }
 
 export default function CreateProgramPage() {
+  const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
@@ -28,7 +30,7 @@ export default function CreateProgramPage() {
 
   const isAdmin = activeRole === 'admin';
   const canCreate =
-    activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+    (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
 
   // Mirrors list-page persona gating: only admins, pastors, and leaders can create.
   useEffect(() => {

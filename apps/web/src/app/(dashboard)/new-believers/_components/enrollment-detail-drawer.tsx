@@ -16,7 +16,7 @@ import {
   Textarea,
 } from '@kairos/ui';
 import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
-import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { formatShortDate } from '@/lib/date-format';
 import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
 import type { EnrollmentDetail } from './types';
@@ -35,8 +35,8 @@ export function EnrollmentDetailDrawer({
   branchMembers,
 }: EnrollmentDetailDrawerProps) {
   const open = !!enrollmentId;
-  const { activeRole } = useAuthStore();
-  const canEdit = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const caps = useCapabilities();
+  const canEdit = (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
 
   const { data, isLoading } = useEnrollment(enrollmentId ?? '');
   const enrollment = data as EnrollmentDetail | undefined;
