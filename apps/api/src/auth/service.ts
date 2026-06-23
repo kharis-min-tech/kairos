@@ -23,6 +23,7 @@ import type {
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
 import { computeAvailableRoles } from './role-options';
+import { resolveGrants } from '../lib/grants';
 import {
   NotFoundError,
   ConflictError,
@@ -77,6 +78,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     emergencyContactRelationship: row.emergencyContactRelationship,
     approvalStatus: row.approvalStatus as MemberProfile['approvalStatus'],
     systemRole: row.systemRole as MemberProfile['systemRole'],
+    honorific: row.honorific,
     memberType: row.memberType as MemberProfile['memberType'],
     guardianMemberId: row.guardianMemberId,
     emailVerified: row.emailVerified,
@@ -308,10 +310,11 @@ async function issueAuthenticatedSession(
   activeRole: SystemRole,
   scope: RoleScope | undefined,
 ): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
-  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
-    db,
-    member.id,
-  );
+  const [authority, grants] = await Promise.all([
+    resolveBranchAdminAuthority(db, member.id),
+    resolveGrants(db, member.id),
+  ]);
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = authority;
 
   const authContext: AuthContext = {
     memberId: member.id,
@@ -322,10 +325,11 @@ async function issueAuthenticatedSession(
     ...(scope ? { scope } : {}),
     branchSystemAdminBranchIds,
     branchDataAdminBranchIds,
-    // RBAC Phase 1: grants are populated fresh on every request by
-    // authMiddleware → resolveGrants. We don't bake them into the JWT
-    // because role assignments can change without re-issuing tokens.
-    grants: [],
+    // RBAC Phase 5c: stamp grants into the JWT at sign time so the client
+    // can derive UI affordances without an extra round-trip. Middleware
+    // still re-resolves on every request (overrides this snapshot) so
+    // mid-session role changes take effect on the next call.
+    grants,
   };
 
   const accessToken = signAccessToken(authContext);
