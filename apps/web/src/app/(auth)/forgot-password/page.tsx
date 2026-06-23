@@ -44,9 +44,9 @@ export default function ForgotPasswordPage() {
             The link will expire in <span className="font-medium text-foreground">1 hour</span>.
           </p>
           {devToken && (
-            <div className="rounded-lg bg-amber-500/10 p-4 space-y-2">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Dev mode — reset token:</p>
-              <p className="break-all font-mono text-xs text-amber-800 dark:text-amber-300">{devToken}</p>
+            <div className="rounded-lg bg-[#f8b537]/10 p-4 space-y-2">
+              <p className="text-xs font-semibold text-[#9a6b04] dark:text-[#f8b537]">Dev mode — reset token:</p>
+              <p className="break-all font-mono text-xs text-[#7a5403] dark:text-[#fbc966]">{devToken}</p>
               <a
                 href={`/reset-password?token=${devToken}`}
                 className="inline-block text-xs font-medium text-[#5D3FD3] underline hover:opacity-80"
@@ -103,9 +103,9 @@ export default function ForgotPasswordPage() {
           </Link>
         </form>
 
-        <div className="mt-6 rounded-lg bg-amber-500/10 p-4">
-          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Need help?</p>
-          <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400/80">
+        <div className="mt-6 rounded-lg bg-[#f8b537]/10 p-4">
+          <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">Need help?</p>
+          <p className="mt-0.5 text-xs text-[#9a6b04]/80 dark:text-[#f8b537]/80">
             Contact your branch administrator if you continue to have issues accessing your account.
           </p>
         </div>

@@ -101,7 +101,7 @@ function VerifyEmailContent() {
         <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Your account is now <span className="font-medium text-amber-500">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
+              Your account is now <span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
             </p>
             <button
               className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90"
@@ -132,9 +132,9 @@ function VerifyEmailContent() {
           )}
 
           {!memberId ? (
-            <div className="rounded-lg bg-amber-500/10 p-4">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Verification link missing</p>
-              <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400/80">
+            <div className="rounded-lg bg-[#f8b537]/10 p-4">
+              <p className="text-sm font-medium text-[#9a6b04] dark:text-[#f8b537]">Verification link missing</p>
+              <p className="mt-0.5 text-xs text-[#9a6b04]/80 dark:text-[#f8b537]/80">
                 Please check your email for the verification link and click it to activate your account.
               </p>
             </div>

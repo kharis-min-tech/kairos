@@ -82,8 +82,8 @@ export default function ChangePasswordPage() {
             </div>
           )}
 
-          <div className="rounded-lg bg-amber-500/10 p-3">
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg bg-[#f8b537]/10 p-3">
+            <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
               Enter the temporary password you received, then choose a new secure password.
             </p>
           </div>

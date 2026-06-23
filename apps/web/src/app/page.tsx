@@ -102,7 +102,7 @@ function CryptixLanding() {
       <section className="relative pt-40 pb-32 px-6 text-center overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-violet-700/10 blur-[120px]" />
-          <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] rounded-full bg-amber-600/10 blur-[100px]" />
+          <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] rounded-full bg-[#f8b537]/10 blur-[100px]" />
         </div>
 
         <div className="relative max-w-4xl mx-auto">
@@ -112,7 +112,7 @@ function CryptixLanding() {
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
             Church admin,{" "}
-            <span className="bg-gradient-to-r from-violet-400 to-amber-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-400 to-[#f8b537] bg-clip-text text-transparent">
               finally sorted.
             </span>
           </h1>
@@ -139,7 +139,7 @@ function CryptixLanding() {
         <div className="relative mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
           {STATS.map((s) => (
             <div key={s.label} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur p-5">
-              <div className="text-3xl font-black text-amber-400">{s.value}</div>
+              <div className="text-3xl font-black text-[#f8b537]">{s.value}</div>
               <div className="text-xs text-white/40 mt-1">{s.label}</div>
             </div>
           ))}
@@ -150,7 +150,7 @@ function CryptixLanding() {
       <section id="why" className="py-24 px-6">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest mb-3">The Problem</p>
+            <p className="text-[#f8b537] text-sm font-semibold uppercase tracking-widest mb-3">The Problem</p>
             <h2 className="text-4xl font-bold leading-tight">Sound familiar?</h2>
             <p className="mt-4 text-white/50 leading-relaxed">
               Most churches are managed with a patchwork of tools that don't talk
@@ -160,7 +160,7 @@ function CryptixLanding() {
           <div className="space-y-4">
             {PAIN_POINTS.map((p) => (
               <div key={p.text} className="flex items-start gap-4 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-                <p.Icon className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
+                <p.Icon className="h-5 w-5 text-[#f8b537] mt-0.5 shrink-0" />
                 <span className="text-sm text-white/60 leading-relaxed">{p.text}</span>
               </div>
             ))}
@@ -198,7 +198,7 @@ function CryptixLanding() {
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-5xl font-extrabold leading-tight">
             Ready to bring{" "}
-            <span className="bg-gradient-to-r from-violet-400 to-amber-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-400 to-[#f8b537] bg-clip-text text-transparent">
               order to your church?
             </span>
           </h2>
@@ -293,7 +293,7 @@ function LandioLanding() {
             <div className="space-y-3">
               {PAIN_POINTS.map((p) => (
                 <div key={p.text} className="flex items-center gap-3 text-sm text-white/40 py-3 border-b border-white/[0.06]">
-                  <p.Icon className="h-4 w-4 text-amber-400/70 shrink-0" />
+                  <p.Icon className="h-4 w-4 text-[#f8b537]/70 shrink-0" />
                   <span>{p.text}</span>
                 </div>
               ))}
@@ -573,7 +573,7 @@ function AsetLanding() {
         <div className="max-w-5xl mx-auto mt-20 flex flex-wrap justify-center gap-px">
           {STATS.map((s, i) => (
             <div key={s.label} className={`flex-1 min-w-[140px] px-8 py-6 text-center ${i < STATS.length - 1 ? "border-r border-white/[0.04]" : ""}`}>
-              <div className="text-4xl font-bold text-amber-400">{s.value}</div>
+              <div className="text-4xl font-bold text-[#f8b537]">{s.value}</div>
               <div className="text-xs text-white/25 mt-2">{s.label}</div>
             </div>
           ))}

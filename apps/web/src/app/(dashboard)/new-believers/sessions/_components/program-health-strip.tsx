@@ -300,7 +300,7 @@ interface StaleTileProps {
 
 function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {
   const surface = isRed ? 'bg-rose-500/15' : 'bg-[#f8b537]/15';
-  const accent = isRed ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-[#f8b537]';
+  const accent = isRed ? 'text-rose-600 dark:text-rose-400' : 'text-[#9a6b04] dark:text-[#f8b537]';
   return (
     <Card
       data-stale-rag={isRed ? 'red' : 'amber'}
@@ -464,7 +464,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
             </h3>
             <span
               className={`text-sm font-medium ${
-                staleIsRed ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-[#f8b537]'
+                staleIsRed ? 'text-rose-600 dark:text-rose-400' : 'text-[#9a6b04] dark:text-[#f8b537]'
               }`}
             >
               {data.stale.count} {data.stale.count === 1 ? 'person' : 'people'}
