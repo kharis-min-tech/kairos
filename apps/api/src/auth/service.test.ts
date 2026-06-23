@@ -283,14 +283,10 @@ describe('login', () => {
     // covering role-name validation will be redesigned then.
   });
 
-  it('should reject member trying to login as admin', async () => {
-    const { login } = await import('./service');
-
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
-    setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'member' }]);
-
-    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', 'admin'))
-      .rejects.toThrow("You don't have admin access");
+  it.skip('TODO Phase 5: login no longer validates activeRole — should reject member trying to login as admin', async () => {
+    // Phase 5a simplified login: the activeRole parameter is now ignored,
+    // and tokens always reflect the member's stored systemRole. The
+    // role-selector flow that needed this validation is gone.
   });
 
   it('should allow any role to login as member', async () => {
@@ -726,21 +722,9 @@ describe('login (two-step)', () => {
     expect(result.member).toBeUndefined();
   });
 
-  it('multi-role envelope does NOT stamp lastLoginAt — only finalize-role does', async () => {
-    const { login } = await import('./service');
-
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
-    const fellowshipId = 'f1111111-1111-1111-1111-111111111111';
-    setupSelectSequence([
-      [{ ...baseMember, passwordHash: hashed, lastLoginAt: new Date() }],
-      [], [], [{ id: fellowshipId, fellowshipName: 'K-Groups', leaderId: baseMember.id, coLeaderId: null }], [],
-    ]);
-    // Intentionally do NOT call setupUpdateChain — login should not touch
-    // members.lastLoginAt when it returns the role-selection envelope.
-
-    const result = await login(mockDb, 'john@example.com', 'MyPassword1!');
-    expect(result.roleSelectionRequired).toBe(true);
-    expect(mockUpdate).not.toHaveBeenCalled();
+  it.skip('TODO Phase 5: multi-role envelope removed — does NOT stamp lastLoginAt', async () => {
+    // Phase 5a simplified login: there is no role-selection envelope path
+    // anymore. The two-step flow has been folded into a single response.
   });
 });
 

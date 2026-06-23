@@ -106,10 +106,13 @@ function signRefreshToken(memberId: string): string {
  * `kind: 'role-selection'` discriminator means `authMiddleware` will refuse
  * to treat it as an access token.
  */
-function signSessionToken(memberId: string): string {
-  const payload: SessionTokenPayload = { kind: 'role-selection', memberId };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: SESSION_TOKEN_EXPIRY });
-}
+// RBAC Phase 5a: `signSessionToken` was used by login's role-selection
+// envelope, which is gone. `verifySessionToken` is retained because the
+// deprecated finalize-role / switch-role routes still need to read tokens
+// minted by older clients during the rollout window.
+//
+// Suppress unused-symbol noise for the payload type that travels with it.
+void SESSION_TOKEN_EXPIRY;
 
 /**
  * Verify a session token and return the memberId. Throws UnauthorizedError
@@ -340,27 +343,20 @@ async function issueAuthenticatedSession(
 }
 
 /**
- * Two-step login:
+ * Login (RBAC Phase 5a — simplified):
  *  1. Validate email + password + activation gates.
- *  2. Compute the caller's available role options.
- *  3. Branch:
- *     - Legacy callers pass `activeRole` explicitly → validate against the
- *       options list, finalize in one trip. Preserves backwards compatibility
- *       with the existing web flow and all existing tests.
- *     - New callers omit `activeRole`. If the member has only one option,
- *       finalize directly. Otherwise return a `role-selection-required`
- *       envelope with a 5-minute sessionToken — the caller follows up with
- *       POST /api/auth/finalize-role.
+ *  2. Mint tokens for the member's systemRole.
  *
- * Important: we NEVER reveal what permission tiers exist to a visitor who
- * hasn't authenticated. The role-selection envelope is only emitted AFTER
- * the bcrypt check passes.
+ * The role-selection envelope is gone — capabilities live on the token's
+ * `grants` array (computed by authMiddleware on every request), so the UI
+ * doesn't need to pick a role at login. The `activeRole` parameter is
+ * accepted for backward-compat with older clients but ignored.
  */
 export async function login(
   db: Database,
   email: string,
   password: string,
-  activeRole?: SystemRole,
+  _activeRole?: SystemRole,
 ): Promise<LoginResponse> {
   const [member] = await db
     .select()
@@ -400,59 +396,15 @@ export async function login(
     );
   }
 
-  const availableRoles = await computeAvailableRoles(db, {
-    memberId: member.id,
-    systemRole: member.systemRole as SystemRole,
-    homeBranchId: member.homeBranchId,
-  });
-
-  // ── Legacy / direct-finalize path ─────────────────────────
-  // Callers that send `activeRole` keep the old strict-match semantics. We
-  // still enforce that 'member' is a fallback every account has, and that
-  // any other activeRole the caller asks for must be present in the
-  // computed options.
-  if (activeRole !== undefined) {
-    if (activeRole === 'member') {
-      const session = await issueAuthenticatedSession(db, member, 'member', undefined);
-      return { ...session, isFirstLogin };
-    }
-    const memberSystemRole = member.systemRole as SystemRole;
-    if (memberSystemRole !== activeRole) {
-      // Preserve the old error message — there are tests asserting on it.
-      throw new UnauthorizedError(`You don't have ${activeRole} access`);
-    }
-    // The unscoped system role (admin / pastor / leader) matches the
-    // member's stored systemRole. Find the matching unscoped option to
-    // keep the JWT shape consistent with computeAvailableRoles.
-    const match = availableRoles.find(
-      (opt) => opt.activeRole === activeRole && opt.scope === undefined,
-    );
-    const session = await issueAuthenticatedSession(
-      db,
-      member,
-      activeRole,
-      match?.scope,
-    );
-    return { ...session, isFirstLogin };
-  }
-
-  // ── Two-step path ────────────────────────────────────────
-  // Exactly one option → finalize directly, no picker needed. This is the
-  // most common case (plain members, single-fellowship leaders).
-  if (availableRoles.length === 1) {
-    const only = availableRoles[0]!;
-    const session = await issueAuthenticatedSession(db, member, only.activeRole, only.scope);
-    return { ...session, isFirstLogin };
-  }
-
-  // Multiple options → return the role-selection envelope. The sessionToken
-  // is short-lived; the picker UI MUST call /finalize-role within 5 minutes
-  // or the user re-authenticates.
-  return {
-    roleSelectionRequired: true,
-    sessionToken: signSessionToken(member.id),
-    availableRoles,
-  };
+  // RBAC Phase 5a: single-path login. Mint tokens for the member's stored
+  // systemRole; capabilities derive from grants at the middleware layer.
+  const session = await issueAuthenticatedSession(
+    db,
+    member,
+    member.systemRole as SystemRole,
+    undefined,
+  );
+  return { ...session, isFirstLogin };
 }
 
 /**

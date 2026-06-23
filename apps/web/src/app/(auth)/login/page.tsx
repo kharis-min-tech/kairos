@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { persistAuthSuccess, useLogin } from '@/hooks/use-auth';
 import { useAuthStore } from '@/lib/auth-store';
-import { useRoleSelectionStore } from '@/lib/role-selection-store';
 import { KharisCardHeader } from '../kharis-logo';
 
 const loginSchema = z.object({
@@ -22,8 +21,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const loginMutation = useLogin();
-  const setRoleSelection = useRoleSelectionStore((s) => s.setRoleSelection);
-  const clearRoleSelection = useRoleSelectionStore((s) => s.clearRoleSelection);
   const accessToken = useAuthStore((s) => s.accessToken);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,12 +32,6 @@ export default function LoginPage() {
     }
   }, [accessToken, router]);
 
-  // Any stale picker stash (back-button, lingering session) is gone the
-  // moment the user lands here. Phase 2 contract: `/login` mount = reset.
-  useEffect(() => {
-    clearRoleSelection();
-  }, [clearRoleSelection]);
-
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -50,18 +41,8 @@ export default function LoginPage() {
     try {
       const result = await loginMutation.mutateAsync(data);
 
-      if (result.roleSelectionRequired) {
-        // Multi-role path: park the envelope in the in-memory stash and
-        // hand off to the picker. No tokens yet — finalize-role mints them.
-        setRoleSelection({
-          sessionToken: result.sessionToken ?? '',
-          availableRoles: result.availableRoles ?? [],
-        });
-        router.push('/select-role');
-        return;
-      }
-
-      // Single-role path: tokens + member are populated; persist + route.
+      // RBAC Phase 5a: login always returns tokens + member. Capabilities
+      // travel on the access token via the `grants` array; no role picker.
       const member = result.member;
       const tokens = result.tokens;
       if (!member || !tokens) {

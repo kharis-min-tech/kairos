@@ -21,7 +21,6 @@ vi.mock('@/hooks/use-auth', async () => {
 });
 
 import LoginPage from './page';
-import { useRoleSelectionStore } from '@/lib/role-selection-store';
 import { persistAuthSuccess } from '@/hooks/use-auth';
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -33,7 +32,6 @@ beforeEach(() => {
   push.mockReset();
   mutateAsync.mockReset();
   vi.mocked(persistAuthSuccess).mockReset();
-  useRoleSelectionStore.getState().clearRoleSelection();
 });
 
 const mockMember: Record<string, unknown> = {
@@ -117,31 +115,8 @@ describe('LoginPage — single-role flow', () => {
   });
 });
 
-describe('LoginPage — multi-role flow', () => {
-  it('stashes session token + availableRoles, then navigates to /select-role', async () => {
-    mutateAsync.mockResolvedValue({
-      roleSelectionRequired: true,
-      sessionToken: 'sess-multi',
-      availableRoles: [
-        { activeRole: 'admin', displayLabel: 'Branch System Admin — London', key: 'k-admin' },
-        { activeRole: 'leader', scope: { kind: 'department', id: 'd-1' }, displayLabel: 'Admin Dept Lead — London', key: 'k-lead' },
-      ],
-    });
-
-    render(<LoginPage />, { wrapper });
-    await userEvent.type(screen.getByLabelText(/Email Address/i), 'sarah@example.com');
-    await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
-    await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
-
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/select-role'));
-
-    const stash = useRoleSelectionStore.getState();
-    expect(stash.sessionToken).toBe('sess-multi');
-    expect(stash.availableRoles).toHaveLength(2);
-    expect(stash.availableRoles[0]!.displayLabel).toBe('Branch System Admin — London');
-    expect(persistAuthSuccess).not.toHaveBeenCalled();
-  });
-});
+// RBAC Phase 5a: the multi-role flow is removed. Login always returns
+// tokens directly; capabilities derive from grants on the access token.
 
 describe('LoginPage — error display', () => {
   it('shows the API error message in the alert region', async () => {
@@ -174,13 +149,6 @@ describe('LoginPage — preserved behavior', () => {
     expect(apple).toBeDisabled();
   });
 
-  it('clears any stale role-selection stash on mount', () => {
-    useRoleSelectionStore.getState().setRoleSelection({
-      sessionToken: 'stale',
-      availableRoles: [{ activeRole: 'member', displayLabel: 'Member', key: 'k' }],
-    });
-    render(<LoginPage />, { wrapper });
-    expect(useRoleSelectionStore.getState().sessionToken).toBeNull();
-    expect(useRoleSelectionStore.getState().availableRoles).toHaveLength(0);
-  });
+  // The stale-stash clearing test was removed in Phase 5a — the role-
+  // selection store no longer exists.
 });
