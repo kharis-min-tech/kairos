@@ -67,11 +67,14 @@ function setupUpdate(...results: unknown[]) {
   });
 }
 
-// ── Mock bcrypt (shell minting) and createEnrollment ───────
-vi.mock('bcrypt', () => ({
-  default: { hash: vi.fn(() => Promise.resolve('hashed')) },
-  hash: vi.fn(() => Promise.resolve('hashed')),
-}));
+// ── Mock hashPassword (shell minting) and createEnrollment ───────
+vi.mock('@kairos/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@kairos/utils')>();
+  return {
+    ...actual,
+    hashPassword: vi.fn(() => Promise.resolve('hashed')),
+  };
+});
 
 const createEnrollmentMock = vi.fn();
 vi.mock('../new-believers/service', () => ({

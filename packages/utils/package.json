@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@kairos/types": "*",
+    "@noble/hashes": "^1.6.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {

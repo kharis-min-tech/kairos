@@ -8,6 +8,8 @@ import {
   NotFoundError,
   ForbiddenError,
   ConflictError,
+  hashPassword,
+  randomTokenHex,
 } from '@kairos/utils';
 
 /**
@@ -85,9 +87,8 @@ export async function convertSoulToMember(
   return await db.transaction(async (tx) => {
     // Generate a temporary password hash (user will need to reset)
     // Using a random string that they can't guess - they'll need to use forgot password
-    const bcrypt = await import('bcrypt');
-    const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
+    const tempPassword = `temp_${randomTokenHex(16)}`;
+    const tempPasswordHash = await hashPassword(tempPassword);
 
     // Generate email if not provided (required field in members table)
     const memberEmail = soul.email || `soul_${soul.id.substring(0, 8)}@temp.kairos.local`;

@@ -39,14 +39,14 @@ import {
   rotaSwapRequests,
 } from './schema';
 import { sql } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import { hashPassword } from '@kairos/utils';
 
 const DATABASE_URL =
   process.env['DATABASE_URL'] ?? 'postgresql://kairos:kairos@localhost:5432/kairos';
 
 async function seed() {
   const db = createDb(DATABASE_URL);
-  const password = await bcrypt.hash('Password1!', 10);
+  const password = await hashPassword('Password1!');
 
   console.log('Seeding database...\n');
 

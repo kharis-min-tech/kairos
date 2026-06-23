@@ -24,14 +24,13 @@
     "db:seed-souls": "tsx src/seed-souls.ts"
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "@kairos/utils": "*",
     "dotenv": "^17.4.1",
     "drizzle-orm": "^0.38.4",
     "postgres": "^3.4.5",
     "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
     "drizzle-kit": "^0.30.4",
     "typescript": "^5.7.3"
   }

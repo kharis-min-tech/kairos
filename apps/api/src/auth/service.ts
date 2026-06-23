@@ -1,7 +1,5 @@
-import bcrypt from 'bcrypt';
 import { SignJWT, jwtVerify } from 'jose';
 import { eq, and, or, sql } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import {
   members,
@@ -28,9 +26,10 @@ import {
   ValidationError,
   logger,
   sendPasswordResetEmail,
+  hashPassword,
+  verifyPassword,
+  randomTokenHex,
 } from '@kairos/utils';
-
-const SALT_ROUNDS = 10;
 
 function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
   return {
@@ -207,8 +206,8 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
     }
   }
 
-  const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-  const verificationToken = randomBytes(32).toString('hex');
+  const passwordHash = await hashPassword(input.password);
+  const verificationToken = randomTokenHex(32);
 
   const [created] = await db
     .insert(members)
@@ -318,7 +317,7 @@ export async function login(
     throw new UnauthorizedError('Invalid email or password');
   }
 
-  const valid = await bcrypt.compare(password, member.passwordHash);
+  const valid = await verifyPassword(password, member.passwordHash);
   if (!valid) {
     throw new UnauthorizedError('Invalid email or password');
   }
@@ -434,8 +433,8 @@ export async function forgotPassword(db: Database, email: string): Promise<{ res
     return { resetToken: '' };
   }
 
-  const plainToken = randomBytes(32).toString('hex');
-  const tokenHash = await bcrypt.hash(plainToken, SALT_ROUNDS);
+  const plainToken = randomTokenHex(32);
+  const tokenHash = await hashPassword(plainToken);
   const expiry = new Date(Date.now() + 3_600_000); // 1 hour
 
   await db
@@ -463,19 +462,19 @@ export async function resetPassword(db: Database, token: string, newPassword: st
   const match = candidates.find((m) => {
     if (!m.passwordResetToken || !m.passwordResetExpiry) return false;
     if (new Date(m.passwordResetExpiry) < now) return false;
-    return true; // bcrypt compare done below
+    return true; // hash compare done below
   });
 
   if (!match) {
     throw new UnauthorizedError('Invalid or expired reset token');
   }
 
-  const valid = await bcrypt.compare(token, match.passwordResetToken!);
+  const valid = await verifyPassword(token, match.passwordResetToken!);
   if (!valid) {
     throw new UnauthorizedError('Invalid or expired reset token');
   }
 
-  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const passwordHash = await hashPassword(newPassword);
 
   await db
     .update(members)
@@ -511,10 +510,10 @@ export async function changePassword(
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const valid = await bcrypt.compare(currentPassword, member.passwordHash);
+  const valid = await verifyPassword(currentPassword, member.passwordHash);
   if (!valid) throw new UnauthorizedError('Current password is incorrect');
 
-  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const passwordHash = await hashPassword(newPassword);
 
   await db
     .update(members)

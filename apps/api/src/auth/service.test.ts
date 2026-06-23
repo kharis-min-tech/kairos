@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import bcrypt from 'bcrypt';
 import { SignJWT, jwtVerify } from 'jose';
+import { hashPassword } from '@kairos/utils';
 import type { AuthSecrets } from '../lib/auth-secrets';
 
 const TEST_SECRETS: AuthSecrets = {
@@ -222,7 +222,7 @@ describe('login', () => {
   it('should return tokens and member profile on valid credentials', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     const member = { ...baseMember, passwordHash: hashed, lastLoginAt: null };
     setupSelectChain([member]);
     setupUpdateChain();
@@ -252,7 +252,7 @@ describe('login', () => {
   it('should throw UnauthorizedError for wrong password', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('CorrectPass1!', 10);
+    const hashed = await hashPassword('CorrectPass1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed }]);
 
     await expect(login(mockDb, 'john@example.com', 'WrongPassword', TEST_SECRETS))
@@ -262,7 +262,7 @@ describe('login', () => {
   it('should throw ValidationError for unverified email', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed, emailVerified: false }]);
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
@@ -272,7 +272,7 @@ describe('login', () => {
   it('should throw ValidationError for unapproved member', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed, approvalStatus: 'pending' }]);
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
@@ -282,7 +282,7 @@ describe('login', () => {
   it('should reject a minor (memberType child) from signing in', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed, memberType: 'child' }]);
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
@@ -292,7 +292,7 @@ describe('login', () => {
   it('should reject a minor (DOB under 16) from signing in', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed, dateOfBirth: '2015-01-01' }]);
 
     await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
@@ -302,7 +302,7 @@ describe('login', () => {
   it('mints tokens regardless of stored systemRole — login no longer narrows by role', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     setupSelectChain([{ ...baseMember, passwordHash: hashed, systemRole: 'admin', lastLoginAt: new Date() }]);
     setupUpdateChain();
 
@@ -313,7 +313,7 @@ describe('login', () => {
   it('JWT branchId is secondaryBranchId when member is at secondary branch', async () => {
     const { login } = await import('./service');
 
-    const hashed = await bcrypt.hash('MyPassword1!', 10);
+    const hashed = await hashPassword('MyPassword1!');
     const secondaryBranchId = '770e8400-e29b-41d4-a716-000000000077';
     setupSelectChain([{ ...baseMember, passwordHash: hashed, secondaryBranchId, isAtSecondaryBranch: true, lastLoginAt: null }]);
     setupUpdateChain();
@@ -434,13 +434,13 @@ describe('resetPassword', () => {
     mockSelect.mockReturnValue({ from: mockFrom });
     mockFrom.mockReturnValue({ where: mockWhere });
     mockWhere.mockReturnValue({ limit: mockLimit });
+    const realTokenHash = await hashPassword(baseMember.id);
     mockLimit.mockResolvedValue([{
       id: baseMember.id,
-      passwordResetToken: 'hashed-token-value',
+      passwordResetToken: realTokenHash,
       passwordResetExpiry: new Date(Date.now() + 3_600_000).toISOString(),
     }]);
 
-    vi.spyOn(bcrypt, 'compare').mockResolvedValueOnce(true as never);
     setupUpdateChain();
 
     await expect(resetPassword(mockDb, baseMember.id, 'NewPassword123!'))

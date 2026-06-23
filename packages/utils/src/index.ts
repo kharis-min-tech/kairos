@@ -2,6 +2,7 @@ export { AppError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictErr
 export { enforceBranchAccess } from './auth';
 export { successResponse, errorResponse, paginatedResponse, parsePagination } from './response';
 export { logger } from './logger';
+export { hashPassword, verifyPassword, randomTokenHex } from './password';
 export {
   sendPasswordResetEmail,
   sendJoinRequestReceivedEmail,

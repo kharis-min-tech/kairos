@@ -1,7 +1,5 @@
 import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -18,6 +16,8 @@ import {
   ValidationError,
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
+  hashPassword,
+  randomTokenHex,
 } from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
@@ -621,8 +621,8 @@ export async function createMember(
   }
 
   // Auto-generate password
-  const generatedPassword = randomBytes(8).toString('base64url');
-  const passwordHash = await bcrypt.hash(generatedPassword, 10);
+  const generatedPassword = randomTokenHex(8);
+  const passwordHash = await hashPassword(generatedPassword);
 
   const [created] = await db
     .insert(members)

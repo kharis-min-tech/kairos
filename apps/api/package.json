@@ -17,7 +17,6 @@
     "@kairos/database": "*",
     "@kairos/types": "*",
     "@kairos/utils": "*",
-    "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.38.4",
     "hono": "^4.7.4",
     "jose": "^5.9.6",
@@ -26,7 +25,6 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"

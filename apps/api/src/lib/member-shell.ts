@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { members } from '@kairos/database';
+import { hashPassword } from '@kairos/utils';
 
 /** Shape for minting a member shell. */
 export interface MemberShellInput {
@@ -30,14 +31,12 @@ export async function createMemberShell(
   branchId: string,
   data: MemberShellInput,
 ): Promise<string> {
-  const bcrypt = await import('bcrypt');
-  const { randomUUID } = await import('node:crypto');
-  const tempPassword = `temp_${randomUUID()}`;
-  const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
+  const tempPassword = `temp_${crypto.randomUUID()}`;
+  const tempPasswordHash = await hashPassword(tempPassword);
   const email =
     data.email && data.email.trim().length > 0
       ? data.email
-      : `${data.memberType}_${randomUUID()}@temp.kairos.local`;
+      : `${data.memberType}_${crypto.randomUUID()}@temp.kairos.local`;
 
   const [newMember] = await db
     .insert(members)
