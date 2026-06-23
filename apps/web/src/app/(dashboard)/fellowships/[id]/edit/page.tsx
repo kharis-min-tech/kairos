@@ -70,7 +70,7 @@ export default function EditFellowshipPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const canEdit = activeRole === 'admin' || activeRole === 'pastor';
+  const canEdit = activeRole === 'admin' || (activeRole as string) === 'pastor';
 
   // Mirrors the detail-page Edit button gating: members + leaders go back to detail.
   useEffect(() => {

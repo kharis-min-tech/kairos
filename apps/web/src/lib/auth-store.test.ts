@@ -39,7 +39,7 @@ const mockMember: Member = {
 const sampleRoles: RoleOption[] = [
   { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
   {
-    activeRole: 'leader',
+    activeRole: 'leader' as any,
     scope: { kind: 'fellowship', id: 'f-1' },
     displayLabel: 'Fellowship Lead — Joy',
     key: 'k-lead-f1',
@@ -179,7 +179,7 @@ describe('decodeScopeFromAccessToken', () => {
     const jwt = fakeJwt({
       memberId: 'm-1',
       email: 'a@b.c',
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'fellowship', id: 'f-1' },
     });
     expect(decodeScopeFromAccessToken(jwt)).toEqual({ kind: 'fellowship', id: 'f-1' });

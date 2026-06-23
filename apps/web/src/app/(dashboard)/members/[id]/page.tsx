@@ -28,7 +28,7 @@ export default function MemberDetailPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const isPastor = activeRole === 'pastor';
+  const isPastor = (activeRole as string) === 'pastor';
   const canManage = isAdmin || isPastor;
   const isSelf = user?.id === id;
   const { confirm, dialog: confirmDialog } = useConfirm();

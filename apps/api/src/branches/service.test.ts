@@ -403,7 +403,7 @@ describe('scope=branch narrowing', () => {
     const auth = {
       memberId: '000-bsa',
       email: 'bsa@test.com',
-      systemRole: 'leader' as const,
+      systemRole: 'member' as const,
       branchId,
       branchSystemAdminBranchIds: [branchId, otherBranchId],
       branchDataAdminBranchIds: [], grants: [],

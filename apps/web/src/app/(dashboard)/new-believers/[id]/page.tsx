@@ -40,8 +40,8 @@ export default function EnrollmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
-  const canEdit = isAdminOrPastor || activeRole === 'leader';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
+  const canEdit = isAdminOrPastor || (activeRole as string) === 'leader';
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   const { data, isLoading, error } = useEnrollment(id);

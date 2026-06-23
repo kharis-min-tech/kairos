@@ -61,7 +61,7 @@ export default function FellowshipDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');

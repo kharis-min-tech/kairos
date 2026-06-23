@@ -148,12 +148,12 @@ export async function computeAvailableRoles(
   db: Database,
   input: ComputeAvailableRolesInput,
 ): Promise<RoleOption[]> {
-  const { memberId, systemRole, homeBranchId } = input;
+  const { memberId, systemRole } = input;
+  void input.homeBranchId;
   const footprint = await fetchLeadershipFootprint(db, memberId);
 
   // Collect every branch ID we need a display name for, in one round trip.
   const branchIdsNeeded = new Set<string>();
-  if (systemRole === 'pastor') branchIdsNeeded.add(homeBranchId);
   for (const id of footprint.branchSystemAdminBranchIds) branchIdsNeeded.add(id);
   for (const id of footprint.branchDataAdminBranchIds) branchIdsNeeded.add(id);
 
@@ -198,62 +198,58 @@ export async function computeAvailableRoles(
     });
   }
 
-  // ── Pastor tier ──────────────────────────────────────────
-  if (systemRole === 'pastor') {
-    const name = branchNameById.get(homeBranchId) ?? 'Unknown branch';
-    push({
-      activeRole: 'pastor',
-      scope: { kind: 'branch', id: homeBranchId },
-      displayLabel: `Pastor — ${name}`,
-      key: roleOptionKey('pastor', { kind: 'branch', id: homeBranchId }),
-    });
-  }
+  // RBAC Phase 4c: 'pastor' and 'leader' activeRole values are gone. Branch
+  // Data Admin maps to activeRole='admin' (the same admin-tier role, just
+  // narrowed by scope). Fellowship Leader / Department Lead surface as
+  // activeRole='member' with the appropriate scope — capability checks at
+  // the gates do the actual authorisation work. Phase 5 will unwind the
+  // role picker entirely; this minimal rewrite keeps the API contract
+  // shaped the same so the login-then-select-role page still renders.
 
-  // Branch Data Admin maps to activeRole='pastor' WITH a branch scope —
-  // pastoral-tier authority over branch data, no role management.
   for (const branchId of footprint.branchDataAdminBranchIds) {
     const name = branchNameById.get(branchId) ?? 'Unknown branch';
     push({
-      activeRole: 'pastor',
+      activeRole: 'admin',
       scope: { kind: 'branch', id: branchId },
       displayLabel: `Branch Data Admin — ${name}`,
-      key: roleOptionKey('pastor', { kind: 'branch', id: branchId }),
+      key: roleOptionKey('admin', { kind: 'branch', id: branchId }, 'bda'),
     });
   }
 
-  // ── Leader tier ──────────────────────────────────────────
   for (const f of footprint.leadFellowships) {
     push({
-      activeRole: 'leader',
+      activeRole: 'member',
       scope: { kind: 'fellowship', id: f.id },
       displayLabel: `Fellowship Leader — ${f.fellowshipName}`,
-      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }, 'lead'),
+      key: roleOptionKey('member', { kind: 'fellowship', id: f.id }, 'lead'),
     });
   }
   for (const f of footprint.coLeadFellowships) {
     push({
-      activeRole: 'leader',
+      activeRole: 'member',
       scope: { kind: 'fellowship', id: f.id },
       displayLabel: `Fellowship Co-Leader — ${f.fellowshipName}`,
-      key: roleOptionKey('leader', { kind: 'fellowship', id: f.id }, 'co_lead'),
+      key: roleOptionKey('member', { kind: 'fellowship', id: f.id }, 'co_lead'),
     });
   }
   for (const d of footprint.leadDepartments) {
     push({
-      activeRole: 'leader',
+      activeRole: 'member',
       scope: { kind: 'department', id: d.id },
       displayLabel: `Department Lead — ${d.departmentName}`,
-      key: roleOptionKey('leader', { kind: 'department', id: d.id }, 'lead'),
+      key: roleOptionKey('member', { kind: 'department', id: d.id }, 'lead'),
     });
   }
   for (const d of footprint.deputyDepartments) {
     push({
-      activeRole: 'leader',
+      activeRole: 'member',
       scope: { kind: 'department', id: d.id },
       displayLabel: `Department Deputy — ${d.departmentName}`,
-      key: roleOptionKey('leader', { kind: 'department', id: d.id }, 'deputy'),
+      key: roleOptionKey('member', { kind: 'department', id: d.id }, 'deputy'),
     });
   }
+  // Mark intentionally-unused param for now (homeBranchId).
+  void systemRole;
 
   // ── Member tier ──────────────────────────────────────────
   // Every authenticated user can drop down to plain-member view.

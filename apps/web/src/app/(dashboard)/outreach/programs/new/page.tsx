@@ -28,7 +28,7 @@ export default function CreateProgramPage() {
 
   const isAdmin = activeRole === 'admin';
   const canCreate =
-    activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
+    activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
 
   // Mirrors list-page persona gating: only admins, pastors, and leaders can create.
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { FunctionalRole } from '@kairos/types';
 
 // RBAC Phase 3c: stub the leader-grant sync so service tests don't need to
 // wire up additional DB calls. Sync behavior is tested in role-sync.test.ts.
@@ -143,7 +144,7 @@ describe('listFellowships', () => {
   });
 
   it('scopes leaders to fellowships they lead or co-lead', async () => {
-    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
     const ledFellowship = { ...sampleFellowship, leaderId: 'leader-1' };
     setupSelectSequence([ledFellowship], [{ value: 1 }]);
     const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
@@ -151,7 +152,7 @@ describe('listFellowships', () => {
   });
 
   it('returns empty list for a leader who does not lead any fellowship (e.g. department-only leader)', async () => {
-    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+    const leaderAuth = { memberId: 'leader-1', email: 'leader@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
     setupSelectSequence([], [{ value: 0 }]);
     const result = await listFellowships(mockDb, leaderAuth, { page: 1, limit: 20 });
     expect(result.data).toEqual([]);
@@ -479,7 +480,18 @@ const sampleJoinRequest = {
   updatedAt: new Date(),
 };
 
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+// RBAC Phase 4c: leader is just a 'member' with a FellowshipLeader grant.
+const leaderAuth = {
+  memberId: '000-leader',
+  email: 'leader@test.com',
+  systemRole: 'member' as const,
+  branchId,
+  branchSystemAdminBranchIds: [],
+  branchDataAdminBranchIds: [],
+  grants: [
+    { role: FunctionalRole.FellowshipLeader, scope: { kind: 'fellowship' as const, id: fellowshipId }, branchId },
+  ],
+};
 
 describe('createJoinRequest', () => {
   it('creates a join request for a member', async () => {
@@ -616,10 +628,13 @@ describe('scope-aware leader writes', () => {
     const scopedLeaderAuth = {
       memberId,
       email: 'lead@test.com',
-      systemRole: 'leader' as const,
+      systemRole: 'member' as const,
       branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [], grants: [],
+      branchDataAdminBranchIds: [],
+      grants: [
+        { role: FunctionalRole.FellowshipLeader, scope: { kind: 'fellowship' as const, id: fellowshipId }, branchId },
+      ],
       scope: { kind: 'fellowship' as const, id: fellowshipId },
     };
     // updateFellowship currently restricts to admin/pastor — so this case
@@ -640,10 +655,14 @@ describe('scope-aware leader writes', () => {
     const scopedLeaderAuth = {
       memberId,
       email: 'lead@test.com',
-      systemRole: 'leader' as const,
+      systemRole: 'member' as const,
       branchId,
       branchSystemAdminBranchIds: [],
-      branchDataAdminBranchIds: [], grants: [],
+      branchDataAdminBranchIds: [],
+      grants: [
+        { role: FunctionalRole.FellowshipLeader, scope: { kind: 'fellowship' as const, id: fellowshipId }, branchId },
+        { role: FunctionalRole.FellowshipLeader, scope: { kind: 'fellowship' as const, id: otherFellowshipId }, branchId },
+      ],
       scope: { kind: 'fellowship' as const, id: fellowshipId },
     };
     const otherFellowship = { ...sampleFellowship, id: otherFellowshipId };
@@ -679,7 +698,7 @@ describe('getFellowshipStats', () => {
   const leaderAuth = {
     memberId,
     email: 'leader@test.com',
-    systemRole: 'leader' as const,
+    systemRole: 'member' as const,
     branchId,
     branchSystemAdminBranchIds: [],
     branchDataAdminBranchIds: [], grants: [],

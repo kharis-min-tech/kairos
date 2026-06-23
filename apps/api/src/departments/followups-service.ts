@@ -14,6 +14,7 @@ import {
   ValidationError,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
+import { authHasAnyCapability } from '../lib/grants';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ function enforceLeaderOrAbove(
 ) {
   if (authHasCapability(auth, 'branch:read')) return;
   const isLead =
-    auth.systemRole === 'leader' &&
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
   if (isLead) {
     enforceScopeAllows(auth, 'department', bd.id);

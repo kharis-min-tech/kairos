@@ -139,7 +139,7 @@ function DepartmentsContent() {
               : `Ministry teams${pagination ? ` — ${pagination.total} total` : ''}`}
           </p>
         </div>
-        {(activeRole === 'admin' || activeRole === 'pastor') && (
+        {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
           <Link href="/departments/new">
             <Button size="sm">+ New Department</Button>
           </Link>
@@ -238,7 +238,7 @@ function DepartmentsContent() {
       {!departments || departments.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            {activeRole === 'leader' ? (
+            {(activeRole as string) === 'leader' ? (
               <>
                 <p className="font-medium">You don’t lead a department</p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -284,7 +284,7 @@ function DepartmentsContent() {
                         <p className="line-clamp-2 pt-1">{dept.description}</p>
                       )}
                     </div>
-                    {(activeRole === 'admin' || activeRole === 'pastor') && (
+                    {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
                       <div className="mt-4">
                         <Button
                           variant="destructive"

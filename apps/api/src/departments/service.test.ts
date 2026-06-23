@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { FunctionalRole } from '@kairos/types';
 
 // RBAC Phase 3d: stub the lead/deputy-grant sync. Sync behavior covered in
 // role-sync.test.ts.
@@ -84,10 +85,33 @@ const departmentId = '550e8400-0000-0000-0000-000000000005';
 const requestId = '660e8400-0000-0000-0000-000000000006';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+// RBAC Phase 4c: 'pastor' systemRole gone. Tests of the old branch-tier admin
+// path now exercise a member with an explicit BranchAdmin grant.
+const pastorAuth = {
+  memberId: '000-pastor',
+  email: 'pastor@test.com',
+  systemRole: 'member' as const,
+  branchId,
+  branchSystemAdminBranchIds: [],
+  branchDataAdminBranchIds: [],
+  grants: [
+    { role: FunctionalRole.BranchAdmin, scope: { kind: 'branch' as const, id: branchId }, branchId },
+  ],
+};
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const otherAuth = { memberId: '000-other', email: 'other@test.com', systemRole: 'member' as const, branchId: 'other-branch', branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+// leaderAuth = a department leader scoped to branchDeptId.
+const leaderAuth = {
+  memberId: '000-leader',
+  email: 'leader@test.com',
+  systemRole: 'member' as const,
+  branchId,
+  branchSystemAdminBranchIds: [],
+  branchDataAdminBranchIds: [],
+  grants: [
+    { role: FunctionalRole.DepartmentLeader, scope: { kind: 'department' as const, id: branchDeptId }, branchId },
+  ],
+};
 
 const sampleBranchDept = {
   id: branchDeptId,
@@ -246,7 +270,7 @@ describe('listBranchDepartments', () => {
 
   it('returns empty list for a leader who leads no department (e.g. fellowship-only leader)', async () => {
     setupSelectSequence([], [{ value: 0 }]);
-    const otherLeader = { memberId: 'other-leader', email: 'x@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+    const otherLeader = { memberId: 'other-leader', email: 'x@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
     const result = await listBranchDepartments(mockDb, otherLeader, { page: 1, limit: 20 });
     expect(result.data).toEqual([]);
   });
@@ -402,7 +426,7 @@ describe('updateBranchDepartment', () => {
     setupSelect([sampleBranchDept]);
     await expect(
       updateBranchDepartment(mockDb, leaderAuth, branchDeptId, { leadMemberId: '000-other' }),
-    ).rejects.toThrow('Only admins and pastors can change department leadership');
+    ).rejects.toThrow('Only branch admins can change department leadership');
   });
 
   it('throws ForbiddenError for regular member', async () => {

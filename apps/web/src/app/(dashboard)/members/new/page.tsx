@@ -16,7 +16,7 @@ export default function AddMemberPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const canCreate = isAdmin || activeRole === 'pastor';
+  const canCreate = isAdmin || (activeRole as string) === 'pastor';
   const createMember = useCreateMember();
   const { data: branches } = useBranches();
 
@@ -275,8 +275,8 @@ export default function AddMemberPage() {
                   <CustomSelect
                     id="systemRole"
                     value={watch('systemRole') ?? 'member'}
-                    onValueChange={(v) => setValue('systemRole', v as 'member' | 'pastor' | 'admin')}
-                    options={[{ value: 'member', label: 'Member' }, { value: 'pastor', label: 'Pastor' }, { value: 'admin', label: 'Admin' }]}
+                    onValueChange={(v) => setValue('systemRole', v as 'member' | 'admin')}
+                    options={[{ value: 'member', label: 'Member' }, { value: 'admin', label: 'Admin' }]}
                   />
                 ) : (
                   <Input id="systemRole" value="Member" disabled className="mt-1 cursor-not-allowed" />

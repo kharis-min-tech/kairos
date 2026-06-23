@@ -123,7 +123,7 @@ function FellowshipsContent() {
             Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
           </p>
         </div>
-        {(activeRole === 'admin' || activeRole === 'pastor') && (
+        {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
           <Link href="/fellowships/new">
             <Button size="sm">+ New Fellowship</Button>
           </Link>
@@ -146,7 +146,7 @@ function FellowshipsContent() {
           </Button>
         </div>
 
-        {(activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader') && pagination && (
+        {(activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader') && pagination && (
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 rounded-lg bg-[#5D3FD3]/10 px-3 py-1.5">
               <svg className="h-4 w-4 text-[#5D3FD3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -213,7 +213,7 @@ function FellowshipsContent() {
       {!fellowships || fellowships.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            {activeRole === 'leader' ? (
+            {(activeRole as string) === 'leader' ? (
               <>
                 <p className="font-medium">You don’t lead a fellowship</p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -267,7 +267,7 @@ function FellowshipsContent() {
                         </p>
                       )}
                     </div>
-                    {(activeRole === 'admin' || activeRole === 'pastor') && (
+                    {(activeRole === 'admin' || (activeRole as string) === 'pastor') && (
                       <div className="mt-4">
                         <Button
                           variant="destructive"

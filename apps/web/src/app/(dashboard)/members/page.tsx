@@ -46,18 +46,18 @@ export default function MembersPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const isPastor = activeRole === 'pastor';
+  const isPastor = (activeRole as string) === 'pastor';
   const isMemberView = activeRole === 'member';
   // Mirrors the dashboard-layout nav gating: members + leaders don't surface
   // the Members tab. Block direct URL access too so behaviour matches the nav.
   useEffect(() => {
-    if (user !== null && (isMemberView || activeRole === 'leader')) {
+    if (user !== null && (isMemberView || (activeRole as string) === 'leader')) {
       router.replace('/dashboard');
     }
   }, [user, isMemberView, activeRole, router]);
   // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
   // the page itself enforces real access via the API (403 for unauthorized leaders).
-  const canSeeSafeguarding = isAdmin || isPastor || activeRole === 'leader';
+  const canSeeSafeguarding = isAdmin || isPastor || (activeRole as string) === 'leader';
   const [params, setParams] = useState<MemberListParams>({
     page: 1,
     limit: 20,
@@ -108,7 +108,7 @@ export default function MembersPage() {
     setParams((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
   }
 
-  if (user !== null && (isMemberView || activeRole === 'leader')) {
+  if (user !== null && (isMemberView || (activeRole as string) === 'leader')) {
     return null;
   }
 

@@ -20,20 +20,21 @@ describe('hasCapability — break-glass and shims', () => {
     ).toBe(true);
   });
 
-  it('pastor (transitional shim) bypasses every capability', () => {
-    // Phase 4 removes this — pastor will be narrowed to BranchAdmin@home_branch.
-    expect(hasCapability([], 'pastor', 'branch:rbac')).toBe(true);
+  it('post-Phase-4c: plain member with no grants is denied even capability-tagged routes', () => {
+    // The old pastor shim is gone. Pastor is now an honorific (members.honorific
+    // column) and confers no capabilities of its own.
+    expect(hasCapability([], 'member', 'branch:rbac')).toBe(false);
     expect(
-      hasCapability([], 'pastor', 'fellowship:write', {
+      hasCapability([], 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-X',
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('plain member with no grants is denied everything', () => {
     expect(hasCapability([], 'member', 'branch:read')).toBe(false);
-    expect(hasCapability([], 'leader', 'fellowship:write')).toBe(false);
+    expect(hasCapability([], 'member', 'fellowship:write')).toBe(false);
   });
 });
 
@@ -46,7 +47,7 @@ describe('hasCapability — exact scope match', () => {
 
   it('FellowshipLeader@F-1 can write F-1', () => {
     expect(
-      hasCapability([fellowshipGrant], 'leader', 'fellowship:write', {
+      hasCapability([fellowshipGrant], 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-1',
       }),
@@ -55,7 +56,7 @@ describe('hasCapability — exact scope match', () => {
 
   it('FellowshipLeader@F-1 cannot write F-2', () => {
     expect(
-      hasCapability([fellowshipGrant], 'leader', 'fellowship:write', {
+      hasCapability([fellowshipGrant], 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-2',
       }),
@@ -64,7 +65,7 @@ describe('hasCapability — exact scope match', () => {
 
   it('FellowshipLeader@F-1 cannot use a department capability', () => {
     expect(
-      hasCapability([fellowshipGrant], 'leader', 'department:write', {
+      hasCapability([fellowshipGrant], 'member', 'department:write', {
         kind: 'department',
         id: 'D-1',
       }),
@@ -78,7 +79,7 @@ describe('hasCapability — exact scope match', () => {
       branchId: 'B-1',
     };
     expect(
-      hasCapability([deputy], 'leader', 'department:write', {
+      hasCapability([deputy], 'member', 'department:write', {
         kind: 'department',
         id: 'D-1',
       }),
@@ -95,7 +96,7 @@ describe('hasCapability — hierarchical scope', () => {
 
   it('BranchAdmin@B-1 can edit a fellowship in B-1 (via branchId)', () => {
     expect(
-      hasCapability([branchAdmin], 'leader', 'fellowship:write', {
+      hasCapability([branchAdmin], 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-1',
         branchId: 'B-1',
@@ -109,7 +110,7 @@ describe('hasCapability — hierarchical scope', () => {
     // This is the realistic hierarchy use — gates checking branch-level cap
     // with a child target.
     expect(
-      hasCapability([branchAdmin], 'leader', 'branch:read', {
+      hasCapability([branchAdmin], 'member', 'branch:read', {
         kind: 'branch',
         id: 'B-1',
       }),
@@ -118,7 +119,7 @@ describe('hasCapability — hierarchical scope', () => {
 
   it('BranchAdmin@B-1 cannot act on B-2', () => {
     expect(
-      hasCapability([branchAdmin], 'leader', 'branch:rbac', {
+      hasCapability([branchAdmin], 'member', 'branch:rbac', {
         kind: 'branch',
         id: 'B-2',
       }),
@@ -132,13 +133,13 @@ describe('hasCapability — hierarchical scope', () => {
       branchId: 'B-1',
     };
     expect(
-      hasCapability([bda], 'leader', 'branch:rbac', {
+      hasCapability([bda], 'member', 'branch:rbac', {
         kind: 'branch',
         id: 'B-1',
       }),
     ).toBe(false);
     expect(
-      hasCapability([bda], 'leader', 'branch:write', {
+      hasCapability([bda], 'member', 'branch:write', {
         kind: 'branch',
         id: 'B-1',
       }),
@@ -155,7 +156,7 @@ describe('hasCapability — multiple grants', () => {
         branchId: 'B-1',
       },
     ];
-    expect(hasCapability(grants, 'leader', 'fellowship:write')).toBe(true);
+    expect(hasCapability(grants, 'member', 'fellowship:write')).toBe(true);
   });
 
   it('grants in different scopes do not bleed into each other', () => {
@@ -172,19 +173,19 @@ describe('hasCapability — multiple grants', () => {
       },
     ];
     expect(
-      hasCapability(grants, 'leader', 'fellowship:write', {
+      hasCapability(grants, 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-1',
       }),
     ).toBe(true);
     expect(
-      hasCapability(grants, 'leader', 'department:write', {
+      hasCapability(grants, 'member', 'department:write', {
         kind: 'department',
         id: 'D-2',
       }),
     ).toBe(true);
     expect(
-      hasCapability(grants, 'leader', 'fellowship:write', {
+      hasCapability(grants, 'member', 'fellowship:write', {
         kind: 'fellowship',
         id: 'F-2',
       }),
@@ -200,7 +201,7 @@ describe('hasCapability — SafeguardingLead', () => {
       branchId: 'B-1',
     };
     expect(
-      hasCapability([grant], 'leader', 'safeguarding:read', {
+      hasCapability([grant], 'member', 'safeguarding:read', {
         kind: 'branch',
         id: 'B-1',
       }),
@@ -214,7 +215,7 @@ describe('hasCapability — SafeguardingLead', () => {
       branchId: 'B-1',
     };
     expect(
-      hasCapability([grant], 'leader', 'branch:rbac', {
+      hasCapability([grant], 'member', 'branch:rbac', {
         kind: 'branch',
         id: 'B-1',
       }),
@@ -352,34 +353,29 @@ describe('resolveGrants', () => {
   });
 });
 
-// ── Equivalence to today's effective access ────────────────
+// ── Post-Phase-4c access matrix ────────────────────────────
 //
-// These tests pin down the Phase 0 invariant: a today-Pastor sees the same
-// allow/deny outcome via the new capability check as they would via the
-// current `auth.systemRole === 'pastor'` bypass.
+// The pastor shim is gone. Only systemRole='admin' bypasses; everyone else
+// must hold an explicit grant.
 
-describe('hasCapability — Phase 0 equivalence to today', () => {
-  const samples: Array<{
-    label: string;
-    role: SystemRole;
-    cap: Capability;
-    scope?: Parameters<typeof hasCapability>[3];
-  }> = [
-    { label: 'pastor reading any branch', role: 'pastor', cap: 'branch:read' },
-    { label: 'pastor writing branch settings', role: 'pastor', cap: 'branch:write' },
-    { label: 'pastor granting roles', role: 'pastor', cap: 'branch:rbac' },
-    { label: 'pastor editing a fellowship', role: 'pastor', cap: 'fellowship:write' },
-    { label: 'pastor editing a department', role: 'pastor', cap: 'department:write' },
-    { label: 'admin doing anything', role: 'admin', cap: 'safeguarding:write' },
-  ];
-
-  for (const s of samples) {
-    it(`allows ${s.label}`, () => {
-      expect(hasCapability([], s.role, s.cap, s.scope)).toBe(true);
-    });
-  }
-
-  it('member with no grants is denied even read access', () => {
-    expect(hasCapability([], 'member', 'fellowship:read')).toBe(false);
+describe('hasCapability — post-Phase-4c access matrix', () => {
+  it('admin bypasses every capability', () => {
+    expect(hasCapability([], 'admin', 'branch:read')).toBe(true);
+    expect(hasCapability([], 'admin', 'branch:write')).toBe(true);
+    expect(hasCapability([], 'admin', 'branch:rbac')).toBe(true);
+    expect(hasCapability([], 'admin', 'safeguarding:write')).toBe(true);
   });
+
+  it('member with no grants is denied every capability', () => {
+    expect(hasCapability([], 'member', 'branch:read')).toBe(false);
+    expect(hasCapability([], 'member', 'fellowship:read')).toBe(false);
+    expect(hasCapability([], 'member', 'department:read')).toBe(false);
+  });
+
 });
+
+// Silence unused-import warnings for shared types.
+const _capabilityRef: Capability | undefined = undefined;
+const _systemRoleRef: SystemRole | undefined = undefined;
+void _capabilityRef;
+void _systemRoleRef;

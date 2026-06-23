@@ -77,8 +77,8 @@ export default function ProgramDetailPage() {
   const [highlightSection, setHighlightSection] = useState<string | null>(null);
 
   const isMember = activeRole === 'member';
-  const canManageProgram = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
-  const canRegister = activeRole === 'member' || activeRole === 'pastor' || activeRole === 'leader';
+  const canManageProgram = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
+  const canRegister = activeRole === 'member' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
   
   // Debug: Log user and program creator info
   useEffect(() => {

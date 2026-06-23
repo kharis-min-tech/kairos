@@ -48,10 +48,12 @@ export type MemberApprovalStatus = (typeof MemberApprovalStatus)[keyof typeof Me
 
 // ── Auth / System Roles ────────────────────────────────────
 
+// RBAC Phase 4c: SystemRole collapsed to the break-glass binary. Former
+// 'pastor' / 'leader' / 'elder' values are now honorific titles (see
+// members.honorific column) plus whatever grants the member explicitly
+// holds in member_roles.
 export const SystemRole = {
   Admin: 'admin',
-  Pastor: 'pastor',
-  Leader: 'leader',
   Member: 'member',
 } as const;
 export type SystemRole = (typeof SystemRole)[keyof typeof SystemRole];

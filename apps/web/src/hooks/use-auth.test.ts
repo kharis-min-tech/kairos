@@ -140,7 +140,7 @@ describe('useLogin', () => {
         sessionToken: 'sess-token-xyz',
         availableRoles: [
           { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
-          { activeRole: 'leader', scope: { kind: 'fellowship', id: 'f1' }, displayLabel: 'Fellowship Lead', key: 'k-lead' },
+          { activeRole: 'leader' as any, scope: { kind: 'fellowship', id: 'f1' }, displayLabel: 'Fellowship Lead', key: 'k-lead' },
         ],
       },
     } as never);
@@ -187,7 +187,7 @@ describe('useFinalizeRole', () => {
     await act(async () => {
       result.current.mutate({
         sessionToken: 'sess-xyz',
-        activeRole: 'leader',
+        activeRole: 'leader' as any,
         scope: { kind: 'fellowship', id: 'f-1' },
         key: 'k-lead',
       });
@@ -196,7 +196,7 @@ describe('useFinalizeRole', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.auth.finalizeRole).toHaveBeenCalledWith({
       sessionToken: 'sess-xyz',
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'fellowship', id: 'f-1' },
       key: 'k-lead',
     });
@@ -241,7 +241,7 @@ describe('persistAuthSuccess', () => {
     persistAuthSuccess({
       tokens: { accessToken: 'at', refreshToken: 'rt' },
       member: { ...mockMember, mustChangePassword: true } as never,
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
     });
     const state = useAuthStore.getState();
     expect(state.accessToken).toBe('at');
@@ -254,13 +254,13 @@ describe('persistAuthSuccess', () => {
   it('decodes scope out of the access-token JWT payload', () => {
     const jwt = fakeJwt({
       memberId: 'm-1',
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'fellowship', id: 'f-99' },
     });
     persistAuthSuccess({
       tokens: { accessToken: jwt, refreshToken: 'rt' },
       member: mockMember as never,
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
     });
     expect(useAuthStore.getState().scope).toEqual({ kind: 'fellowship', id: 'f-99' });
   });
@@ -292,7 +292,7 @@ describe('persistAuthSuccess', () => {
 
   it('leaves availableRoles untouched when caller omits them (single-role login path)', () => {
     const existing: RoleOption[] = [
-      { activeRole: 'pastor', displayLabel: 'Pastor', key: 'k-p' },
+      { activeRole: 'pastor' as any, displayLabel: 'Pastor', key: 'k-p' },
     ];
     useAuthStore.setState({ availableRoles: existing });
     persistAuthSuccess({
@@ -317,7 +317,7 @@ describe('useSwitchRole', () => {
 
     await act(async () => {
       result.current.mutate({
-        activeRole: 'leader',
+        activeRole: 'leader' as any,
         scope: { kind: 'department', id: 'd-1' },
         key: 'k-dept-1',
       });
@@ -325,7 +325,7 @@ describe('useSwitchRole', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.auth.switchRole).toHaveBeenCalledWith({
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'department', id: 'd-1' },
       key: 'k-dept-1',
     });
@@ -356,7 +356,7 @@ describe('useSwitchRole', () => {
     const { result } = renderHook(() => useSwitchRole(), { wrapper: createWrapper() });
 
     await act(async () => {
-      result.current.mutate({ activeRole: 'pastor', key: 'k-stale' });
+      result.current.mutate({ activeRole: 'pastor' as any, key: 'k-stale' });
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));

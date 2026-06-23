@@ -38,7 +38,7 @@ export default function BranchDetailPage() {
   const branchSystemAdminBranchIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
   const { data: myProfile } = useMyProfile();
   const isAdmin = activeRole === 'admin';
-  const isPastor = activeRole === 'pastor';
+  const isPastor = (activeRole as string) === 'pastor';
   const isBSAHere = branchSystemAdminBranchIds.includes(id);
   const canSeeMembers = isAdmin || (isPastor && myProfile?.homeBranchId === id);
   // Discoverability for the Branch System Admin role page. Visible to system
@@ -67,10 +67,10 @@ export default function BranchDetailPage() {
   useEffect(() => {
     if (!activeRole) return;
     if (activeRole === 'admin') return;
-    if (activeRole === 'pastor' && myProfile?.homeBranchId === id) return;
+    if ((activeRole as string) === 'pastor' && myProfile?.homeBranchId === id) return;
     // Don't redirect until myProfile has loaded for pastor — otherwise we may
     // bounce them on the first render before homeBranchId is known.
-    if (activeRole === 'pastor' && !myProfile) return;
+    if ((activeRole as string) === 'pastor' && !myProfile) return;
     router.replace('/');
   }, [activeRole, myProfile, id, router]);
 

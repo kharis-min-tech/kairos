@@ -31,7 +31,7 @@ const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
 export default function AttendanceReportsPage() {
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
   const [branchId, setBranchId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [fellowshipId, setFellowshipId] = useState('');

@@ -3,6 +3,8 @@ import type { SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { souls, followUps, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
+import { authHasAnyCapability } from '../lib/grants';
+import { authHasCapability } from '../lib/grants';
 
 /**
  * Combine branch isolation filter with optional date range filter.
@@ -682,7 +684,7 @@ function getBranchFilter(auth: AuthContext) {
   // 1. The outreach program is in their branch OR the soul has no outreach program
   // 2. The assigned member (if any) is from their branch
   // This ensures strict branch isolation
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     return or(
       // Souls from outreach programs in their branch with members from their branch
       sql`(${outreachPrograms.branchId} = ${auth.branchId} AND (${members.homeBranchId} = ${auth.branchId} OR ${members.homeBranchId} IS NULL))`,

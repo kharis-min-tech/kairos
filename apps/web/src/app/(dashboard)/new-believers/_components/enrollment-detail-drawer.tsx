@@ -36,7 +36,7 @@ export function EnrollmentDetailDrawer({
 }: EnrollmentDetailDrawerProps) {
   const open = !!enrollmentId;
   const { activeRole } = useAuthStore();
-  const canEdit = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
+  const canEdit = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
 
   const { data, isLoading } = useEnrollment(enrollmentId ?? '');
   const enrollment = data as EnrollmentDetail | undefined;

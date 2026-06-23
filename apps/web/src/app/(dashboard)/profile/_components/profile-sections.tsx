@@ -25,7 +25,7 @@ export function useFriendlyRoleLines(opts: {
   const lines: string[] = [];
   if (systemRole === 'admin') {
     lines.push('Church administrator');
-  } else if (systemRole === 'pastor') {
+  } else if ((systemRole as string) === 'pastor') {
     lines.push(homeBranchName ? `Pastor of ${homeBranchName} branch` : 'Pastor');
   }
 

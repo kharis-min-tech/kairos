@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { FunctionalRole } from '@kairos/types';
 
 // ── Mock the shared member-shell helper ───────────────────
 const createMemberShellMock = vi.fn();
@@ -59,9 +60,32 @@ const memberId = '550e8400-e29b-41d4-a716-446655440002';
 const visitorMemberId = '550e8400-e29b-41d4-a716-4466554400ff';
 
 const adminAuth = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth = { memberId: '000-pastor', email: 'pastor@test.com', systemRole: 'pastor' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'leader' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const leaderOtherBranch = { memberId: '000-leader2', email: 'l2@test.com', systemRole: 'leader' as const, branchId: otherBranchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+// RBAC Phase 4c: pastor/leader systemRole gone — granted explicitly.
+const pastorAuth = {
+  memberId: '000-pastor',
+  email: 'pastor@test.com',
+  systemRole: 'member' as const,
+  branchId,
+  branchSystemAdminBranchIds: [],
+  branchDataAdminBranchIds: [],
+  grants: [
+    { role: FunctionalRole.BranchAdmin, scope: { kind: 'branch' as const, id: branchId }, branchId },
+  ],
+};
+const leaderAuth = {
+  memberId: '000-leader',
+  email: 'leader@test.com',
+  systemRole: 'member' as const,
+  branchId,
+  branchSystemAdminBranchIds: [],
+  branchDataAdminBranchIds: [],
+  grants: [
+    // Generic leader-tier grant — fellowship-scoped so reportReader (which
+    // accepts branch:read / fellowship:read / department:read) lets them in.
+    { role: FunctionalRole.FellowshipLeader, scope: { kind: 'fellowship' as const, id: '__leader_scope__' }, branchId },
+  ],
+};
+const leaderOtherBranch = { memberId: '000-leader2', email: 'l2@test.com', systemRole: 'member' as const, branchId: otherBranchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 // Admin-desk volunteer: a regular member whose home branch has them on the Admin dept roster.
 // Distinct from `adminAuth` (which is a system admin, branch-agnostic).

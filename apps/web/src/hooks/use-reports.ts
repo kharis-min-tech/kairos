@@ -13,7 +13,9 @@ export function useMemberGrowth() {
       const res = await api.reports.memberGrowth();
       return res.data!;
     },
-    enabled: activeRole === 'admin' || activeRole === 'pastor',
+    // RBAC Phase 4c: API gates by capability now; any authenticated user
+    // may have access. Fetch when logged in and let the server narrow.
+    enabled: !!activeRole,
     retry: false,
     throwOnError: false,
   });
@@ -27,7 +29,9 @@ export function useAttendanceTrend() {
       const res = await api.reports.attendanceTrend();
       return res.data!;
     },
-    enabled: activeRole === 'admin' || activeRole === 'pastor',
+    // RBAC Phase 4c: API gates by capability now; any authenticated user
+    // may have access. Fetch when logged in and let the server narrow.
+    enabled: !!activeRole,
     retry: false,
     throwOnError: false,
   });

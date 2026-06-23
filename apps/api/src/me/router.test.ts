@@ -117,7 +117,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA],
@@ -140,7 +140,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
     });
@@ -165,7 +165,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
     });
@@ -207,7 +207,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA, branchB],
@@ -241,7 +241,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA],
@@ -271,7 +271,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA],
@@ -301,7 +301,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA, branchB],
@@ -329,7 +329,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       // User holds BSA only on branchA — scope=branchB would yield nothing
@@ -354,7 +354,7 @@ describe('GET /api/me/leadership', () => {
       .mockReturnValueOnce(chainTo([leadDeptRow, deputyDeptRow]));
 
     const token = signTestToken({
-      systemRole: 'leader',
+      systemRole: 'member',
       memberId: TEST_IDS.memberId,
       branchId: branchA,
       branchSystemAdminBranchIds: [branchA],

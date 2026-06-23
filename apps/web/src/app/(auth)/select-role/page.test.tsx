@@ -44,7 +44,7 @@ function seedStash() {
     sessionToken: 'sess-xyz',
     availableRoles: [
       { activeRole: 'admin', scope: { kind: 'branch', id: 'b-1' }, displayLabel: 'Branch System Admin — London', key: 'k-admin' },
-      { activeRole: 'leader', scope: { kind: 'department', id: 'd-1' }, displayLabel: 'Admin Dept Lead — London', key: 'k-lead' },
+      { activeRole: 'leader' as any, scope: { kind: 'department', id: 'd-1' }, displayLabel: 'Admin Dept Lead — London', key: 'k-lead' },
       { activeRole: 'member', displayLabel: 'Member — London', key: 'k-mem' },
     ],
   });
@@ -124,7 +124,7 @@ describe('SelectRolePage — finalize flow', () => {
     expect(persistAuthSuccess).toHaveBeenCalledWith({
       tokens: { accessToken: 'at2', refreshToken: 'rt2' },
       member: mockMember,
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
     });
     // Stash is cleared after successful finalize.
     expect(useRoleSelectionStore.getState().sessionToken).toBeNull();

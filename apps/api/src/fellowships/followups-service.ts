@@ -15,6 +15,7 @@ import {
   ValidationError,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
+import { authHasAnyCapability } from '../lib/grants';
 
 const DEFAULT_OVERDUE_DAYS = 7;
 
@@ -47,7 +48,7 @@ function enforceLeaderOrAbove(
 ) {
   if (authHasCapability(auth, 'branch:read')) return;
   const isFellowshipLead =
-    auth.systemRole === 'leader' &&
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId);
   if (isFellowshipLead) {
     enforceScopeAllows(auth, 'fellowship', fellowship.id);

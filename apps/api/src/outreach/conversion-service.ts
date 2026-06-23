@@ -1,4 +1,6 @@
 import { eq, and, sql } from 'drizzle-orm';
+import { authHasAnyCapability } from '../lib/grants';
+import { authHasCapability } from '../lib/grants';
 import type { Database } from '@kairos/database';
 import { souls, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -54,7 +56,7 @@ export async function convertSoulToMember(
     throw new ForbiddenError('You can only convert souls assigned to you');
   }
 
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId !== auth.branchId) {
+  if ((authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only convert souls from your branch');
   }
 

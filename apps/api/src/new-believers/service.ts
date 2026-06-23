@@ -18,7 +18,7 @@ import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail }
 // ── Helpers ────────────────────────────────────────────────
 
 function enforceAdminOrPastor(auth: AuthContext) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins or pastors can perform this action');
   }
 }
@@ -231,7 +231,7 @@ export async function listEnrollments(
   //   "New Believers Teacher" named role → full branch (operator)
   //   otherwise → only enrollments where the caller is student / teacher-on-row / mentor-on-row
   const personaConditions: Array<ReturnType<typeof eq> | ReturnType<typeof or>> = [];
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     if (!scopedBranchId) {
       // No branch context for a non-admin/non-pastor → return empty rather than leak.
       return { data: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
@@ -369,7 +369,7 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
   // if they are: the student on it, the teacher on it, the mentor on it,
   // the NB-dept leader for the branch, or hold the "New Believers Teacher" role.
   // Admin + pastor short-circuit.
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     const isOwn =
       enrollment.memberId === auth.memberId ||
       enrollment.teacherId === auth.memberId ||
@@ -776,7 +776,7 @@ export async function updateSession(
   enforceBranchScope(auth, session.branchId);
 
   // Only the session’s teacher, or admin/pastor, can update
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     if (!session.teacherId || session.teacherId !== auth.memberId) {
       throw new ForbiddenError('Only the session teacher, a pastor, or admin can update this session');
     }
@@ -948,7 +948,7 @@ export async function getHealthSummary(
       ? query.branchId
       : auth.branchId;
 
-  if (scopedBranchId && auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (scopedBranchId && !authHasCapability(auth, 'branch:read')) {
     enforceBranchScope(auth, scopedBranchId);
   }
 
@@ -1221,7 +1221,7 @@ export async function deleteMentorFollowup(
   enforceBranchScope(auth, enrollment.branchId);
 
   // Only the author, NB-dept leader, pastor, or admin can soft-delete.
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor' && row.createdBy !== auth.memberId) {
+  if (!authHasCapability(auth, 'branch:read') && row.createdBy !== auth.memberId) {
     const isNbLeader = await isNewBelieversDeptLeader(db, auth.memberId, enrollment.branchId);
     if (!isNbLeader) {
       throw new ForbiddenError('Only the author, NB leader, or pastor/admin can delete this follow-up');

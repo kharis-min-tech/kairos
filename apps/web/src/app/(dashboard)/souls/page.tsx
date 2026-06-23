@@ -316,10 +316,10 @@ export default function SoulsKanbanPage() {
   const [members, setMembers] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
-  const canBulkAssign = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
+  const canBulkAssign = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
   const isAdmin = activeRole === 'admin';
-  const isPastor = activeRole === 'pastor';
-  const isLeader = activeRole === 'leader';
+  const isPastor = (activeRole as string) === 'pastor';
+  const isLeader = (activeRole as string) === 'leader';
 
   // Filter dropdowns — sourced from API hooks (already branch-scoped per persona).
   const { data: branches = [] } = useBranches();

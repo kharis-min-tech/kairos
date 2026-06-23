@@ -11,7 +11,7 @@ export default function MembersImportPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
-  const canImport = user?.systemRole === 'admin' || activeRole === 'pastor';
+  const canImport = user?.systemRole === 'admin' || (activeRole as string) === 'pastor';
 
   useEffect(() => {
     if (user !== null && !canImport) router.replace('/members');

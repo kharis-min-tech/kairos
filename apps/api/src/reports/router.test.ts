@@ -34,7 +34,7 @@ const { createApp } = await import('../app');
 const app = createApp();
 
 const adminToken = signTestToken({ systemRole: 'admin' });
-const pastorToken = signTestToken({ systemRole: 'pastor', memberId: TEST_IDS.pastorId, branchId: TEST_IDS.branchId });
+const pastorToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.pastorId, branchId: TEST_IDS.branchId });
 const memberToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 
 beforeEach(() => {

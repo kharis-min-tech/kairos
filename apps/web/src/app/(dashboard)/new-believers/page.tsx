@@ -57,7 +57,7 @@ type PersonalTab = 'enrollment' | 'teaching' | 'mentees';
 
 function NewBelieversContent() {
   const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
   const queryClient = useQueryClient();
 
   // Persona "hats" — admin/pastor always get the full Kanban; everyone else falls back to

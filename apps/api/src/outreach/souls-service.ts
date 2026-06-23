@@ -16,6 +16,8 @@ import {
   ForbiddenError,
   ValidationError,
 } from '@kairos/utils';
+import { authHasCapability } from '../lib/grants';
+import { authHasAnyCapability } from '../lib/grants';
 
 /**
  * Capture a new soul
@@ -145,19 +147,20 @@ export async function listSouls(
   const effectiveRole = auth.activeRole ?? auth.systemRole;
   const conditions: SQL[] = [];
 
-  // Role-based filtering
-  if (effectiveRole === 'member') {
-    // Members see only souls assigned to them
-    conditions.push(eq(souls.assignedMemberId, auth.memberId));
-  } else if (effectiveRole === 'pastor') {
-    // Pastors see souls from their branch — via the program OR via the assignee.
+  // RBAC Phase 4c filtering: admin → no filter (shim); BSA/BDA → branch-wide;
+  // fellowship/dept leader → leader-scoped; everyone else → only assigned.
+  if (effectiveRole === 'admin') {
+    // no scope filter — admin sees everything
+  } else if (authHasCapability(auth, 'branch:read')) {
+    // Branch-tier admins see souls from their branch — via the program OR
+    // via the assignee. (Pre-Phase-4c: 'pastor' systemRole.)
     conditions.push(
       or(
         eq(outreachPrograms.branchId, auth.branchId),
         eq(members.homeBranchId, auth.branchId),
       )!,
     );
-  } else if (effectiveRole === 'leader') {
+  } else if (authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     // Leaders see souls connected to fellowships / departments they lead OR co-lead.
     // Connection paths (any one is enough):
     //   1. The soul is assigned to ME directly.
@@ -277,8 +280,11 @@ export async function listSouls(
       }
       conditions.push(or(...orParts)!);
     }
+  } else {
+    // RBAC Phase 4c: plain members see only souls assigned to them.
+    conditions.push(eq(souls.assignedMemberId, auth.memberId));
   }
-  // Admin sees all
+  // Admin sees all (no condition pushed in the admin branch above)
 
   // Filters
   if (query.status) {
@@ -478,7 +484,7 @@ export async function getSoul(
 
   // Branch isolation for pastor/leader — they must not see souls outside their branch,
   // either via the soul's outreach program OR via an assignee from another branch.
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+  if (effectiveRole !== 'admin' && authHasAnyCapability(auth, 'branch:read', 'fellowship:read', 'department:read')) {
     // Need branchIds for both the program and the assignee.
     const [scope] = await db
       .select({
@@ -528,7 +534,7 @@ export async function reassignSoul(
   }
 
   // Branch isolation for Pastor/Leader
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId !== auth.branchId) {
+  if ((effectiveRole !== 'admin' && authHasAnyCapability(auth, 'branch:read', 'fellowship:read', 'department:read')) && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only reassign souls from your own branch');
   }
 
@@ -543,7 +549,7 @@ export async function reassignSoul(
   }
 
   // For Pastor/Leader, ensure new member is from same branch
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
+  if ((effectiveRole !== 'admin' && authHasAnyCapability(auth, 'branch:read', 'fellowship:read', 'department:read')) && newMember.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only assign souls to members from your own branch');
   }
 
@@ -621,7 +627,7 @@ export async function bulkReassignSouls(
   }
 
   // For Pastor/Leader, ensure new member is from same branch
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && newMember.homeBranchId !== auth.branchId) {
+  if ((effectiveRole !== 'admin' && authHasAnyCapability(auth, 'branch:read', 'fellowship:read', 'department:read')) && newMember.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only assign souls to members from your own branch');
   }
 
@@ -642,7 +648,7 @@ export async function bulkReassignSouls(
   }
 
   // Branch isolation check for Pastor/Leader
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+  if (effectiveRole !== 'admin' && authHasAnyCapability(auth, 'branch:read', 'fellowship:read', 'department:read')) {
     const invalidSouls = soulsList.filter(
       (soul) => soul.branchId !== auth.branchId && soul.assignedMemberBranchId !== auth.branchId
     );

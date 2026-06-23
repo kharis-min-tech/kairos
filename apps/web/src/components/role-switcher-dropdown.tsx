@@ -30,7 +30,9 @@ function rolesEqual(a: RoleOption, target: { activeRole: SystemRole; scope: Role
 }
 
 function friendlyFallbackLabel(activeRole: SystemRole | null): string {
-  switch (activeRole) {
+  // RBAC Phase 4c: pastor/leader cases are dead code post-cutover, kept for
+  // Phase 5's role-switcher rewrite.
+  switch (activeRole as string | null) {
     case 'admin':
       return 'Administrator';
     case 'pastor':

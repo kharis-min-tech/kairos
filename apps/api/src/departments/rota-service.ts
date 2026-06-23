@@ -25,6 +25,7 @@ import {
   type FairnessSlot,
 } from './rota-fairness';
 import { enforceScopeAllows } from '../lib/scope';
+import { authHasAnyCapability } from '../lib/grants';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ function enforceLeaderOrAbove(
 ) {
   if (authHasCapability(auth, 'branch:read')) return;
   const isLead =
-    auth.systemRole === 'leader' &&
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId);
   if (isLead) {
     enforceScopeAllows(auth, 'department', bd.id);
@@ -1002,11 +1003,10 @@ export async function getRotaStats(
   const isLeadOrDeputy =
     bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId;
   if (
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor' &&
+    !authHasCapability(auth, 'branch:read') &&
     !isLeadOrDeputy
   ) {
-    throw new ForbiddenError('Only the department lead/deputy, pastor, or admin can view this');
+    throw new ForbiddenError('Only the department lead/deputy or branch admin can view this');
   }
 
   const windowDays = query.windowDays ?? 28;

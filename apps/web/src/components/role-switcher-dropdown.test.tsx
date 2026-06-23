@@ -25,13 +25,13 @@ import { api } from '@/lib/api';
 const roles: RoleOption[] = [
   { activeRole: 'admin', displayLabel: 'System Admin', key: 'k-admin' },
   {
-    activeRole: 'leader',
+    activeRole: 'leader' as any,
     scope: { kind: 'fellowship', id: 'f-1' },
     displayLabel: 'Fellowship Lead — Joy',
     key: 'k-lead-f1',
   },
   {
-    activeRole: 'leader',
+    activeRole: 'leader' as any,
     scope: { kind: 'department', id: 'd-1' },
     displayLabel: 'Dept Lead — Ushering',
     key: 'k-dept-1',
@@ -84,7 +84,7 @@ describe('RoleSwitcherDropdown', () => {
   });
 
   it('falls back to a friendly default label when no RoleOption matches and the list is empty', () => {
-    useAuthStore.setState({ availableRoles: [], activeRole: 'pastor' });
+    useAuthStore.setState({ availableRoles: [], activeRole: 'pastor' as any });
 
     render(<RoleSwitcherDropdown />, { wrapper: createWrapper() });
 
@@ -93,7 +93,7 @@ describe('RoleSwitcherDropdown', () => {
 
   it('renders the dropdown trigger and shows the matching displayLabel for the current activeRole+scope', () => {
     useAuthStore.setState({
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'fellowship', id: 'f-1' },
     });
 
@@ -125,7 +125,7 @@ describe('RoleSwitcherDropdown', () => {
   it('marks the current role with aria-current="true"', async () => {
     const user = userEvent.setup();
     useAuthStore.setState({
-      activeRole: 'leader',
+      activeRole: 'leader' as any,
       scope: { kind: 'department', id: 'd-1' },
     });
 
@@ -146,7 +146,7 @@ describe('RoleSwitcherDropdown', () => {
         tokens: {
           accessToken: fakeJwt({
             memberId: 'm-1',
-            activeRole: 'leader',
+            activeRole: 'leader' as any,
             scope: { kind: 'fellowship', id: 'f-1' },
           }),
           refreshToken: 'rt-new',
@@ -168,7 +168,7 @@ describe('RoleSwitcherDropdown', () => {
 
     await waitFor(() => {
       expect(api.auth.switchRole).toHaveBeenCalledWith({
-        activeRole: 'leader',
+        activeRole: 'leader' as any,
         scope: { kind: 'fellowship', id: 'f-1' },
         key: 'k-lead-f1',
       });

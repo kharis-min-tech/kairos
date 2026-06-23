@@ -17,6 +17,7 @@ import {
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
 import { createMemberShell } from '../lib/member-shell';
+import { authHasAnyCapability } from '../lib/grants';
 
 // ── Local auth helpers (per-module, not imported — see CLAUDE.md) ──
 
@@ -77,7 +78,7 @@ async function enforceServiceWriter(
 
 /** Reports are admin|pastor|leader. */
 function enforceReportReader(auth: AuthContext) {
-  if (authHasCapability(auth, 'branch:read') || auth.systemRole === 'leader') return;
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) return;
   throw new ForbiddenError('Only leaders, pastors, and admins can view attendance reports');
 }
 
@@ -240,7 +241,7 @@ export async function createService(db: Database, auth: AuthContext, data: Creat
 export async function listServices(db: Database, auth: AuthContext, query: ListServicesQuery) {
   const conditions = [eq(services.isActive, true)];
 
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     conditions.push(eq(services.branchId, auth.branchId));
   } else if (query.branchId) {
     conditions.push(eq(services.branchId, query.branchId));
@@ -1040,11 +1041,10 @@ export async function getDepartmentAttendance(
   const isLeadOrDeputy =
     bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId;
   if (
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor' &&
+    !authHasCapability(auth, 'branch:read') &&
     !isLeadOrDeputy
   ) {
-    throw new ForbiddenError('Only the department lead/deputy, pastor, or admin can view this');
+    throw new ForbiddenError('Only the department lead/deputy or branch admin can view this');
   }
 
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
@@ -1231,11 +1231,10 @@ export async function getFellowshipAttendance(
   enforceBranchScope(auth, fs.branchId);
   const isLeadOrCo = fs.leaderId === auth.memberId || fs.coLeaderId === auth.memberId;
   if (
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor' &&
+    !authHasCapability(auth, 'branch:read') &&
     !isLeadOrCo
   ) {
-    throw new ForbiddenError('Only the fellowship leader, pastor, or admin can view this');
+    throw new ForbiddenError('Only the fellowship leader or branch admin can view this');
   }
 
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
@@ -1426,7 +1425,7 @@ export async function getAttendanceByBranch(
   // subquery rendered them unqualified (so `branches.id` resolved to the inner
   // table's own id, breaking the correlation) and couldn't encode the Date bound.
   const branchConditions = [eq(branches.isActive, true)];
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     branchConditions.push(eq(branches.id, auth.branchId));
   } else if (query.branchId) {
     branchConditions.push(eq(branches.id, query.branchId));

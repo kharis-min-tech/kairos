@@ -26,6 +26,7 @@ import {
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { syncDepartmentLeadGrants, syncDepartmentDeputyGrants } from '../lib/role-sync';
+import { authHasAnyCapability } from '../lib/grants';
 
 // ── Recruitment pipeline constants ─────────────────────────
 
@@ -53,7 +54,7 @@ function isLead(
   bd: { leadMemberId: string | null; deputyMemberId: string | null },
 ) {
   return (
-    auth.systemRole === 'leader' &&
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') &&
     (bd.leadMemberId === auth.memberId || bd.deputyMemberId === auth.memberId)
   );
 }
@@ -155,7 +156,7 @@ export async function listBranchDepartments(
     if (query.branchId) {
       conditions.push(eq(branchDepartments.branchId, query.branchId));
     }
-  } else if (auth.systemRole === 'leader') {
+  } else if (authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     // Leaders see only departments they lead or co-lead, scoped to their branch.
     // A department-only leader who doesn't lead anything (e.g. a fellowship leader)
     // gets an empty list.
@@ -291,7 +292,7 @@ export async function createBranchDepartment(
     startDate?: string;
   },
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can create department instances');
   }
 
@@ -406,13 +407,12 @@ export async function updateBranchDepartment(
   const existing = await getBranchDepartment(db, auth, id);
   enforceLeaderOrAbove(auth, existing);
 
-  // Only admins/pastors can change leadership
+  // RBAC Phase 4c: only branch-tier admins can change leadership.
   if (
     (data.leadMemberId !== undefined || data.deputyMemberId !== undefined) &&
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor'
+    !authHasCapability(auth, 'branch:write')
   ) {
-    throw new ForbiddenError('Only admins and pastors can change department leadership');
+    throw new ForbiddenError('Only branch admins can change department leadership');
   }
 
   const [updated] = await db
@@ -441,7 +441,7 @@ export async function updateBranchDepartment(
 }
 
 export async function deactivateBranchDepartment(db: Database, auth: AuthContext, id: string) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can deactivate departments');
   }
   const existing = await getBranchDepartment(db, auth, id);

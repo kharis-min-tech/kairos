@@ -68,7 +68,7 @@ beforeEach(() => {
   updateIsPending = false;
   updateMutateAsync.mockResolvedValue({});
   // Default to leader role for "can edit" tests
-  useAuthStore.setState({ activeRole: 'leader' });
+  useAuthStore.setState({ activeRole: 'leader' as any });
 });
 
 describe('EnrollmentDetailDrawer', () => {

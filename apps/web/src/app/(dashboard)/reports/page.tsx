@@ -1319,7 +1319,7 @@ export default function ReportsPage() {
   const isBranchSystemAdmin = bsaIds.length > 0 || (leadership.data?.branchSystemAdminBranchIds.length ?? 0) > 0;
   const isBranchDataAdmin = bdaIds.length > 0 || (leadership.data?.branchDataAdminBranchIds.length ?? 0) > 0;
   const isBranchAdmin = isBranchSystemAdmin || isBranchDataAdmin;
-  const isPastor = activeRole === 'pastor';
+  const isPastor = (activeRole as string) === 'pastor';
   const hasFellowshipLead = allLeadFellowships.length > 0;
   const hasDepartmentLead = allLeadDepartments.length > 0;
 

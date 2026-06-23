@@ -13,7 +13,7 @@ export default function MyBranchPage() {
   const router = useRouter();
   const { user, activeRole } = useAuthStore();
   const branchId = user?.homeBranchId ?? '';
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
 
   // Second-level guard — sidebar gates to pastor; mirror that here for direct-URL access.
   useEffect(() => {

@@ -1,4 +1,6 @@
 import { eq, and, or, ilike, count, sql, inArray, type SQL } from 'drizzle-orm';
+import { authHasAnyCapability } from '../lib/grants';
+import { authHasCapability } from '../lib/grants';
 import type { Database } from '@kairos/database';
 import { outreachPrograms, members, branches, outreachParticipants, souls } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -38,14 +40,14 @@ export async function createProgram(
 
   // Auto-set branch_id for Pastor/Leader, require for Admin
   let branchId = input.branchId;
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     branchId = auth.branchId;
   } else if (effectiveRole === 'admin' && !branchId) {
     throw new ValidationError('branch_id is required for Admin users');
   }
 
   // Enforce branch isolation for Pastor/Leader
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && input.branchId && input.branchId !== auth.branchId) {
+  if ((authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) && input.branchId && input.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only create programs for your own branch');
   }
 
@@ -166,7 +168,7 @@ export async function listPrograms(
   const conditions: SQL[] = [];
 
   // Branch isolation with exception for programs open to all branches
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader' || effectiveRole === 'member') {
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read') || effectiveRole === 'member') {
     // Show programs from own branch OR programs that are open to all branches
     conditions.push(
       or(
@@ -281,7 +283,7 @@ export async function listPrograms(
     }
     
     // If current user is leader/pastor, only show creator name if creator is also leader/pastor (not admin)
-    if ((effectiveRole === 'leader' || effectiveRole === 'pastor') && 
+    if ((authHasAnyCapability(auth, 'fellowship:read', 'department:read') || authHasCapability(auth, 'branch:read')) && 
         (creator.role === 'leader' || creator.role === 'pastor')) {
       return { ...row, createdByName: creator.name, creatorRole: creator.role };
     }
@@ -448,7 +450,7 @@ export async function getProgram(
   }
 
   // Branch isolation - allow access if from own branch OR program is open to all branches
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader' || effectiveRole === 'member') {
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read') || effectiveRole === 'member') {
     if (program.branchId !== auth.branchId && !program.isOpenToAllBranches) {
       throw new ForbiddenError('You can only access programs from your own branch');
     }
@@ -475,7 +477,7 @@ export async function getProgram(
   // For admin: show all participants
   const participantConditions = [eq(outreachParticipants.outreachId, programId)];
   
-  if (effectiveRole === 'pastor' || effectiveRole === 'leader') {
+  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     // Only show participants from own branch
     participantConditions.push(eq(members.homeBranchId, auth.branchId));
   }
@@ -535,8 +537,8 @@ export async function updateProgram(
   // Authorization: Admin, Pastor, Leader, or Coordinator can update
   const canUpdate =
     effectiveRole === 'admin' ||
-    effectiveRole === 'pastor' ||
-    effectiveRole === 'leader' ||
+    authHasCapability(auth, 'branch:read') ||
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') ||
     program.coordinatorId === auth.memberId;
 
   if (!canUpdate) {

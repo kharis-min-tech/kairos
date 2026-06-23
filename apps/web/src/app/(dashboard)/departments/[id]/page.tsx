@@ -106,7 +106,7 @@ function RestrictedNotice({ message }: { message: string }) {
 export default function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { activeRole, user } = useAuthStore();
-  const isAdminOrPastor = activeRole === 'admin' || activeRole === 'pastor';
+  const isAdminOrPastor = activeRole === 'admin' || (activeRole as string) === 'pastor';
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberToAdd, setMemberToAdd] = useState<string>('');

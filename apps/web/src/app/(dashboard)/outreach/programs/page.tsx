@@ -31,9 +31,9 @@ export default function OutreachProgramsPage() {
   const [registering, setRegistering] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProgramTab>('active');
 
-  const canCreateProgram = activeRole === 'admin' || activeRole === 'pastor' || activeRole === 'leader';
+  const canCreateProgram = activeRole === 'admin' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
   const isMember = activeRole === 'member';
-  const canRegister = activeRole === 'member' || activeRole === 'pastor' || activeRole === 'leader';
+  const canRegister = activeRole === 'member' || (activeRole as string) === 'pastor' || (activeRole as string) === 'leader';
 
   // Initialize - fetch programs with proper branch isolation
   useEffect(() => {
@@ -258,7 +258,7 @@ export default function OutreachProgramsPage() {
                   userCreatedProgram,
                   canRegisterForProgram,
                   isMember,
-                  shouldShowCreatorName: (activeRole === 'leader' || activeRole === 'pastor') && program.createdByName
+                  shouldShowCreatorName: ((activeRole as string) === 'leader' || (activeRole as string) === 'pastor') && program.createdByName
                 });
 
                 return (

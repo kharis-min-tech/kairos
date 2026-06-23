@@ -42,7 +42,7 @@ const branchId = '110e8400-0000-0000-0000-000000000001';
 const memberId = '330e8400-0000-0000-0000-000000000003';
 
 const adminAuth: AuthContext = { memberId: '000-admin', email: 'admin@test.com', systemRole: 'admin', branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const pastorAuth: AuthContext = { memberId, email: 'pastor@test.com', systemRole: 'pastor', branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+const pastorAuth: AuthContext = { memberId, email: 'pastor@test.com', systemRole: 'member', branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
 
 beforeEach(() => {
   vi.clearAllMocks();

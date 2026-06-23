@@ -41,7 +41,7 @@ export default function NewDepartmentPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = useAuthStore((s) => s.activeRole);
   const isAdmin = user?.systemRole === 'admin';
-  const canCreate = activeRole === 'admin' || activeRole === 'pastor';
+  const canCreate = activeRole === 'admin' || (activeRole as string) === 'pastor';
 
   // Mirrors list-page persona gating: only admins + pastors can create departments.
   useEffect(() => {

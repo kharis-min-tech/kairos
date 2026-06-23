@@ -28,7 +28,7 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
-  activeRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional(),
+  activeRole: z.enum(['admin', 'member']).optional(),
 });
 
 // A scope identifies the entity an activeRole is acting through. Branch
@@ -43,13 +43,13 @@ export const roleScopeSchema = z.discriminatedUnion('kind', [
 
 export const finalizeRoleSchema = z.object({
   sessionToken: z.string().min(1, 'Session token is required'),
-  activeRole: z.enum(['admin', 'pastor', 'leader', 'member']),
+  activeRole: z.enum(['admin', 'member']),
   scope: roleScopeSchema.optional(),
   key: z.string().min(1, 'Role key is required'),
 });
 
 export const switchRoleSchema = z.object({
-  activeRole: z.enum(['admin', 'pastor', 'leader', 'member']),
+  activeRole: z.enum(['admin', 'member']),
   scope: roleScopeSchema.optional(),
   key: z.string().min(1, 'Role key is required'),
 });

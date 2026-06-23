@@ -6,7 +6,11 @@ import type { SystemRole } from '@kairos/types';
  * roadmap item 9 stripped it for security reasons.
  */
 export function RoleIcon({ activeRole, className = 'h-5 w-5' }: { activeRole: SystemRole; className?: string }) {
-  switch (activeRole) {
+  // RBAC Phase 4c: 'pastor'/'leader' cases are dead in the new model (SystemRole
+  // collapsed to 'admin' | 'member') but kept here for Phase 5's role-selector
+  // rewrite to refactor cleanly. Cast widens the discriminant so the unreachable
+  // arms still compile.
+  switch (activeRole as string) {
     case 'admin':
       return (
         <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">

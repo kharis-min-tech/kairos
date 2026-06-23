@@ -88,7 +88,7 @@ export function requireBranchAdmin(branchIdParam = 'id') {
     }
     const ok =
       auth.systemRole === 'admin' ||
-      (auth.systemRole === 'pastor' && auth.branchId === branchId) ||
+      (authHasCapability(auth, 'branch:read') && auth.branchId === branchId) ||
       auth.branchSystemAdminBranchIds.includes(branchId) ||
       auth.branchDataAdminBranchIds.includes(branchId);
     if (!ok) throw new UnauthorizedError('Insufficient permissions');
@@ -153,17 +153,12 @@ export function requireCapability(
 }
 
 /**
- * Service-level helper: returns true if the caller holds any of the supplied
- * capabilities (any scope). Companion to authHasCapability for cases where a
- * single check needs to cover "branch-tier OR fellowship-tier OR department-
- * tier" leadership.
+ * Service-level helper re-export. The implementation lives in
+ * `lib/grants.ts` so service files can use it without dragging in `../db`
+ * (this module imports the db singleton, which throws at module-load time
+ * when DATABASE_URL is unset — bad for unit tests).
  */
-export function authHasAnyCapability(auth: AuthContext, ...caps: Capability[]): boolean {
-  for (const cap of caps) {
-    if (authHasCapability(auth, cap)) return true;
-  }
-  return false;
-}
+export { authHasAnyCapability } from '../lib/grants';
 
 /**
  * Wide-gate variant of requireCapability: passes if the caller holds ANY of

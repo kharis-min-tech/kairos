@@ -80,16 +80,16 @@ export async function resolveGrants(
 
 // ── hasCapability ──────────────────────────────────────────
 //
-// Pure capability lookup over a grant list. Two transitional shims:
+// Pure capability lookup over a grant list. Single transitional shim:
 //
 //   - `systemRole === 'admin'` → always true. The break-glass platform owner
 //     bypasses everything; matches today's escape-hatch semantics and
 //     survives the rebuild.
-//   - `systemRole === 'pastor'` → always true. Phase 0-3 keep pastor's
-//     branch-scope-bypass behavior unchanged so gates can flip to capability
-//     checks without changing the effective access matrix. Phase 4 narrows
-//     pastors to `BranchAdmin@home_branch` via migration and removes this
-//     shim.
+//
+// RBAC Phase 4c: the `'pastor'` shim is gone. Pastor is now a display-only
+// honorific (members.honorific column), not a permission. A "Pastor" who
+// holds no grants gets no admin access — see Phase 4a's migration for the
+// systemRole collapse that drove this.
 //
 // Scope matching:
 //   - No `scope` arg → any grant of `cap` suffices.
@@ -105,7 +105,6 @@ export function hasCapability(
   scope?: RoleScope & { branchId?: string },
 ): boolean {
   if (systemRole === 'admin') return true;
-  if (systemRole === 'pastor') return true;
 
   const targetBranchId =
     scope?.kind === 'branch' ? scope.id : scope?.branchId;
@@ -138,4 +137,16 @@ export function authHasCapability(
   scope?: RoleScope & { branchId?: string },
 ): boolean {
   return hasCapability(auth.grants ?? [], auth.systemRole, cap, scope);
+}
+
+/**
+ * Variadic OR over capabilities. Returns true if the caller holds ANY of the
+ * supplied capabilities (any scope). Used by service-level checks that
+ * accept "branch-tier OR fellowship-tier OR department-tier" leadership.
+ */
+export function authHasAnyCapability(auth: AuthContext, ...caps: Capability[]): boolean {
+  for (const cap of caps) {
+    if (authHasCapability(auth, cap)) return true;
+  }
+  return false;
 }

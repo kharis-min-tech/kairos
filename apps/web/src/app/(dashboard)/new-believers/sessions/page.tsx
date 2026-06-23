@@ -23,8 +23,10 @@ export default function SessionsPage() {
   const branchId = user?.homeBranchId ?? '';
   const userMemberId = user?.id ?? '';
   const userRole = activeRole ?? 'member';
-  const canManageSessions =
-    userRole === 'admin' || userRole === 'pastor' || userRole === 'leader';
+  // RBAC Phase 4c: pastor/leader are gone; Phase 5 will replace this with a
+  // capability check. For now, gate on admin only — non-admins fall back to
+  // the read-only session list (server-side checks still allow grant holders).
+  const canManageSessions = userRole === 'admin';
 
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);

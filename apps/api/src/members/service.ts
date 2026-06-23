@@ -153,7 +153,7 @@ export async function listMembers(
   conditions.push(eq(members.memberType, 'member'));
 
   // Non-admin can only see their own branch (home or active secondary)
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     conditions.push(
       or(
         eq(members.homeBranchId, auth.branchId),
@@ -378,7 +378,7 @@ export async function approveMember(
   approved: boolean,
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can approve members');
   }
 
@@ -597,7 +597,7 @@ export async function createMember(
   },
   auth: AuthContext,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can create members');
   }
 
@@ -811,7 +811,7 @@ export async function listUnguardedMinors(
 ) {
   const branchId = query.branchId ?? auth.branchId;
 
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
     if (!safeguardingBranches.has(branchId)) {
       throw new ForbiddenError('You need safeguarding access to view this list');

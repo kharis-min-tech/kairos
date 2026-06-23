@@ -27,7 +27,7 @@ export default function NewServicePage() {
   }, [canRecordLoading, canRecordResult, router]);
 
   // admin/pastor may target any branch; Admin-dept members are pinned to their own.
-  const canPickBranch = user?.systemRole === 'admin' || user?.systemRole === 'pastor';
+  const canPickBranch = user?.systemRole === 'admin' || (user?.systemRole as string) === 'pastor';
 
   async function handleSubmit(data: CreateServiceRequest) {
     setError(null);

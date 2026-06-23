@@ -26,7 +26,8 @@ export function useBranchDashboard() {
       const res = await api.analytics.branchStats();
       return res.data!;
     },
-    enabled: activeRole === 'pastor' || activeRole === 'leader',
+    // RBAC Phase 4c: API gates by capability. Fetch when logged in.
+    enabled: !!activeRole,
     retry: false,
     throwOnError: false,
   });
@@ -40,7 +41,7 @@ export function useMemberDashboard() {
       const res = await api.analytics.memberStats();
       return res.data!;
     },
-    enabled: activeRole === 'member' || activeRole === 'leader',
+    enabled: !!activeRole,
     retry: false,
     throwOnError: false,
   });

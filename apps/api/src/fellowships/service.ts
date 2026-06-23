@@ -24,6 +24,7 @@ import {
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { syncFellowshipLeaderGrants } from '../lib/role-sync';
+import { authHasAnyCapability } from '../lib/grants';
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (authHasCapability(auth, 'branch:read')) return;
@@ -46,7 +47,7 @@ function enforceLeaderOrAbove(
 ) {
   if (authHasCapability(auth, 'branch:read')) return;
   if (
-    auth.systemRole === 'leader' &&
+    authHasAnyCapability(auth, 'fellowship:read', 'department:read') &&
     (fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId)
   ) {
     enforceScopeAllows(auth, 'fellowship', fellowship.id);
@@ -68,7 +69,7 @@ export async function listFellowships(
     if (query.branchId) {
       conditions.push(eq(fellowships.branchId, query.branchId));
     }
-  } else if (auth.systemRole === 'leader') {
+  } else if (authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
     // Leaders see only fellowships they lead or co-lead, scoped to their branch.
     conditions.push(eq(fellowships.branchId, auth.branchId));
     conditions.push(
@@ -186,7 +187,7 @@ export async function createFellowship(
     country?: string;
   },
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can create fellowships');
   }
 
@@ -251,7 +252,7 @@ export async function updateFellowship(
   id: string,
   data: Record<string, unknown>,
 ) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can update fellowships');
   }
 
@@ -281,7 +282,7 @@ export async function updateFellowship(
 }
 
 export async function deactivateFellowship(db: Database, auth: AuthContext, id: string) {
-  if (auth.systemRole !== 'admin' && auth.systemRole !== 'pastor') {
+  if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can deactivate fellowships');
   }
 
@@ -609,11 +610,10 @@ export async function getFellowshipStats(
   const isLeadOrCo =
     fellowship.leaderId === auth.memberId || fellowship.coLeaderId === auth.memberId;
   if (
-    auth.systemRole !== 'admin' &&
-    auth.systemRole !== 'pastor' &&
+    !authHasCapability(auth, 'branch:read') &&
     !isLeadOrCo
   ) {
-    throw new ForbiddenError('Only the fellowship lead/co-lead, pastor, or admin can view this');
+    throw new ForbiddenError('Only the fellowship lead/co-lead or branch admin can view this');
   }
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);

@@ -22,17 +22,17 @@ export function BranchPicker({ value, onChange }: BranchPickerProps) {
   const user = useAuthStore((s) => s.user);
   const systemRole = user?.systemRole;
   const homeBranchId = (user as { homeBranchId?: string } | null)?.homeBranchId;
-  const canPickBranch = systemRole === 'admin' || systemRole === 'pastor';
+  const canPickBranch = systemRole === 'admin' || (systemRole as string) === 'pastor';
   const { data: branches } = useBranches();
 
   if (!canPickBranch) return null;
   if (!branches || branches.length === 0) return null;
 
   const visibleBranches =
-    systemRole === 'pastor' && homeBranchId
+    (systemRole as string) === 'pastor' && homeBranchId
       ? branches.filter((b) => b.id === homeBranchId)
       : branches;
-  if (visibleBranches.length <= 1 && systemRole === 'pastor') return null;
+  if (visibleBranches.length <= 1 && (systemRole as string) === 'pastor') return null;
 
   const options = visibleBranches.map((b) => ({ value: b.id, label: b.branchName }));
 

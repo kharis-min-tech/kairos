@@ -38,7 +38,7 @@ const { createApp } = await import('../app');
 const app = createApp();
 
 const adminToken = signTestToken({ systemRole: 'admin' });
-const leaderToken = signTestToken({ systemRole: 'leader', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
+const leaderToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 const memberToken = signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId, branchId: TEST_IDS.branchId });
 
 const serviceId = '770e8400-e29b-41d4-a716-446655440010';

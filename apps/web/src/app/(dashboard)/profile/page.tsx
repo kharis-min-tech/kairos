@@ -465,7 +465,7 @@ export default function ProfilePage() {
           <MyLeadershipCard
             memberId={memberId}
             showAdminRole={profileSystemRole === 'admin'}
-            showPastorRole={profileSystemRole === 'pastor'}
+            showPastorRole={(profileSystemRole as string) === 'pastor'}
             homeBranchName={homeBranchName}
           />
 

@@ -1,4 +1,6 @@
 import { eq, and, desc, count, sql, type SQL } from 'drizzle-orm';
+import { authHasAnyCapability } from '../lib/grants';
+import { authHasCapability } from '../lib/grants';
 import type { Database } from '@kairos/database';
 import { followUps, souls, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -148,7 +150,7 @@ export async function getFollowUpHistory(
     }
   }
 
-  if ((effectiveRole === 'pastor' || effectiveRole === 'leader') && soul.branchId && soul.branchId !== auth.branchId) {
+  if ((authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) && soul.branchId && soul.branchId !== auth.branchId) {
     throw new ForbiddenError('You can only view follow-ups for souls from your branch');
   }
 

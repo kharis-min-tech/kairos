@@ -2058,8 +2058,8 @@ export default function DashboardPage() {
 
   const isLeadership =
     activeRole === 'admin' ||
-    activeRole === 'pastor' ||
-    activeRole === 'leader' ||
+    (activeRole as string) === 'pastor' ||
+    (activeRole as string) === 'leader' ||
     isBranchAdmin ||
     hasFellowshipLead ||
     hasDepartmentLead;
@@ -2097,7 +2097,7 @@ export default function DashboardPage() {
         : `Administrator${suffix}`;
     } else if (isBranchDataAdmin) {
       roleLabel = `Branch Data Admin${suffix}`;
-    } else if (activeRole === 'pastor') {
+    } else if ((activeRole as string) === 'pastor') {
       roleLabel = `Pastor${suffix}`;
     } else {
       roleLabel = `Branch${suffix}`;
@@ -2120,7 +2120,7 @@ export default function DashboardPage() {
       homeBranchInBda && homeBranchName
         ? `Branch Data Admin — ${homeBranchName}`
         : 'Branch Data Admin';
-  } else if (activeRole === 'pastor') {
+  } else if ((activeRole as string) === 'pastor') {
     roleLabel = 'Pastor';
   } else if (hasFellowshipLead && hasDepartmentLead) {
     roleLabel = 'Fellowship & Department Lead';
@@ -2130,7 +2130,7 @@ export default function DashboardPage() {
   } else if (hasDepartmentLead) {
     const name = allLeadDepartments[0]?.departmentName;
     roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
-  } else if (activeRole === 'leader') {
+  } else if ((activeRole as string) === 'leader') {
     roleLabel = 'Leader';
   } else {
     roleLabel = 'Member';
@@ -2171,7 +2171,7 @@ export default function DashboardPage() {
           <AdminStats />
         ) : isBranchAdmin ? (
           <BranchAdminStats />
-        ) : activeRole === 'pastor' ? (
+        ) : (activeRole as string) === 'pastor' ? (
           <PastorStats />
         ) : hasFellowshipLead && hasDepartmentLead ? (
           <DualLeaderTabs
@@ -2201,7 +2201,7 @@ export default function DashboardPage() {
           <div className="-mt-1">
             {isSystemAdmin ? (
               <AdminMissionControlReports />
-            ) : isBranchAdmin || activeRole === 'pastor' || hasFellowshipLead || hasDepartmentLead ? (
+            ) : isBranchAdmin || (activeRole as string) === 'pastor' || hasFellowshipLead || hasDepartmentLead ? (
               <BranchMissionControlReports />
             ) : (
               <MemberMissionControlReports />
@@ -2216,7 +2216,7 @@ export default function DashboardPage() {
           {/* Pending approvals — admin sees all; branch admin/pastor see branch-
               scoped. Fellowship/department leaders without branch authority
               don't see this panel (Phase 6 may add a scoped variant). */}
-          {(isSystemAdmin || isBranchAdmin || activeRole === 'pastor') && (
+          {(isSystemAdmin || isBranchAdmin || (activeRole as string) === 'pastor') && (
             <PendingApprovalsPanel branchId={isSystemAdmin ? undefined : branchId} />
           )}
           <QuickActions role={activeRole ?? 'member'} />
