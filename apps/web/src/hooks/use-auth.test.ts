@@ -64,7 +64,7 @@ const mockMember: Member = {
   emergencyContactPhone: null,
   emergencyContactRelationship: null,
   approvalStatus: 'approved',
-  systemRole: 'member',
+  systemRole: 'member', honorific: null,
   memberType: 'member',
   guardianMemberId: null,
   emailVerified: true,

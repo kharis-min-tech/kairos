@@ -93,6 +93,10 @@ export interface Member extends BaseEntity {
   emergencyContactRelationship: string | null;
   approvalStatus: MemberApprovalStatus;
   systemRole: SystemRole;
+  // RBAC Phase 4a: display-only title (e.g. 'Pastor', 'Reverend', 'Elder')
+  // preserved across the systemRole collapse. Null for members who don't
+  // hold a ceremonial title.
+  honorific: string | null;
   memberType: MemberType;
   guardianMemberId: string | null;
   emailVerified: boolean;

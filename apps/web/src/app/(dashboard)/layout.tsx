@@ -9,7 +9,8 @@ import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
-import { RoleSwitcherDropdown } from '@/components/role-switcher-dropdown';
+// RBAC Phase 5b: in-app role switcher removed. Users see all their grants
+// at once; per-page scope selectors handle the multi-scope cases.
 
 type NavItem = {
   href: string;
@@ -245,7 +246,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p className="truncate text-sm font-medium text-foreground">
               {user?.firstName} {user?.lastName}
             </p>
-            <RoleSwitcherDropdown />
+            <p className="truncate text-xs text-muted-foreground">
+              {user?.honorific ?? (user?.systemRole === 'admin' ? 'Administrator' : 'Member')}
+            </p>
           </div>
           <Link
             href="/profile/settings"

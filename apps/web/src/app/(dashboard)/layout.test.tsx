@@ -23,9 +23,6 @@ vi.mock('@/lib/api', () => ({
 }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => <div /> }));
 vi.mock('@/components/member-avatar', () => ({ MemberAvatar: () => <div /> }));
-vi.mock('@/components/role-switcher-dropdown', () => ({
-  RoleSwitcherDropdown: () => <div />,
-}));
 
 import DashboardLayout from './layout';
 
