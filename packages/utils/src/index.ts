@@ -4,6 +4,7 @@ export { successResponse, errorResponse, paginatedResponse, parsePagination } fr
 export { logger } from './logger';
 export { hashPassword, verifyPassword, randomTokenHex } from './password';
 export {
+  bindMailerEnv,
   sendPasswordResetEmail,
   sendJoinRequestReceivedEmail,
   sendJoinRequestApprovedEmail,
@@ -16,3 +17,4 @@ export {
   sendProbationStartedEmail,
   sendProbationPassedEmail,
 } from './mailer';
+export type { MailerSecrets } from './mailer';

@@ -1,62 +1,130 @@
-import nodemailer from 'nodemailer';
+import { AwsClient } from 'aws4fetch';
 import { logger } from './logger';
 
-const mailerLogger = logger;
-
-async function createTransport() {
-  // Use real SMTP if env vars are present; otherwise fall back to Ethereal for local dev
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
-
-  const testAccount = await nodemailer.createTestAccount();
-  mailerLogger.info('Using Ethereal test mailer — set SMTP_HOST/SMTP_USER/SMTP_PASS to use real SMTP');
-  return nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
+/**
+ * Mailer secrets are bound once per Worker cold start (via `bindMailerEnv`)
+ * or fall back to `process.env` for the Node dev server. The `bindMailerEnv`
+ * pattern mirrors `bindDbEnv` in `apps/api/src/db.ts` — module-load must not
+ * read env on Workers, because secrets only arrive per-request.
+ */
+export interface MailerSecrets {
+  awsAccessKeyId: string;
+  awsSecretAccessKey: string;
+  awsRegion: string;
+  emailFrom: string;
+  frontendUrl: string;
 }
 
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? '"Kharis Church" <no-reply@kharis.church>';
+let _secrets: MailerSecrets | null = null;
+let _awsClient: AwsClient | null = null;
+
+export function bindMailerEnv(secrets: Partial<MailerSecrets>): void {
+  _secrets = {
+    awsAccessKeyId: secrets.awsAccessKeyId ?? '',
+    awsSecretAccessKey: secrets.awsSecretAccessKey ?? '',
+    awsRegion: secrets.awsRegion ?? 'eu-west-2',
+    emailFrom: secrets.emailFrom ?? '"Kharis Church" <no-reply@kharis.church>',
+    frontendUrl: secrets.frontendUrl ?? 'http://localhost:3002',
+  };
+  _awsClient = null;
+}
+
+function getSecrets(): MailerSecrets {
+  if (_secrets) return _secrets;
+  if (typeof process !== 'undefined' && process.env) {
+    _secrets = {
+      awsAccessKeyId: process.env['AWS_ACCESS_KEY_ID'] ?? '',
+      awsSecretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] ?? '',
+      awsRegion: process.env['AWS_REGION'] ?? 'eu-west-2',
+      emailFrom: process.env['EMAIL_FROM'] ?? '"Kharis Church" <no-reply@kharis.church>',
+      frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3002',
+    };
+    return _secrets;
+  }
+  throw new Error('Mailer not configured — call bindMailerEnv() or set AWS_* env vars');
+}
+
+function getAwsClient(): AwsClient | null {
+  const s = getSecrets();
+  if (!s.awsAccessKeyId || !s.awsSecretAccessKey) return null;
+  if (_awsClient) return _awsClient;
+  _awsClient = new AwsClient({
+    accessKeyId: s.awsAccessKeyId,
+    secretAccessKey: s.awsSecretAccessKey,
+    region: s.awsRegion,
+    service: 'ses',
+  });
+  return _awsClient;
+}
+
+/**
+ * Send an HTML email via SES v2 (REST). Falls back to log-only when AWS creds
+ * are absent so local dev (no SES) still flows through this function.
+ */
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  const s = getSecrets();
+  const aws = getAwsClient();
+
+  if (!aws) {
+    logger.info('Email (dev mode — AWS creds absent, not sent)', { to, subject });
+    return;
+  }
+
+  const url = `https://email.${s.awsRegion}.amazonaws.com/v2/email/outbound-emails`;
+  const payload = {
+    FromEmailAddress: s.emailFrom,
+    Destination: { ToAddresses: [to] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: 'UTF-8' },
+        Body: { Html: { Data: html, Charset: 'UTF-8' } },
+      },
+    },
+  };
+
+  const res = await aws.fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    logger.error('SES send failed', { status: res.status, body, to, subject });
+    throw new Error(`SES send failed (${res.status}): ${body}`);
+  }
+
+  logger.info('Email sent', { to, subject, status: res.status });
+}
+
+function getFrontendUrl(): string {
+  return getSecrets().frontendUrl;
+}
+
+// ── Account / Auth emails ──────────────────────────────────────
 
 export async function sendPasswordResetEmail(
   to: string,
   resetLink: string,
   memberName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: 'Reset Your Password — Kharis Church',
-    html: `
+    'Reset Your Password — Kharis Church',
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Reset Your Password</h2>
+        <h2 style="color: #5D3FD3;">Reset Your Password</h2>
         <p>Hi ${memberName},</p>
         <p>We received a request to reset your Kharis Church account password.
            Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
         <p style="text-align: center; margin: 32px 0;">
           <a href="${resetLink}"
-             style="background:#6D28D9;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
+             style="background:#5D3FD3;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
             Reset Password
           </a>
         </p>
         <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="word-break:break-all;color:#6D28D9;">${resetLink}</p>
+        <p style="word-break:break-all;color:#5D3FD3;">${resetLink}</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">
           If you didn't request a password reset, you can safely ignore this email.
@@ -64,30 +132,69 @@ export async function sendPasswordResetEmail(
         </p>
       </div>
     `,
-  });
-
-  // Log Ethereal preview URL for local dev
-  mailerLogger.info('Password reset email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
+
+export async function sendAccountApprovedEmail(
+  to: string,
+  memberName: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    'Your Kharis Church account has been approved',
+    `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #059669;">Account Approved!</h2>
+        <p>Hi ${memberName},</p>
+        <p>Great news — your Kharis Church account has been reviewed and approved by an administrator.</p>
+        <p>You can now log in to access your full member portal, view fellowships, meetings, and more.</p>
+        <p style="text-align: center; margin: 32px 0;">
+          <a href="${getFrontendUrl()}/login"
+             style="background:#5D3FD3;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
+            Log In Now
+          </a>
+        </p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  );
+}
+
+export async function sendAccountRejectedEmail(
+  to: string,
+  memberName: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    'Update on your Kharis Church account request',
+    `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #5D3FD3;">Account Request Update</h2>
+        <p>Hi ${memberName},</p>
+        <p>Thank you for registering with the Kharis Church Administration System.</p>
+        <p>After review, we were unable to approve your account at this time.
+           If you believe this is an error, please contact your branch leadership directly.</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+      </div>
+    `,
+  );
+}
+
+// ── Fellowship join request emails ─────────────────────────────
 
 export async function sendJoinRequestReceivedEmail(
   to: string,
   memberName: string,
   fellowshipName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `Join Request Received — ${fellowshipName}`,
-    html: `
+    `Join Request Received — ${fellowshipName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Request Received</h2>
+        <h2 style="color: #5D3FD3;">Request Received</h2>
         <p>Hi ${memberName},</p>
         <p>We've received your request to join <strong>${fellowshipName}</strong>.</p>
         <p>Our team reviews requests as soon as possible — while we aim to respond within 14 days,
@@ -97,13 +204,7 @@ export async function sendJoinRequestReceivedEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Join request received email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 export async function sendJoinRequestApprovedEmail(
@@ -111,13 +212,10 @@ export async function sendJoinRequestApprovedEmail(
   memberName: string,
   fellowshipName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `You've been added to ${fellowshipName}`,
-    html: `
+    `You've been added to ${fellowshipName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Welcome to ${fellowshipName}!</h2>
         <p>Hi ${memberName},</p>
@@ -128,13 +226,7 @@ export async function sendJoinRequestApprovedEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Join request approved email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 export async function sendJoinRequestRejectedEmail(
@@ -142,15 +234,12 @@ export async function sendJoinRequestRejectedEmail(
   memberName: string,
   fellowshipName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `Update on your request to join ${fellowshipName}`,
-    html: `
+    `Update on your request to join ${fellowshipName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Request Update</h2>
+        <h2 style="color: #5D3FD3;">Request Update</h2>
         <p>Hi ${memberName},</p>
         <p>Thank you for your interest in joining <strong>${fellowshipName}</strong>.
            After review, we're unable to approve your request at this time.</p>
@@ -159,94 +248,22 @@ export async function sendJoinRequestRejectedEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Join request rejected email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
-export async function sendAccountApprovedEmail(
-  to: string,
-  memberName: string,
-): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
-    to,
-    subject: 'Your Kharis Church account has been approved',
-    html: `
-      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #059669;">Account Approved!</h2>
-        <p>Hi ${memberName},</p>
-        <p>Great news — your Kharis Church account has been reviewed and approved by an administrator.</p>
-        <p>You can now log in to access your full member portal, view fellowships, meetings, and more.</p>
-        <p style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.FRONTEND_URL ?? 'http://localhost:3002'}/login"
-             style="background:#6D28D9;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
-            Log In Now
-          </a>
-        </p>
-        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
-      </div>
-    `,
-  });
-
-  mailerLogger.info('Account approved email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
-}
-
-export async function sendAccountRejectedEmail(
-  to: string,
-  memberName: string,
-): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
-    to,
-    subject: 'Update on your Kharis Church account request',
-    html: `
-      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Account Request Update</h2>
-        <p>Hi ${memberName},</p>
-        <p>Thank you for registering with the Kharis Church Administration System.</p>
-        <p>After review, we were unable to approve your account at this time.
-           If you believe this is an error, please contact your branch leadership directly.</p>
-        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
-      </div>
-    `,
-  });
-
-  mailerLogger.info('Account rejected email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
-}
+// ── New believers / mentoring ──────────────────────────────────
 
 export async function sendMentorAssignedEmail(
   to: string,
   mentorName: string,
   studentName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `You've been assigned as a mentor — Kharis Church`,
-    html: `
+    `You've been assigned as a mentor — Kharis Church`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Mentor Assignment</h2>
+        <h2 style="color: #5D3FD3;">Mentor Assignment</h2>
         <p>Hi ${mentorName},</p>
         <p>You have been assigned as a mentor for <strong>${studentName}</strong> in the New Believers programme.</p>
         <p>Please reach out to them and support them through their journey of faith.</p>
@@ -255,13 +272,7 @@ export async function sendMentorAssignedEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Mentor assigned email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 // ── Department recruitment pipeline emails ─────────────────────
@@ -272,17 +283,15 @@ export async function sendInterviewScheduledEmail(
   departmentName: string,
   details: { scheduledAt: Date; format: 'in_person' | 'virtual'; location?: string | null },
 ): Promise<void> {
-  const transport = await createTransport();
   const when = details.scheduledAt.toLocaleString('en-GB');
   const formatLabel = details.format === 'virtual' ? 'Virtual' : 'In Person';
 
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `Interview scheduled — ${departmentName}`,
-    html: `
+    `Interview scheduled — ${departmentName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #6D28D9;">Interview Scheduled</h2>
+        <h2 style="color: #5D3FD3;">Interview Scheduled</h2>
         <p>Hi ${memberName},</p>
         <p>Your interview to join <strong>${departmentName}</strong> has been scheduled.</p>
         <ul style="line-height: 1.8;">
@@ -295,13 +304,7 @@ export async function sendInterviewScheduledEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Interview scheduled email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 export async function sendOfferExtendedEmail(
@@ -310,21 +313,19 @@ export async function sendOfferExtendedEmail(
   departmentName: string,
   details: { expiresAt: Date | null; probationDays: number; message?: string | null },
 ): Promise<void> {
-  const transport = await createTransport();
   const expiresLabel = details.expiresAt
     ? `This offer expires on <strong>${details.expiresAt.toLocaleDateString('en-GB')}</strong>.`
     : '';
 
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `You have an offer to join ${departmentName}`,
-    html: `
+    `You have an offer to join ${departmentName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #059669;">You’ve been offered a place</h2>
+        <h2 style="color: #059669;">You've been offered a place</h2>
         <p>Hi ${memberName},</p>
-        <p>Following your interview, we’d love to have you join <strong>${departmentName}</strong>.</p>
-        ${details.message ? `<blockquote style="border-left:4px solid #6D28D9;padding-left:12px;color:#374151;">${details.message}</blockquote>` : ''}
+        <p>Following your interview, we'd love to have you join <strong>${departmentName}</strong>.</p>
+        ${details.message ? `<blockquote style="border-left:4px solid #5D3FD3;padding-left:12px;color:#374151;">${details.message}</blockquote>` : ''}
         <p>If you accept, you will start a <strong>${details.probationDays}-day probation</strong> with the team.</p>
         ${expiresLabel ? `<p>${expiresLabel}</p>` : ''}
         <p>Log in to the Kharis portal to accept or decline the offer.</p>
@@ -332,13 +333,7 @@ export async function sendOfferExtendedEmail(
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Offer extended email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 export async function sendProbationStartedEmail(
@@ -347,30 +342,21 @@ export async function sendProbationStartedEmail(
   departmentName: string,
   details: { probationDays: number },
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `Welcome to ${departmentName} — probation started`,
-    html: `
+    `Welcome to ${departmentName} — probation started`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Welcome — probation started</h2>
         <p>Hi ${memberName},</p>
-        <p>You’re now part of <strong>${departmentName}</strong> on a
+        <p>You're now part of <strong>${departmentName}</strong> on a
            <strong>${details.probationDays}-day probation</strong>.</p>
         <p>Your team lead will check in with you at the end of the probation to confirm your full membership.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Probation started email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }
 
 export async function sendProbationPassedEmail(
@@ -378,27 +364,18 @@ export async function sendProbationPassedEmail(
   memberName: string,
   departmentName: string,
 ): Promise<void> {
-  const transport = await createTransport();
-
-  const info = await transport.sendMail({
-    from: FROM_ADDRESS,
+  await sendEmail(
     to,
-    subject: `You’re now a full member of ${departmentName}`,
-    html: `
+    `You're now a full member of ${departmentName}`,
+    `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #059669;">Probation passed 🎉</h2>
+        <h2 style="color: #059669;">Probation passed</h2>
         <p>Hi ${memberName},</p>
-        <p>Congratulations — you’ve completed probation and are now a full member of
+        <p>Congratulations — you've completed probation and are now a full member of
            <strong>${departmentName}</strong>.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
       </div>
     `,
-  });
-
-  mailerLogger.info('Probation passed email sent', {
-    to,
-    messageId: info.messageId,
-    previewUrl: nodemailer.getTestMessageUrl(info),
-  });
+  );
 }

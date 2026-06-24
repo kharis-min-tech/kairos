@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kairos-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-06-24",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Hyperdrive binding — fronts PlanetScale Postgres (kairos-prod).
+  // Paste the Hyperdrive config ID from the Cloudflare dashboard:
+  //   Workers & Pages → Hyperdrive → kairos-prod-hyperdrive → copy ID.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "b58cd59e2ccc4263804f9d0521435748"
+    }
+  ],
+
+  // Non-secret vars. Secrets (JWT_SECRET, AWS keys, etc.) are set via
+  // `wrangler secret put` and DO NOT belong in this file.
+  "vars": {
+    "AWS_REGION": "eu-west-2"
+  },
+
+  // Enable head sampling for logs in the Cloudflare dashboard.
+  "observability": {
+    "enabled": true
+  }
+}

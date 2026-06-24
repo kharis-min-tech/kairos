@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node --env-file=.env --import=tsx --watch src/server.ts",
+    "dev:worker": "wrangler dev",
     "build": "tsc",
     "start": "node dist/server.js",
+    "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint ."
@@ -20,13 +22,14 @@
     "drizzle-orm": "^0.38.4",
     "hono": "^4.7.4",
     "jose": "^5.9.6",
-    "nodemailer": "^8.0.3",
     "postgres": "^3.4.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "wrangler": "^3.99.0"
   }
 }
