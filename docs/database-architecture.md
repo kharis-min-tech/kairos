@@ -302,6 +302,23 @@ Pattern: **`{app}-{env}`** — lowercase, hyphenated.
 | `production` (no app prefix) | Ambiguous once a second DB is added to the account |
 | Mixing `_` and `-` in the same name | Inconsistent — `-` for cloud resources, `_` for Postgres internals |
 
+### API tokens / secrets
+
+Pattern: **`{app}-{tool-or-purpose}-{context}`** — distinct context per token so they can be rotated independently.
+
+| Use case | Name |
+|---|---|
+| Local wrangler CLI (developer machine) | `kairos-wrangler-{developer-name}` or `kairos-wrangler-local` for the primary dev |
+| CI/CD pipeline deploys | `kairos-wrangler-ci` |
+| One-off script / migration runner | `kairos-{purpose}-runner` |
+| AWS SES sender IAM user (when moved to IaC) | `kairos-ses-sender` |
+
+**Rules:**
+- One token per distinct context — never share a token between local dev and CI.
+- Scope-narrow tokens when possible (e.g. CI token can be restricted to `kairos-api` Worker; local token has broader account access for convenience).
+- Tokens are rotated by deleting the named token in the Cloudflare dashboard and minting a new one with the same name — names persist, values don't.
+- **Avoid** generic names like `wrangler-token`, `prod-token`, `ci-token`: ambiguous once the account hosts more than one project or environment.
+
 ---
 
 ## 11. Open questions deferred to the right moment
