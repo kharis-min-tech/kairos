@@ -41,6 +41,6 @@ export default {
       mailerBound = true;
     }
     if (!app) app = createApp();
-    return withDb(env.HYPERDRIVE.connectionString, () => app!.fetch(request, env, ctx));
+    return withDb(env.HYPERDRIVE.connectionString, async () => app!.fetch(request, env, ctx));
   },
 };
