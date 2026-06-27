@@ -5,6 +5,13 @@
   "compatibility_date": "2026-06-24",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Path-based routing under the Pages custom domain. The Worker handles
+  // `/api/*` on kairos.kharis.org; Pages serves everything else. Same-origin
+  // means zero CORS preflight overhead from the web app.
+  "routes": [
+    { "pattern": "kairos.kharis.org/api/*", "zone_name": "kharis.org" }
+  ],
+
   // Hyperdrive binding — fronts PlanetScale Postgres (kairos-prod).
   // Paste the Hyperdrive config ID from the Cloudflare dashboard:
   //   Workers & Pages → Hyperdrive → kairos-prod-hyperdrive → copy ID.
