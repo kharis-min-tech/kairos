@@ -21,7 +21,8 @@
     "db:fresh": "npm run db:drop && drizzle-kit migrate && tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/seed.ts",
-    "db:seed-souls": "tsx src/seed-souls.ts"
+    "db:seed-souls": "tsx src/seed-souls.ts",
+    "db:seed-admin": "tsx src/seed-admin.ts"
   },
   "dependencies": {
     "@kairos/utils": "*",
