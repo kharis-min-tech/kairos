@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev --port 3002",
     "build": "next build",
+    "pages:build": "next build && npx @cloudflare/next-on-pages",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
@@ -42,6 +43,7 @@
     "@types/react-dom": "^19.0.3",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
+    "@cloudflare/next-on-pages": "^1.13.7",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.0.0",
