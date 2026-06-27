@@ -17,26 +17,47 @@
       "dependsOn": ["^build"]
     },
     "db:generate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:drop": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:fresh": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:studio": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["DATABASE_URL"]
     },
     "db:seed": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:seed-souls": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:seed-admin": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "ADMIN_EMAIL",
+        "ADMIN_PASSWORD",
+        "ADMIN_FIRST_NAME",
+        "ADMIN_LAST_NAME",
+        "ADMIN_REGION_NAME",
+        "ADMIN_REGION_COUNTRY",
+        "ADMIN_BRANCH_NAME",
+        "ADMIN_RESET_PASSWORD"
+      ]
     }
   }
 }
