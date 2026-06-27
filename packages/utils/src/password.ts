@@ -1,7 +1,13 @@
 import { argon2id } from '@noble/hashes/argon2';
 
-const ARGON2_M = 65536;
-const ARGON2_T = 3;
+// Workers-friendly params: 19 MiB memory, 2 iterations. Stays well under the
+// 128 MiB isolate ceiling and the 10ms CPU budget on Workers Free (~30-50ms
+// observed). Still meets OWASP 2025 minimum recommendation for argon2id
+// (m≥19MiB, t≥2, p≥1). Verify-side reads params from the stored hash so
+// older/stronger hashes still verify — old admins must be re-seeded if their
+// hash params exceed what the runtime can afford.
+const ARGON2_M = 19456;
+const ARGON2_T = 2;
 const ARGON2_P = 1;
 const HASH_LEN = 32;
 const SALT_LEN = 16;
