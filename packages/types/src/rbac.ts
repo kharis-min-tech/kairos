@@ -30,7 +30,7 @@ export const Capability = {
   DepartmentWrite: 'department:write',
   SafeguardingRead: 'safeguarding:read',
   SafeguardingWrite: 'safeguarding:write',
-  MemberApprove: 'member:approve',
+  SignupApprove: 'signup:approve',
   NewBelieversMentor: 'newbelievers:mentor',
   NewBelieversTeach: 'newbelievers:teach',
 } as const;
@@ -41,10 +41,10 @@ export const RoleCapabilities: Record<FunctionalRole, readonly Capability[]> = {
   // for a branch. Can grant/revoke roles AND edit branch data, but does NOT
   // bypass fellowship/department scope (that's pastor-equivalent power, which
   // Phase 4 will narrow away).
-  BranchAdmin: ['branch:read', 'branch:write', 'branch:rbac', 'member:approve'],
+  BranchAdmin: ['branch:read', 'branch:write', 'branch:rbac', 'signup:approve'],
   // Branch Data Admin — branch ops without RBAC. Promoted from "Admin
   // department lead" in the prior model.
-  BranchDataAdmin: ['branch:read', 'branch:write', 'member:approve'],
+  BranchDataAdmin: ['branch:read', 'branch:write', 'signup:approve'],
   FellowshipLeader: ['fellowship:read', 'fellowship:write'],
   DepartmentLeader: ['department:read', 'department:write'],
   DepartmentDeputy: ['department:read', 'department:write'],

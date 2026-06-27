@@ -144,7 +144,7 @@ membersRouter.get('/:id/stats', async (c) => {
 
 // ── Approval ───────────────────────────────────────────────
 
-membersRouter.post('/:id/approve', requireCapability('member:approve'), zValidator('json', approveMemberSchema), async (c) => {
+membersRouter.post('/:id/approve', requireCapability('signup:approve'), zValidator('json', approveMemberSchema), async (c) => {
   const auth = getAuth(c);
   const { approved } = c.req.valid('json');
   const member = await approveMember(db, c.req.param('id'), approved, auth);

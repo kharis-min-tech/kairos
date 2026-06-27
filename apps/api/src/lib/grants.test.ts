@@ -102,7 +102,7 @@ describe('hasCapability — hierarchical scope', () => {
         branchId: 'B-1',
       }),
     ).toBe(false);
-    // BranchAdmin does NOT carry fellowship:write — only branch:* + member:approve.
+    // BranchAdmin does NOT carry fellowship:write — only branch:* + signup:approve.
     // The hierarchy match would apply only for branch:* capabilities.
   });
 
