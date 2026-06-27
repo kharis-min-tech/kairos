@@ -1,13 +1,18 @@
 import { createApp } from './app';
-import { bindDbEnv } from './db';
+import { withDb } from './db';
 import { bindMailerEnv } from '@kairos/utils';
 
 /**
  * Cloudflare Workers entry. Server.ts remains the Node entry for `npm run dev`
  * and seed scripts; this file is what wrangler deploys.
  *
- * Hyperdrive binding ID is configured in wrangler.toml. JWT secrets are read
+ * Hyperdrive binding ID is configured in wrangler.jsonc. JWT secrets are read
  * per-request via `getAuthSecrets(c)` from the Hono context — no binding here.
+ *
+ * Each fetch runs inside `withDb(...)` so a fresh postgres-js client is created
+ * per request (Workers I/O isolation: clients cached across requests trip
+ * "Cannot perform I/O on behalf of a different request"). Mailer config is
+ * pure data, so it's safely cached on cold start.
  */
 export interface Env {
   HYPERDRIVE: { connectionString: string };
@@ -21,11 +26,11 @@ export interface Env {
 }
 
 let app: ReturnType<typeof createApp> | null = null;
+let mailerBound = false;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    if (!app) {
-      bindDbEnv(env.HYPERDRIVE.connectionString);
+    if (!mailerBound) {
       bindMailerEnv({
         awsAccessKeyId: env.AWS_ACCESS_KEY_ID,
         awsSecretAccessKey: env.AWS_SECRET_ACCESS_KEY,
@@ -33,8 +38,9 @@ export default {
         emailFrom: env.EMAIL_FROM,
         frontendUrl: env.FRONTEND_URL,
       });
-      app = createApp();
+      mailerBound = true;
     }
-    return app.fetch(request, env, ctx);
+    if (!app) app = createApp();
+    return withDb(env.HYPERDRIVE.connectionString, () => app!.fetch(request, env, ctx));
   },
 };
