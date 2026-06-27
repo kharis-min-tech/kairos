@@ -211,6 +211,13 @@
       "when": 1786300000000,
       "tag": "0029_collapse_system_role",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1787300000000,
+      "tag": "0030_tighten_system_role_check",
+      "breakpoints": true
     }
   ]
 }

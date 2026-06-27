@@ -58,7 +58,7 @@ export const members = pgTable('members', {
     .where(sql`phone IS NOT NULL AND is_active = TRUE`),
   sql`CHECK (gender IN ('Male', 'Female'))`,
   sql`CHECK (approval_status IN ('pending', 'approved', 'rejected'))`,
-  sql`CHECK (system_role IN ('admin', 'pastor', 'leader', 'member'))`,
+  sql`CHECK (system_role IN ('admin', 'member'))`,
   sql`CHECK (member_type IN ('member', 'prospect', 'visitor', 'child'))`,
 ]);
 
