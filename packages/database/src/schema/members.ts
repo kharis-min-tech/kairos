@@ -39,7 +39,11 @@ export const members = pgTable('members', {
   // members who held those system roles before the cutover. New signups
   // leave it null; admins can edit it via the member-profile UI.
   honorific: varchar('honorific', { length: 50 }),
-  memberType: varchar('member_type', { length: 20 }).default('member').notNull(),
+  memberType: varchar('member_type', { length: 20 }).default('attendee').notNull(),
+  // Task #33 P1: timestamp the member completed the 4-week membership class.
+  // NULL = not a confirmed Member yet (provenance tag `memberType` is separate).
+  // See docs/domain-model.md §0 for why this is the real Membership signal.
+  membershipClassCompletedAt: timestamp('membership_class_completed_at'),
   guardianMemberId: uuid('guardian_member_id').references((): AnyPgColumn => members.id, { onDelete: 'set null' }),
   passwordResetToken: varchar('password_reset_token', { length: 255 }),
   passwordResetExpiry: timestamp('password_reset_expiry'),
@@ -59,7 +63,7 @@ export const members = pgTable('members', {
   sql`CHECK (gender IN ('Male', 'Female'))`,
   sql`CHECK (approval_status IN ('pending', 'approved', 'rejected'))`,
   sql`CHECK (system_role IN ('admin', 'member'))`,
-  sql`CHECK (member_type IN ('member', 'prospect', 'visitor', 'child'))`,
+  sql`CHECK (member_type IN ('member', 'attendee', 'visitor', 'child'))`,
 ]);
 
 export const membersRelations = relations(members, ({ one, many }) => ({
