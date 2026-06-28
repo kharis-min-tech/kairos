@@ -38,15 +38,27 @@ const getDailyVerse = () => DAILY_VERSES[new Date().getDay() % DAILY_VERSES.leng
 
 // ── Stat card ──────────────────────────────────────────────
 
-function StatCard({ title, value, sub, icon, accent, onClick }: {
+/**
+ * Member-roll breakdown the StatCard can render under the headline. Always
+ * sums to the headline value when supplied.
+ */
+type StatCardBreakdown = {
+  members: number;
+  returners: number;
+  visitors: number;
+  children: number;
+};
+
+function StatCard({ title, value, sub, icon, accent, onClick, breakdown }: {
   title: string; value: string | number; sub?: string; icon: React.ReactNode;
   accent: 'purple' | 'gold' | 'emerald' | 'rose'; onClick?: () => void;
+  breakdown?: StatCardBreakdown;
 }) {
   const valueColor = { purple: 'text-[#a78bfa]', gold: 'text-[#f8b537]', emerald: 'text-emerald-400', rose: 'text-rose-400' }[accent];
   const iconColor = { purple: 'text-[#a78bfa]/50', gold: 'text-[#f8b537]/50', emerald: 'text-emerald-400/50', rose: 'text-rose-400/50' }[accent];
   const borderColor = { purple: 'border-primary/20', gold: 'border-[#f8b537]/20', emerald: 'border-emerald-400/20', rose: 'border-rose-400/20' }[accent];
   const glowColor = { purple: 'shadow-primary/5', gold: 'shadow-[#f8b537]/10', emerald: 'shadow-emerald-400/10', rose: 'shadow-rose-400/10' }[accent];
-  
+
   return (
     <div
       className={`rounded-lg border ${borderColor} bg-card px-5 py-4 shadow-lg ${glowColor} ${onClick ? 'cursor-pointer hover:border-opacity-60 hover:bg-muted/80 transition-colors' : ''}`}
@@ -56,13 +68,30 @@ function StatCard({ title, value, sub, icon, accent, onClick }: {
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
     >
       <div className="flex items-start justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
           <p className={`mt-2 text-4xl font-bold tracking-tight ${valueColor}`}>{value}</p>
-          {sub && <p className="mt-1 text-xs text-muted-foreground/70">{sub}</p>}
+          {sub && !breakdown && <p className="mt-1 text-xs text-muted-foreground/70">{sub}</p>}
+          {breakdown && (
+            <div className="mt-3 grid grid-cols-4 gap-1 text-[10px]">
+              <BreakdownPill label="Members" value={breakdown.members} />
+              <BreakdownPill label="Returners" value={breakdown.returners} />
+              <BreakdownPill label="Visitors" value={breakdown.visitors} />
+              <BreakdownPill label="Children" value={breakdown.children} />
+            </div>
+          )}
         </div>
-        <div className={`mt-1 ${iconColor}`}>{icon}</div>
+        <div className={`mt-1 ml-2 flex-shrink-0 ${iconColor}`}>{icon}</div>
       </div>
+    </div>
+  );
+}
+
+function BreakdownPill({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-col items-start rounded bg-muted/40 px-1.5 py-1">
+      <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
+      <span className="text-xs font-semibold text-foreground">{value.toLocaleString()}</span>
     </div>
   );
 }
@@ -100,7 +129,14 @@ function AdminStats() {
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Branches" value={data.totalBranches} sub="Active" accent="purple" icon={<BranchIcon />} onClick={() => setEvidenceOpen('branches')} />
-        <StatCard title="Total Members" value={data.totalMembers} sub="+3 this month" accent="emerald" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} />
+        <StatCard
+          title="Total Roll"
+          value={data.totalRoll.toLocaleString()}
+          accent="emerald"
+          icon={<MembersIcon />}
+          onClick={() => setEvidenceOpen('members')}
+          breakdown={data.memberBreakdown}
+        />
         <StatCard title="Total Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Pending Approvals" value={pending} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
       </div>
@@ -263,7 +299,7 @@ function PastorStats() {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Members" value={data.totalMembers} sub="Active" accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} />
+        <StatCard title="Branch Roll" value={data.totalRoll.toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
         <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
@@ -431,7 +467,7 @@ function BranchAdminStats() {
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Members" value={data.totalMembers} sub="Active" accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} />
+        <StatCard title="Branch Roll" value={data.totalRoll.toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
         <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
@@ -1962,24 +1998,28 @@ function MissionSummary({ role }: { role: string }) {
   if (role === 'admin') {
     items = [
       { label: 'Branches', value: adminData?.totalBranches ?? '—', color: '#a78bfa' },
-      { label: 'Members', value: adminData?.totalMembers ?? '—', color: '#10b981' },
+      { label: 'Total Roll', value: adminData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Members', value: adminData?.memberBreakdown?.members ?? '—', color: '#10b981' },
+      { label: 'Returners', value: adminData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: adminData?.totalFellowships ?? '—', color: '#f8b537' },
       { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
       { label: 'Engagement', value: engagementLabel, color: engagementColor },
     ];
   } else if (role === 'pastor') {
     items = [
-      { label: 'Branch Members', value: branchData?.totalMembers ?? '—', color: '#10b981' },
+      { label: 'Total Roll', value: branchData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
+      { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
-      { label: 'Meetings (30d)', value: branchData?.recentMeetings ?? '—', color: '#a78bfa' },
       { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
       { label: 'Engagement', value: engagementLabel, color: engagementColor },
     ];
   } else if (role === 'leader') {
     items = [
-      { label: 'Branch Members', value: branchData?.totalMembers ?? '—', color: '#10b981' },
+      { label: 'Total Roll', value: branchData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
+      { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
-      { label: 'Meetings (30d)', value: branchData?.recentMeetings ?? '—', color: '#a78bfa' },
       { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
       { label: 'Engagement', value: engagementLabel, color: engagementColor },
     ];

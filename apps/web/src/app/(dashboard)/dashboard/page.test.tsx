@@ -75,6 +75,8 @@ vi.mock('@/hooks/use-dashboard', () => ({
   useAdminDashboard: () => ({
     data: {
       totalBranches: 3,
+      totalRoll: 60,
+      memberBreakdown: { members: 42, returners: 10, visitors: 6, children: 2 },
       totalMembers: 42,
       totalFellowships: 7,
       membersByApproval: [{ status: 'pending', count: 2 }],
@@ -82,7 +84,14 @@ vi.mock('@/hooks/use-dashboard', () => ({
     isLoading: false,
   }),
   useBranchDashboard: () => ({
-    data: { totalMembers: 12, totalFellowships: 3, recentMeetings: 4, pendingApprovals: 1 },
+    data: {
+      totalRoll: 20,
+      memberBreakdown: { members: 12, returners: 5, visitors: 2, children: 1 },
+      totalMembers: 12,
+      totalFellowships: 3,
+      recentMeetings: 4,
+      pendingApprovals: 1,
+    },
     isLoading: false,
   }),
   useMemberDashboard: () => ({
@@ -226,7 +235,7 @@ describe('DashboardPage — stats fork', () => {
     // Chip
     expect(screen.getByText('Branch Admin')).toBeInTheDocument();
     // PastorStats-style card
-    expect(screen.getAllByText('Branch Members').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Branch Roll|Branch Members/i).length).toBeGreaterThan(0);
   });
   it('renders FellowshipStats for fellowship-only leader', () => {
     authState.activeRole = 'leader';
@@ -376,7 +385,7 @@ describe('DashboardPage — scope-aware fork', () => {
 
     // BranchAdminStats wins over AdminStats because isBranchAdmin is true.
     expect(screen.getByText('Branch Admin')).toBeInTheDocument();
-    expect(screen.getAllByText('Branch Members').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Branch Roll|Branch Members/i).length).toBeGreaterThan(0);
     expect(screen.getByText('Branch System Admin — Accra')).toBeInTheDocument();
   });
 });

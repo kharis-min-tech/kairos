@@ -317,7 +317,7 @@ export default function MemberDetailPage() {
                   );
                 }}
               >
-                {setMembershipClass.isPending ? 'Saving…' : 'Mark complete'}
+                {setMembershipClass.isPending ? 'Saving…' : 'Mark Membership Class Complete'}
               </Button>
             </div>
           )}
