@@ -9,8 +9,8 @@ import type {
   ListFormSubmissionsParams,
   UpdateFormSubmissionRequest,
   ExportFormSubmissionsParams,
-  ListDormantProspectsParams,
-  ArchiveProspectsRequest,
+  ListDormantAttendeesParams,
+  ArchiveAttendeesRequest,
 } from '@kairos/types';
 
 // ── Caller capabilities (drives /forms landing + filter gating) ──
@@ -116,29 +116,29 @@ export function useExportFormSubmissions() {
   });
 }
 
-// ── Dormant prospects ──────────────────────────────────────
+// ── Dormant attendees ──────────────────────────────────────
 
-export function useDormantProspects(
-  params?: ListDormantProspectsParams,
+export function useDormantAttendees(
+  params?: ListDormantAttendeesParams,
   options?: { enabled?: boolean },
 ) {
   return useQuery({
-    queryKey: ['forms', 'prospects', 'dormant', params],
+    queryKey: ['forms', 'attendees', 'dormant', params],
     queryFn: async () => {
-      const res = await api.forms.prospects.dormant(params);
+      const res = await api.forms.attendees.dormant(params);
       return res.data!;
     },
     enabled: options?.enabled ?? true,
   });
 }
 
-export function useArchiveProspects() {
+export function useArchiveAttendees() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: ArchiveProspectsRequest) => {
-      const res = await api.forms.prospects.archive(data);
+    mutationFn: async (data: ArchiveAttendeesRequest) => {
+      const res = await api.forms.attendees.archive(data);
       return res.data!;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['forms', 'prospects'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['forms', 'attendees'] }),
   });
 }

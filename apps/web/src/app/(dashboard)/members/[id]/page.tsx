@@ -6,15 +6,16 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles } from '@/hooks/use-members';
+import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles, useSetMembershipClass } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
+import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
-import { Lock } from 'lucide-react';
+import { Lock, BadgeCheck } from 'lucide-react';
 import { SafeguardingSection } from './_components/safeguarding-section';
 import { useConfirm } from '@/components/confirm-dialog';
 
@@ -28,6 +29,8 @@ export default function MemberDetailPage() {
   const reactivate = useReactivateMember();
   const approve = useApproveMember();
   const assignRole = useAssignRole();
+  const setMembershipClass = useSetMembershipClass();
+  const [classDateDraft, setClassDateDraft] = useState('');
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
   const isAdmin = user?.systemRole === 'admin';
@@ -217,6 +220,109 @@ export default function MemberDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Membership status — the real "confirmed Member" signal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BadgeCheck
+              className={`h-5 w-5 ${member.membershipClassCompletedAt ? 'text-emerald-600' : 'text-muted-foreground'}`}
+              strokeWidth={2}
+            />
+            Membership Class
+          </CardTitle>
+          <CardDescription>
+            Membership in this church is conferred by completing the 4-week class. This is the
+            formal status &mdash; separate from joining a fellowship or department.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {member.membershipClassCompletedAt ? (
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/30">
+              <div>
+                <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                  Confirmed Member
+                </p>
+                <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">
+                  Completed the class on{' '}
+                  {new Date(member.membershipClassCompletedAt).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
+              </div>
+              {canManage && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={setMembershipClass.isPending}
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: 'Clear membership certification?',
+                      description: `${member.firstName} ${member.lastName} will revert to "not yet a confirmed Member."`,
+                      confirmLabel: 'Clear',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    setMembershipClass.mutate(
+                      { id, completedAt: null },
+                      {
+                        onSuccess: () => toast.success('Membership cleared.'),
+                        onError: () =>
+                          toast.error('Failed to clear membership. Please try again.'),
+                      },
+                    );
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+              Not yet a confirmed Member. Once they complete the 4-week class, mark the completion
+              date here.
+            </div>
+          )}
+
+          {canManage && !member.membershipClassCompletedAt && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Date completed
+                </label>
+                <DateSelect value={classDateDraft} onChange={setClassDateDraft} />
+              </div>
+              <Button
+                disabled={!classDateDraft || setMembershipClass.isPending}
+                onClick={async () => {
+                  if (!classDateDraft) return;
+                  const ok = await confirm({
+                    title: 'Mark membership class as completed?',
+                    description: `${member.firstName} ${member.lastName} will be recorded as a confirmed Member as of ${classDateDraft}.`,
+                    confirmLabel: 'Confirm',
+                  });
+                  if (!ok) return;
+                  setMembershipClass.mutate(
+                    { id, completedAt: new Date(`${classDateDraft}T00:00:00.000Z`).toISOString() },
+                    {
+                      onSuccess: () => {
+                        toast.success('Membership certified.');
+                        setClassDateDraft('');
+                      },
+                      onError: () =>
+                        toast.error('Failed to mark membership. Please try again.'),
+                    },
+                  );
+                }}
+              >
+                {setMembershipClass.isPending ? 'Saving…' : 'Mark complete'}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Safeguarding & Health — minors only */}
       {member.isMinor && (

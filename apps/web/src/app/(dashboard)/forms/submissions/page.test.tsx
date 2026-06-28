@@ -14,9 +14,9 @@ vi.mock('@/lib/auth-store', () => ({
 
 let listParams: unknown;
 let submissions: FormSubmission[] = [];
-let capabilities: { visibleFormTypes: string[]; canSeeProspects: boolean } = {
+let capabilities: { visibleFormTypes: string[]; canSeeAttendees: boolean } = {
   visibleFormTypes: ['altar_call', 'first_time_visitor', 'baptism', 'testimony', 'baby_naming', 'baby_dedication'],
-  canSeeProspects: true,
+  canSeeAttendees: true,
 };
 const updateMutate = vi.fn();
 const exportMutate = vi.fn();
@@ -92,7 +92,7 @@ beforeEach(() => {
   submissions = [baptism, anonTestimony];
   capabilities = {
     visibleFormTypes: ['altar_call', 'first_time_visitor', 'baptism', 'testimony', 'baby_naming', 'baby_dedication'],
-    canSeeProspects: true,
+    canSeeAttendees: true,
   };
   updateMutate.mockResolvedValue({ id: 'sub-1' });
   exportMutate.mockResolvedValue(new Blob(['a'], { type: 'text/csv' }));
@@ -100,7 +100,7 @@ beforeEach(() => {
 
 describe('SubmissionsPage', () => {
   it('blocks a caller with an empty visible set', () => {
-    capabilities = { visibleFormTypes: [], canSeeProspects: false };
+    capabilities = { visibleFormTypes: [], canSeeAttendees: false };
     render(<SubmissionsPage />, { wrapper });
     expect(screen.getByText(/Not authorised/)).toBeInTheDocument();
     expect(screen.queryByText(/Form Submissions/)).not.toBeInTheDocument();

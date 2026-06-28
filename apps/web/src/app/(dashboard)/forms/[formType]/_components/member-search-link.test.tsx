@@ -91,7 +91,7 @@ describe('MemberSearchLink', () => {
   it('opens results once 2+ chars are typed and lists matches', async () => {
     searchResults = [
       { id: 'm-9', firstName: 'Ada', lastName: 'Lovelace', phone: '0700', memberType: 'member' },
-      { id: 'm-10', firstName: 'Adam', lastName: 'Smith', phone: null, memberType: 'prospect' },
+      { id: 'm-10', firstName: 'Adam', lastName: 'Smith', phone: null, memberType: 'attendee' },
     ];
     const user = userEvent.setup();
     render(<MemberSearchLink onSelect={vi.fn()} onClear={vi.fn()} />, { wrapper });

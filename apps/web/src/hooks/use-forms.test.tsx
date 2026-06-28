@@ -9,8 +9,8 @@ import {
   useFormSubmission,
   useUpdateFormSubmission,
   useExportFormSubmissions,
-  useDormantProspects,
-  useArchiveProspects,
+  useDormantAttendees,
+  useArchiveAttendees,
 } from './use-forms';
 
 vi.mock('@/lib/api', () => ({
@@ -24,7 +24,7 @@ vi.mock('@/lib/api', () => ({
         update: vi.fn(),
         exportCsv: vi.fn(),
       },
-      prospects: {
+      attendees: {
         dormant: vi.fn(),
         archive: vi.fn(),
       },
@@ -179,12 +179,12 @@ describe('useExportFormSubmissions', () => {
   });
 });
 
-describe('useDormantProspects', () => {
-  it('returns dormant prospect shells', async () => {
-    vi.mocked(api.forms.prospects.dormant).mockResolvedValue({
+describe('useDormantAttendees', () => {
+  it('returns dormant attendee shells', async () => {
+    vi.mocked(api.forms.attendees.dormant).mockResolvedValue({
       data: [{ id: 'p-1' }],
     } as never);
-    const { result } = renderHook(() => useDormantProspects(), {
+    const { result } = renderHook(() => useDormantAttendees(), {
       wrapper: createWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -192,9 +192,9 @@ describe('useDormantProspects', () => {
   });
 });
 
-describe('useArchiveProspects', () => {
-  it('archives the selected ids and invalidates the prospects cache', async () => {
-    vi.mocked(api.forms.prospects.archive).mockResolvedValue({
+describe('useArchiveAttendees', () => {
+  it('archives the selected ids and invalidates the attendees cache', async () => {
+    vi.mocked(api.forms.attendees.archive).mockResolvedValue({
       data: { archived: 2 },
     } as never);
 
@@ -205,13 +205,13 @@ describe('useArchiveProspects', () => {
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(QueryClientProvider, { client: qc }, children);
 
-    const { result } = renderHook(() => useArchiveProspects(), { wrapper });
+    const { result } = renderHook(() => useArchiveAttendees(), { wrapper });
     let returned: { archived: number } | undefined;
     await act(async () => {
       returned = await result.current.mutateAsync({ memberIds: ['a', 'b'] });
     });
-    expect(api.forms.prospects.archive).toHaveBeenCalledWith({ memberIds: ['a', 'b'] });
+    expect(api.forms.attendees.archive).toHaveBeenCalledWith({ memberIds: ['a', 'b'] });
     expect(returned).toEqual({ archived: 2 });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['forms', 'prospects'] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['forms', 'attendees'] });
   });
 });

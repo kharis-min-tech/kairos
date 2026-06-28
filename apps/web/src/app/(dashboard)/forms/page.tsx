@@ -29,8 +29,8 @@ const FORM_ICONS: Record<FormType, React.ReactNode> = {
 export default function FormsLandingPage() {
   const { data: capabilities } = useMyFormCapabilities();
   const canSeeSubmissions = (capabilities?.visibleFormTypes.length ?? 0) > 0;
-  const canSeeProspects = !!capabilities?.canSeeProspects;
-  const showAdminSection = canSeeSubmissions || canSeeProspects;
+  const canSeeAttendees = !!capabilities?.canSeeAttendees;
+  const showAdminSection = canSeeSubmissions || canSeeAttendees;
 
   return (
     <div className="space-y-8">
@@ -86,15 +86,15 @@ export default function FormsLandingPage() {
               </Link>
             )}
 
-            {canSeeProspects && (
-              <Link href="/forms/prospects" className="group">
+            {canSeeAttendees && (
+              <Link href="/forms/attendees" className="group">
                 <Card className="transition-shadow hover:shadow-ambient">
                   <CardContent className="flex items-center gap-4 py-5">
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
                       <Archive className="h-5 w-5" />
                     </span>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">Dormant prospects</h3>
+                      <h3 className="font-semibold text-foreground">Dormant attendees</h3>
                       <p className="text-sm text-muted-foreground">Bulk-archive stale form-created contact shells.</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />

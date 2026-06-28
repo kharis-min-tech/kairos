@@ -81,6 +81,22 @@ export function useReactivateMember() {
   });
 }
 
+// Task #33 P1: stamp or clear the membership-class completion timestamp.
+// `completedAt: null` un-marks. Branch-write gated server-side.
+export function useSetMembershipClass() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, completedAt }: { id: string; completedAt: string | null }) => {
+      const res = await api.members.setMembershipClass(id, completedAt);
+      return res.data!;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+      qc.invalidateQueries({ queryKey: ['members', vars.id] });
+    },
+  });
+}
+
 export function useCreateMember() {
   const qc = useQueryClient();
   return useMutation({

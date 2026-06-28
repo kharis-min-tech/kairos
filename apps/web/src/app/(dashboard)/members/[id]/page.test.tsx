@@ -31,6 +31,7 @@ vi.mock('@/hooks/use-members', () => ({
   useApproveMember: () => ({ mutate: vi.fn() }),
   useAssignRole: () => ({ mutate: vi.fn(), error: null, isPending: false }),
   useAllRoles: () => ({ data: [] }),
+  useSetMembershipClass: () => ({ mutate: vi.fn(), isPending: false }),
   useMemberHealthRecord: () => ({ data: healthData, isLoading: false, error: null }),
   useUpsertMemberHealthRecord: () => ({ mutate: vi.fn(), isPending: false, error: null }),
 }));
