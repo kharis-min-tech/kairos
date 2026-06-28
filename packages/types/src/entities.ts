@@ -99,6 +99,10 @@ export interface Member extends BaseEntity {
   honorific: string | null;
   memberType: MemberType;
   guardianMemberId: string | null;
+  // Task #33 P1: ISO-8601 timestamp the member completed the 4-week
+  // membership class. NULL = not yet a confirmed Member in the formal
+  // sense. See docs/domain-model.md §0.
+  membershipClassCompletedAt: string | null;
   emailVerified: boolean;
   mustChangePassword: boolean;
 }

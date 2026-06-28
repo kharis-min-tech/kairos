@@ -710,7 +710,7 @@ export interface SessionListParams {
 // ── Forms & Data Capture ───────────────────────────────────
 
 export interface SubmitFormRequest {
-  /** Set when the altar-call UI search-and-select picked an existing member/prospect. */
+  /** Set when the altar-call UI search-and-select picked an existing member/attendee. */
   subjectMemberId?: string;
   /** Ignored by the server — branch is forced to auth.branchId. */
   branchId?: string;
@@ -759,7 +759,7 @@ export interface ExportFormSubmissionsParams {
   to?: string;
 }
 
-export interface DormantProspect {
+export interface DormantAttendee {
   id: string;
   firstName: string;
   lastName: string;
@@ -768,15 +768,15 @@ export interface DormantProspect {
   hasEnrollment: boolean;
 }
 
-export interface ListDormantProspectsParams {
+export interface ListDormantAttendeesParams {
   branchId?: string;
 }
 
-export interface ArchiveProspectsRequest {
+export interface ArchiveAttendeesRequest {
   memberIds: string[];
 }
 
-export interface ArchiveProspectsResult {
+export interface ArchiveAttendeesResult {
   archived: number;
 }
 
@@ -1029,7 +1029,7 @@ export type { FormSubmission };
 // Forms caller capabilities — drives /forms landing + /forms/submissions filter gating.
 export interface FormsCapabilities {
   visibleFormTypes: FormType[];
-  canSeeProspects: boolean;
+  canSeeAttendees: boolean;
 }
 
 // ── /api/me/leadership — caller's leadership footprint ────────

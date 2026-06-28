@@ -191,8 +191,15 @@ export type RotaSwapRequestStatus =
 // ── Members ────────────────────────────────────────────────
 
 export const MemberType = {
+  // 4-week membership class completed. The real Member signal lives in
+  // members.membershipClassCompletedAt — `Member` here is the matching
+  // provenance/display tag, kept in sync server-side.
   Member: 'member',
-  Prospect: 'prospect',
+  // Attached to the church without (yet) completing the class. Self-signups
+  // and soul-capture rows both land here. Replaces the old 'prospect' tag,
+  // which read as sales-funnel language for what is actually a faithful
+  // regular / department server / inquirer.
+  Attendee: 'attendee',
   Visitor: 'visitor',
   Child: 'child',
 } as const;
