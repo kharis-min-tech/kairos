@@ -61,6 +61,9 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     honorific: row.honorific,
     memberType: row.memberType as MemberProfile['memberType'],
     guardianMemberId: row.guardianMemberId,
+    membershipClassCompletedAt: row.membershipClassCompletedAt
+      ? row.membershipClassCompletedAt.toISOString()
+      : null,
     emailVerified: row.emailVerified,
     mustChangePassword: row.mustChangePassword,
   };
@@ -234,6 +237,11 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       emailVerified: false,
       approvalStatus: 'pending',
       systemRole: 'member',
+      // Phase 2: signups start as attendees. Once approved + class completed,
+      // an admin uses the "Mark complete" CTA on the member profile to
+      // promote them to a confirmed Member (sets membershipClassCompletedAt
+      // + flips memberType).
+      memberType: 'attendee',
       isActive: false, // Inactive until admin approves
       mustChangePassword: false,
     })

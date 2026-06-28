@@ -12,6 +12,7 @@ import {
   createMemberSchema,
   upsertHealthRecordSchema,
   unguardedMinorsQuerySchema,
+  setMembershipClassSchema,
 } from './schemas';
 import {
   listMembers,
@@ -32,6 +33,7 @@ import {
   getHealthRecord,
   upsertHealthRecord,
   listUnguardedMinors,
+  setMembershipClassCompleted,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 
@@ -150,6 +152,27 @@ membersRouter.post('/:id/approve', requireCapability('signup:approve'), zValidat
   const member = await approveMember(db, c.req.param('id'), approved, auth);
   return c.json(successResponse(member));
 });
+
+// ── Membership class (Task #33 P1) ─────────────────────────
+// Stamp or clear the timestamp the member completed the 4-week class.
+// `completedAt: null` clears. Branch-write gated; branch-narrowed in service.
+
+membersRouter.post(
+  '/:id/membership-class',
+  requireCapability('branch:write'),
+  zValidator('json', setMembershipClassSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { completedAt } = c.req.valid('json');
+    const member = await setMembershipClassCompleted(
+      db,
+      c.req.param('id'),
+      completedAt ? new Date(completedAt) : null,
+      auth,
+    );
+    return c.json(successResponse(member, completedAt ? 'Membership certified' : 'Membership cleared'));
+  },
+);
 
 // ── Health Records (minor data protection) ────────────────
 

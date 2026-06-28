@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, exists, isNotNull, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
@@ -149,9 +149,10 @@ export async function listMembers(
     conditions.push(eq(members.isActive, true));
   }
 
-  // The directory shows the member roll only — form-created prospect shells are
-  // managed via the New Believers pipeline and the Forms module, not here.
-  conditions.push(eq(members.memberType, 'member'));
+  // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
+  // with membership_class_completed_at populated. Visitors / attendees / child
+  // shells are surfaced via Forms, the NB pipeline, and safeguarding review.
+  conditions.push(isNotNull(members.membershipClassCompletedAt));
 
   // Non-admin can only see their own branch (home or active secondary)
   if (!authHasCapability(auth, 'branch:read')) {
@@ -291,6 +292,7 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       systemRole: members.systemRole,
       memberType: members.memberType,
       guardianMemberId: members.guardianMemberId,
+      membershipClassCompletedAt: members.membershipClassCompletedAt,
       emailVerified: members.emailVerified,
       createdAt: members.createdAt,
       updatedAt: members.updatedAt,
@@ -649,6 +651,10 @@ export async function createMember(
       emailVerified: true,
       approvalStatus: 'approved',
       systemRole: input.systemRole ?? 'member',
+      // Phase 2: admin-add lands as an attendee; the admin must explicitly
+      // mark the membership class as completed afterwards. This matches
+      // self-signup behaviour — neither path auto-confers Member status.
+      memberType: 'attendee',
       isActive: true,
       mustChangePassword: true,
     })
@@ -657,6 +663,56 @@ export async function createMember(
   if (!created) throw new Error('Failed to create member');
 
   return { member: created, generatedPassword };
+}
+
+/**
+ * Task #33 Phase 1: stamp (or clear) the timestamp at which the member
+ * completed the 4-week membership class. This is the real Membership
+ * signifier — see docs/domain-model.md §0. `completedAt: null` unmarks.
+ *
+ * Authorization mirrors deactivateMember: branch:write capability + branch
+ * narrowing for non-platform-admins.
+ */
+export async function setMembershipClassCompleted(
+  db: Database,
+  memberId: string,
+  completedAt: Date | null,
+  auth: AuthContext,
+) {
+  if (!authHasCapability(auth, 'branch:write')) {
+    throw new ForbiddenError('Only branch-tier admins can certify membership');
+  }
+
+  const conditions = [eq(members.id, memberId), eq(members.isActive, true)];
+  if (auth.systemRole !== 'admin') {
+    conditions.push(eq(members.homeBranchId, auth.branchId));
+  }
+
+  const [member] = await db
+    .select({ id: members.id, homeBranchId: members.homeBranchId })
+    .from(members)
+    .where(and(...conditions));
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  // Phase 5 hardening: a session scoped to one branch can't reach another.
+  enforceScopeAllows(auth, 'branch', member.homeBranchId);
+
+  // Phase 2: keep memberType in lockstep with the timestamp. The directory
+  // and reports filters now key off the timestamp, but memberType remains a
+  // provenance tag — when an attendee completes the class we promote the tag
+  // too so the two never drift.
+  const [updated] = await db
+    .update(members)
+    .set({
+      membershipClassCompletedAt: completedAt,
+      memberType: completedAt ? 'member' : 'attendee',
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(members.id, memberId))
+    .returning();
+
+  return updated;
 }
 
 export async function reactivateMember(

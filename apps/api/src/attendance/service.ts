@@ -1,4 +1,4 @@
-import { eq, ne, and, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, ne, and, count, sql, gte, lte, inArray, notInArray, isNotNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -408,7 +408,7 @@ export async function getServiceRoster(
   const conditions = [
     eq(members.isActive, true),
     eq(members.homeBranchId, svc.branchId),
-    eq(members.memberType, 'member'),
+    isNotNull(members.membershipClassCompletedAt),
   ];
   if (query.search) {
     const term = `%${query.search}%`;
@@ -644,7 +644,7 @@ export async function getMissingMembers(
   const baseConditions = [
     eq(members.isActive, true),
     eq(members.homeBranchId, branchId),
-    eq(members.memberType, 'member'),
+    isNotNull(members.membershipClassCompletedAt),
   ];
 
   // Optional department/fellowship filter — narrows the considered member set.
@@ -791,7 +791,7 @@ export async function getCohortDiff(
           and(
             eq(members.isActive, true),
             eq(members.homeBranchId, branchId),
-            eq(members.memberType, 'member'),
+            isNotNull(members.membershipClassCompletedAt),
           ),
         );
       const attendedAtLeastOne = new Set(rows.map((r) => r.memberId));
@@ -814,7 +814,7 @@ export async function getCohortDiff(
           and(
             eq(members.isActive, true),
             eq(members.homeBranchId, branchId),
-            eq(members.memberType, 'member'),
+            isNotNull(members.membershipClassCompletedAt),
           ),
         );
       absentMemberIds = new Set(
@@ -1447,7 +1447,7 @@ export async function getAttendanceByBranch(
     .where(
       and(
         eq(members.isActive, true),
-        eq(members.memberType, 'member'),
+        isNotNull(members.membershipClassCompletedAt),
         inArray(members.homeBranchId, branchIds),
       ),
     )
@@ -1546,7 +1546,7 @@ export async function getAttendanceSummary(
   if (filterIds !== null) {
     activeMembers = filterIds.length;
   } else {
-    const activeConditions = [eq(members.isActive, true), eq(members.memberType, 'member')];
+    const activeConditions = [eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt)];
     if (scopeBranchId) activeConditions.push(eq(members.homeBranchId, scopeBranchId));
     const activeRows = await db.select({ value: count() }).from(members).where(and(...activeConditions));
     activeMembers = Number(activeRows[0]?.value ?? 0);

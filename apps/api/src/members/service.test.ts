@@ -119,6 +119,7 @@ import {
   getHealthRecord,
   upsertHealthRecord,
   listUnguardedMinors,
+  setMembershipClassCompleted,
 } from './service';
 
 // ── listMembers ───────────────────────────────────────────
@@ -536,6 +537,59 @@ describe('reactivateMember', () => {
     setupSelect([{ id: memberId, isActive: true }]);
     await expect(reactivateMember(mockDb, memberId, adminAuth))
       .rejects.toThrow('Member is already active');
+  });
+});
+
+// ── setMembershipClassCompleted (Task #33 P1) ─────────────
+
+describe('setMembershipClassCompleted', () => {
+  const completedAt = new Date('2026-06-01T00:00:00.000Z');
+
+  it('stamps the timestamp for an admin', async () => {
+    setupSelect([{ id: memberId, homeBranchId: branchId }]);
+    const updated = { ...sampleMemberFull, membershipClassCompletedAt: completedAt };
+    setupUpdate([updated]);
+    const result = await setMembershipClassCompleted(mockDb, memberId, completedAt, adminAuth);
+    expect(result).toEqual(updated);
+  });
+
+  it('clears the timestamp when given null', async () => {
+    setupSelect([{ id: memberId, homeBranchId: branchId }]);
+    const updated = { ...sampleMemberFull, membershipClassCompletedAt: null };
+    setupUpdate([updated]);
+    const result = await setMembershipClassCompleted(mockDb, memberId, null, adminAuth);
+    expect(result).toEqual(updated);
+    expect(result?.membershipClassCompletedAt).toBeNull();
+  });
+
+  it('throws ForbiddenError for a plain member', async () => {
+    await expect(setMembershipClassCompleted(mockDb, memberId, completedAt, memberAuth))
+      .rejects.toThrow('Only branch-tier admins can certify membership');
+  });
+
+  it('throws NotFoundError when the member is missing', async () => {
+    setupSelect([]);
+    await expect(setMembershipClassCompleted(mockDb, memberId, completedAt, adminAuth))
+      .rejects.toThrow('Member not found');
+  });
+
+  it('narrows the lookup to the caller branch for non-admins', async () => {
+    // Simulate cross-branch grant: caller has branch:write but the lookup
+    // filters by homeBranchId === auth.branchId, so the member is not visible.
+    const branchAdmin = {
+      ...memberAuth,
+      branchId: 'other-branch',
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: 'other-branch' },
+          branchId: 'other-branch',
+        },
+      ],
+    };
+    setupSelect([]); // narrowed lookup returns nothing
+    await expect(setMembershipClassCompleted(mockDb, memberId, completedAt, branchAdmin))
+      .rejects.toThrow('Member not found');
   });
 });
 

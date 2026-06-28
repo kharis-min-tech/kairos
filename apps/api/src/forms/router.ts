@@ -9,7 +9,7 @@ import {
   listSubmissionsQuerySchema,
   updateSubmissionSchema,
   exportSubmissionsQuerySchema,
-  archiveProspectsSchema,
+  archiveAttendeesSchema,
 } from './schemas';
 import {
   submitForm,
@@ -18,8 +18,8 @@ import {
   getSubmission,
   updateSubmission,
   exportSubmissionsToCSV,
-  listDormantProspects,
-  archiveProspects,
+  listDormantAttendees,
+  archiveAttendees,
   getMyFormsCapabilities,
 } from './service';
 
@@ -88,21 +88,21 @@ formsRouter.patch(
   },
 );
 
-// ── Dormant prospect lifecycle ─────────────────────────────
+// ── Dormant attendee lifecycle ─────────────────────────────
 
-formsRouter.get('/prospects/dormant', async (c) => {
+formsRouter.get('/attendees/dormant', async (c) => {
   const auth = getAuth(c);
   const branchId = c.req.query('branchId');
-  const result = await listDormantProspects(db, auth, { branchId });
+  const result = await listDormantAttendees(db, auth, { branchId });
   return c.json(successResponse(result));
 });
 
 formsRouter.post(
-  '/prospects/archive',
-  zValidator('json', archiveProspectsSchema),
+  '/attendees/archive',
+  zValidator('json', archiveAttendeesSchema),
   async (c) => {
     const auth = getAuth(c);
-    const result = await archiveProspects(db, auth, c.req.valid('json'));
+    const result = await archiveAttendees(db, auth, c.req.valid('json'));
     return c.json(successResponse(result));
   },
 );

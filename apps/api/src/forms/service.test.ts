@@ -101,7 +101,7 @@ const memberAuth = { memberId, email: 'member@test.com', systemRole: 'member' as
  *   3. isNewBelieversDeptLeader
  * Helpers below seed the select queue with the three results.
  *
- * For prospects flows, only #1 (isAdminDeptLeader) is consulted by `canSeeProspects`.
+ * For attendees flows, only #1 (isAdminDeptLeader) is consulted by `canSeeAttendees`.
  */
 const POSITIVE = [{ id: 'dept-stub' }];
 const EMPTY: unknown[] = [];
@@ -146,7 +146,7 @@ beforeEach(() => {
 
 // ── submitForm: altar_call ────────────────────────────────
 describe('submitForm — altar_call', () => {
-  it('creates a prospect shell + enrollment when no subject and no phone match, sets converted', async () => {
+  it('creates a attendee shell + enrollment when no subject and no phone match, sets converted', async () => {
     setupSelectSequence(
       [], // phone safety-net lookup → no match
       [], // existing active enrollment lookup → none
@@ -161,9 +161,9 @@ describe('submitForm — altar_call', () => {
     const { submitForm } = await import('./service');
     const result = await submitForm(mockDb, memberAuth, 'altar_call', { payload: altarCallPayload });
 
-    // Shell minted with prospect type + temp email
+    // Shell minted with attendee type + temp email
     const shell = insertValuesArgs[0] as Record<string, unknown>;
-    expect(shell.memberType).toBe('prospect');
+    expect(shell.memberType).toBe('attendee');
     expect(String(shell.email)).toContain('@temp.kairos.local');
     expect(shell.homeBranchId).toBe(branchId);
     expect(shell.approvalStatus).toBe('approved');
@@ -299,7 +299,7 @@ describe('submitForm — store-only', () => {
   });
 
   it('forces branchId to auth.branchId, ignoring client-sent branchId', async () => {
-    // baptism now mints a prospect shell FIRST (no subject, no phone match), so
+    // baptism now mints a attendee shell FIRST (no subject, no phone match), so
     // insertValuesArgs[0] is the member shell and [1] is the submission.
     setupSelectSequence(
       [], // in-branch phone safety-net → no match
@@ -347,18 +347,18 @@ describe('submitForm — store-only', () => {
 // ── submitForm: baptism ───────────────────────────────────
 //
 // Baptism resolves a subject via the shared resolveOrMintSubject ladder with a
-// mint policy (memberType=prospect). No conversion/enrollment — status stays
+// mint policy (memberType=attendee). No conversion/enrollment — status stays
 // 'new', linkedEntityType is 'member' when a subject is resolved.
 describe('submitForm — baptism', () => {
   const baptismPayload = { firstName: 'Jane', lastName: 'Doe', phone: '07123456789' };
 
-  it('mints a prospect shell and links it when no subject and no phone match, status new', async () => {
+  it('mints a attendee shell and links it when no subject and no phone match, status new', async () => {
     setupSelectSequence(
       [], // in-branch phone safety-net → no match
       [], // global phone-owner check → none
     );
     setupInsert(
-      [{ id: subjectId }], // prospect shell
+      [{ id: subjectId }], // attendee shell
       [{ id: submissionId, status: 'new' }], // submission
     );
     const { submitForm } = await import('./service');
@@ -367,7 +367,7 @@ describe('submitForm — baptism', () => {
     // [0] minted shell, [1] submission
     expect(insertValuesArgs.length).toBe(2);
     const shell = insertValuesArgs[0] as Record<string, unknown>;
-    expect(shell.memberType).toBe('prospect');
+    expect(shell.memberType).toBe('attendee');
     expect(shell.firstName).toBe('Jane');
     expect(shell.lastName).toBe('Doe');
     expect(shell.phone).toBe('07123456789');
@@ -1251,14 +1251,14 @@ describe('exportSubmissionsToCSV', () => {
 
 // ── member search ─────────────────────────────────────────
 describe('searchMembers', () => {
-  it('returns capped active member/prospect rows in the branch', async () => {
+  it('returns capped active member/attendee rows in the branch', async () => {
     setupSelectSequence([
-      { id: subjectId, firstName: 'Jane', lastName: 'Doe', phone: '07123', memberType: 'prospect' },
+      { id: subjectId, firstName: 'Jane', lastName: 'Doe', phone: '07123', memberType: 'attendee' },
     ]);
     const { searchMembers } = await import('./service');
     const rows = await searchMembers(mockDb, memberAuth, { q: 'Jane' });
     expect(rows.length).toBe(1);
-    expect(rows[0]!.memberType).toBe('prospect');
+    expect(rows[0]!.memberType).toBe('attendee');
   });
 
   it('forbids a member searching another branch', async () => {
@@ -1270,10 +1270,10 @@ describe('searchMembers', () => {
   });
 });
 
-// ── dormant prospects ─────────────────────────────────────
-describe('listDormantProspects', () => {
-  it('returns dormant prospects with enrollment flag for an Admin-dept leader', async () => {
-    // canSeeProspects calls isAdminDeptLeader once; then the main query.
+// ── dormant attendees ─────────────────────────────────────
+describe('listDormantAttendees', () => {
+  it('returns dormant attendees with enrollment flag for an Admin-dept leader', async () => {
+    // canSeeAttendees calls isAdminDeptLeader once; then the main query.
     setupSelectSequence(
       POSITIVE, // isAdminDeptLeader → positive
       [
@@ -1287,69 +1287,69 @@ describe('listDormantProspects', () => {
         },
       ],
     );
-    const { listDormantProspects } = await import('./service');
-    const rows = await listDormantProspects(mockDb, leaderAuth, {});
+    const { listDormantAttendees } = await import('./service');
+    const rows = await listDormantAttendees(mockDb, leaderAuth, {});
     expect(rows.length).toBe(1);
     expect(rows[0]!.hasEnrollment).toBe(false);
   });
 
   it('forbids a plain member (not the Admin-dept leader)', async () => {
     setupSelectSequence(EMPTY); // isAdminDeptLeader → negative
-    const { listDormantProspects } = await import('./service');
+    const { listDormantAttendees } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
-    await expect(listDormantProspects(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(listDormantAttendees(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('forbids an Admin-dept member who is NOT the leader', async () => {
     setupSelectSequence(EMPTY); // isAdminDeptLeader returns nothing — even Admin-dept membership isn't enough
-    const { listDormantProspects } = await import('./service');
+    const { listDormantAttendees } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
-    await expect(listDormantProspects(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(listDormantAttendees(mockDb, memberAuth, {})).rejects.toBeInstanceOf(ForbiddenError);
   });
 });
 
-describe('archiveProspects', () => {
-  it('soft-deletes prospect members in the branch and returns the count', async () => {
-    // assertion select: all ids are prospects in branch
+describe('archiveAttendees', () => {
+  it('soft-deletes attendee members in the branch and returns the count', async () => {
+    // assertion select: all ids are attendees in branch
     setupSelectSequence([
-      { id: subjectId, memberType: 'prospect', homeBranchId: branchId },
+      { id: subjectId, memberType: 'attendee', homeBranchId: branchId },
     ]);
     setupUpdate([{ id: subjectId }]);
-    const { archiveProspects } = await import('./service');
-    const result = await archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] });
+    const { archiveAttendees } = await import('./service');
+    const result = await archiveAttendees(mockDb, leaderAuth, { memberIds: [subjectId] });
     expect(result.archived).toBe(1);
     const setArg = updateSetArgs[0] as Record<string, unknown>;
     expect(setArg.isActive).toBe(false);
   });
 
-  it('refuses to archive a non-prospect member', async () => {
+  it('refuses to archive a non-attendee member', async () => {
     setupSelectSequence([
       { id: subjectId, memberType: 'member', homeBranchId: branchId },
     ]);
-    const { archiveProspects } = await import('./service');
+    const { archiveAttendees } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
     await expect(
-      archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] })
+      archiveAttendees(mockDb, leaderAuth, { memberIds: [subjectId] })
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('refuses to archive a cross-branch member', async () => {
     setupSelectSequence([
-      { id: subjectId, memberType: 'prospect', homeBranchId: otherBranchId },
+      { id: subjectId, memberType: 'attendee', homeBranchId: otherBranchId },
     ]);
-    const { archiveProspects } = await import('./service');
+    const { archiveAttendees } = await import('./service');
     const { ForbiddenError } = await import('@kairos/utils');
     await expect(
-      archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] })
+      archiveAttendees(mockDb, leaderAuth, { memberIds: [subjectId] })
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('throws NotFound when a memberId does not exist', async () => {
     setupSelectSequence([]);
-    const { archiveProspects } = await import('./service');
+    const { archiveAttendees } = await import('./service');
     const { NotFoundError } = await import('@kairos/utils');
     await expect(
-      archiveProspects(mockDb, leaderAuth, { memberIds: [subjectId] })
+      archiveAttendees(mockDb, leaderAuth, { memberIds: [subjectId] })
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 });
@@ -1430,37 +1430,37 @@ describe('Phase 2 schema enforces consent', () => {
 
 // ── getMyFormsCapabilities (Phase 1) ──────────────────────
 describe('getMyFormsCapabilities', () => {
-  it('admin sees all form types + prospects', async () => {
+  it('admin sees all form types + attendees', async () => {
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, adminAuth);
     expect(result.visibleFormTypes.length).toBe(6);
-    expect(result.canSeeProspects).toBe(true);
+    expect(result.canSeeAttendees).toBe(true);
   });
-  it('Admin-dept leader sees all form types + prospects (branch-superuser)', async () => {
-    // getVisibleFormTypes runs the ladder; then canSeeProspects runs isAdminDeptLeader again.
+  it('Admin-dept leader sees all form types + attendees (branch-superuser)', async () => {
+    // getVisibleFormTypes runs the ladder; then canSeeAttendees runs isAdminDeptLeader again.
     setupSelectSequence(POSITIVE, POSITIVE);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, leaderAuth);
     expect(result.visibleFormTypes.length).toBe(6);
-    expect(result.canSeeProspects).toBe(true);
+    expect(result.canSeeAttendees).toBe(true);
   });
 
-  it('Admin-dept member (non-leader) sees FRONT_DESK forms only, no prospects', async () => {
+  it('Admin-dept member (non-leader) sees FRONT_DESK forms only, no attendees', async () => {
     // visibility ladder: isAdminDeptLeader → no, isInAdminDepartment → yes
-    // prospects ladder: isAdminDeptLeader → no
+    // attendees ladder: isAdminDeptLeader → no
     setupSelectSequence(EMPTY, POSITIVE, EMPTY);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
     expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
-    expect(result.canSeeProspects).toBe(false);
+    expect(result.canSeeAttendees).toBe(false);
   });
 
-  it('NB-dept leader sees FRONT_DESK forms only, no prospects', async () => {
+  it('NB-dept leader sees FRONT_DESK forms only, no attendees', async () => {
     setupSelectSequence(EMPTY, EMPTY, POSITIVE, EMPTY);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
     expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
-    expect(result.canSeeProspects).toBe(false);
+    expect(result.canSeeAttendees).toBe(false);
   });
 
   it('a regular member with no dept memberships sees nothing', async () => {
@@ -1468,6 +1468,6 @@ describe('getMyFormsCapabilities', () => {
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
     expect(result.visibleFormTypes).toEqual([]);
-    expect(result.canSeeProspects).toBe(false);
+    expect(result.canSeeAttendees).toBe(false);
   });
 });

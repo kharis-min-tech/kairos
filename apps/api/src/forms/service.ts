@@ -27,7 +27,7 @@ import {
   type UpdateSubmissionInput,
   type ExportSubmissionsQuery,
   type MemberSearchQuery,
-  type ArchiveProspectsInput,
+  type ArchiveAttendeesInput,
   type FirstTimeVisitorPayload,
   type BaptismPayload,
   type TestimonyPayload,
@@ -36,8 +36,8 @@ import {
 
 // ── Constants ──────────────────────────────────────────────
 
-/** Prospect shells older than this with no engagement are eligible for manual archive. */
-export const DORMANT_PROSPECT_DAYS = 30;
+/** Attendee shells older than this with no engagement are eligible for manual archive. */
+export const DORMANT_ATTENDEE_DAYS = 30;
 
 const MEMBER_SEARCH_LIMIT = 10;
 
@@ -171,8 +171,8 @@ async function getVisibleFormTypes(
   return [];
 }
 
-/** Prospects (dormant-shell cleanup) → admin-dept leader + pastor + admin only. */
-async function canSeeProspects(
+/** Attendees (dormant-shell cleanup) → admin-dept leader + pastor + admin only. */
+async function canSeeAttendees(
   db: Database,
   auth: AuthContext,
   branchId: string,
@@ -213,7 +213,7 @@ function resolveScopedBranchId(auth: AuthContext, branchId?: string): string {
 type OnNoMatch =
   | {
       mode: 'mint';
-      memberType: 'prospect' | 'visitor' | 'child';
+      memberType: 'attendee' | 'visitor' | 'child';
       middleName?: string | null;
       dateOfBirth?: string | null;
       gender?: 'Male' | 'Female' | null;
@@ -403,14 +403,14 @@ export async function submitForm(
   }
 
   if (formType === 'altar_call') {
-    // ── altar_call: match-or-mint a prospect, then ensure enrollment ──
+    // ── altar_call: match-or-mint an attendee, then ensure enrollment ──
     const ac = payload as { firstName: string; lastName: string; phone: string };
     const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
       explicitSubjectMemberId: body.subjectMemberId,
       firstName: ac.firstName,
       lastName: ac.lastName,
       phone: ac.phone,
-      onNoMatch: { mode: 'mint', memberType: 'prospect' },
+      onNoMatch: { mode: 'mint', memberType: 'attendee' },
     });
     // mint mode always yields an id (match, or a freshly minted shell).
     const enrollmentId = await ensureEnrollment(db, subjectMemberId!, branchId);
@@ -612,7 +612,7 @@ function splitFullName(full: string): { firstName: string; lastName: string } {
   return { firstName: first.slice(0, 100), lastName: last.slice(0, 100) };
 }
 
-// ── Baptism: match an existing member, else mint a prospect shell ──
+// ── Baptism: match an existing member, else mint an attendee shell ──
 async function submitBaptism(
   db: Database,
   auth: AuthContext,
@@ -625,7 +625,7 @@ async function submitBaptism(
     firstName: payload.firstName,
     lastName: payload.lastName,
     phone: payload.phone,
-    onNoMatch: { mode: 'mint', memberType: 'prospect' },
+    onNoMatch: { mode: 'mint', memberType: 'attendee' },
   });
   return insertFormSubmission(db, auth, body, {
     formType: 'baptism',
@@ -784,17 +784,17 @@ export async function searchMembers(
 export async function getMyFormsCapabilities(db: Database, auth: AuthContext) {
   const branchId = auth.branchId;
   if (!branchId && auth.systemRole !== 'admin') {
-    return { visibleFormTypes: [] as FormType[], canSeeProspects: false };
+    return { visibleFormTypes: [] as FormType[], canSeeAttendees: false };
   }
   const targetBranchId = branchId ?? '';
   // Admin without a branchId is the cross-branch superuser — visible set is all.
   const visibleFormTypes = auth.systemRole === 'admin'
     ? ALL_FORM_TYPES
     : await getVisibleFormTypes(db, auth, targetBranchId);
-  const canSeeProspectsResult = auth.systemRole === 'admin'
+  const canSeeAttendeesResult = auth.systemRole === 'admin'
     ? true
-    : await canSeeProspects(db, auth, targetBranchId);
-  return { visibleFormTypes, canSeeProspects: canSeeProspectsResult };
+    : await canSeeAttendees(db, auth, targetBranchId);
+  return { visibleFormTypes, canSeeAttendees: canSeeAttendeesResult };
 }
 
 // ── Submissions: list / get / update ───────────────────────
@@ -1038,16 +1038,16 @@ export async function exportSubmissionsToCSV(
   return lines.join('\n');
 }
 
-// ── Dormant prospect lifecycle ─────────────────────────────
+// ── Dormant attendee lifecycle ─────────────────────────────
 
-export async function listDormantProspects(
+export async function listDormantAttendees(
   db: Database,
   auth: AuthContext,
   query: { branchId?: string },
 ) {
   const branchId = resolveScopedBranchId(auth, query.branchId);
-  if (!(await canSeeProspects(db, auth, branchId))) {
-    throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can view prospects');
+  if (!(await canSeeAttendees(db, auth, branchId))) {
+    throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can view attendees');
   }
 
   const rows = await db
@@ -1066,9 +1066,9 @@ export async function listDormantProspects(
     .where(
       and(
         eq(members.homeBranchId, branchId),
-        eq(members.memberType, 'prospect'),
+        eq(members.memberType, 'attendee'),
         eq(members.isActive, true),
-        sql`${members.createdAt} < NOW() - INTERVAL '${sql.raw(String(DORMANT_PROSPECT_DAYS))} days'`,
+        sql`${members.createdAt} < NOW() - INTERVAL '${sql.raw(String(DORMANT_ATTENDEE_DAYS))} days'`,
       ),
     )
     .orderBy(members.createdAt);
@@ -1090,10 +1090,10 @@ export async function listDormantProspects(
   }));
 }
 
-export async function archiveProspects(
+export async function archiveAttendees(
   db: Database,
   auth: AuthContext,
-  data: ArchiveProspectsInput,
+  data: ArchiveAttendeesInput,
 ) {
   const rows = await db
     .select({
@@ -1110,12 +1110,12 @@ export async function archiveProspects(
   }
 
   for (const row of rows as Array<{ id: string; memberType: string; homeBranchId: string }>) {
-    if (row.memberType !== 'prospect') {
-      throw new ForbiddenError('Only prospect members can be archived');
+    if (row.memberType !== 'attendee') {
+      throw new ForbiddenError('Only attendee members can be archived');
     }
     enforceBranchScope(auth, row.homeBranchId);
-    if (!(await canSeeProspects(db, auth, row.homeBranchId))) {
-      throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can archive prospects');
+    if (!(await canSeeAttendees(db, auth, row.homeBranchId))) {
+      throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can archive attendees');
     }
   }
 

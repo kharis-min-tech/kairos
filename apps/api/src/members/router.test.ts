@@ -258,6 +258,66 @@ describe('POST /api/members/:id/approve', () => {
   });
 });
 
+// ── POST /api/members/:id/membership-class (Task #33 P1) ──
+
+describe('POST /api/members/:id/membership-class', () => {
+  it('certifies the class for an admin', async () => {
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId }]),
+    );
+    mockDb.update.mockReturnValueOnce(
+      chainTo([{ ...sampleMember, membershipClassCompletedAt: '2026-06-01T00:00:00.000Z' }]),
+    );
+
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ completedAt: '2026-06-01T00:00:00.000Z' }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.success).toBe(true);
+  });
+
+  it('clears the timestamp when given null', async () => {
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId }]),
+    );
+    mockDb.update.mockReturnValueOnce(
+      chainTo([{ ...sampleMember, membershipClassCompletedAt: null }]),
+    );
+
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ completedAt: null }),
+    });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 401 for a regular member', async () => {
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+      body: JSON.stringify({ completedAt: '2026-06-01T00:00:00.000Z' }),
+    });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a malformed body', async () => {
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ completedAt: 'not-a-date' }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 // ── Health Records ─────────────────────────────────────────
 
 describe('GET /api/members/:id/health-record', () => {

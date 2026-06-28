@@ -1,4 +1,4 @@
-import { count, eq, and, sql, gte } from 'drizzle-orm';
+import { count, eq, and, sql, gte, isNotNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   members,
@@ -22,7 +22,7 @@ export async function getMemberGrowth(db: Database, auth: AuthContext) {
 
   const conditions = [
     gte(members.createdAt, sql`CURRENT_DATE - INTERVAL '6 months'`),
-    eq(members.memberType, 'member'),
+    isNotNull(members.membershipClassCompletedAt),
   ];
   if (scopedBranchId) {
     conditions.push(eq(members.homeBranchId, scopedBranchId));

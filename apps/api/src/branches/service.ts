@@ -1,4 +1,4 @@
-import { eq, and, count, sql } from 'drizzle-orm';
+import { eq, and, count, sql, isNotNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   branches,
@@ -178,7 +178,7 @@ export async function deleteBranch(db: Database, branchId: string, auth: AuthCon
       and(
         eq(members.homeBranchId, branchId),
         eq(members.isActive, true),
-        eq(members.memberType, 'member'),
+        isNotNull(members.membershipClassCompletedAt),
       ),
     );
 

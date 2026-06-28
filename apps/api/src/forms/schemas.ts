@@ -273,8 +273,8 @@ export const exportSubmissionsQuerySchema = z.object({
   to: z.string().optional(),
 });
 
-// ── Dormant prospect archive ───────────────────────────────
-export const archiveProspectsSchema = z.object({
+// ── Dormant attendee archive ───────────────────────────────
+export const archiveAttendeesSchema = z.object({
   memberIds: z.array(z.string().uuid()).min(1).max(500),
 });
 
@@ -283,4 +283,4 @@ export type ListSubmissionsQuery = z.infer<typeof listSubmissionsQuerySchema>;
 export type UpdateSubmissionInput = z.infer<typeof updateSubmissionSchema>;
 export type ExportSubmissionsQuery = z.infer<typeof exportSubmissionsQuerySchema>;
 export type MemberSearchQuery = z.infer<typeof memberSearchQuerySchema>;
-export type ArchiveProspectsInput = z.infer<typeof archiveProspectsSchema>;
+export type ArchiveAttendeesInput = z.infer<typeof archiveAttendeesSchema>;

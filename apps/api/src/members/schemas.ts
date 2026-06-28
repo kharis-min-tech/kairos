@@ -27,6 +27,13 @@ export const approveMemberSchema = z.object({
   approved: z.boolean(),
 });
 
+// Task #33 P1: set or clear the membership-class completion timestamp.
+// `completedAt: null` clears it (admin un-marks a previously-marked member).
+// Accepts an ISO-8601 instant; the date the class was completed.
+export const setMembershipClassSchema = z.object({
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+});
+
 export const assignRoleSchema = z.object({
   roleId: z.string().uuid('Invalid role ID'),
   branchId: z.string().uuid('Invalid branch ID'),

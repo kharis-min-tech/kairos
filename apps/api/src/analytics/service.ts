@@ -1,4 +1,4 @@
-import { count, eq, and, sql, gte, inArray } from 'drizzle-orm';
+import { count, eq, and, sql, gte, inArray, isNotNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   branches,
@@ -23,7 +23,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     db
       .select({ value: count() })
       .from(members)
-      .where(and(eq(members.isActive, true), eq(members.memberType, 'member'))),
+      .where(and(eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt))),
     db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
   ]);
 
@@ -34,7 +34,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
       count: count(),
     })
     .from(members)
-    .where(and(eq(members.isActive, true), eq(members.memberType, 'member')))
+    .where(and(eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt)))
     .groupBy(members.approvalStatus);
 
   // Fellowships by type
@@ -74,7 +74,7 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
         and(
           eq(members.homeBranchId, branchId),
           eq(members.isActive, true),
-          eq(members.memberType, 'member'),
+          isNotNull(members.membershipClassCompletedAt),
         ),
       ),
     db
@@ -102,7 +102,7 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
         eq(members.homeBranchId, branchId),
         eq(members.approvalStatus, 'pending'),
         eq(members.isActive, true),
-        eq(members.memberType, 'member'),
+        isNotNull(members.membershipClassCompletedAt),
       ),
     );
 

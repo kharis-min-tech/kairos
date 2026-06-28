@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, count, sql, inArray, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, inArray, isNotNull, type SQL } from 'drizzle-orm';
 import { authHasAnyCapability } from '../lib/grants';
 import { authHasCapability } from '../lib/grants';
 import type { Database } from '@kairos/database';
@@ -367,7 +367,7 @@ export async function listPrograms(
             and(
               inArray(members.homeBranchId, branchIds),
               eq(members.isActive, true),
-              eq(members.memberType, 'member')
+              isNotNull(members.membershipClassCompletedAt)
             )
           )
           .groupBy(members.homeBranchId);
@@ -380,7 +380,7 @@ export async function listPrograms(
           const [totalAllBranches] = await db
             .select({ count: count() })
             .from(members)
-            .where(and(eq(members.isActive, true), eq(members.memberType, 'member')));
+            .where(and(eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt)));
           
           totalMembersAllBranches = totalAllBranches?.count || 0;
         }

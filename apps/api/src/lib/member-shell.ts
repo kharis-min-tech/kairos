@@ -12,16 +12,16 @@ export interface MemberShellInput {
   middleName?: string | null;
   dateOfBirth?: string | null;
   gender?: 'Male' | 'Female' | null;
-  memberType: 'prospect' | 'visitor' | 'child';
+  memberType: 'attendee' | 'visitor' | 'child';
   guardianMemberId?: string | null;
 }
 
 /**
  * Mint a member shell (temp email + temp password), returning its id.
- * Shared by the forms module (altar-call prospect, first-time-visitor /
+ * Shared by the forms module (altar-call attendee, first-time-visitor /
  * child shells) and the attendance module (first-time visitors at a service).
  *
- * `memberType` lets the caller mint a prospect, visitor, or child;
+ * `memberType` lets the caller mint an attendee, visitor, or child;
  * `guardianMemberId` links a child shell to its guardian. randomUUID guarantees
  * a unique synthetic email even when several shells are minted in the same tick
  * (where Date.now() alone would collide on the global-unique members.email).
