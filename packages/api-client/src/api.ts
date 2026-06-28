@@ -72,10 +72,10 @@ import type {
   ListFormSubmissionsParams,
   UpdateFormSubmissionRequest,
   ExportFormSubmissionsParams,
-  DormantProspect,
-  ListDormantProspectsParams,
-  ArchiveProspectsRequest,
-  ArchiveProspectsResult,
+  DormantAttendee,
+  ListDormantAttendeesParams,
+  ArchiveAttendeesRequest,
+  ArchiveAttendeesResult,
   FormsCapabilities,
   // Me / Leadership
   MeLeadershipResponse,
@@ -262,6 +262,11 @@ export function createApiClient(
         client.getBlob('/api/members/export'),
       reactivate: (id: string) =>
         client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/reactivate`, {}),
+      setMembershipClass: (id: string, completedAt: string | null) =>
+        client.post<ApiResponse<Member>>(
+          `/api/members/${encodeURIComponent(id)}/membership-class`,
+          { completedAt },
+        ),
       stats: (id: string) =>
         client.get<ApiResponse<MemberDashboardStats>>(`/api/members/${encodeURIComponent(id)}/stats`),
       me: () =>
@@ -1054,15 +1059,15 @@ export function createApiClient(
         },
       },
 
-      prospects: {
-        dormant: (params?: ListDormantProspectsParams) => {
+      attendees: {
+        dormant: (params?: ListDormantAttendeesParams) => {
           const qs = new URLSearchParams();
           if (params?.branchId) qs.set('branchId', params.branchId);
           const q = qs.toString();
-          return client.get<ApiResponse<DormantProspect[]>>(`/api/forms/prospects/dormant${q ? `?${q}` : ''}`);
+          return client.get<ApiResponse<DormantAttendee[]>>(`/api/forms/attendees/dormant${q ? `?${q}` : ''}`);
         },
-        archive: (data: ArchiveProspectsRequest) =>
-          client.post<ApiResponse<ArchiveProspectsResult>>('/api/forms/prospects/archive', data),
+        archive: (data: ArchiveAttendeesRequest) =>
+          client.post<ApiResponse<ArchiveAttendeesResult>>('/api/forms/attendees/archive', data),
       },
     },
 
