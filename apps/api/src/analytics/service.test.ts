@@ -54,16 +54,25 @@ beforeEach(() => {
 
 describe('getAdminStats', () => {
   it('returns church-wide stats for admin', async () => {
+    // Phase 2 follow-up: loadMemberBreakdown fires 5 selects (confirmed,
+    // returners, visitors, children, total) between branchCount and the
+    // remaining Promise.all members.
     setupSelectSequence(
-      [{ value: 5 }],    // branches count
-      [{ value: 100 }],  // members count
-      [{ value: 12 }],   // fellowships count
-      [{ status: 'approved', count: 85 }, { status: 'pending', count: 15 }], // approval stats
-      [{ type: 'K-Groups', count: 6 }, { type: 'Kharis Express', count: 4 }], // fellowship types
+      [{ value: 5 }],     // branches count
+      [{ value: 100 }],   // breakdown.confirmedRow (members)
+      [{ value: 20 }],    // breakdown.returnersRow
+      [{ value: 12 }],    // breakdown.visitorsRow
+      [{ value: 3 }],     // breakdown.childrenRow
+      [{ value: 135 }],   // breakdown.totalRow
+      [{ value: 12 }],    // fellowships count
+      [{ status: 'approved', count: 85 }, { status: 'pending', count: 15 }],
+      [{ type: 'K-Groups', count: 6 }, { type: 'Kharis Express', count: 4 }],
     );
 
     const result = await getAdminStats(mockDb, adminAuth);
     expect(result.totalBranches).toBe(5);
+    expect(result.totalRoll).toBe(135);
+    expect(result.memberBreakdown).toEqual({ members: 100, returners: 20, visitors: 12, children: 3 });
     expect(result.totalMembers).toBe(100);
     expect(result.totalFellowships).toBe(12);
     expect(result.membersByApproval).toHaveLength(2);
@@ -80,13 +89,19 @@ describe('getAdminStats', () => {
 describe('getBranchStats', () => {
   it('returns branch stats', async () => {
     setupSelectSequence(
-      [{ value: 25 }],   // members
+      [{ value: 25 }],   // breakdown.confirmedRow (members)
+      [{ value: 7 }],    // breakdown.returnersRow
+      [{ value: 4 }],    // breakdown.visitorsRow
+      [{ value: 1 }],    // breakdown.childrenRow
+      [{ value: 37 }],   // breakdown.totalRow
       [{ value: 3 }],    // fellowships
       [{ value: 8 }],    // recent meetings
       [{ value: 2 }],    // pending approvals
     );
 
     const result = await getBranchStats(mockDb, memberAuth);
+    expect(result.totalRoll).toBe(37);
+    expect(result.memberBreakdown).toEqual({ members: 25, returners: 7, visitors: 4, children: 1 });
     expect(result.totalMembers).toBe(25);
     expect(result.totalFellowships).toBe(3);
     expect(result.recentMeetings).toBe(8);
@@ -131,15 +146,21 @@ describe('getMemberStats', () => {
 describe('getFellowshipStats', () => {
   it('aggregates counts + attendance rate and classifies engagement as High', async () => {
     setupSelectSequence(
-      [{ value: 3 }],   // branchCount
-      [{ value: 150 }], // memberCount
-      [{ value: 20 }],  // fellowshipCount
-      [{ total: 100, present: 70, late: 10, absent: 15, excused: 5 }], // attendance breakdown
-      [{ value: 80 }],  // recent meetings (80 / 20 fellowships = 4/month)
+      [{ value: 3 }],     // branchCount
+      [{ value: 150 }],   // breakdown.confirmedRow (members)
+      [{ value: 30 }],    // breakdown.returnersRow
+      [{ value: 18 }],    // breakdown.visitorsRow
+      [{ value: 2 }],     // breakdown.childrenRow
+      [{ value: 200 }],   // breakdown.totalRow
+      [{ value: 20 }],    // fellowshipCount
+      [{ total: 100, present: 70, late: 10, absent: 15, excused: 5 }],
+      [{ value: 80 }],    // recent meetings
     );
 
     const result = await getFellowshipStats(mockDb, adminAuth);
     expect(result.totalBranches).toBe(3);
+    expect(result.totalRoll).toBe(200);
+    expect(result.memberBreakdown).toEqual({ members: 150, returners: 30, visitors: 18, children: 2 });
     expect(result.totalMembers).toBe(150);
     expect(result.totalFellowships).toBe(20);
     expect(result.attendanceRate).toBe(70);
@@ -151,9 +172,13 @@ describe('getFellowshipStats', () => {
     setupSelectSequence(
       [{ value: 3 }],
       [{ value: 150 }],
+      [{ value: 30 }],
+      [{ value: 18 }],
+      [{ value: 2 }],
+      [{ value: 200 }],
       [{ value: 20 }],
-      [{ total: 100, present: 40, late: 10, absent: 45, excused: 5 }], // 40% present
-      [{ value: 10 }], // 10 / 20 = 0.5 meetings/month
+      [{ total: 100, present: 40, late: 10, absent: 45, excused: 5 }],
+      [{ value: 10 }],
     );
 
     const result = await getFellowshipStats(mockDb, adminAuth);

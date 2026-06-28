@@ -425,8 +425,27 @@ export interface AssignLeadershipRequest {
 
 // ── Dashboard / Analytics ──────────────────────────────────
 
+/**
+ * Task #33 Phase 2 follow-up: the four real categories the church tracks.
+ * Sums to MemberRollBreakdown's parent totalRoll.
+ *  - members:   completed the 4-week membership class
+ *  - returners: attend regularly, no class yet (memberType='attendee')
+ *  - visitors:  occasional attenders (memberType='visitor')
+ *  - children:  under-16 (memberType='child')
+ */
+export interface MemberRollBreakdown {
+  members: number;
+  returners: number;
+  visitors: number;
+  children: number;
+}
+
 export interface AdminDashboardStats {
   totalBranches: number;
+  /** Total active people on the church roll (sum of memberBreakdown). */
+  totalRoll: number;
+  memberBreakdown: MemberRollBreakdown;
+  /** @deprecated read memberBreakdown.members. Kept for back-compat. */
   totalMembers: number;
   totalFellowships: number;
   membersByApproval: { status: string; count: number }[];
@@ -434,6 +453,10 @@ export interface AdminDashboardStats {
 }
 
 export interface BranchDashboardStats {
+  /** Total active people in this branch (sum of memberBreakdown). */
+  totalRoll: number;
+  memberBreakdown: MemberRollBreakdown;
+  /** @deprecated read memberBreakdown.members. Kept for back-compat. */
   totalMembers: number;
   totalFellowships: number;
   recentMeetings: number;
@@ -465,6 +488,10 @@ export interface MemberDashboardStats {
 
 export interface FellowshipDashboardStats {
   totalBranches: number;
+  /** Total active people in scope (sum of memberBreakdown). */
+  totalRoll: number;
+  memberBreakdown: MemberRollBreakdown;
+  /** @deprecated read memberBreakdown.members. Kept for back-compat. */
   totalMembers: number;
   totalFellowships: number;
   attendanceRate: number;

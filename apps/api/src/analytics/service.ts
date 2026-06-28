@@ -11,6 +11,47 @@ import {
 import type { AuthContext } from '@kairos/types';
 import { ForbiddenError } from '@kairos/utils';
 
+/**
+ * Task #33 Phase 2 follow-up: split the member roll into the four real
+ * categories the church uses. Members are those who completed the class.
+ * Returners attend regularly without formal class. Visitors are occasional.
+ * Children are under-16 (separate cohort because of safeguarding rules).
+ *
+ * The four counts always sum to the total roll (members + returners +
+ * visitors + children = totalRoll). Callers display total prominently and
+ * break the sub-counts down beneath.
+ */
+async function loadMemberBreakdown(
+  db: Database,
+  branchFilter: import('drizzle-orm').SQL | undefined,
+): Promise<{
+  total: number;
+  members: number;
+  returners: number;
+  visitors: number;
+  children: number;
+}> {
+  const baseConds = branchFilter
+    ? and(eq(members.isActive, true), branchFilter)
+    : eq(members.isActive, true);
+
+  const [confirmedRow, returnersRow, visitorsRow, childrenRow, totalRow] = await Promise.all([
+    db.select({ value: count() }).from(members).where(and(baseConds, isNotNull(members.membershipClassCompletedAt))),
+    db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'attendee'))),
+    db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'visitor'))),
+    db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'child'))),
+    db.select({ value: count() }).from(members).where(baseConds),
+  ]);
+
+  return {
+    total: totalRow[0]!.value,
+    members: confirmedRow[0]!.value,
+    returners: returnersRow[0]!.value,
+    visitors: visitorsRow[0]!.value,
+    children: childrenRow[0]!.value,
+  };
+}
+
 // ── Admin Stats (church-wide) ──────────────────────────────
 
 export async function getAdminStats(db: Database, auth: AuthContext) {
@@ -18,16 +59,15 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     throw new ForbiddenError('Only admins can access church-wide stats');
   }
 
-  const [[branchCount], [memberCount], [fellowshipCount]] = await Promise.all([
+  const [[branchCount], breakdown, [fellowshipCount]] = await Promise.all([
     db.select({ value: count() }).from(branches).where(eq(branches.isActive, true)),
-    db
-      .select({ value: count() })
-      .from(members)
-      .where(and(eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt))),
+    loadMemberBreakdown(db, undefined),
     db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
   ]);
 
-  // Members by approval status
+  // Members by approval status — kept as confirmed Members only because the
+  // tile is "pending approvals" for the formal Member roll. Attendee/visitor
+  // shells live under their own admin surfaces.
   const approvalStats = await db
     .select({
       status: members.approvalStatus,
@@ -49,7 +89,19 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
 
   return {
     totalBranches: branchCount!.value,
-    totalMembers: memberCount!.value,
+    // Headline number: everyone active on the books. The old totalMembers
+    // (confirmed-only) survives as memberBreakdown.members.
+    totalRoll: breakdown.total,
+    memberBreakdown: {
+      members: breakdown.members,
+      returners: breakdown.returners,
+      visitors: breakdown.visitors,
+      children: breakdown.children,
+    },
+    // Back-compat: keep totalMembers populated with the confirmed count so
+    // older UI consumers don't silently swap denominators. New consumers
+    // should read totalRoll + memberBreakdown.
+    totalMembers: breakdown.members,
     totalFellowships: fellowshipCount!.value,
     membersByApproval: approvalStats,
     fellowshipsByType,
@@ -66,17 +118,8 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
   const branchId =
     auth.scope?.kind === 'branch' ? auth.scope.id : auth.branchId;
 
-  const [[memberCount], [fellowshipCount], [recentMeetingCount]] = await Promise.all([
-    db
-      .select({ value: count() })
-      .from(members)
-      .where(
-        and(
-          eq(members.homeBranchId, branchId),
-          eq(members.isActive, true),
-          isNotNull(members.membershipClassCompletedAt),
-        ),
-      ),
+  const [breakdown, [fellowshipCount], [recentMeetingCount]] = await Promise.all([
+    loadMemberBreakdown(db, eq(members.homeBranchId, branchId)),
     db
       .select({ value: count() })
       .from(fellowships)
@@ -93,7 +136,8 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       ),
   ]);
 
-  // Pending approvals for this branch
+  // Pending approvals for this branch — restricted to confirmed Members
+  // because attendee/visitor shells use a different approval surface.
   const [pendingCount] = await db
     .select({ value: count() })
     .from(members)
@@ -102,7 +146,6 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
         eq(members.homeBranchId, branchId),
         eq(members.approvalStatus, 'pending'),
         eq(members.isActive, true),
-        isNotNull(members.membershipClassCompletedAt),
       ),
     );
 
@@ -129,7 +172,15 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
     .orderBy(sql`DATE_TRUNC('week', ${fellowshipMeetings.meetingDate})`);
 
   return {
-    totalMembers: memberCount!.value,
+    totalRoll: breakdown.total,
+    memberBreakdown: {
+      members: breakdown.members,
+      returners: breakdown.returners,
+      visitors: breakdown.visitors,
+      children: breakdown.children,
+    },
+    // Back-compat: see getAdminStats note above.
+    totalMembers: breakdown.members,
     totalFellowships: fellowshipCount!.value,
     recentMeetings: recentMeetingCount!.value,
     pendingApprovals: pendingCount!.value,
@@ -153,14 +204,12 @@ export async function getFellowshipStats(db: Database, auth: AuthContext) {
         ? undefined
         : auth.branchId;
 
-  // Count active branches, members, fellowships
-  const [[branchCount], [memberCount], [fellowshipCount]] = await Promise.all([
+  // Count active branches, members (with breakdown), fellowships
+  const [[branchCount], breakdown, [fellowshipCount]] = await Promise.all([
     branchId
       ? db.select({ value: count() }).from(branches).where(and(eq(branches.id, branchId), eq(branches.isActive, true)))
       : db.select({ value: count() }).from(branches).where(eq(branches.isActive, true)),
-    branchId
-      ? db.select({ value: count() }).from(members).where(and(eq(members.homeBranchId, branchId), eq(members.isActive, true)))
-      : db.select({ value: count() }).from(members).where(eq(members.isActive, true)),
+    loadMemberBreakdown(db, branchId ? eq(members.homeBranchId, branchId) : undefined),
     branchId
       ? db.select({ value: count() }).from(fellowships).where(and(eq(fellowships.branchId, branchId), eq(fellowships.isActive, true)))
       : db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
@@ -223,7 +272,15 @@ export async function getFellowshipStats(db: Database, auth: AuthContext) {
 
   return {
     totalBranches: branchCount!.value,
-    totalMembers: memberCount!.value,
+    totalRoll: breakdown.total,
+    memberBreakdown: {
+      members: breakdown.members,
+      returners: breakdown.returners,
+      visitors: breakdown.visitors,
+      children: breakdown.children,
+    },
+    // Back-compat: see getAdminStats note above.
+    totalMembers: breakdown.members,
     totalFellowships: fellowshipCount!.value,
     attendanceRate,
     attendanceBreakdown: {

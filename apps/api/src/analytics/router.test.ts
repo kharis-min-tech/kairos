@@ -57,11 +57,15 @@ describe('GET /api/analytics/admin', () => {
   });
 
   it('should return admin stats', async () => {
-    // Promise.all: branches count, members count, fellowships count
+    // Promise.all: branchCount, loadMemberBreakdown (5 selects), fellowshipCount
     mockDb.select
-      .mockReturnValueOnce(chainTo([{ value: 5 }]))
-      .mockReturnValueOnce(chainTo([{ value: 120 }]))
-      .mockReturnValueOnce(chainTo([{ value: 15 }]));
+      .mockReturnValueOnce(chainTo([{ value: 5 }]))     // branches
+      .mockReturnValueOnce(chainTo([{ value: 120 }]))   // breakdown.members
+      .mockReturnValueOnce(chainTo([{ value: 25 }]))    // breakdown.returners
+      .mockReturnValueOnce(chainTo([{ value: 10 }]))    // breakdown.visitors
+      .mockReturnValueOnce(chainTo([{ value: 3 }]))     // breakdown.children
+      .mockReturnValueOnce(chainTo([{ value: 158 }]))   // breakdown.total
+      .mockReturnValueOnce(chainTo([{ value: 15 }]));   // fellowships
 
     // approvalStats
     mockDb.select.mockReturnValueOnce(
@@ -87,6 +91,8 @@ describe('GET /api/analytics/admin', () => {
     const body = await res.json() as any;
     expect(body.success).toBe(true);
     expect(body.data.totalBranches).toBe(5);
+    expect(body.data.totalRoll).toBe(158);
+    expect(body.data.memberBreakdown).toEqual({ members: 120, returners: 25, visitors: 10, children: 3 });
     expect(body.data.totalMembers).toBe(120);
     expect(body.data.totalFellowships).toBe(15);
   });
@@ -101,11 +107,15 @@ describe('GET /api/analytics/branch', () => {
   });
 
   it('should return branch stats', async () => {
-    // Promise.all: memberCount, fellowshipCount, recentMeetingCount
+    // Promise.all: loadMemberBreakdown (5 selects), fellowshipCount, recentMeetingCount
     mockDb.select
-      .mockReturnValueOnce(chainTo([{ value: 35 }]))
-      .mockReturnValueOnce(chainTo([{ value: 4 }]))
-      .mockReturnValueOnce(chainTo([{ value: 12 }]));
+      .mockReturnValueOnce(chainTo([{ value: 35 }]))    // breakdown.members
+      .mockReturnValueOnce(chainTo([{ value: 8 }]))     // breakdown.returners
+      .mockReturnValueOnce(chainTo([{ value: 5 }]))     // breakdown.visitors
+      .mockReturnValueOnce(chainTo([{ value: 2 }]))     // breakdown.children
+      .mockReturnValueOnce(chainTo([{ value: 50 }]))    // breakdown.total
+      .mockReturnValueOnce(chainTo([{ value: 4 }]))     // fellowships
+      .mockReturnValueOnce(chainTo([{ value: 12 }]));   // recent meetings
 
     // pendingCount
     mockDb.select.mockReturnValueOnce(chainTo([{ value: 3 }]));
