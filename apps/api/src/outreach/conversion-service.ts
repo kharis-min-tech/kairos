@@ -93,7 +93,10 @@ export async function convertSoulToMember(
     // Generate email if not provided (required field in members table)
     const memberEmail = soul.email || `soul_${soul.id.substring(0, 8)}@temp.kairos.local`;
 
-    // Create member
+    // Create member. Phase 2: explicitly mints as 'attendee' (not a confirmed
+    // Member). The membership_class_completed_at stays NULL — admins promote
+    // them to confirmed Member via the "Mark Membership Class Complete"
+    // button on the profile once they've sat the 4-week class.
     const [newMember] = await tx
       .insert(members)
       .values({
@@ -109,6 +112,7 @@ export async function convertSoulToMember(
         emailVerified: false,
         approvalStatus: 'approved',
         systemRole: 'member',
+        memberType: 'attendee',
         isActive: true,
         mustChangePassword: true,
         passwordHash: tempPasswordHash,

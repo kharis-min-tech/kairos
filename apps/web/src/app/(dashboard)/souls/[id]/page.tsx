@@ -205,8 +205,8 @@ export default function SoulDetailPage() {
     if (!api || !currentSoul) return;
 
     const ok = await confirm({
-      title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to a member?`,
-      description: 'They will be added to the church directory. The soul record will be marked Converted and linked to the new member profile.',
+      title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to an attendee?`,
+      description: 'A profile is created and linked to this soul record. They start as an attendee — once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
       confirmLabel: 'Convert',
     });
     if (!ok) return;
@@ -216,8 +216,8 @@ export default function SoulDetailPage() {
       const response = await api.souls.convert(currentSoul.id);
 
       toast({
-        title: 'Soul converted successfully',
-        description: `${currentSoul.firstName} ${currentSoul.lastName} is now a member`,
+        title: 'Soul converted',
+        description: `${currentSoul.firstName} ${currentSoul.lastName} now has a profile as an attendee. Mark them as a confirmed Member once they complete the 4-week class.`,
       });
 
       // Navigate to member profile if member data is available
@@ -580,7 +580,7 @@ export default function SoulDetailPage() {
       {currentSoul.status !== 'Converted' && (
         <div className="flex justify-end">
           <Button onClick={handleConvert} disabled={loading} variant="default">
-            Convert to Member
+            Create profile
           </Button>
         </div>
       )}
