@@ -5,26 +5,34 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
+import type { Capability } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
 // RBAC Phase 5b: in-app role switcher removed. Users see all their grants
 // at once; per-page scope selectors handle the multi-scope cases.
 
+// RBAC Phase 4c+: gating uses capabilities, not the dead pastor/leader
+// activeRole values. `adminOnly` reserves the link for system admins
+// (systemRole='admin'). `capability` checks via useCapabilities, which
+// short-circuits to true for admins, so admins always see admin+pastor
+// links automatically.
 type NavItem = {
   href: string;
   label: string;
-  roles?: string[];
+  adminOnly?: boolean;
+  capability?: Capability;
   badge?: string;
 };
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Overview' },
-  { href: '/admin/branches', label: 'Branches', roles: ['admin'] },
-  { href: '/admin/regions', label: 'Regions', roles: ['admin'] },
-  { href: '/my-branch', label: 'My Branch', roles: ['pastor'] },
-  { href: '/members', label: 'Members', roles: ['admin', 'pastor'] },
+  { href: '/admin/branches', label: 'Branches', adminOnly: true },
+  { href: '/admin/regions', label: 'Regions', adminOnly: true },
+  { href: '/my-branch', label: 'My Branch', capability: 'branch:write' },
+  { href: '/members', label: 'Members', capability: 'branch:write' },
   { href: '/fellowships', label: 'Fellowships' },
   // /attendance is open to all — page-level gating (canRecord) hides write CTAs from non-writers,
   // and Admin-dept members (systemRole='member') need the entry point to reach the desk.
@@ -36,7 +44,7 @@ const navItems: NavItem[] = [
   { href: '/outreach/programs', label: 'Outreach Programs' },
   { href: '/souls', label: 'Souls Pipeline' },
   { href: '/forms', label: 'Forms' },
-  { href: '/souls-dashboard', label: 'Souls Dashboard', roles: ['admin', 'pastor', 'leader', 'member'] },
+  { href: '/souls-dashboard', label: 'Souls Dashboard' },
   { href: '/profile', label: 'Profile' },
 ];
 
@@ -161,6 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setUser,
     accessToken,
   } = useAuthStore();
+  const caps = useCapabilities();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Hydrate user profile from API after page refresh (user is not persisted in localStorage)
@@ -188,9 +197,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   }
 
-  const visibleNavItems = navItems.filter(
-    (item) => !item.roles || (activeRole && item.roles.includes(activeRole)),
-  );
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.adminOnly) return activeRole === 'admin';
+    if (item.capability) return caps.has(item.capability);
+    return true;
+  });
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
