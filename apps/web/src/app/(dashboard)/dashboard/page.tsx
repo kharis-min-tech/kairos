@@ -17,6 +17,7 @@ import type { MeLeadershipFellowship, MeLeadershipDepartment, NewBelieverHealthS
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   Tabs, TabsList, TabsTrigger, TabsContent,
+  CustomSelect,
 } from '@kairos/ui';
 import {
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -2062,6 +2063,55 @@ function MissionSummary({ role }: { role: string }) {
   );
 }
 
+// ── Branch scope picker (#9) ───────────────────────────────
+//
+// Closes the gap left by RBAC Phase 5b: users with branch-admin authority at
+// MULTIPLE branches need a way to switch which branch context they're acting
+// in. The chip renders only when there are 2+ branches to pick between;
+// single-branch admins and plain members see nothing.
+//
+// "All my branches" resets scope to null — the dashboard fork reverts to the
+// cross-branch admin tile (or the user's legacy home-branch view, depending
+// on their authority).
+function BranchScopePicker({
+  adminBranchIds,
+  allBranches,
+}: {
+  adminBranchIds: string[];
+  allBranches: Array<{ id: string; branchName: string }>;
+}) {
+  const scope = useAuthStore((s) => s.scope);
+  const setScope = useAuthStore((s) => s.setScope);
+
+  if (adminBranchIds.length < 2) return null;
+
+  const branchById = new Map(allBranches.map((b) => [b.id, b.branchName]));
+  const options = [
+    { value: '__all__', label: 'All my branches' },
+    ...adminBranchIds.map((id) => ({
+      value: id,
+      label: branchById.get(id) ?? id,
+    })),
+  ];
+  const currentValue = scope?.kind === 'branch' ? scope.id : '__all__';
+
+  return (
+    <CustomSelect
+      value={currentValue}
+      onValueChange={(value) => {
+        if (value === '__all__') {
+          setScope(null);
+        } else {
+          setScope({ kind: 'branch', id: value });
+        }
+      }}
+      options={options}
+      placeholder="Pick a branch"
+      className="h-7 px-2 text-xs"
+    />
+  );
+}
+
 // ── Page ───────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -2179,9 +2229,15 @@ export default function DashboardPage() {
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
             {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
           </h1>
-          <span className="mt-1.5 inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
-            {roleLabel}
-          </span>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
+              {roleLabel}
+            </span>
+            <BranchScopePicker
+              adminBranchIds={[...new Set([...bsaIds, ...bdaIds])]}
+              allBranches={branches ?? []}
+            />
+          </div>
         </div>
       </div>
 
