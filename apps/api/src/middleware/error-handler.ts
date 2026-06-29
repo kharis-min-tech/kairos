@@ -31,10 +31,9 @@ export function errorHandler(err: Error, c: Context) {
     }
   }
 
-  // Print the raw Error to stderr so the full stack is always visible in
-  // the API terminal regardless of how the structured logger serialises it.
-  console.error('[unhandled]', err);
-  logger.error('Unhandled error', { message: err.message, stack: err.stack });
+  // The structured logger already emits the full stack as a JSON field; no
+  // need to also raw-print, which Workers Logs would just duplicate.
+  logger.error('Unhandled error', { message: err.message, stack: err.stack, name: err.name });
 
   // In non-production environments, include the real message + a short stack
   // in the response body so devtools / toast surfaces the actual error

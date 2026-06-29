@@ -1,7 +1,13 @@
 export { AppError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError, ValidationError } from './errors';
 export { enforceBranchAccess } from './auth';
 export { successResponse, errorResponse, paginatedResponse, parsePagination } from './response';
-export { logger } from './logger';
+export {
+  logger,
+  withLoggerContext,
+  patchLoggerContext,
+  getLoggerContext,
+  type LoggerContext,
+} from './logger';
 export { hashPassword, verifyPassword, randomTokenHex } from './password';
 export {
   bindMailerEnv,

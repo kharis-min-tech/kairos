@@ -508,9 +508,10 @@ describe('bulkAdvance', () => {
       targetStage: 'session-1',
     });
     expect(result).toEqual({ advanced: 2, failed: 1 });
+    // The structured logger emits a single JSON string; just assert that
+    // the failing enrollment id surfaced somewhere in the log payload.
     expect(errSpy).toHaveBeenCalledWith(
-      'bulkAdvance: skipping enrollment',
-      expect.objectContaining({ enrollmentId: enrollment2Id }),
+      expect.stringContaining(enrollment2Id),
     );
     errSpy.mockRestore();
   });

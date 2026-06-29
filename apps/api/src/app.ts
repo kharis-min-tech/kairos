@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger as honoLogger } from 'hono/logger';
 import { errorHandler } from './middleware/error-handler';
+import { loggingMiddleware } from './middleware/logging';
 import { authRouter } from './auth/router';
 import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
@@ -23,8 +23,10 @@ import { eq } from 'drizzle-orm';
 export function createApp() {
   const app = new Hono();
 
-  // Global middleware
-  app.use('*', honoLogger());
+  // Global middleware — logging runs FIRST so request entry/exit is captured
+  // even on auth failures. It also seeds the AsyncLocalStorage context that
+  // every subsequent `logger.*` call inherits (requestId, method, path).
+  app.use('*', loggingMiddleware);
   app.use('*', cors({
     origin: (origin) => {
       if (origin && /^http:\/\/localhost:\d+$/.test(origin)) return origin;

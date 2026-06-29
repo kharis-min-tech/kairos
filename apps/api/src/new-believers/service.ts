@@ -13,7 +13,7 @@ import {
   mentorFollowups,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail } from '@kairos/utils';
+import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail, logger } from '@kairos/utils';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -505,7 +505,7 @@ export async function createEnrollmentInternal(
         mentor.email,
         `${mentor.firstName} ${mentor.lastName}`,
         studentName,
-      ).catch((err: unknown) => console.warn('[mailer] sendMentorAssignedEmail failed:', err));
+      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
     }
   }
 
@@ -639,7 +639,7 @@ export async function updateEnrollment(
         mentor.email,
         `${mentor.firstName} ${mentor.lastName}`,
         studentName,
-      ).catch((err: unknown) => console.warn('[mailer] sendMentorAssignedEmail failed:', err));
+      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
     }
   }
 
@@ -673,7 +673,7 @@ export async function bulkAdvance(
       await updateEnrollment(db, auth, enrollmentId, { stage: data.targetStage });
       advanced++;
     } catch (err) {
-      console.error('bulkAdvance: skipping enrollment', { enrollmentId, err });
+      logger.error('bulkAdvance: skipping enrollment', { enrollmentId, error: err instanceof Error ? err.message : String(err) });
       failed++;
     }
   }

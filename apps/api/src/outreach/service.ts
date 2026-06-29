@@ -156,15 +156,6 @@ export async function listPrograms(
 ) {
   const effectiveRole = auth.activeRole ?? auth.systemRole;
 
-  console.log('listPrograms - auth:', {
-    systemRole: auth.systemRole,
-    activeRole: auth.activeRole,
-    effectiveRole,
-    branchId: auth.branchId,
-    memberId: auth.memberId,
-  });
-  console.log('listPrograms - query:', query);
-  
   const conditions: SQL[] = [];
 
   // Branch isolation with exception for programs open to all branches
@@ -176,12 +167,8 @@ export async function listPrograms(
         eq(outreachPrograms.isOpenToAllBranches, true)
       )!
     );
-    console.log('listPrograms - applying branch isolation for', effectiveRole, 'branchId:', auth.branchId);
   } else if (query.branchId) {
     conditions.push(eq(outreachPrograms.branchId, query.branchId));
-    console.log('listPrograms - filtering by branchId:', query.branchId);
-  } else {
-    console.log('listPrograms - no branch filter (admin sees all)');
   }
 
   // Filters
@@ -208,8 +195,6 @@ export async function listPrograms(
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
   const offset = (query.page - 1) * query.limit;
-
-  console.log('listPrograms - total conditions:', conditions.length);
 
   const [rows, [total]] = await Promise.all([
     db
@@ -291,18 +276,6 @@ export async function listPrograms(
     // Otherwise, don't show creator name but still include role for registration logic
     return { ...row, createdByName: null, creatorRole: creator.role };
   });
-
-  console.log('listPrograms - found', rowsWithCreatorNames.length, 'programs, total:', total?.count);
-  console.log('listPrograms - programs:', rowsWithCreatorNames.map(r => ({ 
-    id: r.id, 
-    name: r.programName, 
-    isCompleted: r.isCompleted,
-    branchId: r.branchId,
-    isOpenToAllBranches: r.isOpenToAllBranches,
-    createdBy: r.createdBy,
-    createdByName: r.createdByName,
-    creatorRole: r.creatorRole
-  })));
 
   // For members, check registration status for each program
   // For leaders/pastors/admin, get participant counts

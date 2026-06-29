@@ -1,4 +1,5 @@
 import type { Context, Next } from 'hono';
+import { patchLoggerContext } from '@kairos/utils';
 import { jwtVerify } from 'jose';
 import type { AuthContext, Capability, RoleScope } from '@kairos/types';
 import { UnauthorizedError } from '@kairos/utils';
@@ -56,6 +57,15 @@ export async function authMiddleware(c: Context, next: Next) {
   auth.grants = await resolveGrants(db, auth.memberId);
 
   c.set('auth', auth);
+
+  // Patch the logger's request-scoped context with caller dimensions so every
+  // subsequent log line carries them. Modules add fellowshipId / departmentId
+  // via patchLoggerContext when they're resolved further down the chain.
+  patchLoggerContext({
+    memberId: auth.memberId,
+    activeRole: auth.activeRole ?? auth.systemRole,
+    branchId: auth.branchId,
+  });
 
   await next();
 }
