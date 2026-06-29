@@ -427,9 +427,22 @@ export async function getService(db: Database, auth: AuthContext, id: string) {
   if (!svc) throw new NotFoundError('Service');
   enforceBranchScope(auth, svc.branchId);
 
-  const [recorded] = await db
-    .select({ value: count() })
+  // Task #33 follow-up: single query yields total + per-category breakdown.
+  // Inner join to members is safe because members are soft-deleted (never
+  // hard-deleted) so every attendance row still resolves to a member row.
+  // Priority: confirmed Member (membership_class_completed_at IS NOT NULL)
+  // wins over memberType; otherwise partition by memberType so the four
+  // sub-counts sum to total.
+  const [counts] = await db
+    .select({
+      value: count(),
+      members: sql<number>`COUNT(CASE WHEN ${members.membershipClassCompletedAt} IS NOT NULL THEN 1 END)`,
+      returners: sql<number>`COUNT(CASE WHEN ${members.membershipClassCompletedAt} IS NULL AND ${members.memberType} = 'attendee' THEN 1 END)`,
+      visitors: sql<number>`COUNT(CASE WHEN ${members.membershipClassCompletedAt} IS NULL AND ${members.memberType} = 'visitor' THEN 1 END)`,
+      children: sql<number>`COUNT(CASE WHEN ${members.membershipClassCompletedAt} IS NULL AND ${members.memberType} = 'child' THEN 1 END)`,
+    })
     .from(serviceAttendance)
+    .innerJoin(members, eq(serviceAttendance.memberId, members.id))
     .where(eq(serviceAttendance.serviceId, id));
 
   const preacherName =
@@ -437,7 +450,17 @@ export async function getService(db: Database, auth: AuthContext, id: string) {
       ? `${svc.preacherFirstName} ${svc.preacherLastName}`
       : null;
 
-  return { ...svc, preacherName, recordedCount: recorded?.value ?? 0 };
+  return {
+    ...svc,
+    preacherName,
+    recordedCount: counts?.value ?? 0,
+    categoryBreakdown: {
+      members: Number(counts?.members ?? 0),
+      returners: Number(counts?.returners ?? 0),
+      visitors: Number(counts?.visitors ?? 0),
+      children: Number(counts?.children ?? 0),
+    },
+  };
 }
 
 export async function updateService(

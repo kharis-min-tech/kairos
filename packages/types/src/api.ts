@@ -849,6 +849,11 @@ export interface ServiceSummary {
 export interface ServiceWithDetail extends ServiceSummary {
   preacherName: string | null;
   recordedCount: number;
+  /**
+   * Task #33 follow-up: per-service category breakdown of who was recorded
+   * present. The four counts always sum to recordedCount.
+   */
+  categoryBreakdown: MemberRollBreakdown;
 }
 
 export interface RosterParams {
