@@ -235,7 +235,7 @@ describe('DashboardPage — stats fork', () => {
     // Chip
     expect(screen.getByText('Branch Admin')).toBeInTheDocument();
     // PastorStats-style card
-    expect(screen.getAllByText(/Branch Roll|Branch Members/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Branch Congregation|Branch Members/i).length).toBeGreaterThan(0);
   });
   it('renders FellowshipStats for fellowship-only leader', () => {
     authState.activeRole = 'leader';
@@ -385,7 +385,7 @@ describe('DashboardPage — scope-aware fork', () => {
 
     // BranchAdminStats wins over AdminStats because isBranchAdmin is true.
     expect(screen.getByText('Branch Admin')).toBeInTheDocument();
-    expect(screen.getAllByText(/Branch Roll|Branch Members/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Branch Congregation|Branch Members/i).length).toBeGreaterThan(0);
     expect(screen.getByText('Branch System Admin — Accra')).toBeInTheDocument();
   });
 });

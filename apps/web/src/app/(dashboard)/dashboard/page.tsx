@@ -130,8 +130,8 @@ function AdminStats() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Branches" value={data.totalBranches} sub="Active" accent="purple" icon={<BranchIcon />} onClick={() => setEvidenceOpen('branches')} />
         <StatCard
-          title="Total Roll"
-          value={data.totalRoll.toLocaleString()}
+          title="Total Congregation"
+          value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()}
           accent="emerald"
           icon={<MembersIcon />}
           onClick={() => setEvidenceOpen('members')}
@@ -299,7 +299,7 @@ function PastorStats() {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Roll" value={data.totalRoll.toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
+        <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
         <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
@@ -467,7 +467,7 @@ function BranchAdminStats() {
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Roll" value={data.totalRoll.toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
+        <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
         <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
@@ -1998,7 +1998,7 @@ function MissionSummary({ role }: { role: string }) {
   if (role === 'admin') {
     items = [
       { label: 'Branches', value: adminData?.totalBranches ?? '—', color: '#a78bfa' },
-      { label: 'Total Roll', value: adminData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Total Congregation', value: adminData?.totalRoll ?? '—', color: '#10b981' },
       { label: 'Members', value: adminData?.memberBreakdown?.members ?? '—', color: '#10b981' },
       { label: 'Returners', value: adminData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: adminData?.totalFellowships ?? '—', color: '#f8b537' },
@@ -2007,7 +2007,7 @@ function MissionSummary({ role }: { role: string }) {
     ];
   } else if (role === 'pastor') {
     items = [
-      { label: 'Total Roll', value: branchData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Total Congregation', value: branchData?.totalRoll ?? '—', color: '#10b981' },
       { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
       { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
@@ -2016,7 +2016,7 @@ function MissionSummary({ role }: { role: string }) {
     ];
   } else if (role === 'leader') {
     items = [
-      { label: 'Total Roll', value: branchData?.totalRoll ?? '—', color: '#10b981' },
+      { label: 'Total Congregation', value: branchData?.totalRoll ?? '—', color: '#10b981' },
       { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
       { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
       { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
