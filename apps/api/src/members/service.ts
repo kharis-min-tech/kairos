@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, count, sql, exists, isNotNull, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
@@ -9,6 +9,7 @@ import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
+import { isRealMember } from '../lib/member-predicates';
 import {
   NotFoundError,
   ForbiddenError,
@@ -152,7 +153,7 @@ export async function listMembers(
   // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
   // with membership_class_completed_at populated. Visitors / attendees / child
   // shells are surfaced via Forms, the NB pipeline, and safeguarding review.
-  conditions.push(isNotNull(members.membershipClassCompletedAt));
+  conditions.push(isRealMember());
 
   // Non-admin can only see their own branch (home or active secondary)
   if (!authHasCapability(auth, 'branch:read')) {

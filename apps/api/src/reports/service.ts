@@ -1,4 +1,4 @@
-import { count, eq, and, sql, gte, isNotNull } from 'drizzle-orm';
+import { count, eq, and, sql, gte } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   members,
@@ -7,6 +7,7 @@ import {
   fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
+import { isRealMember } from '../lib/member-predicates';
 
 function branchScope(auth: AuthContext) {
   // Phase 4: scope=branch pins reports to the scoped branch even for system
@@ -22,7 +23,7 @@ export async function getMemberGrowth(db: Database, auth: AuthContext) {
 
   const conditions = [
     gte(members.createdAt, sql`CURRENT_DATE - INTERVAL '6 months'`),
-    isNotNull(members.membershipClassCompletedAt),
+    isRealMember(),
   ];
   if (scopedBranchId) {
     conditions.push(eq(members.homeBranchId, scopedBranchId));

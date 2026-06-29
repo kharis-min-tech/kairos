@@ -1,4 +1,4 @@
-import { count, eq, and, sql, gte, inArray, isNotNull } from 'drizzle-orm';
+import { count, eq, and, sql, gte, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   branches,
@@ -10,6 +10,7 @@ import {
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { ForbiddenError } from '@kairos/utils';
+import { isRealMember } from '../lib/member-predicates';
 
 /**
  * Task #33 Phase 2 follow-up: split the member roll into the four real
@@ -36,7 +37,7 @@ async function loadMemberBreakdown(
     : eq(members.isActive, true);
 
   const [confirmedRow, returnersRow, visitorsRow, childrenRow, totalRow] = await Promise.all([
-    db.select({ value: count() }).from(members).where(and(baseConds, isNotNull(members.membershipClassCompletedAt))),
+    db.select({ value: count() }).from(members).where(and(baseConds, isRealMember())),
     db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'attendee'))),
     db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'visitor'))),
     db.select({ value: count() }).from(members).where(and(baseConds, eq(members.memberType, 'child'))),
@@ -74,7 +75,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
       count: count(),
     })
     .from(members)
-    .where(and(eq(members.isActive, true), isNotNull(members.membershipClassCompletedAt)))
+    .where(and(eq(members.isActive, true), isRealMember()))
     .groupBy(members.approvalStatus);
 
   // Fellowships by type
