@@ -304,9 +304,9 @@ export default function KairosLanding() {
 
           {/* Card cluster — 3 floating browser windows */}
           <div className="relative mx-auto max-w-5xl">
-            <div className="grid md:grid-cols-12 gap-6 md:gap-0 items-center">
+            <div className="grid md:grid-cols-3 gap-4 md:gap-2 items-start">
               {/* ── Left card: Members directory ────────────────────────── */}
-              <div className="md:col-span-4 md:translate-x-6 md:rotate-[-2deg] z-10">
+              <div className="md:translate-x-3 md:translate-y-6 md:rotate-[-2deg] z-10">
                 <PreviewWindow url="kairos.kharis.org/members">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[#1a1c1c] dark:text-white text-sm font-bold">Members</h4>
@@ -361,7 +361,7 @@ export default function KairosLanding() {
               </div>
 
               {/* ── Center card: Dashboard (prominent) ──────────────────── */}
-              <div className="md:col-span-5 md:scale-[1.06] md:z-20 relative">
+              <div className="md:scale-[1.04] md:-translate-y-2 md:z-20 relative">
                 <PreviewWindow url="kairos.kharis.org/dashboard" prominent>
                   <div className="flex items-center justify-between mb-5">
                     <div>
@@ -421,7 +421,7 @@ export default function KairosLanding() {
               </div>
 
               {/* ── Right card: Branch performance ──────────────────────── */}
-              <div className="md:col-span-4 md:-translate-x-6 md:rotate-[2deg] z-10">
+              <div className="md:-translate-x-3 md:translate-y-6 md:rotate-[2deg] z-10">
                 <PreviewWindow url="kairos.kharis.org/reports">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[#1a1c1c] dark:text-white text-sm font-bold">Branch Performance</h4>
