@@ -807,6 +807,20 @@ export interface ArchiveAttendeesResult {
   archived: number;
 }
 
+/** #4 Phase A: dormant visitor — no enrollment field because visitors don't
+ *  enter the New Believers pipeline by default. */
+export interface DormantVisitor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  createdAt: string;
+}
+
+export interface ListDormantVisitorsParams {
+  branchId?: string;
+}
+
 // ── Attendance (services) ──────────────────────────────────
 
 export interface CreateServiceRequest {

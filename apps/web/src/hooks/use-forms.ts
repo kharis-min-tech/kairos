@@ -11,6 +11,7 @@ import type {
   ExportFormSubmissionsParams,
   ListDormantAttendeesParams,
   ArchiveAttendeesRequest,
+  ListDormantVisitorsParams,
 } from '@kairos/types';
 
 // ── Caller capabilities (drives /forms landing + filter gating) ──
@@ -140,5 +141,32 @@ export function useArchiveAttendees() {
       return res.data!;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['forms', 'attendees'] }),
+  });
+}
+
+// ── Dormant visitors (#4 Phase A) ──────────────────────────
+
+export function useDormantVisitors(
+  params?: ListDormantVisitorsParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['forms', 'visitors', 'dormant', params],
+    queryFn: async () => {
+      const res = await api.forms.visitors.dormant(params);
+      return res.data!;
+    },
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useArchiveVisitors() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: ArchiveAttendeesRequest) => {
+      const res = await api.forms.visitors.archive(data);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['forms', 'visitors'] }),
   });
 }

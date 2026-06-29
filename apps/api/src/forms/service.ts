@@ -39,6 +39,12 @@ import {
 /** Attendee shells older than this with no engagement are eligible for manual archive. */
 export const DORMANT_ATTENDEE_DAYS = 30;
 
+/** Visitor shells older than this with no engagement are eligible for manual archive.
+ *  Same threshold as attendees because both cohorts are cleaned up by the same
+ *  Admin-dept surface; if the visitor stuck around they'd have been promoted to
+ *  attendee by the Phase D cron already. */
+export const DORMANT_VISITOR_DAYS = 30;
+
 const MEMBER_SEARCH_LIMIT = 10;
 
 // ── Helpers ────────────────────────────────────────────────
@@ -1088,6 +1094,94 @@ export async function listDormantAttendees(
     createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     hasEnrollment: Number(r.enrollmentCount ?? 0) > 0,
   }));
+}
+
+// ── Dormant visitor lifecycle ──────────────────────────────
+//
+// Mirrors the attendee dormant flow but keyed on memberType='visitor'.
+// Visitors that engage (attend services regularly) are promoted to attendee
+// by the Phase D cron; what's left in this list is stale first-time-visitor
+// shells with no follow-up engagement.
+
+export async function listDormantVisitors(
+  db: Database,
+  auth: AuthContext,
+  query: { branchId?: string },
+) {
+  const branchId = resolveScopedBranchId(auth, query.branchId);
+  if (!(await canSeeAttendees(db, auth, branchId))) {
+    throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can view visitors');
+  }
+
+  const rows = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      phone: members.phone,
+      createdAt: members.createdAt,
+    })
+    .from(members)
+    .where(
+      and(
+        eq(members.homeBranchId, branchId),
+        eq(members.memberType, 'visitor'),
+        eq(members.isActive, true),
+        sql`${members.createdAt} < NOW() - INTERVAL '${sql.raw(String(DORMANT_VISITOR_DAYS))} days'`,
+      ),
+    )
+    .orderBy(members.createdAt);
+
+  return (rows as Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    createdAt: Date | string;
+  }>).map((r) => ({
+    id: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    phone: r.phone,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+  }));
+}
+
+export async function archiveVisitors(
+  db: Database,
+  auth: AuthContext,
+  data: ArchiveAttendeesInput,
+) {
+  const rows = await db
+    .select({
+      id: members.id,
+      memberType: members.memberType,
+      homeBranchId: members.homeBranchId,
+    })
+    .from(members)
+    .where(inArray(members.id, data.memberIds));
+
+  const found = new Set((rows as Array<{ id: string }>).map((r) => r.id));
+  for (const id of data.memberIds) {
+    if (!found.has(id)) throw new NotFoundError('Member');
+  }
+
+  for (const row of rows as Array<{ id: string; memberType: string; homeBranchId: string }>) {
+    if (row.memberType !== 'visitor') {
+      throw new ForbiddenError('Only visitor members can be archived through this endpoint');
+    }
+    enforceBranchScope(auth, row.homeBranchId);
+    if (!(await canSeeAttendees(db, auth, row.homeBranchId))) {
+      throw new ForbiddenError('Only the Admin-dept leader, pastor, or admin can archive visitors');
+    }
+  }
+
+  await db
+    .update(members)
+    .set({ isActive: false, updatedAt: sql`NOW()` })
+    .where(inArray(members.id, data.memberIds));
+
+  return { archived: data.memberIds.length };
 }
 
 export async function archiveAttendees(

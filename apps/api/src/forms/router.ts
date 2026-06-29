@@ -20,6 +20,8 @@ import {
   exportSubmissionsToCSV,
   listDormantAttendees,
   archiveAttendees,
+  listDormantVisitors,
+  archiveVisitors,
   getMyFormsCapabilities,
 } from './service';
 
@@ -103,6 +105,25 @@ formsRouter.post(
   async (c) => {
     const auth = getAuth(c);
     const result = await archiveAttendees(db, auth, c.req.valid('json'));
+    return c.json(successResponse(result));
+  },
+);
+
+// ── Dormant visitor lifecycle (#4 Phase A) ─────────────────
+
+formsRouter.get('/visitors/dormant', async (c) => {
+  const auth = getAuth(c);
+  const branchId = c.req.query('branchId');
+  const result = await listDormantVisitors(db, auth, { branchId });
+  return c.json(successResponse(result));
+});
+
+formsRouter.post(
+  '/visitors/archive',
+  zValidator('json', archiveAttendeesSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await archiveVisitors(db, auth, c.req.valid('json'));
     return c.json(successResponse(result));
   },
 );

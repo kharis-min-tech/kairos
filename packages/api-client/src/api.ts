@@ -76,6 +76,8 @@ import type {
   ListDormantAttendeesParams,
   ArchiveAttendeesRequest,
   ArchiveAttendeesResult,
+  DormantVisitor,
+  ListDormantVisitorsParams,
   FormsCapabilities,
   // Me / Leadership
   MeLeadershipResponse,
@@ -1068,6 +1070,18 @@ export function createApiClient(
         },
         archive: (data: ArchiveAttendeesRequest) =>
           client.post<ApiResponse<ArchiveAttendeesResult>>('/api/forms/attendees/archive', data),
+      },
+
+      visitors: {
+        dormant: (params?: ListDormantVisitorsParams) => {
+          const qs = new URLSearchParams();
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          const q = qs.toString();
+          return client.get<ApiResponse<DormantVisitor[]>>(`/api/forms/visitors/dormant${q ? `?${q}` : ''}`);
+        },
+        // Archive payload + result shapes mirror attendees one-to-one.
+        archive: (data: ArchiveAttendeesRequest) =>
+          client.post<ApiResponse<ArchiveAttendeesResult>>('/api/forms/visitors/archive', data),
       },
     },
 
