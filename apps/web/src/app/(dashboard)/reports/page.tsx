@@ -636,7 +636,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-5 pb-5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#f8b537]">Monthly Highlight</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9a6b04] dark:text-[#f8b537]">Monthly Highlight</p>
                 <p className="mt-2 text-lg font-bold text-foreground">
                   {attendanceTrending === true ? 'Attendance trending up' : attendanceTrending === false ? 'Attendance needs attention' : 'Attendance overview'}
                 </p>
@@ -646,7 +646,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     : 'Start recording attendance to see trends here.'}
                 </p>
                 <Link
-                  href="/fellowships"
+                  href="/attendance/reports"
                   className="mt-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(93,63,211,0.2)] hover:opacity-90 transition-opacity"
                 >
                   View breakdown

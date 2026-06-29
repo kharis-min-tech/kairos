@@ -93,8 +93,11 @@ Tabs.displayName = 'Tabs';
 
 // ── TabsList ──────────────────────────────────────────────
 //
-// Matches the prior inline implementations: inline-flex pill row, ghost-border
-// container, compact padding. role="tablist" + accepts aria-label/labelledby.
+// Container styling matches the established Kairos selector pattern
+// (PipelineToolbar sort selector, etc.): muted gray surface in light mode,
+// translucent white surface in dark. No border — the surface tier shift
+// alone delineates the control per DESIGN.md ("no 1px solid borders for
+// sectioning"). role="tablist" + accepts aria-label/labelledby.
 
 const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
@@ -102,7 +105,7 @@ const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
       ref={ref}
       role="tablist"
       className={cn(
-        'inline-flex rounded-lg border border-border bg-card p-1',
+        'inline-flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]',
         className,
       )}
       {...props}
@@ -113,9 +116,12 @@ TabsList.displayName = 'TabsList';
 
 // ── TabsTrigger ───────────────────────────────────────────
 //
-// Active state uses the Modern Sanctuary primary (#5D3FD3). Inactive triggers
-// use muted-foreground with a foreground hover, matching DualLeaderTabs /
-// PersonaTabs prior to this primitive landing.
+// Active state: in light mode the trigger lifts to a white "card" with a
+// soft shadow (matches PipelineToolbar / SortSelector pattern); in dark mode
+// it fills with Modern Sanctuary primary (#5D3FD3). This dual treatment is
+// the established Kairos selector pattern — dark surfaces use the brand
+// color, light surfaces use surface elevation. Inactive triggers stay muted
+// in both modes.
 
 export interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   value: string;
@@ -215,9 +221,9 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className={cn(
-          'rounded-md px-4 py-1.5 text-xs font-semibold transition-colors',
+          'rounded-lg px-4 py-1.5 text-xs font-semibold transition-all duration-150',
           isActive
-            ? 'bg-[#5D3FD3] text-white'
+            ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
             : 'text-muted-foreground hover:text-foreground',
           className,
         )}
