@@ -51,12 +51,17 @@ export default function MembersPage() {
   const isPastor = caps.has('branch:write');
   const isMemberView = activeRole === 'member';
   // Mirrors the dashboard-layout nav gating: members + leaders don't surface
-  // the Members tab. Block direct URL access too so behaviour matches the nav.
+  // the Members tab. Only admins and branch pastors (branch:write) see it.
+  //
+  // Note: caps.has(*) short-circuits to true for system admins, so checking
+  // fellowship:write/department:write alone would incorrectly catch admins.
+  // Gate on the positive grant (isAdmin || isPastor) instead.
+  const canSeeMembers = isAdmin || isPastor;
   useEffect(() => {
-    if (user !== null && (isMemberView || (caps.has('fellowship:write') || caps.has('department:write')))) {
+    if (user !== null && !canSeeMembers) {
       router.replace('/dashboard');
     }
-  }, [user, isMemberView, activeRole, router]);
+  }, [user, canSeeMembers, router]);
   // Safeguarding review is visible to leaders too (Safeguarding Leads are leaders);
   // the page itself enforces real access via the API (403 for unauthorized leaders).
   const canSeeSafeguarding = isAdmin || isPastor || (caps.has('fellowship:write') || caps.has('department:write'));

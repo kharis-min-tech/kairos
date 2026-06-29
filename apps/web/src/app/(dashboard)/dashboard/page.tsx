@@ -2098,14 +2098,6 @@ export default function DashboardPage() {
   const hasFellowshipLead = allLeadFellowships.length > 0;
   const hasDepartmentLead = allLeadDepartments.length > 0;
 
-  const isLeadership =
-    activeRole === 'admin' ||
-    caps.has('branch:write') ||
-    (caps.has('fellowship:write') || caps.has('department:write')) ||
-    isBranchAdmin ||
-    hasFellowshipLead ||
-    hasDepartmentLead;
-
   // Resolve a branch name for the role-label suffix. With scope=branch, pull
   // the scoped branch directly; without scope, fall back to the legacy
   // homeBranchId path (only valid when home branch is one of the BSA/BDA
@@ -2191,12 +2183,6 @@ export default function DashboardPage() {
             {roleLabel}
           </span>
         </div>
-        {isLeadership && (
-          <Link href="/members" className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3FD3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#451ebb] transition-colors">
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            New Entry
-          </Link>
-        )}
       </div>
 
       {/* Stats — forked by branch-admin authority, then fellowship/department
