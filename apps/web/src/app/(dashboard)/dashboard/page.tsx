@@ -6,6 +6,8 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
 import { useMembers } from '@/hooks/use-members';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMemberGrowth, useAttendanceTrend } from '@/hooks/use-reports';
@@ -891,11 +893,21 @@ function PendingApprovalsPanel({ branchId }: { branchId?: string }) {
 
 // ── Quick actions ──────────────────────────────────────────
 
-function exportMembersCSV() {
-  const link = document.createElement('a');
-  link.href = '/api/members/export';
-  link.download = `members-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
+// Goes through the api-client (which attaches the Bearer token) rather than
+// a plain <a href> click — synthetic navigations don't carry Authorization
+// headers, so the naive shortcut always 401s.
+async function exportMembersCSV() {
+  try {
+    const blob = await api.members.exportCsv();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `members-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'Failed to export members CSV.');
+  }
 }
 
 type QAItem = { label: string; icon: React.ReactNode; href?: string; onClick?: () => void };
