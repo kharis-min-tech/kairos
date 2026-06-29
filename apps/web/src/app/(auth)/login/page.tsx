@@ -84,7 +84,7 @@ export default function LoginPage() {
             <Input
               id="email"
               type="email"
-              placeholder="name@kharischurch.org"
+              placeholder="your email"
               className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
               {...register('email')}
             />
