@@ -1,10 +1,9 @@
-import { and, eq, gte, lte, or, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { souls, followUps, members, outreachPrograms } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { authHasAnyCapability } from '../lib/grants';
-import { authHasCapability } from '../lib/grants';
+import { buildSoulsScopeFilter } from './souls-service';
 
 /**
  * Combine branch isolation filter with optional date range filter.
@@ -133,7 +132,7 @@ export async function getDashboardOverview(
   auth: AuthContext,
   filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
-  const branchFilter = getBranchFilter(auth);
+  const branchFilter = await buildSoulsScopeFilter(db, auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
@@ -212,7 +211,7 @@ export async function getSoulsWithRAGStatus(
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
-  const branchFilter = getBranchFilter(auth);
+  const branchFilter = await buildSoulsScopeFilter(db, auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
@@ -328,7 +327,7 @@ export async function getFollowUpsWithRAGStatus(
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
-  const branchFilter = getBranchFilter(auth);
+  const branchFilter = await buildSoulsScopeFilter(db, auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
@@ -401,7 +400,7 @@ export async function getFollowUpRAGOverview(
   auth: AuthContext,
   filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
-  const branchFilter = getBranchFilter(auth);
+  const branchFilter = await buildSoulsScopeFilter(db, auth);
   const dateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(followUps.followUpDate, filters.dateFrom), lte(followUps.followUpDate, filters.dateTo))
@@ -443,7 +442,7 @@ export async function getDashboardAnalytics(
   auth: AuthContext,
   filters?: { dateFrom?: Date; dateTo?: Date; programId?: string },
 ) {
-  const branchFilter = getBranchFilter(auth);
+  const branchFilter = await buildSoulsScopeFilter(db, auth);
   const soulsDateFilter =
     filters?.dateFrom && filters?.dateTo
       ? and(gte(souls.createdAt, filters.dateFrom), lte(souls.createdAt, filters.dateTo))
@@ -669,30 +668,3 @@ export async function getDashboardAnalytics(
   };
 }
 
-/**
- * Helper to get branch filter based on auth context
- */
-function getBranchFilter(auth: AuthContext) {
-  const effectiveRole = auth.activeRole ?? auth.systemRole;
-
-  // Members can only see souls assigned to them
-  if (effectiveRole === 'member') {
-    return eq(souls.assignedMemberId, auth.memberId);
-  }
-  
-  // Pastors and Leaders can only see souls where BOTH:
-  // 1. The outreach program is in their branch OR the soul has no outreach program
-  // 2. The assigned member (if any) is from their branch
-  // This ensures strict branch isolation
-  if (authHasCapability(auth, 'branch:read') || authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
-    return or(
-      // Souls from outreach programs in their branch with members from their branch
-      sql`(${outreachPrograms.branchId} = ${auth.branchId} AND (${members.homeBranchId} = ${auth.branchId} OR ${members.homeBranchId} IS NULL))`,
-      // Souls without outreach program but assigned to members in their branch
-      sql`(${souls.outreachId} IS NULL AND ${members.homeBranchId} = ${auth.branchId})`,
-    );
-  }
-  
-  // Admin sees all souls across all branches
-  return undefined;
-}

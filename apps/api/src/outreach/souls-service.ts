@@ -122,6 +122,149 @@ export async function updateSoulStatus(
 }
 
 /**
+ * Build the role-scoped WHERE clause for any souls query. Returns undefined
+ * for admins (no restriction). Assumes the calling query joins
+ * outreachPrograms and members onto souls — the standard shape across
+ * souls-service and the souls dashboard.
+ *
+ *   admin                              → no filter
+ *   branch:read (BranchAdmin / BDA)    → branch-wide via program OR member
+ *   fellowship:read / department:read
+ *     (without branch:read)            → scoped to fellowships / depts the
+ *                                        caller leads or co-leads, plus their
+ *                                        own assigned souls (5 connection paths)
+ *   everyone else                      → assigned-to-self only
+ *
+ * Async because the leader-scoped branch queries the DB to resolve the
+ * caller's led fellowships and departments.
+ */
+export async function buildSoulsScopeFilter(
+  db: Database,
+  auth: AuthContext,
+): Promise<SQL | undefined> {
+  const effectiveRole = auth.activeRole ?? auth.systemRole;
+
+  if (effectiveRole === 'admin') return undefined;
+
+  if (authHasCapability(auth, 'branch:read')) {
+    return or(
+      eq(outreachPrograms.branchId, auth.branchId),
+      eq(members.homeBranchId, auth.branchId),
+    );
+  }
+
+  if (authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
+    const ledFellowshipIds = (
+      await db
+        .select({ id: fellowships.id })
+        .from(fellowships)
+        .where(
+          and(
+            eq(fellowships.isActive, true),
+            or(
+              eq(fellowships.leaderId, auth.memberId),
+              eq(fellowships.coLeaderId, auth.memberId),
+            )!,
+          ),
+        )
+    ).map((r) => r.id);
+
+    const ledDepartmentIds = (
+      await db
+        .select({ id: branchDepartments.id })
+        .from(branchDepartments)
+        .where(
+          and(
+            eq(branchDepartments.isActive, true),
+            or(
+              eq(branchDepartments.leadMemberId, auth.memberId),
+              eq(branchDepartments.deputyMemberId, auth.memberId),
+            )!,
+          ),
+        )
+    ).map((r) => r.id);
+
+    if (ledFellowshipIds.length === 0 && ledDepartmentIds.length === 0) {
+      return eq(souls.assignedMemberId, auth.memberId);
+    }
+
+    const groupMemberIds = sql`(
+      SELECT ${fellowshipMembers.memberId} FROM ${fellowshipMembers}
+      WHERE ${fellowshipMembers.isActive} = true
+      ${ledFellowshipIds.length > 0
+        ? sql`AND ${inArray(fellowshipMembers.fellowshipId, ledFellowshipIds)}`
+        : sql`AND false`}
+      UNION
+      SELECT ${departmentMembers.memberId} FROM ${departmentMembers}
+      WHERE ${departmentMembers.isActive} = true
+      ${ledDepartmentIds.length > 0
+        ? sql`AND ${inArray(departmentMembers.branchDepartmentId, ledDepartmentIds)}`
+        : sql`AND false`}
+    )`;
+
+    const orParts: SQL[] = [
+      eq(souls.assignedMemberId, auth.memberId),
+      sql`${souls.assignedMemberId} IN ${groupMemberIds}`,
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(outreachPrograms)
+          .where(
+            and(
+              eq(outreachPrograms.id, souls.outreachId),
+              sql`${outreachPrograms.coordinatorId} IN ${groupMemberIds}`,
+            ),
+          ),
+      ),
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(outreachParticipants)
+          .where(
+            and(
+              eq(outreachParticipants.outreachId, souls.outreachId),
+              sql`${outreachParticipants.memberId} IN ${groupMemberIds}`,
+            ),
+          ),
+      ),
+    ];
+    if (ledFellowshipIds.length > 0) {
+      orParts.push(inArray(souls.fellowshipId, ledFellowshipIds));
+    }
+    if (ledDepartmentIds.length > 0) {
+      orParts.push(inArray(souls.branchDepartmentId, ledDepartmentIds));
+    }
+    const programAttributionConds: SQL[] = [];
+    if (ledFellowshipIds.length > 0) {
+      programAttributionConds.push(inArray(outreachPrograms.fellowshipId, ledFellowshipIds));
+    }
+    if (ledDepartmentIds.length > 0) {
+      programAttributionConds.push(
+        inArray(outreachPrograms.branchDepartmentId, ledDepartmentIds),
+      );
+    }
+    if (programAttributionConds.length > 0) {
+      orParts.push(
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(outreachPrograms)
+            .where(
+              and(
+                eq(outreachPrograms.id, souls.outreachId),
+                or(...programAttributionConds)!,
+              ),
+            ),
+        ),
+      );
+    }
+    return or(...orParts);
+  }
+
+  return eq(souls.assignedMemberId, auth.memberId);
+}
+
+/**
  * List souls with pagination and filters
  * - Uses LEFT JOIN to include ad-hoc souls
  * - Applies role-based filtering (Member: assigned only, Pastor: branch only, Admin: all)
