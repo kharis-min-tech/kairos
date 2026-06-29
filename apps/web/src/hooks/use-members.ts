@@ -159,6 +159,31 @@ export function useUnguardedMinors(branchId?: string) {
   });
 }
 
+// Task #4 Phase B: dormant minors awaiting SG-Lead review.
+export function useDormantMinors(branchId?: string) {
+  return useQuery({
+    queryKey: ['members', 'dormant-minors', branchId ?? null],
+    queryFn: async () => {
+      const res = await api.members.listDormantMinors(branchId ? { branchId } : undefined);
+      return res.data!;
+    },
+  });
+}
+
+export function useReviewMinor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, decision }: { id: string; decision: 'active' | 'archived' }) => {
+      const res = await api.members.reviewMinor(id, { decision });
+      return res.data!;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', 'dormant-minors'] });
+      qc.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
+}
+
 // ── Member Roles ───────────────────────────────────────────
 
 export function useAllRoles() {

@@ -45,6 +45,12 @@ export const members = pgTable('members', {
   // See docs/domain-model.md §0 for why this is the real Membership signal.
   membershipClassCompletedAt: timestamp('membership_class_completed_at'),
   guardianMemberId: uuid('guardian_member_id').references((): AnyPgColumn => members.id, { onDelete: 'set null' }),
+  // Task #4 Phase B: Safeguarding Lead review state for dormant minors.
+  // NULL = never reviewed. The /members/safeguarding page re-surfaces a
+  // minor when reviewed_at is older than 90 days.
+  safeguardingReviewedAt: timestamp('safeguarding_reviewed_at'),
+  safeguardingReviewedBy: uuid('safeguarding_reviewed_by').references((): AnyPgColumn => members.id, { onDelete: 'set null' }),
+  safeguardingArchiveDecision: varchar('safeguarding_archive_decision', { length: 20 }),
   passwordResetToken: varchar('password_reset_token', { length: 255 }),
   passwordResetExpiry: timestamp('password_reset_expiry'),
   lastLoginAt: timestamp('last_login_at'),
@@ -64,6 +70,7 @@ export const members = pgTable('members', {
   sql`CHECK (approval_status IN ('pending', 'approved', 'rejected'))`,
   sql`CHECK (system_role IN ('admin', 'member'))`,
   sql`CHECK (member_type IN ('member', 'attendee', 'visitor', 'child'))`,
+  sql`CHECK (safeguarding_archive_decision IS NULL OR safeguarding_archive_decision IN ('active', 'archived'))`,
 ]);
 
 export const membersRelations = relations(members, ({ one, many }) => ({

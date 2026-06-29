@@ -31,5 +31,14 @@
   // Enable head sampling for logs in the Cloudflare dashboard.
   "observability": {
     "enabled": true
+  },
+
+  // Task #4 Phase C/D: daily cron at 03:00 UTC. The handler in worker.ts
+  // dispatches based on the cron expression. Two jobs share one schedule
+  // because their queries are cheap and they keep cron config minimal:
+  //   - aging-out: child shells crossing 16 → flip to attendee
+  //   - promotion: visitors with 6+ services in 90 days → promote to attendee
+  "triggers": {
+    "crons": ["0 3 * * *"]
   }
 }

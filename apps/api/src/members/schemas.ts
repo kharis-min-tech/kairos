@@ -88,3 +88,8 @@ export const listMembersQuerySchema = z.object({
 export const unguardedMinorsQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
 });
+
+// Task #4 Phase B: SG Lead decision on a dormant minor.
+export const reviewMinorSchema = z.object({
+  decision: z.enum(['active', 'archived']),
+});

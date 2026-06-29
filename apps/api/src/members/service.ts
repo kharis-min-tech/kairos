@@ -929,6 +929,150 @@ export async function listUnguardedMinors(
   }));
 }
 
+// ── Dormant minor review (#4 Phase B) ─────────────────────
+//
+// Minors can't be silently archived — every archive decision needs an
+// explicit Safeguarding Lead approval and an audit trail. listDormantMinors
+// surfaces children with no recent review (or no review at all) for the SG
+// Lead UI to act on; reviewMinor records the decision.
+
+const DORMANT_MINOR_DAYS = 60;        // shell creation older than this
+const MINOR_REVIEW_RECHECK_DAYS = 90; // re-prompt after this many days
+
+/**
+ * List minors who need Safeguarding Lead review: memberType='child' shells
+ * that are dormant (created >60 days ago) and either never reviewed or last
+ * reviewed >90 days ago. Children left active stay surfaced until the SG Lead
+ * decides — there is no silent expiry.
+ */
+export async function listDormantMinors(
+  db: Database,
+  auth: AuthContext,
+  query: { branchId?: string },
+) {
+  const branchId = query.branchId ?? auth.branchId;
+
+  if (!authHasCapability(auth, 'branch:read')) {
+    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+    if (!safeguardingBranches.has(branchId)) {
+      throw new ForbiddenError('You need safeguarding access to view this list');
+    }
+  }
+
+  const reviewer = alias(members, 'reviewer');
+  const rows = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      dateOfBirth: members.dateOfBirth,
+      createdAt: members.createdAt,
+      safeguardingReviewedAt: members.safeguardingReviewedAt,
+      lastDecision: members.safeguardingArchiveDecision,
+      reviewerFirstName: reviewer.firstName,
+      reviewerLastName: reviewer.lastName,
+    })
+    .from(members)
+    .leftJoin(reviewer, eq(members.safeguardingReviewedBy, reviewer.id))
+    .where(
+      and(
+        eq(members.homeBranchId, branchId),
+        eq(members.isActive, true),
+        eq(members.memberType, 'child'),
+        sql`${members.createdAt} < NOW() - INTERVAL '${sql.raw(String(DORMANT_MINOR_DAYS))} days'`,
+        or(
+          sql`${members.safeguardingReviewedAt} IS NULL`,
+          sql`${members.safeguardingReviewedAt} < NOW() - INTERVAL '${sql.raw(String(MINOR_REVIEW_RECHECK_DAYS))} days'`,
+        ),
+      ),
+    )
+    .orderBy(members.createdAt);
+
+  return (rows as Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+    createdAt: Date | string;
+    safeguardingReviewedAt: Date | string | null;
+    lastDecision: string | null;
+    reviewerFirstName: string | null;
+    reviewerLastName: string | null;
+  }>).map((r) => ({
+    id: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    dateOfBirth: r.dateOfBirth,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    lastReviewedAt: r.safeguardingReviewedAt
+      ? (r.safeguardingReviewedAt instanceof Date
+          ? r.safeguardingReviewedAt.toISOString()
+          : String(r.safeguardingReviewedAt))
+      : null,
+    lastDecision: r.lastDecision as 'active' | 'archived' | null,
+    lastReviewerName:
+      r.reviewerFirstName ? `${r.reviewerFirstName} ${r.reviewerLastName ?? ''}`.trim() : null,
+  }));
+}
+
+/**
+ * Record a Safeguarding Lead's decision on a dormant minor:
+ *   'active'   → mark still-active; the row stays but won't resurface for
+ *                another MINOR_REVIEW_RECHECK_DAYS days.
+ *   'archived' → soft-delete the row (isActive=false). Reversible by admin.
+ *
+ * Both branches stamp safeguarding_reviewed_at/by + the decision so the audit
+ * trail captures who made the call and when.
+ */
+export async function reviewMinor(
+  db: Database,
+  auth: AuthContext,
+  memberId: string,
+  decision: 'active' | 'archived',
+) {
+  // Load the row to check it's actually a minor in scope.
+  const [row] = await db
+    .select({
+      id: members.id,
+      memberType: members.memberType,
+      homeBranchId: members.homeBranchId,
+      isActive: members.isActive,
+    })
+    .from(members)
+    .where(eq(members.id, memberId));
+
+  if (!row) throw new NotFoundError('Member not found');
+  if (row.memberType !== 'child') {
+    throw new ForbiddenError('reviewMinor only applies to memberType="child"');
+  }
+  if (!row.isActive) {
+    throw new ConflictError('Member is already inactive');
+  }
+
+  // Authorization mirrors listDormantMinors — admin/pastor short-circuit, SG
+  // Lead must hold safeguarding access to this branch.
+  if (!authHasCapability(auth, 'branch:read')) {
+    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+    if (!safeguardingBranches.has(row.homeBranchId)) {
+      throw new ForbiddenError('You need safeguarding access for this branch');
+    }
+  }
+
+  const [updated] = await db
+    .update(members)
+    .set({
+      safeguardingReviewedAt: new Date(),
+      safeguardingReviewedBy: auth.memberId,
+      safeguardingArchiveDecision: decision,
+      isActive: decision === 'archived' ? false : true,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(members.id, memberId))
+    .returning();
+
+  return updated;
+}
+
 // ── CSV Import / Export ────────────────────────────────────
 
 function parseCSVLine(line: string): string[] {

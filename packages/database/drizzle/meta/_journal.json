@@ -232,6 +232,13 @@
       "when": 1789300000000,
       "tag": "0032_membership_phase2_sweep",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790300000000,
+      "tag": "0033_minor_safeguarding_review",
+      "breakpoints": true
     }
   ]
 }

@@ -23,6 +23,8 @@ import type {
   UpsertHealthRecordRequest,
   HealthRecordResponse,
   UnguardedMinor,
+  DormantMinor,
+  ReviewMinorRequest,
   CreateFellowshipRequest,
   UpdateFellowshipRequest,
   CreateFellowshipMeetingRequest,
@@ -285,6 +287,14 @@ export function createApiClient(
         const query = qs.toString();
         return client.get<ApiResponse<UnguardedMinor[]>>(`/api/members/safeguarding/unguarded-minors${query ? `?${query}` : ''}`);
       },
+      listDormantMinors: (params?: { branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<DormantMinor[]>>(`/api/members/safeguarding/dormant-minors${query ? `?${query}` : ''}`);
+      },
+      reviewMinor: (id: string, data: ReviewMinorRequest) =>
+        client.post<ApiResponse<{ id: string }>>(`/api/members/safeguarding/dormant-minors/${encodeURIComponent(id)}/review`, data),
       roles: {
         listAll: () =>
           client.get<ApiResponse<{ id: string; roleName: string; description: string | null }[]>>('/api/members/roles'),

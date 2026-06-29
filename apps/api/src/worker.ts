@@ -1,6 +1,7 @@
 import { createApp } from './app';
-import { withDb } from './db';
-import { bindMailerEnv } from '@kairos/utils';
+import { db, withDb } from './db';
+import { bindMailerEnv, logger } from '@kairos/utils';
+import { runLifecycleCron } from './cron/lifecycle';
 
 /**
  * Cloudflare Workers entry. Server.ts remains the Node entry for `npm run dev`
@@ -42,5 +43,31 @@ export default {
     }
     if (!app) app = createApp();
     return withDb(env.HYPERDRIVE.connectionString, async () => app!.fetch(request, env, ctx));
+  },
+
+  /**
+   * Daily cron handler (#4 Phase C/D). Runs at 03:00 UTC per wrangler.jsonc
+   * triggers. The Worker spins up cold for crons too, so we re-use the same
+   * withDb wrapper to mint a fresh postgres-js client for the run.
+   *
+   * `waitUntil` is intentionally not used — we want the cron to surface its
+   * outcome (or any error) directly to Workers Logs.
+   */
+  async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+    await withDb(env.HYPERDRIVE.connectionString, async () => {
+      try {
+        const summary = await runLifecycleCron(db);
+        logger.info('cron.lifecycle.complete', {
+          module: 'cron',
+          ...summary,
+        });
+      } catch (err) {
+        logger.error('cron.lifecycle.failed', {
+          module: 'cron',
+          error: err instanceof Error ? err.message : String(err),
+        });
+        throw err;
+      }
+    });
   },
 };

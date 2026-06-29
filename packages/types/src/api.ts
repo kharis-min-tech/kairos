@@ -322,6 +322,22 @@ export interface UnguardedMinor {
   guardianName: string | null;
 }
 
+// Task #4 Phase B: minor surfaced for SG-Lead review (dormant child shell).
+export interface DormantMinor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  createdAt: string;
+  lastReviewedAt: string | null;
+  lastDecision: 'active' | 'archived' | null;
+  lastReviewerName: string | null;
+}
+
+export interface ReviewMinorRequest {
+  decision: 'active' | 'archived';
+}
+
 // ── Fellowship ─────────────────────────────────────────────
 
 export interface CreateFellowshipRequest {

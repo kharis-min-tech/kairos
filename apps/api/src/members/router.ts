@@ -12,6 +12,7 @@ import {
   createMemberSchema,
   upsertHealthRecordSchema,
   unguardedMinorsQuerySchema,
+  reviewMinorSchema,
   setMembershipClassSchema,
 } from './schemas';
 import {
@@ -33,6 +34,8 @@ import {
   getHealthRecord,
   upsertHealthRecord,
   listUnguardedMinors,
+  listDormantMinors,
+  reviewMinor,
   setMembershipClassCompleted,
 } from './service';
 import { getMemberStats } from '../analytics/service';
@@ -104,6 +107,28 @@ membersRouter.get(
   async (c) => {
     const auth = getAuth(c);
     const result = await listUnguardedMinors(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+// Task #4 Phase B — dormant minors review (SG Lead surface)
+membersRouter.get(
+  '/safeguarding/dormant-minors',
+  zValidator('query', unguardedMinorsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await listDormantMinors(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+membersRouter.post(
+  '/safeguarding/dormant-minors/:id/review',
+  zValidator('json', reviewMinorSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { decision } = c.req.valid('json');
+    const result = await reviewMinor(db, auth, c.req.param('id'), decision);
     return c.json(successResponse(result));
   },
 );

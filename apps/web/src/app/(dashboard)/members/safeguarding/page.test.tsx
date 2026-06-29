@@ -11,6 +11,10 @@ let error: { message: string } | null = null;
 
 vi.mock('@/hooks/use-members', () => ({
   useUnguardedMinors: () => ({ data: minors, isLoading, isError, error }),
+  // #4 Phase B additions — kept default-empty so existing tests don't break;
+  // dormant-minors tests can be added in a follow-up.
+  useDormantMinors: () => ({ data: [], isLoading: false, isError: false, error: null }),
+  useReviewMinor: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 import SafeguardingReviewPage from './page';
