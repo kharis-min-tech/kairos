@@ -108,7 +108,7 @@ function Body({ report }: { report: FellowshipAttendanceReport }) {
         />
         <RateCard
           title="Meeting attendance"
-          description="Roll-call attendance at this fellowship’s own meetings."
+          description="Attendance at this fellowship’s own meetings."
           rate={report.meetings.rate}
           distinctAttendees={report.meetings.distinctAttendees}
           total={report.meetings.totalMeetings}
