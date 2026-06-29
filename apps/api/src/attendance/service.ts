@@ -1,4 +1,4 @@
-import { eq, ne, and, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, ne, and, or, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -133,6 +133,115 @@ async function resolveFilterMemberIds(
     return Array.from(deptIds).filter((id) => fellowshipIds!.has(id));
   }
   return Array.from(deptIds ?? fellowshipIds ?? new Set<string>());
+}
+
+/**
+ * Auto-narrow reports for fellowship/department leaders without branch:read.
+ * Returns the union of member IDs across all fellowships and departments the
+ * caller leads/co-leads in the target branch.
+ *
+ *   branch:read holders (admin / pastor)  → null  (no narrowing — branch-wide)
+ *   fellowship:read / department:read     → array (members of led groups)
+ *   leader with no active led groups      → empty array (visible scope = nothing)
+ *
+ * Mirrors the souls dashboard fix: a Youth Fellowship leader's attendance
+ * report should be Youth's attendance, not the whole branch's.
+ */
+async function resolveLeaderScopeMemberIds(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+): Promise<string[] | null> {
+  if (authHasCapability(auth, 'branch:read')) return null;
+  // Plain members (no leadership cap) don't get auto-narrowed — they read
+  // their branch's summary as-is. Only callers holding fellowship/department
+  // read need narrowing because they'd otherwise see branch-wide data.
+  if (!authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
+    return null;
+  }
+
+  const [ledFellowshipRows, ledDeptRows] = await Promise.all([
+    db
+      .select({ id: fellowships.id })
+      .from(fellowships)
+      .where(
+        and(
+          eq(fellowships.isActive, true),
+          eq(fellowships.branchId, branchId),
+          or(
+            eq(fellowships.leaderId, auth.memberId),
+            eq(fellowships.coLeaderId, auth.memberId),
+          )!,
+        ),
+      ),
+    db
+      .select({ id: branchDepartments.id })
+      .from(branchDepartments)
+      .where(
+        and(
+          eq(branchDepartments.isActive, true),
+          eq(branchDepartments.branchId, branchId),
+          or(
+            eq(branchDepartments.leadMemberId, auth.memberId),
+            eq(branchDepartments.deputyMemberId, auth.memberId),
+          )!,
+        ),
+      ),
+  ]);
+
+  const ledFellowshipIds = ledFellowshipRows.map((r) => r.id);
+  const ledDeptIds = ledDeptRows.map((r) => r.id);
+
+  if (ledFellowshipIds.length === 0 && ledDeptIds.length === 0) return [];
+
+  const memberIdSet = new Set<string>();
+  if (ledFellowshipIds.length > 0) {
+    const rows = await db
+      .select({ memberId: fellowshipMembers.memberId })
+      .from(fellowshipMembers)
+      .where(
+        and(
+          eq(fellowshipMembers.isActive, true),
+          inArray(fellowshipMembers.fellowshipId, ledFellowshipIds),
+        ),
+      );
+    rows.forEach((r) => memberIdSet.add(r.memberId));
+  }
+  if (ledDeptIds.length > 0) {
+    const rows = await db
+      .select({ memberId: departmentMembers.memberId })
+      .from(departmentMembers)
+      .where(
+        and(
+          eq(departmentMembers.isActive, true),
+          inArray(departmentMembers.branchDepartmentId, ledDeptIds),
+        ),
+      );
+    rows.forEach((r) => memberIdSet.add(r.memberId));
+  }
+  return Array.from(memberIdSet);
+}
+
+/**
+ * Compose the leader-scope and explicit-filter member IDs:
+ *   admin/pastor + no explicit filter         → null (branch-wide)
+ *   admin/pastor + explicit filter            → explicit filter IDs
+ *   leader      + no explicit filter          → leader-scope IDs
+ *   leader      + explicit filter             → intersection
+ *
+ * `[]` (empty array) means "scope resolved but contains no members" — the
+ * caller short-circuits to an empty report rather than running a branch-wide
+ * query.
+ */
+function composeScopeMemberIds(
+  leaderIds: string[] | null,
+  filterIds: string[] | null,
+): string[] | null {
+  if (leaderIds === null && filterIds === null) return null;
+  if (leaderIds === null) return filterIds;
+  if (filterIds === null) return leaderIds;
+  const filterSet = new Set(filterIds);
+  return leaderIds.filter((id) => filterSet.has(id));
 }
 
 /** Resolve which branch a write/report targets, enforcing scope for non-admin/pastor. */
@@ -583,10 +692,14 @@ export async function getAttendanceTrends(
   const branchId = resolveBranchId(auth, query.branchId);
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
 
-  const filterIds = await resolveFilterMemberIds(db, branchId, {
-    departmentId: query.departmentId,
-    fellowshipId: query.fellowshipId,
-  });
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
   if (filterIds !== null && filterIds.length === 0) {
     return [] as { weekStart: string; attendees: number; serviceCount: number }[];
   }
@@ -645,11 +758,16 @@ export async function getMissingMembers(
     eq(members.homeBranchId, branchId),
   ];
 
-  // Optional department/fellowship filter — narrows the considered member set.
-  const filterIds = await resolveFilterMemberIds(db, branchId, {
-    departmentId: query.departmentId,
-    fellowshipId: query.fellowshipId,
-  });
+  // Leader scope auto-narrows fellowship/dept leaders to their groups; the
+  // explicit query filter further narrows that intersection.
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
   if (filterIds !== null) {
     if (filterIds.length === 0) {
       return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
@@ -1436,21 +1554,39 @@ export async function getAttendanceByBranch(
   if (branchRows.length === 0) return [];
   const branchIds = branchRows.map((b) => b.id);
 
+  // Leader scope auto-narrows to the caller's led groups. Only applies when
+  // the caller has fellowship/dept:read but not branch:read — admin/pastor
+  // get null and the report renders branch-wide as before. Because this
+  // report is cross-branch but the leader scope is single-branch, we use
+  // auth.branchId for the resolution.
+  const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
+  if (leaderScopeIds !== null && leaderScopeIds.length === 0) return [];
+
   // Active 'member'-type counts per branch.
+  const memberCountConditions = [
+    eq(members.isActive, true),
+    inArray(members.homeBranchId, branchIds),
+  ];
+  if (leaderScopeIds !== null) {
+    memberCountConditions.push(inArray(members.id, leaderScopeIds));
+  }
   const memberCounts = await db
     .select({ branchId: members.homeBranchId, value: count() })
     .from(members)
-    .where(
-      and(
-        eq(members.isActive, true),
-        inArray(members.homeBranchId, branchIds),
-      ),
-    )
+    .where(and(...memberCountConditions))
     .groupBy(members.homeBranchId);
   const activeByBranch = new Map(memberCounts.map((r) => [r.branchId, Number(r.value)]));
 
   // Distinct attendees per branch over the recent window (Present/Late/Virtual
   // all count). Uses gte() with a Date — the same encoder path as the trends query.
+  const attendeeCountConditions = [
+    eq(services.isActive, true),
+    gte(services.serviceDate, since),
+    inArray(services.branchId, branchIds),
+  ];
+  if (leaderScopeIds !== null) {
+    attendeeCountConditions.push(inArray(serviceAttendance.memberId, leaderScopeIds));
+  }
   const attendeeCounts = await db
     .select({
       branchId: services.branchId,
@@ -1458,13 +1594,7 @@ export async function getAttendanceByBranch(
     })
     .from(serviceAttendance)
     .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
-    .where(
-      and(
-        eq(services.isActive, true),
-        gte(services.serviceDate, since),
-        inArray(services.branchId, branchIds),
-      ),
-    )
+    .where(and(...attendeeCountConditions))
     .groupBy(services.branchId);
   const attendeesByBranch = new Map(attendeeCounts.map((r) => [r.branchId, Number(r.value)]));
 
@@ -1498,13 +1628,19 @@ export async function getAttendanceSummary(
   const serviceConditions = [eq(services.isActive, true), gte(services.serviceDate, since)];
   if (scopeBranchId) serviceConditions.push(eq(services.branchId, scopeBranchId));
 
-  // Optional dept/fellowship filter narrows the considered member set.
-  const filterIds = scopeBranchId
-    ? await resolveFilterMemberIds(db, scopeBranchId, {
-        departmentId: query.departmentId,
-        fellowshipId: query.fellowshipId,
-      })
-    : null;
+  // Leader scope + optional dept/fellowship query filter, intersected.
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    scopeBranchId
+      ? resolveFilterMemberIds(db, scopeBranchId, {
+          departmentId: query.departmentId,
+          fellowshipId: query.fellowshipId,
+        })
+      : Promise.resolve(null),
+    scopeBranchId
+      ? resolveLeaderScopeMemberIds(db, auth, scopeBranchId)
+      : Promise.resolve(null),
+  ]);
+  const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
   if (filterIds !== null && filterIds.length === 0) {
     return {
       statusBreakdown: { present: 0, late: 0, virtual: 0, total: 0 },
