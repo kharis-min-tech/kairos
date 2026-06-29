@@ -354,7 +354,7 @@ function MemberSoulsTab() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="status" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                  <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {myFunnelData.map((entry) => (
                       <Cell key={entry.status} fill={statusColors[entry.status] ?? '#5D3FD3'} />
@@ -516,24 +516,20 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   // Branch-wide layout — API scopes data by role
   return (
     <div className="space-y-6">
-      {/* Sub-tab pills */}
-      <div className="flex items-center justify-end gap-2">
-        <div className="flex rounded-full border border-border bg-muted p-0.5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      {/* Sub-tab selector — canonical @kairos/ui Tabs (rounded-lg, #5D3FD3
+          active state). Wrapping a single <Tabs> here lets the existing
+          activeTab branches below stay unchanged. */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Tab)}>
+        <div className="flex justify-end">
+          <TabsList aria-label="Report category">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.key} value={tab.key}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         </div>
-      </div>
+      </Tabs>
 
       {/* Stat cards — personal for members/leaders, church-wide for admin/pastor */}
       {isLeadership ? (
@@ -628,7 +624,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} unit="%" axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => [`${v}%`, 'Rate']} contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                    <Tooltip formatter={(v) => [`${v}%`, 'Rate']} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                     <Area type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} fill="url(#attendanceGrad)" dot={{ fill: '#5D3FD3', r: 3 }} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -638,18 +634,21 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
 
           {/* Highlight + Fellowship breakdown */}
           <div className="space-y-4">
-            <Card className="bg-foreground text-background dark:bg-card dark:text-foreground dark:border">
+            <Card>
               <CardContent className="pt-5 pb-5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide opacity-50">Monthly Highlight</p>
-                <p className="mt-2 text-lg font-bold">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#f8b537]">Monthly Highlight</p>
+                <p className="mt-2 text-lg font-bold text-foreground">
                   {attendanceTrending === true ? 'Attendance trending up' : attendanceTrending === false ? 'Attendance needs attention' : 'Attendance overview'}
                 </p>
-                <p className="mt-2 text-sm opacity-70">
+                <p className="mt-2 text-sm text-muted-foreground">
                   {avgAttendance > 0
                     ? `Average rate is ${avgAttendance}% over the last 8 weeks.`
                     : 'Start recording attendance to see trends here.'}
                 </p>
-                <Link href="/fellowships" className="mt-4 flex items-center justify-between rounded-lg border border-current/20 px-4 py-2.5 text-sm font-medium hover:opacity-80 transition-opacity">
+                <Link
+                  href="/fellowships"
+                  className="mt-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(93,63,211,0.2)] hover:opacity-90 transition-opacity"
+                >
                   View breakdown
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
                 </Link>
@@ -692,7 +691,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--muted-foreground) / 0.15)" vertical={false} />
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                    <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                     <Line type="monotone" dataKey="total" stroke="#a78bfa" strokeWidth={1.5} dot={{ fill: '#a78bfa', r: 3.5, strokeWidth: 2, stroke: '#7c3aed' }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -714,7 +713,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                     <BarChart data={effectiveGrowth} barSize={20}>
                       <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                       <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                      <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                       <Bar dataKey="newSignups" name="New Members" fill="#7c3aed" radius={[4, 4, 0, 0]} opacity={0.85} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -847,7 +846,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} />
                       <YAxis type="category" dataKey="status" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                      <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {funnelData.map((entry) => (
                           <Cell key={entry.status} fill={statusColors[entry.status] ?? '#5D3FD3'} />
@@ -1031,7 +1030,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                 <Bar dataKey="count" name="Meetings" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
               </BarChart>
             </ResponsiveContainer>
@@ -1274,7 +1273,7 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                 <Bar dataKey="attendees" name="Attendees" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
               </BarChart>
             </ResponsiveContainer>
