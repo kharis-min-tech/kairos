@@ -33,12 +33,14 @@
     "enabled": true
   },
 
-  // Task #4 Phase C/D: daily cron at 03:00 UTC. The handler in worker.ts
-  // dispatches based on the cron expression. Two jobs share one schedule
-  // because their queries are cheap and they keep cron config minimal:
-  //   - aging-out: child shells crossing 16 → flip to attendee
-  //   - promotion: visitors with 6+ services in 90 days → promote to attendee
+  // Daily crons. The handler in worker.ts switches on cron expression.
+  //   - "0 3 * * *" → lifecycle (#4 Phase C/D): aging-out + visitor promotion
+  //   - "0 8 * * *" → notification digest (Phase 6): rolls up pending
+  //                    workflow / lifecycle / forms events into one email per
+  //                    (member, category).
+  // Single-region scope for v1 — see [[project-design-decisions-2026-06-29]];
+  // per-branch local-TZ digest is deferred to multi-region work.
   "triggers": {
-    "crons": ["0 3 * * *"]
+    "crons": ["0 3 * * *", "0 8 * * *"]
   }
 }

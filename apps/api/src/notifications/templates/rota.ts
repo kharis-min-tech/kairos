@@ -82,3 +82,17 @@ export function renderUniformScheduleSet(p: UniformScheduleSetPayload) {
     }),
   };
 }
+
+// ── Digest lines ──
+
+export function digestRotaAssignmentConfirmed(p: RotaAssignmentConfirmedPayload): string {
+  return `Rota: ${p.templateName} — ${p.slotRoleName} on ${p.serviceDate}`;
+}
+
+export function digestRotaSwapRequested(p: RotaSwapRequestedPayload): string {
+  return `Swap requested: ${p.requesterName} on ${p.templateName} (${p.serviceDate})`;
+}
+
+export function digestUniformScheduleSet(p: UniformScheduleSetPayload): string {
+  return `Uniform: ${p.departmentName} on ${p.serviceDate} — ${p.outfitName}`;
+}

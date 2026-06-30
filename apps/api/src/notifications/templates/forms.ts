@@ -33,3 +33,7 @@ export function renderFormsSubmissionReceived(p: FormsSubmissionReceivedPayload)
     }),
   };
 }
+
+export function digestFormsSubmissionReceived(p: FormsSubmissionReceivedPayload): string {
+  return `${p.formLabel}: ${p.subjectName}${p.submittedByName ? ` (by ${p.submittedByName})` : ''}`;
+}

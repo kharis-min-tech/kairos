@@ -12,6 +12,12 @@
 
 import { renderLayout, escapeHtml } from './_layout';
 
+/**
+ * Each renderer pairs with a `digestLine(payload)` returning a short bullet
+ * line for the daily digest cron. Lines are concatenated under a "Workflow"
+ * heading when the user opts a category into digest cadence.
+ */
+
 export interface JoinRequestReceivedPayload {
   memberName: string;
   requesterName: string;
@@ -139,4 +145,26 @@ export function renderNewBelieverStageMoved(p: NewBelieverStageMovedPayload) {
       cta: { label: 'Open profile', url: p.portalUrl },
     }),
   };
+}
+
+// ── Digest lines ──
+
+export function digestJoinRequestReceived(p: JoinRequestReceivedPayload): string {
+  return `${p.requesterName} requested to join ${p.targetName}`;
+}
+
+export function digestJoinRequestDecided(p: JoinRequestDecidedPayload): string {
+  return `Your ${p.targetKind} request for ${p.targetName} was ${p.decision}`;
+}
+
+export function digestSoulAssigned(p: SoulAssignedPayload): string {
+  return `${p.soulName} was assigned to you`;
+}
+
+export function digestSoulStatusChanged(p: SoulStatusChangedPayload): string {
+  return `${p.soulName}: ${p.fromStatus} → ${p.toStatus}`;
+}
+
+export function digestNewBelieverStageMoved(p: NewBelieverStageMovedPayload): string {
+  return `${p.studentName}: ${p.fromStage} → ${p.toStage}`;
 }

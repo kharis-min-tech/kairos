@@ -143,3 +143,26 @@ export function renderRoleRevoked(p: SecurityRoleRevokedPayload) {
     }),
   };
 }
+
+// ── Digest lines (security defaults to immediate but supported for completeness) ──
+
+export function digestPasswordResetRequested(_p: SecurityPasswordResetRequestedPayload): string {
+  return 'Password reset requested';
+}
+
+export function digestPasswordChanged(p: SecurityPasswordChangedPayload): string {
+  return `Password changed at ${p.occurredAt.toLocaleString('en-GB')}`;
+}
+
+export function digestRoleGranted(p: SecurityRoleGrantedPayload): string {
+  return `Role granted: ${p.roleName} (${p.scopeLabel})`;
+}
+
+export function digestRoleRevoked(p: SecurityRoleRevokedPayload): string {
+  return `Role removed: ${p.roleName} (${p.scopeLabel})`;
+}
+
+export function digestSigninNewDevice(p: SecuritySigninNewDevicePayload): string {
+  const where = [p.country, p.ip].filter(Boolean).join(' · ');
+  return `Sign-in from new device${where ? ` (${where})` : ''}`;
+}

@@ -80,3 +80,17 @@ export function renderMemberConfirmed(p: LifecycleMemberConfirmedPayload) {
     }),
   };
 }
+
+// ── Digest lines ──
+
+export function digestVisitorPromoted(p: LifecycleVisitorPromotedPayload): string {
+  return `${p.visitorName} promoted to attendee (${p.branchName})`;
+}
+
+export function digestChildAgedOut(p: LifecycleChildAgedOutPayload): string {
+  return `${p.childName} aged out — now an attendee (${p.branchName})`;
+}
+
+export function digestMemberConfirmed(p: LifecycleMemberConfirmedPayload): string {
+  return `${p.confirmedName} confirmed as Member (${p.branchName})`;
+}
