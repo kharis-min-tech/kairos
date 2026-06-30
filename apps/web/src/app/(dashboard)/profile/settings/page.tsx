@@ -121,14 +121,19 @@ export default function SettingsPage() {
             <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Notifications
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-dashed bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Notifications coming soon</p>
-            <p className="mt-1">
-              When in-app, email, and SMS channels go live, you&apos;ll be able to
-              choose which topics reach you on which channel (rota assignments,
-              fellowship meetings, follow-ups, urgent announcements).
-            </p>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Email preferences</p>
+              <p className="text-xs text-muted-foreground">
+                Choose which categories reach your inbox and how often.
+              </p>
+            </div>
+            <Link href="/profile/settings/notifications">
+              <Button variant="outline" size="sm" className="rounded-lg">
+                Manage
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

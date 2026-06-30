@@ -18,6 +18,8 @@ import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
 import { resolveGrants } from '../lib/grants';
 import type { AuthSecrets } from '../lib/auth-secrets';
+import { dispatchNotification } from '../notifications/service';
+import { NotificationEventType } from '@kairos/types';
 import {
   NotFoundError,
   ConflictError,
@@ -488,6 +490,15 @@ export async function resetPassword(db: Database, token: string, newPassword: st
     .update(members)
     .set({ passwordHash, passwordResetToken: null, passwordResetExpiry: null, mustChangePassword: false })
     .where(eq(members.id, match.id));
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.SecurityPasswordChanged,
+    recipientMemberIds: [match.id],
+    payload: {
+      occurredAt: new Date(),
+      loginUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/login`,
+    },
+  });
 }
 
 export async function getMe(db: Database, memberId: string): Promise<MemberProfile> {
@@ -527,4 +538,13 @@ export async function changePassword(
     .update(members)
     .set({ passwordHash, mustChangePassword: false, updatedAt: sql`NOW()` })
     .where(eq(members.id, auth.memberId));
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.SecurityPasswordChanged,
+    recipientMemberIds: [auth.memberId],
+    payload: {
+      occurredAt: new Date(),
+      loginUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/login`,
+    },
+  });
 }

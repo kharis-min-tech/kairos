@@ -83,6 +83,9 @@ import type {
   FormsCapabilities,
   // Me / Leadership
   MeLeadershipResponse,
+  ListNotificationPreferencesResponse,
+  NotificationPreferencePayload,
+  UpdateNotificationPreferenceRequest,
   // Branch role management
   BranchRoleAssignment,
   AssignBranchRoleRequest,
@@ -803,6 +806,17 @@ export function createApiClient(
       },
       leadership: () =>
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
+      notificationPreferences: {
+        list: () =>
+          client.get<ApiResponse<ListNotificationPreferencesResponse>>(
+            '/api/me/notification-preferences',
+          ),
+        update: (data: UpdateNotificationPreferenceRequest) =>
+          client.put<ApiResponse<NotificationPreferencePayload>>(
+            '/api/me/notification-preferences',
+            data,
+          ),
+      },
     },
 
     analytics: {

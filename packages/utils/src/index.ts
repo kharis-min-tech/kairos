@@ -22,5 +22,6 @@ export {
   sendOfferExtendedEmail,
   sendProbationStartedEmail,
   sendProbationPassedEmail,
+  sendNotificationEmail,
 } from './mailer';
 export type { MailerSecrets } from './mailer';

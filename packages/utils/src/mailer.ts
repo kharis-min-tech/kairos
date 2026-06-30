@@ -101,6 +101,19 @@ function getFrontendUrl(): string {
   return getSecrets().frontendUrl;
 }
 
+/**
+ * Send a pre-rendered notification email. The notification system in
+ * `apps/api/src/notifications/` resolves recipients + applies preferences
+ * upstream — this is the dumb send pipe.
+ */
+export async function sendNotificationEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
+  await sendEmail(to, subject, html);
+}
+
 // ── Account / Auth emails ──────────────────────────────────────
 
 export async function sendPasswordResetEmail(

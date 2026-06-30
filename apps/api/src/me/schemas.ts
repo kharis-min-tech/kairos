@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NOTIFICATION_CATEGORIES, type NotificationCategory } from '@kairos/types';
 
 /**
  * Response shape for GET /api/me/leadership — echoes the branch-admin
@@ -39,3 +40,11 @@ export const meLeadershipResponseSchema = z.object({
 });
 
 export type MeLeadershipResponseShape = z.infer<typeof meLeadershipResponseSchema>;
+
+const categoryValues = NOTIFICATION_CATEGORIES as readonly [NotificationCategory, ...NotificationCategory[]];
+
+export const updateNotificationPreferenceSchema = z.object({
+  category: z.enum(categoryValues),
+  enabled: z.boolean(),
+  cadence: z.enum(['immediate', 'digest_daily'] as const),
+});

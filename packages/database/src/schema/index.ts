@@ -53,3 +53,15 @@ export {
   type ServiceAttendance,
   type NewServiceAttendance,
 } from './service-attendance';
+export {
+  notificationPreferences,
+  notificationPreferencesRelations,
+  type NotificationPreference,
+  type NewNotificationPreference,
+} from './notification-preferences';
+export {
+  notificationEvents,
+  notificationEventsRelations,
+  type NotificationEvent,
+  type NewNotificationEvent,
+} from './notification-events';

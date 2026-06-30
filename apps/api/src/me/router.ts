@@ -7,6 +7,11 @@ import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
 import { getMyLeadership } from './service';
 import { meLeadershipResponseSchema } from './schemas';
+import {
+  listEffectivePreferences,
+  upsertPreference,
+} from '../notifications/service';
+import { updateNotificationPreferenceSchema } from './schemas';
 
 export const meRouter = new Hono();
 
@@ -27,3 +32,19 @@ meRouter.get('/leadership', async (c) => {
   const validated = meLeadershipResponseSchema.parse(leadership);
   return c.json(successResponse(validated));
 });
+
+meRouter.get('/notification-preferences', async (c) => {
+  const auth = getAuth(c);
+  const preferences = await listEffectivePreferences(db, auth.memberId);
+  return c.json(successResponse({ preferences }));
+});
+
+meRouter.put(
+  '/notification-preferences',
+  zValidator('json', updateNotificationPreferenceSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const updated = await upsertPreference(db, auth.memberId, c.req.valid('json'));
+    return c.json(successResponse(updated));
+  },
+);

@@ -10,6 +10,8 @@ import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
 import { isRealMember } from '../lib/member-predicates';
+import { dispatchNotification } from '../notifications/service';
+import { NotificationEventType } from '@kairos/types';
 import {
   NotFoundError,
   ForbiddenError,
@@ -481,6 +483,14 @@ export async function assignRole(
     })
     .returning();
 
+  await dispatchRoleNotification(db, {
+    eventType: NotificationEventType.SecurityRoleGranted,
+    memberId,
+    roleId: input.roleId,
+    branchId: input.branchId,
+    actorMemberId: auth.memberId,
+  });
+
   return assignment;
 }
 
@@ -513,7 +523,54 @@ export async function removeRole(
     .where(eq(memberRoles.id, roleAssignmentId))
     .returning();
 
+  if (updated) {
+    await dispatchRoleNotification(db, {
+      eventType: NotificationEventType.SecurityRoleRevoked,
+      memberId,
+      roleId: updated.roleId,
+      branchId: assignment.branchId,
+      actorMemberId: auth.memberId,
+    });
+  }
+
   return updated;
+}
+
+async function dispatchRoleNotification(
+  db: Database,
+  input: { eventType: NotificationEventType; memberId: string; roleId: string; branchId: string; actorMemberId: string },
+) {
+  const [role] = await db
+    .select({ name: roles.roleName })
+    .from(roles)
+    .where(eq(roles.id, input.roleId))
+    .limit(1);
+  const [branch] = await db
+    .select({ branchName: branches.branchName })
+    .from(branches)
+    .where(eq(branches.id, input.branchId))
+    .limit(1);
+  const [actor] = await db
+    .select({ firstName: members.firstName, lastName: members.lastName })
+    .from(members)
+    .where(eq(members.id, input.actorMemberId))
+    .limit(1);
+
+  const actorName = actor ? `${actor.firstName} ${actor.lastName}`.trim() : null;
+  const isGrant = input.eventType === NotificationEventType.SecurityRoleGranted;
+
+  await dispatchNotification(db, {
+    eventType: input.eventType,
+    recipientMemberIds: [input.memberId],
+    branchId: input.branchId,
+    subjectType: 'member_role',
+    payload: {
+      roleName: role?.name ?? 'Role',
+      scopeLabel: branch?.branchName ?? 'a branch',
+      ...(isGrant ? { grantedByName: actorName } : { revokedByName: actorName }),
+      portalUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/dashboard`,
+    },
+  });
 }
 
 export async function getMemberRoles(db: Database, memberId: string, auth: AuthContext) {
