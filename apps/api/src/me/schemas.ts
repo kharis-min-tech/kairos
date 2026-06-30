@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { NOTIFICATION_CATEGORIES, type NotificationCategory } from '@kairos/types';
+import {
+  NOTIFICATION_CATEGORIES,
+  type NotificationCategory,
+  CONSENT_TYPES,
+  type ConsentType,
+} from '@kairos/types';
 
 /**
  * Response shape for GET /api/me/leadership — echoes the branch-admin
@@ -47,4 +52,11 @@ export const updateNotificationPreferenceSchema = z.object({
   category: z.enum(categoryValues),
   enabled: z.boolean(),
   cadence: z.enum(['immediate', 'digest_daily'] as const),
+});
+
+const consentTypeValues = CONSENT_TYPES as readonly [ConsentType, ...ConsentType[]];
+
+export const recordConsentSchema = z.object({
+  consentType: z.enum(consentTypeValues),
+  granted: z.boolean(),
 });

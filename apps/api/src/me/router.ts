@@ -11,8 +11,9 @@ import {
   listEffectivePreferences,
   upsertPreference,
 } from '../notifications/service';
-import { updateNotificationPreferenceSchema } from './schemas';
+import { updateNotificationPreferenceSchema, recordConsentSchema } from './schemas';
 import { listMyAuditLog } from '../audit/service';
+import { listConsentStatuses, recordConsent } from '../consent/service';
 
 export const meRouter = new Hono();
 
@@ -55,3 +56,20 @@ meRouter.get('/audit-log', async (c) => {
   const entries = await listMyAuditLog(db, auth.memberId);
   return c.json(successResponse({ entries }));
 });
+
+meRouter.get('/consent', async (c) => {
+  const auth = getAuth(c);
+  const statuses = await listConsentStatuses(db, auth.memberId);
+  return c.json(successResponse({ statuses }));
+});
+
+meRouter.post(
+  '/consent',
+  zValidator('json', recordConsentSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const body = c.req.valid('json');
+    const updated = await recordConsent(db, auth.memberId, body.consentType, body.granted);
+    return c.json(successResponse(updated));
+  },
+);

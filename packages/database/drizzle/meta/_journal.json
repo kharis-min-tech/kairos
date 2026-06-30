@@ -253,6 +253,13 @@
       "when": 1792300000000,
       "tag": "0035_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793300000000,
+      "tag": "0036_email_change_and_consent",
+      "breakpoints": true
     }
   ]
 }

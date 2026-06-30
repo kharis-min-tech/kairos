@@ -56,6 +56,19 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center justify-between border-t pt-4">
             <div>
+              <p className="text-sm font-medium">Change email</p>
+              <p className="text-xs text-muted-foreground">
+                Move your account to a new email. Both addresses get notified.
+              </p>
+            </div>
+            <Link href="/profile/settings/email-change">
+              <Button variant="outline" size="sm" className="rounded-lg">
+                Change
+              </Button>
+            </Link>
+          </div>
+          <div className="flex items-center justify-between border-t pt-4">
+            <div>
               <p className="text-sm font-medium">Recent sign-ins</p>
               <p className="text-xs text-muted-foreground">
                 Sign-ins, password changes, and role updates on your account.
@@ -150,21 +163,16 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium">Read the privacy notice</p>
+              <p className="text-sm font-medium">Legal &amp; consent</p>
               <p className="text-xs text-muted-foreground">
-                How Kharis Church handles your personal data.
+                Review the Terms, Privacy Notice, and marketing preferences.
               </p>
             </div>
-            <a
-              href="https://kharis.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex"
-            >
+            <Link href="/profile/settings/legal">
               <Button variant="outline" size="sm" className="rounded-lg">
-                Open
+                Manage
               </Button>
-            </a>
+            </Link>
           </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div className="flex items-start gap-3">

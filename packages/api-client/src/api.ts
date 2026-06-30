@@ -87,6 +87,9 @@ import type {
   NotificationPreferencePayload,
   UpdateNotificationPreferenceRequest,
   ListMyAuditLogResponse,
+  ListMyConsentResponse,
+  ConsentStatus,
+  RecordConsentRequest,
   // Branch role management
   BranchRoleAssignment,
   AssignBranchRoleRequest,
@@ -192,6 +195,12 @@ export function createApiClient(
         client.post<ApiResponse<void>>('/api/auth/reset-password', data),
       changePassword: (data: ChangePasswordRequest) =>
         client.post<ApiResponse<void>>('/api/auth/change-password', data),
+      requestEmailChange: (data: { currentPassword: string; newEmail: string }) =>
+        client.post<ApiResponse<void>>('/api/auth/email-change', data),
+      confirmEmailChange: (data: { token: string }) =>
+        client.post<ApiResponse<void>>('/api/auth/email-change/confirm', data),
+      undoEmailChange: (data: { token: string }) =>
+        client.post<ApiResponse<{ resetToken: string }>>('/api/auth/email-change/undo', data),
     },
 
     branches: {
@@ -820,6 +829,12 @@ export function createApiClient(
       },
       auditLog: () =>
         client.get<ApiResponse<ListMyAuditLogResponse>>('/api/me/audit-log'),
+      consent: {
+        list: () =>
+          client.get<ApiResponse<ListMyConsentResponse>>('/api/me/consent'),
+        record: (data: RecordConsentRequest) =>
+          client.post<ApiResponse<ConsentStatus>>('/api/me/consent', data),
+      },
     },
 
     analytics: {

@@ -114,6 +114,78 @@ export async function sendNotificationEmail(
   await sendEmail(to, subject, html);
 }
 
+// ── Email change flow ──────────────────────────────────────────
+
+export async function sendEmailChangeConfirmEmail(
+  to: string,
+  memberName: string,
+  confirmLink: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    'Confirm your new email — Kharis Church',
+    `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #5D3FD3;">Confirm your new email</h2>
+        <p>Hi ${memberName},</p>
+        <p>You asked to change the email on your Kharis Church account to this address.
+           Click the button below to confirm the change. This link expires in
+           <strong>24 hours</strong>.</p>
+        <p style="text-align: center; margin: 32px 0;">
+          <a href="${confirmLink}"
+             style="background:#5D3FD3;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
+            Confirm new email
+          </a>
+        </p>
+        <p style="word-break:break-all;color:#5D3FD3;font-size:12px;">
+          ${confirmLink}
+        </p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">
+          If you didn't request this change, ignore this email.
+        </p>
+      </div>
+    `,
+  );
+}
+
+export async function sendEmailChangedAlertEmail(
+  to: string,
+  memberName: string,
+  newEmail: string,
+  undoLink: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    'Your Kharis Church email is being changed',
+    `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #5D3FD3;">Email change requested</h2>
+        <p>Hi ${memberName},</p>
+        <p>Someone (hopefully you) requested to change the email on your Kharis
+           Church account to <strong>${newEmail}</strong>.</p>
+        <p>If this was you, no action is needed once the new address is
+           confirmed.</p>
+        <p>If this <strong>wasn't</strong> you, click below to revert the change
+           and lock the account. You'll be sent a password reset link.</p>
+        <p style="text-align: center; margin: 32px 0;">
+          <a href="${undoLink}"
+             style="background:#b91c1c;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
+            This wasn&apos;t me
+          </a>
+        </p>
+        <p style="word-break:break-all;color:#b91c1c;font-size:12px;">
+          ${undoLink}
+        </p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">
+          Kharis Church Administration System
+        </p>
+      </div>
+    `,
+  );
+}
+
 // ── Account / Auth emails ──────────────────────────────────────
 
 export async function sendPasswordResetEmail(

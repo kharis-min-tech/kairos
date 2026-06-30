@@ -71,3 +71,15 @@ export {
   type AuditLogEntry,
   type NewAuditLogEntry,
 } from './audit-log';
+export {
+  emailChangeRequests,
+  emailChangeRequestsRelations,
+  type EmailChangeRequest,
+  type NewEmailChangeRequest,
+} from './email-change-requests';
+export {
+  consentRecords,
+  consentRecordsRelations,
+  type ConsentRecord,
+  type NewConsentRecord,
+} from './consent-records';

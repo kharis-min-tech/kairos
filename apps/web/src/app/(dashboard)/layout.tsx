@@ -11,6 +11,7 @@ import { cn } from '@kairos/ui';
 import type { Capability } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
+import { ConsentBanner } from '@/components/consent-banner';
 // RBAC Phase 5b: in-app role switcher removed. Users see all their grants
 // at once; per-page scope selectors handle the multi-scope cases.
 
@@ -317,6 +318,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="flex-1 overflow-y-auto">
+          <ConsentBanner />
           <div className="container mx-auto p-6">
             {children}
           </div>

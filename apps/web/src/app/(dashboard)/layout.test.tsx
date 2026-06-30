@@ -23,6 +23,7 @@ vi.mock('@/lib/api', () => ({
 }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => <div /> }));
 vi.mock('@/components/member-avatar', () => ({ MemberAvatar: () => <div /> }));
+vi.mock('@/components/consent-banner', () => ({ ConsentBanner: () => <div /> }));
 
 import DashboardLayout from './layout';
 

@@ -23,5 +23,7 @@ export {
   sendProbationStartedEmail,
   sendProbationPassedEmail,
   sendNotificationEmail,
+  sendEmailChangeConfirmEmail,
+  sendEmailChangedAlertEmail,
 } from './mailer';
 export type { MailerSecrets } from './mailer';

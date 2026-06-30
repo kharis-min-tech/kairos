@@ -13,6 +13,8 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  requestEmailChangeSchema,
+  tokenSchema,
 } from './schemas';
 import {
   signup,
@@ -24,6 +26,11 @@ import {
   getMe,
   changePassword,
 } from './service';
+import {
+  requestEmailChange,
+  confirmEmailChange,
+  undoEmailChange,
+} from './email-change-service';
 import { recordAuditEvent, hasPriorSigninFromUserAgent } from '../audit/service';
 import { extractRequestContext } from '../audit/context';
 import { dispatchNotification } from '../notifications/service';
@@ -137,3 +144,39 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   await changePassword(db, auth, currentPassword, newPassword);
   return c.json(successResponse(undefined, 'Password changed successfully'));
 });
+
+authRouter.post(
+  '/email-change',
+  authMiddleware,
+  zValidator('json', requestEmailChangeSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { currentPassword, newEmail } = c.req.valid('json');
+    await requestEmailChange(db, auth, currentPassword, newEmail);
+    return c.json(
+      successResponse(undefined, 'Check your new email for a confirmation link'),
+    );
+  },
+);
+
+authRouter.post(
+  '/email-change/confirm',
+  zValidator('json', tokenSchema),
+  async (c) => {
+    const { token } = c.req.valid('json');
+    await confirmEmailChange(db, token);
+    return c.json(successResponse(undefined, 'Email change confirmed'));
+  },
+);
+
+authRouter.post(
+  '/email-change/undo',
+  zValidator('json', tokenSchema),
+  async (c) => {
+    const { token } = c.req.valid('json');
+    const result = await undoEmailChange(db, token);
+    return c.json(
+      successResponse(result, 'Email change reverted. Use the reset token to set a new password.'),
+    );
+  },
+);
