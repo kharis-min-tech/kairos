@@ -27,6 +27,17 @@ import {
 import { enforceScopeAllows } from '../lib/scope';
 import { syncDepartmentLeadGrants, syncDepartmentDeputyGrants } from '../lib/role-sync';
 import { authHasAnyCapability } from '../lib/grants';
+import { dispatchNotification } from '../notifications/service';
+import {
+  resolveBranchAuthority,
+  resolveDepartmentLeads,
+} from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+function departmentPortalUrl(branchDepartmentId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/departments/${branchDepartmentId}`;
+}
 
 // ── Recruitment pipeline constants ─────────────────────────
 
@@ -737,7 +748,7 @@ export async function createJoinRequest(
 
   // Fire-and-forget confirmation email
   const [requester] = await db
-    .select({ email: members.email, firstName: members.firstName })
+    .select({ email: members.email, firstName: members.firstName, lastName: members.lastName })
     .from(members)
     .where(eq(members.id, auth.memberId));
   if (requester?.email) {
@@ -747,6 +758,27 @@ export async function createJoinRequest(
       bd.departmentName,
     ).catch(() => undefined);
   }
+
+  const [branchAuth, deptLeads] = await Promise.all([
+    resolveBranchAuthority(db, bd.branchId),
+    resolveDepartmentLeads(db, branchDepartmentId),
+  ]);
+  const requesterName = requester
+    ? `${requester.firstName} ${requester.lastName ?? ''}`.trim()
+    : 'A member';
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowDepartmentJoinRequestReceived,
+    recipientMemberIds: [...branchAuth, ...deptLeads],
+    branchId: bd.branchId,
+    subjectType: 'department_join_request',
+    subjectId: request!.id,
+    payload: {
+      requesterName,
+      targetName: bd.departmentName,
+      targetKind: 'department',
+      portalUrl: departmentPortalUrl(branchDepartmentId),
+    },
+  });
 
   return request!;
 }

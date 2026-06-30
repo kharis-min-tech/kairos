@@ -14,6 +14,14 @@ import {
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, sendMentorAssignedEmail, logger } from '@kairos/utils';
+import { dispatchNotification } from '../notifications/service';
+import { resolveBranchAuthority } from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+function enrollmentPortalUrl(enrollmentId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/new-believers/${enrollmentId}`;
+}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -648,6 +656,42 @@ export async function updateEnrollment(
     .set(updateValues)
     .where(eq(newBelieverEnrollments.id, enrollmentId))
     .returning();
+
+  if (data.stage && data.stage !== existing.stage) {
+    const [student, actor] = await Promise.all([
+      db.select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, existing.memberId)).limit(1),
+      db.select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members).where(eq(members.id, auth.memberId)).limit(1),
+    ]);
+    const studentName = student[0]
+      ? `${student[0].firstName} ${student[0].lastName ?? ''}`.trim()
+      : 'A student';
+    const actorName = actor[0]
+      ? `${actor[0].firstName} ${actor[0].lastName ?? ''}`.trim()
+      : null;
+
+    const recipients = new Set<string>();
+    if (existing.mentorId) recipients.add(existing.mentorId);
+    const branchAuth = await resolveBranchAuthority(db, existing.branchId);
+    branchAuth.forEach((id) => recipients.add(id));
+    recipients.delete(auth.memberId);
+
+    await dispatchNotification(db, {
+      eventType: NotificationEventType.WorkflowNewBelieverStageMoved,
+      recipientMemberIds: Array.from(recipients),
+      branchId: existing.branchId,
+      subjectType: 'new_believer_enrollment',
+      subjectId: enrollmentId,
+      payload: {
+        studentName,
+        fromStage: existing.stage,
+        toStage: data.stage,
+        changedByName: actorName,
+        portalUrl: enrollmentPortalUrl(enrollmentId),
+      },
+    });
+  }
 
   return updated!;
 }

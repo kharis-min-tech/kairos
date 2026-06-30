@@ -492,9 +492,13 @@ describe('bulkAdvance', () => {
 
   it('continues advancing after a single failure and reports { advanced: N-1, failed: 1 }', async () => {
     // Failure pattern: the 2nd lookup returns [] → NotFoundError → caught.
+    // Each successful updateEnrollment fires 3 extra selects via the workflow
+    // notification path (student, actor, branchAuthority). The dispatcher
+    // early-exits on empty recipients so no further reads. Pad accordingly.
     setupSelectSequence(
       [{ branchId, stage: 'enrolled', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
-      [], // not found for enrollment 2
+      [], [], [], // enrollment 1 notification path
+      [], // not found for enrollment 2 (next "existing" lookup)
       [{ branchId, stage: 'enrolled', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
     );
     setupUpdate([{ id: 'any', stage: 'session-1', branchId }]);

@@ -91,6 +91,14 @@ export const NotificationEventType = {
   SecurityEmailChangeRequested: 'security.email_change_requested',
   SecurityEmailChangeConfirmed: 'security.email_change_confirmed',
   SecurityEmailChangedAlert: 'security.email_changed_alert',
+  // ── Workflow ──
+  WorkflowFellowshipJoinRequestReceived: 'workflow.fellowship_join_request_received',
+  WorkflowFellowshipJoinRequestDecided: 'workflow.fellowship_join_request_decided',
+  WorkflowDepartmentJoinRequestReceived: 'workflow.department_join_request_received',
+  WorkflowDepartmentJoinRequestDecided: 'workflow.department_join_request_decided',
+  WorkflowSoulAssigned: 'workflow.soul_assigned',
+  WorkflowSoulStatusChanged: 'workflow.soul_status_changed',
+  WorkflowNewBelieverStageMoved: 'workflow.new_believer_stage_moved',
 } as const;
 export type NotificationEventType = (typeof NotificationEventType)[keyof typeof NotificationEventType];
 

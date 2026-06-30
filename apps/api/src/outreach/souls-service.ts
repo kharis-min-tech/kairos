@@ -18,6 +18,14 @@ import {
 } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
 import { authHasAnyCapability } from '../lib/grants';
+import { dispatchNotification } from '../notifications/service';
+import { resolveBranchAuthority } from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+function soulPortalUrl(soulId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/souls/${soulId}`;
+}
 
 /**
  * Capture a new soul
@@ -81,7 +89,7 @@ export async function updateSoulStatus(
     status: string;
     convertedToMemberId?: string;
   },
-  _auth: AuthContext,
+  auth: AuthContext,
 ) {
   // Normalize status
   const status = input.status.trim();
@@ -97,9 +105,16 @@ export async function updateSoulStatus(
     throw new ValidationError('converted_to_member_id is required when status is Converted');
   }
 
-  // Verify soul exists
+  // Verify soul exists + capture pre-change state for notifications
   const [existing] = await db
-    .select({ id: souls.id })
+    .select({
+      id: souls.id,
+      status: souls.status,
+      firstName: souls.firstName,
+      lastName: souls.lastName,
+      assignedMemberId: souls.assignedMemberId,
+      outreachId: souls.outreachId,
+    })
     .from(souls)
     .where(eq(souls.id, soulId));
 
@@ -117,6 +132,45 @@ export async function updateSoulStatus(
     })
     .where(eq(souls.id, soulId))
     .returning();
+
+  if (existing.status !== status) {
+    let branchId: string | null = null;
+    if (existing.outreachId) {
+      const [program] = await db
+        .select({ branchId: outreachPrograms.branchId })
+        .from(outreachPrograms)
+        .where(eq(outreachPrograms.id, existing.outreachId));
+      branchId = program?.branchId ?? null;
+    }
+    const [actor] = await db
+      .select({ firstName: members.firstName, lastName: members.lastName })
+      .from(members)
+      .where(eq(members.id, auth.memberId));
+    const actorName = actor ? `${actor.firstName} ${actor.lastName ?? ''}`.trim() : null;
+
+    const recipients = new Set<string>();
+    if (existing.assignedMemberId) recipients.add(existing.assignedMemberId);
+    if (branchId) {
+      const branchAuth = await resolveBranchAuthority(db, branchId);
+      branchAuth.forEach((id) => recipients.add(id));
+    }
+    recipients.delete(auth.memberId);
+
+    await dispatchNotification(db, {
+      eventType: NotificationEventType.WorkflowSoulStatusChanged,
+      recipientMemberIds: Array.from(recipients),
+      branchId: branchId ?? undefined,
+      subjectType: 'soul',
+      subjectId: soulId,
+      payload: {
+        soulName: `${existing.firstName} ${existing.lastName ?? ''}`.trim(),
+        fromStatus: existing.status,
+        toStatus: status,
+        changedByName: actorName,
+        portalUrl: soulPortalUrl(soulId),
+      },
+    });
+  }
 
   return updated;
 }
@@ -667,6 +721,8 @@ export async function reassignSoul(
       id: souls.id,
       assignedMemberId: souls.assignedMemberId,
       branchId: outreachPrograms.branchId,
+      firstName: souls.firstName,
+      lastName: souls.lastName,
     })
     .from(souls)
     .leftJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
@@ -705,6 +761,27 @@ export async function reassignSoul(
     })
     .where(eq(souls.id, soulId))
     .returning();
+
+  if (soul.assignedMemberId !== input.assignedMemberId) {
+    const [actor] = await db
+      .select({ firstName: members.firstName, lastName: members.lastName })
+      .from(members)
+      .where(eq(members.id, auth.memberId));
+    const actorName = actor ? `${actor.firstName} ${actor.lastName ?? ''}`.trim() : null;
+
+    await dispatchNotification(db, {
+      eventType: NotificationEventType.WorkflowSoulAssigned,
+      recipientMemberIds: [input.assignedMemberId],
+      branchId: soul.branchId ?? undefined,
+      subjectType: 'soul',
+      subjectId: soulId,
+      payload: {
+        soulName: `${soul.firstName} ${soul.lastName ?? ''}`.trim(),
+        assignedByName: actorName,
+        portalUrl: soulPortalUrl(soulId),
+      },
+    });
+  }
 
   return updated;
 }

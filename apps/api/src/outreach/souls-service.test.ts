@@ -434,6 +434,14 @@ describe('Souls Service', () => {
             })),
           };
         }
+        // Actor lookup for notification dispatch
+        if (fields && fields.firstName && fields.lastName && !fields.id) {
+          return {
+            from: vi.fn(() => ({
+              where: vi.fn().mockResolvedValue([{ firstName: 'Actor', lastName: 'User' }]),
+            })),
+          };
+        }
         return {
           from: vi.fn(() => ({
             leftJoin: vi.fn(() => ({
@@ -441,6 +449,8 @@ describe('Souls Service', () => {
                 id: 'soul-1',
                 assignedMemberId: memberAuth.memberId,
                 branchId: TEST_IDS.branchId,
+                firstName: 'Soul',
+                lastName: 'Name',
               }]),
             })),
           })),

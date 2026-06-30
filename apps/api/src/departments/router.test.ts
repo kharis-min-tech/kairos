@@ -255,7 +255,9 @@ describe('DELETE /api/departments/:id/members/:memberId', () => {
 
 describe('POST /api/departments/:id/join-requests', () => {
   it('allows member to create join request', async () => {
-    // 1) getBranchDept, 2) applicant branch, 3) active check, 4) pending check, 5) cap count, 6) requester email
+    // 1) getBranchDept, 2) applicant branch, 3) active check, 4) pending check,
+    // 5) cap count, 6) requester email, 7) resolveBranchAuthority,
+    // 8) resolveDepartmentLeads, 9) loadRecipients (dispatcher), 10) loadPreferences
     mockDb.select
       .mockReturnValueOnce(chainTo([sampleBranchDept]))
       .mockReturnValueOnce(
@@ -270,7 +272,8 @@ describe('POST /api/departments/:id/join-requests', () => {
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([{ value: 0 }]))
-      .mockReturnValueOnce(chainTo([{ email: 'm@x', firstName: 'M' }]));
+      .mockReturnValueOnce(chainTo([{ email: 'm@x', firstName: 'M', lastName: 'X' }]))
+      .mockReturnValue(chainTo([])); // fallback for any further selects (notification fan-out)
     mockDb.insert.mockReturnValueOnce(chainTo([{ id: requestId, status: 'applied' }]));
     const res = await app.request(`/api/departments/${branchDeptId}/join-requests`, {
       method: 'POST',

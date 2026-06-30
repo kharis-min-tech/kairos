@@ -14,6 +14,13 @@ import {
   renderRoleRevoked,
   renderSigninNewDevice,
 } from './templates/security';
+import {
+  renderJoinRequestReceived,
+  renderJoinRequestDecided,
+  renderSoulAssigned,
+  renderSoulStatusChanged,
+  renderNewBelieverStageMoved,
+} from './templates/workflow';
 
 export interface RenderedEmail {
   subject: string;
@@ -45,5 +52,33 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
   [NotificationEventType.SecuritySigninNewDevice]: {
     category: NotificationCategory.Security,
     render: renderSigninNewDevice,
+  },
+  [NotificationEventType.WorkflowFellowshipJoinRequestReceived]: {
+    category: NotificationCategory.Workflow,
+    render: renderJoinRequestReceived,
+  },
+  [NotificationEventType.WorkflowFellowshipJoinRequestDecided]: {
+    category: NotificationCategory.Workflow,
+    render: renderJoinRequestDecided,
+  },
+  [NotificationEventType.WorkflowDepartmentJoinRequestReceived]: {
+    category: NotificationCategory.Workflow,
+    render: renderJoinRequestReceived,
+  },
+  [NotificationEventType.WorkflowDepartmentJoinRequestDecided]: {
+    category: NotificationCategory.Workflow,
+    render: renderJoinRequestDecided,
+  },
+  [NotificationEventType.WorkflowSoulAssigned]: {
+    category: NotificationCategory.Workflow,
+    render: renderSoulAssigned,
+  },
+  [NotificationEventType.WorkflowSoulStatusChanged]: {
+    category: NotificationCategory.Workflow,
+    render: renderSoulStatusChanged,
+  },
+  [NotificationEventType.WorkflowNewBelieverStageMoved]: {
+    category: NotificationCategory.Workflow,
+    render: renderNewBelieverStageMoved,
   },
 };

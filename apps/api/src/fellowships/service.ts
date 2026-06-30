@@ -25,6 +25,17 @@ import {
 import { enforceScopeAllows } from '../lib/scope';
 import { syncFellowshipLeaderGrants } from '../lib/role-sync';
 import { authHasAnyCapability } from '../lib/grants';
+import { dispatchNotification } from '../notifications/service';
+import {
+  resolveBranchAuthority,
+  resolveFellowshipLeaders,
+} from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+function joinRequestPortalUrl(fellowshipId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/fellowships/${fellowshipId}`;
+}
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
   if (authHasCapability(auth, 'branch:read')) return;
@@ -800,9 +811,9 @@ export async function createJoinRequest(
     .values({ fellowshipId, memberId: auth.memberId, notes: data.notes })
     .returning();
 
-  // Fire confirmation email — non-blocking
+  // Fire confirmation email to requester — non-blocking, transactional
   const [requester] = await db
-    .select({ email: members.email, firstName: members.firstName })
+    .select({ email: members.email, firstName: members.firstName, lastName: members.lastName })
     .from(members)
     .where(eq(members.id, auth.memberId));
   if (requester?.email) {
@@ -812,6 +823,28 @@ export async function createJoinRequest(
       fellowship.fellowshipName,
     ).catch(() => { /* email failure is non-fatal */ });
   }
+
+  // Workflow notification to leadership chain
+  const [branchAuth, fellowshipLeaders] = await Promise.all([
+    resolveBranchAuthority(db, fellowship.branchId!),
+    resolveFellowshipLeaders(db, fellowshipId),
+  ]);
+  const requesterName = requester
+    ? `${requester.firstName} ${requester.lastName ?? ''}`.trim()
+    : 'A member';
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowFellowshipJoinRequestReceived,
+    recipientMemberIds: [...branchAuth, ...fellowshipLeaders],
+    branchId: fellowship.branchId!,
+    subjectType: 'fellowship_join_request',
+    subjectId: request!.id,
+    payload: {
+      requesterName,
+      targetName: fellowship.fellowshipName,
+      targetKind: 'fellowship',
+      portalUrl: joinRequestPortalUrl(fellowshipId),
+    },
+  });
 
   return request!;
 }
@@ -903,7 +936,7 @@ export async function reviewJoinRequest(
     }
   }
 
-  // Fire outcome email — non-blocking
+  // Fire outcome email — non-blocking, transactional
   const [reviewee] = await db
     .select({ email: members.email, firstName: members.firstName })
     .from(members)
@@ -917,6 +950,20 @@ export async function reviewJoinRequest(
       /* email failure is non-fatal */
     });
   }
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowFellowshipJoinRequestDecided,
+    recipientMemberIds: [request.memberId],
+    branchId: fellowship.branchId!,
+    subjectType: 'fellowship_join_request',
+    subjectId: request.id,
+    payload: {
+      targetName: fellowship.fellowshipName,
+      targetKind: 'fellowship',
+      decision: data.status,
+      portalUrl: joinRequestPortalUrl(fellowshipId),
+    },
+  });
 
   return updated!;
 }
