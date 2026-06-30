@@ -58,12 +58,14 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium">Recent sign-ins</p>
               <p className="text-xs text-muted-foreground">
-                Review where you&apos;ve been signed in (coming soon).
+                Sign-ins, password changes, and role updates on your account.
               </p>
             </div>
-            <Button variant="outline" size="sm" className="rounded-lg" disabled>
-              Coming Soon
-            </Button>
+            <Link href="/profile/settings/security">
+              <Button variant="outline" size="sm" className="rounded-lg">
+                View
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

@@ -24,6 +24,10 @@ import {
   getMe,
   changePassword,
 } from './service';
+import { recordAuditEvent, hasPriorSigninFromUserAgent } from '../audit/service';
+import { extractRequestContext } from '../audit/context';
+import { dispatchNotification } from '../notifications/service';
+import { AuditAction, AuditOutcome, NotificationEventType } from '@kairos/types';
 
 export const authRouter = new Hono();
 
@@ -41,8 +45,47 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
 
 authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
-  const result = await login(db, body.email, body.password, getAuthSecrets(c));
-  return c.json(successResponse(result, 'Login successful'));
+  const ctx = extractRequestContext(c);
+  try {
+    const result = await login(db, body.email, body.password, getAuthSecrets(c));
+
+    const isNewDevice = ctx.userAgent
+      ? !(await hasPriorSigninFromUserAgent(db, result.member.id, ctx.userAgent))
+      : false;
+
+    await recordAuditEvent(db, {
+      actorMemberId: result.member.id,
+      action: AuditAction.SigninSuccess,
+      outcome: AuditOutcome.Success,
+      ctx,
+      metadata: { isFirstLogin: result.isFirstLogin },
+    });
+
+    if (isNewDevice) {
+      void dispatchNotification(db, {
+        eventType: NotificationEventType.SecuritySigninNewDevice,
+        recipientMemberIds: [result.member.id],
+        payload: {
+          occurredAt: new Date(),
+          ip: ctx.ip ?? null,
+          country: ctx.country ?? null,
+          userAgent: ctx.userAgent ?? null,
+        },
+      });
+    }
+
+    return c.json(successResponse(result, 'Login successful'));
+  } catch (err) {
+    await recordAuditEvent(db, {
+      actorMemberId: null,
+      action: AuditAction.SigninFailure,
+      outcome: AuditOutcome.Failure,
+      attemptedEmail: body.email,
+      ctx,
+      metadata: { reason: err instanceof Error ? err.message : 'unknown' },
+    });
+    throw err;
+  }
 });
 
 authRouter.post('/refresh', zValidator('json', refreshSchema), async (c) => {

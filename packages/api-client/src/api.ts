@@ -86,6 +86,7 @@ import type {
   ListNotificationPreferencesResponse,
   NotificationPreferencePayload,
   UpdateNotificationPreferenceRequest,
+  ListMyAuditLogResponse,
   // Branch role management
   BranchRoleAssignment,
   AssignBranchRoleRequest,
@@ -817,6 +818,8 @@ export function createApiClient(
             data,
           ),
       },
+      auditLog: () =>
+        client.get<ApiResponse<ListMyAuditLogResponse>>('/api/me/audit-log'),
     },
 
     analytics: {

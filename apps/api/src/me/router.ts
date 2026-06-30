@@ -12,6 +12,7 @@ import {
   upsertPreference,
 } from '../notifications/service';
 import { updateNotificationPreferenceSchema } from './schemas';
+import { listMyAuditLog } from '../audit/service';
 
 export const meRouter = new Hono();
 
@@ -48,3 +49,9 @@ meRouter.put(
     return c.json(successResponse(updated));
   },
 );
+
+meRouter.get('/audit-log', async (c) => {
+  const auth = getAuth(c);
+  const entries = await listMyAuditLog(db, auth.memberId);
+  return c.json(successResponse({ entries }));
+});

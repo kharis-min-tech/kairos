@@ -65,3 +65,9 @@ export {
   type NotificationEvent,
   type NewNotificationEvent,
 } from './notification-events';
+export {
+  auditLog,
+  auditLogRelations,
+  type AuditLogEntry,
+  type NewAuditLogEntry,
+} from './audit-log';

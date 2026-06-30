@@ -26,7 +26,16 @@ export const loggingMiddleware: MiddlewareHandler = async (c, next) => {
   const path = new URL(c.req.url).pathname;
   const start = Date.now();
 
-  await withLoggerContext({ requestId, method, path }, async () => {
+  // Audit / observability fields from CF edge headers — stashed on the same
+  // AsyncLocalStorage so any service in the request can read them without
+  // threading params through every signature.
+  const cfIp = c.req.header('CF-Connecting-IP');
+  const xff = c.req.header('X-Forwarded-For');
+  const ip = cfIp ?? (xff ? xff.split(',')[0]?.trim() : undefined);
+  const country = c.req.header('CF-IPCountry');
+  const userAgent = c.req.header('User-Agent');
+
+  await withLoggerContext({ requestId, method, path, ip, country, userAgent }, async () => {
     try {
       await next();
     } finally {

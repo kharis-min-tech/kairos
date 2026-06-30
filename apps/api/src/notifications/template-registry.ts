@@ -12,6 +12,7 @@ import {
   renderPasswordChanged,
   renderRoleGranted,
   renderRoleRevoked,
+  renderSigninNewDevice,
 } from './templates/security';
 
 export interface RenderedEmail {
@@ -40,5 +41,9 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
   [NotificationEventType.SecurityRoleRevoked]: {
     category: NotificationCategory.Security,
     render: renderRoleRevoked,
+  },
+  [NotificationEventType.SecuritySigninNewDevice]: {
+    category: NotificationCategory.Security,
+    render: renderSigninNewDevice,
   },
 };

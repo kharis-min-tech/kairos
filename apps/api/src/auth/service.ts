@@ -19,7 +19,8 @@ import { isMinorMember } from '@kairos/types';
 import { resolveGrants } from '../lib/grants';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { dispatchNotification } from '../notifications/service';
-import { NotificationEventType } from '@kairos/types';
+import { recordAuditEvent } from '../audit/service';
+import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
   NotFoundError,
   ConflictError,
@@ -499,6 +500,13 @@ export async function resetPassword(db: Database, token: string, newPassword: st
       loginUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/login`,
     },
   });
+
+  await recordAuditEvent(db, {
+    actorMemberId: match.id,
+    action: AuditAction.PasswordChange,
+    outcome: AuditOutcome.Success,
+    metadata: { via: 'reset_password' },
+  });
 }
 
 export async function getMe(db: Database, memberId: string): Promise<MemberProfile> {
@@ -546,5 +554,12 @@ export async function changePassword(
       occurredAt: new Date(),
       loginUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/login`,
     },
+  });
+
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.PasswordChange,
+    outcome: AuditOutcome.Success,
+    metadata: { via: 'change_password' },
   });
 }

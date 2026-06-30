@@ -87,6 +87,38 @@ export function renderRoleGranted(p: SecurityRoleGrantedPayload) {
   };
 }
 
+export interface SecuritySigninNewDevicePayload {
+  memberName: string;
+  occurredAt: Date;
+  ip: string | null;
+  country: string | null;
+  userAgent: string | null;
+}
+
+export function renderSigninNewDevice(p: SecuritySigninNewDevicePayload) {
+  const when = p.occurredAt.toLocaleString('en-GB');
+  const locationLine = [p.country, p.ip].filter(Boolean).join(' · ');
+  return {
+    subject: 'New sign-in to your Kharis Church account',
+    html: renderLayout({
+      heading: 'New sign-in detected',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p>Your Kharis Church account was signed in to from a device we haven't
+           seen before.</p>
+        <ul style="line-height:1.7;">
+          <li><strong>When:</strong> ${escapeHtml(when)}</li>
+          ${locationLine ? `<li><strong>Where:</strong> ${escapeHtml(locationLine)}</li>` : ''}
+          ${p.userAgent ? `<li><strong>Device:</strong> ${escapeHtml(p.userAgent)}</li>` : ''}
+        </ul>
+        <p>If this was you, no action is needed.</p>
+        <p>If you don't recognise this sign-in, change your password immediately
+           and contact your branch administrator.</p>
+      `,
+    }),
+  };
+}
+
 export interface SecurityRoleRevokedPayload {
   memberName: string;
   roleName: string;

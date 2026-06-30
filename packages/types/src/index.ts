@@ -5,3 +5,4 @@ export * from './form-engine';
 export * from './minor';
 export * from './rbac';
 export * from './notifications';
+export * from './audit';

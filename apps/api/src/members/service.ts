@@ -11,7 +11,8 @@ import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
 import { isRealMember } from '../lib/member-predicates';
 import { dispatchNotification } from '../notifications/service';
-import { NotificationEventType } from '@kairos/types';
+import { recordAuditEvent } from '../audit/service';
+import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
   NotFoundError,
   ForbiddenError,
@@ -491,6 +492,15 @@ export async function assignRole(
     actorMemberId: auth.memberId,
   });
 
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.RoleGranted,
+    outcome: AuditOutcome.Success,
+    targetType: 'member_role',
+    targetId: assignment?.id,
+    metadata: { recipientMemberId: memberId, roleId: input.roleId, branchId: input.branchId },
+  });
+
   return assignment;
 }
 
@@ -530,6 +540,15 @@ export async function removeRole(
       roleId: updated.roleId,
       branchId: assignment.branchId,
       actorMemberId: auth.memberId,
+    });
+
+    await recordAuditEvent(db, {
+      actorMemberId: auth.memberId,
+      action: AuditAction.RoleRevoked,
+      outcome: AuditOutcome.Success,
+      targetType: 'member_role',
+      targetId: updated.id,
+      metadata: { recipientMemberId: memberId, roleId: updated.roleId, branchId: assignment.branchId },
     });
   }
 
