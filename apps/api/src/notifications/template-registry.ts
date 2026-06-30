@@ -21,6 +21,17 @@ import {
   renderSoulStatusChanged,
   renderNewBelieverStageMoved,
 } from './templates/workflow';
+import {
+  renderVisitorPromoted,
+  renderChildAgedOut,
+  renderMemberConfirmed,
+} from './templates/lifecycle';
+import { renderFormsSubmissionReceived } from './templates/forms';
+import {
+  renderRotaAssignmentConfirmed,
+  renderRotaSwapRequested,
+  renderUniformScheduleSet,
+} from './templates/rota';
 
 export interface RenderedEmail {
   subject: string;
@@ -80,5 +91,33 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
   [NotificationEventType.WorkflowNewBelieverStageMoved]: {
     category: NotificationCategory.Workflow,
     render: renderNewBelieverStageMoved,
+  },
+  [NotificationEventType.LifecycleVisitorPromoted]: {
+    category: NotificationCategory.Lifecycle,
+    render: renderVisitorPromoted,
+  },
+  [NotificationEventType.LifecycleChildAgedOut]: {
+    category: NotificationCategory.Lifecycle,
+    render: renderChildAgedOut,
+  },
+  [NotificationEventType.LifecycleMemberConfirmed]: {
+    category: NotificationCategory.Lifecycle,
+    render: renderMemberConfirmed,
+  },
+  [NotificationEventType.FormsSubmissionReceived]: {
+    category: NotificationCategory.Forms,
+    render: renderFormsSubmissionReceived,
+  },
+  [NotificationEventType.RotaAssignmentConfirmed]: {
+    category: NotificationCategory.Rota,
+    render: renderRotaAssignmentConfirmed,
+  },
+  [NotificationEventType.RotaSwapRequested]: {
+    category: NotificationCategory.Rota,
+    render: renderRotaSwapRequested,
+  },
+  [NotificationEventType.UniformScheduleSet]: {
+    category: NotificationCategory.Uniform,
+    render: renderUniformScheduleSet,
   },
 };

@@ -3,6 +3,7 @@ import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
   branchDepartments,
+  departments,
   departmentMembers,
   departmentUniformOutfits,
   departmentUniformSchedule,
@@ -16,6 +17,13 @@ import {
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasAnyCapability } from '../lib/grants';
+import { dispatchNotification } from '../notifications/service';
+import { NotificationEventType } from '@kairos/types';
+
+function uniformPortalUrl(branchDeptId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/departments/${branchDeptId}#uniform`;
+}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -290,6 +298,43 @@ export async function assignSchedule(
       assignedById: auth.memberId,
     })
     .returning();
+
+  const [outfitDetail] = await db
+    .select({
+      outfitName: departmentUniformOutfits.name,
+      departmentName: departments.departmentName,
+    })
+    .from(departmentUniformOutfits)
+    .innerJoin(branchDepartments, eq(departmentUniformOutfits.branchDepartmentId, branchDepartments.id))
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(eq(departmentUniformOutfits.id, input.outfitId));
+
+  const memberRows = await db
+    .select({ memberId: departmentMembers.memberId })
+    .from(departmentMembers)
+    .where(
+      and(
+        eq(departmentMembers.branchDepartmentId, branchDeptId),
+        eq(departmentMembers.isActive, true),
+      ),
+    );
+  const recipients = memberRows.map((r) => r.memberId).filter((id) => id !== auth.memberId);
+
+  if (outfitDetail && recipients.length > 0) {
+    await dispatchNotification(db, {
+      eventType: NotificationEventType.UniformScheduleSet,
+      recipientMemberIds: recipients,
+      subjectType: 'uniform_schedule',
+      subjectId: created!.id,
+      payload: {
+        departmentName: outfitDetail.departmentName,
+        serviceDate: input.serviceDate,
+        outfitName: outfitDetail.outfitName,
+        portalUrl: uniformPortalUrl(branchDeptId),
+      },
+    });
+  }
+
   return created!;
 }
 

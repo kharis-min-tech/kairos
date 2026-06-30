@@ -99,6 +99,17 @@ export const NotificationEventType = {
   WorkflowSoulAssigned: 'workflow.soul_assigned',
   WorkflowSoulStatusChanged: 'workflow.soul_status_changed',
   WorkflowNewBelieverStageMoved: 'workflow.new_believer_stage_moved',
+  // ── Lifecycle ──
+  LifecycleVisitorPromoted: 'lifecycle.visitor_promoted',
+  LifecycleChildAgedOut: 'lifecycle.child_aged_out',
+  LifecycleMemberConfirmed: 'lifecycle.member_confirmed',
+  // ── Forms ──
+  FormsSubmissionReceived: 'forms.submission_received',
+  // ── Rota ──
+  RotaAssignmentConfirmed: 'rota.assignment_confirmed',
+  RotaSwapRequested: 'rota.swap_requested',
+  // ── Uniform ──
+  UniformScheduleSet: 'uniform.schedule_set',
 } as const;
 export type NotificationEventType = (typeof NotificationEventType)[keyof typeof NotificationEventType];
 

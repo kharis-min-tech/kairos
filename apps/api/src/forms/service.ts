@@ -20,6 +20,69 @@ import {
 } from '@kairos/utils';
 import { createEnrollmentInternal } from '../new-believers/service';
 import { createMemberShell } from '../lib/member-shell';
+import { dispatchNotification } from '../notifications/service';
+import { resolveBranchAuthority } from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+const FORM_TYPE_LABELS: Record<string, string> = {
+  first_time_visitor: 'first-time visitor',
+  baptism: 'baptism request',
+  testimony: 'testimony',
+  baby_naming: 'baby naming',
+  baby_dedication: 'baby dedication',
+  altar_call: 'altar call',
+};
+
+function formSubmissionPortalUrl(submissionId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/forms/submissions/${submissionId}`;
+}
+
+async function dispatchFormSubmissionReceived(
+  db: Database,
+  auth: AuthContext,
+  formType: string,
+  branchId: string,
+  row: { id: string; subjectMemberId: string | null },
+) {
+  const formLabel = FORM_TYPE_LABELS[formType] ?? formType;
+  const branchAuth = await resolveBranchAuthority(db, branchId);
+  const recipients = branchAuth.filter((id) => id !== auth.memberId);
+  if (recipients.length === 0) return;
+
+  const [submitter] = await db
+    .select({ firstName: members.firstName, lastName: members.lastName })
+    .from(members)
+    .where(eq(members.id, auth.memberId));
+  const submittedByName = submitter
+    ? `${submitter.firstName} ${submitter.lastName ?? ''}`.trim()
+    : null;
+
+  let subjectName = 'a new visitor';
+  if (row.subjectMemberId) {
+    const [subject] = await db
+      .select({ firstName: members.firstName, lastName: members.lastName })
+      .from(members)
+      .where(eq(members.id, row.subjectMemberId));
+    if (subject) {
+      subjectName = `${subject.firstName} ${subject.lastName ?? ''}`.trim();
+    }
+  }
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.FormsSubmissionReceived,
+    recipientMemberIds: recipients,
+    branchId,
+    subjectType: 'form_submission',
+    subjectId: row.id,
+    payload: {
+      formLabel,
+      subjectName,
+      submittedByName,
+      portalUrl: formSubmissionPortalUrl(row.id),
+    },
+  });
+}
 import {
   payloadSchemaByFormType,
   isVisitorUnder16,
@@ -393,6 +456,25 @@ export async function submitForm(
     isCrossBranchCapable && body.branchId ? body.branchId : auth.branchId;
   enforceBranchScope(auth, branchId);
 
+  const row = await submitFormByType(db, auth, branchId, formType, body, payload);
+  await dispatchFormSubmissionReceived(db, auth, formType, branchId, row);
+  return row;
+}
+
+async function submitFormByType(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  formType: string,
+  body: {
+    subjectMemberId?: string;
+    branchId?: string;
+    payload: Record<string, unknown>;
+    consentGivenAt?: string;
+    consentPolicyVersion?: string;
+  },
+  payload: Record<string, unknown>,
+) {
   // Per-form matching policies. Each resolves a subject via the shared
   // `resolveOrMintSubject` ladder, varying only in the no-match policy.
   if (formType === 'first_time_visitor') {

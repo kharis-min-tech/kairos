@@ -26,6 +26,14 @@ import {
 } from './rota-fairness';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasAnyCapability } from '../lib/grants';
+import { dispatchNotification } from '../notifications/service';
+import { resolveDepartmentLeads } from '../notifications/recipients';
+import { NotificationEventType } from '@kairos/types';
+
+function rotaPortalUrl(branchDeptId: string, instanceId: string): string {
+  const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
+  return `${base}/departments/${branchDeptId}#rota-${instanceId}`;
+}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -792,6 +800,38 @@ export async function updateInstanceStatus(
     .set(set)
     .where(eq(rotaInstances.id, instanceId))
     .returning();
+
+  if (input.status === 'Published') {
+    const assignments = await db
+      .select({
+        memberId: rotaAssignments.memberId,
+        slotRoleName: rotaTemplateSlots.roleName,
+        templateName: rotaTemplates.name,
+        serviceDate: rotaInstances.serviceDate,
+      })
+      .from(rotaAssignments)
+      .innerJoin(rotaTemplateSlots, eq(rotaAssignments.slotId, rotaTemplateSlots.id))
+      .innerJoin(rotaInstances, eq(rotaAssignments.instanceId, rotaInstances.id))
+      .innerJoin(rotaTemplates, eq(rotaInstances.templateId, rotaTemplates.id))
+      .where(eq(rotaAssignments.instanceId, instanceId));
+
+    for (const a of assignments) {
+      if (!a.memberId) continue;
+      await dispatchNotification(db, {
+        eventType: NotificationEventType.RotaAssignmentConfirmed,
+        recipientMemberIds: [a.memberId],
+        subjectType: 'rota_assignment',
+        subjectId: instanceId,
+        payload: {
+          templateName: a.templateName,
+          serviceDate: a.serviceDate,
+          slotRoleName: a.slotRoleName,
+          portalUrl: rotaPortalUrl(branchDeptId, instanceId),
+        },
+      });
+    }
+  }
+
   return updated!;
 }
 
@@ -894,6 +934,42 @@ export async function createSwapRequest(
       reason: input.reason ?? null,
     })
     .returning();
+
+  const [requester] = await db
+    .select({ firstName: members.firstName, lastName: members.lastName })
+    .from(members)
+    .where(eq(members.id, auth.memberId));
+  const [instanceData] = await db
+    .select({
+      serviceDate: rotaInstances.serviceDate,
+      templateName: rotaTemplates.name,
+    })
+    .from(rotaInstances)
+    .innerJoin(rotaTemplates, eq(rotaInstances.templateId, rotaTemplates.id))
+    .where(eq(rotaInstances.id, instanceId));
+
+  const deptLeads = await resolveDepartmentLeads(db, bd.id);
+  const recipients = new Set<string>(deptLeads);
+  if (input.proposedMemberId) recipients.add(input.proposedMemberId);
+  recipients.delete(auth.memberId);
+
+  if (instanceData && recipients.size > 0) {
+    await dispatchNotification(db, {
+      eventType: NotificationEventType.RotaSwapRequested,
+      recipientMemberIds: Array.from(recipients),
+      subjectType: 'rota_swap_request',
+      subjectId: created!.id,
+      payload: {
+        requesterName: requester
+          ? `${requester.firstName} ${requester.lastName ?? ''}`.trim()
+          : 'A member',
+        templateName: instanceData.templateName,
+        serviceDate: instanceData.serviceDate,
+        portalUrl: rotaPortalUrl(branchDeptId, instanceId),
+      },
+    });
+  }
+
   return created!;
 }
 
