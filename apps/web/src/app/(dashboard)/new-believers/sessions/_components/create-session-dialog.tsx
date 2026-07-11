@@ -17,7 +17,7 @@ import {
   Textarea,
   TimeSelect,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useCreateSession } from '@/hooks/use-new-believers';
 import type { CreateNewBelieverSessionRequest } from '@kairos/types';
 import {

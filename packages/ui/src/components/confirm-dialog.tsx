@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useCallback, type ReactNode } from 'react';
+import { Button } from './button';
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@kairos/ui';
+} from './dialog';
 
-type ConfirmDialogProps = {
+export type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;

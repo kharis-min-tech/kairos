@@ -15,7 +15,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 function MembersListSkeleton() {
   return (

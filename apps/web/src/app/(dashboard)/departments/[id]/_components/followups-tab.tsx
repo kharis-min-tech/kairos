@@ -15,7 +15,7 @@ import {
   Badge,
   NumberStepper,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { MemberAvatar } from '@/components/member-avatar';
 import { formatDate, formatShortDateTime } from '@/lib/date-format';
 import {
@@ -26,7 +26,7 @@ import {
 } from '@/hooks/use-departments';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import type { DepartmentMemberWithDetails } from '@kairos/types';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 const CONTACT_METHODS = Object.values(ContactMethod);
 const CONTACT_STATUSES = Object.values(ContactStatus);

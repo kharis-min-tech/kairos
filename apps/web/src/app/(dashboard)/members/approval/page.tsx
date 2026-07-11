@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMembers, useApproveMember } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';

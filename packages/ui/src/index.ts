@@ -49,3 +49,7 @@ export {
 } from './components/dialog';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
 export type { TabsProps, TabsTriggerProps, TabsContentProps } from './components/tabs';
+export { ConfirmDialog, useConfirm } from './components/confirm-dialog';
+export type { ConfirmDialogProps } from './components/confirm-dialog';
+export { DateSelect } from './components/date-select';
+export { PasswordStrength } from './components/password-strength';

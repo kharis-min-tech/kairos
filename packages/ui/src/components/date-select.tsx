@@ -16,10 +16,9 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { formatShortDate } from '@/lib/date-format';
 
 /**
- * DateSelect — the application's standard date picker.
+ * DateSelect — the design-system standard date picker.
  *
  * A popover calendar with day / month / year views. Renders as either:
  *  - `variant="input"` (default) — full-width bordered field that visually
@@ -29,8 +28,8 @@ import { formatShortDate } from '@/lib/date-format';
  *     dashboard filter bars, and other dense control rows.
  *
  * Always controlled. Value is an ISO `YYYY-MM-DD` string (or empty string).
- * This is the only date-picker component in the app — do not use native
- * `<input type="date">` or other ad-hoc pickers.
+ * This is the only date-picker in Modern Sanctuary — never use native
+ * `<input type="date">`.
  */
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -51,6 +50,16 @@ function parseIso(iso: string): Date | null {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d);
+}
+
+function formatDisplay(iso: string): string {
+  const d = parseIso(iso);
+  if (!d) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(d);
 }
 
 interface DateSelectProps {
@@ -95,8 +104,6 @@ export function DateSelect({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Keep the calendar's view month in sync when the external value changes
-  // (e.g. form reset).
   useEffect(() => {
     const parsed = parseIso(value);
     if (parsed) setViewMonth(parsed);
@@ -176,7 +183,7 @@ export function DateSelect({
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
 
-  const display = value ? formatShortDate(value, '') : '';
+  const display = value ? formatDisplay(value) : '';
   const portalContainer =
     typeof document !== 'undefined'
       ? wrapperRef.current?.closest('[role="dialog"]') ?? document.body
@@ -212,7 +219,6 @@ export function DateSelect({
   const yearGridStart = Math.floor(currentYear / 12) * 12;
   const yearGrid = Array.from({ length: 12 }, (_, i) => yearGridStart + i);
 
-  // Trigger styles
   const triggerClass =
     variant === 'pill'
       ? 'inline-flex items-center gap-2 rounded bg-[#f0f0f3] px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all duration-150 hover:bg-[#e6e6ea] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60'
@@ -259,7 +265,6 @@ export function DateSelect({
               pointerEvents: 'auto',
             }}
           >
-          {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"
@@ -296,7 +301,6 @@ export function DateSelect({
             </button>
           </div>
 
-          {/* Day grid */}
           {view === 'day' && (
             <>
               <div className="mb-1 grid grid-cols-7 gap-1">
@@ -336,7 +340,6 @@ export function DateSelect({
             </>
           )}
 
-          {/* Month grid */}
           {view === 'month' && (
             <div className="grid grid-cols-3 gap-2">
               {MONTHS_SHORT.map((m, idx) => {
@@ -368,7 +371,6 @@ export function DateSelect({
             </div>
           )}
 
-          {/* Year grid */}
           {view === 'year' && (
             <div className="grid grid-cols-3 gap-2">
               {yearGrid.map((y) => {
@@ -399,7 +401,6 @@ export function DateSelect({
             </div>
           )}
 
-          {/* Footer */}
           <div className="mt-3 flex items-center justify-between border-t border-border/10 pt-3">
             <button
               type="button"

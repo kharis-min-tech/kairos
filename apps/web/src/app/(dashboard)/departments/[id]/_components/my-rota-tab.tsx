@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { CalendarClock, CalendarRange } from 'lucide-react';
 import { Badge, Card, CardContent, Label } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useMyRota } from '@/hooks/use-me';
 import { formatDate } from '@/lib/date-format';
 

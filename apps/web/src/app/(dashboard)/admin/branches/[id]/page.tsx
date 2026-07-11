@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -14,7 +14,7 @@ import { useBranch, useUpdateBranch, useBranchLeadership, useRemoveLeadership, u
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { formatShortDate } from '@/lib/date-format';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';

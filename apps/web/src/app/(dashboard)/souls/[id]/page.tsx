@@ -7,10 +7,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect, NumberStepper } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
 
 interface FollowUpRecord {

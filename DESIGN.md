@@ -20,11 +20,11 @@ rules.
 
 ## What's included
 
-- **13 shared primitives** in `@kairos/ui` — badge, button, card, checkbox,
-  custom-select, dialog, input, label, number-stepper, select, table, tabs,
-  textarea, time-select
-- **3 portable composites** in `apps/web/src/components/` — confirm-dialog,
-  date-select, password-strength
+- **16 components** in `@kairos/ui`:
+  - **13 primitives** — badge, button, card, checkbox, custom-select, dialog,
+    input, label, number-stepper, select, table, tabs, textarea, time-select
+  - **3 composites** — confirm-dialog (+ useConfirm hook), date-select,
+    password-strength
 - **Design tokens** — colors (primary + gold ladders + semantic surfaces),
   radii, shadows, typography scale, spacing
 - **CSS variables** — `--primary`, `--accent`, `--background`, etc., theme-aware

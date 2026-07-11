@@ -6,7 +6,7 @@ import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { Button, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';

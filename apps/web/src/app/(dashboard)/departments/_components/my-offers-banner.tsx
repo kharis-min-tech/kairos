@@ -11,7 +11,7 @@ import {
 } from '@kairos/ui';
 import { useRespondToDepartmentOffer } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 interface Props {
   offers: MyDepartmentJoinRequest[];

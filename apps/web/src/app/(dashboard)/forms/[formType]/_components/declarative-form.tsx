@@ -12,7 +12,7 @@ import {
   cn,
 } from '@kairos/ui';
 import { Search, X, Plus, Trash2 } from 'lucide-react';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
 import {

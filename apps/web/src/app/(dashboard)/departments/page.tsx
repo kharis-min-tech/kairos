@@ -23,7 +23,7 @@ import {
 } from './_components/my-departments-view';
 import { MyOffersBanner } from './_components/my-offers-banner';
 import { MyApplicationsList } from './_components/my-applications-list';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 interface ListParams {
   page?: number;

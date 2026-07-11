@@ -12,7 +12,7 @@ import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { formatShortDate } from '@/lib/date-format';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 interface ProgramParticipant {
   memberId: string;

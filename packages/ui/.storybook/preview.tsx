@@ -21,6 +21,7 @@ const preview: Preview = {
           'Buttons & Actions',
           'Form Controls',
           'Composites',
+          ['ConfirmDialog', 'DateSelect', 'PasswordStrength'],
         ],
       },
     },

@@ -8,7 +8,7 @@ import { useBranches, useDeleteBranch, useRegions } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 export default function BranchesPage() {
   const router = useRouter();

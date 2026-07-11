@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button, Input, Textarea } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';

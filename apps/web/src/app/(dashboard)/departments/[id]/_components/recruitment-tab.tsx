@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { MemberAvatar } from '@/components/member-avatar';
 import {
   useScheduleDepartmentInterview,

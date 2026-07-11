@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button, Card, CardContent } from '@kairos/ui';
 import { useWithdrawDepartmentJoinRequest } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 const STATUS_LABELS: Record<string, string> = {
   applied: 'Applied · awaiting review',

@@ -16,23 +16,16 @@ restrained color, and confident purple/gold emphasis.
 
 ## What's in this Storybook
 
-The 13 shared primitives that ship in `@kairos/ui`:
+**16 components — 13 primitives + 3 composites**, all shipped from `@kairos/ui`:
+
+### Primitives
 
 `Badge` · `Button` · `Card` · `Checkbox` · `CustomSelect` · `Dialog` · `Input` ·
 `Label` · `NumberStepper` · `Select` · `Table` · `Tabs` · `Textarea` · `TimeSelect`
 
-## Composites not shown here
+### Composites
 
-Three portable composites live in `apps/web/src/components/` and are documented
-in `docs/DESIGN-COMPONENTS.md`:
-
-- `ConfirmDialog` — wraps `Dialog` for confirm-cancel flows
-- `DateSelect` — the only date picker in Kairos
-- `PasswordStrength` — live strength meter
-
-They're not in this Storybook because they currently live in the app package,
-not the shared `@kairos/ui` package. If your team adopts them, vendor from the
-app source directly.
+`ConfirmDialog` (+ `useConfirm` hook) · `DateSelect` · `PasswordStrength`
 
 ## Palette
 

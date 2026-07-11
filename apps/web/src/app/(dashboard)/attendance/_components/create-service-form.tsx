@@ -16,7 +16,7 @@ import {
   NumberStepper,
   TimeSelect,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { ServiceType } from '@kairos/types';
 import type { CreateServiceRequest, FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';

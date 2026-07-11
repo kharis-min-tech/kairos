@@ -15,7 +15,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import type { FellowshipListParams } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import type { FellowshipWithBranch } from '@kairos/types';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ssr: false,

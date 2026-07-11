@@ -23,13 +23,13 @@ import {
 import { useMembers } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect, NumberStepper } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
 import { CombinedAttendanceSummary } from './_components/combined-attendance-summary';
 import { formatDate, formatShortDate } from '@/lib/date-format';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { NbStageChip } from '@/components/nb-stage-chip';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 

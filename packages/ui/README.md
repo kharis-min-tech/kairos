@@ -10,12 +10,15 @@ CSS, Radix UI, and `class-variance-authority`. Fully typed. Light + dark theme a
 
 ## What's inside
 
-13 shared primitives, all in `src/components/`:
+**16 components in `src/components/`:**
 
-`Badge` · `Button` · `Card` (+ `CardHeader`, `CardContent`, `CardFooter`, …) ·
-`Checkbox` · `CustomSelect` · `Dialog` (+ Radix parts) · `Input` · `Label` ·
-`NumberStepper` · `Select` (+ parts) · `Table` (+ parts) · `Tabs` (+ parts) ·
-`Textarea` · `TimeSelect`
+Primitives (13): `Badge` · `Button` · `Card` (+ `CardHeader`, `CardContent`,
+`CardFooter`, …) · `Checkbox` · `CustomSelect` · `Dialog` (+ Radix parts) ·
+`Input` · `Label` · `NumberStepper` · `Select` (+ parts) · `Table` (+ parts) ·
+`Tabs` (+ parts) · `Textarea` · `TimeSelect`
+
+Composites (3): `ConfirmDialog` (+ `useConfirm` hook) · `DateSelect` ·
+`PasswordStrength`
 
 Plus:
 

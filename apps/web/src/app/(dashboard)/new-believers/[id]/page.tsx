@@ -12,7 +12,7 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers } from '@/hooks/use-members';
 import { useDepartments } from '@/hooks/use-departments';
 import { useAuthStore } from '@/lib/auth-store';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { formatShortDate } from '@/lib/date-format';
 import {
   Button,

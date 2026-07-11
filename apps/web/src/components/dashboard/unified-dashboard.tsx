@@ -10,7 +10,7 @@ import {
   subDays,
   subMonths,
 } from 'date-fns';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { formatShortDate } from '@/lib/date-format';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
@@ -95,8 +95,6 @@ function InfoTooltip({ title, children }: { title: string; children: React.React
     </div>
   );
 }
-
-// (DateSelect from @/components/date-select replaces the inline DatePill.)
 
 export function UnifiedDashboard({
   overview,

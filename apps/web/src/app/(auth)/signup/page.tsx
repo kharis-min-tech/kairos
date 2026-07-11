@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
-import { PasswordStrength } from '@/components/password-strength';
+import { PasswordStrength } from '@kairos/ui';
 import { KharisCardHeader } from '../kharis-logo';
 
 const signupSchema = z.object({

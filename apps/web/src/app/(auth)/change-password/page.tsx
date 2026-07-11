@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
-import { PasswordStrength } from '@/components/password-strength';
+import { PasswordStrength } from '@kairos/ui';
 import { KharisCardHeader } from '../kharis-logo';
 
 const changePasswordSchema = z

@@ -34,7 +34,7 @@ import { RotaTab } from './_components/rota-tab';
 import { RecruitmentTab } from './_components/recruitment-tab';
 import { MyRotaTab } from './_components/my-rota-tab';
 import { DepartmentAttendanceTab } from './_components/attendance-tab';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { NbStageChip } from '@/components/nb-stage-chip';
 
 type Tab = 'overview' | 'my-rota' | 'members' | 'attendance' | 'followups' | 'uniform' | 'rota' | 'recruitment';

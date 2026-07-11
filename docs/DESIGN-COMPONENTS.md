@@ -1,16 +1,16 @@
 # Kairos Component Reference
 
-Every primitive in `@kairos/ui` and the three portable composites in
-`apps/web/src/components/`. Companion to [`DESIGN.md`](../DESIGN.md) (principles)
-and the Storybook (live visuals — see `packages/ui/README.md`).
+Every primitive and composite in `@kairos/ui`. Companion to
+[`DESIGN.md`](../DESIGN.md) (principles) and the Storybook (live visuals — see
+`packages/ui/README.md`).
 
 Legend:
 
 - 🎨 = variants via `class-variance-authority` (`cva`)
 - 🔀 = forwards ref
 - 🎯 = Radix-based
-- 📦 = shared primitive (`@kairos/ui`)
-- 🧩 = app-local composite (`apps/web/src/components/`)
+- 📦 = primitive (`@kairos/ui`)
+- 🧩 = composite (`@kairos/ui`, built from primitives)
 
 ---
 
@@ -314,7 +314,7 @@ The **only** date picker in Kairos. Popover calendar with day/month/year views.
 Two visual variants: input (form-shaped) and pill (toolbar-shaped).
 
 ```tsx
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 
 <DateSelect value={date} onChange={setDate} variant="input" />
 <DateSelect value={date} onChange={setDate} variant="pill" />
@@ -322,10 +322,11 @@ import { DateSelect } from '@/components/date-select';
 
 **Value:** ISO `YYYY-MM-DD` string, or `""` for unset. Always controlled.
 
-**Rules:** never use `<input type="date">`. This is the entire replacement.
+**Props:** `value?`, `onChange?`, `variant?: 'input' | 'pill'` (default `input`),
+`placeholder?`, `minDate?` / `maxDate?` (ISO), `minYear?` / `maxYear?` (legacy
+shorthand), `disabled?`, `id?`, `className?`.
 
-*Currently in `apps/web/src/components/`; may migrate into `@kairos/ui` in a future
-pass.*
+**Rules:** never use `<input type="date">`. This is the entire replacement.
 
 ---
 
@@ -337,7 +338,7 @@ Wraps `Dialog` with title / description / confirm / cancel props. Includes an
 `isPending` state for optimistic UI.
 
 ```tsx
-import { ConfirmDialog } from '@/components/confirm-dialog';
+import { ConfirmDialog } from '@kairos/ui';
 
 <ConfirmDialog
   open={open}
@@ -355,6 +356,10 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 `confirmLabel?` (default "Confirm"), `cancelLabel?` (default "Cancel"),
 `variant?: 'default' | 'destructive'`, `isPending?`, `onConfirm`.
 
+Also exports **`useConfirm()`** — promise-returning confirm that replaces
+`window.confirm()`. Returns `{ confirm, dialog }`. Render `dialog` in your tree
+and `await confirm({ title, description, variant })`.
+
 ---
 
 ### `PasswordStrength` 🧩
@@ -363,7 +368,7 @@ Live strength meter with per-requirement checklist. Used on signup, reset, and
 change-password flows.
 
 ```tsx
-import { PasswordStrength } from '@/components/password-strength';
+import { PasswordStrength } from '@kairos/ui';
 
 <PasswordStrength password={password} />
 ```
@@ -393,3 +398,5 @@ Vendor these only if you want to adapt them; they're not "design system" surface
 ## Change log
 
 - **v1.0** (2026-07-11) — first handoff catalog. 13 primitives + 3 composites.
+  Composites (ConfirmDialog, DateSelect, PasswordStrength) migrated into
+  `@kairos/ui` from `apps/web/src/components/`.

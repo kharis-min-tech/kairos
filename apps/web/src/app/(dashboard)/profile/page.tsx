@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
 import {

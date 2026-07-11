@@ -17,7 +17,6 @@ describe('PasswordStrength', () => {
 
   it('flags only met requirements as met', () => {
     render(<PasswordStrength password="abc" />);
-    // password 'abc' meets none of: >=8 chars, uppercase, number, special
     expect(screen.getByText('At least 8 characters').className).toMatch(/text-muted/);
     expect(screen.getByText('One uppercase letter').className).toMatch(/text-muted/);
   });

@@ -14,7 +14,7 @@ import {
   Label,
   Textarea,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import {
   useDepartmentOutfits,
   useUniformSchedule,
@@ -25,7 +25,7 @@ import {
 } from '@/hooks/use-departments';
 import { UniformGenderTarget } from '@kairos/types';
 import type { DepartmentUniformOutfit, DepartmentUniformScheduleWithOutfit } from '@kairos/types';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 const GENDER_TARGETS = Object.values(UniformGenderTarget);
 

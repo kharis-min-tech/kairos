@@ -17,7 +17,7 @@ import {
   TimeSelect,
   Badge,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { MemberAvatar } from '@/components/member-avatar';
 import {
   useRotaTemplates,
@@ -39,7 +39,7 @@ import {
   useRotaSwapRequests,
   useReviewRotaSwapRequest,
 } from '@/hooks/use-departments';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import type {
   DepartmentMemberWithDetails,
   RotaInstanceWithSummary,

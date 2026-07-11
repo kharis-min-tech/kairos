@@ -12,12 +12,12 @@ import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships'
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { Lock, BadgeCheck } from 'lucide-react';
 import { SafeguardingSection } from './_components/safeguarding-section';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { useResetPassword } from '@/hooks/use-auth';
-import { PasswordStrength } from '@/components/password-strength';
+import { PasswordStrength } from '@kairos/ui';
 import { KharisCardHeader } from '../kharis-logo';
 
 const resetPasswordSchema = z.object({

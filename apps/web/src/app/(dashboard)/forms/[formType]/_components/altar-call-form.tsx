@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { Button, Input } from '@kairos/ui';
 import type { FormMemberSearchResult } from '@kairos/types';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';

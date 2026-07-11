@@ -8,7 +8,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useCreateMember } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { CreateMemberRequest } from '@kairos/types';
 

@@ -8,7 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useBranch, useBranchRoles, useAssignBranchRole, useRevokeBranchRole } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { useConfirm } from '@/components/confirm-dialog';
+import { useConfirm } from '@kairos/ui';
 import { MemberAvatar } from '@/components/member-avatar';
 import { formatShortDate } from '@/lib/date-format';
 import {

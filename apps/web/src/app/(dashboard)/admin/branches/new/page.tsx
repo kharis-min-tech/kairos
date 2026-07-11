@@ -8,7 +8,7 @@ import { useCreateBranch, useRegions } from '@/hooks/use-branches';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { useForm, Controller } from 'react-hook-form';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 
 const schema = z.object({

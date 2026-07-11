@@ -14,7 +14,7 @@ import {
   TableRow,
   TableCell,
 } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
+import { DateSelect } from '@kairos/ui';
 import { Download } from 'lucide-react';
 import { formatShortDate } from '@/lib/date-format';
 import {
