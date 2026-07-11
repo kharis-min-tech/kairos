@@ -1,0 +1,115 @@
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  darkMode: 'class',
+  content: [
+    './src/**/*.{ts,tsx}',
+    './.storybook/**/*.{ts,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        // Modern Sanctuary primary ladder centred on #5D3FD3 (600).
+        primary: {
+          50:  '#f3f1fd',
+          100: '#e7e3fb',
+          200: '#cfc6f7',
+          300: '#aea0f0',
+          400: '#8970e6',
+          500: '#6f51da',
+          600: '#5d3fd3',
+          700: '#4d33b6',
+          800: '#3f2b96',
+          900: '#342677',
+          950: '#1f1750',
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        // Modern Sanctuary gold ladder centred on #f8b537 (400).
+        accent: {
+          50:  '#fefbed',
+          100: '#fdf3c7',
+          200: '#fce18a',
+          300: '#facb52',
+          400: '#f8b537',
+          500: '#ed9d18',
+          600: '#d18012',
+          700: '#ad6313',
+          800: '#8c4f15',
+          900: '#744116',
+          950: '#432308',
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+        success: {
+          50:  '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        error: {
+          50:  '#fff1f2',
+          100: '#ffe4e6',
+          200: '#fecdd3',
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#f43f5e',
+          600: '#e11d48',
+          700: '#be123c',
+          800: '#9f1239',
+          900: '#881337',
+          DEFAULT: '#E11D48',
+        },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        ambient: '0 8px 24px rgba(26, 28, 28, 0.06)',
+        'ambient-lg': '0 8px 40px rgba(26, 28, 28, 0.06)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;

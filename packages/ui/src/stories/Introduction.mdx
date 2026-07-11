@@ -1,0 +1,54 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/Introduction" />
+
+# Kairos — Modern Sanctuary
+
+Kairos is a church operations console. The design system, **Modern Sanctuary**,
+is calm, structured, and premium: architectural spacing, layered surfaces,
+restrained color, and confident purple/gold emphasis.
+
+## Getting started
+
+- **Principles** — see [`DESIGN.md`](https://github.com/kharis-org/kairos/blob/main/DESIGN.md) at the repo root.
+- **Component reference** — see [`docs/DESIGN-COMPONENTS.md`](https://github.com/kharis-org/kairos/blob/main/docs/DESIGN-COMPONENTS.md).
+- **Tokens** — see [`packages/ui/tokens.json`](https://github.com/kharis-org/kairos/blob/main/packages/ui/tokens.json).
+
+## What's in this Storybook
+
+The 13 shared primitives that ship in `@kairos/ui`:
+
+`Badge` · `Button` · `Card` · `Checkbox` · `CustomSelect` · `Dialog` · `Input` ·
+`Label` · `NumberStepper` · `Select` · `Table` · `Tabs` · `Textarea` · `TimeSelect`
+
+## Composites not shown here
+
+Three portable composites live in `apps/web/src/components/` and are documented
+in `docs/DESIGN-COMPONENTS.md`:
+
+- `ConfirmDialog` — wraps `Dialog` for confirm-cancel flows
+- `DateSelect` — the only date picker in Kairos
+- `PasswordStrength` — live strength meter
+
+They're not in this Storybook because they currently live in the app package,
+not the shared `@kairos/ui` package. If your team adopts them, vendor from the
+app source directly.
+
+## Palette
+
+The core brand colors are royal purple (`#5D3FD3`) and gold (`#f8b537`). See
+the **Colors** story for the full palette.
+
+## Theme
+
+Every component supports light and dark themes. Toggle with the sun/moon icon
+in the Storybook toolbar.
+
+## Adopting the system
+
+If you're another Kharis team adopting Modern Sanctuary:
+
+1. Read `DESIGN.md` for the principles.
+2. Browse this Storybook for the visual catalog.
+3. Follow `packages/ui/README.md` for installation.
+4. Refer to `docs/DESIGN-COMPONENTS.md` for per-component API.

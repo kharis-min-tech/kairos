@@ -11,3 +11,4 @@ test-results
 .claude/worktrees
 .vscode/
 grant-proposal/
+storybook-static/
