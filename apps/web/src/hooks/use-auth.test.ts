@@ -54,6 +54,7 @@ const mockMember: Member = {
   secondaryCity: null,
   secondaryPostalCode: null,
   membershipDate: '2024-01-01',
+  membershipClassCompletedAt: null,
   isActive: true,
   photoUrl: null,
   emergencyContactName: null,

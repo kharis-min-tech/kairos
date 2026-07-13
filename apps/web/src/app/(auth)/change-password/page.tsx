@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,10 +33,17 @@ type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export default function ChangePasswordPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
   const setMustChangePassword = useAuthStore((s) => s.setMustChangePassword);
   const [error, setError] = useState<string | null>(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+
+  useEffect(() => {
+    if (user && !mustChangePassword) {
+      router.replace('/profile/settings/change-password');
+    }
+  }, [user, mustChangePassword, router]);
 
   const {
     register,

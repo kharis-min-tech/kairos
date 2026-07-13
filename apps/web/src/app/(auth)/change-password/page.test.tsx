@@ -5,13 +5,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock('@/lib/auth-store', () => ({
-  useAuthStore: (selector?: (s: { user: { firstName: string }; setMustChangePassword: () => void }) => unknown) => {
+  useAuthStore: (selector?: (s: {
+    user: { firstName: string };
+    mustChangePassword: boolean;
+    setMustChangePassword: () => void;
+  }) => unknown) => {
     const state = {
       user: { firstName: 'Sam' },
+      mustChangePassword: true,
       setMustChangePassword: () => undefined,
     };
     return selector ? selector(state) : state;

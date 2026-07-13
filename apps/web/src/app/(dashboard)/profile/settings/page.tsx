@@ -48,7 +48,7 @@ export default function SettingsPage() {
                 Update your login password. You&apos;ll need your current one.
               </p>
             </div>
-            <Link href="/change-password">
+            <Link href="/profile/settings/change-password">
               <Button variant="outline" size="sm" className="rounded-lg">
                 Change
               </Button>
