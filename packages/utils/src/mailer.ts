@@ -23,7 +23,7 @@ export function bindMailerEnv(secrets: Partial<MailerSecrets>): void {
     awsAccessKeyId: secrets.awsAccessKeyId ?? '',
     awsSecretAccessKey: secrets.awsSecretAccessKey ?? '',
     awsRegion: secrets.awsRegion ?? 'eu-west-2',
-    emailFrom: secrets.emailFrom ?? '"Kharis Church" <no-reply@kharis.church>',
+    emailFrom: secrets.emailFrom ?? '"Kharis Church" <noreply@kharis.org>',
     frontendUrl: secrets.frontendUrl ?? 'http://localhost:3002',
   };
   _awsClient = null;
@@ -36,7 +36,7 @@ function getSecrets(): MailerSecrets {
       awsAccessKeyId: process.env['AWS_ACCESS_KEY_ID'] ?? '',
       awsSecretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] ?? '',
       awsRegion: process.env['AWS_REGION'] ?? 'eu-west-2',
-      emailFrom: process.env['EMAIL_FROM'] ?? '"Kharis Church" <no-reply@kharis.church>',
+      emailFrom: process.env['EMAIL_FROM'] ?? '"Kharis Church" <noreply@kharis.org>',
       frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3002',
     };
     return _secrets;
