@@ -688,5 +688,82 @@ describe('getHealthSummary', () => {
   });
 });
 
+// ── removeFromPipeline ────────────────────────────────────
+
+describe('removeFromPipeline', () => {
+  it('flips isActive=false, stamps reason + notes, and returns the updated row (admin)', async () => {
+    setupSelectSequence(
+      // Initial enrollment lookup (id, branchId, memberId, mentorId, isActive)
+      [{ id: enrollmentId, branchId, memberId, mentorId: 'mentor-1', isActive: true }],
+      // Post-update fan-out selects (student, actor, branch authority, notification loads).
+      // Returning nothing keeps dispatch's downstream a no-op — the try/catch guards it.
+      [], [], [], [],
+    );
+    setupUpdate([{
+      id: enrollmentId,
+      isActive: false,
+      removalReason: 'awol',
+      removalNotes: null,
+    }]);
+
+    const { removeFromPipeline } = await import('./service');
+    const result = await removeFromPipeline(mockDb, adminAuth, enrollmentId, {
+      reason: 'awol',
+    });
+    expect(result?.isActive).toBe(false);
+    expect(result?.removalReason).toBe('awol');
+    expect(mockDb.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 404 when the enrollment does not exist', async () => {
+    setupSelectSequence([]);
+    const { removeFromPipeline } = await import('./service');
+    await expect(
+      removeFromPipeline(mockDb, adminAuth, enrollmentId, { reason: 'awol' }),
+    ).rejects.toThrow('Enrollment');
+  });
+
+  it('is idempotent — already-inactive enrollment returns the row without re-updating', async () => {
+    setupSelectSequence(
+      // Initial lookup shows the enrollment is already removed.
+      [{ id: enrollmentId, branchId, memberId, mentorId: null, isActive: false }],
+      // Re-fetch of the full row.
+      [{ id: enrollmentId, isActive: false, removalReason: 'moved_away', removalNotes: null }],
+    );
+
+    const { removeFromPipeline } = await import('./service');
+    const result = await removeFromPipeline(mockDb, adminAuth, enrollmentId, {
+      reason: 'awol', // reason is ignored on the idempotent branch
+    });
+    expect(result?.removalReason).toBe('moved_away');
+    // No update call — the row was already inactive.
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a plain member who is not a teacher / pastor / admin', async () => {
+    setupSelectSequence(
+      [{ id: enrollmentId, branchId, memberId, mentorId: null, isActive: true }],
+      // enforceTeacherOrAbove: isNewBelieverTeacher → returns []
+      [],
+    );
+    const { removeFromPipeline } = await import('./service');
+    await expect(
+      removeFromPipeline(mockDb, memberAuth, enrollmentId, { reason: 'awol' }),
+    ).rejects.toThrow(/New Believers Teachers|admins/i);
+  });
+
+  it('rejects a leader from another branch (scope enforcement)', async () => {
+    setupSelectSequence(
+      [{ id: enrollmentId, branchId, memberId, mentorId: null, isActive: true }],
+      // enforceTeacherOrAbove: leaderOtherBranch has branch:read via… nope, plain member; teacher check returns []
+      [],
+    );
+    const { removeFromPipeline } = await import('./service');
+    await expect(
+      removeFromPipeline(mockDb, leaderOtherBranch, enrollmentId, { reason: 'awol' }),
+    ).rejects.toThrow();
+  });
+});
+
 // passthrough to prevent unused var
 void teacherId;

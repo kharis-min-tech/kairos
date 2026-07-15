@@ -98,3 +98,16 @@ export const createMentorFollowupSchema = z.object({
   note: z.string().min(1).max(2000),
   contactedAt: z.string().min(1).optional(),
 });
+
+export const NB_REMOVAL_REASONS = [
+  'awol',
+  'withdrew',
+  'moved_away',
+  'stopped_attending',
+  'other',
+] as const;
+
+export const removeEnrollmentSchema = z.object({
+  reason: z.enum(NB_REMOVAL_REASONS),
+  notes: z.string().max(500).optional(),
+});

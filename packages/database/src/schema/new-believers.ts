@@ -36,6 +36,10 @@ export const newBelieverEnrollments = pgTable(
     // Set when member joins a department at the integrated stage
     joinedDepartmentId: uuid('joined_department_id'),
     notes: text('notes'),
+    // Populated when a leader removes the NB from the pipeline before completion.
+    // Independent of `isActive` — active enrollments have both fields null.
+    removalReason: varchar('removal_reason', { length: 20 }),
+    removalNotes: text('removal_notes'),
     isActive: boolean('is_active').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -50,6 +54,7 @@ export const newBelieverEnrollments = pgTable(
     // Partial unique index: only one ACTIVE enrollment per member per branch at a time
     // (enforced via raw migration 0007 — Drizzle unique() can't express WHERE clauses)
     sql`CHECK (stage IN ('enrolled', 'session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'))`,
+    sql`CHECK (removal_reason IS NULL OR removal_reason IN ('awol', 'withdrew', 'moved_away', 'stopped_attending', 'other'))`,
   ]
 );
 

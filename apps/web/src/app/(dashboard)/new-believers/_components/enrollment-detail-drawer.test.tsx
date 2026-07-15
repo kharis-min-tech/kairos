@@ -9,11 +9,13 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-// Mock the new-believers hooks — replace useEnrollment + useUpdateEnrollment
+// Mock the new-believers hooks — replace useEnrollment + useUpdateEnrollment + useRemoveEnrollment
 let enrollmentData: Record<string, unknown> | null = null;
 let enrollmentLoading = false;
 const updateMutateAsync = vi.fn();
 let updateIsPending = false;
+const removeMutateAsync = vi.fn();
+let removeIsPending = false;
 
 vi.mock('@/hooks/use-new-believers', () => ({
   useEnrollment: (id: string) => ({
@@ -23,6 +25,10 @@ vi.mock('@/hooks/use-new-believers', () => ({
   useUpdateEnrollment: () => ({
     mutateAsync: updateMutateAsync,
     isPending: updateIsPending,
+  }),
+  useRemoveEnrollment: () => ({
+    mutateAsync: removeMutateAsync,
+    isPending: removeIsPending,
   }),
 }));
 

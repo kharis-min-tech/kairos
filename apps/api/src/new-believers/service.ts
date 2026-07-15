@@ -1278,3 +1278,106 @@ export async function deleteMentorFollowup(
     .where(eq(mentorFollowups.id, followupId));
   return { id: followupId };
 }
+
+/**
+ * Remove an enrollment from the pipeline with a captured reason. Distinct from
+ * a silent PATCH { isActive: false } — this endpoint requires a reason and
+ * fans a workflow notification to the mentor + branch authority so the
+ * departure isn't invisible to the wider leadership.
+ *
+ * No-op if the enrollment is already inactive (idempotent) — the guard
+ * returns the existing row without re-firing notifications.
+ */
+export async function removeFromPipeline(
+  db: Database,
+  auth: AuthContext,
+  enrollmentId: string,
+  input: { reason: string; notes?: string },
+) {
+  const [existing] = await db
+    .select({
+      id: newBelieverEnrollments.id,
+      branchId: newBelieverEnrollments.branchId,
+      memberId: newBelieverEnrollments.memberId,
+      mentorId: newBelieverEnrollments.mentorId,
+      isActive: newBelieverEnrollments.isActive,
+    })
+    .from(newBelieverEnrollments)
+    .where(eq(newBelieverEnrollments.id, enrollmentId))
+    .limit(1);
+  if (!existing) throw new NotFoundError('Enrollment');
+
+  await enforceTeacherOrAbove(db, auth, existing.branchId);
+  enforceBranchScope(auth, existing.branchId);
+
+  if (!existing.isActive) {
+    // Already removed — surface the row without re-firing dispatch.
+    const [row] = await db
+      .select()
+      .from(newBelieverEnrollments)
+      .where(eq(newBelieverEnrollments.id, enrollmentId))
+      .limit(1);
+    return row;
+  }
+
+  const [updated] = await db
+    .update(newBelieverEnrollments)
+    .set({
+      isActive: false,
+      removalReason: input.reason,
+      removalNotes: input.notes ?? null,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(newBelieverEnrollments.id, enrollmentId))
+    .returning();
+
+  // Fire-and-forget workflow notification. Notification failures must not
+  // roll back the removal.
+  try {
+    const [student, actor, branchAuth] = await Promise.all([
+      db
+        .select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members)
+        .where(eq(members.id, existing.memberId))
+        .limit(1),
+      db
+        .select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members)
+        .where(eq(members.id, auth.memberId))
+        .limit(1),
+      resolveBranchAuthority(db, existing.branchId),
+    ]);
+    const studentName = student[0]
+      ? `${student[0].firstName} ${student[0].lastName ?? ''}`.trim()
+      : 'Student';
+    const removedByName = actor[0]
+      ? `${actor[0].firstName} ${actor[0].lastName ?? ''}`.trim()
+      : null;
+    const recipients = Array.from(
+      new Set([...(existing.mentorId ? [existing.mentorId] : []), ...branchAuth]),
+    );
+    if (recipients.length > 0) {
+      await dispatchNotification(db, {
+        eventType: NotificationEventType.WorkflowNewBelieverRemoved,
+        recipientMemberIds: recipients,
+        branchId: existing.branchId,
+        subjectType: 'nb_enrollment',
+        subjectId: existing.id,
+        payload: {
+          studentName,
+          reason: input.reason,
+          notes: input.notes ?? null,
+          removedByName,
+          portalUrl: enrollmentPortalUrl(existing.id),
+        },
+      });
+    }
+  } catch (err) {
+    logger.error('nb: removeFromPipeline notification failed', {
+      enrollmentId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  return updated;
+}

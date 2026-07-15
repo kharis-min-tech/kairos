@@ -26,11 +26,13 @@ import {
   renderSoulAssigned,
   renderSoulStatusChanged,
   renderNewBelieverStageMoved,
+  renderNewBelieverRemoved,
   digestJoinRequestReceived,
   digestJoinRequestDecided,
   digestSoulAssigned,
   digestSoulStatusChanged,
   digestNewBelieverStageMoved,
+  digestNewBelieverRemoved,
 } from './templates/workflow';
 import {
   renderVisitorPromoted,
@@ -124,6 +126,11 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     category: NotificationCategory.Workflow,
     render: renderNewBelieverStageMoved,
     digestLine: digestNewBelieverStageMoved,
+  },
+  [NotificationEventType.WorkflowNewBelieverRemoved]: {
+    category: NotificationCategory.Workflow,
+    render: renderNewBelieverRemoved,
+    digestLine: digestNewBelieverRemoved,
   },
   [NotificationEventType.LifecycleVisitorPromoted]: {
     category: NotificationCategory.Lifecycle,

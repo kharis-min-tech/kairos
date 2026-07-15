@@ -147,6 +147,44 @@ export function renderNewBelieverStageMoved(p: NewBelieverStageMovedPayload) {
   };
 }
 
+export interface NewBelieverRemovedPayload {
+  memberName: string;
+  studentName: string;
+  reason: string;
+  notes: string | null;
+  removedByName: string | null;
+  portalUrl: string;
+}
+
+const REMOVAL_REASON_LABELS: Record<string, string> = {
+  awol: 'went AWOL',
+  withdrew: 'withdrew',
+  moved_away: 'moved away',
+  stopped_attending: 'stopped attending',
+  other: 'other',
+};
+
+export function renderNewBelieverRemoved(p: NewBelieverRemovedPayload) {
+  const actor = p.removedByName ? ` by ${escapeHtml(p.removedByName)}` : '';
+  const reasonLabel = REMOVAL_REASON_LABELS[p.reason] ?? p.reason;
+  const notesBlock = p.notes
+    ? `<p><em>${escapeHtml(p.notes)}</em></p>`
+    : '';
+  return {
+    subject: `New believer removed from pipeline — ${p.studentName}`,
+    html: renderLayout({
+      heading: 'New believer removed from pipeline',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p><strong>${escapeHtml(p.studentName)}</strong> was removed from the
+           New Believers pipeline${actor} — reason: <strong>${escapeHtml(reasonLabel)}</strong>.</p>
+        ${notesBlock}
+      `,
+      cta: { label: 'Open profile', url: p.portalUrl },
+    }),
+  };
+}
+
 // ── Digest lines ──
 
 export function digestJoinRequestReceived(p: JoinRequestReceivedPayload): string {
@@ -167,4 +205,9 @@ export function digestSoulStatusChanged(p: SoulStatusChangedPayload): string {
 
 export function digestNewBelieverStageMoved(p: NewBelieverStageMovedPayload): string {
   return `${p.studentName}: ${p.fromStage} → ${p.toStage}`;
+}
+
+export function digestNewBelieverRemoved(p: NewBelieverRemovedPayload): string {
+  const reasonLabel = REMOVAL_REASON_LABELS[p.reason] ?? p.reason;
+  return `${p.studentName} removed from pipeline (${reasonLabel})`;
 }

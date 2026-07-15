@@ -42,6 +42,7 @@ vi.mock('@/hooks/use-new-believers', () => ({
   useEnrollmentAlerts: () => ({ data: { data: [] } }),
   useCreateEnrollment: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUpdateEnrollment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useRemoveEnrollment: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useBulkAdvanceEnrollments: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useMyNewBelieverHats: () => ({ data: mockHats }),
   useMentorFollowups: () => ({ data: [] }),

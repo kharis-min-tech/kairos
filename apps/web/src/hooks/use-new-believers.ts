@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import type {
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
+  RemoveEnrollmentRequest,
   EnrollmentListParams,
   BulkAdvanceEnrollmentsRequest,
   CreateNewBelieverSessionRequest,
@@ -67,6 +68,20 @@ export function useUpdateEnrollment() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateEnrollmentRequest }) => {
       const res = await api.newBelievers.enrollments.update(id, data);
+      return res.data!;
+    },
+    onSuccess: (_res, { id }) => {
+      qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments'] });
+      qc.invalidateQueries({ queryKey: ['new-believers', 'enrollments', id] });
+    },
+  });
+}
+
+export function useRemoveEnrollment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: RemoveEnrollmentRequest }) => {
+      const res = await api.newBelievers.enrollments.remove(id, data);
       return res.data!;
     },
     onSuccess: (_res, { id }) => {

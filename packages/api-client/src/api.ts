@@ -56,6 +56,7 @@ import type {
   NewBelieverHealthSummary,
   CreateEnrollmentRequest,
   UpdateEnrollmentRequest,
+  RemoveEnrollmentRequest,
   EnrollmentListParams,
   BulkAdvanceEnrollmentsRequest,
   MentorFollowupItem,
@@ -1034,6 +1035,8 @@ export function createApiClient(
           client.post<ApiResponse<NewBelieverEnrollment>>('/api/new-believers/enrollments', data),
         update: (id: string, data: UpdateEnrollmentRequest) =>
           client.patch<ApiResponse<NewBelieverEnrollment>>(`/api/new-believers/enrollments/${id}`, data),
+        remove: (id: string, data: RemoveEnrollmentRequest) =>
+          client.post<ApiResponse<NewBelieverEnrollment>>(`/api/new-believers/enrollments/${id}/remove`, data),
         listMentorFollowups: (enrollmentId: string) =>
           client.get<ApiResponse<MentorFollowupItem[]>>(`/api/new-believers/enrollments/${enrollmentId}/mentor-followups`),
         createMentorFollowup: (enrollmentId: string, data: CreateMentorFollowupRequest) =>

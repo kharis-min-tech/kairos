@@ -14,12 +14,14 @@ import {
   bulkAdvanceSchema,
   healthQuerySchema,
   createMentorFollowupSchema,
+  removeEnrollmentSchema,
 } from './schemas';
 import {
   listEnrollments,
   getEnrollment,
   createEnrollment,
   updateEnrollment,
+  removeFromPipeline,
   bulkAdvance,
   listSessions,
   createSession,
@@ -128,6 +130,21 @@ newBelieversRouter.patch(
   async (c) => {
     const auth = getAuth(c);
     const enrollment = await updateEnrollment(db, auth, c.req.param('id')!, c.req.valid('json'));
+    return c.json(successResponse(enrollment));
+  }
+);
+
+newBelieversRouter.post(
+  '/enrollments/:id/remove',
+  zValidator('json', removeEnrollmentSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const enrollment = await removeFromPipeline(
+      db,
+      auth,
+      c.req.param('id')!,
+      c.req.valid('json'),
+    );
     return c.json(successResponse(enrollment));
   }
 );

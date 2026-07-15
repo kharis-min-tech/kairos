@@ -15,12 +15,22 @@ import {
   CustomSelect,
   Textarea,
 } from '@kairos/ui';
-import { useEnrollment, useUpdateEnrollment } from '@/hooks/use-new-believers';
+import {
+  useEnrollment,
+  useUpdateEnrollment,
+  useRemoveEnrollment,
+} from '@/hooks/use-new-believers';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { formatShortDate } from '@/lib/date-format';
 import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
 import type { EnrollmentDetail } from './types';
-import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
+import {
+  NB_REMOVAL_REASONS,
+  NB_REMOVAL_REASON_LABEL,
+  type NewBelieverStageValue,
+  type UpdateEnrollmentRequest,
+  type NBRemovalReason,
+} from '@kairos/types';
 
 interface EnrollmentDetailDrawerProps {
   enrollmentId: string | null;
@@ -41,8 +51,12 @@ export function EnrollmentDetailDrawer({
   const { data, isLoading } = useEnrollment(enrollmentId ?? '');
   const enrollment = data as EnrollmentDetail | undefined;
   const updateEnrollment = useUpdateEnrollment();
+  const removeEnrollment = useRemoveEnrollment();
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [advanceFeedback, setAdvanceFeedback] = useState('');
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [removeReason, setRemoveReason] = useState<NBRemovalReason | ''>('');
+  const [removeNotes, setRemoveNotes] = useState('');
 
   const stage = enrollment
     ? STAGES.find((s) => s.value === enrollment.stage)
@@ -104,6 +118,30 @@ export function EnrollmentDetailDrawer({
     if (!advanceFeedback.trim()) return;
     const advanced = await commitAdvance(advanceFeedback);
     if (advanced) resetFeedbackModal();
+  }
+
+  function resetRemoveModal() {
+    setShowRemoveModal(false);
+    setRemoveReason('');
+    setRemoveNotes('');
+  }
+
+  async function handleConfirmRemove() {
+    if (!enrollment || !removeReason) return;
+    try {
+      await removeEnrollment.mutateAsync({
+        id: enrollment.id,
+        data: {
+          reason: removeReason,
+          ...(removeNotes.trim() ? { notes: removeNotes.trim() } : {}),
+        },
+      });
+      toast.success('Removed from pipeline');
+      resetRemoveModal();
+      onClose();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove');
+    }
   }
 
   async function handleReassign(field: 'teacherId' | 'mentorId', value: string) {
@@ -258,15 +296,27 @@ export function EnrollmentDetailDrawer({
               >
                 Open full page <ExternalLink className="h-3.5 w-3.5" />
               </Link>
-              {canEdit && nextStage && enrollment.stage !== 'integrated' && (
-                <Button
-                  onClick={handleAdvance}
-                  disabled={updateEnrollment.isPending}
-                  className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
-                >
-                  Advance to {nextStage.label}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {canEdit && enrollment.isActive && enrollment.stage !== 'integrated' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRemoveModal(true)}
+                    disabled={removeEnrollment.isPending}
+                    className="border-rose-600/40 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                  >
+                    Remove from pipeline
+                  </Button>
+                )}
+                {canEdit && nextStage && enrollment.stage !== 'integrated' && (
+                  <Button
+                    onClick={handleAdvance}
+                    disabled={updateEnrollment.isPending}
+                    className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
+                  >
+                    Advance to {nextStage.label}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -311,6 +361,64 @@ export function EnrollmentDetailDrawer({
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
               {updateEnrollment.isPending ? 'Saving...' : 'Confirm & Advance'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showRemoveModal}
+        onOpenChange={(o) => {
+          if (!o) resetRemoveModal();
+          else setShowRemoveModal(true);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove from pipeline</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Capture why this new believer is leaving the pipeline. Their mentor
+              and branch leadership will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Reason <span className="text-destructive">*</span>
+              </label>
+              <CustomSelect
+                value={removeReason}
+                onValueChange={(v) => setRemoveReason(v as NBRemovalReason)}
+                options={NB_REMOVAL_REASONS.map((r) => ({
+                  value: r,
+                  label: NB_REMOVAL_REASON_LABEL[r],
+                }))}
+                placeholder="Select a reason..."
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Notes <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+              </label>
+              <Textarea
+                rows={3}
+                placeholder="Anything the mentor should know..."
+                value={removeNotes}
+                onChange={(e) => setRemoveNotes(e.target.value)}
+                maxLength={500}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetRemoveModal}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!removeReason || removeEnrollment.isPending}
+              onClick={handleConfirmRemove}
+              className="bg-rose-600 text-white hover:bg-rose-700 border-0"
+            >
+              {removeEnrollment.isPending ? 'Removing...' : 'Confirm removal'}
             </Button>
           </DialogFooter>
         </DialogContent>

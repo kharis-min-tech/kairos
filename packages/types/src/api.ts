@@ -683,6 +683,28 @@ export interface EnrollmentListParams {
   limit?: number;
 }
 
+export const NB_REMOVAL_REASONS = [
+  'awol',
+  'withdrew',
+  'moved_away',
+  'stopped_attending',
+  'other',
+] as const;
+export type NBRemovalReason = (typeof NB_REMOVAL_REASONS)[number];
+
+export const NB_REMOVAL_REASON_LABEL: Record<NBRemovalReason, string> = {
+  awol: 'Went AWOL',
+  withdrew: 'Withdrew',
+  moved_away: 'Moved away',
+  stopped_attending: 'Stopped attending',
+  other: 'Other',
+};
+
+export interface RemoveEnrollmentRequest {
+  reason: NBRemovalReason;
+  notes?: string;
+}
+
 export interface MentorFollowupItem {
   id: string;
   enrollmentId: string;
