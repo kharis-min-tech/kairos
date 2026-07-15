@@ -26,11 +26,11 @@ describe('Checkbox', () => {
     );
   });
 
-  it('uses the documented Kairos purple for its checked state', () => {
+  it('uses the Modern Sanctuary primary for its checked state', () => {
     render(<Checkbox aria-label="Accept" />);
     const checkbox = screen.getByRole('checkbox', { name: 'Accept' });
 
-    expect(checkbox.className).toContain('checked:bg-[#6D28D9]');
-    expect(checkbox.className).toContain('checked:border-[#6D28D9]');
+    expect(checkbox.className).toContain('checked:bg-[#5D3FD3]');
+    expect(checkbox.className).toContain('checked:border-[#5D3FD3]');
   });
 });
