@@ -11,6 +11,7 @@ import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
 import { isRealMember } from '../lib/member-predicates';
 import { dispatchNotification } from '../notifications/service';
+import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
 import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
@@ -766,8 +767,16 @@ export async function setMembershipClassCompleted(
   }
 
   const [member] = await db
-    .select({ id: members.id, homeBranchId: members.homeBranchId })
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      homeBranchId: members.homeBranchId,
+      previousCompletedAt: members.membershipClassCompletedAt,
+      branchName: branches.branchName,
+    })
     .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
     .where(and(...conditions));
 
   if (!member) throw new NotFoundError('Member not found');
@@ -788,6 +797,32 @@ export async function setMembershipClassCompleted(
     })
     .where(eq(members.id, memberId))
     .returning();
+
+  // Notify on the null → timestamp transition only. Clearing the timestamp,
+  // or re-stamping an already-confirmed member, does not fire. Fire-and-forget
+  // — notification failures must not break the certification.
+  if (completedAt && !member.previousCompletedAt) {
+    try {
+      const branchAuth = await resolveBranchAuthority(db, member.homeBranchId);
+      const recipients = Array.from(new Set([member.id, ...branchAuth]));
+      const portalUrl = `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/members/${member.id}`;
+      await dispatchNotification(db, {
+        eventType: NotificationEventType.LifecycleMemberConfirmed,
+        recipientMemberIds: recipients,
+        branchId: member.homeBranchId,
+        subjectType: 'member',
+        subjectId: member.id,
+        payload: {
+          confirmedName: `${member.firstName} ${member.lastName ?? ''}`.trim(),
+          branchName: member.branchName,
+          portalUrl,
+        },
+      });
+    } catch {
+      // dispatchNotification already logs; resolveBranchAuthority failures
+      // here are swallowed to preserve the fire-and-forget contract.
+    }
+  }
 
   return updated;
 }

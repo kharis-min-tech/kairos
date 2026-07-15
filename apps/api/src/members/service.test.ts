@@ -544,22 +544,42 @@ describe('reactivateMember', () => {
 
 describe('setMembershipClassCompleted', () => {
   const completedAt = new Date('2026-06-01T00:00:00.000Z');
+  const memberRow = {
+    id: memberId,
+    firstName: 'John',
+    lastName: 'Doe',
+    homeBranchId: branchId,
+    previousCompletedAt: null,
+    branchName: 'Lagos Branch',
+  };
 
-  it('stamps the timestamp for an admin', async () => {
-    setupSelect([{ id: memberId, homeBranchId: branchId }]);
+  it('stamps the timestamp for an admin and dispatches lifecycle.member_confirmed', async () => {
+    setupSelect([memberRow]);
     const updated = { ...sampleMemberFull, membershipClassCompletedAt: completedAt };
     setupUpdate([updated]);
     const result = await setMembershipClassCompleted(mockDb, memberId, completedAt, adminAuth);
     expect(result).toEqual(updated);
+    // Initial lookup + dispatch fan-out (branch authority + recipients + preferences).
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(1);
   });
 
-  it('clears the timestamp when given null', async () => {
-    setupSelect([{ id: memberId, homeBranchId: branchId }]);
+  it('does not dispatch when the timestamp is being re-set (idempotent)', async () => {
+    setupSelect([{ ...memberRow, previousCompletedAt: new Date('2025-01-01T00:00:00.000Z') }]);
+    const updated = { ...sampleMemberFull, membershipClassCompletedAt: completedAt };
+    setupUpdate([updated]);
+    await setMembershipClassCompleted(mockDb, memberId, completedAt, adminAuth);
+    // Only the initial lookup — no dispatch fan-out.
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
+  });
+
+  it('clears the timestamp when given null and does not dispatch', async () => {
+    setupSelect([memberRow]);
     const updated = { ...sampleMemberFull, membershipClassCompletedAt: null };
     setupUpdate([updated]);
     const result = await setMembershipClassCompleted(mockDb, memberId, null, adminAuth);
     expect(result).toEqual(updated);
     expect(result?.membershipClassCompletedAt).toBeNull();
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
   });
 
   it('throws ForbiddenError for a plain member', async () => {
