@@ -14,11 +14,13 @@ import {
   renderRoleGranted,
   renderRoleRevoked,
   renderSigninNewDevice,
+  renderProfileUpdatedByAdmin,
   digestPasswordResetRequested,
   digestPasswordChanged,
   digestRoleGranted,
   digestRoleRevoked,
   digestSigninNewDevice,
+  digestProfileUpdatedByAdmin,
 } from './templates/security';
 import {
   renderJoinRequestReceived,
@@ -91,6 +93,11 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     category: NotificationCategory.Security,
     render: renderSigninNewDevice,
     digestLine: digestSigninNewDevice,
+  },
+  [NotificationEventType.SecurityProfileUpdatedByAdmin]: {
+    category: NotificationCategory.Security,
+    render: renderProfileUpdatedByAdmin,
+    digestLine: digestProfileUpdatedByAdmin,
   },
   [NotificationEventType.WorkflowFellowshipJoinRequestReceived]: {
     category: NotificationCategory.Workflow,

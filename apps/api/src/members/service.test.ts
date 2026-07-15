@@ -243,6 +243,40 @@ describe('updateMember', () => {
     await expect(updateMember(mockDb, memberId, { phone: '123' }, adminAuth))
       .rejects.toThrow('A member with this phone number or email already exists');
   });
+
+  it('dispatches profile-updated-by-admin when an admin edits a watched field', async () => {
+    setupSelect([{ id: memberId, phone: '000-original' }]);
+    setupUpdate([{ ...sampleMemberFull, phone: '999-new' }]);
+    await updateMember(mockDb, memberId, { phone: '999-new' }, adminAuth);
+    // Initial lookup + actor select + dispatch fan-out (recipients + preferences).
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it('does not dispatch when the member edits their own profile (self-edit stays silent)', async () => {
+    setupSelect([{ id: memberId, phone: '000-original' }]);
+    setupUpdate([{ ...sampleMemberFull, phone: '999-new' }]);
+    await updateMember(mockDb, memberId, { phone: '999-new' }, memberAuth);
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
+  });
+
+  it('does not dispatch when the admin only touches non-watched fields (photo, notes)', async () => {
+    setupSelect([{ id: memberId, phone: '000-original' }]);
+    setupUpdate([{ ...sampleMemberFull, photoUrl: 'https://example.com/a.jpg' }]);
+    await updateMember(
+      mockDb,
+      memberId,
+      { photoUrl: 'https://example.com/a.jpg' },
+      adminAuth,
+    );
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
+  });
+
+  it('does not dispatch when the payload value equals the existing value (no real change)', async () => {
+    setupSelect([{ id: memberId, phone: '000-original' }]);
+    setupUpdate([{ ...sampleMemberFull, phone: '000-original' }]);
+    await updateMember(mockDb, memberId, { phone: '000-original' }, adminAuth);
+    expect((mockDb.select as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
+  });
 });
 
 // ── approveMember ─────────────────────────────────────────

@@ -341,6 +341,30 @@ export async function getMyProfile(db: Database, auth: AuthContext) {
   return getMember(db, auth.memberId, { ...auth, systemRole: 'admin' });
 }
 
+/**
+ * Contact + identity fields that trigger a security notification to the
+ * member when an admin/leader edits them on someone else's behalf. Photo,
+ * notes, systemRole, and email are intentionally excluded — they have their
+ * own dedicated flows (role has a security event, email has a double-confirm
+ * change flow, photo/notes are low-signal).
+ */
+const ADMIN_EDIT_WATCHED_FIELDS: Record<string, string> = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  middleName: 'Middle name',
+  dateOfBirth: 'Date of birth',
+  phone: 'Phone',
+  address: 'Address',
+  city: 'City',
+  postalCode: 'Postal code',
+  secondaryAddress: 'Secondary address',
+  secondaryCity: 'Secondary city',
+  secondaryPostalCode: 'Secondary postal code',
+  emergencyContactName: 'Emergency contact name',
+  emergencyContactPhone: 'Emergency contact phone',
+  emergencyContactRelationship: 'Emergency contact relationship',
+};
+
 export async function updateMember(
   db: Database,
   memberId: string,
@@ -349,8 +373,26 @@ export async function updateMember(
 ) {
   enforceMemberAccess(auth, memberId);
 
+  // Pull the watched fields alongside id so we can diff before-vs-after when
+  // an admin edits on someone else's behalf.
   const [existing] = await db
-    .select({ id: members.id })
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      middleName: members.middleName,
+      dateOfBirth: members.dateOfBirth,
+      phone: members.phone,
+      address: members.address,
+      city: members.city,
+      postalCode: members.postalCode,
+      secondaryAddress: members.secondaryAddress,
+      secondaryCity: members.secondaryCity,
+      secondaryPostalCode: members.secondaryPostalCode,
+      emergencyContactName: members.emergencyContactName,
+      emergencyContactPhone: members.emergencyContactPhone,
+      emergencyContactRelationship: members.emergencyContactRelationship,
+    })
     .from(members)
     .where(and(eq(members.id, memberId), eq(members.isActive, true)));
 
@@ -368,6 +410,46 @@ export async function updateMember(
       .set({ ...safeInput, updatedAt: sql`NOW()` })
       .where(eq(members.id, memberId))
       .returning();
+
+    // Fire security notification when an admin/leader edits watched contact
+    // or identity fields on someone else's behalf. Self-edits stay silent.
+    // Fire-and-forget — notification failures must not roll back the update.
+    if (auth.memberId !== memberId) {
+      const existingRow = existing as Record<string, unknown>;
+      const changedFieldLabels: string[] = [];
+      for (const [field, label] of Object.entries(ADMIN_EDIT_WATCHED_FIELDS)) {
+        if (!(field in safeInput)) continue;
+        const before = existingRow[field] ?? null;
+        const after = safeInput[field] ?? null;
+        if (before !== after) changedFieldLabels.push(label);
+      }
+      if (changedFieldLabels.length > 0) {
+        try {
+          const [actor] = await db
+            .select({ firstName: members.firstName, lastName: members.lastName })
+            .from(members)
+            .where(eq(members.id, auth.memberId))
+            .limit(1);
+          const updatedByName = actor
+            ? `${actor.firstName} ${actor.lastName ?? ''}`.trim()
+            : null;
+          await dispatchNotification(db, {
+            eventType: NotificationEventType.SecurityProfileUpdatedByAdmin,
+            recipientMemberIds: [memberId],
+            subjectType: 'member',
+            subjectId: memberId,
+            payload: {
+              updatedByName,
+              changedFieldLabels,
+              occurredAt: new Date(),
+              portalUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/profile`,
+            },
+          });
+        } catch {
+          // dispatchNotification already logs; swallow to keep the update path clean.
+        }
+      }
+    }
 
     return updated;
   } catch (err) {

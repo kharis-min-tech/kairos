@@ -144,6 +144,42 @@ export function renderRoleRevoked(p: SecurityRoleRevokedPayload) {
   };
 }
 
+export interface SecurityProfileUpdatedByAdminPayload {
+  memberName: string;
+  updatedByName: string | null;
+  changedFieldLabels: string[];
+  occurredAt: Date;
+  portalUrl: string;
+}
+
+export function renderProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayload) {
+  const when = p.occurredAt.toLocaleString('en-GB');
+  const actor = p.updatedByName ? escapeHtml(p.updatedByName) : 'a branch administrator';
+  const fieldList = p.changedFieldLabels.length
+    ? `<ul style="line-height:1.7;">${p.changedFieldLabels
+        .map((f) => `<li>${escapeHtml(f)}</li>`)
+        .join('')}</ul>`
+    : '';
+  return {
+    subject: 'Your profile was updated',
+    html: renderLayout({
+      heading: 'Profile updated by a leader',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p>Your Kharis Church profile was updated on
+           <strong>${escapeHtml(when)}</strong> by <strong>${actor}</strong>.</p>
+        <p>The following fields changed:</p>
+        ${fieldList}
+        <p>If you were expecting this change (for example, a leader tidied up
+           your contact details after speaking with you), no action is needed.</p>
+        <p>If this wasn't expected, sign in to review your profile and contact
+           your branch administrator.</p>
+      `,
+      cta: { label: 'Review profile', url: p.portalUrl },
+    }),
+  };
+}
+
 // ── Digest lines (security defaults to immediate but supported for completeness) ──
 
 export function digestPasswordResetRequested(_p: SecurityPasswordResetRequestedPayload): string {
@@ -165,4 +201,9 @@ export function digestRoleRevoked(p: SecurityRoleRevokedPayload): string {
 export function digestSigninNewDevice(p: SecuritySigninNewDevicePayload): string {
   const where = [p.country, p.ip].filter(Boolean).join(' · ');
   return `Sign-in from new device${where ? ` (${where})` : ''}`;
+}
+
+export function digestProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayload): string {
+  const who = p.updatedByName ?? 'an administrator';
+  return `Profile updated by ${who} — ${p.changedFieldLabels.join(', ')}`;
 }
