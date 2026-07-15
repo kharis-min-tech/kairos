@@ -1,7 +1,7 @@
 import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
-import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords } from '@kairos/database';
+import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
@@ -642,6 +642,27 @@ export async function deactivateMember(
     .update(memberRoles)
     .set({ isActive: false, endDate: sql`CURRENT_DATE`, updatedAt: sql`NOW()` })
     .where(and(eq(memberRoles.memberId, memberId), eq(memberRoles.isActive, true)));
+
+  // Cascade to active New Believer enrollments — otherwise the enrollment row
+  // stays isActive=true after the member is archived and shows up as an
+  // orphan in NB pipeline queries.
+  await db
+    .update(newBelieverEnrollments)
+    .set({ isActive: false, updatedAt: sql`NOW()` })
+    .where(and(
+      eq(newBelieverEnrollments.memberId, memberId),
+      eq(newBelieverEnrollments.isActive, true),
+    ));
+
+  // Same cascade for department assignments — rotas/uniform schedules key
+  // off department_members.is_active.
+  await db
+    .update(departmentMembers)
+    .set({ isActive: false, leaveDate: sql`CURRENT_DATE`, updatedAt: sql`NOW()` })
+    .where(and(
+      eq(departmentMembers.memberId, memberId),
+      eq(departmentMembers.isActive, true),
+    ));
 
   // Soft-delete member
   const [updated] = await db

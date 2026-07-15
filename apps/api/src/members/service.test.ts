@@ -410,12 +410,12 @@ describe('getMemberRoles', () => {
 // ── deactivateMember ──────────────────────────────────────
 
 describe('deactivateMember', () => {
-  it('deactivates member and cascades role deactivation', async () => {
+  it('deactivates member and cascades role + NB enrollment + department-member deactivation', async () => {
     setupSelect([{ id: memberId }]);
     setupUpdate([{ ...sampleMemberFull, isActive: false }]);
     const result = await deactivateMember(mockDb, memberId, adminAuth);
     expect(result).toBeDefined();
-    expect(mockDb.update).toHaveBeenCalledTimes(2); // roles + member
+    expect(mockDb.update).toHaveBeenCalledTimes(4); // roles + NB enrollments + dept members + member
   });
 
   it('rejects non-admin', async () => {
