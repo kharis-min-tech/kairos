@@ -200,7 +200,10 @@ export default function MembersPage() {
           value={params.fellowshipId ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, fellowshipId: v || undefined, page: 1 }))}
           placeholder="All Fellowships"
-          options={(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName }))}
+          options={[
+            { value: '', label: 'All Fellowships' },
+            ...(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName })),
+          ]}
         />
         {isAdmin && (
           <CustomSelect
@@ -208,7 +211,10 @@ export default function MembersPage() {
             value={params.branchId ?? ''}
             onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
             placeholder="All Branches"
-            options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+            options={[
+              { value: '', label: 'All Branches' },
+              ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+            ]}
           />
         )}
         <CustomSelect
@@ -216,7 +222,12 @@ export default function MembersPage() {
           value={params.approvalStatus ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, approvalStatus: (v || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
           placeholder="All Statuses"
-          options={[{ value: 'approved', label: 'Approved' }, { value: 'pending', label: 'Pending' }, { value: 'rejected', label: 'Rejected' }]}
+          options={[
+            { value: '', label: 'All Statuses' },
+            { value: 'approved', label: 'Approved' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'rejected', label: 'Rejected' },
+          ]}
         />
       </div>
 
