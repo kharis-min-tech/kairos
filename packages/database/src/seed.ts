@@ -1730,10 +1730,16 @@ async function seed() {
   console.log(`✓ 4 dept join requests + 4 dept followups`);
 
   // ── 16. Uniforms for 3 more departments ──
+  // Colored SVG data URIs so the gallery renders visible swatches without any
+  // network fetch (broken-image icons look bad in a demo).
+  const swatch = (hex: string) =>
+    `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='300' height='300' fill='${hex}'/></svg>`,
+    )}`;
   const [ushersAccraOutfit, ushersKumasiOutfit, choirManchesterOutfit] = await db.insert(departmentUniformOutfits).values([
-    { branchDepartmentId: ushersAccra!.id,     name: 'Sunday burgundy', imageUrl: '/uniforms/burgundy.png',  genderTarget: 'Unisex', notes: 'Full Sunday service dress', uploadedById: leaderDavid!.id },
-    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: '/uniforms/navy.png',      genderTarget: 'Unisex',                                     uploadedById: kumasiElder.id },
-    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: '/uniforms/blue-robe.png', genderTarget: 'Unisex',                                     uploadedById: manchesterElder.id },
+    { branchDepartmentId: ushersAccra!.id,     name: 'Sunday burgundy', imageUrl: swatch('#800020'), genderTarget: 'Unisex', notes: 'Full Sunday service dress', uploadedById: leaderDavid!.id },
+    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: swatch('#000080'), genderTarget: 'Unisex',                                     uploadedById: kumasiElder.id },
+    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: swatch('#4169e1'), genderTarget: 'Unisex',                                     uploadedById: manchesterElder.id },
   ]).returning();
   await db.insert(departmentUniformSchedule).values([
     { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
