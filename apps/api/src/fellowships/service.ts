@@ -660,7 +660,7 @@ export async function getFellowshipStats(
     const c = Number(r.c);
     meetingsLast90d += c;
     return {
-      week: (r.week as Date).toISOString().slice(0, 10),
+      week: new Date(r.week as Date | string).toISOString().slice(0, 10),
       count: c,
     };
   });

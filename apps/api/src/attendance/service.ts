@@ -1311,7 +1311,7 @@ export async function getDepartmentAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     trend = trendRows.map((r) => ({
-      weekStart: (r.weekStart as Date).toISOString(),
+      weekStart: new Date(r.weekStart as Date | string).toISOString(),
       attendees: Number(r.attendees),
     }));
   }
@@ -1444,7 +1444,7 @@ export async function getFellowshipAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     svcTrend = trendRows.map((r) => ({
-      weekStart: (r.weekStart as Date).toISOString(),
+      weekStart: new Date(r.weekStart as Date | string).toISOString(),
       attendees: Number(r.attendees),
     }));
   }
