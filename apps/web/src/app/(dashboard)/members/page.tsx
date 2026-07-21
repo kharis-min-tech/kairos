@@ -115,7 +115,7 @@ export default function MembersPage() {
     setParams((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
   }
 
-  if (user !== null && (isMemberView || (caps.has('fellowship:write') || caps.has('department:write')))) {
+  if (user !== null && !canSeeMembers) {
     return null;
   }
 
