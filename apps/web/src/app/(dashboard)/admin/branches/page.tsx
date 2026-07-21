@@ -70,7 +70,10 @@ export default function BranchesPage() {
           value={regionFilter}
           onValueChange={setRegionFilter}
           placeholder="All Regions"
-          options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
+          options={[
+            { value: '', label: 'All Regions' },
+            ...(regions ?? []).map((r) => ({ value: r.id, label: r.regionName })),
+          ]}
         />
       </div>
 

@@ -600,7 +600,10 @@ export default function SoulsKanbanPage() {
                 value={filters.branchId ?? ''}
                 onValueChange={(v) => setFilters({ branchId: v || undefined })}
                 placeholder="All Branches"
-                options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+                options={[
+                  { value: '', label: 'All Branches' },
+                  ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+                ]}
               />
             )}
             <CustomSelect
@@ -608,17 +611,23 @@ export default function SoulsKanbanPage() {
               value={filters.fellowshipId ?? ''}
               onValueChange={(v) => setFilters({ fellowshipId: v || undefined })}
               placeholder={isLeader ? 'My Fellowships' : 'All Fellowships'}
-              options={allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
+              options={[
+                { value: '', label: isLeader ? 'My Fellowships' : 'All Fellowships' },
+                ...allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName })),
+              ]}
             />
             <CustomSelect
               size="sm"
               value={filters.branchDepartmentId ?? ''}
               onValueChange={(v) => setFilters({ branchDepartmentId: v || undefined })}
               placeholder={isLeader ? 'My Departments' : 'All Departments'}
-              options={allDepartments.map((d) => ({
-                value: d.id,
-                label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
-              }))}
+              options={[
+                { value: '', label: isLeader ? 'My Departments' : 'All Departments' },
+                ...allDepartments.map((d) => ({
+                  value: d.id,
+                  label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
+                })),
+              ]}
             />
             {(isAdmin || isPastor) && (
               <CustomSelect
@@ -626,7 +635,10 @@ export default function SoulsKanbanPage() {
                 value={filters.assignedMemberId ?? ''}
                 onValueChange={(v) => setFilters({ assignedMemberId: v || undefined })}
                 placeholder="Any worker"
-                options={members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                options={[
+                  { value: '', label: 'Any worker' },
+                  ...members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` })),
+                ]}
               />
             )}
             {(filters.branchId ?? filters.fellowshipId ?? filters.branchDepartmentId ?? filters.assignedMemberId) && (
