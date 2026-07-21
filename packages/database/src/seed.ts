@@ -37,6 +37,9 @@ import {
   rotaInstances,
   rotaAssignments,
   rotaSwapRequests,
+  notificationEvents,
+  auditLog,
+  consentRecords,
 } from './schema';
 import { sql } from 'drizzle-orm';
 import { hashPassword } from '@kairos/utils';
@@ -1387,6 +1390,146 @@ async function seed() {
     },
   ]);
   console.log(`✓ 5 follow-ups`);
+
+  // ── 13. Consent, audit, notification history (visible on /profile/settings/*) ──
+  // Testers landing in staging see non-empty history on the security + legal
+  // settings pages instead of an empty state. Every seeded consent record is at
+  // version '1.0' — matches the CONSENT_VERSION_* env defaults so the banner
+  // stays quiet until you bump those.
+  const consentSeedUsers = [
+    admin!,
+    pastorLondon!,
+    pastorManchester!,
+    leaderSarah!,
+    leaderDavid!,
+    regularMembers[0]!,
+  ];
+  await db.insert(consentRecords).values(
+    consentSeedUsers.flatMap((m, i) =>
+      (['terms', 'privacy', 'marketing'] as const).map((t) => ({
+        memberId: m.id,
+        consentType: t,
+        version: '1.0',
+        granted: true,
+        grantedAt: new Date(Date.now() - (30 - i * 3) * 24 * 60 * 60 * 1000),
+      })),
+    ),
+  );
+  console.log(`✓ ${consentSeedUsers.length * 3} consent records (3 types × ${consentSeedUsers.length} users)`);
+
+  const desktopUA =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+  const mobileUA =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  await db.insert(auditLog).values([
+    ...consentSeedUsers.flatMap((m, i) => [
+      {
+        actorMemberId: m.id,
+        action: 'signin_success',
+        outcome: 'success',
+        ip: '203.0.113.42',
+        userAgent: desktopUA,
+        country: 'GB',
+        createdAt: new Date(Date.now() - (3 + i) * 24 * 60 * 60 * 1000),
+      },
+      {
+        actorMemberId: m.id,
+        action: 'signin_success',
+        outcome: 'success',
+        ip: '198.51.100.15',
+        userAgent: mobileUA,
+        country: 'GB',
+        createdAt: new Date(Date.now() - (1 + i) * 24 * 60 * 60 * 1000),
+      },
+    ]),
+    {
+      actorMemberId: admin!.id,
+      action: 'password_change',
+      outcome: 'success',
+      ip: '203.0.113.42',
+      userAgent: desktopUA,
+      country: 'GB',
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+    },
+    {
+      actorMemberId: leaderSarah!.id,
+      action: 'role_granted',
+      outcome: 'success',
+      targetType: 'member',
+      targetId: leaderSarah!.id,
+      metadata: { role: 'SafeguardingLead', scope: `branch:${london!.id}` },
+      createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+    },
+  ]);
+  console.log(`✓ ${consentSeedUsers.length * 2 + 2} audit log entries`);
+
+  await db.insert(notificationEvents).values([
+    {
+      memberId: admin!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_received',
+      subjectType: 'fellowship_join_request',
+      payload: { fellowshipName: 'Youth Fellowship', requesterName: 'A new member' },
+      sentAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: admin!.id,
+      category: 'lifecycle',
+      eventType: 'lifecycle.visitor_promoted',
+      payload: { memberName: 'Grace Newcomer', reason: '6 services in 90 days' },
+      sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: pastorLondon!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_received',
+      payload: { fellowshipName: 'Prayer Warriors' },
+      sentAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: pastorLondon!.id,
+      category: 'forms',
+      eventType: 'forms.submission_received',
+      payload: { formType: 'first_timer', submitterName: 'Anonymous visitor' },
+      sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: leaderSarah!.id,
+      category: 'rota',
+      eventType: 'rota.assignment_confirmed',
+      payload: { rotaName: 'Choir Sunday Service', slotDate: '2026-08-03' },
+      sentAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: leaderSarah!.id,
+      category: 'uniform',
+      eventType: 'uniform.schedule_set',
+      payload: { departmentName: 'Choir', outfitName: 'Summer whites' },
+      sentAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: regularMembers[0]!.id,
+      category: 'security',
+      eventType: 'security.password_changed',
+      payload: { changedAt: new Date().toISOString() },
+      sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
+    {
+      memberId: regularMembers[0]!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_decided',
+      payload: { fellowshipName: 'Youth Fellowship', outcome: 'approved' },
+      sentAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+  ]);
+  console.log(`✓ 8 notification events (mixed categories, all sent)`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('Test accounts (all passwords: "Password1!"):');
