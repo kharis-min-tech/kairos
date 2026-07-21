@@ -13,6 +13,11 @@ export interface MailerSecrets {
   awsRegion: string;
   emailFrom: string;
   frontendUrl: string;
+  // Optional SES configuration set. When set, every send tags against this
+  // config set so bounce/complaint metrics + suppression are per-environment.
+  // Prod uses `kairos-transactional`; staging uses `kairos-staging`.
+  // When unset, SES falls back to the identity's default configuration set.
+  configurationSetName?: string;
 }
 
 let _secrets: MailerSecrets | null = null;
@@ -25,6 +30,7 @@ export function bindMailerEnv(secrets: Partial<MailerSecrets>): void {
     awsRegion: secrets.awsRegion ?? 'eu-west-2',
     emailFrom: secrets.emailFrom ?? '"Kharis Church" <noreply@kharis.org>',
     frontendUrl: secrets.frontendUrl ?? 'http://localhost:3002',
+    configurationSetName: secrets.configurationSetName,
   };
   _awsClient = null;
 }
@@ -38,6 +44,7 @@ function getSecrets(): MailerSecrets {
       awsRegion: process.env['AWS_REGION'] ?? 'eu-west-2',
       emailFrom: process.env['EMAIL_FROM'] ?? '"Kharis Church" <noreply@kharis.org>',
       frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3002',
+      configurationSetName: process.env['SES_CONFIGURATION_SET'] || undefined,
     };
     return _secrets;
   }
@@ -71,7 +78,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 
   const url = `https://email.${s.awsRegion}.amazonaws.com/v2/email/outbound-emails`;
-  const payload = {
+  const payload: Record<string, unknown> = {
     FromEmailAddress: s.emailFrom,
     Destination: { ToAddresses: [to] },
     Content: {
@@ -81,6 +88,9 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       },
     },
   };
+  if (s.configurationSetName) {
+    payload['ConfigurationSetName'] = s.configurationSetName;
+  }
 
   const res = await aws.fetch(url, {
     method: 'POST',

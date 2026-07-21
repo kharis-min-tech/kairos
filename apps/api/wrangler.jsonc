@@ -25,7 +25,8 @@
   // Non-secret vars. Secrets (JWT_SECRET, AWS keys, etc.) are set via
   // `wrangler secret put` and DO NOT belong in this file.
   "vars": {
-    "AWS_REGION": "eu-west-2"
+    "AWS_REGION": "eu-west-2",
+    "SES_CONFIGURATION_SET": "kairos-transactional"
   },
 
   // Enable head sampling for logs in the Cloudflare dashboard.
@@ -42,5 +43,59 @@
   // per-branch local-TZ digest is deferred to multi-region work.
   "triggers": {
     "crons": ["0 3 * * *", "0 8 * * *"]
+  },
+
+  // ────────────────────────────────────────────────────────────────
+  // Named environments. `wrangler deploy` (no --env) hits the top-level
+  // production config above. `wrangler deploy --env staging` deploys the
+  // staging Worker below.
+  //
+  // Wrangler env blocks do NOT inherit vars/routes/bindings/triggers from
+  // top-level — every knob has to be restated here to be active in staging.
+  //
+  // Staging shares the code but is fully isolated at every runtime edge:
+  //   - Different Worker name (routing table won't collide)
+  //   - Different Hyperdrive → different PlanetScale branch (schema-only fork)
+  //   - Different SES configuration set (bounce/complaint metrics + suppression
+  //     list stay separate from prod)
+  //   - Different JWT secrets (staging tokens can't unlock prod)
+  //   - Different FRONTEND_URL (email links land on staging.kairos.kharis.org)
+  //
+  // One-time setup checklist for staging:
+  //   1. pscale branch create kairos staging --schema-only
+  //   2. Cloudflare → Hyperdrive → create pointing at staging PS branch → copy ID
+  //   3. Replace REPLACE_ME_STAGING_HYPERDRIVE_ID below
+  //   4. wrangler secret put --env staging JWT_SECRET
+  //      (and: JWT_REFRESH_SECRET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+  //       EMAIL_FROM, FRONTEND_URL)
+  //   5. Cloudflare → DNS → route staging.kairos.kharis.org into the zone
+  //      (Pages custom domain covers the /* half; this Worker's route covers
+  //       /api/*)
+  //   6. AWS SES → Configuration sets → create `kairos-staging`
+  //   7. wrangler deploy --env staging   (from apps/api)
+  // ────────────────────────────────────────────────────────────────
+  "env": {
+    "staging": {
+      "name": "kairos-api-staging",
+      "routes": [
+        { "pattern": "staging.kairos.kharis.org/api/*", "zone_name": "kharis.org" }
+      ],
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "REPLACE_ME_STAGING_HYPERDRIVE_ID"
+        }
+      ],
+      "vars": {
+        "AWS_REGION": "eu-west-2",
+        "SES_CONFIGURATION_SET": "kairos-staging"
+      },
+      "observability": {
+        "enabled": true
+      },
+      "triggers": {
+        "crons": ["0 3 * * *", "0 8 * * *"]
+      }
+    }
   }
 }

@@ -25,6 +25,10 @@ export interface Env {
   AWS_REGION: string;
   EMAIL_FROM: string;
   FRONTEND_URL: string;
+  // Set per environment in wrangler.jsonc (prod: `kairos-transactional`,
+  // staging: `kairos-staging`). Optional — mailer falls back to SES identity
+  // default when absent.
+  SES_CONFIGURATION_SET?: string;
 }
 
 let app: ReturnType<typeof createApp> | null = null;
@@ -39,6 +43,7 @@ export default {
         awsRegion: env.AWS_REGION,
         emailFrom: env.EMAIL_FROM,
         frontendUrl: env.FRONTEND_URL,
+        configurationSetName: env.SES_CONFIGURATION_SET,
       });
       mailerBound = true;
     }
@@ -66,6 +71,7 @@ export default {
         awsRegion: env.AWS_REGION,
         emailFrom: env.EMAIL_FROM,
         frontendUrl: env.FRONTEND_URL,
+        configurationSetName: env.SES_CONFIGURATION_SET,
       });
       mailerBound = true;
     }
