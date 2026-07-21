@@ -1,0 +1,30 @@
+{
+  "projectId": "3cf5ee79-be9d-4ff5-9173-6f9d2db2f626",
+  "shape": "storybook",
+  "pkg": "packages/ui",
+  "globalName": "KairosUI",
+  "storybookConfigDir": "packages/ui/.storybook",
+  "storybookStatic": ".design-sync/sb-reference",
+  "buildCmd": "npx turbo run build --filter=@kairos/ui... && (cd packages/ui && npx tailwindcss -c tailwind.config.ts -i src/globals.css -o dist/globals.compiled.css)",
+  "cssEntry": "dist/globals.compiled.css",
+  "extraEntries": ["../../.design-sync/preview-shim.tsx"],
+  "provider": {
+    "component": "PreviewWrapper"
+  },
+  "titleMap": {
+    "Colors": null,
+    "Typography": null
+  },
+  "overrides": {
+    "ConfirmDialog": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "skip": ["composites-confirmdialog--pending"]
+    },
+    "Dialog": {
+      "cardMode": "single",
+      "primaryStory": "Default"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

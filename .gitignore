@@ -12,3 +12,11 @@ test-results
 .vscode/
 grant-proposal/
 storybook-static/
+# design-sync — sync of packages/ui to claude.ai/design
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.design-sync/*.log
+.ds-sync/
+ds-bundle/
