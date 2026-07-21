@@ -40,6 +40,15 @@ import {
   notificationEvents,
   auditLog,
   consentRecords,
+  fellowshipMeetings,
+  fellowshipMeetingAttendance,
+  fellowshipJoinRequests,
+  fellowshipFollowups,
+  newBelieverEnrollments,
+  newBelieverSessions,
+  newBelieverAttendance,
+  mentorFollowups,
+  notificationPreferences,
 } from './schema';
 import { sql } from 'drizzle-orm';
 import { hashPassword } from '@kairos/utils';
@@ -1530,6 +1539,483 @@ async function seed() {
     },
   ]);
   console.log(`✓ 8 notification events (mixed categories, all sent)`);
+
+  // ── 14. Realistic tester hydration ──────────────────────────
+  // Extends the smoke seed so every module renders realistically on staging:
+  // more members per branch, backfilled leadership, additional departments +
+  // members + join requests + followups, uniforms, rota with historical +
+  // upcoming instances, 8 weeks of Sunday services + attendance across the
+  // 4 branches London didn't already cover, fellowship meetings + attendance +
+  // join requests + followups, new-believer pipeline, and notification
+  // preferences. Active-branch scoping honored throughout — every dept /
+  // fellowship / rota / attendance row uses a member whose home branch matches
+  // the parent row's branch.
+  const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+  const daysAhead = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  const dateStr = (d: Date) => d.toISOString().slice(0, 10);
+  // Sunday of relative week `offset` at 10:00 local time (0 = this week's Sunday).
+  const sundayOffset = (offset: number): Date => {
+    const now = new Date();
+    const sun = new Date(now);
+    sun.setDate(now.getDate() - now.getDay() + offset * 7);
+    sun.setHours(10, 0, 0, 0);
+    return sun;
+  };
+
+  // ── 14a. Extra members ──
+  const extraMemberSpecs: Array<{ firstName: string; lastName: string; email: string; branchId: string; gender: 'Male' | 'Female'; dob: string; phone: string; honorific?: string }> = [
+    { firstName: 'Chidera', lastName: 'Nnamani', email: 'chidera.nnamani@kairos.local', branchId: london!.id,     gender: 'Male',   dob: '1993-11-02', phone: '+447700000101' },
+    { firstName: 'Ruth',    lastName: 'Adeleke', email: 'ruth.adeleke@kairos.local',    branchId: london!.id,     gender: 'Female', dob: '1997-04-19', phone: '+447700000102' },
+    { firstName: 'Tobi',    lastName: 'Balogun', email: 'tobi.balogun@kairos.local',    branchId: london!.id,     gender: 'Male',   dob: '1985-09-30', phone: '+447700000103' },
+    { firstName: 'Amina',   lastName: 'Bello',   email: 'amina.bello@kairos.local',     branchId: london!.id,     gender: 'Female', dob: '2001-02-06', phone: '+447700000104' },
+    { firstName: 'Elijah',  lastName: 'Owoyele', email: 'elijah.owoyele@kairos.local',  branchId: manchester!.id, gender: 'Male',   dob: '1979-01-17', phone: '+447700000201' },
+    { firstName: 'Hannah',  lastName: 'Peters',  email: 'hannah.peters@kairos.local',   branchId: manchester!.id, gender: 'Female', dob: '1994-06-24', phone: '+447700000202' },
+    { firstName: 'Micah',   lastName: 'Odumosu', email: 'micah.odumosu@kairos.local',   branchId: manchester!.id, gender: 'Male',   dob: '1990-08-11', phone: '+447700000203' },
+    { firstName: 'Deborah', lastName: 'Fashina', email: 'deborah.fashina@kairos.local', branchId: manchester!.id, gender: 'Female', dob: '1996-12-05', phone: '+447700000204' },
+    { firstName: 'Isaac',   lastName: 'Ojewale', email: 'isaac.ojewale@kairos.local',   branchId: manchester!.id, gender: 'Male',   dob: '1988-03-22', phone: '+447700000205' },
+    { firstName: 'Naomi',   lastName: 'Adebayo', email: 'naomi.adebayo@kairos.local',   branchId: manchester!.id, gender: 'Female', dob: '1999-07-14', phone: '+447700000206' },
+    { firstName: 'Kojo',    lastName: 'Boateng', email: 'kojo.boateng@kairos.local',    branchId: accra!.id,      gender: 'Male',   dob: '1986-05-08', phone: '+233201234701' },
+    { firstName: 'Efua',    lastName: 'Danquah', email: 'efua.danquah@kairos.local',    branchId: accra!.id,      gender: 'Female', dob: '1991-10-30', phone: '+233201234702' },
+    { firstName: 'Kwesi',   lastName: 'Frimpong',email: 'kwesi.frimpong@kairos.local',  branchId: accra!.id,      gender: 'Male',   dob: '1995-02-14', phone: '+233201234703' },
+    { firstName: 'Afia',    lastName: 'Sarpong', email: 'afia.sarpong@kairos.local',    branchId: accra!.id,      gender: 'Female', dob: '2000-11-11', phone: '+233201234704' },
+    { firstName: 'Kofi',    lastName: 'Owusu',   email: 'kofi.owusu@kairos.local',      branchId: kumasi!.id,     gender: 'Male',   dob: '1984-04-01', phone: '+233551234701' },
+    { firstName: 'Adjoa',   lastName: 'Antwi',   email: 'adjoa.antwi@kairos.local',     branchId: kumasi!.id,     gender: 'Female', dob: '1989-09-15', phone: '+233551234702' },
+    { firstName: 'Kwabena', lastName: 'Osei',    email: 'kwabena.osei@kairos.local',    branchId: kumasi!.id,     gender: 'Male',   dob: '1992-01-27', phone: '+233551234703' },
+    { firstName: 'Akosua',  lastName: 'Gyasi',   email: 'akosua.gyasi@kairos.local',    branchId: kumasi!.id,     gender: 'Female', dob: '1997-08-03', phone: '+233551234704' },
+    { firstName: 'Nana',    lastName: 'Amoah',   email: 'nana.amoah@kairos.local',      branchId: kumasi!.id,     gender: 'Male',   dob: '1980-12-20', phone: '+233551234705' },
+    { firstName: 'Sahr',    lastName: 'Koroma',  email: 'sahr.koroma@kairos.local',     branchId: freetown!.id,   gender: 'Male',   dob: '1983-07-05', phone: '+23276123501', honorific: 'Pastor' },
+    { firstName: 'Adama',   lastName: 'Turay',   email: 'adama.turay@kairos.local',     branchId: freetown!.id,   gender: 'Female', dob: '1990-03-18', phone: '+23276123502' },
+    { firstName: 'Foday',   lastName: 'Sesay',   email: 'foday.sesay@kairos.local',     branchId: freetown!.id,   gender: 'Male',   dob: '1986-10-12', phone: '+23276123503' },
+    { firstName: 'Isatu',   lastName: 'Conteh',  email: 'isatu.conteh@kairos.local',    branchId: freetown!.id,   gender: 'Female', dob: '1993-05-29', phone: '+23276123504' },
+    { firstName: 'Mohamed', lastName: 'Bangura', email: 'mohamed.bangura@kairos.local', branchId: freetown!.id,   gender: 'Male',   dob: '1995-11-22', phone: '+23276123505' },
+  ];
+  const extraMembers = await db.insert(members).values(
+    extraMemberSpecs.map((s, i) => ({
+      firstName: s.firstName,
+      lastName: s.lastName,
+      email: s.email,
+      phone: s.phone,
+      gender: s.gender,
+      dateOfBirth: s.dob,
+      homeBranchId: s.branchId,
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+      memberType: 'member',
+      honorific: s.honorific,
+      membershipDate: dateStr(daysAgo(400 + i * 20)),
+      membershipClassCompletedAt: daysAgo(180 + i * 10),
+    })),
+  ).returning();
+  const findExtra = (email: string) => extraMembers.find((m) => m.email === email)!;
+  console.log(`✓ ${extraMembers.length} extra members (Manchester ${extraMemberSpecs.filter(s => s.branchId === manchester!.id).length}, Accra ${extraMemberSpecs.filter(s => s.branchId === accra!.id).length}, Kumasi ${extraMemberSpecs.filter(s => s.branchId === kumasi!.id).length}, Freetown ${extraMemberSpecs.filter(s => s.branchId === freetown!.id).length}, London ${extraMemberSpecs.filter(s => s.branchId === london!.id).length})`);
+
+  // Branch-scoped adult pools (approved, verified, active-branch).
+  const inBranch = (bId: string) => extraMembers.filter((m) => m.homeBranchId === bId);
+  const londonAdults     = [admin!, pastorLondon!, leaderSarah!, regularMembers[0]!, ...inBranch(london!.id)];
+  void londonAdults; // built for symmetry; London already covered by the smoke seed's services + attendance
+  const manchesterAdults = [pastorManchester!, regularMembers[3]!, ...inBranch(manchester!.id)];
+  const accraAdults      = [pastorAccra!, leaderDavid!, regularMembers[1]!, regularMembers[2]!, ...inBranch(accra!.id)];
+  const kumasiAdults     = [pastorKumasi!, abenaOsei!, amaBoateng!, ...inBranch(kumasi!.id)];
+  const freetownAdults   = [regularMembers[4]!, ...inBranch(freetown!.id)];
+
+  // ── 14b. Branch leadership backfill ──
+  const manchesterElder = findExtra('elijah.owoyele@kairos.local');
+  const kumasiElder     = findExtra('nana.amoah@kairos.local');
+  const freetownPastor  = findExtra('sahr.koroma@kairos.local');
+  const freetownElder   = findExtra('foday.sesay@kairos.local');
+  await db.insert(branchLeadership).values([
+    { branchId: manchester!.id, memberId: manchesterElder.id, role: 'Elder',       startDate: '2023-01-15' },
+    { branchId: kumasi!.id,     memberId: kumasiElder.id,     role: 'Elder',       startDate: '2022-06-01' },
+    { branchId: freetown!.id,   memberId: freetownPastor.id,  role: 'Main Pastor', startDate: '2020-01-10' },
+    { branchId: freetown!.id,   memberId: freetownElder.id,   role: 'Elder',       startDate: '2021-03-05' },
+  ]);
+  console.log(`✓ 4 leadership backfill entries`);
+
+  // ── 15. Additional branch departments ──
+  const allDepts = await db.select().from(departments);
+  const deptByName = new Map(allDepts.map((d) => [d.departmentName, d]));
+  const newBranchDeptSpecs = [
+    { branch: manchester!, deptName: 'Choir',             lead: manchesterElder,                             description: 'Manchester choir under Elder Elijah.' },
+    { branch: manchester!, deptName: 'Ushers',            lead: findExtra('hannah.peters@kairos.local'),     description: 'Manchester welcome and seating team.' },
+    { branch: manchester!, deptName: 'Sanctuary Keepers', lead: findExtra('micah.odumosu@kairos.local'),     description: 'Manchester sanctuary care.' },
+    { branch: accra!,      deptName: 'Choir',             lead: findExtra('kojo.boateng@kairos.local'),      description: 'Accra choir ministry.' },
+    { branch: accra!,      deptName: 'Sound',             lead: findExtra('kwesi.frimpong@kairos.local'),    description: 'Accra sound engineering.' },
+    // (accra, Admin) already created by the smoke seed above — do not re-add.
+    { branch: kumasi!,     deptName: 'Choir',             lead: findExtra('kwabena.osei@kairos.local'),      description: 'Kumasi choir ministry.' },
+    { branch: kumasi!,     deptName: 'Ushers',            lead: kumasiElder,                                 description: 'Kumasi ushers under Elder Nana.' },
+    { branch: kumasi!,     deptName: 'Admin',             lead: findExtra('adjoa.antwi@kairos.local'),       description: 'Kumasi admin desk.' },
+    { branch: freetown!,   deptName: 'Choir',             lead: findExtra('adama.turay@kairos.local'),       description: 'Freetown choir.' },
+    { branch: freetown!,   deptName: 'Admin',             lead: freetownElder,                               description: 'Freetown admin desk.' },
+  ];
+  const newBranchDepts = await db.insert(branchDepartments).values(
+    newBranchDeptSpecs.map((s) => ({
+      branchId: s.branch.id,
+      departmentId: deptByName.get(s.deptName)!.id,
+      leadMemberId: s.lead.id,
+      description: s.description,
+    })),
+  ).returning();
+  console.log(`✓ ${newBranchDepts.length} additional branch departments`);
+
+  // DepartmentLead grants for the new leads (so /profile/roles surfaces them).
+  await db.insert(memberRoles).values(
+    newBranchDepts.map((bd) => ({
+      memberId: bd.leadMemberId!,
+      roleId: departmentLeadRole!.id,
+      branchId: bd.branchId,
+      scopeKind: 'department',
+      scopeId: bd.id,
+    })),
+  );
+  console.log(`✓ ${newBranchDepts.length} DepartmentLead grants`);
+
+  const findBd = (branchId: string, deptName: string) =>
+    newBranchDepts.find((bd) => bd.branchId === branchId && bd.departmentId === deptByName.get(deptName)!.id)!;
+  const choirManchester     = findBd(manchester!.id, 'Choir');
+  const ushersManchester    = findBd(manchester!.id, 'Ushers');
+  const sanctuaryManchester = findBd(manchester!.id, 'Sanctuary Keepers');
+  const choirAccra          = findBd(accra!.id, 'Choir');
+  const soundAccra          = findBd(accra!.id, 'Sound');
+  const choirKumasi         = findBd(kumasi!.id, 'Choir');
+  const ushersKumasi        = findBd(kumasi!.id, 'Ushers');
+  const adminKumasi         = findBd(kumasi!.id, 'Admin');
+  const choirFreetown       = findBd(freetown!.id, 'Choir');
+  const adminFreetown       = findBd(freetown!.id, 'Admin');
+
+  // ── 15a. Department members ── lead + up to 4 more from the same branch pool.
+  const buildDmRows = (bd: { id: string }, lead: { id: string }, pool: Array<{ id: string }>, startDaysAgo: number) => {
+    const list = [lead, ...pool.filter((m) => m.id !== lead.id)].slice(0, 5);
+    return list.map((m, i) => ({
+      branchDepartmentId: bd.id,
+      memberId: m.id,
+      joinDate: dateStr(daysAgo(startDaysAgo - i * 8)),
+      membershipStatus: 'active' as const,
+    }));
+  };
+  const dmRows = [
+    ...buildDmRows(choirManchester,     manchesterElder,                             manchesterAdults, 90),
+    ...buildDmRows(ushersManchester,    findExtra('hannah.peters@kairos.local'),     manchesterAdults, 75),
+    ...buildDmRows(sanctuaryManchester, findExtra('micah.odumosu@kairos.local'),     manchesterAdults, 60),
+    ...buildDmRows(choirAccra,          findExtra('kojo.boateng@kairos.local'),      accraAdults,      100),
+    ...buildDmRows(soundAccra,          findExtra('kwesi.frimpong@kairos.local'),    accraAdults,      80),
+    ...buildDmRows(choirKumasi,         findExtra('kwabena.osei@kairos.local'),      kumasiAdults,     90),
+    ...buildDmRows(ushersKumasi,        kumasiElder,                                 kumasiAdults,     70),
+    ...buildDmRows(adminKumasi,         findExtra('adjoa.antwi@kairos.local'),       kumasiAdults,     110),
+    ...buildDmRows(choirFreetown,       findExtra('adama.turay@kairos.local'),       freetownAdults,   80),
+    ...buildDmRows(adminFreetown,       freetownElder,                               freetownAdults,   130),
+    // Extend existing ushersAccra with more members so its rota pool has depth.
+    { branchDepartmentId: ushersAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   joinDate: dateStr(daysAgo(72)), membershipStatus: 'active' as const },
+    { branchDepartmentId: ushersAccra!.id, memberId: findExtra('kwesi.frimpong@kairos.local').id, joinDate: dateStr(daysAgo(65)), membershipStatus: 'active' as const },
+  ];
+  await db.insert(departmentMembers).values(dmRows);
+  console.log(`✓ ${dmRows.length} additional department members`);
+
+  // ── 15b. Join requests (mid-flight recruitment states) ──
+  await db.insert(departmentJoinRequests).values([
+    { branchDepartmentId: choirManchester.id, memberId: manchesterAdults[6]!.id, status: 'applied',              notes: 'Auditioning next Sunday' },
+    { branchDepartmentId: choirManchester.id, memberId: manchesterAdults[7]!.id, status: 'offered',              notes: 'Offer sent',      offeredAt: daysAgo(2), offerExpiresAt: daysAhead(5), offerMessage: 'Come join us this Sunday.' },
+    { branchDepartmentId: ushersKumasi.id,    memberId: kumasiAdults[6]!.id,     status: 'interview_scheduled',  notes: 'First interview', interviewScheduledAt: daysAhead(3), interviewFormat: 'in_person', interviewLocation: 'Kumasi meeting room' },
+    { branchDepartmentId: choirAccra.id,      memberId: accraAdults[6]!.id,      status: 'rejected',             notes: 'Not yet a confirmed member', reviewedAt: daysAgo(10) },
+  ]);
+
+  // ── 15c. Followups (contact activity per dept) ──
+  await db.insert(departmentFollowups).values([
+    { branchDepartmentId: choirAccra.id,       memberId: accraAdults[3]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(7), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 15, notes: 'Rehearsal reminder' },
+    { branchDepartmentId: choirAccra.id,       memberId: accraAdults[4]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(3), contactMethod: 'WhatsApp',   contactStatus: 'Unreachable', notes: 'No response yet' },
+    { branchDepartmentId: ushersManchester.id, memberId: manchesterAdults[3]!.id, recordedById: findExtra('hannah.peters@kairos.local').id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 8,  notes: 'Rota confirmation' },
+    { branchDepartmentId: adminKumasi.id,      memberId: kumasiAdults[2]!.id,     recordedById: findExtra('adjoa.antwi@kairos.local').id,   contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 20, notes: 'Audit prep review' },
+  ]);
+  console.log(`✓ 4 dept join requests + 4 dept followups`);
+
+  // ── 16. Uniforms for 3 more departments ──
+  const [ushersAccraOutfit, ushersKumasiOutfit, choirManchesterOutfit] = await db.insert(departmentUniformOutfits).values([
+    { branchDepartmentId: ushersAccra!.id,     name: 'Sunday burgundy', imageUrl: '/uniforms/burgundy.png',  genderTarget: 'Unisex', notes: 'Full Sunday service dress', uploadedById: leaderDavid!.id },
+    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: '/uniforms/navy.png',      genderTarget: 'Unisex',                                     uploadedById: kumasiElder.id },
+    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: '/uniforms/blue-robe.png', genderTarget: 'Unisex',                                     uploadedById: manchesterElder.id },
+  ]).returning();
+  await db.insert(departmentUniformSchedule).values([
+    { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
+    { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
+    { branchDepartmentId: ushersKumasi.id,     outfitId: ushersKumasiOutfit!.id,    serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: kumasiElder.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: manchesterElder.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: manchesterElder.id },
+  ]);
+  console.log(`✓ 3 more uniforms + 5 schedule entries`);
+
+  // ── 17. Rota expansion — 3 more templates + 6 weeks history + 2 upcoming ──
+  const rotaExpansionSpecs = [
+    { bd: choirManchester, name: 'Sunday choir rota',  startTime: '10:00:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === choirManchester.id).map((r) => r.memberId),  slotDefs: [{ n: 'Lead singer', p: 1 }, { n: 'Backing', p: 2 }] },
+    { bd: ushersAccra!,    name: 'Sunday ushers rota', startTime: '09:30:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === ushersAccra!.id).map((r) => r.memberId).concat([leaderDavid!.id, regularMembers[1]!.id]),
+      slotDefs: [{ n: 'Door usher', p: 2 }, { n: 'Seating usher', p: 2 }] },
+    { bd: adminKumasi,     name: 'Sunday admin rota',  startTime: '10:00:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === adminKumasi.id).map((r) => r.memberId),      slotDefs: [{ n: 'Register keeper', p: 1 }, { n: 'First-timer capture', p: 1 }] },
+  ];
+  const newTemplates = await db.insert(rotaTemplates).values(
+    rotaExpansionSpecs.map((s) => ({
+      branchDepartmentId: s.bd.id,
+      name: s.name,
+      recurrence: 'Weekly' as const,
+      weekday: 0,
+      defaultStartTime: s.startTime,
+    })),
+  ).returning();
+  const newSlots = await db.insert(rotaTemplateSlots).values(
+    rotaExpansionSpecs.flatMap((spec, tIdx) =>
+      spec.slotDefs.map((sd, sortOrder) => ({
+        templateId: newTemplates[tIdx]!.id,
+        roleName: sd.n,
+        positionsRequired: sd.p,
+        sortOrder,
+      })),
+    ),
+  ).returning();
+  await db.insert(rotaPoolMembers).values(
+    rotaExpansionSpecs.flatMap((spec, tIdx) =>
+      // dedupe pool IDs — same member could appear twice via concat above
+      Array.from(new Set(spec.poolIds)).map((mid) => ({
+        templateId: newTemplates[tIdx]!.id,
+        memberId: mid,
+      })),
+    ),
+  );
+  const newInstances = await db.insert(rotaInstances).values(
+    newTemplates.flatMap((tmpl, tIdx) => {
+      const spec = rotaExpansionSpecs[tIdx]!;
+      const rows = [];
+      for (let w = -6; w <= 1; w++) {
+        rows.push({
+          templateId: tmpl.id,
+          branchDepartmentId: spec.bd.id,
+          serviceDate: dateStr(sundayOffset(w)),
+          startTime: spec.startTime,
+          status: w < 0 ? 'Completed' : 'Published',
+          publishedAt: daysAgo(Math.max(1, Math.abs(w) * 7 + 1)),
+        });
+      }
+      return rows;
+    }),
+  ).returning();
+  // Assignments: round-robin the pool across slot positions, skipping duplicate
+  // (instance, member) — unique index would otherwise reject.
+  const asnRows: Array<{ instanceId: string; slotId: string; memberId: string; status: string }> = [];
+  for (const inst of newInstances) {
+    const spec = rotaExpansionSpecs.find((s) => s.bd.id === inst.branchDepartmentId)!;
+    const uniquePool = Array.from(new Set(spec.poolIds));
+    const slotsForTmpl = newSlots.filter((s) => s.templateId === inst.templateId);
+    let poolPos = newInstances.indexOf(inst); // rotate start per instance
+    for (const slot of slotsForTmpl) {
+      for (let p = 0; p < slot.positionsRequired; p++) {
+        if (uniquePool.length === 0) break;
+        let attempts = 0;
+        while (attempts < uniquePool.length) {
+          const mid = uniquePool[poolPos % uniquePool.length]!;
+          poolPos++;
+          attempts++;
+          if (asnRows.some((r) => r.instanceId === inst.id && r.memberId === mid)) continue;
+          asnRows.push({
+            instanceId: inst.id,
+            slotId: slot.id,
+            memberId: mid,
+            status: inst.status === 'Completed' ? 'Confirmed' : p === 0 ? 'Confirmed' : 'Assigned',
+          });
+          break;
+        }
+      }
+    }
+  }
+  if (asnRows.length) await db.insert(rotaAssignments).values(asnRows);
+  console.log(`✓ ${newTemplates.length} rota templates + ${newInstances.length} instances + ${asnRows.length} assignments`);
+
+  // ── 18. Services + attendance for 4 branches × 8 Sundays ──
+  // London already has 3 services from the smoke seed — skip to avoid the
+  // (branchId, serviceDate, serviceType) unique index tripping.
+  const otherBranchInfo = [
+    { branch: manchester!, adults: manchesterAdults, recorder: pastorManchester!, preacher: pastorManchester! },
+    { branch: accra!,      adults: accraAdults,      recorder: leaderDavid!,      preacher: pastorAccra!    },
+    { branch: kumasi!,     adults: kumasiAdults,     recorder: pastorKumasi!,     preacher: pastorKumasi!   },
+    { branch: freetown!,   adults: freetownAdults,   recorder: freetownPastor,    preacher: freetownPastor  },
+  ];
+  const topics = ['The living hope', 'Faith like a mustard seed', "God's covenant faithfulness", 'A living sacrifice'];
+  const newServices = await db.insert(services).values(
+    otherBranchInfo.flatMap((info) =>
+      Array.from({ length: 8 }, (_, i) => {
+        const w = i + 1;
+        return {
+          branchId: info.branch.id,
+          serviceDate: sundayOffset(-w),
+          serviceType: 'Sunday',
+          serviceTitle: 'Sunday service',
+          topic: topics[w % topics.length]!,
+          preacherId: info.preacher.id,
+          expectedAttendance: 40 + info.adults.length * 5,
+          createdBy: info.recorder.id,
+        };
+      }),
+    ),
+  ).returning();
+  const attendanceRows: Array<{ serviceId: string; memberId: string; attendanceStatus: string; arrivalTime: Date; recordedBy: string }> = [];
+  for (const svc of newServices) {
+    const info = otherBranchInfo.find((b) => b.branch.id === svc.branchId)!;
+    const attendeeCount = Math.max(3, Math.min(info.adults.length, Math.round(info.adults.length * 0.75)));
+    for (let i = 0; i < attendeeCount; i++) {
+      attendanceRows.push({
+        serviceId: svc.id,
+        memberId: info.adults[i]!.id,
+        attendanceStatus: i === attendeeCount - 1 && attendeeCount > 3 ? 'Late' : 'Present',
+        arrivalTime: svc.serviceDate,
+        recordedBy: info.recorder.id,
+      });
+    }
+  }
+  await db.insert(serviceAttendance).values(attendanceRows);
+  console.log(`✓ ${newServices.length} services + ${attendanceRows.length} attendance rows (4 branches × 8 Sundays)`);
+
+  // ── 19. Fellowship expansion — meetings + attendance + join requests + followups ──
+  // Grow existing fellowship rosters with a few extras so meeting attendance
+  // has depth. `(fellowshipId, memberId, joinDate)` unique => distinct pairs.
+  await db.insert(fellowshipMembers).values([
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('ruth.adeleke@kairos.local').id },
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('chidera.nnamani@kairos.local').id },
+    { fellowshipId: expressLondon!.id,  memberId: findExtra('tobi.balogun@kairos.local').id },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('kojo.boateng@kairos.local').id },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('efua.danquah@kairos.local').id },
+    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('afia.sarpong@kairos.local').id },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('kofi.owusu@kairos.local').id },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('adjoa.antwi@kairos.local').id },
+  ]);
+
+  const fellowshipInfo = [
+    { fellowship: kGroupLondon!,   day: 3, hour: 19, minute: 0,  location: "Sarah's home — SW London", leader: leaderSarah!,  pool: [leaderSarah!, regularMembers[0]!, pastorLondon!, findExtra('ruth.adeleke@kairos.local'), findExtra('chidera.nnamani@kairos.local')] },
+    { fellowship: expressLondon!,  day: 5, hour: 18, minute: 30, location: 'Central London hub',       leader: pastorLondon!, pool: [regularMembers[0]!, admin!, findExtra('tobi.balogun@kairos.local')] },
+    { fellowship: kGroupAccra!,    day: 4, hour: 18, minute: 0,  location: "David's home — Accra",     leader: leaderDavid!,  pool: [leaderDavid!, regularMembers[1]!, regularMembers[2]!, findExtra('kojo.boateng@kairos.local'), findExtra('efua.danquah@kairos.local')] },
+    { fellowship: newBreedsAccra!, day: 6, hour: 10, minute: 0,  location: 'Accra youth centre',       leader: pastorAccra!,  pool: [regularMembers[2]!, findExtra('afia.sarpong@kairos.local')] },
+    { fellowship: kGroupKumasi!,   day: 2, hour: 18, minute: 30, location: 'Kumasi meeting room',      leader: pastorKumasi!, pool: [pastorKumasi!, abenaOsei!, findExtra('kofi.owusu@kairos.local'), findExtra('adjoa.antwi@kairos.local')] },
+  ];
+  const meetingTopics = ['Prayer & fellowship', 'Bible study — Romans', 'Testimony night', 'Worship & word'];
+  const newMeetings = await db.insert(fellowshipMeetings).values(
+    fellowshipInfo.flatMap((info) =>
+      Array.from({ length: 8 }, (_, i) => {
+        const w = i + 1;
+        const dt = new Date();
+        dt.setDate(dt.getDate() - dt.getDay() + info.day - 7 * (w - 1));
+        dt.setHours(info.hour, info.minute, 0, 0);
+        return {
+          fellowshipId: info.fellowship.id,
+          meetingDate: dt,
+          meetingTitle: `${info.fellowship.fellowshipName} — ${dateStr(dt)}`,
+          meetingTopic: meetingTopics[w % meetingTopics.length]!,
+          location: info.location,
+          durationMinutes: 90,
+          createdBy: info.leader.id,
+        };
+      }),
+    ),
+  ).returning();
+
+  const fmaRows: Array<{ meetingId: string; memberId: string; attendanceStatus: string; recordedBy: string }> = [];
+  for (const meeting of newMeetings) {
+    const info = fellowshipInfo.find((i) => i.fellowship.id === meeting.fellowshipId)!;
+    const attendeeCount = Math.max(2, Math.min(info.pool.length, Math.round(info.pool.length * 0.8)));
+    for (let i = 0; i < attendeeCount; i++) {
+      fmaRows.push({
+        meetingId: meeting.id,
+        memberId: info.pool[i]!.id,
+        attendanceStatus: i === attendeeCount - 1 && attendeeCount > 2 ? 'Late' : 'Present',
+        recordedBy: info.leader.id,
+      });
+    }
+  }
+  await db.insert(fellowshipMeetingAttendance).values(fmaRows);
+  console.log(`✓ 8 fellowship-member expansions + ${newMeetings.length} meetings + ${fmaRows.length} meeting attendance rows`);
+
+  await db.insert(fellowshipJoinRequests).values([
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('tobi.balogun@kairos.local').id,   status: 'pending',  notes: 'Wants to join K-Group as well' },
+    { fellowshipId: expressLondon!.id,  memberId: findExtra('amina.bello@kairos.local').id,    status: 'approved', reviewedBy: pastorLondon!.id, reviewedAt: daysAgo(3) },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('kwesi.frimpong@kairos.local').id, status: 'pending',  notes: 'Wants to join weekly study' },
+    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   status: 'rejected', reviewedBy: pastorAccra!.id,  reviewedAt: daysAgo(10), notes: 'Already committed to another fellowship' },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('akosua.gyasi@kairos.local').id,   status: 'pending' },
+  ]);
+  await db.insert(fellowshipFollowups).values([
+    { fellowshipId: kGroupLondon!.id,   memberId: regularMembers[0]!.id,                   recordedById: leaderSarah!.id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 20, notes: 'Prayer request for family' },
+    { fellowshipId: kGroupAccra!.id,    memberId: regularMembers[2]!.id,                   recordedById: leaderDavid!.id, contactedAt: daysAgo(2), contactMethod: 'WhatsApp',   contactStatus: 'Successful',                       notes: 'Sunday meet confirmed' },
+    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('afia.sarpong@kairos.local').id, recordedById: pastorAccra!.id, contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 15 },
+  ]);
+  console.log(`✓ 5 fellowship join requests + 3 fellowship followups`);
+
+  // ── 20. New Believers pipeline (spread across stages, all 5 branches) ──
+  const nbSpecs = [
+    { member: findExtra('amina.bello@kairos.local'),     branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-3',  enrolledDaysAgo: 35 },
+    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: pastorManchester!, mentor: manchesterElder, stage: 'session-1',  enrolledDaysAgo: 10 },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: pastorManchester!, mentor: manchesterElder, stage: 'session-4',  enrolledDaysAgo: 42 },
+    { member: findExtra('afia.sarpong@kairos.local'),    branch: accra!,      teacher: pastorAccra!,      mentor: leaderDavid!,    stage: 'completed',  enrolledDaysAgo: 60 },
+    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: pastorKumasi!,     mentor: kumasiElder,     stage: 'session-1',  enrolledDaysAgo: 7  },
+    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: freetownPastor,    mentor: freetownElder,   stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: freetownPastor,    mentor: freetownElder,   stage: 'integrated', enrolledDaysAgo: 90 },
+  ];
+  const stageOrder = ['session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'];
+  const newBelievers = await db.insert(newBelieverEnrollments).values(
+    nbSpecs.map((s) => {
+      const stageIdx = stageOrder.indexOf(s.stage);
+      const sessionCompletedAt: Record<string, string> = {};
+      for (let i = 0; i < stageIdx && i < 4; i++) {
+        sessionCompletedAt[stageOrder[i]!] = daysAgo(s.enrolledDaysAgo - (i + 1) * 7).toISOString();
+      }
+      return {
+        memberId: s.member.id,
+        branchId: s.branch.id,
+        teacherId: s.teacher.id,
+        mentorId: s.mentor.id,
+        stage: s.stage,
+        enrolledAt: daysAgo(s.enrolledDaysAgo),
+        completedAt: s.stage === 'completed' || s.stage === 'integrated' ? daysAgo(Math.max(1, s.enrolledDaysAgo - 28)) : null,
+        sessionCompletedAt: Object.keys(sessionCompletedAt).length ? sessionCompletedAt : null,
+      };
+    }),
+  ).returning();
+  await db.insert(mentorFollowups).values([
+    { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Great session — reading through Genesis this week', contactedAt: daysAgo(6) },
+    { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Confirmed for Sunday class',                        contactedAt: daysAgo(1) },
+    { enrollmentId: newBelievers[3]!.id, mentorMemberId: manchesterElder.id, note: 'Ready for baptism conversation',                    contactedAt: daysAgo(3) },
+    { enrollmentId: newBelievers[4]!.id, mentorMemberId: leaderDavid!.id,    note: 'Encouraged to join Ushers',                         contactedAt: daysAgo(5) },
+  ]);
+
+  // NB sessions (one recent per branch) + attendance for currently-enrolled students at or beyond that stage.
+  const nbSessions = await db.insert(newBelieverSessions).values([
+    { branchId: london!.id,     teacherId: pastorLondon!.id,     sessionStage: 'session-2', sessionDate: daysAgo(3),  topic: 'Foundations — session 2', location: 'London teaching room',    createdBy: pastorLondon!.id },
+    { branchId: manchester!.id, teacherId: pastorManchester!.id, sessionStage: 'session-1', sessionDate: daysAgo(2),  topic: 'Welcome — session 1',    location: 'Manchester teaching room', createdBy: pastorManchester!.id },
+    { branchId: accra!.id,      teacherId: pastorAccra!.id,      sessionStage: 'session-4', sessionDate: daysAgo(5),  topic: 'Finishing well',          location: 'Accra teaching room',     createdBy: pastorAccra!.id },
+    { branchId: kumasi!.id,     teacherId: pastorKumasi!.id,     sessionStage: 'session-1', sessionDate: daysAgo(1),  topic: 'Welcome — session 1',    location: 'Kumasi teaching room',    createdBy: pastorKumasi!.id },
+    { branchId: freetown!.id,   teacherId: freetownPastor.id,    sessionStage: 'session-2', sessionDate: daysAgo(4),  topic: 'Foundations',             location: 'Freetown teaching room',  createdBy: freetownPastor.id },
+  ]).returning();
+  const nbAttendanceRows: Array<{ sessionId: string; enrollmentId: string; attended: boolean; recordedBy: string }> = [];
+  for (const session of nbSessions) {
+    const sIdx = stageOrder.indexOf(session.sessionStage);
+    for (const enrollment of newBelievers) {
+      if (enrollment.branchId !== session.branchId) continue;
+      const eIdx = stageOrder.indexOf(enrollment.stage);
+      if (eIdx >= sIdx) {
+        nbAttendanceRows.push({
+          sessionId: session.id,
+          enrollmentId: enrollment.id,
+          attended: true,
+          recordedBy: session.teacherId!,
+        });
+      }
+    }
+  }
+  if (nbAttendanceRows.length) await db.insert(newBelieverAttendance).values(nbAttendanceRows);
+  console.log(`✓ ${newBelievers.length} new-believer enrollments + 4 mentor followups + ${nbSessions.length} NB sessions + ${nbAttendanceRows.length} NB attendance rows`);
+
+  // ── 21. Notification-preference overrides (a couple per lens) ──
+  await db.insert(notificationPreferences).values([
+    { memberId: admin!.id,             category: 'uniform',   enabled: false, cadence: 'immediate' },
+    { memberId: pastorLondon!.id,      category: 'forms',     enabled: true,  cadence: 'digest_daily' },
+    { memberId: leaderSarah!.id,       category: 'rota',      enabled: true,  cadence: 'immediate' },
+    { memberId: regularMembers[0]!.id, category: 'lifecycle', enabled: false, cadence: 'immediate' },
+  ]);
+  console.log(`✓ 4 notification-preference overrides`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('Test accounts (all passwords: "Password1!"):');
