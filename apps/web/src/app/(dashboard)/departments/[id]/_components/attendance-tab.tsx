@@ -140,16 +140,19 @@ function TrendSparkline({ trend }: { trend: Array<{ weekStart: string; attendees
   }
   const max = Math.max(...trend.map((t) => t.attendees), 1);
   return (
-    <div className="flex h-16 items-end gap-1" aria-label="Weekly attended count">
+    <div className="flex items-end gap-3" aria-label="Weekly attended count">
       {trend.map((t) => {
-        const h = Math.max(4, Math.round((t.attendees / max) * 64));
+        const h = Math.max(4, Math.round((t.attendees / max) * 56));
         return (
-          <div
-            key={t.weekStart}
-            className="w-4 rounded-t bg-[#5D3FD3]/70"
-            style={{ height: `${h}px` }}
-            title={`${formatShortDate(t.weekStart)}: ${t.attendees} attendees`}
-          />
+          <div key={t.weekStart} className="flex flex-col items-center gap-1">
+            <span className="text-xs font-semibold text-foreground tabular-nums">{t.attendees}</span>
+            <div
+              className="w-6 rounded-t bg-[#5D3FD3]/70"
+              style={{ height: `${h}px` }}
+              title={`${formatShortDate(t.weekStart)}: ${t.attendees} attendees`}
+            />
+            <span className="text-[10px] text-muted-foreground tabular-nums">{formatShortDate(t.weekStart)}</span>
+          </div>
         );
       })}
     </div>
