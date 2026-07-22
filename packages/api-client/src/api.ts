@@ -78,6 +78,8 @@ import type {
   DormantAttendee,
   ListDormantAttendeesParams,
   ArchiveAttendeesRequest,
+  MintUploadUrlRequest,
+  MintUploadUrlResponse,
   ArchiveAttendeesResult,
   DormantVisitor,
   ListDormantVisitorsParams,
@@ -1228,6 +1230,10 @@ export function createApiClient(
           `/api/attendance/reports/fellowship/${encodeURIComponent(fellowshipId)}${query ? `?${query}` : ''}`,
         );
       },
+    },
+    media: {
+      mintUploadUrl: (data: MintUploadUrlRequest) =>
+        client.post<ApiResponse<MintUploadUrlResponse>>('/api/media/upload-url', data),
     },
   };
 }

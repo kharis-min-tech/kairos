@@ -22,8 +22,14 @@
     }
   ],
 
-  // Non-secret vars. Secrets (JWT_SECRET, AWS keys, etc.) are set via
-  // `wrangler secret put` and DO NOT belong in this file.
+  // Non-secret vars. Secrets (JWT_SECRET, AWS keys, CF_IMAGES_TOKEN, etc.)
+  // are set via `wrangler secret put` and DO NOT belong in this file.
+  //
+  // Cloudflare Images secrets to set per env (once):
+  //   wrangler secret put CF_IMAGES_ACCOUNT_ID       # numeric CF account id
+  //   wrangler secret put CF_IMAGES_ACCOUNT_HASH     # short public hash
+  //   wrangler secret put CF_IMAGES_TOKEN            # API token with Images:Edit
+  //   (…and `--env staging` variants for staging)
   "vars": {
     "AWS_REGION": "eu-west-2",
     "SES_CONFIGURATION_SET": "kairos-transactional"

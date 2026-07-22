@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   Textarea,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
+import { ImageUpload } from '@/components/image-upload';
 import {
   useDepartmentOutfits,
   useUniformSchedule,
@@ -43,43 +44,6 @@ function GenderPill({ value, className = '' }: { value: string; className?: stri
       {value}
     </span>
   );
-}
-
-const MAX_IMAGE_BYTES = 500_000;
-
-function resizeImageToBase64(file: File, maxDim = 800, quality = 0.85): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas context unavailable'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Image load failed'));
-    };
-    img.src = objectUrl;
-  });
 }
 
 function formatDateLong(iso: string): string {
@@ -477,28 +441,10 @@ function UploadForm({
   onDone: () => void;
 }) {
   const create = useCreateOutfit();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [genderTarget, setGenderTarget] = useState<string>(UniformGenderTarget.Unisex);
   const [notes, setNotes] = useState('');
-  const [uploading, setUploading] = useState(false);
-
-  const handleFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const dataUri = await resizeImageToBase64(file);
-      if (dataUri.length > MAX_IMAGE_BYTES) {
-        toast.error(`Image too large after compression (${Math.round(dataUri.length / 1024)} KB > 500 KB). Try a smaller source.`);
-        return;
-      }
-      setImageUrl(dataUri);
-    } catch {
-      toast.error('Failed to read image');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -560,51 +506,25 @@ function UploadForm({
 
       <div className="space-y-1.5">
         <Label>Image</Label>
-        <div className="flex items-center gap-3">
-          {imageUrl ? (
-            <div className="h-20 w-20 overflow-hidden rounded-[4px] bg-surface-container-low">
-              <img src={imageUrl} alt="preview" className="h-full w-full object-cover" />
-            </div>
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-[4px] bg-surface-container-low text-xs text-muted-foreground">
-              No image
-            </div>
-          )}
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleFile(file);
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'Processing…' : imageUrl ? 'Replace image' : 'Choose image'}
-            </Button>
-            {imageUrl && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setImageUrl('')}
-                className="text-xs text-muted-foreground"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-        </div>
+        <ImageUpload
+          purpose="uniform-outfit"
+          previewUrl={imageUrl || null}
+          onUploaded={setImageUrl}
+          onError={(msg) => toast.error(msg)}
+        />
+        {imageUrl && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setImageUrl('')}
+            className="text-xs text-muted-foreground"
+          >
+            Clear
+          </Button>
+        )}
         <p className="text-xs text-muted-foreground">
-          JPG/PNG/WebP, auto-resized to ≤800px and ≤500KB.
+          JPG/PNG/WebP, resized before upload and delivered via Cloudflare Images CDN.
         </p>
       </div>
 
@@ -624,7 +544,7 @@ function UploadForm({
         <Button type="button" variant="ghost" onClick={onDone} disabled={create.isPending}>
           Cancel
         </Button>
-        <Button type="submit" disabled={create.isPending || uploading || !imageUrl}>
+        <Button type="submit" disabled={create.isPending || !imageUrl}>
           {create.isPending ? 'Saving…' : 'Add outfit'}
         </Button>
       </div>

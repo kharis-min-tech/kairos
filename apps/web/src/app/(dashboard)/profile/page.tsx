@@ -1,12 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
+import { ImageUpload } from '@/components/image-upload';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
 import {
@@ -25,35 +26,6 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function resizeImageToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const MAX = 256;
-      let { width, height } = img;
-      if (width > MAX || height > MAX) {
-        if (width > height) {
-          height = Math.round((height * MAX) / width);
-          width = MAX;
-        } else {
-          width = Math.round((width * MAX) / height);
-          height = MAX;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
-    };
-    img.onerror = reject;
-    img.src = objectUrl;
-  });
-}
-
 export default function ProfilePage() {
   const { user, setUser, setTokens } = useAuthStore();
   const { data: member, isLoading } = useMyProfile();
@@ -64,7 +36,6 @@ export default function ProfilePage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profile = member ?? user;
 
@@ -150,12 +121,9 @@ export default function ProfilePage() {
     setIsEditing(false);
   }
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const resized = await resizeImageToBase64(file);
-    setPhotoPreview(resized);
-    setValue('photoUrl', resized);
+  function handlePhotoUploaded(deliveryUrl: string) {
+    setPhotoPreview(deliveryUrl);
+    setValue('photoUrl', deliveryUrl);
   }
 
   async function onSwitchBranch() {
@@ -229,26 +197,12 @@ export default function ProfilePage() {
               </div>
             )}
             {isEditing && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity hover:opacity-100"
-                  title="Change photo"
-                >
-                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePhotoChange}
-                />
-              </>
+              <ImageUpload
+                variant="avatar"
+                purpose="profile-photo"
+                onUploaded={handlePhotoUploaded}
+                onError={(msg) => setSaveError(msg)}
+              />
             )}
           </div>
           <div className="flex-1">

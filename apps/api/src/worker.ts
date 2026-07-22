@@ -29,6 +29,13 @@ export interface Env {
   // staging: `kairos-staging`). Optional — mailer falls back to SES identity
   // default when absent.
   SES_CONFIGURATION_SET?: string;
+  // Cloudflare Images. ACCOUNT_ID is the numeric account id (used in the API
+  // path); ACCOUNT_HASH is the short public hash (used in the delivery URL).
+  // TOKEN is an API token with `Images:Edit`. All three are set via
+  // `wrangler secret put` per environment.
+  CF_IMAGES_ACCOUNT_ID?: string;
+  CF_IMAGES_ACCOUNT_HASH?: string;
+  CF_IMAGES_TOKEN?: string;
 }
 
 let app: ReturnType<typeof createApp> | null = null;
