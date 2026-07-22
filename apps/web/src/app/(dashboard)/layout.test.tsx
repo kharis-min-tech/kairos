@@ -5,7 +5,13 @@ let authState: Record<string, unknown> = {};
 vi.mock('@/lib/auth-store', () => ({
   useAuthStore: Object.assign(
     (selector?: (s: typeof authState) => unknown) => (selector ? selector(authState) : authState),
-    { getState: () => authState },
+    {
+      getState: () => authState,
+      persist: {
+        hasHydrated: () => true,
+        onFinishHydration: () => () => {},
+      },
+    },
   ),
 }));
 
@@ -16,6 +22,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: () => ({ data: undefined }),
+  useQueryClient: () => ({ clear: vi.fn() }),
 }));
 
 vi.mock('@/lib/api', () => ({

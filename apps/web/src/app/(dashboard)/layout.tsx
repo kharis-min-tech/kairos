@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { api } from '@/lib/api';
@@ -162,6 +162,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     user,
     logout,
@@ -172,6 +173,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   } = useAuthStore();
   const caps = useCapabilities();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Wait for zustand-persist to rehydrate from localStorage before deciding
+  // whether we're logged out. Otherwise every legitimate refresh flashes a
+  // redirect to /login while accessToken is transiently null. Initial state
+  // must be `false` (not read from persist) — this component is rendered
+  // during SSG where `useAuthStore.persist` isn't reliably attached.
+  const [hasHydrated, setHasHydrated] = useState(false);
+  useEffect(() => {
+    const p = useAuthStore.persist;
+    if (!p) {
+      setHasHydrated(true);
+      return;
+    }
+    if (p.hasHydrated()) {
+      setHasHydrated(true);
+      return;
+    }
+    const unsub = p.onFinishHydration(() => setHasHydrated(true));
+    return unsub;
+  }, []);
+
+  // Client-side auth guard. If someone hits a dashboard URL after logout
+  // (or via Back after logout), send them to /login instead of painting
+  // the chrome and letting every useQuery below 401 into an empty state.
+  useEffect(() => {
+    if (hasHydrated && !accessToken) {
+      router.replace('/login');
+    }
+  }, [hasHydrated, accessToken, router]);
 
   // Hydrate user profile from API after page refresh (user is not persisted in localStorage)
   const { data: profileData } = useQuery({
@@ -195,8 +225,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   function handleLogout() {
     logout();
-    router.push('/login');
+    // Purge any cached responses from the previous session so a subsequent
+    // login (or the redirect flash) can't surface stale data.
+    queryClient.clear();
+    router.replace('/login');
   }
+
+  // Suppress render entirely until we know for sure whether the caller is
+  // authenticated. Prevents the sidebar + failing fetches from appearing
+  // when the store is empty (post-logout URL nav) or still hydrating.
+  if (!hasHydrated || !accessToken) return null;
 
   const visibleNavItems = navItems.filter((item) => {
     if (item.adminOnly) return activeRole === 'admin';
