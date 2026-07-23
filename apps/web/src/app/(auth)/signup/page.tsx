@@ -41,6 +41,9 @@ const signupSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   confirmPassword: z.string(),
+  acceptedPolicies: z.boolean().refine((v) => v === true, {
+    message: 'You must accept the Terms & Conditions and Privacy Notice to continue',
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
@@ -125,7 +128,7 @@ export default function SignupPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { homeBranchId: '' },
+    defaultValues: { homeBranchId: '', acceptedPolicies: false },
   });
 
   const password = watch('password', '');
@@ -146,7 +149,7 @@ export default function SignupPage() {
     setError(null);
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { confirmPassword: _, ...payload } = data;
+      const { confirmPassword: _, acceptedPolicies: __, ...payload } = data;
       const result = await signupMutation.mutateAsync(payload);
       router.push(`/verify-email?memberId=${result.member.id}`);
     } catch (err) {
@@ -375,6 +378,43 @@ export default function SignupPage() {
                 <Input id="confirmPassword" type="password" className="h-11" {...register('confirmPassword')} />
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <input
+                    id="acceptedPolicies"
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 accent-[#5D3FD3]"
+                    {...register('acceptedPolicies')}
+                  />
+                  <span className="text-foreground">
+                    I have read and accept the{' '}
+                    <Link
+                      href="/legal/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-[#5D3FD3] hover:underline"
+                    >
+                      Terms &amp; Conditions
+                    </Link>{' '}
+                    and{' '}
+                    <Link
+                      href="/legal/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-[#5D3FD3] hover:underline"
+                    >
+                      Privacy Notice
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {errors.acceptedPolicies && (
+                  <p className="mt-1 pl-6 text-xs text-destructive">
+                    {errors.acceptedPolicies.message}
+                  </p>
                 )}
               </div>
             </>

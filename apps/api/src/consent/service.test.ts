@@ -68,10 +68,10 @@ beforeEach(() => {
 });
 
 describe('getCurrentConsentVersions', () => {
-  it('defaults to 1.0 across types', () => {
+  it('defaults to the current published version for terms + privacy, and 1.0 for marketing', () => {
     expect(getCurrentConsentVersions()).toEqual({
-      terms: '1.0',
-      privacy: '1.0',
+      terms: '2026-07-v1',
+      privacy: '2026-07-v1',
       marketing: '1.0',
     });
   });
@@ -82,7 +82,8 @@ describe('getCurrentConsentVersions', () => {
     const versions = getCurrentConsentVersions();
     expect(versions.terms).toBe('2.0');
     expect(versions.marketing).toBe('3.5');
-    expect(versions.privacy).toBe('1.0');
+    // privacy falls back to its published default when the env var is unset
+    expect(versions.privacy).toBe('2026-07-v1');
   });
 });
 
@@ -98,13 +99,13 @@ describe('listConsentStatuses', () => {
 
   it('marks required consent as accepted when version matches + granted=true', async () => {
     setupSelectSequence([
-      { consentType: 'terms', version: '1.0', granted: true, grantedAt: new Date('2026-06-01') },
+      { consentType: 'terms', version: '2026-07-v1', granted: true, grantedAt: new Date('2026-07-23') },
     ]);
     const out = await listConsentStatuses(mockDb, memberId);
     const terms = out.find((s) => s.consentType === ConsentType.Terms)!;
     expect(terms.needsAccept).toBe(false);
     expect(terms.granted).toBe(true);
-    expect(terms.acceptedVersion).toBe('1.0');
+    expect(terms.acceptedVersion).toBe('2026-07-v1');
   });
 
   it('re-prompts after env version bumps past stored version', async () => {

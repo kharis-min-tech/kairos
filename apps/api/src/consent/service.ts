@@ -15,8 +15,8 @@ import {
  */
 export function getCurrentConsentVersions(): Record<ConsentType, string> {
   return {
-    terms: process.env['CONSENT_VERSION_TERMS'] ?? '1.0',
-    privacy: process.env['CONSENT_VERSION_PRIVACY'] ?? '1.0',
+    terms: process.env['CONSENT_VERSION_TERMS'] ?? '2026-07-v1',
+    privacy: process.env['CONSENT_VERSION_PRIVACY'] ?? '2026-07-v1',
     marketing: process.env['CONSENT_VERSION_MARKETING'] ?? '1.0',
   };
 }

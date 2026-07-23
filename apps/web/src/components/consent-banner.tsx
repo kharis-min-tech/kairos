@@ -1,13 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@kairos/ui';
-import {
-  CONSENT_TYPE_LABEL,
-  CONSENT_TYPE_DESCRIPTION,
-  type ConsentType,
-} from '@kairos/types';
+import { CONSENT_TYPE_LABEL, ConsentType } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -50,8 +47,18 @@ export function ConsentBanner() {
                 .map((s) => `${CONSENT_TYPE_LABEL[s.consentType]} (v${s.currentVersion})`)
                 .join(' · ')}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {pending.map((s) => CONSENT_TYPE_DESCRIPTION[s.consentType]).join(' ')}
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              {pending.map((s) => (
+                <Link
+                  key={s.consentType}
+                  href={s.consentType === ConsentType.Terms ? '/legal/terms' : '/legal/privacy'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
+                >
+                  Read the {CONSENT_TYPE_LABEL[s.consentType]}
+                </Link>
+              ))}
             </p>
           </div>
         </div>

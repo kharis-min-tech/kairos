@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, FileText, Check, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileText, Check, X, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import {
   CONSENT_TYPE_LABEL,
@@ -9,6 +9,12 @@ import {
   ConsentType,
 } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
+
+function docHrefFor(consentType: ConsentType): string | null {
+  if (consentType === ConsentType.Terms) return '/legal/terms';
+  if (consentType === ConsentType.Privacy) return '/legal/privacy';
+  return null;
+}
 
 export default function LegalSettingsPage() {
   const { data, isLoading, isError, error } = useMyConsentStatuses();
@@ -81,6 +87,16 @@ export default function LegalSettingsPage() {
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {CONSENT_TYPE_DESCRIPTION[status.consentType]}
                   </p>
+                  {docHrefFor(status.consentType) && (
+                    <Link
+                      href={docHrefFor(status.consentType)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#5D3FD3] hover:underline"
+                    >
+                      Read the current version <ExternalLink className="h-3 w-3" aria-hidden />
+                    </Link>
+                  )}
                   <p className={`mt-1 inline-flex items-center gap-1 text-xs ${tone}`}>
                     <Icon className="h-3 w-3" /> {stateLabel}
                     {status.acceptedVersion && (
