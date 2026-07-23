@@ -5,14 +5,41 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Lock, Bell, Palette, LogOut, Download, FileText, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CustomSelect,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+} from '@kairos/ui';
+import { downloadMyDataExport, useDeleteMyAccount } from '@/hooks/use-me';
+
+const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPhrase, setConfirmPhrase] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteMutation = useDeleteMyAccount();
 
   // Avoid hydration mismatch — theme is read from localStorage on the client.
   useEffect(() => setMounted(true), []);
@@ -20,6 +47,46 @@ export default function SettingsPage() {
   function handleLogout() {
     logout();
     router.push('/login');
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadMyDataExport();
+      toast.success('Your data has been downloaded.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not export your data. Try again shortly.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function openDeleteDialog() {
+    setPassword('');
+    setConfirmPhrase('');
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function handleDelete() {
+    setDeleteError(null);
+    if (confirmPhrase !== DELETE_CONFIRM_PHRASE) {
+      setDeleteError(`Please type "${DELETE_CONFIRM_PHRASE}" exactly to confirm.`);
+      return;
+    }
+    if (!password) {
+      setDeleteError('Please enter your current password.');
+      return;
+    }
+    try {
+      await deleteMutation.mutateAsync({ currentPassword: password });
+      // Clear any cached data before we redirect.
+      queryClient.clear();
+      logout();
+      router.replace('/login?deleted=1');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Delete failed. Please try again.');
+    }
   }
 
   return (
@@ -185,26 +252,98 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="rounded-lg" disabled>
-              Coming Soon
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? 'Preparing…' : 'Download'}
             </Button>
           </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div className="flex items-start gap-3">
-              <Trash2 className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
+              <Trash2 className="mt-0.5 h-4 w-4 text-destructive" aria-hidden />
               <div>
                 <p className="text-sm font-medium">Delete my account</p>
                 <p className="text-xs text-muted-foreground">
-                  Withdraw consent and request account deletion.
+                  Permanently scrub your personal data. Attendance and
+                  consent history are anonymised, not fully removed.
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="rounded-lg" disabled>
-              Coming Soon
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={openDeleteDialog}
+            >
+              Delete
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete my account</DialogTitle>
+            <DialogDescription>
+              This will scrub your name, email, phone, address, photo and other
+              personal details from Kharis Church. Your attendance history and
+              consent audit trail stay in place but are anonymised. This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="deleteConfirm">
+                Type <span className="font-mono font-semibold">{DELETE_CONFIRM_PHRASE}</span> to confirm
+              </Label>
+              <Input
+                id="deleteConfirm"
+                value={confirmPhrase}
+                onChange={(e) => setConfirmPhrase(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deletePassword">Current password</Label>
+              <Input
+                id="deletePassword"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            {deleteError && (
+              <p className="text-sm text-destructive" role="alert">
+                {deleteError}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Permanently delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Log Out */}
       <Button

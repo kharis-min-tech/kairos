@@ -5,8 +5,8 @@ import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
-import { getMyLeadership } from './service';
-import { meLeadershipResponseSchema } from './schemas';
+import { getMyLeadership, deleteMyAccount, exportMyData } from './service';
+import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
 import {
   listEffectivePreferences,
   upsertPreference,
@@ -71,5 +71,22 @@ meRouter.post(
     const body = c.req.valid('json');
     const updated = await recordConsent(db, auth.memberId, body.consentType, body.granted);
     return c.json(successResponse(updated));
+  },
+);
+
+meRouter.get('/export', async (c) => {
+  const auth = getAuth(c);
+  const data = await exportMyData(db, auth.memberId);
+  return c.json(successResponse(data));
+});
+
+meRouter.post(
+  '/delete-account',
+  zValidator('json', deleteAccountSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const body = c.req.valid('json');
+    await deleteMyAccount(db, auth.memberId, body.currentPassword);
+    return c.json(successResponse({ deleted: true }));
   },
 );

@@ -60,3 +60,7 @@ export const recordConsentSchema = z.object({
   consentType: z.enum(consentTypeValues),
   granted: z.boolean(),
 });
+
+export const deleteAccountSchema = z.object({
+  currentPassword: z.string().min(1, 'Password is required'),
+});

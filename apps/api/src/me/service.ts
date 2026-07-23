@@ -1,7 +1,22 @@
 import { and, eq, or } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { fellowships, branchDepartments, departments } from '@kairos/database';
+import {
+  fellowships,
+  branchDepartments,
+  departments,
+  members,
+  consentRecords,
+  fellowshipMembers,
+  departmentMembers,
+  serviceAttendance,
+  fellowshipMeetingAttendance,
+  newBelieverEnrollments,
+  formSubmissions,
+  notificationPreferences,
+} from '@kairos/database';
 import type { AuthContext, MeLeadershipResponse } from '@kairos/types';
+import { verifyPassword, UnauthorizedError, NotFoundError } from '@kairos/utils';
+import { randomTokenHex } from '@kairos/utils';
 
 /**
  * Build the caller's leadership footprint:
@@ -127,5 +142,156 @@ export async function getMyLeadership(
     coLeadFellowships,
     leadDepartments,
     deputyDepartments,
+  };
+}
+
+/**
+ * GDPR right to erasure — user-initiated account deletion.
+ *
+ * Rather than a hard delete (which would cascade-remove attendance history and
+ * safeguarding audit trail we may need to keep), we scrub direct PII on the
+ * member row and flip isActive=false. Related tables that reference this
+ * memberId (attendance, form submissions, consent audit) are kept, but now
+ * point at an anonymised shell.
+ *
+ * The requester must supply their current password. On success:
+ *   - Their email, phone, address, DOB, photo etc. are cleared / replaced
+ *   - Password hash is scrambled so no future login attempt succeeds
+ *   - isActive=false — refresh-token path already filters on isActive so
+ *     existing sessions can't be extended past the 15-minute access-token TTL
+ *
+ * Consent records remain (kept for the audit lifetime documented in the
+ * privacy notice). Notification preferences are deleted since they're
+ * behavioural state, not audit.
+ */
+export async function deleteMyAccount(
+  db: Database,
+  memberId: string,
+  currentPassword: string,
+): Promise<void> {
+  const [member] = await db
+    .select({
+      id: members.id,
+      passwordHash: members.passwordHash,
+      isActive: members.isActive,
+    })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+
+  if (!member) {
+    throw new NotFoundError('Member');
+  }
+  if (!member.isActive) {
+    throw new UnauthorizedError('This account is already deactivated');
+  }
+
+  const valid = await verifyPassword(currentPassword, member.passwordHash);
+  if (!valid) {
+    throw new UnauthorizedError('Password is incorrect');
+  }
+
+  // Scrub PII. Email must stay unique + not-null; replace with a per-id
+  // placeholder that no real user will ever produce.
+  const now = new Date();
+  const anonEmail = `deleted-${memberId}@deleted.kairos.local`;
+  const unusablePasswordHash = `!DELETED!${randomTokenHex(24)}`;
+
+  await db
+    .update(members)
+    .set({
+      firstName: 'Deleted',
+      lastName: 'User',
+      middleName: null,
+      dateOfBirth: null,
+      gender: null,
+      email: anonEmail,
+      phone: null,
+      address: null,
+      city: null,
+      postalCode: null,
+      secondaryAddress: null,
+      secondaryCity: null,
+      secondaryPostalCode: null,
+      photoUrl: null,
+      emergencyContactName: null,
+      emergencyContactPhone: null,
+      emergencyContactRelationship: null,
+      honorific: null,
+      passwordHash: unusablePasswordHash,
+      passwordResetToken: null,
+      passwordResetExpiry: null,
+      emailVerified: false,
+      isActive: false,
+      approvalStatus: 'rejected',
+      updatedAt: now,
+    })
+    .where(eq(members.id, memberId));
+
+  // Wipe notification preferences — they're per-member behavioural state, not
+  // audit. Keeping them serves no one.
+  await db.delete(notificationPreferences).where(eq(notificationPreferences.memberId, memberId));
+}
+
+/**
+ * GDPR data portability — return a machine-readable dump of the requester's
+ * data. Covers the biggest first-party surfaces:
+ *   - their member row
+ *   - consent history
+ *   - fellowship + department memberships
+ *   - attendance (service + fellowship meetings)
+ *   - new-believer pipeline enrolment
+ *   - form submissions where they are the subject
+ *   - notification preferences
+ *
+ * Anything beyond this (audit log, follow-ups written by leaders about them,
+ * safeguarding notes, outreach participation) is available on request per the
+ * privacy notice; keeping the automated export focused avoids leaking third-
+ * party data (e.g. mentor session notes) that isn't strictly the requester's
+ * own contribution.
+ */
+export async function exportMyData(db: Database, memberId: string) {
+  const [
+    memberRow,
+    consents,
+    fellowshipMemberships,
+    deptMemberships,
+    serviceAttendanceRows,
+    fellowshipAttendanceRows,
+    nbEnrollments,
+    formSubmissionRows,
+    prefs,
+  ] = await Promise.all([
+    db.select().from(members).where(eq(members.id, memberId)).limit(1),
+    db.select().from(consentRecords).where(eq(consentRecords.memberId, memberId)),
+    db.select().from(fellowshipMembers).where(eq(fellowshipMembers.memberId, memberId)),
+    db.select().from(departmentMembers).where(eq(departmentMembers.memberId, memberId)),
+    db.select().from(serviceAttendance).where(eq(serviceAttendance.memberId, memberId)),
+    db.select().from(fellowshipMeetingAttendance).where(eq(fellowshipMeetingAttendance.memberId, memberId)),
+    db.select().from(newBelieverEnrollments).where(eq(newBelieverEnrollments.memberId, memberId)),
+    db.select().from(formSubmissions).where(eq(formSubmissions.subjectMemberId, memberId)),
+    db.select().from(notificationPreferences).where(eq(notificationPreferences.memberId, memberId)),
+  ]);
+
+  if (memberRow.length === 0) {
+    throw new NotFoundError('Member');
+  }
+
+  // Strip the password hash from the exported member row — an attacker
+  // shouldn't be able to grab it via this endpoint even for their own account.
+  const { passwordHash: _drop, passwordResetToken: _drop2, ...safeMember } = memberRow[0]!;
+  void _drop; void _drop2;
+
+  return {
+    exportedAt: new Date().toISOString(),
+    member: safeMember,
+    consents,
+    fellowshipMemberships,
+    departmentMemberships: deptMemberships,
+    serviceAttendance: serviceAttendanceRows,
+    fellowshipMeetingAttendance: fellowshipAttendanceRows,
+    newBelieverEnrollments: nbEnrollments,
+    formSubmissionsAboutMe: formSubmissionRows,
+    notificationPreferences: prefs,
   };
 }

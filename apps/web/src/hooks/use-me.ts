@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { MeLeadershipResponse } from '@kairos/types';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type { DeleteAccountRequest, MeLeadershipResponse } from '@kairos/types';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -52,4 +52,39 @@ export function useMyLeadership() {
   }, [query.data, setBranchAdminAuthority]);
 
   return query;
+}
+
+/**
+ * Fetch the caller's data export and trigger a browser download as JSON.
+ * Returns nothing — the side effect (the download) is the point. Errors
+ * bubble up so the caller can surface them.
+ */
+export async function downloadMyDataExport(): Promise<void> {
+  const res = await api.me.exportData();
+  const data = res.data;
+  if (!data) throw new Error('Export returned no data');
+  const filename = `kairos-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * User-initiated account deletion. The API scrubs PII on the member row and
+ * flips isActive=false. On success the caller should log out and route to
+ * the login page.
+ */
+export function useDeleteMyAccount() {
+  return useMutation({
+    mutationFn: async (data: DeleteAccountRequest) => {
+      const res = await api.me.deleteAccount(data);
+      return res.data!;
+    },
+  });
 }

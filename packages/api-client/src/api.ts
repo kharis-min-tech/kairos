@@ -93,6 +93,8 @@ import type {
   ListMyConsentResponse,
   ConsentStatus,
   RecordConsentRequest,
+  DeleteAccountRequest,
+  MyDataExport,
   // Branch role management
   BranchRoleAssignment,
   AssignBranchRoleRequest,
@@ -838,6 +840,10 @@ export function createApiClient(
         record: (data: RecordConsentRequest) =>
           client.post<ApiResponse<ConsentStatus>>('/api/me/consent', data),
       },
+      exportData: () =>
+        client.get<ApiResponse<MyDataExport>>('/api/me/export'),
+      deleteAccount: (data: DeleteAccountRequest) =>
+        client.post<ApiResponse<{ deleted: true }>>('/api/me/delete-account', data),
     },
 
     analytics: {

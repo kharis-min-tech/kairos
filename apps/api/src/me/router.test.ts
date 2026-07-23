@@ -17,9 +17,23 @@ const mockDb = {
   select: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
+  delete: vi.fn(),
 };
 
 vi.mock('../db', () => ({ db: mockDb }));
+
+// Delete-account verifies the caller's password via @kairos/utils. Stub only
+// verifyPassword so the rest of the utils surface (successResponse, errors,
+// randomTokenHex) keeps working.
+vi.mock('@kairos/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@kairos/utils')>();
+  return {
+    ...actual,
+    verifyPassword: vi.fn(async () => true),
+  };
+});
+const utils = await import('@kairos/utils');
+const mockVerifyPassword = utils.verifyPassword as unknown as ReturnType<typeof vi.fn>;
 
 function chainTo(data: unknown) {
   const self: Record<string, unknown> = {};
@@ -374,5 +388,122 @@ describe('GET /api/me/leadership', () => {
     expect(body.data.coLeadFellowships).toHaveLength(1);
     expect(body.data.leadDepartments).toHaveLength(1);
     expect(body.data.deputyDepartments).toHaveLength(1);
+  });
+});
+
+// ── POST /api/me/delete-account ────────────────────────────
+
+describe('POST /api/me/delete-account', () => {
+  beforeEach(() => {
+    mockVerifyPassword.mockReset();
+    mockVerifyPassword.mockResolvedValue(true);
+  });
+
+  it('returns 401 without an auth header', async () => {
+    const res = await app.request('/api/me/delete-account', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ currentPassword: 'x' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 when currentPassword is missing', async () => {
+    const token = await signTestToken({ memberId: TEST_IDS.memberId });
+    const res = await app.request('/api/me/delete-account', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 when the password is wrong', async () => {
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ id: TEST_IDS.memberId, passwordHash: '$2b$10$stub', isActive: true }]),
+    );
+    mockVerifyPassword.mockResolvedValueOnce(false);
+    const token = await signTestToken({ memberId: TEST_IDS.memberId });
+    const res = await app.request('/api/me/delete-account', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword: 'nope' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('scrubs PII and returns 200 on success', async () => {
+    mockDb.select.mockReturnValueOnce(
+      chainTo([{ id: TEST_IDS.memberId, passwordHash: '$2b$10$stub', isActive: true }]),
+    );
+    const updateChain = chainTo([]);
+    mockDb.update.mockReturnValueOnce(updateChain);
+    mockDb.delete.mockReturnValueOnce(chainTo([]));
+
+    const token = await signTestToken({ memberId: TEST_IDS.memberId });
+    const res = await app.request('/api/me/delete-account', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword: 'right' }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: { deleted: boolean } };
+    expect(body.data.deleted).toBe(true);
+    // The scrub call ran with the anonymising fields.
+    const setCall = (updateChain.set as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Record<string, unknown>;
+    expect(setCall['firstName']).toBe('Deleted');
+    expect(setCall['lastName']).toBe('User');
+    expect(setCall['isActive']).toBe(false);
+    expect(setCall['email']).toMatch(/^deleted-.*@deleted\.kairos\.local$/);
+    expect(setCall['photoUrl']).toBeNull();
+    expect(setCall['phone']).toBeNull();
+    // And notification preferences were purged.
+    expect(mockDb.delete).toHaveBeenCalled();
+  });
+});
+
+// ── GET /api/me/export ─────────────────────────────────────
+
+describe('GET /api/me/export', () => {
+  it('returns 401 without an auth header', async () => {
+    const res = await app.request('/api/me/export');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns the caller data blob and never leaks the password hash', async () => {
+    const memberRow = {
+      id: TEST_IDS.memberId,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      passwordHash: '$2b$10$SECRET_HASH_DO_NOT_LEAK',
+      passwordResetToken: 'reset-token-secret',
+      isActive: true,
+    };
+    mockDb.select.mockReturnValueOnce(chainTo([memberRow]));
+    // The remaining 8 selects in Promise.all get empty defaults.
+    mockDb.select.mockReturnValue(chainTo([]));
+
+    const token = await signTestToken({ memberId: TEST_IDS.memberId });
+    const res = await app.request('/api/me/export', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: { exportedAt: string; member: Record<string, unknown> } };
+    expect(body.data.exportedAt).toBeTruthy();
+    expect(body.data.member['firstName']).toBe('Ada');
+    expect(body.data.member['passwordHash']).toBeUndefined();
+    expect(body.data.member['passwordResetToken']).toBeUndefined();
   });
 });

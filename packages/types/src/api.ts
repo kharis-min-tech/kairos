@@ -53,6 +53,15 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface DeleteAccountRequest {
+  currentPassword: string;
+}
+
+// The export endpoint returns a large, mixed-shape blob intended for download.
+// Kept unknown/loose so schema changes in the underlying tables don't force
+// this type to churn.
+export type MyDataExport = Record<string, unknown> & { exportedAt: string };
+
 // RoleScope narrows authority to a specific entity. Stamped into the JWT
 // alongside each grant; the client decodes it for UI affordances.
 export type RoleScope =
