@@ -87,10 +87,11 @@ describe('POST /api/auth/signup', () => {
     const phoneCheck = chainTo([]);
     mockDb.select.mockReturnValueOnce(phoneCheck);
 
-    // insert → return created member
+    // insert #1 → return created member row
     const created = { ...baseMember, isActive: false, emailVerified: false, approvalStatus: 'pending' };
-    const insertChain = chainTo([created]);
-    mockDb.insert.mockReturnValueOnce(insertChain);
+    mockDb.insert.mockReturnValueOnce(chainTo([created]));
+    // insert #2 → consent records (terms + privacy), return value unused
+    mockDb.insert.mockReturnValueOnce(chainTo([]));
 
     const res = await app.request('/api/auth/signup', {
       method: 'POST',
@@ -100,6 +101,7 @@ describe('POST /api/auth/signup', () => {
         lastName: 'User',
         email: 'admin@kairos.local',
         password: 'StrongPass123!',
+        acceptedPolicies: true,
         homeBranchId: TEST_IDS.branchId,
         phone: '+441234567890',
       }),
@@ -135,6 +137,7 @@ describe('POST /api/auth/signup', () => {
         lastName: 'User',
         email: 'admin@kairos.local',
         password: 'StrongPass123!',
+        acceptedPolicies: true,
         homeBranchId: TEST_IDS.branchId,
       }),
     });

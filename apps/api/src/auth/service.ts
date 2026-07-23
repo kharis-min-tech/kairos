@@ -7,7 +7,9 @@ import {
   roles,
   branchDepartments,
   departments,
+  consentRecords,
 } from '@kairos/database';
+import { getCurrentConsentVersions } from '../consent/service';
 import type {
   AuthContext,
   AuthTokens,
@@ -177,6 +179,7 @@ export interface SignupInput {
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;
   password: string;
+  acceptedPolicies?: boolean;
 }
 
 export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken: string }> {
@@ -252,6 +255,32 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
 
   if (!created) {
     throw new Error('Failed to create member');
+  }
+
+  // Record Terms + Privacy consent inline at the current published version so
+  // self-signup users don't have to accept twice (checkbox at signup + banner
+  // on first login). Admin-invited members skip this path and still see the
+  // banner on first login, which is correct — they never saw the docs before
+  // their account was created.
+  if (input.acceptedPolicies) {
+    const versions = getCurrentConsentVersions();
+    const now = new Date();
+    await db.insert(consentRecords).values([
+      {
+        memberId: created.id,
+        consentType: 'terms',
+        version: versions.terms,
+        granted: true,
+        grantedAt: now,
+      },
+      {
+        memberId: created.id,
+        consentType: 'privacy',
+        version: versions.privacy,
+        granted: true,
+        grantedAt: now,
+      },
+    ]);
   }
 
   // In production, send verification email. For local dev, log the token.

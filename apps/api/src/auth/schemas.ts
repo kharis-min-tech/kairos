@@ -19,6 +19,9 @@ export const signupSchema = z.object({
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   // Step 3: Password
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  acceptedPolicies: z.boolean().refine((v) => v === true, {
+    message: 'You must accept the Terms & Conditions and Privacy Notice to continue',
+  }),
 });
 
 export const loginSchema = z.object({

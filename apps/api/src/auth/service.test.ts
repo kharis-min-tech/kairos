@@ -144,6 +144,7 @@ describe('signup', () => {
       email: 'john@example.com',
       homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
       password: 'StrongPass123!',
+      acceptedPolicies: true,
       phone: '1234567890',
     });
 
@@ -165,6 +166,7 @@ describe('signup', () => {
       email: 'tim@example.com',
       homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
       password: 'StrongPass123!',
+      acceptedPolicies: true,
       dateOfBirth: '2015-01-01',
     })).rejects.toThrow('under 16 cannot create their own account');
 
@@ -188,6 +190,7 @@ describe('signup', () => {
       email: 'john@example.com',
       homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
       password: 'StrongPass123!',
+      acceptedPolicies: true,
       secondaryBranchId: '660e8400-e29b-41d4-a716-000000000099',
       secondaryAddress: '10 Side St',
       secondaryCity: 'Manchester',
@@ -214,7 +217,61 @@ describe('signup', () => {
       email: 'john@example.com',
       homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
       password: 'StrongPass123!',
+      acceptedPolicies: true,
     })).rejects.toThrow('A member with this email already exists');
+  });
+
+  it('records terms + privacy consent inline when acceptedPolicies is true', async () => {
+    const { signup } = await import('./service');
+
+    mockSelect.mockReturnValueOnce({ from: mockFrom });
+    mockFrom.mockReturnValueOnce({ where: mockWhere });
+    mockWhere.mockReturnValueOnce({ limit: mockLimit });
+    mockLimit.mockReturnValueOnce(Promise.resolve([]));
+
+    const created = { ...baseMember, isActive: false, approvalStatus: 'pending', emailVerified: false };
+    setupInsertChain([created]);
+
+    await signup(mockDb, {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
+      password: 'StrongPass123!',
+      acceptedPolicies: true,
+    });
+
+    const consentCall = mockValues.mock.calls.find(
+      (c) => Array.isArray(c[0]) && c[0].some((r: { consentType?: string }) => r.consentType === 'terms'),
+    );
+    expect(consentCall).toBeTruthy();
+    const rows = consentCall![0] as Array<{ consentType: string; granted: boolean }>;
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.consentType).sort()).toEqual(['privacy', 'terms']);
+    expect(rows.every((r) => r.granted === true)).toBe(true);
+  });
+
+  it('skips inline consent inserts when acceptedPolicies is false (admin-invited path)', async () => {
+    const { signup } = await import('./service');
+
+    mockSelect.mockReturnValueOnce({ from: mockFrom });
+    mockFrom.mockReturnValueOnce({ where: mockWhere });
+    mockWhere.mockReturnValueOnce({ limit: mockLimit });
+    mockLimit.mockReturnValueOnce(Promise.resolve([]));
+
+    const created = { ...baseMember, isActive: false, approvalStatus: 'pending', emailVerified: false };
+    setupInsertChain([created]);
+
+    await signup(mockDb, {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
+      password: 'StrongPass123!',
+      // acceptedPolicies omitted — service should fall through to banner-driven consent
+    });
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
   });
 });
 

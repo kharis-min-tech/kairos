@@ -38,6 +38,9 @@ export interface SignupRequest {
   emergencyContactRelationship?: string;
   // Step 3: Password
   password: string;
+  // Signup-time acceptance of the current Terms & Conditions and Privacy
+  // Notice. Records a consent row per policy at the current published version.
+  acceptedPolicies: boolean;
 }
 
 export interface LoginRequest {

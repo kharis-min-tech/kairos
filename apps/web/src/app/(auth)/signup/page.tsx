@@ -149,7 +149,7 @@ export default function SignupPage() {
     setError(null);
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { confirmPassword: _, acceptedPolicies: __, ...payload } = data;
+      const { confirmPassword: _, ...payload } = data;
       const result = await signupMutation.mutateAsync(payload);
       router.push(`/verify-email?memberId=${result.member.id}`);
     } catch (err) {
