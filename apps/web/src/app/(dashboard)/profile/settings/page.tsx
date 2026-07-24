@@ -24,7 +24,7 @@ import {
   Input,
   Label,
 } from '@kairos/ui';
-import { downloadMyDataExport, useDeleteMyAccount } from '@/hooks/use-me';
+import { downloadMyDataExportHtml, downloadMyDataExportJson, useDeleteMyAccount } from '@/hooks/use-me';
 
 const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
@@ -34,7 +34,7 @@ export default function SettingsPage() {
   const { logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<'html' | 'json' | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPhrase, setConfirmPhrase] = useState('');
@@ -49,15 +49,20 @@ export default function SettingsPage() {
     router.push('/login');
   }
 
-  async function handleExport() {
-    setExporting(true);
+  async function handleExport(format: 'html' | 'json') {
+    setExporting(format);
     try {
-      await downloadMyDataExport();
-      toast.success('Your data has been downloaded.');
+      if (format === 'html') {
+        await downloadMyDataExportHtml();
+        toast.success('Your data has been downloaded as a readable report.');
+      } else {
+        await downloadMyDataExportJson();
+        toast.success('Your data has been downloaded as JSON.');
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not export your data. Try again shortly.');
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   }
 
@@ -241,26 +246,38 @@ export default function SettingsPage() {
               </Button>
             </Link>
           </div>
-          <div className="flex items-center justify-between gap-4 border-t pt-4">
-            <div className="flex items-start gap-3">
-              <Download className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
-              <div>
-                <p className="text-sm font-medium">Export my data</p>
-                <p className="text-xs text-muted-foreground">
-                  Download a copy of your personal data (GDPR right to
-                  portability).
-                </p>
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <Download className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium">Export my data</p>
+                  <p className="text-xs text-muted-foreground">
+                    Download a readable report of your personal data. Open it in
+                    any browser and print or save as PDF.
+                  </p>
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={() => handleExport('html')}
+                disabled={exporting !== null}
+              >
+                {exporting === 'html' ? 'Preparing…' : 'Download'}
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={handleExport}
-              disabled={exporting}
-            >
-              {exporting ? 'Preparing…' : 'Download'}
-            </Button>
+            <div className="mt-2 pl-7">
+              <button
+                type="button"
+                onClick={() => handleExport('json')}
+                disabled={exporting !== null}
+                className="text-xs text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-[#5D3FD3] disabled:opacity-50"
+              >
+                {exporting === 'json' ? 'Preparing…' : 'Advanced: download as JSON'}
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div className="flex items-start gap-3">

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import type { DeleteAccountRequest, MeLeadershipResponse } from '@kairos/types';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { buildDataExportHtml } from '@/lib/data-export-html';
 
 export interface MyRotaParams {
   from?: string;
@@ -54,17 +55,7 @@ export function useMyLeadership() {
   return query;
 }
 
-/**
- * Fetch the caller's data export and trigger a browser download as JSON.
- * Returns nothing — the side effect (the download) is the point. Errors
- * bubble up so the caller can surface them.
- */
-export async function downloadMyDataExport(): Promise<void> {
-  const res = await api.me.exportData();
-  const data = res.data;
-  if (!data) throw new Error('Export returned no data');
-  const filename = `kairos-my-data-${new Date().toISOString().slice(0, 10)}.json`;
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+function triggerDownload(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -73,6 +64,33 @@ export async function downloadMyDataExport(): Promise<void> {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Fetch the caller's data export and download it as a readable HTML report.
+ * Opens in any browser by double-clicking; users can print or save-as-PDF
+ * from the browser's print dialog.
+ */
+export async function downloadMyDataExportHtml(): Promise<void> {
+  const res = await api.me.exportData();
+  const data = res.data;
+  if (!data) throw new Error('Export returned no data');
+  const html = buildDataExportHtml(data as Parameters<typeof buildDataExportHtml>[0]);
+  const filename = `kharis-my-data-${new Date().toISOString().slice(0, 10)}.html`;
+  triggerDownload(filename, new Blob([html], { type: 'text/html;charset=utf-8' }));
+}
+
+/**
+ * Fetch the caller's data export and download the raw JSON. Kept for GDPR
+ * portability (Art. 20 — structured, machine-readable) and anyone comfortable
+ * with the raw fields.
+ */
+export async function downloadMyDataExportJson(): Promise<void> {
+  const res = await api.me.exportData();
+  const data = res.data;
+  if (!data) throw new Error('Export returned no data');
+  const filename = `kharis-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+  triggerDownload(filename, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
 }
 
 /**
