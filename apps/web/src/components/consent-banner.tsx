@@ -9,11 +9,24 @@ import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
 
 /**
- * Dashboard-level banner. Renders when any REQUIRED consent (terms / privacy)
- * needs accepting — either it's never been granted or the env-driven version
- * has bumped since the last acceptance. Marketing is optional and surfaces
- * on /profile/settings/legal, not here.
+ * Dashboard-level banner. Renders when any REQUIRED consent needs accepting —
+ * either it's never been granted or the env-driven version has bumped since
+ * the last acceptance. Marketing is optional and surfaces on
+ * /profile/settings/legal, not here.
+ *
+ * Required set is driven by the API's `status.required` flag, which the API
+ * computes per-user: terms + privacy + acceptable_use for everyone, plus
+ * admin_confidentiality for anyone holding a leadership / administrative
+ * role.
  */
+
+const LEGAL_DOC_HREF: Record<ConsentType, string> = {
+  [ConsentType.Terms]: '/legal/terms',
+  [ConsentType.Privacy]: '/legal/privacy',
+  [ConsentType.Marketing]: '/profile/settings/legal',
+  [ConsentType.AcceptableUse]: '/legal/acceptable-use',
+  [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
+};
 export function ConsentBanner() {
   const { user } = useAuthStore();
   const { data, isLoading } = useMyConsentStatuses();
@@ -51,7 +64,7 @@ export function ConsentBanner() {
               {pending.map((s) => (
                 <Link
                   key={s.consentType}
-                  href={s.consentType === ConsentType.Terms ? '/legal/terms' : '/legal/privacy'}
+                  href={LEGAL_DOC_HREF[s.consentType]}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"

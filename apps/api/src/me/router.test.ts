@@ -472,6 +472,114 @@ describe('POST /api/me/delete-account', () => {
   });
 });
 
+// ── GET /api/me/consent ────────────────────────────────────
+//
+// The consent endpoint routes through hasPrivilegedRole → listConsentStatuses.
+// We assert the two branches that matter for the confidentiality gate:
+//   • plain member → admin_confidentiality.required=false
+//   • privileged (systemRole=admin) → admin_confidentiality.required=true
+
+describe('GET /api/me/consent', () => {
+  beforeEach(() => {
+    delete process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'];
+  });
+
+  it('returns 401 without an auth header', async () => {
+    const res = await app.request('/api/me/consent');
+    expect(res.status).toBe(401);
+  });
+
+  it('marks admin_confidentiality as NOT required for a plain member', async () => {
+    // hasPrivilegedRole checks fellowships + branch_departments (both empty)
+    // then listConsentStatuses reads consent rows (also empty).
+    mockDb.select
+      .mockReturnValueOnce(chainTo([])) // fellowships leader query
+      .mockReturnValueOnce(chainTo([])) // branch_departments lead query
+      .mockReturnValueOnce(chainTo([])); // consent_records rows
+
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+    });
+    const res = await app.request('/api/me/consent', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: { statuses: Array<{ consentType: string; required: boolean; needsAccept: boolean }> };
+    };
+    const conf = body.data.statuses.find((s) => s.consentType === 'admin_confidentiality')!;
+    expect(conf.required).toBe(false);
+    expect(conf.needsAccept).toBe(false);
+    // But acceptable_use IS required for everyone
+    const aup = body.data.statuses.find((s) => s.consentType === 'acceptable_use')!;
+    expect(aup.required).toBe(true);
+    expect(aup.needsAccept).toBe(true);
+  });
+
+  it('marks admin_confidentiality as REQUIRED for a system admin', async () => {
+    // systemRole=admin short-circuits hasPrivilegedRole — no DB check needed
+    // for privilege. So only listConsentStatuses's select runs.
+    mockDb.select.mockReturnValueOnce(chainTo([])); // consent_records rows
+
+    const token = await signTestToken({ systemRole: 'admin' });
+    const res = await app.request('/api/me/consent', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: { statuses: Array<{ consentType: string; required: boolean; needsAccept: boolean }> };
+    };
+    const conf = body.data.statuses.find((s) => s.consentType === 'admin_confidentiality')!;
+    expect(conf.required).toBe(true);
+    expect(conf.needsAccept).toBe(true);
+  });
+
+  it('marks admin_confidentiality as REQUIRED for a BranchAdmin', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([])); // consent_records rows
+
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+      branchSystemAdminBranchIds: [TEST_IDS.branchId],
+    });
+    const res = await app.request('/api/me/consent', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: { statuses: Array<{ consentType: string; required: boolean }> };
+    };
+    const conf = body.data.statuses.find((s) => s.consentType === 'admin_confidentiality')!;
+    expect(conf.required).toBe(true);
+  });
+
+  it('marks admin_confidentiality as REQUIRED when the caller leads a fellowship', async () => {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([{ id: 'fellowship-1' }])) // fellowships leader query returns a row
+      .mockReturnValueOnce(chainTo([])) // branch_departments empty
+      .mockReturnValueOnce(chainTo([])); // consent_records rows
+
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+    });
+    const res = await app.request('/api/me/consent', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: { statuses: Array<{ consentType: string; required: boolean }> };
+    };
+    const conf = body.data.statuses.find((s) => s.consentType === 'admin_confidentiality')!;
+    expect(conf.required).toBe(true);
+  });
+});
+
 // ── GET /api/me/export ─────────────────────────────────────
 
 describe('GET /api/me/export', () => {

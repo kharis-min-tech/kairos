@@ -27,6 +27,12 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <Link href="/legal/terms" className="hover:text-[#5D3FD3] hover:underline">
             Terms &amp; Conditions
           </Link>
+          <Link href="/legal/acceptable-use" className="hover:text-[#5D3FD3] hover:underline">
+            Acceptable Use
+          </Link>
+          <Link href="/legal/confidentiality" className="hover:text-[#5D3FD3] hover:underline">
+            Confidentiality
+          </Link>
           <Link href="/login" className="hover:text-[#5D3FD3] hover:underline">
             Sign in
           </Link>

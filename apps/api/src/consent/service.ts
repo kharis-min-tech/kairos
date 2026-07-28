@@ -4,6 +4,7 @@ import { consentRecords } from '@kairos/database';
 import {
   CONSENT_TYPES,
   CONSENT_TYPE_REQUIRED,
+  CONSENT_TYPE_REQUIRED_FOR_PRIVILEGED,
   type ConsentType,
   type ConsentStatus,
 } from '@kairos/types';
@@ -18,6 +19,9 @@ export function getCurrentConsentVersions(): Record<ConsentType, string> {
     terms: process.env['CONSENT_VERSION_TERMS'] ?? '2026-07-v1',
     privacy: process.env['CONSENT_VERSION_PRIVACY'] ?? '2026-07-v1',
     marketing: process.env['CONSENT_VERSION_MARKETING'] ?? '1.0',
+    acceptable_use: process.env['CONSENT_VERSION_ACCEPTABLE_USE'] ?? '2026-07-v1',
+    admin_confidentiality:
+      process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'] ?? '2026-07-v1',
   };
 }
 
@@ -26,12 +30,21 @@ export function getCurrentConsentVersions(): Record<ConsentType, string> {
  * `needsAccept` flag based on whether the stored version matches the
  * current env-driven version. Required consents that have never been
  * granted (or were declined) always needAccept.
+ *
+ * `isPrivileged` toggles the required-map: users with a leadership /
+ * administrative role must additionally accept the confidentiality
+ * undertaking (`admin_confidentiality`). Defaults to false so ordinary
+ * members and legacy callers see the same behavior they did before.
  */
 export async function listConsentStatuses(
   db: Database,
   memberId: string,
+  isPrivileged = false,
 ): Promise<ConsentStatus[]> {
   const versions = getCurrentConsentVersions();
+  const requiredMap = isPrivileged
+    ? CONSENT_TYPE_REQUIRED_FOR_PRIVILEGED
+    : CONSENT_TYPE_REQUIRED;
   const rows = await db
     .select({
       consentType: consentRecords.consentType,
@@ -52,7 +65,7 @@ export async function listConsentStatuses(
 
   return CONSENT_TYPES.map((type) => {
     const stored = latestPerType.get(type);
-    const required = CONSENT_TYPE_REQUIRED[type];
+    const required = requiredMap[type];
     const currentVersion = versions[type];
     const acceptedVersion = stored?.version ?? null;
     const granted = stored?.granted ?? null;

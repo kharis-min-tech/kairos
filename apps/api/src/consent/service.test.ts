@@ -65,23 +65,31 @@ beforeEach(() => {
   delete process.env['CONSENT_VERSION_TERMS'];
   delete process.env['CONSENT_VERSION_PRIVACY'];
   delete process.env['CONSENT_VERSION_MARKETING'];
+  delete process.env['CONSENT_VERSION_ACCEPTABLE_USE'];
+  delete process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'];
 });
 
 describe('getCurrentConsentVersions', () => {
-  it('defaults to the current published version for terms + privacy, and 1.0 for marketing', () => {
+  it('defaults to the current published version for terms + privacy + acceptable use + admin confidentiality, and 1.0 for marketing', () => {
     expect(getCurrentConsentVersions()).toEqual({
       terms: '2026-07-v1',
       privacy: '2026-07-v1',
       marketing: '1.0',
+      acceptable_use: '2026-07-v1',
+      admin_confidentiality: '2026-07-v1',
     });
   });
 
   it('reads env overrides', () => {
     process.env['CONSENT_VERSION_TERMS'] = '2.0';
     process.env['CONSENT_VERSION_MARKETING'] = '3.5';
+    process.env['CONSENT_VERSION_ACCEPTABLE_USE'] = '2027-01';
+    process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'] = '2027-02';
     const versions = getCurrentConsentVersions();
     expect(versions.terms).toBe('2.0');
     expect(versions.marketing).toBe('3.5');
+    expect(versions.acceptable_use).toBe('2027-01');
+    expect(versions.admin_confidentiality).toBe('2027-02');
     // privacy falls back to its published default when the env var is unset
     expect(versions.privacy).toBe('2026-07-v1');
   });
@@ -126,6 +134,44 @@ describe('listConsentStatuses', () => {
     const marketing = out.find((s) => s.consentType === ConsentType.Marketing)!;
     expect(marketing.required).toBe(false);
     expect(marketing.needsAccept).toBe(false);
+  });
+
+  it('acceptable_use is always required and needsAccept for a fresh user', async () => {
+    setupSelectSequence([]);
+    const out = await listConsentStatuses(mockDb, memberId);
+    const aup = out.find((s) => s.consentType === ConsentType.AcceptableUse)!;
+    expect(aup.required).toBe(true);
+    expect(aup.needsAccept).toBe(true);
+  });
+
+  it('admin_confidentiality is NOT required for a plain member (isPrivileged omitted)', async () => {
+    setupSelectSequence([]);
+    const out = await listConsentStatuses(mockDb, memberId);
+    const conf = out.find((s) => s.consentType === ConsentType.AdminConfidentiality)!;
+    expect(conf.required).toBe(false);
+    expect(conf.needsAccept).toBe(false);
+  });
+
+  it('admin_confidentiality IS required for a privileged caller (isPrivileged=true)', async () => {
+    setupSelectSequence([]);
+    const out = await listConsentStatuses(mockDb, memberId, true);
+    const conf = out.find((s) => s.consentType === ConsentType.AdminConfidentiality)!;
+    expect(conf.required).toBe(true);
+    expect(conf.needsAccept).toBe(true);
+  });
+
+  it('admin_confidentiality accepted at current version does not need-accept even when privileged', async () => {
+    setupSelectSequence([
+      {
+        consentType: 'admin_confidentiality',
+        version: '2026-07-v1',
+        granted: true,
+        grantedAt: new Date('2026-07-28'),
+      },
+    ]);
+    const out = await listConsentStatuses(mockDb, memberId, true);
+    const conf = out.find((s) => s.consentType === ConsentType.AdminConfidentiality)!;
+    expect(conf.needsAccept).toBe(false);
   });
 });
 

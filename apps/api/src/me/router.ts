@@ -5,7 +5,7 @@ import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
-import { getMyLeadership, deleteMyAccount, exportMyData } from './service';
+import { getMyLeadership, deleteMyAccount, exportMyData, hasPrivilegedRole } from './service';
 import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
 import {
   listEffectivePreferences,
@@ -59,7 +59,8 @@ meRouter.get('/audit-log', async (c) => {
 
 meRouter.get('/consent', async (c) => {
   const auth = getAuth(c);
-  const statuses = await listConsentStatuses(db, auth.memberId);
+  const isPrivileged = await hasPrivilegedRole(db, auth);
+  const statuses = await listConsentStatuses(db, auth.memberId, isPrivileged);
   return c.json(successResponse({ statuses }));
 });
 

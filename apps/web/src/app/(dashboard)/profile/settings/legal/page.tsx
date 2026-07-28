@@ -13,6 +13,8 @@ import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 function docHrefFor(consentType: ConsentType): string | null {
   if (consentType === ConsentType.Terms) return '/legal/terms';
   if (consentType === ConsentType.Privacy) return '/legal/privacy';
+  if (consentType === ConsentType.AcceptableUse) return '/legal/acceptable-use';
+  if (consentType === ConsentType.AdminConfidentiality) return '/legal/confidentiality';
   return null;
 }
 

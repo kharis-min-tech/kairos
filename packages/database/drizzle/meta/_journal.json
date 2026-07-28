@@ -267,6 +267,13 @@
       "when": 1794300000000,
       "tag": "0037_nb_removal_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795300000000,
+      "tag": "0038_consent_extend_types",
+      "breakpoints": true
     }
   ]
 }

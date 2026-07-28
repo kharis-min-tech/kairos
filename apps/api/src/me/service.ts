@@ -149,6 +149,56 @@ export async function getMyLeadership(
 }
 
 /**
+ * Does the caller hold any role that surfaces PII of other members? Used to
+ * decide whether the confidentiality-undertaking gate applies. Returns true
+ * when the caller:
+ *   - is a system admin (`systemRole = 'admin'`), OR
+ *   - holds a BranchAdmin or BranchDataAdmin grant on any branch, OR
+ *   - is the active leader / co-leader of any fellowship, OR
+ *   - is the active lead / deputy of any branch_department.
+ *
+ * The fellowship / department checks hit the DB because that leadership is
+ * not currently encoded in the JWT. Kept cheap by selecting only the id.
+ */
+export async function hasPrivilegedRole(
+  db: Database,
+  auth: AuthContext,
+): Promise<boolean> {
+  if (auth.systemRole === 'admin') return true;
+  if (auth.branchSystemAdminBranchIds.length > 0) return true;
+  if (auth.branchDataAdminBranchIds.length > 0) return true;
+
+  const memberId = auth.memberId;
+  const [fellowshipRows, departmentRows] = await Promise.all([
+    db
+      .select({ id: fellowships.id })
+      .from(fellowships)
+      .where(
+        and(
+          eq(fellowships.isActive, true),
+          or(eq(fellowships.leaderId, memberId), eq(fellowships.coLeaderId, memberId)),
+        ),
+      )
+      .limit(1),
+    db
+      .select({ id: branchDepartments.id })
+      .from(branchDepartments)
+      .where(
+        and(
+          eq(branchDepartments.isActive, true),
+          or(
+            eq(branchDepartments.leadMemberId, memberId),
+            eq(branchDepartments.deputyMemberId, memberId),
+          ),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  return fellowshipRows.length > 0 || departmentRows.length > 0;
+}
+
+/**
  * GDPR right to erasure — user-initiated account deletion.
  *
  * Rather than a hard delete (which would cascade-remove attendance history and
