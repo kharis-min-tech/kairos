@@ -1,7 +1,8 @@
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   fellowships,
+  branches,
   branchDepartments,
   departments,
   members,
@@ -9,6 +10,8 @@ import {
   fellowshipMembers,
   departmentMembers,
   serviceAttendance,
+  services,
+  fellowshipMeetings,
   fellowshipMeetingAttendance,
   newBelieverEnrollments,
   formSubmissions,
@@ -251,24 +254,106 @@ export async function deleteMyAccount(
  * own contribution.
  */
 export async function exportMyData(db: Database, memberId: string) {
+  // Row-level lookups are joined so each returned row carries the human-readable
+  // name (fellowship name, department name, branch name, meeting date) alongside
+  // its ID. Keeps IDs in the payload so the JSON export stays machine-readable
+  // (GDPR Art. 20) while giving the HTML renderer something a person can read.
   const [
     memberRow,
     consents,
-    fellowshipMemberships,
-    deptMemberships,
-    serviceAttendanceRows,
-    fellowshipAttendanceRows,
-    nbEnrollments,
+    fellowshipMembershipsEnriched,
+    deptMembershipsEnriched,
+    serviceAttendanceEnriched,
+    fellowshipAttendanceEnriched,
+    nbEnrollmentsEnriched,
     formSubmissionRows,
     prefs,
   ] = await Promise.all([
     db.select().from(members).where(eq(members.id, memberId)).limit(1),
     db.select().from(consentRecords).where(eq(consentRecords.memberId, memberId)),
-    db.select().from(fellowshipMembers).where(eq(fellowshipMembers.memberId, memberId)),
-    db.select().from(departmentMembers).where(eq(departmentMembers.memberId, memberId)),
-    db.select().from(serviceAttendance).where(eq(serviceAttendance.memberId, memberId)),
-    db.select().from(fellowshipMeetingAttendance).where(eq(fellowshipMeetingAttendance.memberId, memberId)),
-    db.select().from(newBelieverEnrollments).where(eq(newBelieverEnrollments.memberId, memberId)),
+
+    db
+      .select({
+        fellowshipId: fellowshipMembers.fellowshipId,
+        fellowshipName: fellowships.fellowshipName,
+        fellowshipType: fellowships.fellowshipType,
+        branchId: fellowships.branchId,
+        branchName: branches.branchName,
+        joinDate: fellowshipMembers.joinDate,
+        leaveDate: fellowshipMembers.leaveDate,
+        isActive: fellowshipMembers.isActive,
+        notes: fellowshipMembers.notes,
+      })
+      .from(fellowshipMembers)
+      .innerJoin(fellowships, eq(fellowshipMembers.fellowshipId, fellowships.id))
+      .leftJoin(branches, eq(fellowships.branchId, branches.id))
+      .where(eq(fellowshipMembers.memberId, memberId)),
+
+    db
+      .select({
+        branchDepartmentId: departmentMembers.branchDepartmentId,
+        departmentName: departments.departmentName,
+        branchId: branchDepartments.branchId,
+        branchName: branches.branchName,
+        joinDate: departmentMembers.joinDate,
+        leaveDate: departmentMembers.leaveDate,
+        isActive: departmentMembers.isActive,
+        membershipStatus: departmentMembers.membershipStatus,
+      })
+      .from(departmentMembers)
+      .innerJoin(branchDepartments, eq(departmentMembers.branchDepartmentId, branchDepartments.id))
+      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .leftJoin(branches, eq(branchDepartments.branchId, branches.id))
+      .where(eq(departmentMembers.memberId, memberId)),
+
+    db
+      .select({
+        serviceId: serviceAttendance.serviceId,
+        serviceDate: services.serviceDate,
+        serviceType: services.serviceType,
+        serviceTitle: services.serviceTitle,
+        branchName: branches.branchName,
+        attendanceStatus: serviceAttendance.attendanceStatus,
+        arrivalTime: serviceAttendance.arrivalTime,
+        isFirstTimeVisitor: serviceAttendance.isFirstTimeVisitor,
+        recordedAt: serviceAttendance.recordedAt,
+      })
+      .from(serviceAttendance)
+      .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+      .leftJoin(branches, eq(services.branchId, branches.id))
+      .where(eq(serviceAttendance.memberId, memberId)),
+
+    db
+      .select({
+        meetingId: fellowshipMeetingAttendance.meetingId,
+        meetingDate: fellowshipMeetings.meetingDate,
+        meetingTitle: fellowshipMeetings.meetingTitle,
+        meetingTopic: fellowshipMeetings.meetingTopic,
+        fellowshipId: fellowshipMeetings.fellowshipId,
+        fellowshipName: fellowships.fellowshipName,
+        attendanceStatus: fellowshipMeetingAttendance.attendanceStatus,
+        arrivalTime: fellowshipMeetingAttendance.arrivalTime,
+        recordedAt: fellowshipMeetingAttendance.recordedAt,
+      })
+      .from(fellowshipMeetingAttendance)
+      .innerJoin(fellowshipMeetings, eq(fellowshipMeetingAttendance.meetingId, fellowshipMeetings.id))
+      .leftJoin(fellowships, eq(fellowshipMeetings.fellowshipId, fellowships.id))
+      .where(eq(fellowshipMeetingAttendance.memberId, memberId)),
+
+    db
+      .select({
+        id: newBelieverEnrollments.id,
+        branchId: newBelieverEnrollments.branchId,
+        branchName: branches.branchName,
+        stage: newBelieverEnrollments.stage,
+        enrolledAt: newBelieverEnrollments.enrolledAt,
+        completedAt: newBelieverEnrollments.completedAt,
+        isActive: newBelieverEnrollments.isActive,
+      })
+      .from(newBelieverEnrollments)
+      .leftJoin(branches, eq(newBelieverEnrollments.branchId, branches.id))
+      .where(eq(newBelieverEnrollments.memberId, memberId)),
+
     db.select().from(formSubmissions).where(eq(formSubmissions.subjectMemberId, memberId)),
     db.select().from(notificationPreferences).where(eq(notificationPreferences.memberId, memberId)),
   ]);
@@ -282,15 +367,35 @@ export async function exportMyData(db: Database, memberId: string) {
   const { passwordHash: _drop, passwordResetToken: _drop2, ...safeMember } = memberRow[0]!;
   void _drop; void _drop2;
 
+  // Enrich home + secondary branch on the member row so the profile section
+  // shows names, not UUIDs.
+  const branchIds = [safeMember.homeBranchId, safeMember.secondaryBranchId]
+    .filter((v): v is string => typeof v === 'string' && v.length > 0);
+  const branchLookup = branchIds.length
+    ? await db
+        .select({ id: branches.id, branchName: branches.branchName, city: branches.city })
+        .from(branches)
+        .where(inArray(branches.id, branchIds))
+    : [];
+  const branchById = new Map(branchLookup.map((b) => [b.id, b]));
+
+  const memberOut = {
+    ...safeMember,
+    homeBranchName: safeMember.homeBranchId ? branchById.get(safeMember.homeBranchId)?.branchName ?? null : null,
+    secondaryBranchName: safeMember.secondaryBranchId
+      ? branchById.get(safeMember.secondaryBranchId)?.branchName ?? null
+      : null,
+  };
+
   return {
     exportedAt: new Date().toISOString(),
-    member: safeMember,
+    member: memberOut,
     consents,
-    fellowshipMemberships,
-    departmentMemberships: deptMemberships,
-    serviceAttendance: serviceAttendanceRows,
-    fellowshipMeetingAttendance: fellowshipAttendanceRows,
-    newBelieverEnrollments: nbEnrollments,
+    fellowshipMemberships: fellowshipMembershipsEnriched,
+    departmentMemberships: deptMembershipsEnriched,
+    serviceAttendance: serviceAttendanceEnriched,
+    fellowshipMeetingAttendance: fellowshipAttendanceEnriched,
+    newBelieverEnrollments: nbEnrollmentsEnriched,
     formSubmissionsAboutMe: formSubmissionRows,
     notificationPreferences: prefs,
   };

@@ -1,3 +1,4 @@
+import { NOTIFICATION_CATEGORY_LABEL, type NotificationCategory } from '@kairos/types';
 import { formatDate, UK_DATE_LOCALE } from './date-format';
 
 /**
@@ -8,10 +9,10 @@ import { formatDate, UK_DATE_LOCALE } from './date-format';
  * takes no extra tooling. All styles are inline; the file has no external
  * dependencies.
  *
- * The API payload itself is not enriched — fellowship / department IDs stay as
- * IDs — because the readable summary here is the profile + activity narrative,
- * and the machine-readable JSON export is offered separately for anyone who
- * wants the raw fields.
+ * The API pre-enriches every row with human-readable names (branch / fellowship
+ * / department / meeting) so this file only formats them — it never renders
+ * raw UUIDs to the reader. IDs are still present in the JSON export so that
+ * portability (GDPR Art. 20) stays intact.
  */
 
 type ExportPayload = {
@@ -94,8 +95,8 @@ function renderProfile(member: Record<string, unknown> | null | undefined): stri
         ${row('Address', esc(member['address']))}
         ${row('City', esc(member['city']))}
         ${row('Postal code', esc(member['postalCode']))}
-        ${row('Home branch (ID)', esc(member['homeBranchId']))}
-        ${row('Secondary branch (ID)', esc(member['secondaryBranchId']))}
+        ${row('Home branch', esc(member['homeBranchName']))}
+        ${row('Secondary branch', esc(member['secondaryBranchName']))}
         ${row('At secondary branch?', yesNo(member['isAtSecondaryBranch']))}
         ${row('Membership date', longDate(member['membershipDate']))}
         ${row('Emergency contact — name', esc(member['emergencyContactName']))}
@@ -111,20 +112,30 @@ function renderProfile(member: Record<string, unknown> | null | undefined): stri
   `;
 }
 
+const CONSENT_TYPE_LABELS: Record<string, string> = {
+  terms: 'Terms & Conditions',
+  privacy: 'Privacy Notice',
+  marketing: 'Marketing communications',
+};
+
 function renderConsents(rows: Array<Record<string, unknown>> = []): string {
   if (rows.length === 0) return emptyNote('No consent history recorded.');
   const body = rows
     .slice()
     .sort((a, b) => String(b['grantedAt'] ?? '').localeCompare(String(a['grantedAt'] ?? '')))
     .map(
-      (r) => `
+      (r) => {
+        const raw = typeof r['consentType'] === 'string' ? r['consentType'] : '';
+        const label = CONSENT_TYPE_LABELS[raw] ?? labelFor(raw || 'consent');
+        return `
       <tr>
-        <td>${esc(r['consentType'])}</td>
+        <td>${esc(label)}</td>
         <td>${esc(r['version'])}</td>
         <td>${yesNo(r['granted'])}</td>
         <td>${longDateTime(r['grantedAt'])}</td>
       </tr>
-    `,
+    `;
+      },
     )
     .join('');
   return `
@@ -137,13 +148,20 @@ function renderConsents(rows: Array<Record<string, unknown>> = []): string {
   `;
 }
 
+function withBranch(name: unknown, branchName: unknown): string {
+  const n = typeof name === 'string' && name ? esc(name) : '—';
+  const b = typeof branchName === 'string' && branchName ? esc(branchName) : '';
+  return b ? `${n} <span class="muted-inline">(${b})</span>` : n;
+}
+
 function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = []): string {
   if (rows.length === 0) return emptyNote('You are not recorded in any fellowships.');
   const body = rows
     .map(
       (r) => `
       <tr>
-        <td>${esc(r['fellowshipId'])}</td>
+        <td>${withBranch(r['fellowshipName'], r['branchName'])}</td>
+        <td>${esc(r['fellowshipType'])}</td>
         <td>${longDate(r['joinDate'])}</td>
         <td>${longDate(r['leaveDate'])}</td>
         <td>${yesNo(r['isActive'])}</td>
@@ -152,10 +170,9 @@ function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = []):
     )
     .join('');
   return `
-    <p class="note">Fellowships are shown by ID — see the church directory for names.</p>
     <table>
       <thead>
-        <tr><th>Fellowship (ID)</th><th>Joined</th><th>Left</th><th>Currently active?</th></tr>
+        <tr><th>Fellowship</th><th>Type</th><th>Joined</th><th>Left</th><th>Currently active?</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
@@ -168,19 +185,18 @@ function renderDepartmentMemberships(rows: Array<Record<string, unknown>> = []):
     .map(
       (r) => `
       <tr>
-        <td>${esc(r['branchDepartmentId'] ?? r['departmentId'])}</td>
-        <td>${esc(r['role'])}</td>
-        <td>${longDate(r['joinDate'] ?? r['joinedAt'])}</td>
+        <td>${withBranch(r['departmentName'], r['branchName'])}</td>
+        <td>${longDate(r['joinDate'])}</td>
+        <td>${longDate(r['leaveDate'])}</td>
         <td>${yesNo(r['isActive'])}</td>
       </tr>
     `,
     )
     .join('');
   return `
-    <p class="note">Departments are shown by ID — see the church directory for names.</p>
     <table>
       <thead>
-        <tr><th>Department (ID)</th><th>Role</th><th>Joined</th><th>Currently active?</th></tr>
+        <tr><th>Department</th><th>Joined</th><th>Left</th><th>Currently active?</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
@@ -191,21 +207,29 @@ function renderServiceAttendance(rows: Array<Record<string, unknown>> = []): str
   if (rows.length === 0) return emptyNote('No Sunday service attendance recorded.');
   const body = rows
     .slice()
-    .sort((a, b) => String(b['serviceDate'] ?? b['createdAt'] ?? '').localeCompare(String(a['serviceDate'] ?? a['createdAt'] ?? '')))
+    .sort((a, b) => String(b['serviceDate'] ?? b['recordedAt'] ?? '').localeCompare(String(a['serviceDate'] ?? a['recordedAt'] ?? '')))
     .map(
-      (r) => `
+      (r) => {
+        const label =
+          typeof r['serviceTitle'] === 'string' && r['serviceTitle']
+            ? String(r['serviceTitle'])
+            : typeof r['serviceType'] === 'string'
+              ? `${r['serviceType']} service`
+              : 'Service';
+        return `
       <tr>
-        <td>${longDate(r['serviceDate'] ?? r['date'])}</td>
-        <td>${esc(r['serviceType'] ?? r['service'])}</td>
-        <td>${yesNo(r['present'] ?? true)}</td>
+        <td>${longDateTime(r['serviceDate'])}</td>
+        <td>${withBranch(label, r['branchName'])}</td>
+        <td>${esc(r['attendanceStatus'])}</td>
       </tr>
-    `,
+    `;
+      },
     )
     .join('');
   return `
     <table>
       <thead>
-        <tr><th>Date</th><th>Service</th><th>Recorded present?</th></tr>
+        <tr><th>Date</th><th>Service</th><th>Status</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
@@ -216,21 +240,29 @@ function renderFellowshipMeetingAttendance(rows: Array<Record<string, unknown>> 
   if (rows.length === 0) return emptyNote('No fellowship meeting attendance recorded.');
   const body = rows
     .slice()
-    .sort((a, b) => String(b['createdAt'] ?? '').localeCompare(String(a['createdAt'] ?? '')))
+    .sort((a, b) => String(b['meetingDate'] ?? b['recordedAt'] ?? '').localeCompare(String(a['meetingDate'] ?? a['recordedAt'] ?? '')))
     .map(
-      (r) => `
+      (r) => {
+        const label =
+          typeof r['meetingTitle'] === 'string' && r['meetingTitle']
+            ? String(r['meetingTitle'])
+            : typeof r['meetingTopic'] === 'string' && r['meetingTopic']
+              ? String(r['meetingTopic'])
+              : 'Fellowship meeting';
+        return `
       <tr>
-        <td>${esc(r['meetingId'])}</td>
-        <td>${yesNo(r['present'] ?? true)}</td>
-        <td>${longDateTime(r['createdAt'])}</td>
+        <td>${longDateTime(r['meetingDate'])}</td>
+        <td>${withBranch(label, r['fellowshipName'])}</td>
+        <td>${esc(r['attendanceStatus'])}</td>
       </tr>
-    `,
+    `;
+      },
     )
     .join('');
   return `
     <table>
       <thead>
-        <tr><th>Meeting (ID)</th><th>Recorded present?</th><th>When recorded</th></tr>
+        <tr><th>Date</th><th>Meeting</th><th>Status</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
@@ -244,7 +276,8 @@ function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = [])
       (r) => `
       <tr>
         <td>${esc(r['stage'])}</td>
-        <td>${longDate(r['enrolledAt'] ?? r['createdAt'])}</td>
+        <td>${esc(r['branchName'])}</td>
+        <td>${longDate(r['enrolledAt'])}</td>
         <td>${longDate(r['completedAt'])}</td>
         <td>${yesNo(r['isActive'])}</td>
       </tr>
@@ -254,56 +287,85 @@ function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = [])
   return `
     <table>
       <thead>
-        <tr><th>Stage</th><th>Started</th><th>Completed</th><th>Currently active?</th></tr>
+        <tr><th>Stage</th><th>Branch</th><th>Started</th><th>Completed</th><th>Currently active?</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
+
+const FORM_TYPE_LABELS: Record<string, string> = {
+  altar_call: 'Altar call',
+  baptism: 'Baptism request',
+  testimony: 'Testimony',
+  baby_naming: 'Baby naming',
+  baby_dedication: 'Baby dedication',
+  first_time_visitor: 'First-time visitor',
+};
 
 function renderFormSubmissions(rows: Array<Record<string, unknown>> = []): string {
   if (rows.length === 0) return emptyNote('No form submissions on record about you.');
   const body = rows
     .slice()
-    .sort((a, b) => String(b['submittedAt'] ?? b['createdAt'] ?? '').localeCompare(String(a['submittedAt'] ?? a['createdAt'] ?? '')))
+    .sort((a, b) => String(b['createdAt'] ?? '').localeCompare(String(a['createdAt'] ?? '')))
     .map(
-      (r) => `
+      (r) => {
+        const raw = typeof r['formType'] === 'string' ? r['formType'] : '';
+        const label = FORM_TYPE_LABELS[raw] ?? labelFor(raw || 'form');
+        return `
       <tr>
-        <td>${esc(r['formType'])}</td>
-        <td>${longDateTime(r['submittedAt'] ?? r['createdAt'])}</td>
-        <td>${esc(r['id'])}</td>
+        <td>${esc(label)}</td>
+        <td>${esc(r['status'])}</td>
+        <td>${longDateTime(r['createdAt'])}</td>
       </tr>
-    `,
+    `;
+      },
     )
     .join('');
   return `
     <table>
       <thead>
-        <tr><th>Form</th><th>Submitted</th><th>Submission ID</th></tr>
+        <tr><th>Form</th><th>Status</th><th>Submitted</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
+const CADENCE_LABELS: Record<string, string> = {
+  immediate: 'Immediate',
+  digest_daily: 'Daily digest',
+};
+
 function renderNotificationPreferences(rows: Array<Record<string, unknown>> = []): string {
   if (rows.length === 0) return emptyNote('No notification preferences saved (you receive the defaults).');
   const body = rows
+    .slice()
+    .sort((a, b) => String(a['category'] ?? '').localeCompare(String(b['category'] ?? '')))
     .map(
       (r) => {
-        const keys = Object.keys(r).filter((k) => !['id', 'memberId', 'createdAt', 'updatedAt'].includes(k));
-        const inner = keys
-          .map((k) => {
-            const v = r[k];
-            const display = typeof v === 'boolean' ? yesNo(v) : esc(v);
-            return `<tr><th scope="row">${esc(labelFor(k))}</th><td>${display}</td></tr>`;
-          })
-          .join('');
-        return `<table class="nested"><tbody>${inner}</tbody></table>`;
+        const raw = typeof r['category'] === 'string' ? r['category'] : '';
+        const label = NOTIFICATION_CATEGORY_LABEL[raw as NotificationCategory] ?? labelFor(raw || 'category');
+        const cadenceRaw = typeof r['cadence'] === 'string' ? r['cadence'] : '';
+        const cadence = CADENCE_LABELS[cadenceRaw] ?? esc(cadenceRaw);
+        return `
+      <tr>
+        <td>${esc(label)}</td>
+        <td>${yesNo(r['enabled'])}</td>
+        <td>${cadence}</td>
+      </tr>
+    `;
       },
     )
     .join('');
-  return body;
+  return `
+    <table>
+      <thead>
+        <tr><th>Category</th><th>Enabled?</th><th>How often</th></tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  `;
 }
 
 export function buildDataExportHtml(payload: ExportPayload): string {
@@ -469,6 +531,11 @@ export function buildDataExportHtml(payload: ExportPayload): string {
       margin: 0 0 12px;
       color: var(--muted);
       font-size: 13px;
+    }
+    .muted-inline {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 0.92em;
     }
     table {
       width: 100%;
