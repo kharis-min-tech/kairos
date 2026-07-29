@@ -443,22 +443,48 @@ describe('refreshAccessToken', () => {
 });
 
 describe('verifyEmail', () => {
-  it('should mark email as verified', async () => {
+  it('should mark email as verified when plaintext token matches stored hash', async () => {
     const { verifyEmail } = await import('./service');
+    const plainToken = 'plaintext-verification-token';
+    const tokenHash = await hashPassword(plainToken);
 
-    setupSelectChain([{ ...baseMember, emailVerified: false }]);
+    setupSelectChain([
+      {
+        id: baseMember.id,
+        emailVerificationToken: tokenHash,
+        emailVerificationExpiry: new Date(Date.now() + 3_600_000),
+      },
+    ]);
     setupUpdateChain();
 
-    await expect(verifyEmail(mockDb, baseMember.id)).resolves.toBeUndefined();
+    await expect(verifyEmail(mockDb, plainToken)).resolves.toBeUndefined();
     expect(mockUpdate).toHaveBeenCalled();
   });
 
-  it('should throw NotFoundError for invalid token', async () => {
+  it('should throw NotFoundError when no candidate rows exist', async () => {
     const { verifyEmail } = await import('./service');
 
     setupSelectChain([]);
 
     await expect(verifyEmail(mockDb, 'bad-token'))
+      .rejects.toThrow('not found');
+  });
+
+  it('should throw NotFoundError when plaintext token does not hash-match any candidate', async () => {
+    const { verifyEmail } = await import('./service');
+    const rightToken = 'the-real-token';
+    const wrongToken = 'guessed-token';
+    const tokenHash = await hashPassword(rightToken);
+
+    setupSelectChain([
+      {
+        id: baseMember.id,
+        emailVerificationToken: tokenHash,
+        emailVerificationExpiry: new Date(Date.now() + 3_600_000),
+      },
+    ]);
+
+    await expect(verifyEmail(mockDb, wrongToken))
       .rejects.toThrow('not found');
   });
 });

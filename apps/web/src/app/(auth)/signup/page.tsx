@@ -151,7 +151,14 @@ export default function SignupPage() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data;
       const result = await signupMutation.mutateAsync(payload);
-      router.push(`/verify-email?memberId=${result.member.id}`);
+      // Prefer the emailed link — no token in the URL means the "check your
+      // mailbox" state renders. In dev/staging the API still returns the
+      // plaintext token so QA can complete signup without SES delivery; append
+      // it to shortcut the flow.
+      const query = result.verificationToken
+        ? `?token=${encodeURIComponent(result.verificationToken)}&memberId=${result.member.id}`
+        : `?memberId=${result.member.id}`;
+      router.push(`/verify-email${query}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed');
     }

@@ -148,16 +148,19 @@ export async function listMembers(
   auth: AuthContext,
   query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string; fellowshipId?: string },
 ) {
-  // Pending members are inactive until approved, so skip isActive filter for pending queries
+  // Pending members are inactive until approved AND arrive as attendees
+  // (membership_class_completed_at NULL), so BOTH filters get skipped for
+  // pending queries — otherwise the approval queue would be permanently empty
+  // for self-signup accounts.
   const conditions: SQL[] = [];
   if (query.approvalStatus !== 'pending') {
     conditions.push(eq(members.isActive, true));
+    // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
+    // with membership_class_completed_at populated. Visitors / attendees /
+    // child shells are surfaced via Forms, the NB pipeline, and safeguarding
+    // review — except during pending approval, where they must be visible.
+    conditions.push(isRealMember());
   }
-
-  // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
-  // with membership_class_completed_at populated. Visitors / attendees / child
-  // shells are surfaced via Forms, the NB pipeline, and safeguarding review.
-  conditions.push(isRealMember());
 
   // Non-admin can only see their own branch (home or active secondary)
   if (!authHasCapability(auth, 'branch:read')) {

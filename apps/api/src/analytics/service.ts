@@ -137,8 +137,11 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       ),
   ]);
 
-  // Pending approvals for this branch — restricted to confirmed Members
-  // because attendee/visitor shells use a different approval surface.
+  // Pending approvals for this branch. Self-signup members are inactive
+  // (is_active = false) until an admin approves them, so we do NOT filter on
+  // is_active here — mirrors the carve-out in listMembers for pending queries.
+  // Attendee shells count too: /members/approval surfaces them, so the tile
+  // must match.
   const [pendingCount] = await db
     .select({ value: count() })
     .from(members)
@@ -146,7 +149,6 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       and(
         eq(members.homeBranchId, branchId),
         eq(members.approvalStatus, 'pending'),
-        eq(members.isActive, true),
       ),
     );
 

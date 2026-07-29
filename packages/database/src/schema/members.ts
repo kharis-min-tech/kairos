@@ -53,6 +53,11 @@ export const members = pgTable('members', {
   safeguardingArchiveDecision: varchar('safeguarding_archive_decision', { length: 20 }),
   passwordResetToken: varchar('password_reset_token', { length: 255 }),
   passwordResetExpiry: timestamp('password_reset_expiry'),
+  // Signup email verification: hashed token + expiry. Plaintext token is
+  // emailed to the user; verifyEmail() hash-compares. NULL after success so a
+  // second submission of the same link fails cleanly.
+  emailVerificationToken: varchar('email_verification_token', { length: 255 }),
+  emailVerificationExpiry: timestamp('email_verification_expiry'),
   lastLoginAt: timestamp('last_login_at'),
   mustChangePassword: boolean('must_change_password').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

@@ -30,6 +30,7 @@ import {
   UnauthorizedError,
   ValidationError,
   logger,
+  sendAccountVerificationEmail,
   sendPasswordResetEmail,
   hashPassword,
   verifyPassword,
@@ -216,7 +217,11 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   }
 
   const passwordHash = await hashPassword(input.password);
+  // Verification token: plaintext goes in the emailed link, hash sits in the DB.
+  // Mirrors password_reset. verifyEmail() hash-compares against the row.
   const verificationToken = randomTokenHex(32);
+  const verificationTokenHash = await hashPassword(verificationToken);
+  const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   const [created] = await db
     .insert(members)
@@ -241,6 +246,8 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       homeBranchId: input.homeBranchId,
       passwordHash,
       emailVerified: false,
+      emailVerificationToken: verificationTokenHash,
+      emailVerificationExpiry: verificationExpiry,
       approvalStatus: 'pending',
       systemRole: 'member',
       // Phase 2: signups start as attendees. Once approved + class completed,
@@ -283,15 +290,24 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
     ]);
   }
 
-  // In production, send verification email. For local dev, log the token.
-  logger.info('Email verification token generated', {
-    memberId: created.id,
-    email: created.email,
-    verificationToken,
+  const verifyLink = `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/verify-email?token=${verificationToken}`;
+
+  // Fire-and-forget the email. If SES fails (or creds are absent in dev), the
+  // mailer logs it; we do NOT block signup on delivery — the user can request
+  // a resend, and admins can approve manually if needed.
+  sendAccountVerificationEmail(created.email, created.firstName, verifyLink).catch((err) => {
+    logger.error('Failed to send account verification email', {
+      memberId: created.id,
+      email: created.email,
+      error: err instanceof Error ? err.message : String(err),
+    });
   });
 
   return {
     member: toMemberProfile(created),
+    // Plaintext token returned so local dev + staging QA can complete signup
+    // without waiting on SES delivery. In prod the mailbox link is the
+    // canonical path — the client no longer routes with it by default.
     verificationToken,
   };
 }
@@ -434,30 +450,53 @@ export async function refreshAccessToken(
 }
 
 export async function verifyEmail(db: Database, token: string): Promise<void> {
-  // For local dev, we use a simple token lookup approach.
-  // The token was logged during signup — in production, this would be stored in a verification_tokens table.
-  // For MVP, we accept any valid token format and verify based on member lookup.
-  // In a real implementation, validate token against a stored hash.
-
-  // For local dev simplicity: the token is the member's email encoded by a deterministic scheme.
-  // We'll use a pragmatic approach: find unverified members, or accept the token as a member ID for dev.
-  logger.info('Email verification attempted', { token });
-
-  // For MVP local dev: accept token as member ID
-  const [member] = await db
-    .select()
+  // The token in the URL is the plaintext value we emailed on signup. The DB
+  // holds only the bcrypt hash + expiry. Fetch all candidate rows (unverified,
+  // non-expired, token still present) and hash-compare to find the owner.
+  const now = new Date();
+  const candidates = await db
+    .select({
+      id: members.id,
+      emailVerificationToken: members.emailVerificationToken,
+      emailVerificationExpiry: members.emailVerificationExpiry,
+    })
     .from(members)
-    .where(and(eq(members.id, token), eq(members.emailVerified, false)))
-    .limit(1);
+    .where(
+      and(
+        eq(members.emailVerified, false),
+        // Postgres treats `column > $val` as false when column is NULL, which
+        // is what we want — no token = no match.
+        sql`${members.emailVerificationExpiry} > ${now}`,
+      ),
+    )
+    .limit(200);
 
-  if (!member) {
+  let matched: { id: string } | null = null;
+  for (const candidate of candidates) {
+    if (!candidate.emailVerificationToken) continue;
+    // Sequential hash compares are fine: bcrypt is fast enough at O(hundreds)
+    // and signup-verification traffic is low.
+    // eslint-disable-next-line no-await-in-loop
+    if (await verifyPassword(token, candidate.emailVerificationToken)) {
+      matched = { id: candidate.id };
+      break;
+    }
+  }
+
+  if (!matched) {
     throw new NotFoundError('Invalid or expired verification token');
   }
 
   await db
     .update(members)
-    .set({ emailVerified: true })
-    .where(eq(members.id, member.id));
+    .set({
+      emailVerified: true,
+      // Null the token so the link is single-use — a second submit gets
+      // "invalid or expired" instead of silently succeeding.
+      emailVerificationToken: null,
+      emailVerificationExpiry: null,
+    })
+    .where(eq(members.id, matched.id));
 }
 
 export async function forgotPassword(db: Database, email: string): Promise<{ resetToken: string }> {

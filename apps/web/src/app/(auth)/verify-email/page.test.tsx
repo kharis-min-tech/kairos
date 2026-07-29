@@ -1,15 +1,18 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
+const mockMutate = vi.fn().mockResolvedValue(undefined);
+let searchParamsString = '';
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams('memberId=abc-123-def-456'),
+  useSearchParams: () => new URLSearchParams(searchParamsString),
 }));
 
 vi.mock('@/hooks/use-auth', () => ({
-  useVerifyEmail: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useVerifyEmail: () => ({ mutateAsync: mockMutate, isPending: false }),
 }));
 
 import VerifyEmailPage from './page';
@@ -19,19 +22,32 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 }
 
-describe('VerifyEmailPage a11y', () => {
-  it('labels each OTP digit and wires one-time-code autocomplete on the first', () => {
+describe('VerifyEmailPage', () => {
+  it('renders the check-your-email state when no token is in the URL', () => {
+    searchParamsString = '';
+    mockMutate.mockClear();
     render(<VerifyEmailPage />, { wrapper });
-    const digits = Array.from({ length: 6 }, (_, i) =>
-      screen.getByLabelText(`Verification code digit ${i + 1}`),
-    );
-    expect(digits).toHaveLength(6);
-    expect(digits[0]).toHaveAttribute('autocomplete', 'one-time-code');
-    expect(digits[1]).toHaveAttribute('autocomplete', 'off');
+    expect(screen.getByText(/check your email/i)).toBeDefined();
+    expect(screen.getAllByText(/verification link/i).length).toBeGreaterThan(0);
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
-  it('groups the OTP boxes under a labelled group', () => {
+  it('auto-submits the token when ?token= is present in the URL', async () => {
+    searchParamsString = 'token=plain-verification-token-abc';
+    mockMutate.mockClear();
+    mockMutate.mockResolvedValueOnce(undefined);
     render(<VerifyEmailPage />, { wrapper });
-    expect(screen.getByRole('group', { name: /verification code/i })).toBeDefined();
+    await waitFor(() =>
+      expect(mockMutate).toHaveBeenCalledWith('plain-verification-token-abc'),
+    );
+  });
+
+  it('shows the verified confirmation after a successful verify', async () => {
+    searchParamsString = 'token=plain-verification-token-abc';
+    mockMutate.mockClear();
+    mockMutate.mockResolvedValueOnce(undefined);
+    render(<VerifyEmailPage />, { wrapper });
+    await waitFor(() => expect(screen.getByText(/email verified!/i)).toBeDefined());
+    expect(screen.getByText(/pending admin approval/i)).toBeDefined();
   });
 });
