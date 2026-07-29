@@ -1,0 +1,434 @@
+/* ─── Kairos colour tokens ──────────────────────────────────────────────── */
+:root {
+  --kairos-purple: #6D28D9;
+  --kairos-purple-deep: #451ebb;
+  --kairos-gold: #D97706;
+}
+
+/* ─── VitePress light mode overrides ────────────────────────────────────── */
+:root {
+  --vp-c-brand-1: #6D28D9;
+  --vp-c-brand-2: #451ebb;
+  --vp-c-brand-3: #5d3fd3;
+  --vp-c-brand-soft: rgba(109, 40, 217, 0.12);
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-soft: #f9f9f9;
+  --vp-c-bg-mute: #f3f0ff;
+  --vp-c-text-1: #1a1c1c;
+  --vp-c-text-2: #4b5563;
+  --vp-c-text-3: #6b7280;
+  --vp-c-border: #e5e1f0;
+  --vp-c-divider: #ede9fe;
+  --vp-c-tip-1: #6D28D9;
+  --vp-c-tip-2: #451ebb;
+  --vp-c-tip-soft: rgba(109, 40, 217, 0.08);
+  --vp-c-warning-1: #D97706;
+  --vp-c-warning-2: #b45309;
+  --vp-c-warning-soft: rgba(217, 119, 6, 0.08);
+  --vp-c-danger-1: #E11D48;
+  --vp-c-danger-2: #be123c;
+  --vp-c-danger-soft: rgba(225, 29, 72, 0.08);
+}
+
+/* ─── VitePress dark mode overrides ─────────────────────────────────────── */
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #7c3aed;
+  --vp-c-brand-soft: rgba(167, 139, 250, 0.12);
+  --vp-c-bg: #0f0d14;
+  --vp-c-bg-soft: #1a1625;
+  --vp-c-bg-mute: #221d30;
+  --vp-c-text-1: #f0ecff;
+  --vp-c-text-2: #b8b0d0;
+  --vp-c-text-3: #7c7594;
+  --vp-c-border: #2e2840;
+  --vp-c-divider: #2e2840;
+  --vp-c-tip-1: #a78bfa;
+  --vp-c-tip-soft: rgba(167, 139, 250, 0.1);
+  --vp-c-warning-1: #f8b537;
+  --vp-c-warning-soft: rgba(248, 181, 55, 0.1);
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+:root {
+  --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ─── Nav bar ────────────────────────────────────────────────────────────── */
+.VPNav {
+  border-bottom: 1px solid var(--vp-c-border) !important;
+  background: var(--vp-c-bg) !important;
+  backdrop-filter: blur(12px);
+}
+.dark .VPNav {
+  background: rgba(15, 13, 20, 0.92) !important;
+}
+.VPNavBar .title {
+  font-weight: 700;
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+.VPSidebar {
+  background: var(--vp-c-bg-soft) !important;
+  border-right: 1px solid var(--vp-c-border) !important;
+}
+.VPSidebarItem.level-0 > .item .text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--vp-c-text-3);
+}
+.VPSidebarItem.is-active > .item .link {
+  color: var(--vp-c-brand-1) !important;
+  font-weight: 600;
+}
+.VPSidebarItem > .item .link:hover {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ─── Content ────────────────────────────────────────────────────────────── */
+.VPDoc .container { max-width: 860px; }
+.vp-doc h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.03em; }
+.vp-doc h2 { font-size: 1.2rem; font-weight: 700; border-top: 1px solid var(--vp-c-divider); padding-top: 1.5rem; margin-top: 2rem; }
+.vp-doc h3 { font-size: 1rem; font-weight: 600; }
+.vp-doc p, .vp-doc li { font-size: 0.95rem; line-height: 1.75; color: var(--vp-c-text-2); }
+.vp-doc strong { color: var(--vp-c-text-1); font-weight: 600; }
+
+/* ─── Tables ─────────────────────────────────────────────────────────────── */
+.vp-doc table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1.25rem 0; }
+.vp-doc thead tr { background: var(--vp-c-bg-mute); border-bottom: 2px solid var(--vp-c-border); }
+.vp-doc th { text-align: left; padding: 0.6rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--vp-c-text-3); }
+.vp-doc td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--vp-c-divider); color: var(--vp-c-text-2); }
+.vp-doc tr:last-child td { border-bottom: none; }
+.vp-doc tr:hover td { background: var(--vp-c-bg-mute); }
+
+/* ─── Code ───────────────────────────────────────────────────────────────── */
+.vp-doc div[class*='language-'] { border-radius: 8px; border: 1px solid var(--vp-c-border); }
+.dark .vp-doc div[class*='language-'] { background: #13101c !important; }
+.vp-doc :not(pre) > code { background: var(--vp-c-bg-mute); color: var(--vp-c-brand-1); border-radius: 4px; padding: 0.15em 0.4em; font-size: 0.85em; border: 1px solid var(--vp-c-border); }
+
+/* ─── Custom blocks ──────────────────────────────────────────────────────── */
+.vp-doc .custom-block { border-radius: 8px; border: 1px solid; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+.vp-doc .custom-block.tip { border-color: rgba(109,40,217,0.25); background: var(--vp-c-tip-soft); }
+.vp-doc .custom-block.warning { border-color: rgba(217,119,6,0.25); background: var(--vp-c-warning-soft); }
+.vp-doc .custom-block.danger { border-color: rgba(225,29,72,0.25); background: var(--vp-c-danger-soft); }
+.vp-doc .custom-block-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+
+/* ─── Home page ──────────────────────────────────────────────────────────── */
+.VPHero .name { background: linear-gradient(135deg, #6D28D9 0%, #D97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.VPHero .tagline { font-size: 1.1rem; color: var(--vp-c-text-2); max-width: 540px; line-height: 1.65; }
+.VPHero .actions .VPButton.brand { background: var(--kairos-purple); border-color: var(--kairos-purple); color: #fff; font-weight: 600; }
+.VPHero .actions .VPButton.brand:hover { background: var(--kairos-purple-deep); border-color: var(--kairos-purple-deep); }
+.VPHero .actions .VPButton.alt { border-color: var(--vp-c-border); color: var(--vp-c-text-1); }
+.VPFeature { border: 1px solid var(--vp-c-border) !important; border-radius: 10px !important; background: var(--vp-c-bg-soft) !important; transition: border-color 0.15s, box-shadow 0.15s; }
+.VPFeature:hover { border-color: var(--vp-c-brand-1) !important; box-shadow: 0 0 0 1px var(--vp-c-brand-soft), 0 4px 16px rgba(109,40,217,0.08) !important; }
+.VPFeature .title { font-size: 0.95rem; font-weight: 700; color: var(--vp-c-text-1); }
+.VPFeature .details { font-size: 0.85rem; color: var(--vp-c-text-2); line-height: 1.6; }
+
+/* ─── Search ─────────────────────────────────────────────────────────────── */
+.VPLocalSearchBox { --vp-local-search-highlight-bg: rgba(109,40,217,0.15); --vp-local-search-highlight-text: #6D28D9; }
+
+/* ─── Footer / Nav ───────────────────────────────────────────────────────── */
+.VPFooter { border-top: 1px solid var(--vp-c-border) !important; background: var(--vp-c-bg-soft) !important; }
+.VPFooter .message, .VPFooter .copyright { font-size: 0.8rem; color: var(--vp-c-text-3); }
+.VPDocFooter .pager-link { border: 1px solid var(--vp-c-border); border-radius: 8px; transition: border-color 0.15s; }
+.VPDocFooter .pager-link:hover { border-color: var(--vp-c-brand-1); }
+.VPDocFooter .pager-link .title { color: var(--vp-c-brand-1); font-weight: 600; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--vp-c-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--vp-c-brand-3); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCREENSHOTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Reset VitePress default image styles inside screenshot wrappers */
+.vp-doc img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/* 2. Screenshot container — mac window chrome, fixed height */
+.screenshot-window {
+  position: relative;
+  margin: 2rem auto;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-border);
+  box-shadow: 0 8px 30px rgba(109, 40, 217, 0.12), 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Mac titlebar */
+.screenshot-window::before {
+  content: '';
+  display: block;
+  height: 36px;
+  flex-shrink: 0;
+  background: #ebebeb;
+  border-bottom: 1px solid #d5d5d5;
+}
+.dark .screenshot-window::before {
+  background: #1c1926;
+  border-bottom: 1px solid #2e2840;
+}
+
+/* Traffic lights */
+.screenshot-window::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 12px;
+  width: 54px;
+  height: 13px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 54 13'%3E%3Ccircle cx='6.5' cy='6.5' r='5.5' fill='%23ff5f57'/%3E%3Ccircle cx='27' cy='6.5' r='5.5' fill='%23febc2e'/%3E%3Ccircle cx='47.5' cy='6.5' r='5.5' fill='%2328c840'/%3E%3C/svg%3E") no-repeat;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Image wrapper */
+.screenshot-window p {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  display: block;
+}
+
+/* Image — natural size, no cropping, no zooming */
+.screenshot-window p img,
+.screenshot-window img {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+
+/* 3. Light/dark switching — hide the correct one */
+.screenshot-dark { display: none !important; }
+.screenshot-light { display: block !important; }
+
+html.dark .screenshot-light { display: none !important; }
+html.dark .screenshot-dark { display: block !important; }
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .vp-doc h1 { font-size: 1.5rem; }
+  .vp-doc h2 { font-size: 1.1rem; }
+  .VPDoc .container { padding: 0 1rem; }
+  .vp-doc table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 0.8rem; }
+  .vp-doc th, .vp-doc td { padding: 0.5rem 0.75rem; white-space: nowrap; }
+  .VPHero .name { font-size: 2rem !important; }
+  .VPHero .tagline { font-size: 0.95rem; }
+  .vp-doc .custom-block { font-size: 0.875rem; }
+  .VPNavBarAppearance { display: flex !important; align-items: center; margin-right: 0.25rem; }
+  .VPNavBarSocialLinks { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .vp-doc h1 { font-size: 1.3rem; }
+  .VPHero .name { font-size: 1.7rem !important; }
+}
+
+/* ─── Sidebar icons ──────────────────────────────────────────────────────── */
+
+.sidebar-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-right: 7px;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s, transform 0.15s;
+  vertical-align: middle;
+  display: inline-block;
+  position: relative;
+  top: -1px;
+}
+
+/* Active link icon */
+.VPSidebarItem.is-active .sidebar-icon {
+  opacity: 1;
+  color: var(--vp-c-brand-1);
+}
+
+/* Hover effect */
+.VPSidebarItem .VPLink:hover .sidebar-icon {
+  opacity: 1;
+  color: var(--vp-c-brand-1);
+  transform: scale(1.15);
+}
+
+/* Touch feedback on mobile */
+.VPSidebarItem .VPLink:active .sidebar-icon {
+  transform: scale(0.92);
+  opacity: 1;
+}
+
+/* Make the link item flex so icon and text align */
+.VPSidebarItem.level-1 .item {
+  display: flex;
+  align-items: center;
+}
+
+.VPSidebarItem.level-1 .VPLink {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 3px 6px;
+  margin: 1px 0;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.VPSidebarItem.level-1 .VPLink:hover {
+  background: var(--vp-c-brand-soft);
+}
+
+.VPSidebarItem.level-1 .VPLink:active {
+  background: var(--vp-c-brand-soft);
+}
+
+/* Touch device — larger tap target */
+@media (max-width: 768px) {
+  .VPSidebarItem.level-1 .VPLink {
+    padding: 10px 10px;
+    margin: 3px 0;
+    border-radius: 8px;
+    /* Larger touch target */
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .sidebar-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    opacity: 0.6;
+  }
+
+  /* Remove hover on touch — use active instead */
+  .VPSidebarItem.level-1 .VPLink:hover {
+    background: transparent;
+  }
+
+  .VPSidebarItem.level-1 .VPLink:hover .sidebar-icon {
+    opacity: 0.6;
+    color: inherit;
+    transform: none;
+  }
+
+  /* Touch press feedback */
+  .VPSidebarItem.level-1 .VPLink:active {
+    background: var(--vp-c-brand-soft);
+  }
+
+  .VPSidebarItem.level-1 .VPLink:active .sidebar-icon {
+    opacity: 1;
+    color: var(--vp-c-brand-1);
+    transform: scale(0.95);
+  }
+}
+
+/* ─── Nav dropdown menus ─────────────────────────────────────────────────── */
+
+.VPFlyout .menu {
+  border: 1px solid var(--vp-c-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(109, 40, 217, 0.12), 0 2px 8px rgba(0,0,0,0.08) !important;
+  background: var(--vp-c-bg) !important;
+  min-width: 200px;
+}
+
+.dark .VPFlyout .menu {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(109,40,217,0.15) !important;
+}
+
+.VPFlyout .VPMenuLink a {
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+  font-size: 0.875rem;
+}
+
+.VPFlyout .VPMenuLink a:hover {
+  background: var(--vp-c-brand-soft) !important;
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* On touch devices, suppress CSS :hover-based open and use JS class instead */
+@media (hover: none) {
+  .VPFlyout:hover .menu {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  .VPFlyout.touch-open .menu {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}/* Nav button active/hover state */
+.VPNavBarMenuLink,
+.VPFlyoutButton {
+  position: relative;
+  transition: color 0.18s ease !important;
+}
+
+.VPNavBarMenuLink:hover,
+.VPFlyoutButton:hover {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* Sliding nav highlight pill */
+#nav-hover-pill {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--vp-c-brand-soft);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+              width 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+              opacity 0.15s ease;
+  transform: translateX(0px) translateY(0px);
+  will-change: transform, width, opacity;
+}
+
+/* ─── Mobile home page — hide default cards, show custom list ────────────── */
+@media (max-width: 640px) {
+  /* Hide VitePress default feature cards */
+  .VPFeatures {
+    display: none !important;
+  }
+
+  /* Hero */
+  .VPHero .name {
+    font-size: 2.4rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .VPHero .text {
+    font-size: 2.4rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .VPHero .tagline {
+    font-size: 0.9rem !important;
+  }
+
+  .VPHero .action .VPButton {
+    border-radius: 99px !important;
+  }
+}
