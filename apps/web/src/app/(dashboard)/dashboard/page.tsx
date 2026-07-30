@@ -125,7 +125,9 @@ function AdminStats() {
   const [evidenceOpen, setEvidenceOpen] = useState<'branches' | 'members' | 'fellowships' | 'pending' | null>(null);
 
   if (isLoading || !data) return <StatsSkeleton />;
-  const pending = data.membersByApproval.find(s => s.status === 'pending')?.count ?? 0;
+  // Prefer the dedicated pendingApprovals count (matches the /members?pending
+  // list). Fall back to the breakdown-derived value for older backends.
+  const pending = data.pendingApprovals ?? (data.membersByApproval.find(s => s.status === 'pending')?.count ?? 0);
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

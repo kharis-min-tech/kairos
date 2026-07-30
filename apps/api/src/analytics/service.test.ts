@@ -65,6 +65,7 @@ describe('getAdminStats', () => {
       [{ value: 3 }],     // breakdown.childrenRow
       [{ value: 135 }],   // breakdown.totalRow
       [{ value: 12 }],    // fellowships count
+      [{ value: 18 }],    // pendingApprovals (includes inactive + non-real-member shells)
       [{ status: 'approved', count: 85 }, { status: 'pending', count: 15 }],
       [{ type: 'K-Groups', count: 6 }, { type: 'Kharis Express', count: 4 }],
     );
@@ -75,6 +76,7 @@ describe('getAdminStats', () => {
     expect(result.memberBreakdown).toEqual({ members: 100, returners: 20, visitors: 12, children: 3 });
     expect(result.totalMembers).toBe(100);
     expect(result.totalFellowships).toBe(12);
+    expect(result.pendingApprovals).toBe(18);
     expect(result.membersByApproval).toHaveLength(2);
     expect(result.fellowshipsByType).toHaveLength(2);
   });

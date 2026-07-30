@@ -476,6 +476,12 @@ export interface AdminDashboardStats {
   /** @deprecated read memberBreakdown.members. Kept for back-compat. */
   totalMembers: number;
   totalFellowships: number;
+  /**
+   * Count of members awaiting admin review. Includes self-signup users
+   * (inactive until approved) and non-real-member shells — matches what
+   * the /members?approvalStatus=pending list surfaces.
+   */
+  pendingApprovals: number;
   membersByApproval: { status: string; count: number }[];
   fellowshipsByType: { type: string; count: number }[];
 }

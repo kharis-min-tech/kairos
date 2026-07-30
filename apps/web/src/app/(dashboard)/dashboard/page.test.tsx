@@ -79,6 +79,7 @@ vi.mock('@/hooks/use-dashboard', () => ({
       memberBreakdown: { members: 42, returners: 10, visitors: 6, children: 2 },
       totalMembers: 42,
       totalFellowships: 7,
+      pendingApprovals: 2,
       membersByApproval: [{ status: 'pending', count: 2 }],
     },
     isLoading: false,

@@ -60,10 +60,17 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     throw new ForbiddenError('Only admins can access church-wide stats');
   }
 
-  const [[branchCount], breakdown, [fellowshipCount]] = await Promise.all([
+  const [[branchCount], breakdown, [fellowshipCount], [pendingCount]] = await Promise.all([
     db.select({ value: count() }).from(branches).where(eq(branches.isActive, true)),
     loadMemberBreakdown(db, undefined),
     db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
+    // Pending approvals — mirrors getBranchStats: self-signup members are
+    // inactive until approved, so we do NOT filter on is_active. Attendee/
+    // visitor shells count too so the tile matches the /members?pending list.
+    db
+      .select({ value: count() })
+      .from(members)
+      .where(eq(members.approvalStatus, 'pending')),
   ]);
 
   // Members by approval status — kept as confirmed Members only because the
@@ -104,6 +111,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     // should read totalRoll + memberBreakdown.
     totalMembers: breakdown.members,
     totalFellowships: fellowshipCount!.value,
+    pendingApprovals: pendingCount!.value,
     membersByApproval: approvalStats,
     fellowshipsByType,
   };
