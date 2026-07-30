@@ -762,69 +762,118 @@ export async function getMissingMembers(
   query: { branchId?: string; services?: number; departmentId?: string; fellowshipId?: string },
 ) {
   enforceReportReader(auth);
-  const branchId = resolveBranchId(auth, query.branchId);
   const recentCount = query.services ?? 4;
 
-  // Recent N services for this branch.
-  const recentServices = await db
-    .select({ id: services.id })
-    .from(services)
-    .where(and(eq(services.branchId, branchId), eq(services.isActive, true)))
-    .orderBy(sql`${services.serviceDate} DESC`)
-    .limit(recentCount);
-
-  const recentServiceIds = recentServices.map((s) => s.id);
-
-  // Active members (as of now) in this branch with no row across those services.
-  const baseConditions = [
-    eq(members.isActive, true),
-    eq(members.homeBranchId, branchId),
-  ];
-
-  // Leader scope auto-narrows fellowship/dept leaders to their groups; the
-  // explicit query filter further narrows that intersection.
-  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
-    resolveFilterMemberIds(db, branchId, {
-      departmentId: query.departmentId,
-      fellowshipId: query.fellowshipId,
-    }),
-    resolveLeaderScopeMemberIds(db, auth, branchId),
-  ]);
-  const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
-  if (filterIds !== null) {
-    if (filterIds.length === 0) {
+  // Determine the set of branches to compute for. Admin/pastor with
+  // branch:read + no explicit filter → all active branches (mirrors the
+  // Attendance-by-branch tile on the same page). Otherwise fall back to
+  // the single-branch resolution that enforces scope.
+  const canReadAcrossBranches = authHasCapability(auth, 'branch:read');
+  const isAllBranches = canReadAcrossBranches && !query.branchId;
+  let targetBranchIds: string[];
+  if (isAllBranches) {
+    const activeBranches = await db
+      .select({ id: branches.id })
+      .from(branches)
+      .where(eq(branches.isActive, true));
+    if (activeBranches.length === 0) {
       return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
     }
-    baseConditions.push(inArray(members.id, filterIds));
-  }
-
-  let rows;
-  if (recentServiceIds.length === 0) {
-    // No services to compare against — every active member is "missing".
-    rows = await db
-      .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
-      .from(members)
-      .where(and(...baseConditions))
-      .orderBy(members.lastName, members.firstName);
+    targetBranchIds = activeBranches.map((b) => b.id);
   } else {
-    const attendedSubquery = db
-      .select({ memberId: serviceAttendance.memberId })
-      .from(serviceAttendance)
-      .where(inArray(serviceAttendance.serviceId, recentServiceIds));
-
-    rows = await db
-      .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
-      .from(members)
-      .where(and(...baseConditions, notInArray(members.id, attendedSubquery)))
-      .orderBy(members.lastName, members.firstName);
+    targetBranchIds = [resolveBranchId(auth, query.branchId)];
   }
 
-  return rows.map((r) => ({
-    memberId: r.memberId,
-    firstName: r.firstName,
-    lastName: r.lastName,
-    servicesConsidered: recentServiceIds.length,
-  }));
+  // Per-branch: last N services on that branch (a global ORDER BY across
+  // branches would let the busiest branch swallow the window and hide
+  // members from quieter branches).
+  const perBranchServiceIds = await Promise.all(
+    targetBranchIds.map(async (bId) => {
+      const rows = await db
+        .select({ id: services.id })
+        .from(services)
+        .where(and(eq(services.branchId, bId), eq(services.isActive, true)))
+        .orderBy(sql`${services.serviceDate} DESC`)
+        .limit(recentCount);
+      return { branchId: bId, serviceIds: rows.map((r) => r.id) };
+    }),
+  );
+
+  // Leader scope narrows to the caller's led groups (same auth.branchId
+  // regardless of target — leader grants are per-branch and the target
+  // set already respects the caller's read scope).
+  const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
+  if (leaderScopeIds !== null && leaderScopeIds.length === 0) {
+    return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
+  }
+
+  // Compute one query per branch and union the results. Explicit
+  // department/fellowship filters only make sense inside one branch, so
+  // when computing "All branches" we skip them (the UI hides those
+  // dropdowns' effect anyway when no branch is picked).
+  const perBranchRows = await Promise.all(
+    perBranchServiceIds.map(async ({ branchId, serviceIds }) => {
+      const baseConditions = [
+        eq(members.isActive, true),
+        eq(members.homeBranchId, branchId),
+      ];
+
+      const explicitFilterIds = isAllBranches
+        ? null
+        : await resolveFilterMemberIds(db, branchId, {
+            departmentId: query.departmentId,
+            fellowshipId: query.fellowshipId,
+          });
+      const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+      if (filterIds !== null) {
+        if (filterIds.length === 0) return [];
+        baseConditions.push(inArray(members.id, filterIds));
+      }
+
+      if (serviceIds.length === 0) {
+        // No services to compare against — every active member in this
+        // branch is "missing".
+        return db
+          .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
+          .from(members)
+          .where(and(...baseConditions))
+          .orderBy(members.lastName, members.firstName)
+          .then((rows) =>
+            rows.map((r) => ({
+              memberId: r.memberId,
+              firstName: r.firstName,
+              lastName: r.lastName,
+              servicesConsidered: 0,
+            })),
+          );
+      }
+
+      const attendedSubquery = db
+        .select({ memberId: serviceAttendance.memberId })
+        .from(serviceAttendance)
+        .where(inArray(serviceAttendance.serviceId, serviceIds));
+
+      const rows = await db
+        .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
+        .from(members)
+        .where(and(...baseConditions, notInArray(members.id, attendedSubquery)))
+        .orderBy(members.lastName, members.firstName);
+
+      return rows.map((r) => ({
+        memberId: r.memberId,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        servicesConsidered: serviceIds.length,
+      }));
+    }),
+  );
+
+  const merged = perBranchRows.flat();
+  merged.sort((a, b) => {
+    const ln = a.lastName.localeCompare(b.lastName);
+    return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+  });
+  return merged;
 }
 
 /**
