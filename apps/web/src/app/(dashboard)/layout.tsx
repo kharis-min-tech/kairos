@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
+import { useMyConsentStatuses } from '@/hooks/use-consent';
 import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import type { Capability } from '@kairos/types';
@@ -222,6 +223,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace('/change-password');
     }
   }, [mustChangePassword, router]);
+
+  // Consent gate: any required policy that hasn't been accepted forces the
+  // caller to /accept-policies before the dashboard renders. Mirrors the
+  // mustChangePassword gate above. The API middleware provides the same
+  // enforcement server-side — the client redirect is a UX niceness on top.
+  const { data: consentData } = useMyConsentStatuses();
+  const pendingConsentCount = consentData
+    ? consentData.statuses.filter((s) => s.required && s.needsAccept).length
+    : 0;
+  useEffect(() => {
+    if (pendingConsentCount > 0) {
+      router.replace('/accept-policies');
+    }
+  }, [pendingConsentCount, router]);
 
   function handleLogout() {
     logout();

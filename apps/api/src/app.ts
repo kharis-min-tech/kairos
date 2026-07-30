@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { errorHandler } from './middleware/error-handler';
 import { loggingMiddleware } from './middleware/logging';
+import { consentGateMiddleware } from './middleware/consent-gate';
 import { authRouter } from './auth/router';
 import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
@@ -49,6 +50,13 @@ export function createApp() {
       .orderBy(branches.branchName);
     return c.json(successResponse(rows));
   });
+
+  // Consent gate — 403s any /api/* request from a user who owes a required
+  // policy acceptance (with an allowlist for the consent flow + GDPR
+  // escape hatches). Client-side, the dashboard layout also redirects to
+  // /accept-policies; this middleware is the belt-and-braces server-side
+  // enforcement so direct API calls can't bypass the policy screen.
+  app.use('/api/*', consentGateMiddleware);
 
   // Module routers
   app.route('/api/auth', authRouter);
