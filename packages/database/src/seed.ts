@@ -1860,19 +1860,37 @@ async function seed() {
       }),
     ),
   ).returning();
+  // Attendance per service: keep ~75% turnout, but rotate WHICH members attend
+  // each week so cohort compare has real divergence. Previously every service
+  // used the same first-N adults, so "present in A but absent from B" always
+  // returned 0 rows — /attendance/reports demos broke.
   const attendanceRows: Array<{ serviceId: string; memberId: string; attendanceStatus: string; arrivalTime: Date; recordedBy: string }> = [];
+  const servicesByBranch = new Map<string, typeof newServices>();
   for (const svc of newServices) {
-    const info = otherBranchInfo.find((b) => b.branch.id === svc.branchId)!;
-    const attendeeCount = Math.max(3, Math.min(info.adults.length, Math.round(info.adults.length * 0.75)));
-    for (let i = 0; i < attendeeCount; i++) {
-      attendanceRows.push({
-        serviceId: svc.id,
-        memberId: info.adults[i]!.id,
-        attendanceStatus: i === attendeeCount - 1 && attendeeCount > 3 ? 'Late' : 'Present',
-        arrivalTime: svc.serviceDate,
-        recordedBy: info.recorder.id,
-      });
-    }
+    const bucket = servicesByBranch.get(svc.branchId) ?? [];
+    bucket.push(svc);
+    servicesByBranch.set(svc.branchId, bucket);
+  }
+  for (const [branchId, branchServices] of servicesByBranch) {
+    // Sort ascending by date so weekIdx=0 is the oldest, weekIdx=N-1 the most
+    // recent — deterministic offsets across re-seeds.
+    branchServices.sort((a, b) => a.serviceDate.getTime() - b.serviceDate.getTime());
+    const info = otherBranchInfo.find((b) => b.branch.id === branchId)!;
+    const total = info.adults.length;
+    const attendeeCount = Math.max(3, Math.min(total, Math.round(total * 0.75)));
+    branchServices.forEach((svc, weekIdx) => {
+      const offset = weekIdx % total;
+      for (let i = 0; i < attendeeCount; i++) {
+        const adultIdx = (offset + i) % total;
+        attendanceRows.push({
+          serviceId: svc.id,
+          memberId: info.adults[adultIdx]!.id,
+          attendanceStatus: i === attendeeCount - 1 && attendeeCount > 3 ? 'Late' : 'Present',
+          arrivalTime: svc.serviceDate,
+          recordedBy: info.recorder.id,
+        });
+      }
+    });
   }
   await db.insert(serviceAttendance).values(attendanceRows);
   console.log(`✓ ${newServices.length} services + ${attendanceRows.length} attendance rows (4 branches × 8 Sundays)`);
