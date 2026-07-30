@@ -87,8 +87,11 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
           <GitCompare className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Compare cohorts
         </CardTitle>
         <CardDescription>
-          Who came to one selection of services but is missing from another? Pick services in each
-          column; toggle ANY/ALL when comparing across multiple services.
+          Who came to one selection of services but is missing from another?
+          Pick services in each column, then Run comparison. Use ANY/ALL to
+          choose whether &ldquo;present in&rdquo; means at least one service
+          in the set (ANY) or every service (ALL) — same for &ldquo;absent
+          from&rdquo;.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

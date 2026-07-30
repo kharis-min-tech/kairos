@@ -83,7 +83,7 @@ describe('AttendanceReportsPage', () => {
   it('renders empty states when there is no data', () => {
     render(<AttendanceReportsPage />);
     expect(screen.getByText(/No attendance recorded yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/Everyone has been seen recently/i)).toBeInTheDocument();
+    expect(screen.getByText(/Everyone attended the most recent service/i)).toBeInTheDocument();
     expect(screen.getByText(/No branch data yet/i)).toBeInTheDocument();
   });
 
@@ -95,7 +95,7 @@ describe('AttendanceReportsPage', () => {
       error: null,
     };
     missing = {
-      data: [{ memberId: 'm1', firstName: 'Ada', lastName: 'Lovelace', servicesConsidered: 4 }],
+      data: [{ memberId: 'm1', firstName: 'Ada', lastName: 'Lovelace', servicesConsidered: 4, missedStreak: 2 }],
       isLoading: false,
       isError: false,
       error: null,

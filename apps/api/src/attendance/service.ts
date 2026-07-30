@@ -1,4 +1,4 @@
-import { eq, ne, and, or, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, ne, and, or, count, sql, gte, lte, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -777,17 +777,23 @@ export async function getMissingMembers(
       .from(branches)
       .where(eq(branches.isActive, true));
     if (activeBranches.length === 0) {
-      return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
+      return [] as {
+        memberId: string;
+        firstName: string;
+        lastName: string;
+        servicesConsidered: number;
+        missedStreak: number;
+      }[];
     }
     targetBranchIds = activeBranches.map((b) => b.id);
   } else {
     targetBranchIds = [resolveBranchId(auth, query.branchId)];
   }
 
-  // Per-branch: last N services on that branch (a global ORDER BY across
-  // branches would let the busiest branch swallow the window and hide
-  // members from quieter branches).
-  const perBranchServiceIds = await Promise.all(
+  // Per-branch: last N services on that branch, ordered most-recent first
+  // (a global ORDER BY across branches would let the busiest branch swallow
+  // the window and hide members from quieter branches).
+  const perBranchServices = await Promise.all(
     targetBranchIds.map(async (bId) => {
       const rows = await db
         .select({ id: services.id })
@@ -799,25 +805,23 @@ export async function getMissingMembers(
     }),
   );
 
-  // Leader scope narrows to the caller's led groups (same auth.branchId
-  // regardless of target — leader grants are per-branch and the target
-  // set already respects the caller's read scope).
   const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
   if (leaderScopeIds !== null && leaderScopeIds.length === 0) {
-    return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
+    return [] as {
+      memberId: string;
+      firstName: string;
+      lastName: string;
+      servicesConsidered: number;
+      missedStreak: number;
+    }[];
   }
 
-  // Compute one query per branch and union the results. Explicit
-  // department/fellowship filters only make sense inside one branch, so
-  // when computing "All branches" we skip them (the UI hides those
-  // dropdowns' effect anyway when no branch is picked).
+  // Per branch: (1) list active members in scope, (2) load their attendance
+  // rows across the window, (3) compute each member's consecutive-most-recent
+  // absence streak in JS. Streak-of-0 (present at the most recent service in
+  // scope) drops off the list.
   const perBranchRows = await Promise.all(
-    perBranchServiceIds.map(async ({ branchId, serviceIds }) => {
-      const baseConditions = [
-        eq(members.isActive, true),
-        eq(members.homeBranchId, branchId),
-      ];
-
+    perBranchServices.map(async ({ branchId, serviceIds }) => {
       const explicitFilterIds = isAllBranches
         ? null
         : await resolveFilterMemberIds(db, branchId, {
@@ -825,51 +829,87 @@ export async function getMissingMembers(
             fellowshipId: query.fellowshipId,
           });
       const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
-      if (filterIds !== null) {
-        if (filterIds.length === 0) return [];
-        baseConditions.push(inArray(members.id, filterIds));
-      }
+      if (filterIds !== null && filterIds.length === 0) return [];
 
-      if (serviceIds.length === 0) {
-        // No services to compare against — every active member in this
-        // branch is "missing".
-        return db
-          .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
-          .from(members)
-          .where(and(...baseConditions))
-          .orderBy(members.lastName, members.firstName)
-          .then((rows) =>
-            rows.map((r) => ({
-              memberId: r.memberId,
-              firstName: r.firstName,
-              lastName: r.lastName,
-              servicesConsidered: 0,
-            })),
-          );
-      }
+      const baseConditions = [
+        eq(members.isActive, true),
+        eq(members.homeBranchId, branchId),
+      ];
+      if (filterIds !== null) baseConditions.push(inArray(members.id, filterIds));
 
-      const attendedSubquery = db
-        .select({ memberId: serviceAttendance.memberId })
-        .from(serviceAttendance)
-        .where(inArray(serviceAttendance.serviceId, serviceIds));
-
-      const rows = await db
-        .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
+      const memberRows = await db
+        .select({
+          memberId: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+        })
         .from(members)
-        .where(and(...baseConditions, notInArray(members.id, attendedSubquery)))
-        .orderBy(members.lastName, members.firstName);
+        .where(and(...baseConditions));
 
-      return rows.map((r) => ({
-        memberId: r.memberId,
-        firstName: r.firstName,
-        lastName: r.lastName,
-        servicesConsidered: serviceIds.length,
-      }));
+      if (memberRows.length === 0) return [];
+
+      // No services on this branch → treat every active member as fully
+      // missing (streak equals window size, but window has no anchor so we
+      // report 1 to keep the sort meaningful and avoid a divide-by-zero look).
+      if (serviceIds.length === 0) {
+        return memberRows.map((r) => ({
+          memberId: r.memberId,
+          firstName: r.firstName,
+          lastName: r.lastName,
+          servicesConsidered: 0,
+          missedStreak: 1,
+        }));
+      }
+
+      const memberIds = memberRows.map((m) => m.memberId);
+      const attendance = await db
+        .select({
+          memberId: serviceAttendance.memberId,
+          serviceId: serviceAttendance.serviceId,
+        })
+        .from(serviceAttendance)
+        .where(
+          and(
+            inArray(serviceAttendance.memberId, memberIds),
+            inArray(serviceAttendance.serviceId, serviceIds),
+          ),
+        );
+
+      const attendedBy = new Map<string, Set<string>>();
+      for (const row of attendance) {
+        let set = attendedBy.get(row.memberId);
+        if (!set) {
+          set = new Set();
+          attendedBy.set(row.memberId, set);
+        }
+        set.add(row.serviceId);
+      }
+
+      // serviceIds is ordered DESC (most recent first). Streak = leading
+      // count of services this member missed before the first hit.
+      return memberRows
+        .map((m) => {
+          const attended = attendedBy.get(m.memberId) ?? new Set<string>();
+          let streak = 0;
+          for (const sid of serviceIds) {
+            if (attended.has(sid)) break;
+            streak++;
+          }
+          return {
+            memberId: m.memberId,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            servicesConsidered: serviceIds.length,
+            missedStreak: streak,
+          };
+        })
+        .filter((m) => m.missedStreak > 0);
     }),
   );
 
   const merged = perBranchRows.flat();
   merged.sort((a, b) => {
+    if (a.missedStreak !== b.missedStreak) return b.missedStreak - a.missedStreak;
     const ln = a.lastName.localeCompare(b.lastName);
     return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
   });

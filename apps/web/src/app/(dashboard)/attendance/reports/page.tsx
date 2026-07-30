@@ -116,7 +116,11 @@ export default function AttendanceReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Weekly attendance</CardTitle>
-          <CardDescription>Total attendees per week (last 12 weeks)</CardDescription>
+          <CardDescription>
+            How many people attended each week over the last 12 weeks. Counts
+            each attendee once per week — the same person coming multiple
+            weeks appears in every week they attend.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {trends.isLoading ? (
@@ -154,7 +158,11 @@ export default function AttendanceReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Members not seen recently</CardTitle>
-            <CardDescription>Active members with no recent attendance</CardDescription>
+            <CardDescription>
+              Active members who missed the most recent service. Sorted by
+              consecutive services missed — the top of the list are the
+              members most likely to need a check-in.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {missing.isLoading ? (
@@ -170,7 +178,9 @@ export default function AttendanceReportsPage() {
             ) : !missing.data || missing.data.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <UserX className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Everyone has been seen recently.</p>
+                <p className="text-sm text-muted-foreground">
+                  Everyone attended the most recent service.
+                </p>
               </div>
             ) : (
               <ul className="space-y-1.5">
@@ -183,7 +193,9 @@ export default function AttendanceReportsPage() {
                       {m.firstName} {m.lastName}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      missed {m.servicesConsidered} service{m.servicesConsidered === 1 ? '' : 's'}
+                      {m.missedStreak === 1
+                        ? 'missed the last service'
+                        : `missed ${m.missedStreak} in a row`}
                     </span>
                   </li>
                 ))}
@@ -196,7 +208,11 @@ export default function AttendanceReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Attendance by branch</CardTitle>
-            <CardDescription>Distinct attendees vs active members (last 4 weeks)</CardDescription>
+            <CardDescription>
+              Distinct members who attended at least one service in the last
+              4 weeks, over each branch&rsquo;s active roll. Rate = distinct
+              attendees ÷ active members.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {byBranch.isLoading ? (

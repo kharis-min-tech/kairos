@@ -993,7 +993,14 @@ export interface MissingMember {
   memberId: string;
   firstName: string;
   lastName: string;
+  /** Total services in the window used to compute the streak. */
   servicesConsidered: number;
+  /**
+   * Consecutive most-recent services this member missed. Always ≥ 1 for
+   * members on this list (streak-of-0 = present at the last service = not
+   * missing). Sort descending to surface the most disengaged first.
+   */
+  missedStreak: number;
 }
 
 export interface MissingMembersParams {
