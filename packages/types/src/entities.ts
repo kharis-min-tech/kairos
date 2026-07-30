@@ -38,6 +38,9 @@ interface BaseEntity {
 export interface Region extends BaseEntity {
   regionName: string;
   country: string;
+  /** Populated by GET /api/branches/regions to gate edit/delete in the UI.
+   *  Other consumers can ignore it. */
+  branchCount?: number;
 }
 
 // ── Branch ─────────────────────────────────────────────────

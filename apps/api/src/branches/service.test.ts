@@ -5,9 +5,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};
   const methods = [
-    'select', 'from', 'where', 'innerJoin', 'orderBy', 'limit',
+    'select', 'from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy', 'limit',
     'insert', 'values', 'returning',
-    'update', 'set',
+    'update', 'set', 'delete',
   ];
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnValue(chain);
@@ -89,19 +89,20 @@ beforeEach(() => {
 // ── Region Tests ──────────────────────────────────────────
 
 describe('listRegions', () => {
-  it('should return all regions', async () => {
+  it('returns each region with its branchCount coerced to a number', async () => {
     const { listRegions } = await import('./service');
-    setupSelect([sampleRegion]);
+    // The service uses a LEFT JOIN + COUNT(branches.id) — mock the pre-map
+    // shape (branchCount arrives as a string/number/bigint from PG).
+    setupSelect([{ ...sampleRegion, branchCount: '2' }]);
     const result = await listRegions(mockDb);
-    expect(result).toEqual([sampleRegion]);
+    expect(result).toEqual([{ ...sampleRegion, branchCount: 2 }]);
     expect(mockDb.select).toHaveBeenCalled();
   });
 });
 
 describe('createRegion', () => {
-  it('should create a region when name is unique', async () => {
+  it('creates a region when the (name, country) pair is unique', async () => {
     const { createRegion } = await import('./service');
-    // First select: check existing → empty; Insert: returns new region
     setupSelectSequence([]);
     setupInsert([sampleRegion]);
 
@@ -109,13 +110,91 @@ describe('createRegion', () => {
     expect(result).toEqual(sampleRegion);
   });
 
-  it('should throw ConflictError for duplicate region name', async () => {
+  it('rejects a duplicate (name, country) pair', async () => {
     const { createRegion } = await import('./service');
     setupSelectSequence([sampleRegion]);
 
     await expect(
       createRegion(mockDb, { regionName: 'North Region', country: 'Nigeria' }),
-    ).rejects.toThrow('Region name already exists');
+    ).rejects.toThrow('A region already exists for that continent and country');
+  });
+});
+
+describe('updateRegion', () => {
+  it('updates a region when it has no branches attached', async () => {
+    const { updateRegion } = await import('./service');
+    // 1) fetch existing region → found; 2) branch count → 0
+    setupSelectSequence([sampleRegion], [{ value: 0 }]);
+    const renamed = { ...sampleRegion, regionName: 'Africa', country: 'Kenya' };
+    setupUpdate([renamed]);
+
+    const result = await updateRegion(mockDb, regionId, {
+      regionName: 'Africa',
+      country: 'Kenya',
+    });
+    expect(result).toEqual(renamed);
+  });
+
+  it('is a no-op that returns the existing row when the input is empty', async () => {
+    const { updateRegion } = await import('./service');
+    setupSelectSequence([sampleRegion], [{ value: 0 }]);
+    const result = await updateRegion(mockDb, regionId, {});
+    expect(result).toEqual(sampleRegion);
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+
+  it('throws NotFoundError when the region does not exist', async () => {
+    const { updateRegion } = await import('./service');
+    setupSelectSequence([]); // region not found — no second select happens
+    await expect(
+      updateRegion(mockDb, regionId, { regionName: 'X', country: 'Y' }),
+    ).rejects.toThrow('Region not found');
+  });
+
+  it('is blocked with a ConflictError when branches are attached', async () => {
+    const { updateRegion } = await import('./service');
+    setupSelectSequence([sampleRegion], [{ value: 3 }]);
+    await expect(
+      updateRegion(mockDb, regionId, { regionName: 'X', country: 'Y' }),
+    ).rejects.toThrow('3 branches are still assigned to this region');
+  });
+
+  it('translates a Postgres 23505 unique-violation into a ConflictError', async () => {
+    const { updateRegion } = await import('./service');
+    setupSelectSequence([sampleRegion], [{ value: 0 }]);
+    (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      const chain: Record<string, unknown> = {};
+      chain['set'] = vi.fn().mockReturnValue(chain);
+      chain['where'] = vi.fn().mockReturnValue(chain);
+      chain['returning'] = vi.fn().mockRejectedValue(Object.assign(new Error('duplicate'), { code: '23505' }));
+      return chain;
+    });
+    await expect(
+      updateRegion(mockDb, regionId, { regionName: 'North Region', country: 'Nigeria' }),
+    ).rejects.toThrow('A region already exists for that continent and country');
+  });
+});
+
+describe('deleteRegion', () => {
+  it('deletes when the region exists and has no branches', async () => {
+    const { deleteRegion } = await import('./service');
+    setupSelectSequence([{ id: regionId }], [{ value: 0 }]);
+    const deleteFn = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    (mockDb as unknown as { delete: typeof deleteFn }).delete = deleteFn;
+    await expect(deleteRegion(mockDb, regionId)).resolves.toBeUndefined();
+    expect(deleteFn).toHaveBeenCalled();
+  });
+
+  it('throws NotFoundError when the region does not exist', async () => {
+    const { deleteRegion } = await import('./service');
+    setupSelectSequence([]);
+    await expect(deleteRegion(mockDb, regionId)).rejects.toThrow('Region not found');
+  });
+
+  it('is blocked with a ConflictError when branches are attached', async () => {
+    const { deleteRegion } = await import('./service');
+    setupSelectSequence([{ id: regionId }], [{ value: 1 }]);
+    await expect(deleteRegion(mockDb, regionId)).rejects.toThrow('1 branch is still assigned to this region');
   });
 });
 

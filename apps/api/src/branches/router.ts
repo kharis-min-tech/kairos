@@ -17,6 +17,7 @@ import {
   createBranchSchema,
   updateBranchSchema,
   createRegionSchema,
+  updateRegionSchema,
   assignLeadershipSchema,
   getLeadershipQuerySchema,
   assignBranchRoleSchema,
@@ -32,6 +33,8 @@ import {
   removeLeadership,
   listRegions,
   createRegion,
+  updateRegion,
+  deleteRegion,
   listBranchRoleAssignments,
   assignBranchSystemAdmin,
   revokeBranchSystemAdmin,
@@ -53,6 +56,24 @@ branchesRouter.post('/regions', requireRole('admin'), zValidator('json', createR
   const input = c.req.valid('json');
   const region = await createRegion(db, input);
   return c.json(successResponse(region), 201);
+});
+
+// Edit + delete are admin-only and gated on "no branches attached" in the
+// service layer. See [[assertRegionEmpty]] for the rationale — a region with
+// branches is effectively immutable to prevent silent relabeling.
+branchesRouter.patch(
+  '/regions/:id',
+  requireRole('admin'),
+  zValidator('json', updateRegionSchema),
+  async (c) => {
+    const region = await updateRegion(db, c.req.param('id')!, c.req.valid('json'));
+    return c.json(successResponse(region));
+  },
+);
+
+branchesRouter.delete('/regions/:id', requireRole('admin'), async (c) => {
+  await deleteRegion(db, c.req.param('id')!);
+  return c.json(successResponse(null, 'Region deleted'));
 });
 
 // ── Branches CRUD ──────────────────────────────────────────

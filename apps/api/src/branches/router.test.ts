@@ -32,7 +32,7 @@ vi.mock('../db', () => ({ db: mockDb }));
 
 function chainTo(data: unknown) {
   const self: Record<string, unknown> = {};
-  for (const m of ['select', 'from', 'where', 'limit', 'offset', 'orderBy', 'innerJoin', 'leftJoin', 'set', 'values', 'returning', 'for']) {
+  for (const m of ['select', 'from', 'where', 'limit', 'offset', 'orderBy', 'groupBy', 'innerJoin', 'leftJoin', 'set', 'values', 'returning', 'for']) {
     self[m] = vi.fn(() => self);
   }
   self.then = (resolve: (v: unknown) => unknown) => resolve(data);
@@ -137,6 +137,91 @@ describe('POST /api/branches/regions', () => {
     const body = await res.json() as any;
     expect(body.success).toBe(true);
     expect(body.data.regionName).toBe('United Kingdom');
+  });
+});
+
+// ── PATCH /api/branches/regions/:id ────────────────────────
+
+describe('PATCH /api/branches/regions/:id', () => {
+  it('rejects non-admin callers with 401', async () => {
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+      body: JSON.stringify({ regionName: 'Europe', country: 'France' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('updates the region when no branches are attached', async () => {
+    // 1) load existing region 2) branch count = 0 3) update returns row
+    mockDb.select.mockReturnValueOnce(chainTo([sampleRegion]));
+    mockDb.select.mockReturnValueOnce(chainTo([{ value: 0 }]));
+    mockDb.update.mockReturnValueOnce(chainTo([{ ...sampleRegion, regionName: 'Europe', country: 'France' }]));
+
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ regionName: 'Europe', country: 'France' }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data.regionName).toBe('Europe');
+    expect(body.data.country).toBe('France');
+  });
+
+  it('returns 409 when branches are still attached', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([sampleRegion]));
+    mockDb.select.mockReturnValueOnce(chainTo([{ value: 2 }]));
+
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ regionName: 'Europe', country: 'France' }),
+    });
+
+    expect(res.status).toBe(409);
+    const body = await res.json() as any;
+    expect(body.success).toBe(false);
+  });
+});
+
+// ── DELETE /api/branches/regions/:id ───────────────────────
+
+describe('DELETE /api/branches/regions/:id', () => {
+  it('rejects non-admin callers with 401', async () => {
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('deletes when the region is empty', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([{ id: TEST_IDS.regionId }]));
+    mockDb.select.mockReturnValueOnce(chainTo([{ value: 0 }]));
+    (mockDb as unknown as { delete: ReturnType<typeof vi.fn> }).delete = vi.fn(() => chainTo(undefined));
+
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+  });
+
+  it('returns 409 when branches are still attached', async () => {
+    mockDb.select.mockReturnValueOnce(chainTo([{ id: TEST_IDS.regionId }]));
+    mockDb.select.mockReturnValueOnce(chainTo([{ value: 5 }]));
+
+    const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+
+    expect(res.status).toBe(409);
   });
 });
 

@@ -18,15 +18,96 @@ const BRANCH_SYSTEM_ADMIN_ROLE = 'Branch System Admin';
 // ── Region CRUD ────────────────────────────────────────────
 
 export async function listRegions(db: Database) {
-  return db.select().from(regions).orderBy(regions.regionName);
+  // LEFT JOIN + COUNT so each region carries its branchCount for the admin
+  // page — used to disable Edit/Delete when a region has dependents (both
+  // operations are only allowed on empty regions; see [[assertRegionEmpty]]).
+  const rows = await db
+    .select({
+      id: regions.id,
+      regionName: regions.regionName,
+      country: regions.country,
+      createdAt: regions.createdAt,
+      updatedAt: regions.updatedAt,
+      branchCount: count(branches.id),
+    })
+    .from(regions)
+    .leftJoin(branches, eq(branches.regionId, regions.id))
+    .groupBy(regions.id)
+    .orderBy(regions.regionName);
+  return rows.map((r) => ({ ...r, branchCount: Number(r.branchCount) }));
 }
 
 export async function createRegion(db: Database, input: { regionName: string; country: string }) {
-  const [existing] = await db.select().from(regions).where(eq(regions.regionName, input.regionName));
-  if (existing) throw new ConflictError('Region name already exists');
+  const [existing] = await db
+    .select()
+    .from(regions)
+    .where(and(eq(regions.regionName, input.regionName), eq(regions.country, input.country)));
+  if (existing) throw new ConflictError('A region already exists for that continent and country');
 
   const [region] = await db.insert(regions).values(input).returning();
   return region;
+}
+
+/**
+ * Both edit and delete require the region to be empty (no branches attached).
+ * Editing a region with branches would silently relabel every branch under
+ * it; deleting one is blocked at the DB level by ON DELETE RESTRICT. Same
+ * rule keeps the two operations consistent.
+ */
+async function assertRegionEmpty(db: Database, regionId: string): Promise<void> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(branches)
+    .where(eq(branches.regionId, regionId));
+  const attached = row ? Number(row.value) : 0;
+  if (attached > 0) {
+    throw new ConflictError(
+      `${attached} branch${attached === 1 ? ' is' : 'es are'} still assigned to this region. Move them first.`,
+    );
+  }
+}
+
+export async function updateRegion(
+  db: Database,
+  regionId: string,
+  input: { regionName?: string; country?: string },
+) {
+  const [existing] = await db.select().from(regions).where(eq(regions.id, regionId));
+  if (!existing) throw new NotFoundError('Region not found');
+
+  await assertRegionEmpty(db, regionId);
+
+  // Nothing to change — return the row unchanged rather than issue a no-op update.
+  const hasChanges = input.regionName !== undefined || input.country !== undefined;
+  if (!hasChanges) return existing;
+
+  try {
+    const [updated] = await db
+      .update(regions)
+      .set({
+        ...(input.regionName !== undefined ? { regionName: input.regionName } : {}),
+        ...(input.country !== undefined ? { country: input.country } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(regions.id, regionId))
+      .returning();
+    return updated;
+  } catch (err) {
+    // 23505 = composite unique violation on (region_name, country).
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+      throw new ConflictError('A region already exists for that continent and country');
+    }
+    throw err;
+  }
+}
+
+export async function deleteRegion(db: Database, regionId: string): Promise<void> {
+  const [existing] = await db.select({ id: regions.id }).from(regions).where(eq(regions.id, regionId));
+  if (!existing) throw new NotFoundError('Region not found');
+
+  await assertRegionEmpty(db, regionId);
+
+  await db.delete(regions).where(eq(regions.id, regionId));
 }
 
 // ── Branch CRUD ────────────────────────────────────────────

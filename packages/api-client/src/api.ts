@@ -12,6 +12,7 @@ import type {
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
+  UpdateRegionRequest,
   GetLeadershipParams,
   AssignLeadershipRequest,
   UpdateMemberRequest,
@@ -228,6 +229,10 @@ export function createApiClient(
         client.get<ApiResponse<Region[]>>('/api/branches/regions'),
       create: (data: CreateRegionRequest) =>
         client.post<ApiResponse<Region>>('/api/branches/regions', data),
+      update: (id: string, data: UpdateRegionRequest) =>
+        client.patch<ApiResponse<Region>>(`/api/branches/regions/${encodeURIComponent(id)}`, data),
+      delete: (id: string) =>
+        client.delete<ApiResponse<void>>(`/api/branches/regions/${encodeURIComponent(id)}`),
     },
 
     leadership: {
