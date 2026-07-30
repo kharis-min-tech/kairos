@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GitCompare } from 'lucide-react';
 import {
   Button,
@@ -17,7 +17,8 @@ import { formatShortDate } from '@/lib/date-format';
 type Mode = 'any' | 'all';
 
 interface CohortCompareCardProps {
-  /** Optional branch scope; admin/pastor can pass a chosen branchId, others omit (server scopes to caller). */
+  /** Branch scope. Required semantically — the compare API is single-branch.
+   *  Card renders a "pick a branch first" hint when this is undefined. */
   branchId?: string;
 }
 
@@ -25,19 +26,41 @@ interface CohortCompareCardProps {
  * "Who came to A but not B?" form. Pick any number of services in each bucket;
  * use the ANY/ALL toggle when a bucket has 2+ services (toggle collapses to one
  * answer when the bucket is single-select).
+ *
+ * The compare API validates that every referenced service belongs to a single
+ * branch — cross-branch cohorts aren't meaningful (a member can't attend two
+ * branches' services simultaneously). We enforce that at the UI too: this
+ * card is inert until a branch is selected on the parent report page, and we
+ * clear selections whenever the branch changes so stale UUIDs from a
+ * different branch can't leak into the next submission.
  */
 export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
-  const { data: servicesPage } = useServices({ branchId, limit: 100 });
-  const serviceOptions = useMemo(() => servicesPage?.data ?? [], [servicesPage?.data]);
+  const { data: servicesPage } = useServices(branchId ? { branchId, limit: 100 } : undefined);
+  const serviceOptions = useMemo(
+    () => (branchId ? servicesPage?.data ?? [] : []),
+    [branchId, servicesPage?.data],
+  );
 
   const [presentIds, setPresentIds] = useState<Set<string>>(new Set());
   const [absentIds, setAbsentIds] = useState<Set<string>>(new Set());
   const [presentMode, setPresentMode] = useState<Mode>('any');
   const [absentMode, setAbsentMode] = useState<Mode>('all');
 
+  // When the outer filter switches branches, old service UUIDs point at rows
+  // in a different branch and would fail the server-side branch check. Wipe
+  // selections + any prior result so the user starts fresh.
   const cohort = useCohortDiff();
+  useEffect(() => {
+    setPresentIds(new Set());
+    setAbsentIds(new Set());
+    cohort.reset();
+    // Intentionally omit `cohort` from deps — mutation is a fresh object every
+    // render, we only want to reset when the scope actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branchId]);
+
   const result = cohort.data?.members ?? [];
-  const canSubmit = presentIds.size > 0 || absentIds.size > 0;
+  const canSubmit = Boolean(branchId) && (presentIds.size > 0 || absentIds.size > 0);
 
   function toggle(set: Set<string>, setter: (next: Set<string>) => void, id: string) {
     const next = new Set(set);
@@ -69,24 +92,32 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <ServiceColumn
-            title="Present in"
-            services={serviceOptions}
-            selected={presentIds}
-            mode={presentMode}
-            onToggleService={(id) => toggle(presentIds, setPresentIds, id)}
-            onModeChange={setPresentMode}
-          />
-          <ServiceColumn
-            title="Absent from"
-            services={serviceOptions}
-            selected={absentIds}
-            mode={absentMode}
-            onToggleService={(id) => toggle(absentIds, setAbsentIds, id)}
-            onModeChange={setAbsentMode}
-          />
-        </div>
+        {!branchId ? (
+          <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+            Pick a specific branch in the filter above to compare cohorts. Comparison only runs
+            within one branch at a time — a member can only attend one branch&rsquo;s services on
+            a given day.
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            <ServiceColumn
+              title="Present in"
+              services={serviceOptions}
+              selected={presentIds}
+              mode={presentMode}
+              onToggleService={(id) => toggle(presentIds, setPresentIds, id)}
+              onModeChange={setPresentMode}
+            />
+            <ServiceColumn
+              title="Absent from"
+              services={serviceOptions}
+              selected={absentIds}
+              mode={absentMode}
+              onToggleService={(id) => toggle(absentIds, setAbsentIds, id)}
+              onModeChange={setAbsentMode}
+            />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3">
           <Button

@@ -633,6 +633,17 @@ describe('getCohortDiff', () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
+  it('rejects admin/pastor callers who omit branchId — no more silent fallback', async () => {
+    await expect(
+      getCohortDiff(mockDb, adminAuth, {
+        presentInServiceIds: [svcA],
+        absentFromServiceIds: [],
+        presentMode: 'any',
+        absentMode: 'all',
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
   it('forbids services outside the caller branch', async () => {
     // service-validation select returns fewer rows than requested
     setupSelectSequence([{ id: svcA }]); // 1 row, but 2 ids requested
@@ -642,6 +653,7 @@ describe('getCohortDiff', () => {
         absentFromServiceIds: [],
         presentMode: 'any',
         absentMode: 'all',
+        branchId,
       }),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
@@ -664,6 +676,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [svcB],
       presentMode: 'any',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toEqual([{ memberId: m2, firstName: 'Bob', lastName: 'B' }]);
   });
@@ -678,6 +691,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [],
       presentMode: 'any',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toEqual([]);
   });
@@ -694,6 +708,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [],
       presentMode: 'all',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toHaveLength(1);
     expect(result.members[0]?.memberId).toBe(m1);

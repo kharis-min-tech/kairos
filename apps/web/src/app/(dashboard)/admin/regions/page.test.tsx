@@ -17,7 +17,13 @@ vi.mock('@/lib/auth-store', () => ({
 
 vi.mock('@/hooks/use-branches', () => ({
   useRegions: () => ({ data: [], isLoading: false }),
-  useCreateRegion: () => ({ mutateAsync: vi.fn(), isPending: false, error: null }),
+  useCreateRegion: () => ({ mutateAsync: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
+  useUpdateRegion: () => ({ mutateAsync: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
+  useDeleteRegion: () => ({ mutateAsync: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
+}));
+
+vi.mock('@/components/confirm-dialog', () => ({
+  useConfirm: () => ({ confirm: vi.fn().mockResolvedValue(false), dialog: null }),
 }));
 
 import RegionsPage from './page';

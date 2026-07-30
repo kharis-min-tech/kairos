@@ -15,7 +15,7 @@ import {
   fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
+import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 import { createMemberShell } from '../lib/member-shell';
 import { authHasAnyCapability } from '../lib/grants';
 
@@ -848,6 +848,14 @@ export async function getCohortDiff(
   },
 ) {
   enforceReportReader(auth);
+  // Cross-branch admins (branch:read) MUST pass an explicit branchId — the
+  // compare API is single-branch and silently narrowing to auth.branchId
+  // produced the "One or more services are outside the caller branch" bug
+  // that the /attendance/reports page hit when the outer filter defaulted
+  // to "All branches". Fail loudly instead of falling back.
+  if (authHasCapability(auth, 'branch:read') && !query.branchId) {
+    throw new ValidationError('branchId is required — pick a branch to compare cohorts within');
+  }
   const branchId = resolveBranchId(auth, query.branchId);
 
   // Validate that every referenced service belongs to the scoped branch.
