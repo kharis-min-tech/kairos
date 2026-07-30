@@ -228,7 +228,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // caller to /accept-policies before the dashboard renders. Mirrors the
   // mustChangePassword gate above. The API middleware provides the same
   // enforcement server-side — the client redirect is a UX niceness on top.
-  const { data: consentData } = useMyConsentStatuses();
+  //
+  // We block the dashboard render entirely until the query has resolved AND
+  // no required consents are pending. Without that we'd flash the dashboard
+  // chrome + content for one render before the redirect fires. React Query
+  // caches the result for 5 minutes (see useMyConsentStatuses), so warm
+  // navigations don't pay the round-trip.
+  const { data: consentData, isPending: consentQueryPending } = useMyConsentStatuses();
   const pendingConsentCount = consentData
     ? consentData.statuses.filter((s) => s.required && s.needsAccept).length
     : 0;
@@ -250,6 +256,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // authenticated. Prevents the sidebar + failing fetches from appearing
   // when the store is empty (post-logout URL nav) or still hydrating.
   if (!hasHydrated || !accessToken) return null;
+
+  // Block dashboard render while the consent gate is deciding. Two cases:
+  //   1. First page load with unresolved consent query — waiting on the
+  //      network. Painting the dashboard now and redirecting a beat later
+  //      causes the "flash of dashboard" the user reported.
+  //   2. Query resolved with pending required consents — the useEffect above
+  //      has already fired router.replace('/accept-policies') this render;
+  //      returning null avoids painting the dashboard for one frame while
+  //      the router swaps routes.
+  if (consentQueryPending || pendingConsentCount > 0) return null;
 
   const visibleNavItems = navItems.filter((item) => {
     if (item.adminOnly) return activeRole === 'admin';

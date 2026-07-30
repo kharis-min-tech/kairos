@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useOutreachStore } from '@/stores/outreach-store';
 import { useApi } from '@/hooks/useApi';
 import { useCapabilities } from '@/hooks/use-capabilities';
-import { Button, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
+import { Button, Checkbox, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
@@ -381,12 +381,10 @@ export default function CreateProgramPage() {
         {isAdmin && (
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="isOpenToAllBranches"
                 checked={formData.isOpenToAllBranches}
                 onChange={(e) => handleChange('isOpenToAllBranches', e.target.checked)}
-                className="h-4 w-4 rounded border-input/15 text-primary focus:ring-accent"
               />
               <Label htmlFor="isOpenToAllBranches" className="cursor-pointer font-normal">
                 Open to All Branches (Allow pastors and leaders from all branches to register)

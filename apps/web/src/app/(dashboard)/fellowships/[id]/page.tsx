@@ -22,7 +22,7 @@ import {
 } from '@/hooks/use-fellowships';
 import { useMembers } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, CustomSelect, NumberStepper } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Checkbox, CustomSelect, NumberStepper } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -800,8 +800,7 @@ export default function FellowshipDetailPage() {
                     <CardContent className="flex items-center gap-3 py-4">
                       {req.status === 'pending' && (
                         <div className="relative flex-shrink-0" title={atLimit ? 'Maximum 5 at a time' : undefined}>
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isSelected}
                             disabled={atLimit}
                             onChange={(e) => {
@@ -811,7 +810,6 @@ export default function FellowshipDetailPage() {
                                 return next;
                               });
                             }}
-                            className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
                           />
                         </div>
                       )}

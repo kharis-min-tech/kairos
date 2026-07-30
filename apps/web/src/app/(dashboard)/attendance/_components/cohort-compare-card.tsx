@@ -9,6 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Checkbox,
 } from '@kairos/ui';
 import { useServices, useCohortDiff } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
@@ -171,11 +172,9 @@ function ServiceColumn({
           return (
             <li key={s.id}>
               <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-foreground/[0.04]">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
                   onChange={() => onToggleService(s.id)}
-                  className="h-4 w-4 accent-[#5D3FD3]"
                 />
                 <span className="font-medium">{s.serviceType}</span>
                 <span className="text-muted-foreground">{formatShortDate(s.serviceDate)}</span>

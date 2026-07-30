@@ -1,5 +1,7 @@
 'use client';
 
+import { Checkbox } from '@kairos/ui';
+
 /**
  * GDPR / safeguarding disclaimer rendered above every form's submit. The submit
  * button on each form should remain disabled until `acknowledged` is true.
@@ -50,11 +52,9 @@ export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps)
         </p>
       </div>
       <label className="mt-4 flex items-start gap-2 cursor-pointer">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={checked}
           onChange={(ev) => onChange(ev.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-[#5D3FD3]"
           aria-describedby="consent-helper"
           required
         />

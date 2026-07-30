@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
+import { Button, Checkbox, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
@@ -390,10 +390,8 @@ export default function SignupPage() {
 
               <div className="rounded-lg border bg-muted/30 p-3">
                 <label className="flex cursor-pointer items-start gap-2 text-sm">
-                  <input
+                  <Checkbox
                     id="acceptedPolicies"
-                    type="checkbox"
-                    className="mt-0.5 h-4 w-4 accent-[#5D3FD3]"
                     {...register('acceptedPolicies')}
                   />
                   <span className="text-foreground">

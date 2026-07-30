@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button, Input, CustomSelect, Textarea } from '@kairos/ui';
+import { Button, Checkbox, Input, CustomSelect, Textarea } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
@@ -280,11 +280,9 @@ export function TestimonyForm() {
 
         <div className="space-y-2">
           <label className="flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={form.acknowledged}
               onChange={(e) => set('acknowledged', e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[#5D3FD3]"
               aria-label="Acknowledgement"
             />
             <span className="text-muted-foreground">

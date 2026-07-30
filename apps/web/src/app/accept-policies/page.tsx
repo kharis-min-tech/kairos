@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Button } from '@kairos/ui';
+import { Button, Checkbox } from '@kairos/ui';
 import {
   CONSENT_TYPE_LABEL,
   ConsentType,
@@ -205,9 +205,8 @@ export default function AcceptPoliciesPage() {
               )}
 
               <label className="flex cursor-pointer items-start gap-3 border-t border-black/5 bg-muted/30 px-5 py-4 dark:border-white/5">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 accent-[#5D3FD3]"
+                <Checkbox
+                  className="mt-0.5"
                   checked={accepted.has(status.consentType)}
                   onChange={() => toggle(status.consentType)}
                   disabled={submitting}
