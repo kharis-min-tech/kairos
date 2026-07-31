@@ -172,15 +172,22 @@ function HeatmapTable({
               >
                 {m.firstName} {m.lastName}
               </th>
-              {m.cells.map((c, i) => (
-                <td
-                  key={`${m.memberId}-${services[i].id}`}
-                  title={`${services[i].serviceType} · ${formatShortDate(services[i].serviceDate)} · ${cellLabel(c)}`}
-                  className="p-0.5"
-                >
-                  <div className={`h-5 w-5 rounded-sm ${cellClass(c)}`} />
-                </td>
-              ))}
+              {m.cells.map((c, i) => {
+                const s = services[i];
+                // Cells and services are built server-side with identical
+                // length; the guard is only for stricter tsconfigs that
+                // treat indexed-array access as possibly undefined.
+                if (!s) return null;
+                return (
+                  <td
+                    key={`${m.memberId}-${s.id}`}
+                    title={`${s.serviceType} · ${formatShortDate(s.serviceDate)} · ${cellLabel(c)}`}
+                    className="p-0.5"
+                  >
+                    <div className={`h-5 w-5 rounded-sm ${cellClass(c)}`} />
+                  </td>
+                );
+              })}
               <td className="px-3 py-1.5 text-right text-sm tabular-nums text-muted-foreground">
                 {Math.round(m.attendancePct * 100)}%
               </td>
