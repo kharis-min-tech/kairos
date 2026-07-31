@@ -10,7 +10,7 @@ import {
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { ForbiddenError } from '@kairos/utils';
-import { isRealMember } from '../lib/member-predicates';
+import { isRealMember, isPastoralMember } from '../lib/member-predicates';
 
 /**
  * Task #33 Phase 2 follow-up: split the member roll into the four real
@@ -73,16 +73,16 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
       .where(eq(members.approvalStatus, 'pending')),
   ]);
 
-  // Members by approval status — kept as confirmed Members only because the
-  // tile is "pending approvals" for the formal Member roll. Attendee/visitor
-  // shells live under their own admin surfaces.
+  // Approval-status breakdown across the pastoral roll (Members + Attendees).
+  // Visitor/child shells excluded — they don't go through the same approval
+  // gate and would distort the "who's waiting on approval" tile.
   const approvalStats = await db
     .select({
       status: members.approvalStatus,
       count: count(),
     })
     .from(members)
-    .where(and(eq(members.isActive, true), isRealMember()))
+    .where(and(eq(members.isActive, true), isPastoralMember()))
     .groupBy(members.approvalStatus);
 
   // Fellowships by type

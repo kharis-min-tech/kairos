@@ -7,7 +7,7 @@ import {
   fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { isRealMember } from '../lib/member-predicates';
+import { isPastoralMember } from '../lib/member-predicates';
 
 function branchScope(auth: AuthContext) {
   // Phase 4: scope=branch pins reports to the scoped branch even for system
@@ -23,7 +23,11 @@ export async function getMemberGrowth(db: Database, auth: AuthContext) {
 
   const conditions = [
     gte(members.createdAt, sql`CURRENT_DATE - INTERVAL '6 months'`),
-    isRealMember(),
+    // Growth chart tracks new sign-ups on the pastoral roll — Members +
+    // Attendees. Previously filtered to confirmed Members only, so a fresh
+    // signup didn't count until class completion (months later) and the
+    // chart under-reported real growth.
+    isPastoralMember(),
   ];
   if (scopedBranchId) {
     conditions.push(eq(members.homeBranchId, scopedBranchId));
