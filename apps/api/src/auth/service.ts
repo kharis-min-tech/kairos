@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { eq, and, or, sql } from 'drizzle-orm';
+import { eq, and, or, gt, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   members,
@@ -464,9 +464,11 @@ export async function verifyEmail(db: Database, token: string): Promise<void> {
     .where(
       and(
         eq(members.emailVerified, false),
-        // Postgres treats `column > $val` as false when column is NULL, which
-        // is what we want — no token = no match.
-        sql`${members.emailVerificationExpiry} > ${now}`,
+        // gt() routes through the column encoder — the raw sql`...` template
+        // does not, and hands the Date straight to postgres.js which crashes
+        // in Buffer.byteLength. Column is nullable; gt() with NULL evaluates
+        // false, which is the semantic we want (no expiry = no candidate).
+        gt(members.emailVerificationExpiry, now),
       ),
     )
     .limit(200);
