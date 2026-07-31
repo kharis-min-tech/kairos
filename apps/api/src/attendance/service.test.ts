@@ -495,38 +495,59 @@ describe('getMissingMembers', () => {
 // counts per branch, (3) distinct attendees per branch over the window.
 
 describe('getAttendanceByBranch', () => {
-  it('merges per-branch member + attendee counts into a rate', async () => {
+  // Rate now uses the engaged-in-last-N-months denominator, not the active
+  // roll. Roll count is returned alongside for context. Four grouped queries:
+  // branches, active-count, distinct-attendees, engaged-member-ids.
+  const engagedRows = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ branchId, memberId: `eng-${i}` }));
+
+  it('uses engaged as rate denominator; returns the roll count alongside', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }], // branchRows
-      [{ branchId, value: 100 }], // active member counts
-      [{ branchId, value: 80 }], // distinct attendees
+      [{ branchId, value: 100 }],                // active member counts (roll)
+      [{ branchId, value: 8 }],                  // distinct attendees in window
+      engagedRows(10),                           // engaged: 10 unique members in last N months
     );
 
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
 
     expect(result).toEqual([
-      { branchId, branchName: 'London', activeMembers: 100, distinctAttendees: 80, attendanceRate: 0.8 },
+      {
+        branchId,
+        branchName: 'London',
+        activeMembers: 100,
+        engagedMembers: 10,
+        distinctAttendees: 8,
+        attendanceRate: 0.8, // 8 / 10 engaged
+      },
     ]);
   });
 
-  it('caps the rate at 1.0 when visitors push attendees above active members', async () => {
+  it('caps the rate at 1.0 when a visitor pushes distinct attendees above engaged', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }],
-      [{ branchId, value: 4 }],
+      [{ branchId, value: 100 }],
       [{ branchId, value: 5 }], // 5 attendees incl a first-time visitor
+      engagedRows(4),
     );
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
     expect(result[0]!.attendanceRate).toBe(1);
   });
 
-  it('reports 0 for a branch with no active members or attendees', async () => {
+  it('falls back to the active roll when engaged is zero so the display avoids /0', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }],
-      [], // no member counts
-      [], // no attendees
+      [{ branchId, value: 10 }],
+      [{ branchId, value: 0 }],
+      [], // no engaged rows — nobody attended in the window
     );
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
-    expect(result[0]!).toMatchObject({ activeMembers: 0, distinctAttendees: 0, attendanceRate: 0 });
+    expect(result[0]).toMatchObject({
+      activeMembers: 10,
+      engagedMembers: 0,
+      distinctAttendees: 0,
+      attendanceRate: 0,
+    });
   });
 
   it('returns empty when no branches are in scope', async () => {

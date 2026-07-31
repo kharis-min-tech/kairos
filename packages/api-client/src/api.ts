@@ -123,6 +123,12 @@ import type {
   MyAttendanceSnapshot,
   DepartmentAttendanceReport,
   FellowshipAttendanceReport,
+  AttendanceHeatmap,
+  AttendanceHeatmapParams,
+  FrequencyBucketReport,
+  FrequencyBucketParams,
+  FirstTimeReturningPoint,
+  FirstTimeReturningParams,
 } from '@kairos/types';
 
 import type { FormType } from '@kairos/types';
@@ -1199,8 +1205,37 @@ export function createApiClient(
         const qs = new URLSearchParams();
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
         const query = qs.toString();
         return client.get<ApiResponse<BranchAttendanceRate[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
+      },
+      heatmap: (params: AttendanceHeatmapParams) => {
+        const qs = new URLSearchParams();
+        qs.set('branchId', params.branchId);
+        if (params.weeks) qs.set('weeks', String(params.weeks));
+        if (params.departmentId) qs.set('departmentId', params.departmentId);
+        if (params.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        if (params.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
+        if (params.engagedOnly !== undefined) qs.set('engagedOnly', String(params.engagedOnly));
+        return client.get<ApiResponse<AttendanceHeatmap>>(`/api/attendance/reports/heatmap?${qs.toString()}`);
+      },
+      frequencyBuckets: (params?: FrequencyBucketParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        const query = qs.toString();
+        return client.get<ApiResponse<FrequencyBucketReport>>(`/api/attendance/reports/frequency-buckets${query ? `?${query}` : ''}`);
+      },
+      firstTimeReturning: (params?: FirstTimeReturningParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        const query = qs.toString();
+        return client.get<ApiResponse<FirstTimeReturningPoint[]>>(`/api/attendance/reports/first-time-returning${query ? `?${query}` : ''}`);
       },
       summary: (params?: AttendanceSummaryParams) => {
         const qs = new URLSearchParams();

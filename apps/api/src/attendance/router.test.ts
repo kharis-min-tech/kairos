@@ -29,6 +29,14 @@ const svc = {
   getMissingMembers: vi.fn(),
   getAttendanceByBranch: vi.fn(),
   getAttendanceSummary: vi.fn(),
+  canRecordAttendance: vi.fn(),
+  getCohortDiff: vi.fn(),
+  getMyAttendance: vi.fn(),
+  getDepartmentAttendance: vi.fn(),
+  getFellowshipAttendance: vi.fn(),
+  getAttendanceHeatmap: vi.fn(),
+  getFrequencyBuckets: vi.fn(),
+  getFirstTimeReturning: vi.fn(),
 };
 
 vi.mock('./service', () => svc);
@@ -291,9 +299,52 @@ describe('reports', () => {
 
   it('GET /reports/by-branch returns 200 for admin', async () => {
     svc.getAttendanceByBranch.mockResolvedValue([
-      { branchId, branchName: 'London', activeMembers: 100, distinctAttendees: 80, attendanceRate: 0.8 },
+      {
+        branchId,
+        branchName: 'London',
+        activeMembers: 100,
+        engagedMembers: 60,
+        distinctAttendees: 48,
+        attendanceRate: 0.8,
+      },
     ]);
     const res = await app.request('/api/attendance/reports/by-branch', {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /reports/heatmap returns 200 for admin with an explicit branchId', async () => {
+    svc.getAttendanceHeatmap.mockResolvedValue({ services: [], members: [] });
+    const res = await app.request(`/api/attendance/reports/heatmap?branchId=${branchId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /reports/heatmap 400s without a branchId (single-branch by design)', async () => {
+    const res = await app.request('/api/attendance/reports/heatmap', {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /reports/frequency-buckets returns 200 for admin', async () => {
+    svc.getFrequencyBuckets.mockResolvedValue({
+      windowMonths: 3,
+      servicesConsidered: 12,
+      engagedMembers: 40,
+      buckets: [],
+    });
+    const res = await app.request('/api/attendance/reports/frequency-buckets', {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /reports/first-time-returning returns 200 for admin', async () => {
+    svc.getFirstTimeReturning.mockResolvedValue([]);
+    const res = await app.request('/api/attendance/reports/first-time-returning?weeks=12', {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.status).toBe(200);

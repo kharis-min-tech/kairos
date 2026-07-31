@@ -39,6 +39,21 @@ vi.mock('@/hooks/use-attendance', () => ({
   useAttendanceTrends: () => trends,
   useMissingMembers: () => missing,
   useAttendanceByBranch: () => byBranch,
+  // v2 tiles: heatmap + frequency + first-time/returning. Default to empty
+  // successful responses so the page renders its "no data" states.
+  useAttendanceHeatmap: () => ({
+    data: { services: [], members: [] },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+  useFrequencyBuckets: () => ({
+    data: { windowMonths: 3, servicesConsidered: 0, engagedMembers: 0, buckets: [] },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+  useFirstTimeReturning: () => ({ data: [], isLoading: false, isError: false, error: null }),
   // CohortCompareCard renders inside this page; stub its hooks too.
   useServices: () => ({ data: { data: [], total: 0, page: 1, limit: 100 }, isLoading: false, isError: false, error: null }),
   useCohortDiff: () => ({
@@ -58,11 +73,14 @@ vi.mock('recharts', () => {
   return {
     LineChart: Stub,
     Line: Stub,
+    BarChart: Stub,
+    Bar: Stub,
     ResponsiveContainer: Stub,
     XAxis: Stub,
     YAxis: Stub,
     CartesianGrid: Stub,
     Tooltip: Stub,
+    Legend: Stub,
   };
 });
 
@@ -89,7 +107,7 @@ describe('AttendanceReportsPage', () => {
 
   it('renders report data', () => {
     trends = {
-      data: [{ weekStart: '2026-05-18', attendees: 120, serviceCount: 2 }],
+      data: [{ weekStart: '2026-05-18', attendees: 120, distinctAttendees: 100, serviceCount: 2 }],
       isLoading: false,
       isError: false,
       error: null,
@@ -102,7 +120,14 @@ describe('AttendanceReportsPage', () => {
     };
     byBranch = {
       data: [
-        { branchId: 'b1', branchName: 'London', activeMembers: 100, distinctAttendees: 80, attendanceRate: 0.8 },
+        {
+          branchId: 'b1',
+          branchName: 'London',
+          activeMembers: 100,
+          engagedMembers: 60,
+          distinctAttendees: 48,
+          attendanceRate: 0.8,
+        },
       ],
       isLoading: false,
       isError: false,

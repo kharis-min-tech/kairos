@@ -255,6 +255,56 @@ function resolveBranchId(auth: AuthContext, requested?: string): string {
   return auth.branchId;
 }
 
+/** Absolute cutoff for the "engaged member" window — N months back from now. */
+function engagedSince(windowMonths: number): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - windowMonths);
+  return d;
+}
+
+/**
+ * Members who attended at least one service in the engagement window,
+ * grouped by branch. Present/Late/Virtual all count. Returns a fully
+ * populated Map (empty set for a branch with zero attendance) so callers
+ * can look up any input branchId without existence checks.
+ *
+ * "engaged" is our reporting-only counter to the soft-delete `is_active`
+ * flag — someone who stopped 8 months ago is still `is_active=true` and
+ * would inflate branch-rate denominators. Engagement is the honest denominator
+ * for pastoral rate metrics.
+ */
+async function resolveEngagedMemberIds(
+  db: Database,
+  branchIds: string[],
+  windowMonths: number,
+): Promise<Map<string, Set<string>>> {
+  const result = new Map<string, Set<string>>();
+  branchIds.forEach((b) => result.set(b, new Set()));
+  if (branchIds.length === 0 || windowMonths <= 0) return result;
+
+  const since = engagedSince(windowMonths);
+  const rows = await db
+    .select({
+      branchId: services.branchId,
+      memberId: serviceAttendance.memberId,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        inArray(services.branchId, branchIds),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .groupBy(services.branchId, serviceAttendance.memberId);
+
+  for (const row of rows) {
+    result.get(row.branchId)?.add(row.memberId);
+  }
+  return result;
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 interface CreateServiceInput {
@@ -736,11 +786,16 @@ export async function getAttendanceTrends(
     conditions.push(inArray(serviceAttendance.memberId, filterIds));
   }
 
-  // Per ISO week: distinct attendees (Present + Late + Virtual all count as attended).
+  // Per ISO week: `attendees` = raw check-ins (sum of attendance rows across
+  // every service that week — someone at both Sunday AM and Midweek counts
+  // twice); `distinctAttendees` = unique humans that week. Gap between the
+  // two = multi-service attenders, i.e. how deeply engaged the regulars are.
+  // Present/Late/Virtual all count as attended.
   const rows = await db
     .select({
       weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`,
-      attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`,
+      attendees: sql<number>`COUNT(${serviceAttendance.memberId})`,
+      distinctAttendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`,
       serviceCount: sql<number>`COUNT(DISTINCT ${services.id})`,
     })
     .from(services)
@@ -752,6 +807,7 @@ export async function getAttendanceTrends(
   return rows.map((r) => ({
     weekStart: r.weekStart,
     attendees: Number(r.attendees),
+    distinctAttendees: Number(r.distinctAttendees),
     serviceCount: Number(r.serviceCount),
   }));
 }
@@ -1645,10 +1701,11 @@ export async function getFellowshipAttendance(
 export async function getAttendanceByBranch(
   db: Database,
   auth: AuthContext,
-  query: { branchId?: string; weeks: number },
+  query: { branchId?: string; weeks: number; engagedWindowMonths?: number },
 ) {
   enforceReportReader(auth);
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+  const engagedWindow = query.engagedWindowMonths ?? 3;
 
   // Metric (defined here): attendanceRate = distinct attendees over the recent
   // period / count of active 'member'-type members in the branch. Capped at 1.0
@@ -1682,7 +1739,8 @@ export async function getAttendanceByBranch(
   const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
   if (leaderScopeIds !== null && leaderScopeIds.length === 0) return [];
 
-  // Active 'member'-type counts per branch.
+  // Active 'member'-type counts per branch (soft-delete flag — kept alongside
+  // engaged for context; not used as rate denominator).
   const memberCountConditions = [
     eq(members.isActive, true),
     inArray(members.homeBranchId, branchIds),
@@ -1718,14 +1776,35 @@ export async function getAttendanceByBranch(
     .groupBy(services.branchId);
   const attendeesByBranch = new Map(attendeeCounts.map((r) => [r.branchId, Number(r.value)]));
 
+  // Engaged denominator per branch. Filter to the leader scope so a Youth
+  // leader sees engaged-in-Youth, not engaged-in-branch.
+  const engagedByBranchRaw = await resolveEngagedMemberIds(db, branchIds, engagedWindow);
+  const engagedByBranch = new Map<string, number>();
+  for (const [bId, memberSet] of engagedByBranchRaw) {
+    if (leaderScopeIds !== null) {
+      const scope = new Set(leaderScopeIds);
+      let n = 0;
+      for (const m of memberSet) if (scope.has(m)) n++;
+      engagedByBranch.set(bId, n);
+    } else {
+      engagedByBranch.set(bId, memberSet.size);
+    }
+  }
+
   return branchRows.map((b) => {
     const active = activeByBranch.get(b.id) ?? 0;
+    const engaged = engagedByBranch.get(b.id) ?? 0;
     const attended = attendeesByBranch.get(b.id) ?? 0;
-    const rate = active > 0 ? Math.min(1, attended / active) : 0;
+    // Rate uses engaged as denominator — the honest "of the people we're
+    // actually reaching, what fraction came in the last window". Falls back
+    // to active when engaged is zero to avoid a divide-by-zero display.
+    const denom = engaged > 0 ? engaged : active;
+    const rate = denom > 0 ? Math.min(1, attended / denom) : 0;
     return {
       branchId: b.id,
       branchName: b.branchName,
       activeMembers: active,
+      engagedMembers: engaged,
       distinctAttendees: attended,
       attendanceRate: Math.round(rate * 1000) / 1000,
     };
@@ -1813,4 +1892,400 @@ export async function getAttendanceSummary(
       rate: Math.round(rate * 1000) / 1000,
     },
   };
+}
+
+// ── Heatmap ────────────────────────────────────────────────
+
+/**
+ * Attendance heatmap — rows of members × columns of the last N services on
+ * one branch. Cells encode Present/Late/Virtual/absent. Sorting is left to
+ * the client; response includes attendedCount / attendancePct / missedStreak
+ * so the client can order without a second call.
+ *
+ * Per-branch only (a global cross-branch heatmap has no coherent column
+ * ordering — different branches meet on different days).
+ */
+export async function getAttendanceHeatmap(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId: string;
+    weeks: number;
+    departmentId?: string;
+    fellowshipId?: string;
+    engagedWindowMonths: number;
+    engagedOnly: boolean;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+
+  // 1) Columns: last N services in the branch, chronological ASC so the
+  // rightmost column is the most recent (typical timeline reading order).
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+  const serviceRows = await db
+    .select({
+      id: services.id,
+      serviceDate: services.serviceDate,
+      serviceType: services.serviceType,
+      serviceTitle: services.serviceTitle,
+    })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .orderBy(sql`${services.serviceDate} ASC`);
+
+  const serviceIdList = serviceRows.map((s) => s.id);
+  // Most-recent-first order used for streak computation.
+  const serviceIdListDesc = [...serviceIdList].reverse();
+
+  // 2) Row scope: leader-scope ∩ explicit dept/fellowship filter ∩ engaged?
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  let scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+  if (scopedIds !== null && scopedIds.length === 0) {
+    return {
+      services: serviceRows.map((s) => ({
+        id: s.id,
+        serviceDate: s.serviceDate.toISOString(),
+        serviceType: s.serviceType,
+        serviceTitle: s.serviceTitle,
+      })),
+      members: [],
+    };
+  }
+
+  if (query.engagedOnly) {
+    const engagedMap = await resolveEngagedMemberIds(db, [branchId], query.engagedWindowMonths);
+    const engaged = engagedMap.get(branchId) ?? new Set<string>();
+    if (scopedIds === null) {
+      scopedIds = Array.from(engaged);
+    } else {
+      scopedIds = scopedIds.filter((id) => engaged.has(id));
+    }
+    if (scopedIds.length === 0) {
+      return {
+        services: serviceRows.map((s) => ({
+          id: s.id,
+          serviceDate: s.serviceDate.toISOString(),
+          serviceType: s.serviceType,
+          serviceTitle: s.serviceTitle,
+        })),
+        members: [],
+      };
+    }
+  }
+
+  const memberConds = [eq(members.isActive, true), eq(members.homeBranchId, branchId)];
+  if (scopedIds !== null) memberConds.push(inArray(members.id, scopedIds));
+  const memberRows = await db
+    .select({
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(members)
+    .where(and(...memberConds))
+    .orderBy(members.lastName, members.firstName);
+
+  if (memberRows.length === 0 || serviceIdList.length === 0) {
+    return {
+      services: serviceRows.map((s) => ({
+        id: s.id,
+        serviceDate: s.serviceDate.toISOString(),
+        serviceType: s.serviceType,
+        serviceTitle: s.serviceTitle,
+      })),
+      members: memberRows.map((m) => ({
+        memberId: m.memberId,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        cells: [] as ('present' | 'late' | 'virtual' | 'absent')[],
+        attendedCount: 0,
+        servicesConsidered: serviceIdList.length,
+        attendancePct: 0,
+        missedStreak: serviceIdList.length,
+      })),
+    };
+  }
+
+  // 3) Attendance rows for the window and scope.
+  const memberIds = memberRows.map((m) => m.memberId);
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      serviceId: serviceAttendance.serviceId,
+      status: serviceAttendance.attendanceStatus,
+    })
+    .from(serviceAttendance)
+    .where(
+      and(
+        inArray(serviceAttendance.memberId, memberIds),
+        inArray(serviceAttendance.serviceId, serviceIdList),
+      ),
+    );
+
+  const statusByMember = new Map<string, Map<string, 'present' | 'late' | 'virtual'>>();
+  for (const r of attRows) {
+    let inner = statusByMember.get(r.memberId);
+    if (!inner) {
+      inner = new Map();
+      statusByMember.set(r.memberId, inner);
+    }
+    inner.set(
+      r.serviceId,
+      r.status === 'Late' ? 'late' : r.status === 'Virtual' ? 'virtual' : 'present',
+    );
+  }
+
+  const members2 = memberRows.map((m) => {
+    const inner = statusByMember.get(m.memberId);
+    const cells = serviceIdList.map<'present' | 'late' | 'virtual' | 'absent'>((sid) =>
+      inner?.get(sid) ?? 'absent',
+    );
+    const attendedCount = cells.filter((c) => c !== 'absent').length;
+    const attendancePct =
+      serviceIdList.length > 0
+        ? Math.round((attendedCount / serviceIdList.length) * 1000) / 1000
+        : 0;
+    // Streak: consecutive most-recent absences.
+    let streak = 0;
+    for (const sid of serviceIdListDesc) {
+      if (inner?.has(sid)) break;
+      streak++;
+    }
+    return {
+      memberId: m.memberId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      cells,
+      attendedCount,
+      servicesConsidered: serviceIdList.length,
+      attendancePct,
+      missedStreak: streak,
+    };
+  });
+
+  return {
+    services: serviceRows.map((s) => ({
+      id: s.id,
+      serviceDate: s.serviceDate.toISOString(),
+      serviceType: s.serviceType,
+      serviceTitle: s.serviceTitle,
+    })),
+    members: members2,
+  };
+}
+
+// ── Frequency buckets ──────────────────────────────────────
+
+/**
+ * Bucket engaged members by attendance ratio over the engagement window:
+ *   weekly     ≥75%
+ *   biweekly   ≥40% and <75%
+ *   monthly    ≥15% and <40%
+ *   occasional  >0% and <15%
+ *   dormant    on the active roll but zero attendance in the window
+ *
+ * Denominator = distinct services on the branch in the window. Filters:
+ * leader scope + explicit dept/fellowship.
+ */
+export async function getFrequencyBuckets(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId?: string;
+    engagedWindowMonths: number;
+    departmentId?: string;
+    fellowshipId?: string;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+  const since = engagedSince(query.engagedWindowMonths);
+
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+
+  const bucketsEmpty = (window: number, considered: number, engaged = 0) => ({
+    windowMonths: window,
+    servicesConsidered: considered,
+    engagedMembers: engaged,
+    buckets: [
+      { key: 'weekly' as const, label: 'Weekly', members: 0, description: 'Attended ≥75% of services in the window' },
+      { key: 'biweekly' as const, label: 'Biweekly', members: 0, description: 'Attended 40–74% of services' },
+      { key: 'monthly' as const, label: 'Monthly', members: 0, description: 'Attended 15–39% of services' },
+      { key: 'occasional' as const, label: 'Occasional', members: 0, description: 'Attended <15% of services (at least once)' },
+      { key: 'dormant' as const, label: 'Dormant', members: 0, description: 'On the active roll but no attendance in the window' },
+    ],
+  });
+
+  // 1) Denominator: how many services on the branch in the window.
+  const serviceRows = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    );
+  const totalServices = serviceRows.length;
+  if (totalServices === 0) return bucketsEmpty(query.engagedWindowMonths, 0);
+
+  // 2) Population: active members on the branch (filtered).
+  const memberConds = [eq(members.isActive, true), eq(members.homeBranchId, branchId)];
+  if (scopedIds !== null) memberConds.push(inArray(members.id, scopedIds));
+  const memberRows = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(and(...memberConds));
+  if (memberRows.length === 0) return bucketsEmpty(query.engagedWindowMonths, totalServices);
+
+  // 3) Per-member attendance counts over the window.
+  const memberIds = memberRows.map((m) => m.id);
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      value: sql<number>`COUNT(DISTINCT ${serviceAttendance.serviceId})`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+        inArray(serviceAttendance.memberId, memberIds),
+      ),
+    )
+    .groupBy(serviceAttendance.memberId);
+
+  const countByMember = new Map(attRows.map((r) => [r.memberId, Number(r.value)]));
+
+  let weekly = 0, biweekly = 0, monthly = 0, occasional = 0, dormant = 0, engaged = 0;
+  for (const m of memberIds) {
+    const c = countByMember.get(m) ?? 0;
+    if (c === 0) { dormant++; continue; }
+    engaged++;
+    const ratio = c / totalServices;
+    if (ratio >= 0.75) weekly++;
+    else if (ratio >= 0.4) biweekly++;
+    else if (ratio >= 0.15) monthly++;
+    else occasional++;
+  }
+
+  const shell = bucketsEmpty(query.engagedWindowMonths, totalServices, engaged);
+  const counts: Record<string, number> = { weekly, biweekly, monthly, occasional, dormant };
+  for (const b of shell.buckets) {
+    b.members = counts[b.key] ?? 0;
+  }
+  return shell;
+}
+
+// ── First-time vs returning per week ───────────────────────
+
+/**
+ * For each of the last N weeks: how many attendees were first-time (their
+ * earliest attendance record on this branch is inside the week), vs
+ * returning (they'd attended before that week). Real growth signal —
+ * distinguishes reaching new people from same-regulars showing up.
+ */
+export async function getFirstTimeReturning(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId?: string;
+    weeks: number;
+    departmentId?: string;
+    fellowshipId?: string;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+  if (scopedIds !== null && scopedIds.length === 0) {
+    return [] as { weekStart: string; firstTime: number; returning: number }[];
+  }
+
+  // 1) In-window attendance rows.
+  const attConds = [
+    eq(services.branchId, branchId),
+    eq(services.isActive, true),
+    gte(services.serviceDate, since),
+  ];
+  if (scopedIds !== null) attConds.push(inArray(serviceAttendance.memberId, scopedIds));
+
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(and(...attConds))
+    .groupBy(serviceAttendance.memberId, sql`date_trunc('week', ${services.serviceDate})`);
+
+  if (attRows.length === 0) return [];
+
+  // 2) Earliest-ever attendance date per member on this branch (used to
+  // classify a week's attendees as first-time vs returning). Only members
+  // present in the window matter — restrict for cheapness.
+  const attendedMemberIds = Array.from(new Set(attRows.map((r) => r.memberId)));
+  const earliestRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      earliestWeek: sql<string>`to_char(date_trunc('week', MIN(${services.serviceDate})), 'YYYY-MM-DD')`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        inArray(serviceAttendance.memberId, attendedMemberIds),
+      ),
+    )
+    .groupBy(serviceAttendance.memberId);
+  const earliestByMember = new Map(earliestRows.map((r) => [r.memberId, r.earliestWeek]));
+
+  // 3) Roll up: per week, count first-time vs returning.
+  const byWeek = new Map<string, { firstTime: number; returning: number }>();
+  for (const row of attRows) {
+    const entry = byWeek.get(row.weekStart) ?? { firstTime: 0, returning: 0 };
+    const earliest = earliestByMember.get(row.memberId);
+    if (earliest && earliest === row.weekStart) entry.firstTime++;
+    else entry.returning++;
+    byWeek.set(row.weekStart, entry);
+  }
+
+  return Array.from(byWeek.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([weekStart, v]) => ({ weekStart, ...v }));
 }

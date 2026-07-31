@@ -13,6 +13,9 @@ import type {
   BranchAttendanceParams,
   AttendanceSummaryParams,
   CohortDiffRequest,
+  AttendanceHeatmapParams,
+  FrequencyBucketParams,
+  FirstTimeReturningParams,
 } from '@kairos/types';
 
 // ── Service queries ────────────────────────────────────────
@@ -91,6 +94,40 @@ export function useAttendanceByBranch(params?: BranchAttendanceParams) {
     queryKey: ['attendance', 'by-branch', params],
     queryFn: async () => {
       const res = await api.attendance.byBranch(params);
+      return res.data!;
+    },
+  });
+}
+
+export function useAttendanceHeatmap(
+  params: AttendanceHeatmapParams | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['attendance', 'heatmap', params],
+    queryFn: async () => {
+      const res = await api.attendance.heatmap(params!);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!params?.branchId,
+  });
+}
+
+export function useFrequencyBuckets(params?: FrequencyBucketParams) {
+  return useQuery({
+    queryKey: ['attendance', 'frequency-buckets', params],
+    queryFn: async () => {
+      const res = await api.attendance.frequencyBuckets(params);
+      return res.data!;
+    },
+  });
+}
+
+export function useFirstTimeReturning(params?: FirstTimeReturningParams) {
+  return useQuery({
+    queryKey: ['attendance', 'first-time-returning', params],
+    queryFn: async () => {
+      const res = await api.attendance.firstTimeReturning(params);
       return res.data!;
     },
   });

@@ -12,6 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
@@ -26,6 +27,9 @@ import {
 } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
 import { CohortCompareCard } from '../_components/cohort-compare-card';
+import { AttendanceHeatmapCard } from '../_components/attendance-heatmap-card';
+import { FrequencyBucketsCard } from '../_components/frequency-buckets-card';
+import { FirstTimeReturningCard } from '../_components/first-time-returning-card';
 
 const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
 
@@ -37,6 +41,11 @@ export default function AttendanceReportsPage() {
   const [branchId, setBranchId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [fellowshipId, setFellowshipId] = useState('');
+  // Engagement window drives the "engaged member" denominator across the page.
+  // Values chosen from a small user-visible dropdown — no redeploy needed to
+  // change the number a pastor sees.
+  const [engagedWindowMonths, setEngagedWindowMonths] = useState('3');
+  const engagedWindow = Number(engagedWindowMonths);
 
   // Second-level guard: only admin/pastor/leader may view attendance reports.
   // Members would otherwise hit a wall of 403s on each chart query.
@@ -57,7 +66,7 @@ export default function AttendanceReportsPage() {
 
   const trends = useAttendanceTrends({ branchId: branchParam, weeks: 12, departmentId: departmentParam, fellowshipId: fellowshipParam });
   const missing = useMissingMembers({ branchId: branchParam, departmentId: departmentParam, fellowshipId: fellowshipParam });
-  const byBranch = useAttendanceByBranch({ weeks: 4 });
+  const byBranch = useAttendanceByBranch({ weeks: 4, engagedWindowMonths: engagedWindow });
 
   const branchOptions = [
     { value: '', label: 'All branches' },
@@ -83,7 +92,14 @@ export default function AttendanceReportsPage() {
   const chartData = (trends.data ?? []).map((p) => ({
     week: formatShortDate(p.weekStart),
     attendees: p.attendees,
+    distinctAttendees: p.distinctAttendees,
   }));
+
+  const engagedWindowOptions = [
+    { value: '3', label: 'Engaged: 3 mo' },
+    { value: '6', label: 'Engaged: 6 mo' },
+    { value: '12', label: 'Engaged: 12 mo' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -107,19 +123,35 @@ export default function AttendanceReportsPage() {
               <div className="w-44">
                 <CustomSelect value={fellowshipId} onValueChange={setFellowshipId} options={fellowshipOptions} />
               </div>
+              <div className="w-40">
+                <CustomSelect
+                  value={engagedWindowMonths}
+                  onValueChange={setEngagedWindowMonths}
+                  options={engagedWindowOptions}
+                />
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Trends */}
+      {/* Headline heatmap — single-branch only, renders a hint until branch is picked */}
+      <AttendanceHeatmapCard
+        branchId={branchParam}
+        departmentId={departmentParam}
+        fellowshipId={fellowshipParam}
+        engagedWindowMonths={engagedWindow}
+      />
+
+      {/* Trends — check-ins overlaid with distinct members */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Weekly attendance</CardTitle>
           <CardDescription>
-            How many people attended each week over the last 12 weeks. Counts
-            each attendee once per week — the same person coming multiple
-            weeks appears in every week they attend.
+            Total check-ins per week (attendees × services attended) with a
+            distinct-members overlay showing how many unique humans that was.
+            A big gap = the same regulars showing up to multiple services;
+            the lines together = one-service-per-week attendance.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,13 +170,24 @@ export default function AttendanceReportsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="week" fontSize={12} />
                   <YAxis allowDecimals={false} fontSize={12} />
-                  <Tooltip formatter={(v) => [v, 'Attendees']} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line
                     type="monotone"
                     dataKey="attendees"
+                    name="Check-ins"
                     stroke="#5D3FD3"
                     strokeWidth={2}
                     dot={{ fill: '#5D3FD3', r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="distinctAttendees"
+                    name="Distinct members"
+                    stroke="#f8b537"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={{ fill: '#f8b537', r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -152,6 +195,21 @@ export default function AttendanceReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* New: frequency buckets + first-time/returning */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <FrequencyBucketsCard
+          branchId={branchParam}
+          departmentId={departmentParam}
+          fellowshipId={fellowshipParam}
+          engagedWindowMonths={engagedWindow}
+        />
+        <FirstTimeReturningCard
+          branchId={branchParam}
+          departmentId={departmentParam}
+          fellowshipId={fellowshipParam}
+        />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Missing members */}
@@ -210,8 +268,10 @@ export default function AttendanceReportsPage() {
             <CardTitle className="text-base">Attendance by branch</CardTitle>
             <CardDescription>
               Distinct members who attended at least one service in the last
-              4 weeks, over each branch&rsquo;s active roll. Rate = distinct
-              attendees ÷ active members.
+              4 weeks. Rate = distinct attendees ÷ <span className="font-medium">engaged
+              members</span> (attended in the last {engagedWindow} months) —
+              the honest denominator; the roll count is shown alongside for
+              context.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -232,7 +292,8 @@ export default function AttendanceReportsPage() {
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="pb-2 font-medium">Branch</th>
-                    <th className="pb-2 text-right font-medium">Attendees</th>
+                    <th className="pb-2 text-right font-medium">Attended / Engaged</th>
+                    <th className="pb-2 text-right font-medium">On roll</th>
                     <th className="pb-2 text-right font-medium">Rate</th>
                   </tr>
                 </thead>
@@ -240,10 +301,13 @@ export default function AttendanceReportsPage() {
                   {byBranch.data.map((b) => (
                     <tr key={b.branchId} className="border-t border-foreground/[0.06]">
                       <td className="py-2 font-medium text-foreground">{b.branchName}</td>
-                      <td className="py-2 text-right text-muted-foreground">
-                        {b.distinctAttendees}/{b.activeMembers}
+                      <td className="py-2 text-right text-muted-foreground tabular-nums">
+                        {b.distinctAttendees}/{b.engagedMembers}
                       </td>
-                      <td className="py-2 text-right font-semibold text-[#5D3FD3]">
+                      <td className="py-2 text-right text-muted-foreground tabular-nums">
+                        {b.activeMembers}
+                      </td>
+                      <td className="py-2 text-right font-semibold text-[#5D3FD3] tabular-nums">
                         {Math.round(b.attendanceRate * 100)}%
                       </td>
                     </tr>

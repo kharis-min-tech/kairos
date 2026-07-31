@@ -978,7 +978,14 @@ export interface ServiceAttendanceRow {
 
 export interface AttendanceTrendPoint {
   weekStart: string;
+  /** Attendee-weeks: each attendee counted once per week they showed up. */
   attendees: number;
+  /**
+   * Distinct members who attended at least one service in this week.
+   * Overlaid on the weekly line to separate same-regulars (line runs flat
+   * even as `attendees` climbs) from real growth (this line climbs too).
+   */
+  distinctAttendees: number;
   serviceCount: number;
 }
 
@@ -1013,14 +1020,126 @@ export interface MissingMembersParams {
 export interface BranchAttendanceRate {
   branchId: string;
   branchName: string;
+  /** All active members on the roll (soft-delete denominator). */
   activeMembers: number;
+  /**
+   * Members who attended at least one service in the engagement window
+   * (default 3 months). This is the honest denominator for pastoral rates —
+   * people who stopped coming a year ago still sit in `activeMembers` because
+   * nobody flipped their soft-delete flag.
+   */
+  engagedMembers: number;
   distinctAttendees: number;
+  /** distinctAttendees ÷ engagedMembers, capped at 1.0. */
   attendanceRate: number;
 }
 
 export interface BranchAttendanceParams {
   branchId?: string;
   weeks?: number;
+  /**
+   * Engagement window in months for the `engagedMembers` denominator.
+   * User-configurable via the report page dropdown; default 3.
+   */
+  engagedWindowMonths?: number;
+}
+
+// ── Attendance heatmap (headline v2 visual) ────────────────
+// Rows = members in scope, columns = last N services on the branch.
+// Cells encode attendance status per service or "absent" if no row exists.
+
+export type AttendanceHeatmapCellStatus = 'present' | 'late' | 'virtual' | 'absent';
+
+export interface AttendanceHeatmapService {
+  id: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+}
+
+export interface AttendanceHeatmapMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  /** Cell status per service, in the same order as the top-level services array. */
+  cells: AttendanceHeatmapCellStatus[];
+  /** Services attended (Present/Late/Virtual all count) in the window. */
+  attendedCount: number;
+  /** Distinct services in the window (denominator for attendancePct). */
+  servicesConsidered: number;
+  /** attendedCount / servicesConsidered, rounded to 3dp; 0 when window empty. */
+  attendancePct: number;
+  /** Leading consecutive-absence count from the most recent service. */
+  missedStreak: number;
+}
+
+export interface AttendanceHeatmap {
+  services: AttendanceHeatmapService[];
+  members: AttendanceHeatmapMember[];
+}
+
+export interface AttendanceHeatmapParams {
+  branchId: string;
+  weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
+  engagedWindowMonths?: number;
+  /** When true, filter to members who attended at least once in the engagement window. */
+  engagedOnly?: boolean;
+}
+
+// ── Frequency buckets ──────────────────────────────────────
+// How often engaged members show up. Weekly / biweekly / monthly / occasional /
+// dormant — thresholds computed over the engagement window.
+
+export type FrequencyBucketKey =
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'occasional'
+  | 'dormant';
+
+export interface FrequencyBucket {
+  key: FrequencyBucketKey;
+  label: string;
+  /** How many engaged members fall into this bucket. */
+  members: number;
+  /**
+   * Human-readable rule used to place a member in this bucket, e.g.
+   * "attended ≥75% of services in the window".
+   */
+  description: string;
+}
+
+export interface FrequencyBucketReport {
+  windowMonths: number;
+  servicesConsidered: number;
+  engagedMembers: number;
+  buckets: FrequencyBucket[];
+}
+
+export interface FrequencyBucketParams {
+  branchId?: string;
+  engagedWindowMonths?: number;
+  departmentId?: string;
+  fellowshipId?: string;
+}
+
+// ── First-time vs returning per week ───────────────────────
+
+export interface FirstTimeReturningPoint {
+  weekStart: string;
+  /** Members whose earliest attendance record falls in this week. */
+  firstTime: number;
+  /** Members who had attended before this week. */
+  returning: number;
+}
+
+export interface FirstTimeReturningParams {
+  branchId?: string;
+  weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
 }
 
 // Dashboard summary feeding the Mission Control donuts: present/late/virtual

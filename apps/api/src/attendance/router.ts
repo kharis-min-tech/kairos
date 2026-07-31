@@ -16,6 +16,9 @@ import {
   cohortDiffSchema,
   myAttendanceQuerySchema,
   groupAttendanceQuerySchema,
+  heatmapQuerySchema,
+  frequencyBucketsQuerySchema,
+  firstTimeReturningQuerySchema,
 } from './schemas';
 import {
   createService,
@@ -35,6 +38,9 @@ import {
   getMyAttendance,
   getDepartmentAttendance,
   getFellowshipAttendance,
+  getAttendanceHeatmap,
+  getFrequencyBuckets,
+  getFirstTimeReturning,
 } from './service';
 
 export const attendanceRouter = new Hono();
@@ -113,6 +119,39 @@ attendanceRouter.get(
   async (c) => {
     const auth = getAuth(c);
     const result = await getAttendanceByBranch(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/heatmap',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', heatmapQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getAttendanceHeatmap(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/frequency-buckets',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', frequencyBucketsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getFrequencyBuckets(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/first-time-returning',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', firstTimeReturningQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getFirstTimeReturning(db, auth, c.req.valid('query'));
     return c.json(successResponse(result));
   },
 );

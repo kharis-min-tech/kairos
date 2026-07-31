@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { GitCompare } from 'lucide-react';
+import { GitCompare, Zap } from 'lucide-react';
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import { useServices, useCohortDiff } from '@/hooks/use-attendance';
 import { formatShortDate } from '@/lib/date-format';
 
 type Mode = 'any' | 'all';
+type PresetKey = 'missed-last-4' | 'first-timers-this-week' | 'regulars-slipped';
 
 interface CohortCompareCardProps {
   /** Branch scope. Required semantically — the compare API is single-branch.
@@ -80,6 +81,65 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
     });
   }
 
+  // Presets pre-fill and submit in one click. They assume services are ordered
+  // most-recent-first in the useServices() response — the API defaults to
+  // that ordering (services router lists newest first).
+  async function runPreset(key: PresetKey) {
+    if (!branchId || serviceOptions.length === 0) return;
+    const mostRecent = serviceOptions[0]?.id;
+    const last4 = serviceOptions.slice(0, 4).map((s) => s.id);
+    const prior4 = serviceOptions.slice(4, 8).map((s) => s.id);
+
+    if (key === 'missed-last-4' && last4.length > 0) {
+      const absentSet = new Set(last4);
+      setPresentIds(new Set());
+      setAbsentIds(absentSet);
+      setAbsentMode('all');
+      await cohort.mutateAsync({
+        presentInServiceIds: [],
+        absentFromServiceIds: last4,
+        presentMode: 'any',
+        absentMode: 'all',
+        branchId,
+      });
+    } else if (key === 'first-timers-this-week' && mostRecent) {
+      // "Present at the most recent service but absent from every one of the
+      // 4 services before it" — proxy for a first-timer this week.
+      const presentSet = new Set([mostRecent]);
+      const absentSet = new Set(prior4);
+      setPresentIds(presentSet);
+      setAbsentIds(absentSet);
+      setPresentMode('any');
+      setAbsentMode('all');
+      if (prior4.length === 0) return;
+      await cohort.mutateAsync({
+        presentInServiceIds: [mostRecent],
+        absentFromServiceIds: prior4,
+        presentMode: 'any',
+        absentMode: 'all',
+        branchId,
+      });
+    } else if (key === 'regulars-slipped' && prior4.length > 0 && last4.length > 0) {
+      // "Attended every one of the 4 services BEFORE the last 4, but missed
+      // every one of the last 4" — regulars who've dropped off recently.
+      const presentSet = new Set(prior4);
+      const absentSet = new Set(last4);
+      setPresentIds(presentSet);
+      setAbsentIds(absentSet);
+      setPresentMode('all');
+      setAbsentMode('all');
+      await cohort.mutateAsync({
+        presentInServiceIds: prior4,
+        absentFromServiceIds: last4,
+        presentMode: 'all',
+        absentMode: 'all',
+        branchId,
+      });
+    }
+  }
+
+  const presetsEnabled = Boolean(branchId) && serviceOptions.length > 0 && !cohort.isPending;
+
   return (
     <Card>
       <CardHeader>
@@ -95,6 +155,28 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {branchId && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <Zap className="h-3.5 w-3.5" aria-hidden /> Presets:
+            </span>
+            <PresetButton
+              label="Missed last 4"
+              disabled={!presetsEnabled}
+              onClick={() => runPreset('missed-last-4')}
+            />
+            <PresetButton
+              label="First-timers this week"
+              disabled={!presetsEnabled || serviceOptions.length < 5}
+              onClick={() => runPreset('first-timers-this-week')}
+            />
+            <PresetButton
+              label="Regulars who slipped"
+              disabled={!presetsEnabled || serviceOptions.length < 8}
+              onClick={() => runPreset('regulars-slipped')}
+            />
+          </div>
+        )}
         {!branchId ? (
           <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
             Pick a specific branch in the filter above to compare cohorts. Comparison only runs
@@ -158,6 +240,27 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function PresetButton({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-full border border-foreground/10 bg-card px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-[#5D3FD3]/40 hover:bg-[#5D3FD3]/5 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {label}
+    </button>
   );
 }
 
