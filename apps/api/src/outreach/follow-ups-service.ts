@@ -186,7 +186,7 @@ export async function getFollowUpHistory(
 
   return {
     data: rows,
-    pagination: {
+    meta: {
       page: query.page,
       limit: query.limit,
       total: total!.count,

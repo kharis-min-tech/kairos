@@ -128,7 +128,7 @@ describe('GET /api/members', () => {
     const body = await res.json() as any;
     expect(body.success).toBe(true);
     expect(body.data.data).toBeDefined();
-    expect(body.data.pagination).toBeDefined();
+    expect(body.data.meta).toBeDefined();
   });
 });
 

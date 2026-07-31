@@ -66,7 +66,7 @@ app.get(
     
 
     const result = await listPrograms(db, auth, query);
-    return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
+    return c.json({ success: true, data: { data: result.data, meta: result.meta } });
   }
 );
 

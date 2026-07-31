@@ -273,7 +273,7 @@ export async function listMembers(
 
   return {
     data,
-    pagination: {
+    meta: {
       page: query.page,
       limit: query.limit,
       total: total!.count,

@@ -90,7 +90,7 @@ router.get(
       success: true,
       data: {
         data: result.data,
-        pagination: result.pagination,
+        meta: result.meta,
       },
     });
   },
@@ -152,7 +152,7 @@ router.get(
       success: true,
       data: {
         data: result.data,
-        pagination: result.pagination,
+        meta: result.meta,
       },
     });
   },

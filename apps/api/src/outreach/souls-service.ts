@@ -616,7 +616,7 @@ export async function listSouls(
 
   return {
     data: rows,
-    pagination: {
+    meta: {
       page: query.page,
       limit: query.limit,
       total: total!.count,

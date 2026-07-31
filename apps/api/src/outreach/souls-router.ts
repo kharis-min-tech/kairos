@@ -61,7 +61,7 @@ app.get(
     const query = c.req.valid('query');
 
     const result = await listSouls(db, auth, query);
-    return c.json({ success: true, data: { data: result.data, meta: result.pagination } });
+    return c.json({ success: true, data: { data: result.data, meta: result.meta } });
   }
 );
 
@@ -173,7 +173,11 @@ app.get('/:id/follow-ups', async (c) => {
   const limit = parseInt(c.req.query('limit') || '20');
 
   const result = await getFollowUpHistory(db, soulId, auth, { page, limit });
-  return c.json({ success: true, ...result });
+  // Standard envelope: { success, data: { data: [...], meta: {...} } }.
+  // Old shape spread `result` at the top so the client read
+  // `response.data.data` / `response.data.meta` as undefined and pagination
+  // silently never advanced.
+  return c.json({ success: true, data: result });
 });
 
 /**

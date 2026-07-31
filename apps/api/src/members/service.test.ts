@@ -133,7 +133,7 @@ describe('listMembers', () => {
     );
     const result = await listMembers(mockDb, adminAuth, { page: 1, limit: 20 });
     expect(result.data).toHaveLength(2);
-    expect(result.pagination.total).toBe(2);
+    expect(result.meta.total).toBe(2);
   });
 
   it('filters by branch for non-admin', async () => {

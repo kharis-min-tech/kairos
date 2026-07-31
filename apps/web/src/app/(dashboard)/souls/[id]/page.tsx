@@ -109,8 +109,8 @@ export default function SoulDetailPage() {
       });
       if (response.success) {
         setFollowUps(response.data?.data || []);
-        if (response.data?.pagination) {
-          setFollowUpsPagination(response.data.pagination);
+        if (response.data?.meta) {
+          setFollowUpsPagination(response.data.meta);
         }
       }
     } catch (error) {
