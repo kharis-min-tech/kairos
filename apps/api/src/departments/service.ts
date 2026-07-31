@@ -23,6 +23,7 @@ import {
   sendOfferExtendedEmail,
   sendProbationStartedEmail,
   sendProbationPassedEmail,
+  logger,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { syncDepartmentLeadGrants, syncDepartmentDeputyGrants } from '../lib/role-sync';
@@ -752,11 +753,19 @@ export async function createJoinRequest(
     .from(members)
     .where(eq(members.id, auth.memberId));
   if (requester?.email) {
-    sendJoinRequestReceivedEmail(
-      requester.email,
-      requester.firstName,
-      bd.departmentName,
-    ).catch(() => undefined);
+    try {
+      await sendJoinRequestReceivedEmail(
+        requester.email,
+        requester.firstName,
+        bd.departmentName,
+      );
+    } catch (err) {
+      logger.warn('sendJoinRequestReceivedEmail failed', {
+        memberId: auth.memberId,
+        departmentName: bd.departmentName,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   const [branchAuth, deptLeads] = await Promise.all([
@@ -915,7 +924,19 @@ async function fireRequesterEmail(
     .select({ email: members.email, firstName: members.firstName })
     .from(members)
     .where(eq(members.id, memberId));
-  if (m?.email) fn(m.email, m.firstName, departmentName).catch(() => undefined);
+  if (!m?.email) return;
+  // Must await: CF Workers cancel un-awaited promises the instant the
+  // response returns, so a floating `.catch(...)` silently drops every
+  // email. Failure is still non-fatal for the state change.
+  try {
+    await fn(m.email, m.firstName, departmentName);
+  } catch (err) {
+    logger.warn('Department email send failed', {
+      memberId,
+      departmentName,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function scheduleJoinRequestInterview(

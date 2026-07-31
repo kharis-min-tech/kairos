@@ -21,6 +21,7 @@ import {
   sendJoinRequestReceivedEmail,
   sendJoinRequestApprovedEmail,
   sendJoinRequestRejectedEmail,
+  logger,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { syncFellowshipLeaderGrants } from '../lib/role-sync';
@@ -817,11 +818,21 @@ export async function createJoinRequest(
     .from(members)
     .where(eq(members.id, auth.memberId));
   if (requester?.email) {
-    sendJoinRequestReceivedEmail(
-      requester.email,
-      requester.firstName,
-      fellowship.fellowshipName,
-    ).catch(() => { /* email failure is non-fatal */ });
+    // Await: CF Workers cancel un-awaited promises when the response
+    // returns, so a floating .catch(...) never runs and no email is sent.
+    try {
+      await sendJoinRequestReceivedEmail(
+        requester.email,
+        requester.firstName,
+        fellowship.fellowshipName,
+      );
+    } catch (err) {
+      logger.warn('sendJoinRequestReceivedEmail failed', {
+        memberId: auth.memberId,
+        fellowshipName: fellowship.fellowshipName,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   // Workflow notification to leadership chain
@@ -946,9 +957,16 @@ export async function reviewJoinRequest(
       data.status === 'approved'
         ? sendJoinRequestApprovedEmail
         : sendJoinRequestRejectedEmail;
-    sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName).catch(() => {
-      /* email failure is non-fatal */
-    });
+    try {
+      await sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName);
+    } catch (err) {
+      logger.warn('Join request decision email failed', {
+        memberId: request.memberId,
+        fellowshipName: fellowship.fellowshipName,
+        decision: data.status,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   await dispatchNotification(db, {

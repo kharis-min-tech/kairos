@@ -236,8 +236,8 @@ export default function MembersPage() {
           placeholder="Members + Attendees"
           options={[
             { value: '', label: 'Members + Attendees' },
-            { value: 'member', label: 'Members (completed official membership class)' },
-            { value: 'attendee', label: 'Attendees (has not completed official membership class)' },
+            { value: 'member', label: 'Members only' },
+            { value: 'attendee', label: 'Attendees only' },
           ]}
         />
       </div>

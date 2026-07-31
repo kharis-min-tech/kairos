@@ -509,11 +509,16 @@ export async function createEnrollmentInternal(
     const student = studentRows[0];
     if (mentor?.email) {
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'a new believer';
-      sendMentorAssignedEmail(
-        mentor.email,
-        `${mentor.firstName} ${mentor.lastName}`,
-        studentName,
-      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
+      // Await: CF Workers cancel un-awaited promises when fetch() returns.
+      try {
+        await sendMentorAssignedEmail(
+          mentor.email,
+          `${mentor.firstName} ${mentor.lastName}`,
+          studentName,
+        );
+      } catch (err) {
+        logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 
@@ -643,11 +648,15 @@ export async function updateEnrollment(
     const student = studentRows[0];
     if (mentor?.email) {
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'a student';
-      sendMentorAssignedEmail(
-        mentor.email,
-        `${mentor.firstName} ${mentor.lastName}`,
-        studentName,
-      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
+      try {
+        await sendMentorAssignedEmail(
+          mentor.email,
+          `${mentor.firstName} ${mentor.lastName}`,
+          studentName,
+        );
+      } catch (err) {
+        logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 
