@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, inArray, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
@@ -9,7 +9,6 @@ import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasCapability } from '../lib/grants';
-import { isRealMember } from '../lib/member-predicates';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
@@ -146,20 +145,34 @@ export async function listRoles(db: Database) {
 export async function listMembers(
   db: Database,
   auth: AuthContext,
-  query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string; fellowshipId?: string },
+  query: {
+    page: number;
+    limit: number;
+    search?: string;
+    branchId?: string;
+    approvalStatus?: string;
+    fellowshipId?: string;
+    memberType?: 'member' | 'attendee';
+  },
 ) {
   // Pending members are inactive until approved AND arrive as attendees
-  // (membership_class_completed_at NULL), so BOTH filters get skipped for
+  // (membership_class_completed_at NULL), so all defaults get skipped for
   // pending queries — otherwise the approval queue would be permanently empty
   // for self-signup accounts.
   const conditions: SQL[] = [];
   if (query.approvalStatus !== 'pending') {
     conditions.push(eq(members.isActive, true));
-    // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
-    // with membership_class_completed_at populated. Visitors / attendees /
-    // child shells are surfaced via Forms, the NB pipeline, and safeguarding
-    // review — except during pending approval, where they must be visible.
-    conditions.push(isRealMember());
+    // Directory covers Members + Attendees (approved humans who signed in).
+    // Visitor / child shells stay behind their dedicated surfaces (Forms,
+    // Safeguarding review) — surfacing them here would flood the roll with
+    // rows that don't have a sign-in and blur the safeguarding gate.
+    // Callers can narrow to one type via query.memberType.
+    conditions.push(
+      inArray(
+        members.memberType,
+        query.memberType ? [query.memberType] : ['member', 'attendee'],
+      ),
+    );
   }
 
   // Non-admin can only see their own branch (home or active secondary)

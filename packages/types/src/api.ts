@@ -269,6 +269,12 @@ export interface MemberListParams {
   branchId?: string;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   fellowshipId?: string;
+  /**
+   * Narrow to a single member type. Omit to show Members + Attendees (the
+   * default post-approval view). Visitor/child shells never appear here
+   * regardless — they have dedicated surfaces.
+   */
+  memberType?: 'member' | 'attendee';
 }
 
 // ── Minor data protection ──────────────────────────────────

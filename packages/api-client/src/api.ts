@@ -276,6 +276,7 @@ export function createApiClient(
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
         if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        if (params?.memberType) qs.set('memberType', params.memberType);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<MemberWithBranchProtected>>>(`/api/members${query ? `?${query}` : ''}`);
       },

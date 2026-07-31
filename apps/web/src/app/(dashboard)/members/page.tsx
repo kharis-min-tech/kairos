@@ -229,6 +229,17 @@ export default function MembersPage() {
             { value: 'rejected', label: 'Rejected' },
           ]}
         />
+        <CustomSelect
+          size="sm"
+          value={params.memberType ?? ''}
+          onValueChange={(v) => setParams((p) => ({ ...p, memberType: (v || undefined) as MemberListParams['memberType'], page: 1 }))}
+          placeholder="Members + Attendees"
+          options={[
+            { value: '', label: 'Members + Attendees' },
+            { value: 'member', label: 'Members (completed class)' },
+            { value: 'attendee', label: 'Attendees (class pending)' },
+          ]}
+        />
       </div>
 
       {!members || members.length === 0 ? (
@@ -279,7 +290,28 @@ export default function MembersPage() {
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <p className="truncate">{member.email}</p>
                           {member.phone && <p>{member.phone}</p>}
-                          <p className="text-xs capitalize">{member.systemRole}</p>
+                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            {member.memberType === 'attendee' ? (
+                              <span
+                                title="Approved attendee — has not completed the 4-week membership class yet"
+                                className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
+                              >
+                                Attendee
+                              </span>
+                            ) : member.memberType === 'member' ? (
+                              <span
+                                title="Confirmed Member — has completed the 4-week membership class"
+                                className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+                              >
+                                Member
+                              </span>
+                            ) : null}
+                            {member.systemRole === 'admin' && (
+                              <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
+                                Admin
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {(isAdmin || isPastor) && (
                           <div className="mt-4">
