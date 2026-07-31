@@ -127,9 +127,22 @@ function HeatmapTable({
   services: { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null }[];
   members: AttendanceHeatmapMember[];
 }) {
+  // Fixed column width so the day-of-month header, cell, and any following
+  // rows line up on the same pixel grid. Cells are 20px; column is 32px so
+  // there's a comfortable 6px gutter on each side.
+  const COL_PX = 32;
+
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-separate" style={{ borderSpacing: 0 }}>
+      <table className="border-separate" style={{ borderSpacing: 0 }}>
+        <colgroup>
+          <col />
+          {services.map((s) => (
+            <col key={s.id} style={{ width: `${COL_PX}px` }} />
+          ))}
+          <col />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th
@@ -143,9 +156,10 @@ function HeatmapTable({
                 key={s.id}
                 scope="col"
                 title={`${s.serviceType} · ${formatShortDate(s.serviceDate)}${s.serviceTitle ? ` · ${s.serviceTitle}` : ''}`}
-                className="px-1 py-2 text-center text-[10px] font-medium text-muted-foreground"
+                className="py-2 text-center text-[11px] font-medium tabular-nums text-muted-foreground"
+                style={{ width: `${COL_PX}px` }}
               >
-                {formatShortDate(s.serviceDate)}
+                {dayOfMonth(s.serviceDate)}
               </th>
             ))}
             <th
@@ -182,9 +196,10 @@ function HeatmapTable({
                   <td
                     key={`${m.memberId}-${s.id}`}
                     title={`${s.serviceType} · ${formatShortDate(s.serviceDate)} · ${cellLabel(c)}`}
-                    className="p-0.5"
+                    className="p-0 text-center"
+                    style={{ width: `${COL_PX}px` }}
                   >
-                    <div className={`h-5 w-5 rounded-sm ${cellClass(c)}`} />
+                    <div className={`mx-auto my-0.5 h-5 w-5 rounded-sm ${cellClass(c)}`} />
                   </td>
                 );
               })}
@@ -203,25 +218,33 @@ function HeatmapTable({
         </tbody>
       </table>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        <Legend cls="bg-[#5D3FD3]" label="Present" />
-        <Legend cls="bg-[#f8b537]" label="Late" />
-        <Legend cls="bg-sky-500" label="Virtual" />
-        <Legend cls="bg-foreground/10" label="Absent" />
+        <Legend cls="bg-emerald-500" label="Present" />
+        <Legend cls="bg-emerald-300" label="Virtual" />
+        <Legend cls="bg-amber-500" label="Late" />
+        <Legend cls="bg-red-400" label="Absent" />
       </div>
     </div>
   );
 }
 
+// Day-of-month header keeps columns narrow; full date shown on hover via the
+// <th title>. 13 weeks of Sundays can span 3 months but the numbers alone
+// read like a calendar strip — pastors flip to hover for the full date.
+function dayOfMonth(iso: string): string {
+  const d = new Date(iso);
+  return String(d.getUTCDate());
+}
+
 function cellClass(c: AttendanceHeatmapCellStatus): string {
   switch (c) {
     case 'present':
-      return 'bg-[#5D3FD3]';
-    case 'late':
-      return 'bg-[#f8b537]';
+      return 'bg-emerald-500';
     case 'virtual':
-      return 'bg-sky-500';
+      return 'bg-emerald-300';
+    case 'late':
+      return 'bg-amber-500';
     default:
-      return 'bg-foreground/10';
+      return 'bg-red-400';
   }
 }
 
