@@ -78,9 +78,9 @@ export function AttendanceHeatmapCard({
             </CardTitle>
             <CardDescription>
               Row per engaged member × column per service (last 13 weeks, oldest
-              on the left). Green cells = attended, empty = missed. Sort by
-              streak to prioritise pastoral care; by attendance to spot regulars
-              vs fringe.
+              on the left). Green / blue / amber cells = attended (in-person,
+              virtual, late); dashed red = absent. Sort by streak to prioritise
+              pastoral care; by attendance to spot regulars vs fringe.
             </CardDescription>
           </div>
           <div className="w-44">
@@ -127,21 +127,26 @@ function HeatmapTable({
   services: { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null }[];
   members: AttendanceHeatmapMember[];
 }) {
-  // Fixed column width so the day-of-month header, cell, and any following
-  // rows line up on the same pixel grid. Cells are 20px; column is 32px so
-  // there's a comfortable 6px gutter on each side.
-  const COL_PX = 32;
+  // Layout strategy: table-fixed with equal-share service columns so the
+  // heatmap always fills the card width. As weeks accumulate columns get
+  // narrower; on mobile the whole grid horizontally scrolls with a minimum
+  // per-column width so cells stay readable.
+  const MIN_COL_PX = 44;
+  const minTableWidth = 220 /* member */ + services.length * MIN_COL_PX + 60 + 70;
 
   return (
     <div className="overflow-x-auto">
-      <table className="border-separate" style={{ borderSpacing: 0 }}>
+      <table
+        className="w-full table-fixed border-separate"
+        style={{ borderSpacing: 0, minWidth: `${minTableWidth}px` }}
+      >
         <colgroup>
-          <col />
+          <col style={{ width: '220px' }} />
           {services.map((s) => (
-            <col key={s.id} style={{ width: `${COL_PX}px` }} />
+            <col key={s.id} />
           ))}
-          <col />
-          <col />
+          <col style={{ width: '60px' }} />
+          <col style={{ width: '70px' }} />
         </colgroup>
         <thead>
           <tr>
@@ -156,21 +161,20 @@ function HeatmapTable({
                 key={s.id}
                 scope="col"
                 title={`${s.serviceType} · ${formatShortDate(s.serviceDate)}${s.serviceTitle ? ` · ${s.serviceTitle}` : ''}`}
-                className="py-2 text-center text-[11px] font-medium tabular-nums text-muted-foreground"
-                style={{ width: `${COL_PX}px` }}
+                className="py-2 text-center text-[11px] font-medium tabular-nums leading-tight text-muted-foreground"
               >
-                {dayOfMonth(s.serviceDate)}
+                {formatDayMonth(s.serviceDate)}
               </th>
             ))}
             <th
               scope="col"
-              className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
             >
               %
             </th>
             <th
               scope="col"
-              className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
               title="Consecutive most-recent absences"
             >
               Streak
@@ -188,26 +192,22 @@ function HeatmapTable({
               </th>
               {m.cells.map((c, i) => {
                 const s = services[i];
-                // Cells and services are built server-side with identical
-                // length; the guard is only for stricter tsconfigs that
-                // treat indexed-array access as possibly undefined.
                 if (!s) return null;
                 return (
                   <td
                     key={`${m.memberId}-${s.id}`}
                     title={`${s.serviceType} · ${formatShortDate(s.serviceDate)} · ${cellLabel(c)}`}
-                    className="p-0 text-center"
-                    style={{ width: `${COL_PX}px` }}
+                    className="p-0.5 text-center"
                   >
-                    <div className={`mx-auto my-0.5 h-5 w-5 rounded-sm ${cellClass(c)}`} />
+                    <Cell status={c} />
                   </td>
                 );
               })}
-              <td className="px-3 py-1.5 text-right text-sm tabular-nums text-muted-foreground">
+              <td className="px-2 py-1.5 text-right text-sm tabular-nums text-muted-foreground">
                 {Math.round(m.attendancePct * 100)}%
               </td>
               <td
-                className={`px-3 py-1.5 text-right text-sm tabular-nums ${
+                className={`px-2 py-1.5 text-right text-sm tabular-nums ${
                   m.missedStreak >= 3 ? 'font-semibold text-destructive' : 'text-muted-foreground'
                 }`}
               >
@@ -218,34 +218,57 @@ function HeatmapTable({
         </tbody>
       </table>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        <Legend cls="bg-emerald-500" label="Present" />
-        <Legend cls="bg-emerald-300" label="Virtual" />
-        <Legend cls="bg-amber-500" label="Late" />
-        <Legend cls="bg-red-400" label="Absent" />
+        <LegendSwatch status="present" label="Present" />
+        <LegendSwatch status="virtual" label="Virtual" />
+        <LegendSwatch status="late" label="Late" />
+        <LegendSwatch status="absent" label="Absent" />
       </div>
     </div>
   );
 }
 
-// Day-of-month header keeps columns narrow; full date shown on hover via the
-// <th title>. 13 weeks of Sundays can span 3 months but the numbers alone
-// read like a calendar strip — pastors flip to hover for the full date.
-function dayOfMonth(iso: string): string {
-  const d = new Date(iso);
-  return String(d.getUTCDate());
+/**
+ * Cell is a small square that fills the available column width up to 24px.
+ * Filled variants mean "came" (present/virtual/late); absent renders as a
+ * hollow outlined square so the presence/absence axis reads through shape
+ * as well as colour — useful for the ~5-8% of viewers with red-green
+ * colour vision deficiency who'd otherwise struggle with the palette.
+ */
+function Cell({ status }: { status: AttendanceHeatmapCellStatus }) {
+  if (status === 'absent') {
+    return <div className="mx-auto h-5 w-5 max-w-full rounded-sm border border-dashed border-red-300 bg-red-50/60 dark:border-red-400/40 dark:bg-red-500/10" />;
+  }
+  const fill =
+    status === 'present' ? 'bg-emerald-500'
+    : status === 'virtual' ? 'bg-sky-500'
+    : 'bg-amber-500';
+  return <div className={`mx-auto h-5 w-5 max-w-full rounded-sm ${fill}`} />;
 }
 
-function cellClass(c: AttendanceHeatmapCellStatus): string {
-  switch (c) {
-    case 'present':
-      return 'bg-emerald-500';
-    case 'virtual':
-      return 'bg-emerald-300';
-    case 'late':
-      return 'bg-amber-500';
-    default:
-      return 'bg-red-400';
-  }
+function LegendSwatch({ status, label }: { status: AttendanceHeatmapCellStatus; label: string }) {
+  const swatchClass =
+    status === 'absent'
+      ? 'border border-dashed border-red-300 bg-red-50/60 dark:border-red-400/40 dark:bg-red-500/10'
+      : status === 'present' ? 'bg-emerald-500'
+      : status === 'virtual' ? 'bg-sky-500'
+      : 'bg-amber-500';
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`inline-block h-3 w-3 rounded-sm ${swatchClass}`} />
+      {label}
+    </span>
+  );
+}
+
+// "31 May" — short but unambiguous. Full "Sunday · 31/05/2026" stays on <th title>.
+function formatDayMonth(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  });
 }
 
 function cellLabel(c: AttendanceHeatmapCellStatus): string {
@@ -261,10 +284,3 @@ function cellLabel(c: AttendanceHeatmapCellStatus): string {
   }
 }
 
-function Legend({ cls, label }: { cls: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block h-3 w-3 rounded-sm ${cls}`} /> {label}
-    </span>
-  );
-}
