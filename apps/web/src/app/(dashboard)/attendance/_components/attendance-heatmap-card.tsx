@@ -88,9 +88,9 @@ export function AttendanceHeatmapCard({
               value={sortKey}
               onValueChange={(v) => setSortKey(v as SortKey)}
               options={[
-                { value: 'streak', label: 'Sort: absence streak' },
-                { value: 'attendance', label: 'Sort: attendance %' },
-                { value: 'name', label: 'Sort: last name' },
+                { value: 'streak', label: 'Sort: streak' },
+                { value: 'attendance', label: 'Sort: %' },
+                { value: 'name', label: 'Sort: name' },
               ]}
             />
           </div>

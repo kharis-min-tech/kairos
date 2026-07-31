@@ -114,13 +114,13 @@ export default function AttendanceReportsPage() {
           <h1 className="text-2xl font-bold text-foreground">Attendance Reports</h1>
           {isAdminOrPastor && (
             <div className="flex flex-wrap items-center gap-2">
-              <div className="w-44">
+              <div className="w-56">
                 <CustomSelect value={branchId} onValueChange={setBranchId} options={branchOptions} />
               </div>
-              <div className="w-44">
+              <div className="w-56">
                 <CustomSelect value={departmentId} onValueChange={setDepartmentId} options={deptOptions} />
               </div>
-              <div className="w-44">
+              <div className="w-56">
                 <CustomSelect value={fellowshipId} onValueChange={setFellowshipId} options={fellowshipOptions} />
               </div>
               <div className="w-40">
