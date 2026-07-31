@@ -150,8 +150,10 @@ describe('signup', () => {
 
     expect(result.member).toBeDefined();
     expect(result.member.email).toBe('john@example.com');
+    // Mailer isn't bound in tests → isMailerLive() is false → the plaintext
+    // token is returned as the local-dev auto-verify shortcut.
     expect(result.verificationToken).toBeDefined();
-    expect(result.verificationToken.length).toBeGreaterThan(0);
+    expect(result.verificationToken?.length ?? 0).toBeGreaterThan(0);
     expect(mockInsert).toHaveBeenCalled();
   });
 

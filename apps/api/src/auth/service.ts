@@ -35,6 +35,7 @@ import {
   hashPassword,
   verifyPassword,
   randomTokenHex,
+  isMailerLive,
 } from '@kairos/utils';
 
 function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
@@ -183,7 +184,7 @@ export interface SignupInput {
   acceptedPolicies?: boolean;
 }
 
-export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken: string }> {
+export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken?: string }> {
   // Check for existing email
   const existing = await db
     .select({ id: members.id })
@@ -303,12 +304,15 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
     });
   });
 
+  // Only return the plaintext token when the mailer is NOT live (local dev
+  // without SES creds). In staging/prod the email is the canonical path;
+  // returning the token here bypasses the mailer entirely and used to
+  // auto-verify users who never received an email — hiding real SES
+  // misconfiguration behind a "success" screen.
+  const mailerLive = isMailerLive();
   return {
     member: toMemberProfile(created),
-    // Plaintext token returned so local dev + staging QA can complete signup
-    // without waiting on SES delivery. In prod the mailbox link is the
-    // canonical path — the client no longer routes with it by default.
-    verificationToken,
+    ...(mailerLive ? {} : { verificationToken }),
   };
 }
 

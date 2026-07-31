@@ -194,7 +194,7 @@ export function createApiClient(
   return {
     auth: {
       signup: (data: SignupRequest) =>
-        client.post<ApiResponse<{ member: MemberProfile; verificationToken: string }>>('/api/auth/signup', data),
+        client.post<ApiResponse<{ member: MemberProfile; verificationToken?: string }>>('/api/auth/signup', data),
       login: (data: LoginRequest) =>
         client.post<ApiResponse<LoginResponse>>('/api/auth/login', data),
       refresh: (data: RefreshRequest) =>

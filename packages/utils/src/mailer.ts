@@ -51,6 +51,17 @@ function getSecrets(): MailerSecrets {
   throw new Error('Mailer not configured — call bindMailerEnv() or set AWS_* env vars');
 }
 
+/**
+ * True when both AWS keys are bound — i.e. the mailer will actually try to
+ * hit SES rather than fall back to log-only. Signup uses this to decide
+ * whether it's safe to omit the plaintext verification token from the
+ * response body (live mailer → email is the canonical delivery path).
+ */
+export function isMailerLive(): boolean {
+  const s = getSecrets();
+  return Boolean(s.awsAccessKeyId && s.awsSecretAccessKey);
+}
+
 function getAwsClient(): AwsClient | null {
   const s = getSecrets();
   if (!s.awsAccessKeyId || !s.awsSecretAccessKey) return null;

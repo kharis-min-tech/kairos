@@ -11,6 +11,7 @@ export {
 export { hashPassword, verifyPassword, randomTokenHex } from './password';
 export {
   bindMailerEnv,
+  isMailerLive,
   sendAccountVerificationEmail,
   sendPasswordResetEmail,
   sendJoinRequestReceivedEmail,

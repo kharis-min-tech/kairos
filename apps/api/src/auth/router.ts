@@ -45,8 +45,9 @@ authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
   const result = await signup(db, body);
   return c.json(successResponse({
     member: result.member,
-    // In dev mode, include token for easy testing — remove in production
-    verificationToken: result.verificationToken,
+    // Present only when the mailer isn't live (local dev). Staging/prod
+    // never see this field — email is the only path to verification.
+    ...(result.verificationToken ? { verificationToken: result.verificationToken } : {}),
   }, 'Signup successful. Please verify your email.'), 201);
 });
 
