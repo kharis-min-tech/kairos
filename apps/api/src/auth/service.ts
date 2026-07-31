@@ -184,7 +184,7 @@ export interface SignupInput {
   acceptedPolicies?: boolean;
 }
 
-export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken?: string }> {
+export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken?: string; sendVerificationEmail: Promise<void> }> {
   // Check for existing email
   const existing = await db
     .select({ id: members.id })
@@ -293,10 +293,15 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
 
   const verifyLink = `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/verify-email?token=${verificationToken}`;
 
-  // Fire-and-forget the email. If SES fails (or creds are absent in dev), the
-  // mailer logs it; we do NOT block signup on delivery — the user can request
-  // a resend, and admins can approve manually if needed.
-  sendAccountVerificationEmail(created.email, created.firstName, verifyLink).catch((err) => {
+  // Return the send as a promise so the router can hand it to
+  // `c.executionCtx.waitUntil(...)`. CF Workers cancel un-awaited promises
+  // the moment fetch() returns; a floating `.catch(...)` here would silently
+  // kill every verification email in staging/prod.
+  const sendVerificationEmail = sendAccountVerificationEmail(
+    created.email,
+    created.firstName,
+    verifyLink,
+  ).catch((err) => {
     logger.error('Failed to send account verification email', {
       memberId: created.id,
       email: created.email,
@@ -312,6 +317,7 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   const mailerLive = isMailerLive();
   return {
     member: toMemberProfile(created),
+    sendVerificationEmail,
     ...(mailerLive ? {} : { verificationToken }),
   };
 }

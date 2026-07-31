@@ -43,6 +43,17 @@ export const authRouter = new Hono();
 authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
   const body = c.req.valid('json');
   const result = await signup(db, body);
+  // Keep the isolate alive so SES actually gets called after we return the
+  // 201. Without waitUntil, CF Workers cancel the send-email promise the
+  // instant fetch() resolves — nothing hits the wire, nothing logs. Hono
+  // throws on `c.executionCtx` access outside a Workers runtime (Node dev
+  // server, vitest), so try/catch it and just let the promise float there —
+  // Node doesn't freeze isolates.
+  try {
+    c.executionCtx.waitUntil(result.sendVerificationEmail);
+  } catch {
+    /* no executionCtx — Node/test environment */
+  }
   return c.json(successResponse({
     member: result.member,
     // Present only when the mailer isn't live (local dev). Staging/prod

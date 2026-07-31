@@ -22,6 +22,7 @@ import {
   sendAccountRejectedEmail,
   hashPassword,
   randomTokenHex,
+  logger,
 } from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
@@ -508,13 +509,27 @@ export async function approveMember(
     .where(eq(members.id, memberId))
     .returning();
 
-  // Send approval/rejection email non-blocking
+  // Await the send — a floating .catch() gets cancelled on CF Workers the
+  // moment the response returns, silently dropping every approval email.
+  // Approval is a low-frequency admin action; the extra ~300ms round-trip
+  // is a fair price for actually delivering the email. Failures still
+  // don't block the approval itself (swallowed here on purpose).
   if (member.email) {
     const memberName = member.firstName ?? 'Member';
-    if (approved) {
-      sendAccountApprovedEmail(member.email, memberName).catch(() => {});
-    } else {
-      sendAccountRejectedEmail(member.email, memberName).catch(() => {});
+    try {
+      if (approved) {
+        await sendAccountApprovedEmail(member.email, memberName);
+      } else {
+        await sendAccountRejectedEmail(member.email, memberName);
+      }
+    } catch (err) {
+      // Log but don't fail the approval — an admin has already flipped the
+      // account state and the user can be told out-of-band.
+      logger.error('Failed to send approval email', {
+        memberId,
+        approved,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
