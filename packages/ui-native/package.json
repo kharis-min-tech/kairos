@@ -1,0 +1,33 @@
+{
+  "name": "@kairos/ui-native",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsc --watch",
+    "test": "jest --passWithNoTests"
+  },
+  "peerDependencies": {
+    "expo-linear-gradient": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "expo-linear-gradient": "~14.0.1",
+    "jest": "^29.7.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "typescript": "^5.7.3"
+  }
+}
