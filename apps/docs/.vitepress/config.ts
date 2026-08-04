@@ -142,6 +142,13 @@ export default defineConfig({
           { text: 'Attendance Reports', link: '/analytics/attendance-reports' },
         ],
       },
+      {
+        text: 'More',
+        items: [
+          { text: 'FAQ', link: '/faq' },
+          { text: 'Release Notes', link: '/release-notes' },
+        ],
+      },
     ],
 
     search: {
@@ -156,7 +163,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Kairos — Church Administration System by Kharis Church',
+      message: 'Kairos — Church Administration System by Kharis Church · <a href="/KairosDocument/legal/terms">Terms</a> · <a href="/KairosDocument/legal/privacy">Privacy</a>',
     },
 
     outline: {
