@@ -5,7 +5,6 @@ export default defineConfig({
   title: 'Kairos',
   description: 'Church Administration System — documentation for Kharis Church.',
   base: '/',
-  appearance: 'force-dark',
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
   head: [
@@ -16,7 +15,7 @@ export default defineConfig({
       href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
     }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' }],
-    ['meta', { name: 'theme-color', content: '#0a0a0a', media: '(prefers-color-scheme: light)' }],
+    ['meta', { name: 'theme-color', content: '#6D28D9', media: '(prefers-color-scheme: light)' }],
     ['meta', { name: 'theme-color', content: '#0a0a0a', media: '(prefers-color-scheme: dark)' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }],
