@@ -72,6 +72,18 @@ export default function WelcomePage() {
               Go to Dashboard
             </button>
           </Link>
+
+          <p className="text-center text-xs text-muted-foreground">
+            New to Kairos?{' '}
+            <a
+              href="https://docs.kairos.kharis.org/getting-started/introduction"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[#5D3FD3] hover:underline"
+            >
+              Read the getting-started guide
+            </a>
+          </p>
         </div>
       </div>
     </>
