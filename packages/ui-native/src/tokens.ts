@@ -1,6 +1,6 @@
 /**
- * Modern Sanctuary design tokens for mobile.
- * Mirrors DESIGN.md and the mobile handoff spec — do not add ad-hoc colors.
+ * Modern Sanctuary design tokens for mobile — source of truth.
+ * Mirrors DESIGN.md and the mobile design handoff. Do not add ad-hoc colors.
  */
 export const colors = {
   primary: '#5D3FD3',
@@ -23,12 +23,13 @@ export const colors = {
   elevatedDark: '#1a1a22',
 
   ink: '#1a1c1c',
+  inkOnDark: '#e5e2e1',
 } as const;
 
 export const gradients = {
-  brand: ['#451ebb', '#5D3FD3'] as const,
-  brandDeep: ['#3b0764', '#5D3FD3'] as const,
-  splash: ['#1e1050', '#150d35', '#0c0a1a', '#050408'] as const,
+  brand: ['#451ebb', '#5D3FD3'] as [string, string],
+  brandDeep: ['#3b0764', '#5D3FD3'] as [string, string],
+  splash: ['#1e1050', '#150d35', '#0c0a1a', '#050408'] as [string, string, string, string],
 } as const;
 
 export const radii = {
@@ -59,5 +60,23 @@ export const typography = {
     fontWeight: '600' as const,
     letterSpacing: 1.3,
     textTransform: 'uppercase' as const,
+  },
+  button: { fontSize: 15, fontWeight: '600' as const, letterSpacing: 0.1 },
+} as const;
+
+export const shadows = {
+  card: {
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  buttonHero: {
+    shadowColor: '#451ebb',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
 } as const;
