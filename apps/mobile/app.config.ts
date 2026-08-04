@@ -8,10 +8,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   scheme: 'kairos',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
-  splash: {
-    backgroundColor: '#0c0a1a',
-  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.kharis.kairos',
@@ -22,7 +18,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#5D3FD3',
     },
   },
-  plugins: ['expo-router', 'expo-secure-store', 'expo-font'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-font',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#0c0a1a',
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },
