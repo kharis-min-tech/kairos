@@ -17,7 +17,7 @@ import {
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
-import { formatDate, formatShortDateTime } from '@/lib/date-format';
+import { formatDate, formatShortDateTime } from '@kairos/core';
 import {
   useDepartmentFollowups,
   useOverdueFollowups,

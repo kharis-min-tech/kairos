@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { ChevronLeft, Users } from 'lucide-react';
 import { Card, CardContent, cn } from '@kairos/ui';
 import { useService, useCanRecordAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { ServiceType } from '@kairos/types';
 import { CheckInPanel } from '../_components/check-in-panel';
 

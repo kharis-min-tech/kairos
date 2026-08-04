@@ -15,7 +15,7 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
