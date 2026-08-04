@@ -130,6 +130,15 @@ export default function KairosLanding() {
             <a href="#why" className="hover:text-black dark:hover:text-white transition-colors">Why Kairos</a>
             <a href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</a>
             <a href="#preview" className="hover:text-black dark:hover:text-white transition-colors">Preview</a>
+            <a
+              href="https://docs.kairos.kharis.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors"
+            >
+              Help & Guides
+              <ArrowUpRight className="h-3 w-3" />
+            </a>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle className="rounded-full border border-black/15 dark:border-white/15 hover:border-[#f8b537]/60 bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/[0.05] dark:hover:bg-white/[0.07] text-black/85 dark:text-white/90 hover:text-[#f8b537] dark:hover:text-[#f8b537] w-9 h-9 inline-flex items-center justify-center" />
@@ -862,13 +871,24 @@ export default function KairosLanding() {
             © {new Date().getFullYear()} Kairos — Church Administration Platform
           </span>
         </div>
-        <Link
-          href="/login"
-          className="text-black/45 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70 uppercase tracking-[0.15em] transition-colors inline-flex items-center gap-1.5 self-start md:self-auto"
-        >
-          Sign In
-          <ArrowUpRight className="h-3 w-3" />
-        </Link>
+        <div className="flex items-center gap-6 self-start md:self-auto">
+          <a
+            href="https://docs.kairos.kharis.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-black/45 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70 uppercase tracking-[0.15em] transition-colors inline-flex items-center gap-1.5"
+          >
+            Help & Guides
+            <ArrowUpRight className="h-3 w-3" />
+          </a>
+          <Link
+            href="/login"
+            className="text-black/45 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70 uppercase tracking-[0.15em] transition-colors inline-flex items-center gap-1.5"
+          >
+            Sign In
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
       </footer>
     </div>
   );
