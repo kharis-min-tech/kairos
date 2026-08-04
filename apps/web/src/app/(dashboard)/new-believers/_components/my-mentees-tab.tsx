@@ -14,7 +14,7 @@ import {
   DialogTitle,
   Textarea,
 } from '@kairos/ui';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { useCreateMentorFollowup, useMentorFollowups } from '@/hooks/use-new-believers';
 import { getStageByValue } from './stage-config';
 import type { EnrollmentCardData } from './types';

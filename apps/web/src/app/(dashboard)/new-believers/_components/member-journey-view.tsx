@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@kairos/ui';
 import { Check, Award } from 'lucide-react';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { STAGES } from './stage-config';
 import type { EnrollmentCardData } from './types';
 

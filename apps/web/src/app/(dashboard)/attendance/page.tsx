@@ -6,7 +6,7 @@ import { Plus, CalendarDays } from 'lucide-react';
 import { Button, Card, CardContent, CustomSelect, cn } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useServices, useCanRecordAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { ServiceType } from '@kairos/types';
 import type { ServiceListParams } from '@kairos/types';
 

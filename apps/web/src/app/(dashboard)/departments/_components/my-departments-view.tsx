@@ -13,7 +13,7 @@ import {
 } from '@kairos/ui';
 import { useMyDepartments } from '@/hooks/use-departments';
 import { useMyRota } from '@/hooks/use-me';
-import { formatDate, formatShortDate } from '@/lib/date-format';
+import { formatDate, formatShortDate } from '@kairos/core';
 
 const PREVIEW_LIMIT = 3;
 

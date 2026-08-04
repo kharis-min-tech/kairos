@@ -11,7 +11,7 @@ import {
   CustomSelect,
 } from '@kairos/ui';
 import { useAttendanceHeatmap } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { AttendanceHeatmapMember, AttendanceHeatmapCellStatus } from '@kairos/types';
 
 type SortKey = 'streak' | 'attendance' | 'name';

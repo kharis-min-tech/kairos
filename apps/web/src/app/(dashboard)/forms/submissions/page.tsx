@@ -16,7 +16,7 @@ import {
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { Download } from 'lucide-react';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import {
   useFormSubmissions,
   useExportFormSubmissions,

@@ -1,5 +1,5 @@
 import { NOTIFICATION_CATEGORY_LABEL, type NotificationCategory } from '@kairos/types';
-import { formatDate, UK_DATE_LOCALE } from './date-format';
+import { formatDate, UK_DATE_LOCALE } from '@kairos/core';
 
 /**
  * Turn the /api/me/export payload into a self-contained, printable HTML page.

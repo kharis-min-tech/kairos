@@ -11,7 +11,7 @@ import {
   subMonths,
 } from 'date-fns';
 import { DateSelect } from '@/components/date-select';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
 
 type DatePreset = 'week' | '1M' | '3M' | '6M' | 'custom';

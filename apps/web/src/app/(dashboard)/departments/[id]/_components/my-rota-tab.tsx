@@ -5,7 +5,7 @@ import { CalendarClock, CalendarRange } from 'lucide-react';
 import { Badge, Card, CardContent, Label } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useMyRota } from '@/hooks/use-me';
-import { formatDate } from '@/lib/date-format';
+import { formatDate } from '@kairos/core';
 
 interface Props {
   branchDepartmentId: string;
