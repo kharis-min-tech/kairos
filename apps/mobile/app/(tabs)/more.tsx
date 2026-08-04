@@ -50,10 +50,20 @@ export default function More() {
         <View style={styles.group}>
           <Text style={styles.groupLabel}>For you</Text>
           <NavRow label="Profile" onPress={() => router.push('/profile')} />
-          <PlaceholderRow label="Notifications" />
+          <NavRow label="Notifications" onPress={() => router.push('/notifications')} />
+          <NavRow
+            label="New Believer journey"
+            onPress={() => router.push('/new-believers')}
+          />
           <PlaceholderRow label="My attendance" />
           <PlaceholderRow label="Giving history" />
-          <PlaceholderRow label="New Believer journey" />
+        </View>
+
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>Leader tools</Text>
+          <NavRow label="Approvals" onPress={() => router.push('/approvals')} />
+          <NavRow label="Follow-ups" onPress={() => router.push('/follow-ups')} />
+          <NavRow label="Rota" onPress={() => router.push('/rota')} />
         </View>
 
         <View style={styles.group}>
