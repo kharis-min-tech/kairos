@@ -1,7 +1,6 @@
 import DefaultTheme from 'vitepress/theme'
 import { h } from 'vue'
 import SidebarIcons from './SidebarIcons.vue'
-import CookieConsent from './CookieConsent.vue'
 import HomeFeatures from './HomeFeatures.vue'
 import NavHoverPill from './NavHoverPill.vue'
 import './custom.css'
@@ -11,7 +10,6 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'sidebar-nav-before': () => h(SidebarIcons),
-      'doc-after': () => h(CookieConsent),
       'home-features-after': () => h(HomeFeatures),
       'nav-bar-content-after': () => h(NavHoverPill),
     })
