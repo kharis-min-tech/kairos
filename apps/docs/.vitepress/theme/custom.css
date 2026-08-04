@@ -129,6 +129,10 @@
 .VPFeature:hover { border-color: var(--vp-c-brand-1) !important; box-shadow: 0 0 0 1px var(--vp-c-brand-soft), 0 4px 16px rgba(109,40,217,0.08) !important; }
 .VPFeature .title { font-size: 0.95rem; font-weight: 700; color: var(--vp-c-text-1); }
 .VPFeature .details { font-size: 0.85rem; color: var(--vp-c-text-2); line-height: 1.6; }
+/* Make feature card icons visible in dark mode */
+.dark .VPFeature .VPImage,
+.dark .VPFeature svg,
+.dark .VPFeature .icon { opacity: 0.75; filter: brightness(2.5); }
 
 /* ─── Search ─────────────────────────────────────────────────────────────── */
 .VPLocalSearchBox { --vp-local-search-highlight-bg: rgba(109,40,217,0.15); --vp-local-search-highlight-text: #6D28D9; }
