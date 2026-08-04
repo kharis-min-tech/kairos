@@ -35,19 +35,87 @@
   --vp-c-brand-1: #a78bfa;
   --vp-c-brand-2: #8b5cf6;
   --vp-c-brand-3: #7c3aed;
-  --vp-c-brand-soft: rgba(167, 139, 250, 0.12);
-  --vp-c-bg: #0f0d14;
-  --vp-c-bg-soft: #1a1625;
-  --vp-c-bg-mute: #221d30;
-  --vp-c-text-1: #f0ecff;
-  --vp-c-text-2: #b8b0d0;
-  --vp-c-text-3: #7c7594;
-  --vp-c-border: #2e2840;
-  --vp-c-divider: #2e2840;
+  --vp-c-brand-soft: rgba(167, 139, 250, 0.10);
+  --vp-c-bg: #000000;
+  --vp-c-bg-soft: #0d0d0d;
+  --vp-c-bg-mute: #141414;
+  --vp-c-text-1: #f5f5f5;
+  --vp-c-text-2: #aaaaaa;
+  --vp-c-text-3: #666666;
+  --vp-c-border: #1f1f1f;
+  --vp-c-divider: #1f1f1f;
+  color-scheme: dark;
   --vp-c-tip-1: #a78bfa;
   --vp-c-tip-soft: rgba(167, 139, 250, 0.1);
   --vp-c-warning-1: #f8b537;
   --vp-c-warning-soft: rgba(248, 181, 55, 0.1);
+}
+
+/* ─── Force pitch black backgrounds in dark mode ────────────────────────── */
+html.dark,
+html.dark body {
+  background-color: #000000 !important;
+}
+html.dark .VPNav,
+html.dark .VPNavBar {
+  background-color: #000000 !important;
+  border-bottom-color: #1f1f1f !important;
+}
+html.dark .VPSidebar {
+  background-color: #000000 !important;
+  border-right-color: #1f1f1f !important;
+}
+html.dark .VPContent,
+html.dark .VPDoc,
+html.dark .vp-doc,
+html.dark .VPPage {
+  background-color: #000000 !important;
+}
+html.dark .VPLocalNav {
+  background-color: #000000 !important;
+  border-bottom-color: #1f1f1f !important;
+}
+html.dark .VPDocOutlineItem,
+html.dark .VPDocAside,
+html.dark .aside {
+  background-color: #000000 !important;
+}
+html.dark .VPFooter {
+  background-color: #000000 !important;
+  border-top-color: #1f1f1f !important;
+}
+html.dark .VPFooter .message,
+html.dark .VPFooter .copyright {
+  color: #444444 !important;
+}
+html.dark .VPHome {
+  background-color: #000000 !important;
+}
+html.dark .VPFeature {
+  background-color: #0d0d0d !important;
+  border-color: #1f1f1f !important;
+}
+html.dark .VPFeatures {
+  background-color: #000000 !important;
+}
+html.dark .VPFeatures .container {
+  background-color: #000000 !important;
+}
+html.dark .VPFeatureIcon {
+  background-color: #141414 !important;
+}
+html.dark .VPHomeHero,
+html.dark .VPHomeFeatures,
+html.dark .VPHomeSponsors {
+  background-color: #000000 !important;
+}
+/* Catch-all for any remaining purple-tinted containers */
+html.dark [class*="VP"] {
+  --vp-c-bg: #000000;
+  --vp-c-bg-soft: #0d0d0d;
+  --vp-c-bg-mute: #141414;
+  --vp-c-border: #1f1f1f;
+  --vp-c-divider: #1f1f1f;
 }
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
@@ -63,7 +131,7 @@
   backdrop-filter: blur(12px);
 }
 .dark .VPNav {
-  background: rgba(15, 13, 20, 0.92) !important;
+  background: rgba(0, 0, 0, 0.95) !important;
 }
 .VPNavBar .title {
   font-weight: 700;
@@ -108,7 +176,7 @@
 
 /* ─── Code ───────────────────────────────────────────────────────────────── */
 .vp-doc div[class*='language-'] { border-radius: 8px; border: 1px solid var(--vp-c-border); }
-.dark .vp-doc div[class*='language-'] { background: #13101c !important; }
+.dark .vp-doc div[class*='language-'] { background: #080808 !important; }
 .vp-doc :not(pre) > code { background: var(--vp-c-bg-mute); color: var(--vp-c-brand-1); border-radius: 4px; padding: 0.15em 0.4em; font-size: 0.85em; border: 1px solid var(--vp-c-border); }
 
 /* ─── Custom blocks ──────────────────────────────────────────────────────── */
@@ -176,8 +244,8 @@
   border-bottom: 1px solid #d5d5d5;
 }
 .dark .screenshot-window::before {
-  background: #1c1926;
-  border-bottom: 1px solid #2e2840;
+  background: #0d0d0d;
+  border-bottom: 1px solid #1f1f1f;
 }
 
 /* Traffic lights */
