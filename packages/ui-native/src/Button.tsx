@@ -80,7 +80,7 @@ export function Button({
           colors={gradients.brand}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: radii.lg }]}
+          style={styles.gradientFill}
         />
         {content}
       </Pressable>
@@ -147,4 +147,12 @@ const styles = StyleSheet.create({
   },
   fullWidth: { alignSelf: 'stretch' },
   disabled: { opacity: 0.5 },
+  gradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: radii.lg,
+  },
 });

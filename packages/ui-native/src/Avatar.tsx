@@ -51,7 +51,14 @@ export function Avatar({
               colors={[colors.primaryLight, colors.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: px / 2 }]}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: px / 2,
+              }}
             />
             <Text
               style={[
