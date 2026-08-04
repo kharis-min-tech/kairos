@@ -67,6 +67,15 @@ export default function More() {
         </View>
 
         <View style={styles.group}>
+          <Text style={styles.groupLabel}>Admin</Text>
+          <NavRow label="Check-in desk" onPress={() => router.push('/admin/checkin')} />
+          <NavRow
+            label="Service attendance"
+            onPress={() => router.push('/admin/attendance')}
+          />
+        </View>
+
+        <View style={styles.group}>
           <Text style={styles.groupLabel}>Settings</Text>
           <PlaceholderRow label="Appearance" />
           <PlaceholderRow label="Language" />
