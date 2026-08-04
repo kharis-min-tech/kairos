@@ -29,24 +29,27 @@ export default function More() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.pageTitle}>More</Text>
 
-        <Card padding="md" style={styles.profileCard}>
-          <Avatar
-            size="md"
-            photoUrl={user?.photoUrl}
-            firstName={user?.firstName}
-            lastName={user?.lastName}
-          />
-          <View style={styles.profileText}>
-            <Text style={styles.profileName}>
-              {user ? `${user.firstName} ${user.lastName}` : 'Signed in'}
-            </Text>
-            <Text style={styles.profileMeta}>{user?.email ?? ''}</Text>
-          </View>
-        </Card>
+        <Pressable onPress={() => router.push('/profile')}>
+          <Card padding="md" style={styles.profileCard}>
+            <Avatar
+              size="md"
+              photoUrl={user?.photoUrl}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+            />
+            <View style={styles.profileText}>
+              <Text style={styles.profileName}>
+                {user ? `${user.firstName} ${user.lastName}` : 'Signed in'}
+              </Text>
+              <Text style={styles.profileMeta}>{user?.email ?? ''}</Text>
+            </View>
+            <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+          </Card>
+        </Pressable>
 
         <View style={styles.group}>
           <Text style={styles.groupLabel}>For you</Text>
-          <PlaceholderRow label="Profile" />
+          <NavRow label="Profile" onPress={() => router.push('/profile')} />
           <PlaceholderRow label="Notifications" />
           <PlaceholderRow label="My attendance" />
           <PlaceholderRow label="Giving history" />
@@ -75,11 +78,18 @@ export default function More() {
 function PlaceholderRow({ label }: { label: string }) {
   return (
     <Pressable
-      onPress={() =>
-        Alert.alert(label, 'Lands in a later phase.')
-      }
+      onPress={() => Alert.alert(label, 'Lands in a later phase.')}
       style={styles.row}
     >
+      <Text style={styles.rowLabel}>{label}</Text>
+      <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+    </Pressable>
+  );
+}
+
+function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
       <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
     </Pressable>
