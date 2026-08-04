@@ -147,8 +147,6 @@ export default defineConfig({
         items: [
           { text: 'FAQ', link: '/faq' },
           { text: 'Release Notes', link: '/release-notes' },
-          { text: 'Terms & Conditions', link: '/legal/terms' },
-          { text: 'Privacy Notice', link: '/legal/privacy' },
         ],
       },
     ],
