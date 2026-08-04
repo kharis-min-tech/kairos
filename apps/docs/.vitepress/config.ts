@@ -163,7 +163,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Kairos — Church Administration System by Kharis Church · <a href="/KairosDocument/legal/terms">Terms</a> · <a href="/KairosDocument/legal/privacy">Privacy</a>',
+      message: 'Kairos — Church Administration System by Kharis Church',
     },
 
     outline: {
