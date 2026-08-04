@@ -159,7 +159,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Ruthhilary/KairosDocument' },
+      { icon: 'github', link: 'https://github.com/kharis-min-tech/kairos' },
     ],
 
     footer: {
