@@ -142,13 +142,6 @@ export default defineConfig({
           { text: 'Attendance Reports', link: '/analytics/attendance-reports' },
         ],
       },
-      {
-        text: 'More',
-        items: [
-          { text: 'FAQ', link: '/faq' },
-          { text: 'Release Notes', link: '/release-notes' },
-        ],
-      },
     ],
 
     search: {
