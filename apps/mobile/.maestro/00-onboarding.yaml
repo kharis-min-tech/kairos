@@ -1,0 +1,41 @@
+appId: com.kharis.kairos
+name: Onboarding — language + branch selection
+tags:
+  - smoke
+  - onboarding
+env:
+  BRANCH_NAME: "Kharis"
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+# Splash auto-advances to Language after ~1.8s
+- assertVisible:
+    text: "Choose your language"
+    timeout: 10000
+
+- tapOn: "English"
+- tapOn: "Continue"
+
+# Branch step
+- assertVisible: "Where do you fellowship?"
+
+# Filter to a known branch to avoid tapping a group header.
+# Override BRANCH_NAME via --env if the seed doesn't contain "Kharis".
+- tapOn:
+    text: "Search branches"
+- inputText: ${BRANCH_NAME}
+- hideKeyboard
+
+- extendedWaitUntil:
+    visible:
+      text: ${BRANCH_NAME}
+    timeout: 15000
+- tapOn:
+    text: ${BRANCH_NAME}
+    index: 0
+- tapOn: "Continue"
+
+# Lands on Login
+- assertVisible: "Sign in"

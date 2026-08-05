@@ -1,0 +1,27 @@
+appId: com.kharis.kairos
+name: Sign out — from More tab
+tags:
+  - smoke
+  - auth
+---
+- assertVisible: "More"
+- tapOn: "More"
+
+- extendedWaitUntil:
+    visible:
+      text: "Sign out"
+    timeout: 5000
+- scroll
+- tapOn: "Sign out"
+
+# Confirmation dialog
+- assertVisible: "You will need to sign in again to use the app."
+- tapOn:
+    text: "Sign out"
+    index: 1
+
+# Back to Login
+- extendedWaitUntil:
+    visible:
+      text: "Sign in"
+    timeout: 8000

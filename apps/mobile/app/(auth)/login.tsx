@@ -75,6 +75,7 @@ export default function LoginScreen() {
             ) : null}
 
             <Input
+              testID="login-email"
               label="Email"
               value={email}
               onChangeText={(v) => {
@@ -89,6 +90,7 @@ export default function LoginScreen() {
             />
 
             <Input
+              testID="login-password"
               label="Password"
               value={password}
               onChangeText={(v) => {
