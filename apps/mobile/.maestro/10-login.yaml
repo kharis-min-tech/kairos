@@ -1,0 +1,30 @@
+appId: com.kharis.kairos
+name: Login — email + password
+tags:
+  - smoke
+  - auth
+env:
+  EMAIL: ""
+  PASSWORD: ""
+---
+- assertVisible: "Sign in"
+
+- tapOn:
+    id: "login-email"
+- inputText: ${EMAIL}
+- hideKeyboard
+
+- tapOn:
+    id: "login-password"
+- inputText: ${PASSWORD}
+- hideKeyboard
+
+- tapOn:
+    text: "Sign in"
+    index: 1
+
+# Successful login lands on Home tab
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 15000
