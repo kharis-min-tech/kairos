@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -189,7 +189,7 @@ export default function AttendanceComparison() {
 function BarChart({
   data,
 }: {
-  data: Array<{ weekStart: string; attendees: number }>;
+  data: { weekStart: string; attendees: number }[];
 }) {
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;
