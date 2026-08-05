@@ -1,4 +1,3 @@
-appId: com.kharis.kairos
 name: Onboarding — language + branch selection
 tags:
   - smoke
@@ -6,14 +5,12 @@ tags:
 env:
   BRANCH_NAME: "Kharis"
 ---
-- launchApp:
-    clearState: true
-    clearKeychain: true
-
-# Splash auto-advances to Language after ~1.8s
-- assertVisible:
-    text: "Choose your language"
-    timeout: 10000
+# Assumes the app is already foreground (parent flow handles launchApp / Expo Go
+# bootstrap). Splash auto-advances to Language after ~1.8s.
+- extendedWaitUntil:
+    visible:
+      text: "Choose your language"
+    timeout: 20000
 
 - tapOn: "English"
 - tapOn: "Continue"

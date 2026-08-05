@@ -1,5 +1,5 @@
 appId: com.kharis.kairos
-name: Golden path — first-run onboarding, login, tab tour, sign out
+name: Golden path (native build) — first-run onboarding, login, tab tour, sign out
 tags:
   - smoke
 env:
@@ -7,6 +7,12 @@ env:
   PASSWORD: ""
   BRANCH_NAME: "Kharis"
 ---
+# Requires an installed dev-client / preview / production build with bundle id
+# com.kharis.kairos on the target device. Use golden-path-expo-go.yaml if you
+# only have Expo Go installed.
+- launchApp:
+    clearState: true
+    clearKeychain: true
 - runFlow:
     file: 00-onboarding.yaml
     env:
