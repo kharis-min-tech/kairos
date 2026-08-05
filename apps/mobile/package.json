@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "e2e": "maestro test .maestro/golden-path.yaml",
+    "e2e:expo-go": "maestro test .maestro/golden-path-expo-go.yaml",
     "e2e:studio": "maestro studio"
   },
   "dependencies": {
