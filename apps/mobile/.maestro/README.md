@@ -7,13 +7,96 @@ Golden-path flows for the mobile app. Two entry points, sharing the same UI subf
 
 The four UI subflows (`00-onboarding`, `10-login`, `20-tab-navigation`, `30-sign-out`) are shared — they drop `appId` from their frontmatter and inherit from the parent flow.
 
-## Install
+## Install Maestro
 
 Maestro is a native CLI (not npm).
 
 ```bash
 curl -fsSL "https://get.maestro.mobile.dev" | bash
+# adds ~/.maestro/bin to PATH — re-source your shell or open a new terminal
 ```
+
+Verify:
+
+```bash
+maestro --version
+```
+
+## Device-side setup (WSL2 → physical Android phone)
+
+This is the working path for this repo. iOS requires macOS + Xcode and can't be driven from WSL2 — see the "iOS notes" section at the bottom.
+
+### One-time: enable developer options on the phone
+
+1. **Settings → About phone → tap `Build number` seven times** → "You are now a developer!"
+2. **Settings → System → Developer options** → toggle:
+   - `USB debugging` — on
+   - `Wireless debugging` — on (Android 11+; older Android needs the USB path below)
+
+### One-time: install adb inside WSL2
+
+```bash
+sudo apt update && sudo apt install -y android-tools-adb
+adb --version   # should print "Android Debug Bridge version 1.0.x"
+```
+
+Reusing the Windows-side `adb.exe` from Android Studio's platform-tools also works, but a WSL-native adb is simpler because Maestro shells out to `adb` from the same process.
+
+### Every session: pair + connect over Wi-Fi
+
+Phone and WSL2 host must be on the same Wi-Fi network.
+
+```bash
+# On the phone: Developer options → Wireless debugging → "Pair device with pairing code".
+# Phone displays: IP:PORT and a 6-digit code.
+
+adb pair <phone-ip>:<pair-port>
+# prompts: Enter pairing code: <6-digit code>
+
+# Then reconnect on the main port (shown at the top of the Wireless debugging screen):
+adb connect <phone-ip>:<connect-port>
+
+adb devices
+# should list your phone as: <phone-ip>:<connect-port>  device
+```
+
+Pairing only needs to happen once per WSL2 install — subsequent sessions can go straight to `adb connect`. But WSL2's networking sometimes forgets, so if `adb devices` shows nothing or `offline`:
+
+```bash
+adb kill-server && adb start-server
+adb connect <phone-ip>:<connect-port>
+```
+
+### Sanity check: Maestro sees the device
+
+```bash
+maestro test --help   # should succeed
+maestro hierarchy     # dumps the current foregrounded app's view tree
+```
+
+If `maestro hierarchy` prints XML, you're good. If it says "No devices connected", `adb devices` isn't seeing the phone — retry the pair/connect above.
+
+### Then: run E2E
+
+From `apps/mobile/`, with Metro already running (`npx expo start` + the cloudflared bridge from the mobile v1 handoff):
+
+```bash
+npm run e2e:expo-go -- \
+  --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
+  --env EMAIL=<staging-email> \
+  --env PASSWORD=<staging-password> \
+  --env BRANCH_NAME=Kharis
+```
+
+### iOS notes
+
+Maestro on iOS drives the device via WebDriverAgent, which needs a macOS host with Xcode. From WSL2 that's not reachable. Options if iOS coverage matters:
+
+- Run Maestro from a Mac with `idevice_id -l` seeing the phone.
+- Run against an iOS Simulator (macOS-only).
+- BrowserStack App Automate / Sauce Labs have hosted Maestro cloud runners — no local iOS setup needed.
+
+For now, treat Android as the E2E target and lean on manual QA + unit tests for iOS parity.
 
 ## Path A — against Expo Go (no build required)
 
