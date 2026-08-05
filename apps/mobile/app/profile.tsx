@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Pencil, ChevronRight } from 'lucide-react-native';
-import { Avatar, Badge, Card, colors, spacing, typography, radii } from '@kairos/ui-native';
+import { Avatar, Badge, Card, colors, spacing, typography } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';

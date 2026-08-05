@@ -67,12 +67,12 @@ function ColumnView({ column }: { column: Column }) {
     },
   });
 
-  const souls = (query.data ?? []) as Array<{
+  const souls = (query.data ?? []) as {
     id: string;
     firstName: string;
     lastName: string;
     createdAt: string | Date;
-  }>;
+  }[];
 
   return (
     <View style={styles.column}>
