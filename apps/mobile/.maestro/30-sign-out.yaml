@@ -1,16 +1,21 @@
+appId: ${APP_ID}
 name: Sign out — from More tab
 tags:
   - smoke
   - auth
+env:
+  APP_ID: "com.kharis.kairos"
 ---
 - assertVisible: "More"
 - tapOn: "More"
 
-- extendedWaitUntil:
-    visible:
+# Sign out sits at the bottom of the More list — scroll until it's on screen.
+- scrollUntilVisible:
+    element:
       text: "Sign out"
-    timeout: 5000
-- scroll
+    direction: DOWN
+    timeout: 10000
+    speed: 40
 - tapOn: "Sign out"
 
 # Confirmation dialog

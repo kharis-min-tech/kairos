@@ -3,15 +3,11 @@ name: Golden path (Expo Go) — bootstrap via deep link, then onboarding → log
 tags:
   - smoke
 env:
-  EMAIL: ""
-  PASSWORD: ""
-  BRANCH_NAME: "Kharis"
   # Android Expo Go bundle id. iOS is host.exp.Exponent (capital E).
   EXPO_GO_APP_ID: "host.exp.exponent"
-  # Metro URL as reachable from the device. LAN: exp://<host-lan-ip>:8081.
-  # Cloudflared tunnel: exp://<subdomain>.trycloudflare.com (no :port —
-  # Metro's EXPO_PACKAGER_PROXY_URL handles it).
-  METRO_URL: ""
+  # EMAIL, PASSWORD, METRO_URL, BRANCH_NAME MUST be passed via --env at run time.
+  # Do NOT set defaults here — Maestro 2.x's flow env block always wins over CLI
+  # --env, so any default here silently overrides what you pass on the command line.
 ---
 # Reset Expo Go's own state so the project's AsyncStorage + SecureStore items
 # are wiped. Since Expo Go OWNS the SecureStore keychain for hosted projects,
@@ -21,7 +17,7 @@ env:
     clearKeychain: true
 
 # Open the Metro deep link. Expo Go routes exp:// URLs into its project loader.
-- openLink: ${METRO_URL}
+- openLink: "${METRO_URL}"
 
 # Expo Go shows its own "Building JavaScript bundle" indicator before handing
 # off to the app. Wait until the splash-screen text appears before proceeding.
@@ -33,11 +29,19 @@ env:
 - runFlow:
     file: 00-onboarding.yaml
     env:
+      APP_ID: ${EXPO_GO_APP_ID}
       BRANCH_NAME: ${BRANCH_NAME}
 - runFlow:
     file: 10-login.yaml
     env:
+      APP_ID: ${EXPO_GO_APP_ID}
       EMAIL: ${EMAIL}
       PASSWORD: ${PASSWORD}
-- runFlow: 20-tab-navigation.yaml
-- runFlow: 30-sign-out.yaml
+- runFlow:
+    file: 20-tab-navigation.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
