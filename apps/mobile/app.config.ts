@@ -5,6 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'Kairos',
   slug: 'kairos-mobile',
   version: '1.0.0',
+  runtimeVersion: { policy: 'appVersion' },
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: 'kairos',

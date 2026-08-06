@@ -13,7 +13,13 @@
     "typecheck": "tsc --noEmit",
     "e2e": "maestro test .maestro/golden-path.yaml",
     "e2e:expo-go": "maestro test .maestro/golden-path-expo-go.yaml",
-    "e2e:studio": "maestro studio"
+    "e2e:studio": "maestro studio",
+    "build:dev:android": "eas build --profile development --platform android",
+    "build:dev:ios": "eas build --profile development --platform ios",
+    "build:preview:android": "eas build --profile preview --platform android",
+    "build:preview:ios": "eas build --profile preview --platform ios",
+    "build:prod": "eas build --profile production --platform all",
+    "submit:prod": "eas submit --profile production --platform all"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
