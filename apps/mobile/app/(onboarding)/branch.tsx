@@ -86,6 +86,7 @@ export default function BranchScreen() {
               return (
                 <Pressable
                   key={b.id}
+                  testID={`branch-row-${b.branchName}`}
                   onPress={() => setSelected(b.id)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}
