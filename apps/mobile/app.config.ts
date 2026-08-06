@@ -6,6 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'kairos-mobile',
   version: '1.0.0',
   orientation: 'portrait',
+  icon: './assets/icon.png',
   scheme: 'kairos',
   userInterfaceStyle: 'automatic',
   ios: {
@@ -15,8 +16,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: 'com.kharis.kairos',
     adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#5D3FD3',
     },
+  },
+  web: {
+    favicon: './assets/favicon.png',
   },
   plugins: [
     'expo-router',
@@ -25,7 +30,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#0c0a1a',
+        image: './assets/splash-icon.png',
+        imageWidth: 200,
+        resizeMode: 'contain',
+        backgroundColor: '#5D3FD3',
       },
     ],
   ],
