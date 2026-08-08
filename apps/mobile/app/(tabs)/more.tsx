@@ -104,7 +104,11 @@ export default function More() {
             label="My fellowship"
             onPress={() => router.push('/my-fellowship')}
           />
-          <SoonRow icon={Building2} label="My department" />
+          <NavRow
+            icon={Building2}
+            label="My department"
+            onPress={() => router.push('/my-department')}
+          />
           <SoonRow icon={Map} label="My branch" />
         </Section>
 
