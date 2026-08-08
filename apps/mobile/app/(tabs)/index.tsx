@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Bell } from 'lucide-react-native';
 import { Avatar, Card, Badge, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
@@ -9,6 +10,7 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function Home() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
   const rota = useQuery({
@@ -20,6 +22,15 @@ export default function Home() {
       return res.data ?? [];
     },
     enabled: !!user,
+  });
+
+  const myFellowship = useQuery({
+    queryKey: ['home', 'my-fellowship', user?.id],
+    queryFn: async () => {
+      const res = await api.fellowships.list({ memberId: user!.id, limit: 1 });
+      return res.data?.data?.[0] ?? null;
+    },
+    enabled: !!user?.id,
   });
 
   const dateHeader = useMemo(() => {
@@ -110,13 +121,32 @@ export default function Home() {
             )}
           </Card>
 
-          <Card padding="md" style={styles.fellowshipCard}>
-            <View style={[styles.dutyDot, { backgroundColor: colors.gold }]} />
-            <Text style={styles.dutyEyebrow}>FELLOWSHIP</Text>
-            <Text style={styles.dutyTitle}>Your K-Group</Text>
-            <Text style={styles.dutyMeta}>Wire in Phase 6</Text>
-            <Text style={styles.dutySub}>Leader tools coming next</Text>
-          </Card>
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={() => router.push('/my-fellowship')}
+          >
+            <Card padding="md" style={styles.fellowshipCard}>
+              <View style={[styles.dutyDot, { backgroundColor: colors.gold }]} />
+              <Text style={styles.dutyEyebrow}>FELLOWSHIP</Text>
+              {myFellowship.data ? (
+                <>
+                  <Text style={styles.dutyTitle}>{myFellowship.data.fellowshipName}</Text>
+                  <Text style={styles.dutyMeta}>
+                    {[myFellowship.data.meetingDay, myFellowship.data.meetingTime]
+                      .filter(Boolean)
+                      .join(' · ') || myFellowship.data.fellowshipType}
+                  </Text>
+                  <Text style={styles.dutySub}>Tap to view members</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.dutyTitle}>No fellowship yet</Text>
+                  <Text style={styles.dutyMeta}>Ask your pastor to add you</Text>
+                  <Text style={styles.dutySub}>Tap for details</Text>
+                </>
+              )}
+            </Card>
+          </Pressable>
         </View>
 
         <View style={styles.verseCard}>
