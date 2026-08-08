@@ -1,9 +1,43 @@
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LogOut, ChevronRight } from 'lucide-react-native';
-import { Card, Avatar, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  LogOut,
+  ChevronRight,
+  User,
+  Bell,
+  BookOpen,
+  Calendar,
+  Heart,
+  ClipboardList,
+  Users,
+  UsersRound,
+  Building2,
+  Sparkles,
+  UserPlus,
+  Handshake,
+  CheckSquare,
+  Repeat,
+  BarChart3,
+  LayoutDashboard,
+  PieChart,
+  Map,
+  FileText,
+  Send,
+  Shield,
+  Lock,
+  History,
+  Download,
+  Palette,
+  Globe,
+  HelpCircle,
+  Info,
+} from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import { Badge, Card, Avatar, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
+
+const HELP_URL = 'https://docs.kairos.kharis.org';
 
 export default function More() {
   const router = useRouter();
@@ -47,41 +81,103 @@ export default function More() {
           </Card>
         </Pressable>
 
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>For you</Text>
-          <NavRow label="Profile" onPress={() => router.push('/profile')} />
-          <NavRow label="Notifications" onPress={() => router.push('/notifications')} />
+        <Section label="For you">
+          <NavRow icon={User} label="Profile" onPress={() => router.push('/profile')} />
           <NavRow
+            icon={Bell}
+            label="Notifications"
+            onPress={() => router.push('/notifications')}
+          />
+          <NavRow
+            icon={BookOpen}
             label="New Believer journey"
             onPress={() => router.push('/new-believers')}
           />
-          <PlaceholderRow label="My attendance" />
-          <PlaceholderRow label="Giving history" />
-        </View>
+          <SoonRow icon={Calendar} label="My attendance" />
+          <SoonRow icon={Heart} label="Giving history" />
+          <SoonRow icon={FileText} label="My form submissions" />
+        </Section>
 
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>Leader tools</Text>
-          <NavRow label="Approvals" onPress={() => router.push('/approvals')} />
-          <NavRow label="Follow-ups" onPress={() => router.push('/follow-ups')} />
-          <NavRow label="Rota" onPress={() => router.push('/rota')} />
-        </View>
+        <Section label="My groups">
+          <SoonRow icon={UsersRound} label="My fellowship" />
+          <SoonRow icon={Building2} label="My department" />
+          <SoonRow icon={Map} label="My branch" />
+        </Section>
 
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>Admin</Text>
-          <NavRow label="Check-in desk" onPress={() => router.push('/admin/checkin')} />
+        <Section label="People">
+          <SoonRow icon={Users} label="Members directory" />
           <NavRow
+            icon={Sparkles}
+            label="New Believers pipeline"
+            onPress={() => router.push('/new-believers')}
+          />
+          <SoonRow icon={UserPlus} label="Souls / outreach" />
+        </Section>
+
+        <Section label="Groups">
+          <SoonRow icon={UsersRound} label="Fellowships" />
+          <SoonRow icon={Building2} label="Departments" />
+        </Section>
+
+        <Section label="Leader tools">
+          <NavRow
+            icon={CheckSquare}
+            label="Approvals"
+            onPress={() => router.push('/approvals')}
+          />
+          <NavRow
+            icon={Handshake}
+            label="Follow-ups"
+            onPress={() => router.push('/follow-ups')}
+          />
+          <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
+          <SoonRow icon={ClipboardList} label="Rollcall" />
+        </Section>
+
+        <Section label="Forms">
+          <SoonRow icon={FileText} label="Fill a form" />
+          <SoonRow icon={Send} label="First-timer capture" />
+        </Section>
+
+        <Section label="Reports & analytics">
+          <SoonRow icon={LayoutDashboard} label="Dashboard" />
+          <SoonRow icon={PieChart} label="Reports" />
+          <NavRow
+            icon={BarChart3}
             label="Service attendance"
             onPress={() => router.push('/admin/attendance')}
           />
-        </View>
+        </Section>
 
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>Settings</Text>
-          <PlaceholderRow label="Appearance" />
-          <PlaceholderRow label="Language" />
-          <PlaceholderRow label="Privacy & consent" />
-          <PlaceholderRow label="Help & support" />
-        </View>
+        <Section label="Admin">
+          <NavRow
+            icon={ClipboardList}
+            label="Check-in desk"
+            onPress={() => router.push('/admin/checkin')}
+          />
+          <SoonRow icon={Building2} label="Branch settings" />
+          <SoonRow icon={Users} label="Users & roles" />
+          <SoonRow icon={Map} label="Regions" />
+        </Section>
+
+        <Section label="Settings">
+          <SoonRow icon={Bell} label="Notification preferences" />
+          <SoonRow icon={Shield} label="Privacy & consent" />
+          <SoonRow icon={Download} label="Data & privacy" />
+          <SoonRow icon={Lock} label="Security" />
+          <SoonRow icon={History} label="Recent activity" />
+          <SoonRow icon={Palette} label="Appearance" />
+          <SoonRow icon={Globe} label="Language" />
+        </Section>
+
+        <Section label="Help">
+          <NavRow
+            icon={HelpCircle}
+            label="Help & Guides"
+            onPress={() => Linking.openURL(HELP_URL)}
+          />
+          <SoonRow icon={Info} label="About Kairos" />
+        </Section>
 
         <Pressable onPress={handleSignOut} style={styles.signOutRow}>
           <LogOut color={colors.danger} size={18} strokeWidth={1.5} />
@@ -94,23 +190,46 @@ export default function More() {
   );
 }
 
-function PlaceholderRow({ label }: { label: string }) {
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <Pressable
-      onPress={() => Alert.alert(label, 'Lands in a later phase.')}
-      style={styles.row}
-    >
+    <View style={styles.group}>
+      <Text style={styles.groupLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
+function NavRow({
+  icon: Icon,
+  label,
+  onPress,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={styles.row}>
+      <View style={styles.rowIcon}>
+        <Icon color={colors.primary} size={18} strokeWidth={1.5} />
+      </View>
       <Text style={styles.rowLabel}>{label}</Text>
       <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
     </Pressable>
   );
 }
 
-function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
+function SoonRow({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
-    <Pressable onPress={onPress} style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+    <Pressable
+      onPress={() => Alert.alert(label, 'Coming in a later mobile pass. Available on web.')}
+      style={styles.row}
+    >
+      <View style={styles.rowIcon}>
+        <Icon color="rgba(26,28,28,0.35)" size={18} strokeWidth={1.5} />
+      </View>
+      <Text style={[styles.rowLabel, styles.rowLabelSoon]}>{label}</Text>
+      <Badge label="Soon" variant="neutral" size="sm" />
     </Pressable>
   );
 }
@@ -142,13 +261,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.md,
     backgroundColor: colors.cardLight,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
-  rowLabel: { ...typography.body, color: colors.ink },
+  rowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowLabel: { ...typography.body, color: colors.ink, flex: 1 },
+  rowLabelSoon: { color: 'rgba(26,28,28,0.6)' },
   signOutRow: {
     flexDirection: 'row',
     alignItems: 'center',
