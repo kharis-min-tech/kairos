@@ -99,7 +99,11 @@ export default function More() {
         </Section>
 
         <Section label="My groups">
-          <SoonRow icon={UsersRound} label="My fellowship" />
+          <NavRow
+            icon={UsersRound}
+            label="My fellowship"
+            onPress={() => router.push('/my-fellowship')}
+          />
           <SoonRow icon={Building2} label="My department" />
           <SoonRow icon={Map} label="My branch" />
         </Section>
