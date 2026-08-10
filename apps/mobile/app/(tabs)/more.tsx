@@ -169,7 +169,11 @@ export default function More() {
         </Section>
 
         <Section label="Settings">
-          <SoonRow icon={Bell} label="Notification preferences" />
+          <NavRow
+            icon={Bell}
+            label="Notification preferences"
+            onPress={() => router.push('/notification-preferences')}
+          />
           <NavRow
             icon={Shield}
             label="Privacy & consent"
