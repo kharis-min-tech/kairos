@@ -1088,6 +1088,10 @@ export function createApiClient(
       myCapabilities: () =>
         client.get<ApiResponse<FormsCapabilities>>('/api/forms/me/capabilities'),
 
+      // Caller's own submissions — personal paper trail across branches.
+      mySubmissions: () =>
+        client.get<ApiResponse<FormSubmission[]>>('/api/forms/me/submissions'),
+
       // Submit a form (any logged-in member). Branch is forced server-side.
       submit: (formType: FormType, data: SubmitFormRequest) =>
         client.post<ApiResponse<FormSubmission>>(`/api/forms/${encodeURIComponent(formType)}/submit`, data),

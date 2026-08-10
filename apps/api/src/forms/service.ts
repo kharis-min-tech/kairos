@@ -887,6 +887,34 @@ export async function getMyFormsCapabilities(db: Database, auth: AuthContext) {
 
 // ── Submissions: list / get / update ───────────────────────
 
+/**
+ * List submissions filed by the caller. Unlike listSubmissions (leader-scoped
+ * review surface), this returns anything the caller submitted regardless of
+ * branch or form-type visibility rules — it's their own paper trail.
+ */
+export async function listMySubmissions(db: Database, auth: AuthContext) {
+  return db
+    .select({
+      id: formSubmissions.id,
+      formType: formSubmissions.formType,
+      branchId: formSubmissions.branchId,
+      branchName: branches.branchName,
+      submittedBy: formSubmissions.submittedBy,
+      subjectMemberId: formSubmissions.subjectMemberId,
+      payload: formSubmissions.payload,
+      status: formSubmissions.status,
+      linkedEntityType: formSubmissions.linkedEntityType,
+      linkedEntityId: formSubmissions.linkedEntityId,
+      notes: formSubmissions.notes,
+      createdAt: formSubmissions.createdAt,
+      updatedAt: formSubmissions.updatedAt,
+    })
+    .from(formSubmissions)
+    .innerJoin(branches, eq(formSubmissions.branchId, branches.id))
+    .where(eq(formSubmissions.submittedBy, auth.memberId))
+    .orderBy(desc(formSubmissions.createdAt));
+}
+
 function submissionFilters(branchId: string, query: ListSubmissionsQuery | ExportSubmissionsQuery) {
   const conditions = [eq(formSubmissions.branchId, branchId)];
   if (query.formType) conditions.push(eq(formSubmissions.formType, query.formType));

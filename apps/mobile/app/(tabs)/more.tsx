@@ -95,7 +95,11 @@ export default function More() {
           />
           <SoonRow icon={Calendar} label="My attendance" />
           <SoonRow icon={Heart} label="Giving history" />
-          <SoonRow icon={FileText} label="My form submissions" />
+          <NavRow
+            icon={FileText}
+            label="My form submissions"
+            onPress={() => router.push('/my-form-submissions')}
+          />
         </Section>
 
         <Section label="My groups">
