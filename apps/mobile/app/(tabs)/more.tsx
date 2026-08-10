@@ -143,7 +143,11 @@ export default function More() {
             onPress={() => router.push('/follow-ups')}
           />
           <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
-          <SoonRow icon={ClipboardList} label="Rollcall" />
+          <NavRow
+            icon={ClipboardList}
+            label="Rollcall"
+            onPress={() => router.push('/rollcall')}
+          />
         </Section>
 
         <Section label="Forms">
