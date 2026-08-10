@@ -170,10 +170,22 @@ export default function More() {
 
         <Section label="Settings">
           <SoonRow icon={Bell} label="Notification preferences" />
-          <SoonRow icon={Shield} label="Privacy & consent" />
-          <SoonRow icon={Download} label="Data & privacy" />
+          <NavRow
+            icon={Shield}
+            label="Privacy & consent"
+            onPress={() => router.push('/privacy-consent')}
+          />
+          <NavRow
+            icon={Download}
+            label="Data & privacy"
+            onPress={() => router.push('/data-privacy')}
+          />
           <SoonRow icon={Lock} label="Security" />
-          <SoonRow icon={History} label="Recent activity" />
+          <NavRow
+            icon={History}
+            label="Recent activity"
+            onPress={() => router.push('/recent-activity')}
+          />
           <SoonRow icon={Palette} label="Appearance" />
           <SoonRow icon={Globe} label="Language" />
         </Section>
