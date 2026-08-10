@@ -143,8 +143,12 @@ export default function More() {
         </Section>
 
         <Section label="Forms">
-          <SoonRow icon={FileText} label="Fill a form" />
-          <SoonRow icon={Send} label="First-timer capture" />
+          <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
+          <NavRow
+            icon={Send}
+            label="First-timer capture"
+            onPress={() => router.push('/forms/first_time_visitor')}
+          />
         </Section>
 
         <Section label="Reports & analytics">
