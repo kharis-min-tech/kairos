@@ -1,0 +1,292 @@
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Plus,
+  CheckCircle2,
+} from 'lucide-react-native';
+import { Button, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import type { CreateFellowshipMeetingRequest, FellowshipMeeting } from '@kairos/types';
+import { api } from '@/lib/api-client';
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function formatMeetingDate(iso: string | Date): string {
+  const d = iso instanceof Date ? iso : new Date(iso);
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+export default function RollcallFellowship() {
+  const router = useRouter();
+  const qc = useQueryClient();
+  const params = useLocalSearchParams<{ fellowshipId: string }>();
+  const fellowshipId = params.fellowshipId!;
+
+  const fellowship = useQuery({
+    queryKey: ['fellowships', fellowshipId],
+    enabled: !!fellowshipId,
+    queryFn: async () => (await api.fellowships.get(fellowshipId)).data ?? null,
+  });
+
+  const meetings = useQuery({
+    queryKey: ['fellowships', fellowshipId, 'meetings'],
+    enabled: !!fellowshipId,
+    queryFn: async () => (await api.fellowships.meetings.list(fellowshipId)).data ?? [],
+  });
+
+  const createMeeting = useMutation({
+    mutationFn: async (data: CreateFellowshipMeetingRequest) =>
+      (await api.fellowships.meetings.create(fellowshipId, data)).data!,
+    onSuccess: (m) => {
+      qc.invalidateQueries({ queryKey: ['fellowships', fellowshipId, 'meetings'] });
+      router.push(`/rollcall/${fellowshipId}/${m.id}`);
+    },
+  });
+
+  const rows = (meetings.data ?? []) as FellowshipMeeting[];
+  const now = new Date();
+  const upcoming = rows
+    .filter((m) => new Date(m.meetingDate) >= new Date(now.getFullYear(), now.getMonth(), now.getDate()))
+    .sort((a, b) => new Date(a.meetingDate).getTime() - new Date(b.meetingDate).getTime());
+  const past = rows
+    .filter((m) => new Date(m.meetingDate) < new Date(now.getFullYear(), now.getMonth(), now.getDate()))
+    .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+
+  const [creating, setCreating] = useState(false);
+
+  function handleQuickCreate() {
+    setCreating(true);
+    createMeeting.mutate(
+      { meetingDate: toISODate(new Date()) },
+      {
+        onError: (err) => {
+          Alert.alert(
+            'Could not start meeting',
+            err instanceof Error ? err.message : 'Please try again in a moment.',
+          );
+        },
+        onSettled: () => setCreating(false),
+      },
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {fellowship.data?.fellowshipName ?? 'Rollcall'}
+        </Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={meetings.isFetching || fellowship.isFetching}
+            onRefresh={() => {
+              meetings.refetch();
+              fellowship.refetch();
+            }}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        <View style={styles.introBlock}>
+          <Text style={styles.introTitle}>Meetings</Text>
+          {fellowship.data?.branchName ? (
+            <Text style={styles.introMeta}>{fellowship.data.branchName}</Text>
+          ) : null}
+        </View>
+
+        <Button
+          label={creating ? 'Starting…' : "Start today's meeting"}
+          variant="primary"
+          size="md"
+          fullWidth
+          loading={creating}
+          iconLeft={<Plus color="#ffffff" size={16} strokeWidth={2} />}
+          onPress={handleQuickCreate}
+        />
+
+        {meetings.isLoading ? (
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+        ) : null}
+
+        {upcoming.length > 0 ? (
+          <View>
+            <Text style={styles.sectionEyebrow}>UPCOMING</Text>
+            <View style={styles.list}>
+              {upcoming.map((m) => (
+                <MeetingRow
+                  key={m.id}
+                  meeting={m}
+                  onPress={() => router.push(`/rollcall/${fellowshipId}/${m.id}`)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {past.length > 0 ? (
+          <View>
+            <Text style={styles.sectionEyebrow}>RECENT</Text>
+            <View style={styles.list}>
+              {past.slice(0, 8).map((m) => (
+                <MeetingRow
+                  key={m.id}
+                  meeting={m}
+                  onPress={() => router.push(`/rollcall/${fellowshipId}/${m.id}`)}
+                  muted
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!meetings.isLoading && rows.length === 0 ? (
+          <Card padding="md" style={styles.emptyCard}>
+            <View style={styles.emptyIconTile}>
+              <Calendar color={colors.primary} size={22} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.emptyTitle}>No meetings yet</Text>
+            <Text style={styles.emptyMeta}>
+              Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
+              rollcall.
+            </Text>
+          </Card>
+        ) : null}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function MeetingRow({
+  meeting,
+  onPress,
+  muted,
+}: {
+  meeting: FellowshipMeeting;
+  onPress: () => void;
+  muted?: boolean;
+}) {
+  return (
+    <Pressable onPress={onPress}>
+      <Card padding="md" style={styles.rowCard}>
+        <View
+          style={[
+            styles.rowIconTile,
+            muted ? styles.rowIconTileMuted : null,
+          ]}
+        >
+          {muted ? (
+            <CheckCircle2 color="rgba(26,28,28,0.5)" size={18} strokeWidth={1.5} />
+          ) : (
+            <Calendar color={colors.primary} size={18} strokeWidth={1.5} />
+          )}
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {meeting.meetingTitle ?? formatMeetingDate(meeting.meetingDate)}
+          </Text>
+          {meeting.meetingTitle ? (
+            <Text style={styles.rowMeta}>{formatMeetingDate(meeting.meetingDate)}</Text>
+          ) : null}
+          {meeting.location ? (
+            <Text style={styles.rowMeta} numberOfLines={1}>
+              {meeting.location}
+            </Text>
+          ) : null}
+        </View>
+        <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+      </Card>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.pageLight },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
+  },
+  introBlock: { gap: 2 },
+  introTitle: { ...typography.screenTitle, color: colors.ink },
+  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  sectionEyebrow: {
+    ...typography.eyebrow,
+    color: 'rgba(26,28,28,0.55)',
+    marginBottom: spacing.sm,
+  },
+  list: { gap: spacing.sm },
+  rowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rowIconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowIconTileMuted: {
+    backgroundColor: 'rgba(26,28,28,0.06)',
+  },
+  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  emptyCard: {
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  emptyIconTile: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.lg,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyMeta: {
+    ...typography.body,
+    color: 'rgba(26,28,28,0.6)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});
