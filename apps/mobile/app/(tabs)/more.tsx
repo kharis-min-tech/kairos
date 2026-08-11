@@ -136,7 +136,11 @@ export default function More() {
             label="Fellowships"
             onPress={() => router.push('/fellowships')}
           />
-          <SoonRow icon={Building2} label="Departments" />
+          <NavRow
+            icon={Building2}
+            label="Departments"
+            onPress={() => router.push('/departments')}
+          />
         </Section>
 
         <Section label="Leader tools">
