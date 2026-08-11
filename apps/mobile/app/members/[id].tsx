@@ -291,7 +291,7 @@ export default function MemberProfile() {
             (fellowships.data ?? []).map((f) => (
               <Pressable
                 key={f.id}
-                onPress={() => router.push('/my-fellowship')}
+                onPress={() => router.push(`/fellowships/${f.id}`)}
                 style={styles.linkRow}
               >
                 <Text style={styles.linkRowLabel}>{f.fellowshipName}</Text>
@@ -308,12 +308,16 @@ export default function MemberProfile() {
             <Text style={styles.emptyLine}>Not in any departments yet.</Text>
           ) : (
             (departments.data ?? []).map((d) => (
-              <View key={d.id} style={styles.linkRow}>
+              <Pressable
+                key={d.id}
+                onPress={() => router.push(`/departments/${d.id}`)}
+                style={styles.linkRow}
+              >
                 <Text style={styles.linkRowLabel}>{d.departmentName}</Text>
                 {d.branchName ? (
                   <Text style={styles.linkRowMeta}>{d.branchName}</Text>
                 ) : null}
-              </View>
+              </Pressable>
             ))
           )}
         </Section>
