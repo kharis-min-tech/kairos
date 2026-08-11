@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,22 +7,36 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Users, Pencil } from 'lucide-react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ChevronLeft,
+  Calendar,
+  Users,
+  Pencil,
+  UserPlus,
+  Check,
+  X,
+  Search,
+  Handshake,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
   Card,
+  Input,
   colors,
   gradients,
   radii,
   spacing,
   typography,
 } from '@kairos/ui-native';
+import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
 function formatMeetingDate(iso: string | Date): string {
@@ -33,8 +48,18 @@ function formatMeetingDate(iso: string | Date): string {
   });
 }
 
+function useDebounced<T>(value: T, delay: number): T {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+}
+
 export default function FellowshipDetail() {
   const router = useRouter();
+  const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
 
@@ -56,10 +81,52 @@ export default function FellowshipDetail() {
     queryFn: async () => (await api.fellowships.meetings.list(id)).data ?? [],
   });
 
+  const joinRequests = useQuery({
+    queryKey: ['fellowships', id, 'join-requests'],
+    enabled: !!id,
+    queryFn: async () =>
+      (await api.fellowships.joinRequests.list(id)).data ?? [],
+  });
+
+  const addMember = useMutation({
+    mutationFn: async (memberId: string) =>
+      (await api.fellowships.members.add(id, { memberId })).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fellowships', id, 'members'] });
+    },
+  });
+
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      await api.fellowships.members.remove(id, memberId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fellowships', id, 'members'] });
+    },
+  });
+
+  const reviewRequest = useMutation({
+    mutationFn: async ({
+      requestId,
+      status,
+    }: {
+      requestId: string;
+      status: 'approved' | 'rejected';
+    }) =>
+      (await api.fellowships.joinRequests.review(id, requestId, { status })).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fellowships', id, 'join-requests'] });
+      qc.invalidateQueries({ queryKey: ['fellowships', id, 'members'] });
+    },
+  });
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const refresh = () => {
     fellowship.refetch();
     members.refetch();
     meetings.refetch();
+    joinRequests.refetch();
   };
 
   const f = fellowship.data;
@@ -73,6 +140,39 @@ export default function FellowshipDetail() {
     .filter((m) => new Date(m.meetingDate) < startOfToday)
     .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime())
     .slice(0, 4);
+
+  const pendingRequests = (joinRequests.data ?? []).filter(
+    (r: FellowshipJoinRequestWithMember) => r.status === 'pending',
+  );
+
+  const memberIds = useMemo(
+    () => new Set((members.data ?? []).map((m) => m.memberId)),
+    [members.data],
+  );
+
+  function confirmRemoveMember(memberId: string, name: string) {
+    Alert.alert(
+      'Remove from fellowship?',
+      `Remove ${name} from this fellowship. They keep their member record; only this fellowship membership is ended.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            removeMember.mutate(memberId, {
+              onError: (err) => {
+                Alert.alert(
+                  'Remove failed',
+                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                );
+              },
+            });
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -101,7 +201,10 @@ export default function FellowshipDetail() {
         refreshControl={
           <RefreshControl
             refreshing={
-              fellowship.isFetching || members.isFetching || meetings.isFetching
+              fellowship.isFetching ||
+              members.isFetching ||
+              meetings.isFetching ||
+              joinRequests.isFetching
             }
             onRefresh={refresh}
             tintColor={colors.primary}
@@ -169,6 +272,78 @@ export default function FellowshipDetail() {
               </Card>
             ) : null}
 
+            {pendingRequests.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconTile}>
+                    <Handshake color={colors.gold} size={14} strokeWidth={1.5} />
+                  </View>
+                  <Text style={styles.sectionTitle}>Join requests</Text>
+                  <Badge
+                    label={String(pendingRequests.length)}
+                    variant="gold"
+                    size="sm"
+                  />
+                </View>
+                <Card padding="md" style={{ gap: spacing.sm }}>
+                  {pendingRequests.map((r, idx) => (
+                    <View
+                      key={r.id}
+                      style={[
+                        styles.requestRow,
+                        idx > 0 ? styles.rowDivider : null,
+                      ]}
+                    >
+                      <Avatar
+                        size="sm"
+                        photoUrl={r.memberPhotoUrl ?? undefined}
+                        firstName={r.memberFirstName}
+                        lastName={r.memberLastName}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.memberName} numberOfLines={1}>
+                          {r.memberFirstName} {r.memberLastName}
+                        </Text>
+                        {r.notes ? (
+                          <Text style={styles.requestNote} numberOfLines={2}>
+                            &ldquo;{r.notes}&rdquo;
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.requestActions}>
+                        <Pressable
+                          onPress={() =>
+                            reviewRequest.mutate({
+                              requestId: r.id,
+                              status: 'rejected',
+                            })
+                          }
+                          style={styles.rejectBtn}
+                          hitSlop={4}
+                          disabled={reviewRequest.isPending}
+                        >
+                          <X color={colors.danger} size={14} strokeWidth={2} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() =>
+                            reviewRequest.mutate({
+                              requestId: r.id,
+                              status: 'approved',
+                            })
+                          }
+                          style={styles.approveBtn}
+                          hitSlop={4}
+                          disabled={reviewRequest.isPending}
+                        >
+                          <Check color="#ffffff" size={14} strokeWidth={2} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  ))}
+                </Card>
+              </View>
+            ) : null}
+
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
@@ -180,6 +355,14 @@ export default function FellowshipDetail() {
                   variant="neutral"
                   size="sm"
                 />
+                <Pressable
+                  onPress={() => setPickerOpen(true)}
+                  style={styles.addMemberBtn}
+                  hitSlop={6}
+                  accessibilityLabel="Add member"
+                >
+                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                </Pressable>
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.sm }} />
@@ -191,6 +374,13 @@ export default function FellowshipDetail() {
                     <Pressable
                       key={m.id}
                       onPress={() => router.push(`/members/${m.memberId}`)}
+                      onLongPress={() =>
+                        confirmRemoveMember(
+                          m.memberId,
+                          `${m.memberFirstName} ${m.memberLastName}`,
+                        )
+                      }
+                      delayLongPress={350}
                       style={styles.memberRow}
                     >
                       <Avatar
@@ -209,6 +399,9 @@ export default function FellowshipDetail() {
                       ) : null}
                     </Pressable>
                   ))}
+                  <Text style={styles.longPressHint}>
+                    Long-press a row to remove them from the fellowship.
+                  </Text>
                 </View>
               )}
             </View>
@@ -247,7 +440,133 @@ export default function FellowshipDetail() {
           </>
         ) : null}
       </ScrollView>
+
+      {f ? (
+        <MemberPickerSheet
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          branchId={f.branchId}
+          excludeMemberIds={memberIds}
+          onPick={(memberId) => {
+            setPickerOpen(false);
+            addMember.mutate(memberId, {
+              onError: (err) => {
+                Alert.alert(
+                  'Add failed',
+                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                );
+              },
+            });
+          }}
+        />
+      ) : null}
     </SafeAreaView>
+  );
+}
+
+function MemberPickerSheet({
+  open,
+  onClose,
+  branchId,
+  excludeMemberIds,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  branchId: string;
+  excludeMemberIds: Set<string>;
+  onPick: (memberId: string) => void;
+}) {
+  const [searchInput, setSearchInput] = useState('');
+  const debounced = useDebounced(searchInput.trim(), 250);
+
+  const results = useQuery({
+    queryKey: ['members', 'picker', { branchId, search: debounced }],
+    enabled: open,
+    queryFn: async () =>
+      (
+        await api.members.list({
+          branchId,
+          search: debounced || undefined,
+          limit: 20,
+        })
+      ).data?.data ?? [],
+  });
+
+  const filtered = (results.data ?? []).filter((m) => !excludeMemberIds.has(m.id));
+
+  return (
+    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <Pressable style={styles.pickerSheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.sheetHandle} />
+          <Text style={styles.pickerSheetTitle}>Add a member</Text>
+          <Text style={styles.pickerSheetSub}>
+            Search members in this branch. Tap to add.
+          </Text>
+
+          <View style={styles.pickerSearchWrap}>
+            <Search
+              color="rgba(26,28,28,0.4)"
+              size={16}
+              strokeWidth={1.5}
+              style={styles.pickerSearchIcon}
+            />
+            <Input
+              value={searchInput}
+              onChangeText={setSearchInput}
+              placeholder="Search by name or email"
+              autoCapitalize="none"
+              autoCorrect={false}
+              containerStyle={{ flex: 1 }}
+              autoFocus
+            />
+          </View>
+
+          <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
+            {results.isLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            ) : filtered.length === 0 ? (
+              <Text style={styles.pickerEmpty}>
+                {debounced
+                  ? `No matches for "${debounced}" in this branch.`
+                  : 'Start typing to search members.'}
+              </Text>
+            ) : (
+              filtered.map((m) => (
+                <Pressable
+                  key={m.id}
+                  onPress={() => onPick(m.id)}
+                  style={styles.pickerRow}
+                >
+                  <Avatar
+                    size="sm"
+                    photoUrl={m.photoUrl ?? undefined}
+                    firstName={m.firstName}
+                    lastName={m.lastName}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.pickerName} numberOfLines={1}>
+                      {m.firstName} {m.lastName}
+                    </Text>
+                    {m.email && !m.redacted ? (
+                      <Text style={styles.pickerMeta} numberOfLines={1}>
+                        {m.email}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+
+          <Pressable style={styles.sheetCancel} onPress={onClose}>
+            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 
@@ -346,6 +665,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  addMemberBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   memberList: { gap: spacing.xs },
   memberRow: {
     flexDirection: 'row',
@@ -356,10 +683,55 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   memberName: { ...typography.body, color: colors.ink },
+  longPressHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.45)',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
   emptyLine: {
     ...typography.body,
     color: 'rgba(26,28,28,0.55)',
     padding: spacing.md,
+  },
+  requestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  rowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(26,28,28,0.08)',
+  },
+  requestNote: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    marginTop: 2,
+    fontStyle: 'italic',
+    lineHeight: 15,
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  approveBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(225,29,72,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(225,29,72,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   meetingList: { gap: spacing.xs },
   meetingRow: {
@@ -388,5 +760,71 @@ const styles = StyleSheet.create({
   errorLine: {
     ...typography.body,
     color: colors.danger,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10,10,15,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerSheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    paddingTop: spacing.md,
+    gap: spacing.md,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    alignSelf: 'center',
+  },
+  pickerSheetTitle: {
+    ...typography.cardTitle,
+    color: colors.ink,
+  },
+  pickerSheetSub: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    marginTop: -6,
+  },
+  pickerSearchWrap: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pickerSearchIcon: {
+    position: 'absolute',
+    left: spacing.md,
+    top: '50%',
+    marginTop: -8,
+    zIndex: 1,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(26,28,28,0.06)',
+  },
+  pickerName: { ...typography.body, color: colors.ink, fontWeight: '500' },
+  pickerMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  pickerEmpty: {
+    ...typography.body,
+    color: 'rgba(26,28,28,0.55)',
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
+  },
+  sheetCancel: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  sheetCancelLabel: {
+    ...typography.button,
+    color: colors.primary,
   },
 });
