@@ -24,6 +24,7 @@ import {
   BadgeCheck,
   ShieldAlert,
   Sparkles,
+  Pencil,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -146,7 +147,13 @@ export default function MemberProfile() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {m.firstName} {m.lastName}
         </Text>
-        <View style={{ width: 24 }} />
+        <Pressable
+          onPress={() => router.push(`/members/edit/${m.id}`)}
+          hitSlop={8}
+          accessibilityLabel="Edit member"
+        >
+          <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+        </Pressable>
       </View>
 
       <ScrollView

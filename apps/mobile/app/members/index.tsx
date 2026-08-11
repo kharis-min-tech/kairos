@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Search, X, Users } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Search, X, Users, Plus } from 'lucide-react-native';
 import { Avatar, Badge, Card, Input, colors, radii, spacing, typography } from '@kairos/ui-native';
 import type { MemberWithBranchProtected } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -68,7 +68,13 @@ export default function MembersDirectory() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Members</Text>
-        <View style={{ width: 24 }} />
+        <Pressable
+          onPress={() => router.push('/members/new')}
+          hitSlop={8}
+          accessibilityLabel="New member"
+        >
+          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+        </Pressable>
       </View>
 
       <View style={styles.controlsBlock}>
