@@ -42,6 +42,32 @@ export default function Approvals() {
     },
   });
 
+  const reject = useMutation({
+    mutationFn: (memberId: string) =>
+      api.members.approve(memberId, { approved: false }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+    },
+    onError: (e: Error) => {
+      Alert.alert('Reject failed', e.message);
+    },
+  });
+
+  function confirmReject(memberId: string, name: string) {
+    Alert.alert(
+      'Reject signup?',
+      `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reject',
+          style: 'destructive',
+          onPress: () => reject.mutate(memberId),
+        },
+      ],
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
@@ -127,8 +153,9 @@ export default function Approvals() {
                 size="sm"
                 variant="outline"
                 fullWidth
+                loading={reject.isPending && reject.variables === item.id}
                 onPress={() =>
-                  Alert.alert('Reject', 'Reject flow lands in a follow-up.')
+                  confirmReject(item.id, `${item.firstName} ${item.lastName}`)
                 }
                 style={styles.rejectButton}
               />
