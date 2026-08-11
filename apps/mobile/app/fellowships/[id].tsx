@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Modal,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,14 +21,12 @@ import {
   UserPlus,
   Check,
   X,
-  Search,
   Handshake,
 } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
   Card,
-  Input,
   colors,
   gradients,
   radii,
@@ -38,6 +35,7 @@ import {
 } from '@kairos/ui-native';
 import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 function formatMeetingDate(iso: string | Date): string {
   const d = iso instanceof Date ? iso : new Date(iso);
@@ -46,15 +44,6 @@ function formatMeetingDate(iso: string | Date): string {
     day: 'numeric',
     month: 'short',
   });
-}
-
-function useDebounced<T>(value: T, delay: number): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return v;
 }
 
 export default function FellowshipDetail() {
@@ -464,112 +453,6 @@ export default function FellowshipDetail() {
   );
 }
 
-function MemberPickerSheet({
-  open,
-  onClose,
-  branchId,
-  excludeMemberIds,
-  onPick,
-}: {
-  open: boolean;
-  onClose: () => void;
-  branchId: string;
-  excludeMemberIds: Set<string>;
-  onPick: (memberId: string) => void;
-}) {
-  const [searchInput, setSearchInput] = useState('');
-  const debounced = useDebounced(searchInput.trim(), 250);
-
-  const results = useQuery({
-    queryKey: ['members', 'picker', { branchId, search: debounced }],
-    enabled: open,
-    queryFn: async () =>
-      (
-        await api.members.list({
-          branchId,
-          search: debounced || undefined,
-          limit: 20,
-        })
-      ).data?.data ?? [],
-  });
-
-  const filtered = (results.data ?? []).filter((m) => !excludeMemberIds.has(m.id));
-
-  return (
-    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.modalBackdrop} onPress={onClose}>
-        <Pressable style={styles.pickerSheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.pickerSheetTitle}>Add a member</Text>
-          <Text style={styles.pickerSheetSub}>
-            Search members in this branch. Tap to add.
-          </Text>
-
-          <View style={styles.pickerSearchWrap}>
-            <Search
-              color="rgba(26,28,28,0.4)"
-              size={16}
-              strokeWidth={1.5}
-              style={styles.pickerSearchIcon}
-            />
-            <Input
-              value={searchInput}
-              onChangeText={setSearchInput}
-              placeholder="Search by name or email"
-              autoCapitalize="none"
-              autoCorrect={false}
-              containerStyle={{ flex: 1 }}
-              autoFocus
-            />
-          </View>
-
-          <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
-            {results.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-            ) : filtered.length === 0 ? (
-              <Text style={styles.pickerEmpty}>
-                {debounced
-                  ? `No matches for "${debounced}" in this branch.`
-                  : 'Start typing to search members.'}
-              </Text>
-            ) : (
-              filtered.map((m) => (
-                <Pressable
-                  key={m.id}
-                  onPress={() => onPick(m.id)}
-                  style={styles.pickerRow}
-                >
-                  <Avatar
-                    size="sm"
-                    photoUrl={m.photoUrl ?? undefined}
-                    firstName={m.firstName}
-                    lastName={m.lastName}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.pickerName} numberOfLines={1}>
-                      {m.firstName} {m.lastName}
-                    </Text>
-                    {m.email && !m.redacted ? (
-                      <Text style={styles.pickerMeta} numberOfLines={1}>
-                        {m.email}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
-                </Pressable>
-              ))
-            )}
-          </ScrollView>
-
-          <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.pageLight },
   headerBar: {
@@ -760,71 +643,5 @@ const styles = StyleSheet.create({
   errorLine: {
     ...typography.body,
     color: colors.danger,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(10,10,15,0.5)',
-    justifyContent: 'flex-end',
-  },
-  pickerSheet: {
-    backgroundColor: colors.cardLight,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-    paddingTop: spacing.md,
-    gap: spacing.md,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
-    alignSelf: 'center',
-  },
-  pickerSheetTitle: {
-    ...typography.cardTitle,
-    color: colors.ink,
-  },
-  pickerSheetSub: {
-    ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
-    marginTop: -6,
-  },
-  pickerSearchWrap: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pickerSearchIcon: {
-    position: 'absolute',
-    left: spacing.md,
-    top: '50%',
-    marginTop: -8,
-    zIndex: 1,
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.06)',
-  },
-  pickerName: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  pickerMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
-  pickerEmpty: {
-    ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
-    textAlign: 'center',
-    paddingVertical: spacing.lg,
-  },
-  sheetCancel: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  sheetCancelLabel: {
-    ...typography.button,
-    color: colors.primary,
   },
 });
