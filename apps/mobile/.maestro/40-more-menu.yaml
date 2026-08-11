@@ -1,0 +1,67 @@
+appId: ${APP_ID}
+name: More menu — full taxonomy visible
+tags:
+  - smoke
+  - navigation
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Assumes signed-in state. Ensures the full grouped taxonomy is present in the
+# More tab — every section header from the 2026-08-08 web-parity refactor. A
+# regression here means a section got renamed or dropped.
+
+- tapOn: "More"
+
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "My groups"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "People"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Leader tools"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Forms"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Reports & analytics"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Settings"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Help"
+    direction: DOWN
+    timeout: 8000
+    speed: 40

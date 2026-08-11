@@ -1,0 +1,51 @@
+appId: ${APP_ID}
+name: Forms — picker + First-Time Visitor declarative renderer
+tags:
+  - smoke
+  - forms
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation. Enters the forms picker, taps into
+# the declaratively-rendered First-Time Visitor form, and asserts the "About
+# you" section renders. Does NOT submit the form — that would create real data.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Fill a form"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Fill a form"
+
+- extendedWaitUntil:
+    visible:
+      text: "Forms & data capture"
+    timeout: 8000
+- assertVisible: "First-Time Visitor"
+- assertVisible: "Baptism"
+
+# Enter the declarative renderer for the first-time visitor form.
+- tapOn: "First-Time Visitor"
+
+- extendedWaitUntil:
+    visible:
+      text: "About you"
+    timeout: 8000
+- assertVisible: "First name"
+- assertVisible: "Last name"
+- assertVisible: "Privacy notice"
+- assertVisible: "Submit"
+
+- pressKey: Back  # back to picker
+- extendedWaitUntil:
+    visible:
+      text: "Forms & data capture"
+    timeout: 8000
+- pressKey: Back  # back to More

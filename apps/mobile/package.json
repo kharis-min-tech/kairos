@@ -13,6 +13,8 @@
     "typecheck": "tsc --noEmit",
     "e2e": "maestro test .maestro/golden-path.yaml",
     "e2e:expo-go": "maestro test .maestro/golden-path-expo-go.yaml",
+    "e2e:waves": "maestro test .maestro/wave-navigation.yaml",
+    "e2e:waves:expo-go": "maestro test .maestro/wave-navigation-expo-go.yaml",
     "e2e:studio": "maestro studio",
     "build:dev:android": "npx eas-cli build --profile development --platform android",
     "build:dev:ios": "npx eas-cli build --profile development --platform ios",
