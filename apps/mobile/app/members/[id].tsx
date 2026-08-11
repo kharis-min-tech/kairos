@@ -7,11 +7,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   Mail,
@@ -25,6 +26,12 @@ import {
   ShieldAlert,
   Sparkles,
   Pencil,
+  Check,
+  X,
+  UserX,
+  UserCheck,
+  Award,
+  Settings,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -51,6 +58,7 @@ function formatDate(iso: string | Date | null | undefined): string {
 
 export default function MemberProfile() {
   const router = useRouter();
+  const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
 
@@ -59,6 +67,94 @@ export default function MemberProfile() {
     enabled: !!id,
     queryFn: async () => (await api.members.get(id)).data ?? null,
   });
+
+  const approve = useMutation({
+    mutationFn: (approved: boolean) => api.members.approve(id, { approved }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
+  });
+
+  const deactivate = useMutation({
+    mutationFn: () => api.members.deactivate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
+  });
+
+  const reactivate = useMutation({
+    mutationFn: () => api.members.reactivate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
+  });
+
+  const setClassComplete = useMutation({
+    mutationFn: (completedAt: string | null) =>
+      api.members.setMembershipClass(id, completedAt),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members'] });
+      qc.invalidateQueries({ queryKey: ['members', id] });
+    },
+  });
+
+  function confirmDeactivate(name: string) {
+    Alert.alert(
+      'Deactivate member?',
+      `Deactivate ${name}. They lose access and stop appearing in the directory. You can reactivate them later.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Deactivate',
+          style: 'destructive',
+          onPress: () =>
+            deactivate.mutate(undefined, {
+              onError: (err) =>
+                Alert.alert(
+                  'Deactivate failed',
+                  err instanceof Error ? err.message : 'Please try again.',
+                ),
+            }),
+        },
+      ],
+    );
+  }
+
+  function confirmReject(name: string) {
+    Alert.alert(
+      'Reject signup?',
+      `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reject',
+          style: 'destructive',
+          onPress: () =>
+            approve.mutate(false, {
+              onError: (err) =>
+                Alert.alert(
+                  'Reject failed',
+                  err instanceof Error ? err.message : 'Please try again.',
+                ),
+            }),
+        },
+      ],
+    );
+  }
+
+  function markClassComplete() {
+    const iso = new Date().toISOString();
+    setClassComplete.mutate(iso, {
+      onError: (err) =>
+        Alert.alert(
+          'Save failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
+  }
 
   const fellowships = useQuery({
     queryKey: ['fellowships', 'for-member', id],
@@ -365,6 +461,117 @@ export default function MemberProfile() {
             ) : null}
           </Card>
         ) : null}
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconTile}>
+              <Settings color={colors.primary} size={14} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.sectionTitle}>Manage</Text>
+          </View>
+          <Card padding="md" style={{ gap: spacing.sm }}>
+            {m.approvalStatus === 'pending' ? (
+              <>
+                <Text style={styles.manageBlurb}>
+                  This member signup is waiting for review.
+                </Text>
+                <View style={styles.manageRow}>
+                  <Pressable
+                    style={[styles.manageBtn, styles.manageBtnPrimary]}
+                    onPress={() =>
+                      approve.mutate(true, {
+                        onError: (err) =>
+                          Alert.alert(
+                            'Approve failed',
+                            err instanceof Error ? err.message : 'Please try again.',
+                          ),
+                      })
+                    }
+                    disabled={approve.isPending}
+                  >
+                    <Check color="#ffffff" size={14} strokeWidth={2} />
+                    <Text style={styles.manageBtnLabelPrimary}>
+                      {approve.isPending ? 'Working…' : 'Approve'}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.manageBtn, styles.manageBtnOutline]}
+                    onPress={() => confirmReject(`${m.firstName} ${m.lastName}`)}
+                    disabled={approve.isPending}
+                  >
+                    <X color={colors.danger} size={14} strokeWidth={2} />
+                    <Text style={[styles.manageBtnLabel, { color: colors.danger }]}>
+                      Reject
+                    </Text>
+                  </Pressable>
+                </View>
+                <View style={styles.manageDivider} />
+              </>
+            ) : null}
+
+            {m.memberType === 'member' && !m.membershipClassCompletedAt ? (
+              <Pressable
+                style={[styles.manageBtn, styles.manageBtnOutline]}
+                onPress={markClassComplete}
+                disabled={setClassComplete.isPending}
+              >
+                <Award color={colors.gold} size={14} strokeWidth={1.5} />
+                <Text style={[styles.manageBtnLabel, { color: colors.goldDark }]}>
+                  {setClassComplete.isPending
+                    ? 'Saving…'
+                    : 'Mark 4-week class complete'}
+                </Text>
+              </Pressable>
+            ) : null}
+
+            {m.membershipClassCompletedAt ? (
+              <View style={styles.confirmedRow}>
+                <BadgeCheck color={colors.gold} size={14} strokeWidth={1.5} />
+                <Text style={styles.confirmedLabel}>
+                  Membership class completed{' '}
+                  {formatDate(m.membershipClassCompletedAt)}
+                </Text>
+              </View>
+            ) : null}
+
+            {m.isActive ? (
+              <Pressable
+                style={[styles.manageBtn, styles.manageBtnDanger]}
+                onPress={() => confirmDeactivate(`${m.firstName} ${m.lastName}`)}
+                disabled={deactivate.isPending}
+              >
+                <UserX color={colors.danger} size={14} strokeWidth={1.5} />
+                <Text style={[styles.manageBtnLabel, { color: colors.danger }]}>
+                  {deactivate.isPending ? 'Deactivating…' : 'Deactivate member'}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={[styles.manageBtn, styles.manageBtnPrimary]}
+                onPress={() =>
+                  reactivate.mutate(undefined, {
+                    onError: (err) =>
+                      Alert.alert(
+                        'Reactivate failed',
+                        err instanceof Error ? err.message : 'Please try again.',
+                      ),
+                  })
+                }
+                disabled={reactivate.isPending}
+              >
+                <UserCheck color="#ffffff" size={14} strokeWidth={1.5} />
+                <Text style={styles.manageBtnLabelPrimary}>
+                  {reactivate.isPending ? 'Reactivating…' : 'Reactivate member'}
+                </Text>
+              </Pressable>
+            )}
+
+            <Text style={styles.manageFootnote}>
+              Actions require admin or branch-admin access. The API will refuse if you
+              don&apos;t.
+            </Text>
+          </Card>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -599,5 +806,67 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.ink,
     fontWeight: '500',
+  },
+  manageBlurb: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    lineHeight: 16,
+  },
+  manageRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  manageDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(26,28,28,0.08)',
+    marginVertical: spacing.xs,
+  },
+  manageBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.md,
+  },
+  manageBtnPrimary: {
+    backgroundColor: colors.primary,
+  },
+  manageBtnOutline: {
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.12)',
+    backgroundColor: colors.cardLight,
+  },
+  manageBtnDanger: {
+    borderWidth: 1.5,
+    borderColor: 'rgba(225,29,72,0.4)',
+    backgroundColor: colors.cardLight,
+  },
+  manageBtnLabel: {
+    ...typography.button,
+    fontSize: 13,
+  },
+  manageBtnLabelPrimary: {
+    ...typography.button,
+    fontSize: 13,
+    color: '#ffffff',
+  },
+  confirmedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  confirmedLabel: {
+    ...typography.meta,
+    color: colors.goldDark,
+    fontWeight: '600',
+  },
+  manageFootnote: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.5)',
+    marginTop: spacing.xs,
+    lineHeight: 15,
   },
 });
