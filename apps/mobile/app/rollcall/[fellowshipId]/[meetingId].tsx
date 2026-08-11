@@ -9,11 +9,20 @@ import {
   Modal,
   FlatList,
   Vibration,
+  AppState,
+  type AppStateStatus,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Check, CheckCheck, UserX } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Calendar,
+  Check,
+  CheckCheck,
+  CloudOff,
+  UserX,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -31,6 +40,11 @@ import type {
   RecordAttendanceRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import {
+  enqueueRollcall,
+  flushPendingRollcall,
+  getPendingRollcall,
+} from '@/lib/rollcall-queue';
 
 const STATUS_ORDER: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Excused'];
 
@@ -124,25 +138,85 @@ export default function RollcallMeeting() {
   const [records, setRecords] = useState<Record<string, AttendanceStatus>>({});
   const [seededFromServer, setSeededFromServer] = useState(false);
   const [pickerFor, setPickerFor] = useState<FellowshipMemberWithDetails | null>(null);
+  const [pendingLocally, setPendingLocally] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (seededFromServer) return;
     if (members.isLoading || existing.isLoading) return;
     const memberRows = members.data ?? [];
     if (memberRows.length === 0) return;
-    const existingByMember = new Map(
-      (existing.data ?? []).map((r: FellowshipMeetingAttendance) => [
-        r.memberId,
-        r.attendanceStatus,
-      ]),
-    );
-    const next: Record<string, AttendanceStatus> = {};
-    for (const m of memberRows) {
-      next[m.memberId] = existingByMember.get(m.memberId) ?? 'Present';
+    // Locally-queued snapshot wins over server data on seed — the user's
+    // last tap-set is the source of truth until we successfully sync it.
+    void (async () => {
+      const pending = await getPendingRollcall(meetingId);
+      if (pending) {
+        const bag: Record<string, AttendanceStatus> = {};
+        for (const m of memberRows) bag[m.memberId] = 'Present';
+        for (const r of pending.payload.records) {
+          bag[r.memberId] = r.attendanceStatus;
+        }
+        setRecords(bag);
+        setPendingLocally(true);
+        setSeededFromServer(true);
+        return;
+      }
+      const existingByMember = new Map(
+        (existing.data ?? []).map((r: FellowshipMeetingAttendance) => [
+          r.memberId,
+          r.attendanceStatus,
+        ]),
+      );
+      const next: Record<string, AttendanceStatus> = {};
+      for (const m of memberRows) {
+        next[m.memberId] = existingByMember.get(m.memberId) ?? 'Present';
+      }
+      setRecords(next);
+      setSeededFromServer(true);
+    })();
+  }, [
+    members.isLoading,
+    existing.isLoading,
+    members.data,
+    existing.data,
+    meetingId,
+    seededFromServer,
+  ]);
+
+  // Auto-retry a queued snapshot whenever we mount or the app returns to
+  // the foreground on this screen. Silent on failure — the banner stays and
+  // the user can still tap Save to try again explicitly.
+  useEffect(() => {
+    let cancelled = false;
+    async function tryFlush() {
+      if (!meetingId) return;
+      const pending = await getPendingRollcall(meetingId);
+      if (!pending || cancelled) {
+        if (!cancelled) setPendingLocally(false);
+        return;
+      }
+      setSyncing(true);
+      const result = await flushPendingRollcall(meetingId);
+      if (cancelled) return;
+      setSyncing(false);
+      if (result === 'sent') {
+        setPendingLocally(false);
+        qc.invalidateQueries({
+          queryKey: ['fellowships', fellowshipId, 'meetings', meetingId, 'attendance'],
+        });
+      } else {
+        setPendingLocally(true);
+      }
     }
-    setRecords(next);
-    setSeededFromServer(true);
-  }, [members.isLoading, existing.isLoading, members.data, existing.data, seededFromServer]);
+    void tryFlush();
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') void tryFlush();
+    });
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, [meetingId, fellowshipId, qc]);
 
   const record = useMutation({
     mutationFn: async (data: RecordAttendanceRequest) => {
@@ -198,18 +272,51 @@ export default function RollcallMeeting() {
       })),
     };
     record.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // If a previous offline attempt left a payload queued, this successful
+        // save supersedes it — nuke the queued entry so it doesn't fire later.
+        await flushPendingRollcall(meetingId);
+        setPendingLocally(false);
         Alert.alert('Saved', 'Attendance recorded.', [
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: (err) => {
-        Alert.alert(
-          'Save failed',
-          err instanceof Error ? err.message : 'Please try again in a moment.',
-        );
+      onError: async (err) => {
+        // Cache-and-retry: keep the user's tap-set locally so it's not lost.
+        try {
+          await enqueueRollcall({ fellowshipId, meetingId, payload });
+          setPendingLocally(true);
+          Alert.alert(
+            'Saved locally',
+            "We couldn't reach the server, but your attendance is safe on this device — we'll sync it as soon as you're back online.",
+            [{ text: 'OK' }],
+          );
+        } catch {
+          Alert.alert(
+            'Save failed',
+            err instanceof Error ? err.message : 'Please try again in a moment.',
+          );
+        }
       },
     });
+  }
+
+  async function handleRetrySync() {
+    setSyncing(true);
+    const result = await flushPendingRollcall(meetingId);
+    setSyncing(false);
+    if (result === 'sent') {
+      setPendingLocally(false);
+      qc.invalidateQueries({
+        queryKey: ['fellowships', fellowshipId, 'meetings', meetingId, 'attendance'],
+      });
+      Alert.alert('Synced', 'Your attendance was uploaded.');
+    } else if (result === 'kept') {
+      Alert.alert(
+        'Still offline',
+        "Couldn't reach the server. Your attendance is safe locally — we'll keep trying.",
+      );
+    }
   }
 
   const memberRows = members.data ?? [];
@@ -242,6 +349,27 @@ export default function RollcallMeeting() {
                   {meeting.meetingTitle ?? 'Meeting'} ·{' '}
                   {formatMeetingDate(meeting.meetingDate)}
                 </Text>
+              </View>
+            ) : null}
+
+            {pendingLocally ? (
+              <View style={styles.offlineBanner}>
+                <CloudOff color={colors.goldDark} size={16} strokeWidth={1.5} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.offlineTitle}>Saved locally · will sync</Text>
+                  <Text style={styles.offlineMeta}>
+                    Your attendance is safe on this device. We&apos;ll upload it as
+                    soon as we can reach the server.
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={syncing ? undefined : handleRetrySync}
+                  style={[styles.retryBtn, syncing && { opacity: 0.6 }]}
+                >
+                  <Text style={styles.retryBtnLabel}>
+                    {syncing ? 'Trying…' : 'Retry'}
+                  </Text>
+                </Pressable>
               </View>
             ) : null}
 
@@ -471,6 +599,40 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
     flex: 1,
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(248,181,55,0.14)',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(248,181,55,0.4)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  offlineTitle: {
+    ...typography.body,
+    color: colors.goldDark,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  offlineMeta: {
+    ...typography.meta,
+    color: colors.goldDark,
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  retryBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.goldDark,
+  },
+  retryBtnLabel: {
+    ...typography.meta,
+    color: '#ffffff',
+    fontWeight: '700',
   },
   summaryRow: {
     flexDirection: 'row',
