@@ -7,6 +7,13 @@ Golden-path flows for the mobile app. Two entry points, sharing the same UI subf
 
 The four UI subflows (`00-onboarding`, `10-login`, `20-tab-navigation`, `30-sign-out`) are shared — they drop `appId` from their frontmatter and inherit from the parent flow.
 
+A broader **wave-navigation** flow layers on top of the golden path — it re-uses onboarding + login, walks every screen shipped in the 2026-08 Wave 1 + Wave 2 web-parity push (GDPR, notif prefs, forms, my-submissions, my-groups, members directory, rollcall, reports), then signs out. Two entry points, same shape:
+
+- `wave-navigation.yaml` — native build.
+- `wave-navigation-expo-go.yaml` — Expo Go via Metro deep link.
+
+Run with `npm run e2e:waves` or `npm run e2e:waves:expo-go` (same env args as the golden path — see below). Individual wave subflows (`40-more-menu`, `41-wave1-selfservice`, `42-forms`, `43-my-groups`, `44-members-directory`, `45-rollcall-smoke`, `46-reports`) can each be run in isolation with `maestro test .maestro/<file>.yaml --env APP_ID=<bundle>` while signed in on the More tab.
+
 ## Install Maestro
 
 Maestro is a native CLI (not npm).
@@ -116,6 +123,16 @@ For now, treat Android as the E2E target and lean on manual QA + unit tests for 
 
 ```bash
 npm run e2e:expo-go -- \
+  --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
+  --env EMAIL=<staging-email> \
+  --env PASSWORD=<staging-password> \
+  --env BRANCH_NAME=Kharis
+```
+
+For the broader wave-navigation flow, swap the script name — same env args:
+
+```bash
+npm run e2e:waves:expo-go -- \
   --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
   --env EMAIL=<staging-email> \
   --env PASSWORD=<staging-password> \

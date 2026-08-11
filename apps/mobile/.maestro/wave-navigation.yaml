@@ -1,0 +1,73 @@
+appId: com.kharis.kairos
+name: Wave 1 + 2 navigation smoke (native build) — every new destination loads
+tags:
+  - smoke
+  - waves
+env:
+  EMAIL: ""
+  PASSWORD: ""
+  BRANCH_NAME: "Kharis"
+  MEMBER_SEARCH: "a"
+---
+# End-to-end walk of every screen shipped in the Wave 1 + Wave 2 web-parity
+# push (GDPR, notif prefs, forms, my-submissions, my-groups, members directory,
+# rollcall, reports). Composes onboarding + login + per-wave subflows + sign
+# out. Golden-path.yaml stays the minimal auth+tabs smoke; this one is the
+# broader per-release check.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- runFlow:
+    file: 00-onboarding.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      BRANCH_NAME: ${BRANCH_NAME}
+
+- runFlow:
+    file: 10-login.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+- runFlow:
+    file: 40-more-menu.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 41-wave1-selfservice.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 42-forms.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 43-my-groups.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 44-members-directory.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      MEMBER_SEARCH: ${MEMBER_SEARCH}
+
+- runFlow:
+    file: 45-rollcall-smoke.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 46-reports.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: com.kharis.kairos

@@ -1,0 +1,73 @@
+appId: ${APP_ID}
+name: Reports — five tiles render
+tags:
+  - smoke
+  - reports
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation. Enters /reports and asserts each
+# section title. Tiles render their intro headings whether or not attendance
+# data exists — empty states carry the same section title with an inline
+# empty message. Also flips the engagement window chips to verify the toggle
+# is wired.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Reports"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Reports"
+
+- extendedWaitUntil:
+    visible:
+      text: "Attendance analytics"
+    timeout: 10000
+
+# Headline attendance tile
+- scrollUntilVisible:
+    element:
+      text: "Weekly attendance"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+# Frequency section
+- scrollUntilVisible:
+    element:
+      text: "How often people show up"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+# Engagement-window chip toggle wired?
+- assertVisible: "3 mo"
+- assertVisible: "6 mo"
+- assertVisible: "12 mo"
+- tapOn: "6 mo"
+- tapOn: "3 mo"
+
+# First-time / returning
+- scrollUntilVisible:
+    element:
+      text: "First-time vs returning"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+# Missing members
+- scrollUntilVisible:
+    element:
+      text: "Not seen recently"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- pressKey: Back
