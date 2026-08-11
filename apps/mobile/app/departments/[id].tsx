@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +7,13 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Users, Pencil } from 'lucide-react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, Users, Pencil, UserPlus, Handshake } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -23,9 +25,11 @@ import {
   typography,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 export default function DepartmentDetail() {
   const router = useRouter();
+  const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
 
@@ -41,12 +45,62 @@ export default function DepartmentDetail() {
     queryFn: async () => (await api.departments.members.list(id)).data ?? [],
   });
 
+  const addMember = useMutation({
+    mutationFn: async (memberId: string) =>
+      (await api.departments.members.add(id, { memberId })).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departments', id, 'members'] });
+      qc.invalidateQueries({ queryKey: ['departments', id] });
+    },
+  });
+
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      await api.departments.members.remove(id, memberId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departments', id, 'members'] });
+      qc.invalidateQueries({ queryKey: ['departments', id] });
+    },
+  });
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const refresh = () => {
     department.refetch();
     members.refetch();
   };
 
   const d = department.data;
+
+  const memberIds = useMemo(
+    () => new Set((members.data ?? []).map((m) => m.memberId)),
+    [members.data],
+  );
+
+  function confirmRemoveMember(memberId: string, name: string) {
+    Alert.alert(
+      'Remove from department?',
+      `Remove ${name} from this department. They keep their member record; only this department membership is ended.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            removeMember.mutate(memberId, {
+              onError: (err) => {
+                Alert.alert(
+                  'Remove failed',
+                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                );
+              },
+            });
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -143,6 +197,22 @@ export default function DepartmentDetail() {
               </View>
             </LinearGradient>
 
+            {d.pendingJoinRequestCount ? (
+              <Card padding="md" style={styles.pendingCard}>
+                <Handshake color={colors.gold} size={16} strokeWidth={1.5} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.pendingTitle}>
+                    {d.pendingJoinRequestCount} pending join request
+                    {d.pendingJoinRequestCount === 1 ? '' : 's'}
+                  </Text>
+                  <Text style={styles.pendingMeta}>
+                    Interview scheduling and offer flow live on the web. Open{' '}
+                    kairos.kharis.org to review.
+                  </Text>
+                </View>
+              </Card>
+            ) : null}
+
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
@@ -154,6 +224,14 @@ export default function DepartmentDetail() {
                   variant="neutral"
                   size="sm"
                 />
+                <Pressable
+                  onPress={() => setPickerOpen(true)}
+                  style={styles.addMemberBtn}
+                  hitSlop={6}
+                  accessibilityLabel="Add member"
+                >
+                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                </Pressable>
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.sm }} />
@@ -165,6 +243,13 @@ export default function DepartmentDetail() {
                     <Pressable
                       key={m.id}
                       onPress={() => router.push(`/members/${m.memberId}`)}
+                      onLongPress={() =>
+                        confirmRemoveMember(
+                          m.memberId,
+                          `${m.memberFirstName} ${m.memberLastName}`,
+                        )
+                      }
+                      delayLongPress={350}
                       style={styles.memberRow}
                     >
                       <Avatar
@@ -183,12 +268,35 @@ export default function DepartmentDetail() {
                       ) : null}
                     </Pressable>
                   ))}
+                  <Text style={styles.longPressHint}>
+                    Long-press a row to remove them from the department.
+                  </Text>
                 </View>
               )}
             </View>
           </>
         ) : null}
       </ScrollView>
+
+      {d ? (
+        <MemberPickerSheet
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          branchId={d.branchId}
+          excludeMemberIds={memberIds}
+          onPick={(memberId) => {
+            setPickerOpen(false);
+            addMember.mutate(memberId, {
+              onError: (err) => {
+                Alert.alert(
+                  'Add failed',
+                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                );
+              },
+            });
+          }}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -280,5 +388,39 @@ const styles = StyleSheet.create({
   errorLine: {
     ...typography.body,
     color: colors.danger,
+  },
+  addMemberBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  longPressHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.45)',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  pendingCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(248,181,55,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,181,55,0.35)',
+  },
+  pendingTitle: {
+    ...typography.body,
+    color: colors.goldDark,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  pendingMeta: {
+    ...typography.meta,
+    color: colors.goldDark,
+    marginTop: 2,
+    lineHeight: 15,
   },
 });
