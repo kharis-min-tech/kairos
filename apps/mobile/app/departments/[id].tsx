@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Users } from 'lucide-react-native';
+import { ChevronLeft, Users, Pencil } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -57,7 +57,17 @@ export default function DepartmentDetail() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {d?.departmentName ?? 'Department'}
         </Text>
-        <View style={{ width: 24 }} />
+        {d ? (
+          <Pressable
+            onPress={() => router.push(`/departments/edit/${d.id}`)}
+            hitSlop={8}
+            accessibilityLabel="Edit department"
+          >
+            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView
