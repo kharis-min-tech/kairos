@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Users } from 'lucide-react-native';
+import { ChevronLeft, Calendar, Users, Pencil } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -83,7 +83,17 @@ export default function FellowshipDetail() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {f?.fellowshipName ?? 'Fellowship'}
         </Text>
-        <View style={{ width: 24 }} />
+        {f ? (
+          <Pressable
+            onPress={() => router.push(`/fellowships/edit/${f.id}`)}
+            hitSlop={8}
+            accessibilityLabel="Edit fellowship"
+          >
+            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView
