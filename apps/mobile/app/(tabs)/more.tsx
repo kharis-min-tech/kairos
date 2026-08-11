@@ -165,7 +165,7 @@ export default function More() {
 
         <Section label="Reports & analytics">
           <SoonRow icon={LayoutDashboard} label="Dashboard" />
-          <SoonRow icon={PieChart} label="Reports" />
+          <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
           <NavRow
             icon={BarChart3}
             label="Service attendance"
