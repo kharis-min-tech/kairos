@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Pressable,
   ActivityIndicator,
   Alert,
+  Modal,
+  FlatList,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Check } from 'lucide-react-native';
+import { ChevronLeft, Calendar, Check, CheckCheck, UserX } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -22,10 +24,15 @@ import {
   spacing,
   typography,
 } from '@kairos/ui-native';
-import type { AttendanceStatus, RecordAttendanceRequest } from '@kairos/types';
+import type {
+  AttendanceStatus,
+  FellowshipMeetingAttendance,
+  FellowshipMemberWithDetails,
+  RecordAttendanceRequest,
+} from '@kairos/types';
 import { api } from '@/lib/api-client';
 
-const STATUSES: AttendanceStatus[] = ['Present', 'Late', 'Excused', 'Absent'];
+const STATUS_ORDER: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Excused'];
 
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
   Present: 'Present',
@@ -36,29 +43,42 @@ const STATUS_LABEL: Record<AttendanceStatus, string> = {
 
 const STATUS_TONE: Record<
   AttendanceStatus,
-  { bg: string; text: string; border: string }
+  { bg: string; text: string; border: string; barBg: string; barText: string }
 > = {
   Present: {
     bg: 'rgba(16,185,129,0.14)',
     text: colors.successText,
     border: 'rgba(16,185,129,0.4)',
+    barBg: 'rgba(16,185,129,0.14)',
+    barText: colors.successText,
   },
   Late: {
     bg: 'rgba(248,181,55,0.18)',
     text: colors.goldDark,
     border: 'rgba(248,181,55,0.55)',
+    barBg: 'rgba(248,181,55,0.18)',
+    barText: colors.goldDark,
   },
   Excused: {
     bg: 'rgba(59,130,246,0.14)',
     text: colors.info,
     border: 'rgba(59,130,246,0.4)',
+    barBg: 'rgba(59,130,246,0.14)',
+    barText: colors.info,
   },
   Absent: {
     bg: 'rgba(225,29,72,0.12)',
     text: colors.danger,
     border: 'rgba(225,29,72,0.4)',
+    barBg: 'rgba(225,29,72,0.12)',
+    barText: colors.danger,
   },
 };
+
+function nextStatus(current: AttendanceStatus): AttendanceStatus {
+  const idx = STATUS_ORDER.indexOf(current);
+  return STATUS_ORDER[(idx + 1) % STATUS_ORDER.length]!;
+}
 
 function formatMeetingDate(iso: string | Date): string {
   const d = iso instanceof Date ? iso : new Date(iso);
@@ -103,16 +123,18 @@ export default function RollcallMeeting() {
 
   const [records, setRecords] = useState<Record<string, AttendanceStatus>>({});
   const [seededFromServer, setSeededFromServer] = useState(false);
+  const [pickerFor, setPickerFor] = useState<FellowshipMemberWithDetails | null>(null);
 
-  // Seed local state once from server: existing attendance rows win, everyone
-  // else defaults to Present so the leader can just tap exceptions.
   useEffect(() => {
     if (seededFromServer) return;
     if (members.isLoading || existing.isLoading) return;
     const memberRows = members.data ?? [];
     if (memberRows.length === 0) return;
     const existingByMember = new Map(
-      (existing.data ?? []).map((r) => [r.memberId, r.attendanceStatus]),
+      (existing.data ?? []).map((r: FellowshipMeetingAttendance) => [
+        r.memberId,
+        r.attendanceStatus,
+      ]),
     );
     const next: Record<string, AttendanceStatus> = {};
     for (const m of memberRows) {
@@ -147,7 +169,28 @@ export default function RollcallMeeting() {
     return counts;
   }, [records]);
 
+  function cycleStatus(memberId: string) {
+    Vibration.vibrate(10);
+    setRecords((p) => {
+      const current = p[memberId] ?? 'Present';
+      return { ...p, [memberId]: nextStatus(current) };
+    });
+  }
+
+  function setStatus(memberId: string, status: AttendanceStatus) {
+    setRecords((p) => ({ ...p, [memberId]: status }));
+  }
+
+  function markAll(status: AttendanceStatus) {
+    Vibration.vibrate(15);
+    const memberRows = members.data ?? [];
+    const next: Record<string, AttendanceStatus> = {};
+    for (const m of memberRows) next[m.memberId] = status;
+    setRecords(next);
+  }
+
   function handleSave() {
+    Vibration.vibrate(20);
     const payload: RecordAttendanceRequest = {
       records: Object.entries(records).map(([memberId, status]) => ({
         memberId,
@@ -182,122 +225,220 @@ export default function RollcallMeeting() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {meeting ? (
-          <View style={styles.meetingBanner}>
-            <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
-            <Text style={styles.meetingBannerLabel}>
-              {meeting.meetingTitle ?? 'Meeting'} · {formatMeetingDate(meeting.meetingDate)}
-            </Text>
-          </View>
-        ) : null}
-
-        <View style={styles.summaryRow}>
-          {STATUSES.map((s) => {
-            const tone = STATUS_TONE[s];
-            return (
-              <View
-                key={s}
-                style={[styles.summaryTile, { backgroundColor: tone.bg, borderColor: tone.border }]}
-              >
-                <Text style={[styles.summaryCount, { color: tone.text }]}>{totals[s]}</Text>
-                <Text style={[styles.summaryLabel, { color: tone.text }]}>{STATUS_LABEL[s]}</Text>
+      <FlatList
+        data={memberRows}
+        keyExtractor={(m) => m.memberId}
+        contentContainerStyle={styles.container}
+        initialNumToRender={16}
+        maxToRenderPerBatch={12}
+        windowSize={8}
+        removeClippedSubviews
+        ListHeaderComponent={
+          <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+            {meeting ? (
+              <View style={styles.meetingBanner}>
+                <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
+                <Text style={styles.meetingBannerLabel}>
+                  {meeting.meetingTitle ?? 'Meeting'} ·{' '}
+                  {formatMeetingDate(meeting.meetingDate)}
+                </Text>
               </View>
-            );
-          })}
-        </View>
+            ) : null}
 
-        {isBusy ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
-        ) : null}
-
-        {!isBusy && memberRows.length === 0 ? (
-          <Card padding="md">
-            <Text style={styles.emptyLine}>No members in this fellowship yet.</Text>
-          </Card>
-        ) : null}
-
-        {memberRows.length > 0 ? (
-          <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.rosterEyebrow}>ROSTER · {memberRows.length}</Text>
-            {memberRows.map((m, idx) => {
-              const status = records[m.memberId] ?? 'Present';
-              return (
-                <View
-                  key={m.memberId}
-                  style={[styles.memberRow, idx > 0 ? styles.rowDivider : null]}
-                >
-                  <View style={styles.memberInfo}>
-                    <Avatar
-                      size="sm"
-                      photoUrl={m.memberPhotoUrl ?? undefined}
-                      firstName={m.memberFirstName}
-                      lastName={m.memberLastName}
-                    />
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <Text style={styles.memberName} numberOfLines={1}>
-                        {m.memberFirstName} {m.memberLastName}
-                      </Text>
-                      {m.nbStage ? (
-                        <Badge label={m.nbStage} variant="gold" size="sm" />
-                      ) : null}
-                    </View>
+            <View style={styles.summaryRow}>
+              {STATUS_ORDER.map((s) => {
+                const tone = STATUS_TONE[s];
+                return (
+                  <View
+                    key={s}
+                    style={[
+                      styles.summaryTile,
+                      { backgroundColor: tone.bg, borderColor: tone.border },
+                    ]}
+                  >
+                    <Text style={[styles.summaryCount, { color: tone.text }]}>
+                      {totals[s]}
+                    </Text>
+                    <Text style={[styles.summaryLabel, { color: tone.text }]}>
+                      {STATUS_LABEL[s]}
+                    </Text>
                   </View>
-                  <View style={styles.statusRow}>
-                    {STATUSES.map((s) => {
-                      const selected = status === s;
-                      const tone = STATUS_TONE[s];
-                      return (
-                        <Pressable
-                          key={s}
-                          onPress={() =>
-                            setRecords((p) => ({ ...p, [m.memberId]: s }))
-                          }
+                );
+              })}
+            </View>
+
+            {memberRows.length > 0 ? (
+              <View style={styles.batchRow}>
+                <Pressable
+                  style={styles.batchBtn}
+                  onPress={() => markAll('Present')}
+                  hitSlop={4}
+                >
+                  <CheckCheck color={colors.successText} size={14} strokeWidth={2} />
+                  <Text style={[styles.batchBtnLabel, { color: colors.successText }]}>
+                    All present
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={styles.batchBtn}
+                  onPress={() => markAll('Absent')}
+                  hitSlop={4}
+                >
+                  <UserX color={colors.danger} size={14} strokeWidth={2} />
+                  <Text style={[styles.batchBtnLabel, { color: colors.danger }]}>
+                    All not-here
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+
+            {isBusy ? (
+              <ActivityIndicator
+                color={colors.primary}
+                style={{ marginTop: spacing.md }}
+              />
+            ) : null}
+          </View>
+        }
+        ListEmptyComponent={
+          !isBusy ? (
+            <Card padding="md">
+              <Text style={styles.emptyLine}>
+                No members in this fellowship yet.
+              </Text>
+            </Card>
+          ) : null
+        }
+        renderItem={({ item, index }) => {
+          const status = records[item.memberId] ?? 'Present';
+          const tone = STATUS_TONE[status];
+          return (
+            <View
+              style={[
+                styles.memberRow,
+                index === 0 ? styles.memberRowFirst : styles.memberRowNext,
+                index === memberRows.length - 1 ? styles.memberRowLast : null,
+              ]}
+            >
+              <View style={styles.memberInfo}>
+                <Avatar
+                  size="sm"
+                  photoUrl={item.memberPhotoUrl ?? undefined}
+                  firstName={item.memberFirstName}
+                  lastName={item.memberLastName}
+                />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.memberName} numberOfLines={1}>
+                    {item.memberFirstName} {item.memberLastName}
+                  </Text>
+                  {item.nbStage ? (
+                    <Badge label={item.nbStage} variant="gold" size="sm" />
+                  ) : null}
+                </View>
+              </View>
+              <Pressable
+                onPress={() => cycleStatus(item.memberId)}
+                onLongPress={() => {
+                  Vibration.vibrate(15);
+                  setPickerFor(item);
+                }}
+                delayLongPress={280}
+                style={[
+                  styles.statusPill,
+                  { backgroundColor: tone.barBg, borderColor: tone.border },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.memberFirstName} ${item.memberLastName} — ${STATUS_LABEL[status]}. Tap to change. Long-press to open picker.`}
+                hitSlop={{ top: 6, bottom: 6, left: 0, right: 0 }}
+              >
+                <Text style={[styles.statusPillLabel, { color: tone.barText }]}>
+                  {STATUS_LABEL[status]}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        }}
+        ListFooterComponent={
+          memberRows.length > 0 ? (
+            <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+              <Button
+                label={record.isPending ? 'Saving…' : 'Save attendance'}
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={record.isPending}
+                onPress={handleSave}
+              />
+              <Text style={styles.footnote}>
+                Everyone defaults to Present. Tap the pill to cycle Absent → Late → Excused
+                → Present. Hold to pick directly.
+              </Text>
+            </View>
+          ) : null
+        }
+      />
+
+      <Modal
+        visible={!!pickerFor}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPickerFor(null)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setPickerFor(null)}>
+          <Pressable style={styles.pickerSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.pickerHandle} />
+            {pickerFor ? (
+              <>
+                <Text style={styles.pickerTitle}>
+                  {pickerFor.memberFirstName} {pickerFor.memberLastName}
+                </Text>
+                <Text style={styles.pickerSub}>Pick an attendance status</Text>
+                <View style={{ gap: spacing.xs, marginTop: spacing.md }}>
+                  {STATUS_ORDER.map((s) => {
+                    const active =
+                      (records[pickerFor.memberId] ?? 'Present') === s;
+                    const tone = STATUS_TONE[s];
+                    return (
+                      <Pressable
+                        key={s}
+                        onPress={() => {
+                          setStatus(pickerFor.memberId, s);
+                          setPickerFor(null);
+                        }}
+                        style={[
+                          styles.pickerOption,
+                          active && {
+                            backgroundColor: tone.barBg,
+                            borderColor: tone.border,
+                          },
+                        ]}
+                      >
+                        <Text
                           style={[
-                            styles.statusChip,
-                            selected && {
-                              backgroundColor: tone.bg,
-                              borderColor: tone.border,
-                            },
+                            styles.pickerOptionLabel,
+                            active && { color: tone.barText, fontWeight: '700' },
                           ]}
                         >
-                          {selected ? (
-                            <Check color={tone.text} size={12} strokeWidth={2} />
-                          ) : null}
-                          <Text
-                            style={[
-                              styles.statusChipLabel,
-                              selected && { color: tone.text, fontWeight: '700' },
-                            ]}
-                          >
-                            {s === 'Present' ? 'P' : s === 'Absent' ? 'A' : s === 'Excused' ? 'E' : 'L'}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                          {STATUS_LABEL[s]}
+                        </Text>
+                        {active ? (
+                          <Check color={tone.barText} size={16} strokeWidth={2} />
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              );
-            })}
-          </Card>
-        ) : null}
-
-        {memberRows.length > 0 ? (
-          <Button
-            label={record.isPending ? 'Saving…' : 'Save attendance'}
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={record.isPending}
-            onPress={handleSave}
-          />
-        ) : null}
-
-        <Text style={styles.footnote}>
-          Everyone defaults to Present — tap a chip to change. P/L/E/A = Present, Late,
-          Excused, Absent.
-        </Text>
-      </ScrollView>
+                <Pressable
+                  style={styles.pickerCancel}
+                  onPress={() => setPickerFor(null)}
+                >
+                  <Text style={styles.pickerCancelLabel}>Cancel</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -315,7 +456,6 @@ const styles = StyleSheet.create({
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
   },
   meetingBanner: {
     flexDirection: 'row',
@@ -343,10 +483,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: 'center',
   },
-  summaryCount: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
+  summaryCount: { fontSize: 20, fontWeight: '800' },
   summaryLabel: {
     ...typography.meta,
     fontSize: 10,
@@ -354,22 +491,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
-  rosterEyebrow: {
-    ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+  batchRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  batchBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.cardLight,
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.1)',
+  },
+  batchBtnLabel: {
+    ...typography.meta,
+    fontWeight: '700',
+    fontSize: 12,
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    backgroundColor: colors.cardLight,
+    borderColor: 'rgba(26,28,28,0.06)',
   },
-  rowDivider: {
+  memberRowFirst: {
+    borderTopLeftRadius: radii.md,
+    borderTopRightRadius: radii.md,
+  },
+  memberRowNext: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
-    paddingTop: spacing.md,
-    marginTop: spacing.xs,
+  },
+  memberRowLast: {
+    borderBottomLeftRadius: radii.md,
+    borderBottomRightRadius: radii.md,
   },
   memberInfo: {
     flexDirection: 'row',
@@ -378,28 +540,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   memberName: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  statusRow: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  statusChip: {
-    minWidth: 32,
-    height: 32,
-    borderRadius: radii.sm,
+  statusPill: {
+    minWidth: 92,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
-    backgroundColor: colors.cardLight,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-    flexDirection: 'row',
-    gap: 2,
   },
-  statusChipLabel: {
+  statusPillLabel: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
   emptyLine: {
     ...typography.body,
@@ -411,5 +563,60 @@ const styles = StyleSheet.create({
     color: 'rgba(26,28,28,0.5)',
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10,10,15,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerSheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  pickerHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    alignSelf: 'center',
+    marginBottom: spacing.md,
+  },
+  pickerTitle: {
+    ...typography.cardTitle,
+    color: colors.ink,
+    fontSize: 17,
+  },
+  pickerSub: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    marginTop: 2,
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    backgroundColor: colors.subtleLight,
+  },
+  pickerOptionLabel: {
+    ...typography.body,
+    color: colors.ink,
+    fontWeight: '500',
+  },
+  pickerCancel: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  pickerCancelLabel: {
+    ...typography.button,
+    color: colors.primary,
   },
 });
