@@ -131,7 +131,11 @@ export default function More() {
         </Section>
 
         <Section label="Groups">
-          <SoonRow icon={UsersRound} label="Fellowships" />
+          <NavRow
+            icon={UsersRound}
+            label="Fellowships"
+            onPress={() => router.push('/fellowships')}
+          />
           <SoonRow icon={Building2} label="Departments" />
         </Section>
 
