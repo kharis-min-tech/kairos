@@ -107,7 +107,12 @@ export default function FellowshipsDirectory() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Fellowships</Text>
-        <Pressable onPress={() => router.push('/fellowships/new')} hitSlop={8}>
+        <Pressable
+          onPress={() => router.push('/fellowships/new')}
+          hitSlop={8}
+          testID="new-fellowship-btn"
+          accessibilityLabel="New fellowship"
+        >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>

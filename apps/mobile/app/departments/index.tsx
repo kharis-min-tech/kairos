@@ -110,7 +110,12 @@ export default function DepartmentsDirectory() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Departments</Text>
-        <Pressable onPress={() => router.push('/departments/new')} hitSlop={8}>
+        <Pressable
+          onPress={() => router.push('/departments/new')}
+          hitSlop={8}
+          testID="new-department-btn"
+          accessibilityLabel="New department"
+        >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>

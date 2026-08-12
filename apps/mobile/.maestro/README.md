@@ -14,6 +14,13 @@ A broader **wave-navigation** flow layers on top of the golden path — it re-us
 
 Run with `npm run e2e:waves` or `npm run e2e:waves:expo-go` (same env args as the golden path — see below). Individual wave subflows (`40-more-menu`, `41-wave1-selfservice`, `42-forms`, `43-my-groups`, `44-members-directory`, `45-rollcall-smoke`, `46-reports`) can each be run in isolation with `maestro test .maestro/<file>.yaml --env APP_ID=<bundle>` while signed in on the More tab.
 
+A **wave3-navigation** flow covers everything shipped in the 2026-08-12 admin CRUD wave (Fellowships / Departments / Members create forms; Branches + Regions; Outreach + Souls; Security hub + change-password/email; My attendance). Same shape:
+
+- `wave3-navigation.yaml` — native build.
+- `wave3-navigation-expo-go.yaml` — Expo Go via Metro deep link.
+
+Run with `npm run e2e:wave3` or `npm run e2e:wave3:expo-go`. Individual subflows: `50-fellowships-crud`, `51-departments-crud`, `52-members-crud`, `53-branches-regions`, `54-outreach-souls`, `55-security-attendance`. Wave 3 subflows target the "+" header buttons on list screens via `testID` (`new-fellowship-btn`, `new-department-btn`, `new-branch-btn`, `new-member-btn`, `new-outreach-btn`, `new-region-btn`) — keep those testIDs stable when refactoring or the flows will hang on tapOn.
+
 ## Install Maestro
 
 Maestro is a native CLI (not npm).

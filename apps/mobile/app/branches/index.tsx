@@ -60,7 +60,12 @@ export default function BranchesDirectory() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Branches</Text>
-        <Pressable onPress={() => router.push('/branches/new')} hitSlop={8}>
+        <Pressable
+          onPress={() => router.push('/branches/new')}
+          hitSlop={8}
+          testID="new-branch-btn"
+          accessibilityLabel="New branch"
+        >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
