@@ -20,11 +20,14 @@ interface Column {
   color: string;
 }
 
+// SoulStatus values are capitalized-with-spaces per the API enum
+// (`New` / `Following Up` / `Interested` / `Converted`). Do NOT lowercase or
+// snake_case them — the server filters strictly on this shape.
 const COLUMNS: Column[] = [
-  { key: 'new', label: 'New', color: colors.primary },
-  { key: 'following_up', label: 'Following up', color: colors.gold },
-  { key: 'interested', label: 'Interested', color: colors.info },
-  { key: 'converted', label: 'Converted', color: colors.success },
+  { key: 'New', label: 'New', color: colors.primary },
+  { key: 'Following Up', label: 'Following up', color: colors.gold },
+  { key: 'Interested', label: 'Interested', color: colors.info },
+  { key: 'Converted', label: 'Converted', color: colors.success },
 ];
 
 export default function FollowUps() {

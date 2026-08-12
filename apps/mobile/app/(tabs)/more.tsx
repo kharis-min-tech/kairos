@@ -127,7 +127,12 @@ export default function More() {
             label="New Believers pipeline"
             onPress={() => router.push('/new-believers')}
           />
-          <SoonRow icon={UserPlus} label="Souls / outreach" />
+          <NavRow
+            icon={UserPlus}
+            label="Outreach programs"
+            onPress={() => router.push('/outreach')}
+          />
+          <NavRow icon={Handshake} label="Souls" onPress={() => router.push('/souls')} />
         </Section>
 
         <Section label="Groups">
