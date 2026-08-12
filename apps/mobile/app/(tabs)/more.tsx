@@ -187,7 +187,11 @@ export default function More() {
             label="Check-in desk"
             onPress={() => router.push('/admin/checkin')}
           />
-          <SoonRow icon={Building2} label="Branch settings" />
+          <NavRow
+            icon={Building2}
+            label="Branch settings"
+            onPress={() => router.push('/branches')}
+          />
           <SoonRow icon={Users} label="Users & roles" />
           <SoonRow icon={Map} label="Regions" />
         </Section>
