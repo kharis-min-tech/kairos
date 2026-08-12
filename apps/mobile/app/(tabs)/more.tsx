@@ -193,7 +193,7 @@ export default function More() {
             onPress={() => router.push('/branches')}
           />
           <SoonRow icon={Users} label="Users & roles" />
-          <SoonRow icon={Map} label="Regions" />
+          <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
         </Section>
 
         <Section label="Settings">
