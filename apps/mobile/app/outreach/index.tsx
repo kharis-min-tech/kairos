@@ -90,7 +90,12 @@ export default function OutreachDirectory() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Outreach</Text>
-        <Pressable onPress={() => router.push('/outreach/new')} hitSlop={8}>
+        <Pressable
+          onPress={() => router.push('/outreach/new')}
+          hitSlop={8}
+          testID="new-outreach-btn"
+          accessibilityLabel="New outreach program"
+        >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>

@@ -1,0 +1,53 @@
+appId: ${APP_ID}
+name: Fellowships CRUD — list + create form (no submit)
+tags:
+  - smoke
+  - wave3
+  - fellowships
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation from any signed-in surface.
+# Enters /fellowships, opens the create form via the + header button, asserts
+# the form renders, then backs out. Does NOT submit — that creates persistent
+# staging data.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Fellowships"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Fellowships"
+
+# Landed on /fellowships. Filter chips always render regardless of data.
+- extendedWaitUntil:
+    visible:
+      text: "My branch"
+    timeout: 8000
+- assertVisible: "Any type"
+
+# Open create form via the + button (testID + accessibilityLabel).
+- tapOn:
+    id: "new-fellowship-btn"
+
+- extendedWaitUntil:
+    visible:
+      text: "New fellowship"
+    timeout: 8000
+- assertVisible: "DETAILS"
+- assertVisible: "MEETING"
+- assertVisible: "Create fellowship"
+
+- pressKey: Back  # back to list
+- extendedWaitUntil:
+    visible:
+      text: "My branch"
+    timeout: 8000
+- pressKey: Back  # back to More

@@ -106,6 +106,8 @@ export default function Regions() {
             setOpenForm('new');
           }}
           hitSlop={8}
+          testID="new-region-btn"
+          accessibilityLabel="New region"
         >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
         </Pressable>

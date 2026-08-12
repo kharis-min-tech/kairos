@@ -71,6 +71,7 @@ export default function MembersDirectory() {
         <Pressable
           onPress={() => router.push('/members/new')}
           hitSlop={8}
+          testID="new-member-btn"
           accessibilityLabel="New member"
         >
           <Plus color={colors.primary} size={22} strokeWidth={1.5} />
