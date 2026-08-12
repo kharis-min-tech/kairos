@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Map, MapPin, Phone, Mail, Calendar } from 'lucide-react-native';
+import { ChevronLeft, Map, MapPin, Phone, Mail, Calendar, Pencil } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -72,7 +72,17 @@ export default function MyBranch() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My branch</Text>
-        <View style={{ width: 24 }} />
+        {active ? (
+          <Pressable
+            onPress={() => router.push(`/branches/edit/${active.id}`)}
+            hitSlop={8}
+            accessibilityLabel="Edit branch"
+          >
+            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView
