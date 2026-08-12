@@ -18,7 +18,6 @@ import {
   CheckSquare,
   Repeat,
   BarChart3,
-  LayoutDashboard,
   PieChart,
   Map,
   FileText,
@@ -28,7 +27,6 @@ import {
   History,
   Download,
   Palette,
-  Globe,
   HelpCircle,
   Info,
 } from 'lucide-react-native';
@@ -179,7 +177,6 @@ export default function More() {
         </Section>
 
         <Section label="Reports & analytics">
-          <SoonRow icon={LayoutDashboard} label="Dashboard" />
           <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
           <NavRow
             icon={BarChart3}
@@ -230,7 +227,6 @@ export default function More() {
             onPress={() => router.push('/recent-activity')}
           />
           <SoonRow icon={Palette} label="Appearance" />
-          <SoonRow icon={Globe} label="Language" />
         </Section>
 
         <Section label="Help">
