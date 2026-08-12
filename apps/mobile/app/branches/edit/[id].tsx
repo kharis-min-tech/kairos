@@ -10,8 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Trash2 } from 'lucide-react-native';
-import { colors, radii, spacing, typography } from '@kairos/ui-native';
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
 import type { UpdateBranchRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { BranchForm } from '../_form';
@@ -160,24 +160,49 @@ export default function EditBranch() {
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
-          <View style={styles.dangerZone}>
-            <Text style={styles.dangerEyebrow}>DANGER ZONE</Text>
+          <>
             <Pressable
-              onPress={deleting || remove.isPending ? undefined : () => confirmDelete(b.branchName)}
-              style={[
-                styles.dangerBtn,
-                (deleting || remove.isPending) && { opacity: 0.6 },
-              ]}
+              onPress={() => router.push(`/branches/roles/${b.id}`)}
+              style={styles.linkCardWrap}
             >
-              <Trash2 color={colors.danger} size={16} strokeWidth={1.5} />
-              <Text style={styles.dangerBtnLabel}>
-                {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate branch'}
-              </Text>
+              <Card padding="md" style={styles.linkCard}>
+                <View style={styles.linkIconTile}>
+                  <ShieldCheck color={colors.primary} size={18} strokeWidth={1.5} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.linkTitle}>Branch admins</Text>
+                  <Text style={styles.linkMeta}>
+                    Manage who can invite members, edit settings, and assign roles for
+                    this branch.
+                  </Text>
+                </View>
+                <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+              </Card>
             </Pressable>
-            <Text style={styles.footnote}>
-              Hides the branch from directories. Members and history are preserved.
-            </Text>
-          </View>
+
+            <View style={styles.dangerZone}>
+              <Text style={styles.dangerEyebrow}>DANGER ZONE</Text>
+              <Pressable
+                onPress={
+                  deleting || remove.isPending
+                    ? undefined
+                    : () => confirmDelete(b.branchName)
+                }
+                style={[
+                  styles.dangerBtn,
+                  (deleting || remove.isPending) && { opacity: 0.6 },
+                ]}
+              >
+                <Trash2 color={colors.danger} size={16} strokeWidth={1.5} />
+                <Text style={styles.dangerBtnLabel}>
+                  {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate branch'}
+                </Text>
+              </Pressable>
+              <Text style={styles.footnote}>
+                Hides the branch from directories. Members and history are preserved.
+              </Text>
+            </View>
+          </>
         }
       />
     </SafeAreaView>
@@ -201,6 +226,28 @@ const styles = StyleSheet.create({
   },
   errorTitle: { ...typography.cardTitle, color: colors.ink },
   errorMeta: { ...typography.body, color: 'rgba(26,28,28,0.6)', textAlign: 'center' },
+  linkCardWrap: {
+    marginTop: spacing.md,
+  },
+  linkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  linkIconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  linkMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    lineHeight: 15,
+  },
   dangerZone: {
     marginTop: spacing.md,
     gap: spacing.sm,
