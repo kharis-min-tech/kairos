@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   RefreshControl,
   Linking,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +34,8 @@ import {
   UserCheck,
   Award,
   Settings,
+  Plus,
+  ChevronRight,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -154,6 +158,49 @@ export default function MemberProfile() {
           err instanceof Error ? err.message : 'Please try again.',
         ),
     });
+  }
+
+  const assignRole = useMutation({
+    mutationFn: (data: { roleId: string; branchId: string }) =>
+      api.members.roles.assign(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', id, 'roles'] });
+    },
+  });
+
+  const removeRole = useMutation({
+    mutationFn: (assignmentId: string) => api.members.roles.remove(id, assignmentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', id, 'roles'] });
+    },
+  });
+
+  const [rolePickerOpen, setRolePickerOpen] = useState(false);
+
+  function confirmRemoveRole(
+    assignmentId: string,
+    roleName: string,
+    branchName?: string,
+  ) {
+    Alert.alert(
+      'Revoke role?',
+      `Remove the ${roleName} role${branchName ? ` for ${branchName}` : ''}. The member keeps everything else.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: () =>
+            removeRole.mutate(assignmentId, {
+              onError: (err) =>
+                Alert.alert(
+                  'Revoke failed',
+                  err instanceof Error ? err.message : 'Please try again.',
+                ),
+            }),
+        },
+      ],
+    );
   }
 
   const fellowships = useQuery({
@@ -425,18 +472,50 @@ export default function MemberProfile() {
           )}
         </Section>
 
-        {(roles.data ?? []).length > 0 ? (
-          <Section title="Roles" icon={Sparkles} loading={roles.isLoading}>
-            {(roles.data ?? []).map((r) => (
-              <View key={r.id} style={styles.roleRow}>
-                <Badge label={r.roleName} variant="primary" size="sm" />
-                {r.branchName ? (
-                  <Text style={styles.linkRowMeta}>{r.branchName}</Text>
-                ) : null}
-              </View>
-            ))}
-          </Section>
-        ) : null}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconTile}>
+              <Sparkles color={colors.primary} size={14} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.sectionTitle}>Roles</Text>
+            <Pressable
+              onPress={() => setRolePickerOpen(true)}
+              style={styles.addRoleBtn}
+              hitSlop={6}
+              accessibilityLabel="Add role"
+            >
+              <Plus color={colors.primary} size={16} strokeWidth={1.5} />
+            </Pressable>
+          </View>
+          <Card padding="md" style={{ gap: spacing.xs }}>
+            {roles.isLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.sm }} />
+            ) : (roles.data ?? []).length === 0 ? (
+              <Text style={styles.emptyLine}>No roles assigned. Tap + to add one.</Text>
+            ) : (
+              <>
+                {(roles.data ?? []).map((r) => (
+                  <Pressable
+                    key={r.id}
+                    onLongPress={() =>
+                      confirmRemoveRole(r.id, r.roleName, r.branchName ?? undefined)
+                    }
+                    delayLongPress={350}
+                    style={styles.roleRow}
+                  >
+                    <Badge label={r.roleName} variant="primary" size="sm" />
+                    {r.branchName ? (
+                      <Text style={styles.linkRowMeta}>{r.branchName}</Text>
+                    ) : null}
+                  </Pressable>
+                ))}
+                <Text style={styles.longPressHint}>
+                  Long-press a role to revoke it.
+                </Text>
+              </>
+            )}
+          </Card>
+        </View>
 
         {!m.redacted &&
         (m.emergencyContactName || m.emergencyContactPhone) ? (
@@ -573,7 +652,159 @@ export default function MemberProfile() {
           </Card>
         </View>
       </ScrollView>
+
+      <RolePickerSheet
+        open={rolePickerOpen}
+        onClose={() => setRolePickerOpen(false)}
+        defaultBranchId={m.homeBranchId}
+        onPick={(roleId, branchId) => {
+          setRolePickerOpen(false);
+          assignRole.mutate(
+            { roleId, branchId },
+            {
+              onError: (err) =>
+                Alert.alert(
+                  'Assign failed',
+                  err instanceof Error ? err.message : 'Please try again.',
+                ),
+            },
+          );
+        }}
+      />
     </SafeAreaView>
+  );
+}
+
+function RolePickerSheet({
+  open,
+  onClose,
+  defaultBranchId,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  defaultBranchId: string;
+  onPick: (roleId: string, branchId: string) => void;
+}) {
+  const allRoles = useQuery({
+    queryKey: ['members', 'roles', 'listAll'],
+    enabled: open,
+    queryFn: async () => (await api.members.roles.listAll()).data ?? [],
+    staleTime: 5 * 60 * 1000,
+  });
+  const branches = useQuery({
+    queryKey: ['branches', 'listPublic'],
+    enabled: open,
+    queryFn: async () => (await api.branches.listPublic()).data ?? [],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [pickedRoleId, setPickedRoleId] = useState<string | null>(null);
+  const [branchId, setBranchId] = useState(defaultBranchId);
+
+  return (
+    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <Pressable style={styles.rolePickerSheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.rolePickerHandle} />
+          <Text style={styles.rolePickerTitle}>Assign a role</Text>
+          <Text style={styles.rolePickerSub}>
+            Pick a role and the branch it applies to.
+          </Text>
+
+          <ScrollView style={{ maxHeight: 380 }}>
+            {allRoles.isLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            ) : (
+              (allRoles.data ?? []).map((r) => {
+                const isSelected = pickedRoleId === r.id;
+                return (
+                  <Pressable
+                    key={r.id}
+                    onPress={() => setPickedRoleId(r.id)}
+                    style={[
+                      styles.rolePickerOption,
+                      isSelected && styles.rolePickerOptionActive,
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rolePickerOptionLabel}>{r.roleName}</Text>
+                      {r.description ? (
+                        <Text style={styles.rolePickerOptionMeta} numberOfLines={2}>
+                          {r.description}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {isSelected ? (
+                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                    ) : (
+                      <ChevronRight
+                        color="rgba(26,28,28,0.3)"
+                        size={16}
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+
+          {pickedRoleId ? (
+            <View style={styles.branchPickerRow}>
+              <Text style={styles.branchPickerLabel}>Branch</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: spacing.xs }}
+              >
+                {(branches.data ?? []).map((b) => {
+                  const active = branchId === b.id;
+                  return (
+                    <Pressable
+                      key={b.id}
+                      onPress={() => setBranchId(b.id)}
+                      style={[
+                        styles.branchChip,
+                        active && styles.branchChipActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.branchChipLabel,
+                          active && styles.branchChipLabelActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {b.branchName}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
+
+          <View style={styles.rolePickerActions}>
+            <Pressable style={styles.rolePickerCancel} onPress={onClose}>
+              <Text style={styles.rolePickerCancelLabel}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.rolePickerAssign,
+                (!pickedRoleId || !branchId) && { opacity: 0.5 },
+              ]}
+              disabled={!pickedRoleId || !branchId}
+              onPress={() => {
+                if (pickedRoleId && branchId) onPick(pickedRoleId, branchId);
+              }}
+            >
+              <Text style={styles.rolePickerAssignLabel}>Assign</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 
@@ -868,5 +1099,131 @@ const styles = StyleSheet.create({
     color: 'rgba(26,28,28,0.5)',
     marginTop: spacing.xs,
     lineHeight: 15,
+  },
+  addRoleBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  longPressHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.45)',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10,10,15,0.5)',
+    justifyContent: 'flex-end',
+  },
+  rolePickerSheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    paddingTop: spacing.md,
+    gap: spacing.md,
+  },
+  rolePickerHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    alignSelf: 'center',
+  },
+  rolePickerTitle: {
+    ...typography.cardTitle,
+    color: colors.ink,
+  },
+  rolePickerSub: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    marginTop: -6,
+  },
+  rolePickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(26,28,28,0.06)',
+  },
+  rolePickerOptionActive: {
+    backgroundColor: 'rgba(93,63,211,0.06)',
+  },
+  rolePickerOptionLabel: {
+    ...typography.body,
+    color: colors.ink,
+    fontWeight: '600',
+  },
+  rolePickerOptionMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  branchPickerRow: {
+    gap: spacing.xs,
+  },
+  branchPickerLabel: {
+    ...typography.eyebrow,
+    color: 'rgba(26,28,28,0.55)',
+  },
+  branchChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.subtleLight,
+  },
+  branchChipActive: {
+    backgroundColor: colors.primary,
+  },
+  branchChipLabel: {
+    ...typography.meta,
+    color: colors.ink,
+    fontWeight: '600',
+  },
+  branchChipLabelActive: {
+    color: '#ffffff',
+  },
+  rolePickerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  rolePickerCancel: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.12)',
+    backgroundColor: colors.cardLight,
+  },
+  rolePickerCancelLabel: {
+    ...typography.button,
+    color: colors.ink,
+    fontSize: 14,
+  },
+  rolePickerAssign: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+  },
+  rolePickerAssignLabel: {
+    ...typography.button,
+    color: '#ffffff',
+    fontSize: 14,
   },
 });
