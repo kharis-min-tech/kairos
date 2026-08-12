@@ -8,7 +8,6 @@ import {
   Bell,
   BookOpen,
   Calendar,
-  Heart,
   ClipboardList,
   Users,
   UsersRound,
@@ -93,8 +92,11 @@ export default function More() {
             label="New Believer journey"
             onPress={() => router.push('/new-believers')}
           />
-          <SoonRow icon={Calendar} label="My attendance" />
-          <SoonRow icon={Heart} label="Giving history" />
+          <NavRow
+            icon={Calendar}
+            label="My attendance"
+            onPress={() => router.push('/my-attendance')}
+          />
           <NavRow
             icon={FileText}
             label="My form submissions"
@@ -221,7 +223,7 @@ export default function More() {
             label="Data & privacy"
             onPress={() => router.push('/data-privacy')}
           />
-          <SoonRow icon={Lock} label="Security" />
+          <NavRow icon={Lock} label="Security" onPress={() => router.push('/security')} />
           <NavRow
             icon={History}
             label="Recent activity"
@@ -237,7 +239,11 @@ export default function More() {
             label="Help & Guides"
             onPress={() => Linking.openURL(HELP_URL)}
           />
-          <SoonRow icon={Info} label="About Kairos" />
+          <NavRow
+            icon={Info}
+            label="About Kairos"
+            onPress={() => Linking.openURL(`${HELP_URL}/about`)}
+          />
         </Section>
 
         <Pressable onPress={handleSignOut} style={styles.signOutRow}>
