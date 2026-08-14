@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,61 +7,58 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
-import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react-native';
-import { Card, Badge, Button, Avatar, colors, spacing, typography, radii } from '@kairos/ui-native';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, UserPlus, UsersRound, Building2 } from 'lucide-react-native';
+import { Badge, Card, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
+import type { MeApprovalItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
+
+type FilterKind = 'all' | 'member_signup' | 'fellowship_join' | 'department_join';
+
+const KIND_META: Record<
+  MeApprovalItem['kind'],
+  { label: string; icon: typeof UserPlus; variant: 'primary' | 'gold' | 'info' }
+> = {
+  member_signup: { label: 'Member signup', icon: UserPlus, variant: 'primary' },
+  fellowship_join: { label: 'Fellowship request', icon: UsersRound, variant: 'gold' },
+  department_join: { label: 'Department request', icon: Building2, variant: 'info' },
+};
+
+const FILTERS: { key: FilterKind; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'member_signup', label: 'Signups' },
+  { key: 'fellowship_join', label: 'Fellowships' },
+  { key: 'department_join', label: 'Departments' },
+];
 
 export default function Approvals() {
   const router = useRouter();
-  const qc = useQueryClient();
+  const [filter, setFilter] = useState<FilterKind>('all');
 
-  const pending = useQuery({
-    queryKey: ['members', 'pending'],
-    queryFn: async () => {
-      const res = await api.members.list({
-        approvalStatus: 'pending',
-        limit: 50,
-      });
-      return res.data?.data ?? [];
-    },
+  const inbox = useQuery({
+    queryKey: ['me', 'approvals'],
+    queryFn: async () => (await api.me.approvals()).data ?? [],
   });
 
-  const approve = useMutation({
-    mutationFn: (memberId: string) =>
-      api.members.approve(memberId, { approved: true }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['members'] });
-    },
-    onError: (e: Error) => {
-      alert.info('Approve failed', e.message);
-    },
-  });
+  const rows = useMemo(() => {
+    const all = inbox.data ?? [];
+    if (filter === 'all') return all;
+    return all.filter((i) => i.kind === filter);
+  }, [inbox.data, filter]);
 
-  const reject = useMutation({
-    mutationFn: (memberId: string) =>
-      api.members.approve(memberId, { approved: false }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['members'] });
-    },
-    onError: (e: Error) => {
-      alert.info('Reject failed', e.message);
-    },
-  });
-
-  async function confirmReject(memberId: string, name: string) {
-    const ok = await alert.confirm({
-      title: 'Reject signup?',
-      message: `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
-      confirmLabel: 'Reject',
-      destructive: true,
-    });
-    if (ok) reject.mutate(memberId);
+  function handlePress(item: MeApprovalItem) {
+    if (item.kind === 'member_signup') {
+      router.push(`/members/${item.subjectMemberId}`);
+    } else if (item.kind === 'fellowship_join') {
+      router.push(`/fellowships/${item.fellowshipId}`);
+    } else {
+      router.push(`/departments/${item.branchDeptId}`);
+    }
   }
 
   return (
@@ -76,98 +74,100 @@ export default function Approvals() {
       <View style={styles.subHeader}>
         <Text style={styles.subTitle}>Waiting on you</Text>
         <Text style={styles.subMeta}>
-          {pending.data?.length ?? 0} member signup{pending.data?.length === 1 ? '' : 's'} pending
+          {(inbox.data ?? []).length} item{(inbox.data ?? []).length === 1 ? '' : 's'} across your
+          fellowships, departments and branch signups.
         </Text>
       </View>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
+      >
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f.key}
+            onPress={() => setFilter(f.key)}
+            style={[styles.chip, filter === f.key && styles.chipActive]}
+          >
+            <Text
+              style={[styles.chipLabel, filter === f.key && styles.chipLabelActive]}
+            >
+              {f.label}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
       <FlatList
-        data={pending.data ?? []}
-        keyExtractor={(m) => m.id}
+        data={rows}
+        keyExtractor={(i) => `${i.kind}:${i.id}`}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={pending.isFetching}
-            onRefresh={() => pending.refetch()}
+            refreshing={inbox.isFetching}
+            onRefresh={() => inbox.refetch()}
             tintColor={colors.primary}
           />
         }
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
-          pending.isLoading ? (
+          inbox.isLoading ? (
             <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
           ) : (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>All caught up</Text>
-              <Text style={styles.emptyMeta}>No pending member signups.</Text>
+              <Text style={styles.emptyMeta}>
+                {filter === 'all'
+                  ? 'Nothing needs your approval right now.'
+                  : 'Nothing in this filter.'}
+              </Text>
             </View>
           )
         }
-        renderItem={({ item }) => (
-          <Card padding="md" style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Badge label="Member signup" variant="primary" size="sm" />
-              <Text style={styles.dateLabel}>
-                {formatShortDate(item.createdAt as unknown as string)}
-              </Text>
-            </View>
-            <View style={styles.applicantRow}>
-              <Avatar
-                size="sm"
-                photoUrl={item.photoUrl}
-                firstName={item.firstName}
-                lastName={item.lastName}
-              />
-              <View style={styles.applicantText}>
-                <Text style={styles.applicantName}>
-                  {item.firstName} {item.lastName}
-                </Text>
-                <Text style={styles.applicantContact}>
-                  {item.email}
-                  {item.phone ? ` · ${item.phone}` : ''}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.detailGrid}>
-              <DetailCell label="Home branch" value={item.branchName ?? '—'} />
-              <DetailCell
-                label="Date of birth"
-                value={item.dateOfBirth ? formatShortDate(item.dateOfBirth) : '—'}
-              />
-            </View>
-            <View style={styles.actions}>
-              <Button
-                label="Approve"
-                size="sm"
-                fullWidth
-                loading={approve.isPending && approve.variables === item.id}
-                onPress={() => approve.mutate(item.id)}
-                style={styles.approveButton}
-              />
-              <Button
-                label="Reject"
-                size="sm"
-                variant="outline"
-                fullWidth
-                loading={reject.isPending && reject.variables === item.id}
-                onPress={() =>
-                  confirmReject(item.id, `${item.firstName} ${item.lastName}`)
-                }
-                style={styles.rejectButton}
-              />
-            </View>
-          </Card>
-        )}
+        renderItem={({ item }) => <ApprovalRow item={item} onPress={() => handlePress(item)} />}
       />
     </SafeAreaView>
   );
 }
 
-function DetailCell({ label, value }: { label: string; value: string }) {
+function ApprovalRow({
+  item,
+  onPress,
+}: {
+  item: MeApprovalItem;
+  onPress: () => void;
+}) {
+  const meta = KIND_META[item.kind];
+  const Icon = meta.icon;
+  const contextLabel =
+    item.kind === 'member_signup'
+      ? (item.branchName ?? 'Branch')
+      : item.kind === 'fellowship_join'
+        ? item.fellowshipName
+        : `${item.departmentName} · ${item.status}`;
+
   return (
-    <View style={styles.detailCell}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
-    </View>
+    <Pressable onPress={onPress} style={styles.row}>
+      <View style={[styles.iconTile, { backgroundColor: 'rgba(93,63,211,0.1)' }]}>
+        <Icon color={colors.primary} size={16} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={styles.rowTitleLine}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.subjectName}
+          </Text>
+          <Badge label={meta.label} variant={meta.variant} size="sm" />
+        </View>
+        <Text style={styles.rowMeta} numberOfLines={1}>
+          {contextLabel}
+        </Text>
+        <Text style={styles.rowMetaFaded}>
+          {formatShortDate(item.createdAt)}
+        </Text>
+      </View>
+      <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+    </Pressable>
   );
 }
 
@@ -187,11 +187,24 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   subTitle: { ...typography.screenTitle, color: colors.ink },
-  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
+  chipsRow: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.subtleLight,
+  },
+  chipActive: { backgroundColor: colors.primary },
+  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipLabelActive: { color: '#ffffff' },
   listContent: {
-    padding: spacing.lg,
-    paddingTop: spacing.md,
-    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   empty: {
     alignItems: 'center',
@@ -200,35 +213,27 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { ...typography.cardTitle, color: colors.ink },
   emptyMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
-  card: { gap: spacing.md },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateLabel: { ...typography.meta, color: 'rgba(26,28,28,0.5)' },
-  applicantRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  applicantText: { flex: 1, gap: 2 },
-  applicantName: { ...typography.cardTitle, color: colors.ink },
-  applicantContact: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
-  detailGrid: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: colors.cardLight,
     borderRadius: radii.md,
     padding: spacing.md,
   },
-  detailCell: { flex: 1, gap: 2 },
-  detailLabel: { ...typography.eyebrow, color: 'rgba(26,28,28,0.5)' },
-  detailValue: { ...typography.body, color: colors.ink },
-  actions: {
+  iconTile: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowTitleLine: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
   },
-  approveButton: { flex: 1 },
-  rejectButton: { flex: 1 },
+  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  rowMetaFaded: { ...typography.meta, color: 'rgba(26,28,28,0.4)', fontSize: 11 },
 });

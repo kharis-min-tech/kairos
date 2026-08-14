@@ -5,7 +5,14 @@ import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
-import { getMyLeadership, deleteMyAccount, exportMyData, hasPrivilegedRole } from './service';
+import {
+  getMyLeadership,
+  deleteMyAccount,
+  exportMyData,
+  hasPrivilegedRole,
+  listMyApprovals,
+  listMyFollowups,
+} from './service';
 import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
 import {
   listEffectivePreferences,
@@ -50,6 +57,18 @@ meRouter.put(
     return c.json(successResponse(updated));
   },
 );
+
+meRouter.get('/approvals', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyApprovals(db, auth);
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/followups', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyFollowups(db, auth);
+  return c.json(successResponse(items));
+});
 
 meRouter.get('/audit-log', async (c) => {
   const auth = getAuth(c);

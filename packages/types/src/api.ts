@@ -1292,6 +1292,80 @@ export interface MeLeadershipResponse {
   deputyDepartments: MeLeadershipDepartment[];
 }
 
+// ── Unified inbox — approvals + follow-ups ────────────────
+//
+// Cross-domain feeds that walk the caller's scope grants and roll up every
+// pending decision (approvals) or open task (follow-ups) into a single list
+// the mobile app can render behind /approvals and /follow-ups. Every row
+// discriminates on `kind` so callers can render + route per type.
+
+export type MeApprovalItem =
+  | {
+      kind: 'member_signup';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      branchName: string | null;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_join';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'department_join';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      status: string;
+      createdAt: string;
+    };
+
+export type MeFollowupItem =
+  | {
+      kind: 'soul';
+      id: string;
+      subjectName: string;
+      status: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      nextFollowUpDate: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'department_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      nextFollowUpDate: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'mentor_enrollment';
+      /** Enrollment id — mentors are surfaced per enrollment, not per note. */
+      id: string;
+      memberId: string;
+      subjectName: string;
+      /** ISO string; null when the mentor has not logged any followup yet. */
+      lastContactedAt: string | null;
+    };
+
 // ── Branch role management — Branch System Admin assignments ─
 
 export interface BranchRoleAssignment {

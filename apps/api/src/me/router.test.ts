@@ -615,3 +615,55 @@ describe('GET /api/me/export', () => {
     expect(body.data.member['passwordResetToken']).toBeUndefined();
   });
 });
+
+// ── GET /api/me/approvals ──────────────────────────────────
+
+describe('GET /api/me/approvals', () => {
+  it('returns 401 without auth', async () => {
+    const res = await app.request('/api/me/approvals');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns an empty list for a plain member with no scope grants', async () => {
+    // fellowshipIdsCallerCanApprove + branchDeptIdsCallerCanApprove each hit
+    // the DB once; both return [] which short-circuits the join-request
+    // queries. Signup query is gated on branchWide capability which a plain
+    // member lacks, so we never hit it.
+    mockDb.select.mockReturnValue(chainTo([]));
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+      branchId: branchA,
+    });
+    const res = await app.request('/api/me/approvals', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: unknown[] };
+    expect(body.data).toEqual([]);
+  });
+});
+
+// ── GET /api/me/followups ──────────────────────────────────
+
+describe('GET /api/me/followups', () => {
+  it('returns 401 without auth', async () => {
+    const res = await app.request('/api/me/followups');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns an empty list for a plain member', async () => {
+    mockDb.select.mockReturnValue(chainTo([]));
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+      branchId: branchA,
+    });
+    const res = await app.request('/api/me/followups', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: unknown[] };
+    expect(body.data).toEqual([]);
+  });
+});
