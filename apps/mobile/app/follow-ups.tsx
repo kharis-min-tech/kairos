@@ -1,56 +1,88 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   FlatList,
+  ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { Avatar, Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Handshake,
+  UsersRound,
+  Building2,
+  Sparkles,
+} from 'lucide-react-native';
+import { Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
+import type { MeFollowupItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
-// SoulStatus values are capitalized-with-spaces per the API enum
-// (`New` / `Following Up` / `Interested` / `Converted`). Do NOT lowercase or
-// snake_case them — the server filters strictly on this shape.
-const STATUSES = ['New', 'Following Up', 'Interested', 'Converted'] as const;
-type Status = (typeof STATUSES)[number];
+type FilterKind =
+  | 'all'
+  | 'soul'
+  | 'fellowship_followup'
+  | 'department_followup'
+  | 'mentor_enrollment';
 
-const STATUS_VARIANT: Record<Status, 'primary' | 'gold' | 'info' | 'success'> = {
-  New: 'primary',
-  'Following Up': 'gold',
-  Interested: 'info',
-  Converted: 'success',
+const KIND_META: Record<
+  MeFollowupItem['kind'],
+  { label: string; icon: typeof Handshake; variant: 'primary' | 'gold' | 'info' | 'success' }
+> = {
+  soul: { label: 'Soul', icon: Handshake, variant: 'primary' },
+  fellowship_followup: { label: 'Fellowship', icon: UsersRound, variant: 'gold' },
+  department_followup: { label: 'Department', icon: Building2, variant: 'info' },
+  mentor_enrollment: { label: 'Mentee', icon: Sparkles, variant: 'success' },
 };
+
+const FILTERS: { key: FilterKind; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'soul', label: 'Souls' },
+  { key: 'fellowship_followup', label: 'Fellowships' },
+  { key: 'department_followup', label: 'Departments' },
+  { key: 'mentor_enrollment', label: 'Mentees' },
+];
+
+function daysAgo(iso: string | null): number | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  return Math.max(0, Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24)));
+}
 
 export default function FollowUps() {
   const router = useRouter();
-  const [activeStatus, setActiveStatus] = useState<Status | 'All'>('All');
+  const [filter, setFilter] = useState<FilterKind>('all');
 
-  const list = useQuery({
-    queryKey: ['souls', 'follow-ups', activeStatus],
-    queryFn: async () => {
-      const params: { status?: Status; limit: number } = { limit: 100 };
-      if (activeStatus !== 'All') params.status = activeStatus;
-      const res = await api.souls.list(params);
-      return res.data?.data ?? [];
-    },
+  const inbox = useQuery({
+    queryKey: ['me', 'followups'],
+    queryFn: async () => (await api.me.followups()).data ?? [],
   });
 
-  const rows = (list.data ?? []) as {
-    id: string;
-    firstName: string;
-    lastName: string;
-    status: Status;
-    createdAt: string | Date;
-  }[];
+  const rows = useMemo(() => {
+    const all = inbox.data ?? [];
+    if (filter === 'all') return all;
+    return all.filter((i) => i.kind === filter);
+  }, [inbox.data, filter]);
+
+  function handlePress(item: MeFollowupItem) {
+    if (item.kind === 'soul') {
+      router.push(`/souls/${item.id}`);
+    } else if (item.kind === 'fellowship_followup') {
+      router.push(`/fellowships/${item.fellowshipId}`);
+    } else if (item.kind === 'department_followup') {
+      router.push(`/departments/${item.branchDeptId}`);
+    } else {
+      router.push(`/members/${item.memberId}`);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -63,8 +95,10 @@ export default function FollowUps() {
       </View>
 
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>Souls pipeline</Text>
-        <Text style={styles.subMeta}>Tap a soul to update their status.</Text>
+        <Text style={styles.subTitle}>Owe someone a call</Text>
+        <Text style={styles.subMeta}>
+          Souls, meeting follow-ups, and new-believer mentees you look after.
+        </Text>
       </View>
 
       <ScrollView
@@ -72,86 +106,95 @@ export default function FollowUps() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipsRow}
       >
-        <FilterChip
-          label="All"
-          active={activeStatus === 'All'}
-          onPress={() => setActiveStatus('All')}
-        />
-        {STATUSES.map((s) => (
-          <FilterChip
-            key={s}
-            label={s}
-            active={activeStatus === s}
-            onPress={() => setActiveStatus(s)}
-          />
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f.key}
+            onPress={() => setFilter(f.key)}
+            style={[styles.chip, filter === f.key && styles.chipActive]}
+          >
+            <Text style={[styles.chipLabel, filter === f.key && styles.chipLabelActive]}>
+              {f.label}
+            </Text>
+          </Pressable>
         ))}
       </ScrollView>
 
       <FlatList
         data={rows}
-        keyExtractor={(r) => r.id}
+        keyExtractor={(i) => `${i.kind}:${i.id}`}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={list.isFetching}
-            onRefresh={() => list.refetch()}
+            refreshing={inbox.isFetching}
+            onRefresh={() => inbox.refetch()}
             tintColor={colors.primary}
           />
         }
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
-          list.isLoading ? (
+          inbox.isLoading ? (
             <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
           ) : (
-            <Text style={styles.emptyText}>
-              {activeStatus === 'All'
-                ? 'No souls in the pipeline yet.'
-                : `No souls in “${activeStatus}” yet.`}
-            </Text>
-          )
-        }
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push(`/souls/${item.id}`)}
-            style={styles.row}
-          >
-            <Avatar size="sm" firstName={item.firstName} lastName={item.lastName} />
-            <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>
-                {item.firstName} {item.lastName}
-              </Text>
-              <Text style={styles.rowMeta}>
-                Captured {formatShortDate(item.createdAt as string)}
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>All caught up</Text>
+              <Text style={styles.emptyMeta}>
+                {filter === 'all'
+                  ? 'Nothing pending right now — enjoy the quiet.'
+                  : 'Nothing in this filter.'}
               </Text>
             </View>
-            <Badge
-              label={item.status}
-              variant={STATUS_VARIANT[item.status] ?? 'neutral'}
-              size="sm"
-            />
-            <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
-          </Pressable>
-        )}
+          )
+        }
+        renderItem={({ item }) => <FollowupRow item={item} onPress={() => handlePress(item)} />}
       />
     </SafeAreaView>
   );
 }
 
-function FilterChip({
-  label,
-  active,
+function FollowupRow({
+  item,
   onPress,
 }: {
-  label: string;
-  active: boolean;
+  item: MeFollowupItem;
   onPress: () => void;
 }) {
+  const meta = KIND_META[item.kind];
+  const Icon = meta.icon;
+  const contextLabel =
+    item.kind === 'soul'
+      ? item.status
+      : item.kind === 'fellowship_followup'
+        ? item.fellowshipName
+        : item.kind === 'department_followup'
+          ? item.departmentName
+          : 'New Believer';
+  const tailLabel =
+    item.kind === 'soul'
+      ? `captured ${formatShortDate(item.createdAt)}`
+      : item.kind === 'fellowship_followup' || item.kind === 'department_followup'
+        ? `due ${formatShortDate(item.nextFollowUpDate)}`
+        : item.lastContactedAt
+          ? `last note ${daysAgo(item.lastContactedAt)}d ago`
+          : 'no notes yet';
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.chip, active && styles.chipActive]}
-    >
-      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{label}</Text>
+    <Pressable onPress={onPress} style={styles.row}>
+      <View style={styles.iconTile}>
+        <Icon color={colors.primary} size={16} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={styles.rowTitleLine}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.subjectName}
+          </Text>
+          <Badge label={meta.label} variant={meta.variant} size="sm" />
+        </View>
+        <Text style={styles.rowMeta} numberOfLines={1}>
+          {contextLabel}
+        </Text>
+        <Text style={styles.rowMetaFaded}>{tailLabel}</Text>
+      </View>
+      <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
     </Pressable>
   );
 }
@@ -168,11 +211,11 @@ const styles = StyleSheet.create({
   headerTitle: { ...typography.cardTitle, color: colors.ink },
   subHeader: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.sm,
     gap: 2,
   },
   subTitle: { ...typography.screenTitle, color: colors.ink },
-  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
   chipsRow: {
     paddingHorizontal: spacing.lg,
     gap: spacing.xs,
@@ -185,15 +228,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.subtleLight,
   },
   chipActive: { backgroundColor: colors.primary },
-  chipLabel: {
-    ...typography.meta,
-    color: colors.ink,
-    fontWeight: '600',
-  },
+  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  empty: {
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+    gap: spacing.xs,
+  },
+  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',
@@ -203,13 +253,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
   },
-  rowText: { flex: 1, gap: 2 },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
-  emptyText: {
-    ...typography.body,
-    color: 'rgba(26,28,28,0.5)',
-    textAlign: 'center',
-    marginTop: spacing.xl,
+  iconTile: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  rowTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  rowMetaFaded: { ...typography.meta, color: 'rgba(26,28,28,0.4)', fontSize: 11 },
 });
