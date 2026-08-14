@@ -98,7 +98,7 @@ export default function RollcallFellowship() {
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {fellowship.data?.fellowshipName ?? 'Rollcall'}
+          {fellowship.data?.fellowshipName ?? 'Fellowship attendance'}
         </Text>
         <View style={{ width: 24 }} />
       </View>
