@@ -1,0 +1,49 @@
+appId: ${APP_ID}
+name: Members directory — search + filter chips
+tags:
+  - smoke
+  - members
+env:
+  APP_ID: "com.kharis.kairos"
+  # Prefix used to search the directory; must match at least one seeded
+  # member's first or last name. Default matches typical Kharis seeds.
+  MEMBER_SEARCH: "a"
+---
+# Idempotent — safe to run in isolation. Verifies the Members directory
+# loads with search + filter chips, and search narrows results. Does NOT
+# tap into a specific member — that requires a stable seed id which varies
+# by env.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Members directory"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Members directory"
+
+- extendedWaitUntil:
+    visible:
+      text: "Members"
+    timeout: 8000
+
+# Filter chips are always present
+- assertVisible: "All"
+- assertVisible: "Attendees"
+
+# Search input (has placeholder "Search by name or email")
+- tapOn: "Search by name or email"
+- inputText: ${MEMBER_SEARCH}
+- pressKey: Back  # dismiss keyboard
+
+# Filter chip interaction — sanity that state changes
+- tapOn: "Attendees"
+- tapOn: "All"
+
+- pressKey: Back

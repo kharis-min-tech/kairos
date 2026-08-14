@@ -21,7 +21,7 @@ import {
   useRemoveEnrollment,
 } from '@/hooks/use-new-believers';
 import { useCapabilities } from '@/hooks/use-capabilities';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
 import type { EnrollmentDetail } from './types';
 import {

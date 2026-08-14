@@ -25,7 +25,7 @@ import {
   useMissingMembers,
   useAttendanceByBranch,
 } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { CohortCompareCard } from '../_components/cohort-compare-card';
 import { AttendanceHeatmapCard } from '../_components/attendance-heatmap-card';
 import { FrequencyBucketsCard } from '../_components/frequency-buckets-card';

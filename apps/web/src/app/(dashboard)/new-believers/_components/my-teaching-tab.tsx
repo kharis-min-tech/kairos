@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { getStageByValue } from './stage-config';
 import type { EnrollmentCardData } from './types';
 

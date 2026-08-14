@@ -1,0 +1,61 @@
+appId: ${APP_ID}
+name: My groups — fellowship / department / branch
+tags:
+  - smoke
+  - my-groups
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation. Walks each "My groups" destination
+# and asserts a header string that renders regardless of data state — the
+# header bar is stable whether the user has group memberships or lands on
+# the empty state.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+# ── My fellowship ────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "My fellowship"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "My fellowship"
+# Header bar always shows "My fellowship" regardless of populated / empty state.
+- extendedWaitUntil:
+    visible:
+      text: "My fellowship"
+    timeout: 8000
+- pressKey: Back
+
+# ── My department ────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "My department"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "My department"
+- extendedWaitUntil:
+    visible:
+      text: "My department"
+    timeout: 8000
+- pressKey: Back
+
+# ── My branch ────────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "My branch"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "My branch"
+- extendedWaitUntil:
+    visible:
+      text: "My branch"
+    timeout: 8000
+- pressKey: Back

@@ -1119,6 +1119,26 @@ describe('listSubmissions', () => {
   });
 });
 
+// ── listMySubmissions ─────────────────────────────────────
+describe('listMySubmissions', () => {
+  it('returns submissions filed by the caller (no visibility gate)', async () => {
+    setupSelectSequence([
+      { id: submissionId, formType: 'testimony', branchId, status: 'new' },
+    ]);
+    const { listMySubmissions } = await import('./service');
+    const rows = await listMySubmissions(mockDb, memberAuth);
+    expect(rows.length).toBe(1);
+    expect(rows[0]!.id).toBe(submissionId);
+  });
+
+  it('returns an empty list when the caller has filed nothing', async () => {
+    setupSelectSequence([]);
+    const { listMySubmissions } = await import('./service');
+    const rows = await listMySubmissions(mockDb, memberAuth);
+    expect(rows).toEqual([]);
+  });
+});
+
 // ── getSubmission ─────────────────────────────────────────
 describe('getSubmission', () => {
   it('returns a submission for an Admin-dept leader', async () => {

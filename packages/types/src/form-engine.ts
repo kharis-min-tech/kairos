@@ -66,6 +66,11 @@ export interface FormFieldDef {
   /** For `select` / `radio` (and multi-select via `select`). */
   options?: FormFieldOption[];
   helpText?: string;
+  /**
+   * Value the field starts with. For date fields, the magic string
+   * `'today'` resolves to the current ISO date at renderer boot time.
+   */
+  defaultValue?: string | boolean;
   /** Field is rendered/validated only when this condition holds. */
   visibleWhen?: FormConditionDef;
 }
@@ -339,7 +344,259 @@ export const FIRST_TIME_VISITOR_FORM: FormDefinition = {
   ],
 };
 
+// ── New Believers class (altar-call) — captures phone + name for follow-up ──
+
+export const ALTAR_CALL_FORM: FormDefinition = {
+  formType: 'altar_call',
+  title: 'New Believers Class',
+  description:
+    'Enrol someone into the New Believers programme — we’ll follow up to arrange the four-week class.',
+  blocks: [
+    {
+      kind: 'section',
+      id: 'details',
+      title: 'Their details',
+      fields: [
+        {
+          id: 'todaysDate',
+          type: 'date',
+          label: 'Today’s date',
+          required: true,
+          defaultValue: 'today',
+        },
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+      ],
+    },
+  ],
+};
+
+// ── Baptism request ─────────────────────────────────────────
+
+export const BAPTISM_FORM: FormDefinition = {
+  formType: 'baptism',
+  title: 'Baptism',
+  description:
+    'Request baptism. A leader will get in touch to talk through timing and next steps.',
+  blocks: [
+    {
+      kind: 'section',
+      id: 'details',
+      title: 'Your details',
+      fields: [
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+      ],
+    },
+  ],
+};
+
+// ── Testimony share ────────────────────────────────────────
+
+export const TESTIMONY_FORM: FormDefinition = {
+  formType: 'testimony',
+  title: 'Testimony',
+  description:
+    'Share what God has done. Leaders may reach out to celebrate with you or ask if you’d share it on a Sunday.',
+  blocks: [
+    {
+      kind: 'section',
+      id: 'about-you',
+      title: 'About you',
+      fields: [
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+        {
+          id: 'todaysDate',
+          type: 'date',
+          label: 'Today’s date',
+          required: true,
+          defaultValue: 'today',
+        },
+      ],
+    },
+    {
+      kind: 'section',
+      id: 'testimony',
+      title: 'Your testimony',
+      fields: [
+        {
+          id: 'dateOfTestimony',
+          type: 'date',
+          label: 'Date this happened',
+          required: true,
+        },
+        {
+          id: 'category',
+          type: 'select',
+          label: 'Category',
+          required: true,
+          placeholder: 'Choose a category',
+          options: [
+            { value: 'Business', label: 'Business' },
+            { value: 'Career/Job', label: 'Career / Job' },
+            { value: 'Deliverance', label: 'Deliverance' },
+            { value: 'Education', label: 'Education' },
+            { value: 'Financial', label: 'Financial' },
+            { value: 'Health/Healing', label: 'Health / Healing' },
+            { value: 'Marriage/Family', label: 'Marriage / Family' },
+            { value: 'Salvation', label: 'Salvation' },
+            { value: 'Unusual Favour', label: 'Unusual Favour' },
+            { value: 'Other', label: 'Other' },
+          ],
+        },
+        {
+          id: 'details',
+          type: 'textarea',
+          label: 'What happened?',
+          required: true,
+          placeholder: 'Tell us in your own words.',
+        },
+      ],
+    },
+    {
+      kind: 'section',
+      id: 'sharing',
+      title: 'Sharing preferences',
+      fields: [
+        {
+          id: 'shareAnonymously',
+          type: 'checkbox',
+          label: 'Share anonymously (don’t use my name if published)',
+        },
+        {
+          id: 'happyToShareSunday',
+          type: 'checkbox',
+          label: 'I’d be happy to share this on a Sunday',
+        },
+        {
+          id: 'acknowledged',
+          type: 'checkbox',
+          required: true,
+          label: 'I confirm this is my testimony and Kharis may follow up with me.',
+        },
+      ],
+    },
+  ],
+};
+
+// ── Baby naming / dedication (share the same shell) ──────────────────
+
+function babyForm(
+  formType: 'baby_naming' | 'baby_dedication',
+  title: string,
+  description: string,
+): FormDefinition {
+  const preferredDateFieldId =
+    formType === 'baby_dedication' ? 'preferredDedicationDate' : 'preferredCeremonyDate';
+  const preferredDateLabel =
+    formType === 'baby_dedication' ? 'Preferred dedication date' : 'Preferred ceremony date';
+  return {
+    formType,
+    title,
+    description,
+    blocks: [
+      {
+        kind: 'section',
+        id: 'baby',
+        title: 'About the baby',
+        fields: [
+          {
+            id: 'babyFullName',
+            type: 'text',
+            label: 'Baby’s full name',
+            required: true,
+          },
+          {
+            id: 'dateOfBirth',
+            type: 'date',
+            label: 'Date of birth',
+            required: true,
+          },
+          {
+            id: 'gender',
+            type: 'radio',
+            label: 'Gender',
+            options: [
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' },
+            ],
+          },
+        ],
+      },
+      {
+        kind: 'section',
+        id: 'parents',
+        title: 'Parents',
+        fields: [
+          { id: 'fathersName', type: 'text', label: 'Father’s name', required: true },
+          { id: 'mothersName', type: 'text', label: 'Mother’s name', required: true },
+          ...(formType === 'baby_dedication'
+            ? [
+                {
+                  id: 'parentsAreMembers',
+                  type: 'checkbox' as const,
+                  label: 'One or both parents are members of Kharis',
+                },
+              ]
+            : []),
+          {
+            id: 'parentContactPhone',
+            type: 'tel',
+            label: 'Parent contact phone',
+            required: true,
+          },
+          {
+            id: 'parentContactEmail',
+            type: 'email',
+            label: 'Parent contact email',
+          },
+        ],
+      },
+      {
+        kind: 'section',
+        id: 'preferences',
+        title: 'Preferences',
+        fields: [
+          {
+            id: preferredDateFieldId,
+            type: 'date',
+            label: preferredDateLabel,
+            helpText: 'Leaders will confirm the actual date.',
+          },
+          {
+            id: 'additionalNotes',
+            type: 'textarea',
+            label: 'Anything else?',
+            placeholder: 'Special requests, sponsors, etc.',
+          },
+        ],
+      },
+    ],
+  };
+}
+
+export const BABY_NAMING_FORM = babyForm(
+  'baby_naming',
+  'Baby Naming',
+  'Request a baby naming ceremony.',
+);
+
+export const BABY_DEDICATION_FORM = babyForm(
+  'baby_dedication',
+  'Baby Dedication',
+  'Request a baby dedication.',
+);
+
 /** Registry of declarative form definitions, keyed by `FormType`. */
 export const FORM_DEFINITIONS: Partial<Record<FormType, FormDefinition>> = {
   first_time_visitor: FIRST_TIME_VISITOR_FORM,
+  altar_call: ALTAR_CALL_FORM,
+  baptism: BAPTISM_FORM,
+  testimony: TESTIMONY_FORM,
+  baby_naming: BABY_NAMING_FORM,
+  baby_dedication: BABY_DEDICATION_FORM,
 };

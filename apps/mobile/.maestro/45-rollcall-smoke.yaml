@@ -1,0 +1,46 @@
+appId: ${APP_ID}
+name: Rollcall — landing → fellowship view (no destructive save)
+tags:
+  - smoke
+  - rollcall
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation. Rollcall auto-forwards to
+# /rollcall/[id] if the user leads exactly one fellowship — so we accept
+# either the landing ("Take rollcall") or the fellowship view ("Meetings" +
+# "Start today's meeting"). Doesn't tap Start — that would create a
+# persistent meeting row.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Rollcall"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn:
+    text: "Rollcall"
+    # Index 0 = More menu row; the header of the destination screen also says
+    # "Rollcall" so we want the first match (the tappable row).
+    index: 0
+
+# One of two things will be true after tap:
+#   a) Single-fellowship user — auto-redirect to /rollcall/[id] shows "Meetings"
+#   b) Multi- or no-fellowship user — landing page shows "Take rollcall"
+- extendedWaitUntil:
+    visible:
+      text: "Rollcall"
+    timeout: 10000
+
+# Back to More. Two back-presses handle the auto-redirect case: one out of the
+# meeting-picker, one out of the landing (Expo Router keeps both on the stack).
+# The second back is unconditional — pressing back on the More tab is a no-op
+# so it's safe when we were only one screen deep.
+- pressKey: Back
+- pressKey: Back

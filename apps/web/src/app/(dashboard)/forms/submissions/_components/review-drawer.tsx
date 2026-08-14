@@ -14,7 +14,7 @@ import {
   Textarea,
   Badge,
 } from '@kairos/ui';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { useUpdateFormSubmission } from '@/hooks/use-forms';
 import { FORM_META, STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';

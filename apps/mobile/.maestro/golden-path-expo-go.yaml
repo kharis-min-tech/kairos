@@ -1,0 +1,47 @@
+appId: ${EXPO_GO_APP_ID}
+name: Golden path (Expo Go) — bootstrap via deep link, then onboarding → login → tabs → sign out
+tags:
+  - smoke
+env:
+  # Android Expo Go bundle id. iOS is host.exp.Exponent (capital E).
+  EXPO_GO_APP_ID: "host.exp.exponent"
+  # EMAIL, PASSWORD, METRO_URL, BRANCH_NAME MUST be passed via --env at run time.
+  # Do NOT set defaults here — Maestro 2.x's flow env block always wins over CLI
+  # --env, so any default here silently overrides what you pass on the command line.
+---
+# Reset Expo Go's own state so the project's AsyncStorage + SecureStore items
+# are wiped. Since Expo Go OWNS the SecureStore keychain for hosted projects,
+# this is the only way to force the first-run onboarding path.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+# Open the Metro deep link. Expo Go routes exp:// URLs into its project loader.
+- openLink: "${METRO_URL}"
+
+# Expo Go shows its own "Building JavaScript bundle" indicator before handing
+# off to the app. Wait until the splash-screen text appears before proceeding.
+- extendedWaitUntil:
+    visible:
+      text: "KAIROS"
+    timeout: 120000
+
+- runFlow:
+    file: 00-onboarding.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+      BRANCH_NAME: ${BRANCH_NAME}
+- runFlow:
+    file: 10-login.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+- runFlow:
+    file: 20-tab-navigation.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}

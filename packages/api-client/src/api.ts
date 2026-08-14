@@ -86,6 +86,8 @@ import type {
   ListDormantVisitorsParams,
   FormsCapabilities,
   // Me / Leadership
+  MeApprovalItem,
+  MeFollowupItem,
   MeLeadershipResponse,
   ListNotificationPreferencesResponse,
   NotificationPreferencePayload,
@@ -833,6 +835,10 @@ export function createApiClient(
       },
       leadership: () =>
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
+      approvals: () =>
+        client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
+      followups: () =>
+        client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
       notificationPreferences: {
         list: () =>
           client.get<ApiResponse<ListNotificationPreferencesResponse>>(
@@ -1087,6 +1093,10 @@ export function createApiClient(
       // Caller capabilities — drives /forms landing + filter gating.
       myCapabilities: () =>
         client.get<ApiResponse<FormsCapabilities>>('/api/forms/me/capabilities'),
+
+      // Caller's own submissions — personal paper trail across branches.
+      mySubmissions: () =>
+        client.get<ApiResponse<FormSubmission[]>>('/api/forms/me/submissions'),
 
       // Submit a form (any logged-in member). Branch is forced server-side.
       submit: (formType: FormType, data: SubmitFormRequest) =>

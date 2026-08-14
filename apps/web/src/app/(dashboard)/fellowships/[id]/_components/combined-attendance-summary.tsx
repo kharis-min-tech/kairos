@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@kairos/ui';
 import { useFellowshipAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { FellowshipAttendanceReport } from '@kairos/types';
 
 interface CombinedAttendanceSummaryProps {

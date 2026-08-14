@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from '@kairos/ui';
 import { useMyAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { MyAttendanceSnapshot } from '@kairos/types';
 
 function getTone(rate: number, missedCount: number, servicesInWindow: number) {

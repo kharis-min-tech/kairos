@@ -3,7 +3,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { Check } from 'lucide-react';
 import { Card, CardContent } from '@kairos/ui';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { STAGES, getStaleDays } from './stage-config';
 import type { EnrollmentCardData } from './types';
 

@@ -10,7 +10,7 @@ import {
   useDeleteRegion,
 } from '@/hooks/use-branches';
 import { Button, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
-import { CONTINENTS, COUNTRIES_BY_CONTINENT } from '@/lib/countries';
+import { CONTINENTS, COUNTRIES_BY_CONTINENT } from '@kairos/core';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
 import type { Region } from '@kairos/types';

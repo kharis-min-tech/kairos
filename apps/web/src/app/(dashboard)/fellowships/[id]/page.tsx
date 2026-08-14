@@ -28,7 +28,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
 import { FellowshipFollowupsTab } from './_components/followups-tab';
 import { CombinedAttendanceSummary } from './_components/combined-attendance-summary';
-import { formatDate, formatShortDate } from '@/lib/date-format';
+import { formatDate, formatShortDate } from '@kairos/core';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';

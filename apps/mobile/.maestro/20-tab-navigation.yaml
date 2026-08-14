@@ -1,0 +1,33 @@
+appId: ${APP_ID}
+name: Tab navigation — Home → Community → Check-in → Give → More
+tags:
+  - smoke
+  - navigation
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Assumes signed-in state (Home tab visible)
+- assertVisible: "Home"
+
+- tapOn: "Community"
+- extendedWaitUntil:
+    visible:
+      text: "People"
+    timeout: 8000
+
+- tapOn: "Check-in"
+- extendedWaitUntil:
+    visible:
+      text: "Happening now"
+    timeout: 8000
+
+- tapOn: "Give"
+# Give tab hosts a WebView pointed at https://kharis.org/giving/ — the tab label
+# should remain visible even while the WebView loads.
+- assertVisible: "Give"
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000

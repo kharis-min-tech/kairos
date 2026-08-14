@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useUnguardedMinors, useDormantMinors, useReviewMinor } from '@/hooks/use-members';
 import { Button, Card, CardContent } from '@kairos/ui';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { UnguardedMinor, DormantMinor } from '@kairos/types';
 
 export default function SafeguardingReviewPage() {

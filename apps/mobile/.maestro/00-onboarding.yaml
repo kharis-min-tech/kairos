@@ -1,0 +1,47 @@
+appId: ${APP_ID}
+name: Onboarding — language + branch selection
+tags:
+  - smoke
+  - onboarding
+env:
+  APP_ID: "com.kharis.kairos"
+  # BRANCH_NAME must come from the parent flow's runFlow env or --env.
+  # Do NOT default here — Maestro 2.x subflow defaults win over parent env.
+---
+# Assumes the app is already foreground (parent flow handles launchApp / Expo Go
+# bootstrap). Splash auto-advances to Language after ~1.8s.
+- extendedWaitUntil:
+    visible:
+      text: "Choose your language"
+    timeout: 20000
+
+- tapOn: "English"
+- tapOn: "Continue"
+
+# Branch step
+- assertVisible: "Where do you fellowship?"
+
+# Filter to a known branch to avoid tapping a group header.
+# Override BRANCH_NAME via --env if the seed doesn't contain "Kharis".
+- tapOn:
+    text: "Search branches"
+- inputText: ${BRANCH_NAME}
+- pressKey: Back  # dismiss keyboard reliably (hideKeyboard is flaky on A16)
+
+# Tap the branch row by stable testID — avoids matching the search input
+# (which now has BRANCH_NAME as its value) or a region group header.
+- extendedWaitUntil:
+    visible:
+      id: "branch-row-${BRANCH_NAME}"
+    timeout: 15000
+- tapOn:
+    id: "branch-row-${BRANCH_NAME}"
+
+# Continue button is in a fixed footer — should be visible after keyboard dismiss.
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 5000
+- tapOn: "Continue"
+
+# Lands on Login
+- assertVisible: "Sign in"
