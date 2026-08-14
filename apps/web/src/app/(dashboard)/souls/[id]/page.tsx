@@ -11,7 +11,7 @@ import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
 import { useConfirm } from '@/components/confirm-dialog';
-import { formatShortDate, formatShortDateTime } from '@/lib/date-format';
+import { formatShortDate, formatShortDateTime } from '@kairos/core';
 
 interface FollowUpRecord {
   id: string;

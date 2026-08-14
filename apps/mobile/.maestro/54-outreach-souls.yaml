@@ -1,0 +1,77 @@
+appId: ${APP_ID}
+name: Outreach + Souls — programs list/create form, souls quick-list
+tags:
+  - smoke
+  - wave3
+  - outreach
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent. Walks Outreach programs (list → create form → back) and Souls
+# quick-list (list + status chip filter tap). Doesn't submit or drill into
+# individual records — both would need seed data.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+# ── Outreach programs ─────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Outreach programs"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Outreach programs"
+
+- extendedWaitUntil:
+    visible:
+      text: "Outreach"
+    timeout: 8000
+- assertVisible: "Active"
+- assertVisible: "Completed"
+
+- tapOn:
+    id: "new-outreach-btn"
+
+- extendedWaitUntil:
+    visible:
+      text: "New program"
+    timeout: 8000
+- assertVisible: "PROGRAM"
+- assertVisible: "Owning branch"
+- assertVisible: "Create program"
+
+- pressKey: Back
+- extendedWaitUntil:
+    visible:
+      text: "Outreach"
+    timeout: 8000
+- pressKey: Back  # back to More
+
+# ── Souls quick-list ──────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Souls"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn:
+    text: "Souls"
+    index: 0
+
+- extendedWaitUntil:
+    visible:
+      text: "Souls"
+    timeout: 8000
+# Status chip row and overdue toggle always render
+- assertVisible: "All"
+- assertVisible: "Only show overdue follow-ups"
+
+# Flip a filter to verify the chip is wired
+- tapOn: "New"
+- tapOn: "All"
+
+- pressKey: Back

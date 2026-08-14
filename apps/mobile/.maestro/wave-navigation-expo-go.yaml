@@ -1,0 +1,77 @@
+appId: ${EXPO_GO_APP_ID}
+name: Wave 1 + 2 navigation smoke (Expo Go) — every new destination loads
+tags:
+  - smoke
+  - waves
+env:
+  # Android Expo Go bundle id. iOS is host.exp.Exponent (capital E).
+  EXPO_GO_APP_ID: "host.exp.exponent"
+  # EMAIL, PASSWORD, METRO_URL, BRANCH_NAME MUST be passed via --env at run
+  # time. Do NOT set defaults here — Maestro 2.x's flow env block always wins
+  # over CLI --env, so any default here silently overrides the command line.
+  MEMBER_SEARCH: "a"
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- openLink: "${METRO_URL}"
+
+- extendedWaitUntil:
+    visible:
+      text: "KAIROS"
+    timeout: 120000
+
+- runFlow:
+    file: 00-onboarding.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+      BRANCH_NAME: ${BRANCH_NAME}
+
+- runFlow:
+    file: 10-login.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+- runFlow:
+    file: 40-more-menu.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 41-wave1-selfservice.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 42-forms.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 43-my-groups.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 44-members-directory.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+      MEMBER_SEARCH: ${MEMBER_SEARCH}
+
+- runFlow:
+    file: 45-rollcall-smoke.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 46-reports.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}
+
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: ${EXPO_GO_APP_ID}

@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { Button, Card, CardContent } from '@kairos/ui';
 import { useEnrollmentAlerts, useNewBelieversHealth } from '@/hooks/use-new-believers';
-import { formatDate, formatShortDate } from '@/lib/date-format';
+import { formatDate, formatShortDate } from '@kairos/core';
 import type {
   NewBelieverEnrollmentWithMember,
   NewBelieverHealthSummary,

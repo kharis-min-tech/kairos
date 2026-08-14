@@ -9,7 +9,7 @@ import { Button, Input, Badge, Table, TableHeader, TableBody, TableRow, TableHea
 import { Plus, Search, UserPlus, CheckCircle2, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/hooks/use-toast';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 
 type ProgramTab = 'active' | 'completed';
 

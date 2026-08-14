@@ -12,7 +12,7 @@ import {
   Checkbox,
 } from '@kairos/ui';
 import { useServices, useCohortDiff } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 
 type Mode = 'any' | 'all';
 type PresetKey = 'missed-last-4' | 'first-timers-this-week' | 'regulars-slipped';

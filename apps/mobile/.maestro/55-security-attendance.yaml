@@ -1,0 +1,80 @@
+appId: ${APP_ID}
+name: Security + My attendance — sweeps the small post-Wave-3 additions
+tags:
+  - smoke
+  - wave3
+  - security
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent. Enters Security hub → Change password → back; Change email →
+# back; then My attendance. Does NOT submit either password/email form —
+# submitting would mutate real credentials.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+# ── Security hub ──────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Security"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Security"
+
+- extendedWaitUntil:
+    visible:
+      text: "Account security"
+    timeout: 8000
+- assertVisible: "Change password"
+- assertVisible: "Change email"
+- assertVisible: "Recent activity"
+
+# Change password screen
+- tapOn: "Change password"
+- extendedWaitUntil:
+    visible:
+      text: "Current password *"
+    timeout: 8000
+- assertVisible: "New password *"
+- assertVisible: "Confirm new password *"
+- pressKey: Back
+
+# Change email screen
+- extendedWaitUntil:
+    visible:
+      text: "Account security"
+    timeout: 8000
+- tapOn: "Change email"
+- extendedWaitUntil:
+    visible:
+      text: "CURRENT EMAIL"
+    timeout: 8000
+- assertVisible: "New email *"
+- pressKey: Back
+
+- pressKey: Back  # back to More
+
+# ── My attendance ─────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "My attendance"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "My attendance"
+
+- extendedWaitUntil:
+    visible:
+      text: "My attendance"
+    timeout: 8000
+# Window chips are always visible
+- assertVisible: "4 weeks"
+- assertVisible: "3 months"
+- assertVisible: "6 months"
+
+- pressKey: Back

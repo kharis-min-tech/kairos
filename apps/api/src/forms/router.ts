@@ -15,6 +15,7 @@ import {
   submitForm,
   searchMembers,
   listSubmissions,
+  listMySubmissions,
   getSubmission,
   updateSubmission,
   exportSubmissionsToCSV,
@@ -35,6 +36,14 @@ formsRouter.use('*', authMiddleware);
 formsRouter.get('/me/capabilities', async (c) => {
   const auth = getAuth(c);
   const result = await getMyFormsCapabilities(db, auth);
+  return c.json(successResponse(result));
+});
+
+// Caller's own submissions — their personal paper trail across all branches.
+// No visibility gate: this is `submittedBy = auth.memberId`, not a review surface.
+formsRouter.get('/me/submissions', async (c) => {
+  const auth = getAuth(c);
+  const result = await listMySubmissions(db, auth);
   return c.json(successResponse(result));
 });
 

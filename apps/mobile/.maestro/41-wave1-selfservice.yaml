@@ -1,0 +1,91 @@
+appId: ${APP_ID}
+name: Wave 1 — GDPR, notification prefs, my submissions
+tags:
+  - smoke
+  - wave1
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent — safe to run in isolation from any signed-in surface, or chained
+# after another wave subflow. Uses `pressKey: Back` to return to More after
+# each destination (the top-left chevron doesn't yet carry a stable
+# accessibility label).
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+# ── Privacy & consent ────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Privacy & consent"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Privacy & consent"
+- extendedWaitUntil:
+    visible:
+      text: "Legal & consent"
+    timeout: 8000
+- assertVisible: "Consent records"
+- pressKey: Back
+
+# ── Recent activity ──────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Recent activity"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Recent activity"
+- extendedWaitUntil:
+    visible:
+      text: "Security activity"
+    timeout: 8000
+- pressKey: Back
+
+# ── Data & privacy (export + delete card) ────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Data & privacy"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Data & privacy"
+- extendedWaitUntil:
+    visible:
+      text: "Your data"
+    timeout: 8000
+- assertVisible: "Export my data"
+- pressKey: Back
+
+# ── Notification preferences ─────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Notification preferences"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Notification preferences"
+- extendedWaitUntil:
+    visible:
+      text: "Email preferences"
+    timeout: 8000
+- assertVisible: "By category"
+- pressKey: Back
+
+# ── My form submissions ──────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "My form submissions"
+    direction: UP
+    timeout: 8000
+    speed: 40
+- tapOn: "My form submissions"
+- extendedWaitUntil:
+    visible:
+      text: "Your form history"
+    timeout: 8000
+- pressKey: Back

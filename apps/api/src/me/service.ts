@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, lte, or, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   fellowships,
@@ -16,10 +16,22 @@ import {
   newBelieverEnrollments,
   formSubmissions,
   notificationPreferences,
+  fellowshipJoinRequests,
+  departmentJoinRequests,
+  fellowshipFollowups,
+  departmentFollowups,
+  mentorFollowups,
+  souls,
 } from '@kairos/database';
-import type { AuthContext, MeLeadershipResponse } from '@kairos/types';
+import type {
+  AuthContext,
+  MeApprovalItem,
+  MeFollowupItem,
+  MeLeadershipResponse,
+} from '@kairos/types';
 import { verifyPassword, UnauthorizedError, NotFoundError } from '@kairos/utils';
 import { randomTokenHex } from '@kairos/utils';
+import { authHasCapability } from '../lib/grants';
 
 /**
  * Build the caller's leadership footprint:
@@ -449,4 +461,356 @@ export async function exportMyData(db: Database, memberId: string) {
     formSubmissionsAboutMe: formSubmissionRows,
     notificationPreferences: prefs,
   };
+}
+
+// ── Unified inbox — approvals + follow-ups ────────────────
+//
+// Both feeds walk the caller's scope grants and roll cross-domain rows into a
+// single list. Non-admin scoping is intentionally narrow: the caller sees the
+// fellowships / departments they lead, not everything in the branch. Admin
+// (systemRole='admin' OR BranchAdmin grant on this branch) sees everything
+// in `auth.branchId`.
+
+async function fellowshipIdsCallerCanApprove(
+  db: Database,
+  auth: AuthContext,
+): Promise<string[]> {
+  const branchWide = authHasCapability(auth, 'branch:write', {
+    kind: 'branch',
+    id: auth.branchId,
+  });
+  const conditions = [eq(fellowships.branchId, auth.branchId), eq(fellowships.isActive, true)];
+  if (!branchWide) {
+    const leaderFellowshipIds = (auth.grants ?? [])
+      .filter((g) => g.scope.kind === 'fellowship')
+      .map((g) => g.scope.id);
+    if (leaderFellowshipIds.length === 0) return [];
+    conditions.push(inArray(fellowships.id, leaderFellowshipIds));
+  }
+  const rows = await db
+    .select({ id: fellowships.id })
+    .from(fellowships)
+    .where(and(...conditions));
+  return rows.map((r) => r.id);
+}
+
+async function branchDeptIdsCallerCanApprove(
+  db: Database,
+  auth: AuthContext,
+): Promise<string[]> {
+  const branchWide = authHasCapability(auth, 'branch:write', {
+    kind: 'branch',
+    id: auth.branchId,
+  });
+  const conditions = [
+    eq(branchDepartments.branchId, auth.branchId),
+    eq(branchDepartments.isActive, true),
+  ];
+  if (!branchWide) {
+    const leaderDeptIds = (auth.grants ?? [])
+      .filter((g) => g.scope.kind === 'department')
+      .map((g) => g.scope.id);
+    if (leaderDeptIds.length === 0) return [];
+    conditions.push(inArray(branchDepartments.id, leaderDeptIds));
+  }
+  const rows = await db
+    .select({ id: branchDepartments.id })
+    .from(branchDepartments)
+    .where(and(...conditions));
+  return rows.map((r) => r.id);
+}
+
+export async function listMyApprovals(
+  db: Database,
+  auth: AuthContext,
+): Promise<MeApprovalItem[]> {
+  const items: MeApprovalItem[] = [];
+  const branchWide = authHasCapability(auth, 'branch:write', {
+    kind: 'branch',
+    id: auth.branchId,
+  });
+
+  // 1) Member signups — branch-scoped, only branch admins see them.
+  if (branchWide) {
+    const signupRows = await db
+      .select({
+        id: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        createdAt: members.createdAt,
+        branchName: branches.branchName,
+      })
+      .from(members)
+      .leftJoin(branches, eq(members.homeBranchId, branches.id))
+      .where(
+        and(
+          eq(members.homeBranchId, auth.branchId),
+          eq(members.approvalStatus, 'pending'),
+          eq(members.isActive, true),
+        ),
+      )
+      .orderBy(desc(members.createdAt));
+    for (const r of signupRows) {
+      items.push({
+        kind: 'member_signup',
+        id: r.id,
+        subjectMemberId: r.id,
+        subjectName: `${r.firstName} ${r.lastName}`,
+        branchName: r.branchName ?? null,
+        createdAt: (r.createdAt as Date).toISOString(),
+      });
+    }
+  }
+
+  // 2) Fellowship join requests — for fellowships the caller can approve.
+  const fellowshipIds = await fellowshipIdsCallerCanApprove(db, auth);
+  if (fellowshipIds.length > 0) {
+    const fjrRows = await db
+      .select({
+        id: fellowshipJoinRequests.id,
+        memberId: fellowshipJoinRequests.memberId,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        fellowshipId: fellowshipJoinRequests.fellowshipId,
+        fellowshipName: fellowships.fellowshipName,
+        createdAt: fellowshipJoinRequests.createdAt,
+      })
+      .from(fellowshipJoinRequests)
+      .innerJoin(members, eq(fellowshipJoinRequests.memberId, members.id))
+      .innerJoin(fellowships, eq(fellowshipJoinRequests.fellowshipId, fellowships.id))
+      .where(
+        and(
+          inArray(fellowshipJoinRequests.fellowshipId, fellowshipIds),
+          eq(fellowshipJoinRequests.status, 'pending'),
+        ),
+      )
+      .orderBy(desc(fellowshipJoinRequests.createdAt));
+    for (const r of fjrRows) {
+      items.push({
+        kind: 'fellowship_join',
+        id: r.id,
+        subjectMemberId: r.memberId,
+        subjectName: `${r.firstName} ${r.lastName}`,
+        fellowshipId: r.fellowshipId,
+        fellowshipName: r.fellowshipName,
+        createdAt: (r.createdAt as Date).toISOString(),
+      });
+    }
+  }
+
+  // 3) Department join requests — anything in an open state.
+  const branchDeptIds = await branchDeptIdsCallerCanApprove(db, auth);
+  if (branchDeptIds.length > 0) {
+    const openStatuses = [
+      'applied',
+      'interview_scheduled',
+      'interviewed',
+      'offered',
+      'probation',
+    ];
+    const djrRows = await db
+      .select({
+        id: departmentJoinRequests.id,
+        memberId: departmentJoinRequests.memberId,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        branchDeptId: departmentJoinRequests.branchDepartmentId,
+        departmentName: departments.departmentName,
+        status: departmentJoinRequests.status,
+        createdAt: departmentJoinRequests.createdAt,
+      })
+      .from(departmentJoinRequests)
+      .innerJoin(members, eq(departmentJoinRequests.memberId, members.id))
+      .innerJoin(
+        branchDepartments,
+        eq(departmentJoinRequests.branchDepartmentId, branchDepartments.id),
+      )
+      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .where(
+        and(
+          inArray(departmentJoinRequests.branchDepartmentId, branchDeptIds),
+          inArray(departmentJoinRequests.status, openStatuses),
+        ),
+      )
+      .orderBy(desc(departmentJoinRequests.createdAt));
+    for (const r of djrRows) {
+      items.push({
+        kind: 'department_join',
+        id: r.id,
+        subjectMemberId: r.memberId,
+        subjectName: `${r.firstName} ${r.lastName}`,
+        branchDeptId: r.branchDeptId,
+        departmentName: r.departmentName,
+        status: r.status,
+        createdAt: (r.createdAt as Date).toISOString(),
+      });
+    }
+  }
+
+  // Newest first across the whole feed — the client can filter by kind.
+  items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return items;
+}
+
+export async function listMyFollowups(
+  db: Database,
+  auth: AuthContext,
+): Promise<MeFollowupItem[]> {
+  const items: MeFollowupItem[] = [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 1) Souls — assigned to me and in a non-terminal state. Kept personal-scope
+  // (assignee, not branch-wide) so the caller sees their own workload.
+  const soulRows = await db
+    .select({
+      id: souls.id,
+      firstName: souls.firstName,
+      lastName: souls.lastName,
+      status: souls.status,
+      createdAt: souls.createdAt,
+    })
+    .from(souls)
+    .where(
+      and(
+        eq(souls.assignedMemberId, auth.memberId),
+        inArray(souls.status, ['Following Up', 'Interested']),
+      ),
+    )
+    .orderBy(desc(souls.createdAt));
+  for (const r of soulRows) {
+    items.push({
+      kind: 'soul',
+      id: r.id,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      status: r.status,
+      createdAt: (r.createdAt as Date).toISOString(),
+    });
+  }
+
+  // 2) Fellowship followups — any row with a nextFollowUpDate that has come
+  // due, for fellowships the caller can approve/manage.
+  const fellowshipIds = await fellowshipIdsCallerCanApprove(db, auth);
+  if (fellowshipIds.length > 0) {
+    const ffRows = await db
+      .select({
+        id: fellowshipFollowups.id,
+        memberId: fellowshipFollowups.memberId,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        fellowshipId: fellowshipFollowups.fellowshipId,
+        fellowshipName: fellowships.fellowshipName,
+        nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
+        notes: fellowshipFollowups.notes,
+      })
+      .from(fellowshipFollowups)
+      .innerJoin(members, eq(fellowshipFollowups.memberId, members.id))
+      .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
+      .where(
+        and(
+          inArray(fellowshipFollowups.fellowshipId, fellowshipIds),
+          isNotNull(fellowshipFollowups.nextFollowUpDate),
+          lte(fellowshipFollowups.nextFollowUpDate, today),
+        ),
+      )
+      .orderBy(fellowshipFollowups.nextFollowUpDate);
+    for (const r of ffRows) {
+      items.push({
+        kind: 'fellowship_followup',
+        id: r.id,
+        memberId: r.memberId,
+        subjectName: `${r.firstName} ${r.lastName}`,
+        fellowshipId: r.fellowshipId,
+        fellowshipName: r.fellowshipName,
+        nextFollowUpDate: r.nextFollowUpDate as string,
+        notes: r.notes,
+      });
+    }
+  }
+
+  // 3) Department followups — same pattern.
+  const branchDeptIds = await branchDeptIdsCallerCanApprove(db, auth);
+  if (branchDeptIds.length > 0) {
+    const dfRows = await db
+      .select({
+        id: departmentFollowups.id,
+        memberId: departmentFollowups.memberId,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        branchDeptId: departmentFollowups.branchDepartmentId,
+        departmentName: departments.departmentName,
+        nextFollowUpDate: departmentFollowups.nextFollowUpDate,
+        notes: departmentFollowups.notes,
+      })
+      .from(departmentFollowups)
+      .innerJoin(members, eq(departmentFollowups.memberId, members.id))
+      .innerJoin(
+        branchDepartments,
+        eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
+      )
+      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .where(
+        and(
+          inArray(departmentFollowups.branchDepartmentId, branchDeptIds),
+          isNotNull(departmentFollowups.nextFollowUpDate),
+          lte(departmentFollowups.nextFollowUpDate, today),
+        ),
+      )
+      .orderBy(departmentFollowups.nextFollowUpDate);
+    for (const r of dfRows) {
+      items.push({
+        kind: 'department_followup',
+        id: r.id,
+        memberId: r.memberId,
+        subjectName: `${r.firstName} ${r.lastName}`,
+        branchDeptId: r.branchDeptId,
+        departmentName: r.departmentName,
+        nextFollowUpDate: r.nextFollowUpDate as string,
+        notes: r.notes,
+      });
+    }
+  }
+
+  // 4) Mentor followups — surface one row per active enrollment the caller
+  // mentors, with the timestamp of the most recent note (so the caller can
+  // spot enrollments they haven't touched in a while).
+  const mentorEnrollments = await db
+    .select({
+      id: newBelieverEnrollments.id,
+      memberId: newBelieverEnrollments.memberId,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      lastContactedAt: sql<Date | null>`max(${mentorFollowups.contactedAt})`,
+    })
+    .from(newBelieverEnrollments)
+    .innerJoin(members, eq(newBelieverEnrollments.memberId, members.id))
+    .leftJoin(
+      mentorFollowups,
+      and(
+        eq(mentorFollowups.enrollmentId, newBelieverEnrollments.id),
+        eq(mentorFollowups.isActive, true),
+      )!,
+    )
+    .where(
+      and(
+        eq(newBelieverEnrollments.mentorId, auth.memberId),
+        eq(newBelieverEnrollments.isActive, true),
+      ),
+    )
+    .groupBy(
+      newBelieverEnrollments.id,
+      newBelieverEnrollments.memberId,
+      members.firstName,
+      members.lastName,
+    );
+  for (const r of mentorEnrollments) {
+    items.push({
+      kind: 'mentor_enrollment',
+      id: r.id,
+      memberId: r.memberId,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      lastContactedAt: r.lastContactedAt ? r.lastContactedAt.toISOString() : null,
+    });
+  }
+
+  return items;
 }

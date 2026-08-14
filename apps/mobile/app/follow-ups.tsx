@@ -1,0 +1,272 @@
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Handshake,
+  UsersRound,
+  Building2,
+  Sparkles,
+} from 'lucide-react-native';
+import { Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
+import { formatShortDate } from '@kairos/core';
+import type { MeFollowupItem } from '@kairos/types';
+import { api } from '@/lib/api-client';
+
+type FilterKind =
+  | 'all'
+  | 'soul'
+  | 'fellowship_followup'
+  | 'department_followup'
+  | 'mentor_enrollment';
+
+const KIND_META: Record<
+  MeFollowupItem['kind'],
+  { label: string; icon: typeof Handshake; variant: 'primary' | 'gold' | 'info' | 'success' }
+> = {
+  soul: { label: 'Soul', icon: Handshake, variant: 'primary' },
+  fellowship_followup: { label: 'Fellowship', icon: UsersRound, variant: 'gold' },
+  department_followup: { label: 'Department', icon: Building2, variant: 'info' },
+  mentor_enrollment: { label: 'Mentee', icon: Sparkles, variant: 'success' },
+};
+
+const FILTERS: { key: FilterKind; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'soul', label: 'Souls' },
+  { key: 'fellowship_followup', label: 'Fellowships' },
+  { key: 'department_followup', label: 'Departments' },
+  { key: 'mentor_enrollment', label: 'Mentees' },
+];
+
+function daysAgo(iso: string | null): number | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  return Math.max(0, Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24)));
+}
+
+export default function FollowUps() {
+  const router = useRouter();
+  const [filter, setFilter] = useState<FilterKind>('all');
+
+  const inbox = useQuery({
+    queryKey: ['me', 'followups'],
+    queryFn: async () => (await api.me.followups()).data ?? [],
+  });
+
+  const rows = useMemo(() => {
+    const all = inbox.data ?? [];
+    if (filter === 'all') return all;
+    return all.filter((i) => i.kind === filter);
+  }, [inbox.data, filter]);
+
+  function handlePress(item: MeFollowupItem) {
+    if (item.kind === 'soul') {
+      router.push(`/souls/${item.id}`);
+    } else if (item.kind === 'fellowship_followup') {
+      router.push(`/fellowships/${item.fellowshipId}`);
+    } else if (item.kind === 'department_followup') {
+      router.push(`/departments/${item.branchDeptId}`);
+    } else {
+      router.push(`/members/${item.memberId}`);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Follow-ups</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <View style={styles.subHeader}>
+        <Text style={styles.subTitle}>Owe someone a call</Text>
+        <Text style={styles.subMeta}>
+          Souls, meeting follow-ups, and new-believer mentees you look after.
+        </Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
+      >
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f.key}
+            onPress={() => setFilter(f.key)}
+            style={[styles.chip, filter === f.key && styles.chipActive]}
+          >
+            <Text style={[styles.chipLabel, filter === f.key && styles.chipLabelActive]}>
+              {f.label}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      <FlatList
+        data={rows}
+        keyExtractor={(i) => `${i.kind}:${i.id}`}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={inbox.isFetching}
+            onRefresh={() => inbox.refetch()}
+            tintColor={colors.primary}
+          />
+        }
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+        ListEmptyComponent={
+          inbox.isLoading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          ) : (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>All caught up</Text>
+              <Text style={styles.emptyMeta}>
+                {filter === 'all'
+                  ? 'Nothing pending right now — enjoy the quiet.'
+                  : 'Nothing in this filter.'}
+              </Text>
+            </View>
+          )
+        }
+        renderItem={({ item }) => <FollowupRow item={item} onPress={() => handlePress(item)} />}
+      />
+    </SafeAreaView>
+  );
+}
+
+function FollowupRow({
+  item,
+  onPress,
+}: {
+  item: MeFollowupItem;
+  onPress: () => void;
+}) {
+  const meta = KIND_META[item.kind];
+  const Icon = meta.icon;
+  const contextLabel =
+    item.kind === 'soul'
+      ? item.status
+      : item.kind === 'fellowship_followup'
+        ? item.fellowshipName
+        : item.kind === 'department_followup'
+          ? item.departmentName
+          : 'New Believer';
+  const tailLabel =
+    item.kind === 'soul'
+      ? `captured ${formatShortDate(item.createdAt)}`
+      : item.kind === 'fellowship_followup' || item.kind === 'department_followup'
+        ? `due ${formatShortDate(item.nextFollowUpDate)}`
+        : item.lastContactedAt
+          ? `last note ${daysAgo(item.lastContactedAt)}d ago`
+          : 'no notes yet';
+
+  return (
+    <Pressable onPress={onPress} style={styles.row}>
+      <View style={styles.iconTile}>
+        <Icon color={colors.primary} size={16} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={styles.rowTitleLine}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.subjectName}
+          </Text>
+          <Badge label={meta.label} variant={meta.variant} size="sm" />
+        </View>
+        <Text style={styles.rowMeta} numberOfLines={1}>
+          {contextLabel}
+        </Text>
+        <Text style={styles.rowMetaFaded}>{tailLabel}</Text>
+      </View>
+      <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.pageLight },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  subHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: 2,
+  },
+  subTitle: { ...typography.screenTitle, color: colors.ink },
+  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
+  chipsRow: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.subtleLight,
+  },
+  chipActive: { backgroundColor: colors.primary },
+  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipLabelActive: { color: '#ffffff' },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  empty: {
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+    gap: spacing.xs,
+  },
+  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.cardLight,
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  iconTile: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  rowMetaFaded: { ...typography.meta, color: 'rgba(26,28,28,0.4)', fontSize: 11 },
+});

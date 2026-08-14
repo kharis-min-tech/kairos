@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { useConfirm } from '@/components/confirm-dialog';
 
 interface ProgramParticipant {

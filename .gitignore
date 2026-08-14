@@ -11,3 +11,6 @@ test-results
 .claude/worktrees
 .vscode/
 grant-proposal/
+
+# Windows/WSL mark-of-the-web metadata
+*:Zone.Identifier

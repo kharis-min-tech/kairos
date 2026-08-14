@@ -1,0 +1,67 @@
+appId: com.kharis.kairos
+name: Wave 3 navigation smoke (native build) — CRUD + admin surfaces load
+tags:
+  - smoke
+  - wave3
+env:
+  EMAIL: ""
+  PASSWORD: ""
+  BRANCH_NAME: "Kharis"
+---
+# End-to-end walk of every Wave 3 screen (Fellowships/Departments/Members
+# CRUD; Branches + Regions; Outreach + Souls; Security + My attendance).
+# Composes onboarding + login + per-wave-3 subflows + sign out. Existing
+# golden-path.yaml and wave-navigation.yaml remain the auth+tabs and Wave 1+2
+# smokes respectively; this one focuses on Wave 3.
+
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- runFlow:
+    file: 00-onboarding.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      BRANCH_NAME: ${BRANCH_NAME}
+
+- runFlow:
+    file: 10-login.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+- runFlow:
+    file: 50-fellowships-crud.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 51-departments-crud.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 52-members-crud.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 53-branches-regions.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 54-outreach-souls.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 55-security-attendance.yaml
+    env:
+      APP_ID: com.kharis.kairos
+
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: com.kharis.kairos

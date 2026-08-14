@@ -1,0 +1,78 @@
+appId: ${APP_ID}
+name: Branches + Regions — admin nav + form assertions (no submit)
+tags:
+  - smoke
+  - wave3
+  - admin
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent. Walks Branch settings + Regions, opens each create form,
+# asserts, backs out. Does NOT submit — branch creation persists.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+# ── Branch settings ───────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Branch settings"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Branch settings"
+
+- extendedWaitUntil:
+    visible:
+      text: "Branches"
+    timeout: 8000
+
+- tapOn:
+    id: "new-branch-btn"
+
+- extendedWaitUntil:
+    visible:
+      text: "New branch"
+    timeout: 8000
+- assertVisible: "BRANCH"
+- assertVisible: "SERVICE SCHEDULE"
+- assertVisible: "Create branch"
+
+- pressKey: Back  # back to list
+- extendedWaitUntil:
+    visible:
+      text: "Branches"
+    timeout: 8000
+- pressKey: Back  # back to More
+
+# ── Regions ───────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      text: "Regions"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Regions"
+
+- extendedWaitUntil:
+    visible:
+      text: "Regions"
+    timeout: 8000
+
+- tapOn:
+    id: "new-region-btn"
+
+# Regions uses an inline bottom-sheet form, not a full-screen route.
+- extendedWaitUntil:
+    visible:
+      text: "New region"
+    timeout: 8000
+- assertVisible: "Region name *"
+- assertVisible: "Country *"
+# Dismiss the sheet
+- tapOn: "Cancel"
+
+- pressKey: Back

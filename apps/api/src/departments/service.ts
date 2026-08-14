@@ -1,4 +1,4 @@
-import { eq, and, or, count, sql, exists, ne, inArray } from 'drizzle-orm';
+import { eq, and, or, count, sql, exists, ne, inArray, isNotNull } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
@@ -1309,25 +1309,54 @@ export async function evaluateJoinRequestProbation(
 // ── Member-facing: my departments ──────────────────────────
 
 export async function listMyDepartments(db: Database, auth: AuthContext) {
+  const lead = alias(members, 'lead_member');
+  const deputy = alias(members, 'deputy_member');
+  const myMembership = alias(departmentMembers, 'my_membership');
+
+  // Left-join departmentMembers to the caller so leads who were assigned via
+  // updateBranchDepartment (which doesn't always mint a departmentMembers row)
+  // still see the dept under "my department". A single query keeps the shape
+  // simple and lets the underlying mocks/tests stay minimal.
   return db
     .select({
       id: branchDepartments.id,
       branchId: branchDepartments.branchId,
       departmentId: branchDepartments.departmentId,
       departmentName: departments.departmentName,
+      description: departments.description,
       iconKey: departments.iconKey,
       branchName: branches.branchName,
-      joinDate: departmentMembers.joinDate,
+      joinDate: myMembership.joinDate,
+      leadMemberId: branchDepartments.leadMemberId,
+      leadFirstName: lead.firstName,
+      leadLastName: lead.lastName,
+      leadPhotoUrl: lead.photoUrl,
+      deputyMemberId: branchDepartments.deputyMemberId,
+      deputyFirstName: deputy.firstName,
+      deputyLastName: deputy.lastName,
+      deputyPhotoUrl: deputy.photoUrl,
     })
-    .from(departmentMembers)
-    .innerJoin(branchDepartments, eq(departmentMembers.branchDepartmentId, branchDepartments.id))
+    .from(branchDepartments)
     .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
     .innerJoin(branches, eq(branchDepartments.branchId, branches.id))
+    .leftJoin(lead, eq(branchDepartments.leadMemberId, lead.id))
+    .leftJoin(deputy, eq(branchDepartments.deputyMemberId, deputy.id))
+    .leftJoin(
+      myMembership,
+      and(
+        eq(myMembership.branchDepartmentId, branchDepartments.id),
+        eq(myMembership.memberId, auth.memberId),
+        eq(myMembership.isActive, true),
+      )!,
+    )
     .where(
       and(
-        eq(departmentMembers.memberId, auth.memberId),
-        eq(departmentMembers.isActive, true),
         eq(branchDepartments.isActive, true),
+        or(
+          eq(branchDepartments.leadMemberId, auth.memberId),
+          eq(branchDepartments.deputyMemberId, auth.memberId),
+          isNotNull(myMembership.id),
+        ),
       ),
     )
     .orderBy(departments.departmentName);

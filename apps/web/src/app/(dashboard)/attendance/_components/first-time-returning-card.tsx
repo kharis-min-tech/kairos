@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from '@kairos/ui';
 import { useFirstTimeReturning } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 
 interface Props {
   branchId?: string;

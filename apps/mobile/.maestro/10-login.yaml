@@ -1,0 +1,31 @@
+appId: ${APP_ID}
+name: Login — email + password
+tags:
+  - smoke
+  - auth
+env:
+  APP_ID: "com.kharis.kairos"
+  # EMAIL, PASSWORD must come from --env at run time. Do NOT set empty
+  # defaults — Maestro 2.x empty-default-wins-over-CLI silently blanks inputs.
+---
+- assertVisible: "Sign in"
+
+- tapOn:
+    id: "login-email"
+- inputText: ${EMAIL}
+- hideKeyboard
+
+- tapOn:
+    id: "login-password"
+- inputText: ${PASSWORD}
+- hideKeyboard
+
+- tapOn:
+    text: "Sign in"
+    index: 1
+
+# Successful login lands on Home tab
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 15000

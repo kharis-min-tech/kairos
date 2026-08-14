@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/modern-sanctuary-3cf5ee79-be9d-4ff5-9173-6f9d2db2f626/styles.css">
+<script src="_ds/modern-sanctuary-3cf5ee79-be9d-4ff5-9173-6f9d2db2f626/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #ece9e4; font-family: 'Inter', system-ui, sans-serif; color: #1a1c1c; -webkit-font-smoothing: antialiased; }
+  .dv-turn { padding: 56px 60px 40px; border-bottom: 1px solid rgba(0,0,0,.06); scroll-margin-top: 16px; }
+  .dv-thd { display: flex; align-items: baseline; gap: 10px; margin: 0 0 24px; }
+  .dv-tid { font: 600 10px ui-monospace, Menlo, monospace; padding: 4px 8px; background: #1a1a1a; color: #fff; border-radius: 4px; text-decoration: none; letter-spacing: .04em; }
+  .dv-tname { font: 600 13px/1.2 system-ui, sans-serif; color: #1a1a1a; }
+  .dv-opts { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+  .dv-opt { flex: none; display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 16px; }
+  .dv-oid { font: 600 10.5px ui-monospace, Menlo, monospace; padding: 3px 8px; background: rgba(0,0,0,.08); color: #1a1a1a; border-radius: 5px; text-decoration: none; }
+  .dv-olabel { display: flex; align-items: baseline; gap: 8px; font: 500 12px/1.3 system-ui, sans-serif; color: rgba(0,0,0,.6); }
+  .dv-opt:target .dv-oid { background: #5D3FD3; color: #fff; }
+  .dv-next { margin: 26px 0 0; font: 12px/1.5 system-ui, sans-serif; color: rgba(0,0,0,.5); }
+  @keyframes pulse-dot { 0%,100% { opacity: .35 } 50% { opacity: 1 } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+</style>
+</helmet>
+
+<section class="dv-turn" id="t2">
+<div style="max-width:1400px; margin:0 auto 24px;">
+  <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:8px;">
+    <a class="dv-tid" href="#t2">2</a>
+    <span style="font: 700 26px/1.1 Inter, sans-serif; letter-spacing:-.015em;">Admin check-in desk + Service attendance comparison</span>
+  </div>
+  <p style="max-width:820px; font: 400 14.5px/1.6 Inter, sans-serif; color:rgba(0,0,0,.66); margin:6px 0 0;">
+    Two new screens for the branch-admin / pastor perspective, plus real Kharis dove logo swapped in across splash, auth and give screens (goodbye placeholder).
+  </p>
+</div>
+
+<div style="max-width:1400px; margin:0 auto 40px; display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start;">
+  <div class="dv-opt" id="2a">
+    <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Admin check-in desk · marking members in</div>
+    {{ adminCheckin }}
+  </div>
+  <div class="dv-opt" id="2b">
+    <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Service attendance comparison · pastor view</div>
+    {{ attendanceCompare }}
+  </div>
+</div>
+
+<p class="dv-next" style="max-width:1400px; margin:20px auto 0;">Turn 1 (with everything else) is below — keep scrolling.</p>
+</section>
+
+<section class="dv-turn" id="t1">
+
+<div style="max-width: 1400px; margin: 0 auto 44px;">
+  <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
+    <a class="dv-tid" href="#t1">1</a>
+    <span style="font: 800 34px/1.05 Inter, sans-serif; letter-spacing: -0.02em;">Kairos Mobile — first hi-fi pass</span>
+  </div>
+  <p style="max-width: 780px; font: 400 15px/1.6 Inter, sans-serif; color: rgba(0,0,0,.66); margin: 8px 0 0;">
+    Cross-platform mobile companion to <span style="font-weight:600; color:#5D3FD3;">kairos.kharis.org</span>. Grounded in the live codebase — same Modern Sanctuary vocabulary (purple <span style="font-family:ui-monospace,monospace; font-size:12px; color:#5D3FD3;">#5D3FD3</span>, gold <span style="font-family:ui-monospace,monospace; font-size:12px; color:#B8801C;">#f8b537</span>, ≤8px corners, tonal surfaces), same terminology (Members / Fellowships / K-Groups / New Believers / Souls), same head-pastor & branch roster.
+  </p>
+
+  <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+    <div style="background:#fff; border-radius:8px; padding:18px 20px;">
+      <div style="font: 600 10.5px/1 Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#5D3FD3;">Nav pattern</div>
+      <div style="font: 600 15px/1.35 Inter, sans-serif; margin-top:8px;">5-tab bottom bar</div>
+      <div style="font: 400 12.5px/1.5 Inter, sans-serif; color:rgba(0,0,0,.55); margin-top:6px;">Home · Community · Check-in · Give · More. Role-aware — leader/admin CTAs surface inside the tabs, not new tabs.</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:18px 20px;">
+      <div style="font: 600 10.5px/1 Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#5D3FD3;">Audience</div>
+      <div style="font: 600 15px/1.35 Inter, sans-serif; margin-top:8px;">One app, four modes</div>
+      <div style="font: 400 12.5px/1.5 Inter, sans-serif; color:rgba(0,0,0,.55); margin-top:6px;">Member-first shell; leader tools appear when capabilities present. Admin CRUD stays on web — mobile shows the read + approve slice.</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:18px 20px;">
+      <div style="font: 600 10.5px/1 Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#5D3FD3;">Giving</div>
+      <div style="font: 600 15px/1.35 Inter, sans-serif; margin-top:8px;">WebView for now</div>
+      <div style="font: 400 12.5px/1.5 Inter, sans-serif; color:rgba(0,0,0,.55); margin-top:6px;">Confirmed: no native Stripe in the delivered MVP. Tab opens the existing giving page in an embedded browser; history shown natively.</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:18px 20px;">
+      <div style="font: 600 10.5px/1 Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#5D3FD3;">Offline</div>
+      <div style="font: 600 15px/1.35 Inter, sans-serif; margin-top:8px;">Online-only</div>
+      <div style="font: 400 12.5px/1.5 Inter, sans-serif; color:rgba(0,0,0,.55); margin-top:6px;">Confirmed nice-to-have only. Every list has a friendly empty/offline state but nothing is designed to be authored offline.</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width: 1400px; margin: 0 auto 24px;">
+  <div class="dv-olabel"><a class="dv-oid" href="#try">try</a>Interactive iOS prototype — the tabs actually switch</div>
+</div>
+
+<div class="dv-opt" id="try" style="max-width: 1400px; margin: 0 auto 60px; align-items: flex-start;">
+  <div style="display:flex; gap:44px; align-items:flex-start;">
+
+    <!-- INTERACTIVE iOS FRAME -->
+    <div style="position:relative; width:340px; height:720px; background:#0a0a0a; border-radius:44px; padding:12px; box-shadow: 0 40px 80px -30px rgba(0,0,0,.45), 0 0 0 2px #232323 inset;">
+      <div style="width:100%; height:100%; border-radius:34px; overflow:hidden; position:relative; background:{{ bg }};">
+        <!-- Status bar + Dynamic Island -->
+        <div style="position:absolute; top:0; left:0; right:0; height:52px; display:flex; align-items:center; justify-content:space-between; padding:16px 26px 0; z-index:5;">
+          <div style="font: 600 14px Inter, sans-serif; color:{{ statusFg }};">10:12</div>
+          <div style="display:flex; gap:6px; align-items:center; color:{{ statusFg }};">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx=".5"/><rect x="5" y="4.5" width="3" height="6.5" rx=".5"/><rect x="10" y="2" width="3" height="9" rx=".5"/><rect x="15" y="0" width="1.5" height="11" rx=".5" opacity=".4"/></svg>
+            <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2C4.5 2 2.3 3 1 4.3l1.4 1.4C3.5 4.7 5.2 4 7 4s3.5.7 4.6 1.7L13 4.3C11.7 3 9.5 2 7 2zm0 3C5.5 5 4.1 5.5 3 6.4l1.4 1.4c.7-.6 1.6-1 2.6-1s1.9.4 2.6 1L11 6.4C9.9 5.5 8.5 5 7 5zm0 3c-.6 0-1.1.2-1.5.6L7 10l1.5-1.4C8.1 8.2 7.6 8 7 8z" fill="currentColor"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="4" width="1.5" height="4" rx=".5" fill="currentColor" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div style="position:absolute; top:11px; left:50%; transform:translateX(-50%); width:118px; height:34px; background:#000; border-radius:20px; z-index:6;"></div>
+
+        <!-- Slot for tab content -->
+        <div style="position:absolute; inset:52px 0 82px; overflow-y:auto; overflow-x:hidden;">
+          {{ tabContent }}
+        </div>
+
+        <!-- Bottom tab bar -->
+        <div style="position:absolute; bottom:0; left:0; right:0; height:82px; background:{{ tabBg }}; backdrop-filter: blur(16px); border-top: 1px solid {{ tabBorder }}; display:flex; padding:8px 4px 22px; z-index:7;">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+            <button onClick="{{ pickTab }}" data-key="{{ t.k }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:transparent; border:0; padding:0; cursor:pointer; color:{{ t.color }};">
+              <div style="width:26px; height:26px; display:flex; align-items:center; justify-content:center;">{{ t.icon }}</div>
+              <span style="font: 600 10px Inter, sans-serif; letter-spacing:.01em;">{{ t.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <!-- Home indicator -->
+        <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:130px; height:5px; background:{{ homeInd }}; border-radius:3px; z-index:8;"></div>
+      </div>
+    </div>
+
+    <!-- side notes -->
+    <div style="width:280px; padding-top:12px;">
+      <div style="font: 700 13px Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#5D3FD3;">Try it</div>
+      <h3 style="font: 600 20px/1.3 Inter, sans-serif; margin:8px 0 12px;">Tap the bottom bar</h3>
+      <p style="font: 400 13.5px/1.6 Inter, sans-serif; color:rgba(0,0,0,.6); margin:0 0 16px;">
+        This iOS frame is live — the 5 tabs switch content and the top status bar recolours to match. Home shows Rev Dr Antwi&rsquo;s upcoming service, your fellowship, rota, and giving. Community is your directory + fellowship roster. Check-in is a one-tap "I&rsquo;m here". Give opens the WebView. More surfaces leader tools when you have them.
+      </p>
+      <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#fff; border-radius:6px;">
+        <div style="width:6px; height:6px; border-radius:50%; background:#059669; animation: pulse-dot 1.6s ease-in-out infinite;"></div>
+        <span style="font: 500 12px Inter, sans-serif; color:rgba(0,0,0,.7);">Currently on: <span style="color:#5D3FD3; font-weight:600;">{{ tabLabel }}</span></span>
+      </div>
+      <button onClick="{{ toggleDark }}" style="margin-top:14px; padding:8px 14px; background:transparent; border:1px solid rgba(0,0,0,.15); border-radius:6px; font: 500 12px Inter, sans-serif; cursor:pointer; color:rgba(0,0,0,.7);">
+        Toggle dark preview
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SECTION A · Splash + Onboarding + Auth variants               -->
+<!-- ============================================================= -->
+<div style="max-width: 1400px; margin: 80px auto 24px;">
+  <div style="font: 700 11px Inter, sans-serif; letter-spacing:.15em; text-transform:uppercase; color:rgba(0,0,0,.4); margin-bottom:6px;">A</div>
+  <h2 style="font: 700 24px/1.2 Inter, sans-serif; margin:0 0 8px; letter-spacing:-.01em;">Splash → Onboarding → Auth</h2>
+  <p style="font: 400 13.5px/1.55 Inter, sans-serif; color:rgba(0,0,0,.55); margin:0 0 28px; max-width:640px;">
+    Splash mirrors the auth panel from the web app — dove logo, scripture, purple gradient. 1 Cor 14:40 stays as brand copy. Then language → branch, then auth. Auth shows all three flows the team is choosing between.
+  </p>
+</div>
+
+<div style="max-width:1400px; margin:0 auto 40px; display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start;">
+
+  <!-- Splash -->
+  <div class="dv-opt" id="A-splash">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-splash">A-splash</a>Splash · iOS</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background: radial-gradient(ellipse at 50% 30%, #1e1050 0%, #150d35 40%, #0c0a1a 70%, #050408 100%);">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 30px; color:#fff;">
+          <div style="width:76px; height:76px; border-radius:20px; background: linear-gradient(135deg, #451ebb, #5d3fd3); display:flex; align-items:center; justify-content:center; margin-bottom:24px; box-shadow: 0 20px 40px -10px rgba(93,63,211,.6);">
+            <img src="uploads/Kharis_Logo_transparent_noText.png" alt="Kharis" style="width:52px; height:52px; object-fit:contain;">
+          </div>
+          <div style="font: 800 22px/1.1 Inter, sans-serif; letter-spacing:.15em; text-align:center;">KAIROS</div>
+          <div style="font: 500 11px Inter, sans-serif; opacity:.55; letter-spacing:.22em; text-transform:uppercase; margin-top:6px;">Kharis Church</div>
+          <div style="flex:1"></div>
+          <p style="font: 300 17px/1.35 Inter, sans-serif; text-align:center; opacity:.9; max-width:220px;">
+            Let all things be done <em style="font-weight:600; font-style:normal; color:#a488ff;">decently</em> and in <em style="font-weight:600; font-style:normal; color:#f8b537;">order</em>.
+          </p>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:14px;">
+            <div style="height:1px; width:24px; background:rgba(255,255,255,.2);"></div>
+            <span style="font: 500 10px Inter, sans-serif; letter-spacing:.2em; text-transform:uppercase; opacity:.4;">1 Cor 14:40</span>
+          </div>
+          <div style="flex:1"></div>
+          <div style="width:20px; height:20px; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation: spin 1s linear infinite;"></div>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(255,255,255,.4); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language -->
+  <div class="dv-opt" id="A-lang">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-lang">A-lang</a>Language · iOS</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background:#fafafa;">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; top:44px; left:0; right:0; padding:18px 22px 100px; overflow-y:auto; bottom:0;">
+          <div style="width:44px; height:44px; border-radius:12px; background: linear-gradient(135deg, #451ebb, #5d3fd3); display:flex; align-items:center; justify-content:center; margin-bottom:24px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+          </div>
+          <h1 style="font: 700 24px/1.15 Inter, sans-serif; margin:0 0 6px; letter-spacing:-.01em;">Choose your language</h1>
+          <p style="font: 400 13px/1.5 Inter, sans-serif; color:rgba(0,0,0,.5); margin:0 0 24px;">You can change this any time in Settings.</p>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#fff; border-radius:8px; border:1.5px solid #5D3FD3;">
+              <div><div style="font: 600 14px Inter, sans-serif;">English</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.4); margin-top:2px;">Default</div></div>
+              <div style="width:20px; height:20px; border-radius:50%; background:#5D3FD3; display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M4 12l6 6L20 6"/></svg></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#fff; border-radius:8px; border:1px solid rgba(0,0,0,.06);">
+              <div><div style="font: 600 14px Inter, sans-serif;">Twi</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.4); margin-top:2px;">Akan · Ghana</div></div>
+              <div style="width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(0,0,0,.15);"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#fff; border-radius:8px; border:1px solid rgba(0,0,0,.06);">
+              <div><div style="font: 600 14px Inter, sans-serif;">Krio</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.4); margin-top:2px;">Sierra Leone</div></div>
+              <div style="width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(0,0,0,.15);"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#fff; border-radius:8px; border:1px solid rgba(0,0,0,.06);">
+              <div><div style="font: 600 14px Inter, sans-serif;">Français</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.4); margin-top:2px;">West Africa</div></div>
+              <div style="width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(0,0,0,.15);"></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; bottom:0; left:0; right:0; padding:16px 22px 24px; background: linear-gradient(to top, #fafafa 60%, transparent);">
+          <button style="width:100%; height:46px; border-radius:8px; background: linear-gradient(135deg, #451ebb, #5d3fd3); color:#fff; border:0; font: 600 14px Inter, sans-serif; box-shadow: 0 8px 24px -8px rgba(93,63,211,.5);">Continue</button>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(0,0,0,.35); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Branch select -->
+  <div class="dv-opt" id="A-branch">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-branch">A-branch</a>Pick your branch · iOS</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background:#fafafa;">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; top:44px; left:0; right:0; bottom:80px; padding:18px 22px; overflow-y:auto;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+            <button style="width:32px; height:32px; border-radius:8px; background:#fff; border:1px solid rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div style="flex:1; height:4px; background:rgba(0,0,0,.06); border-radius:2px; overflow:hidden;"><div style="width:66%; height:100%; background:#5D3FD3;"></div></div>
+            <span style="font: 500 11px Inter, sans-serif; color:rgba(0,0,0,.45);">2 of 3</span>
+          </div>
+          <h1 style="font: 700 22px/1.15 Inter, sans-serif; margin:0 0 4px; letter-spacing:-.01em;">Where do you fellowship?</h1>
+          <p style="font: 400 12.5px/1.5 Inter, sans-serif; color:rgba(0,0,0,.5); margin:0 0 18px;">Your home branch. You can join services at any branch.</p>
+
+          <div style="position:relative; margin-bottom:14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1.75" style="position:absolute; left:12px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input placeholder="Search branches" style="width:100%; height:40px; border-radius:8px; border:1px solid rgba(0,0,0,.08); background:#fff; padding: 0 12px 0 34px; font: 400 13px Inter, sans-serif; box-sizing:border-box; outline:none;">
+          </div>
+
+          <div style="font: 600 10px Inter, sans-serif; letter-spacing:.14em; text-transform:uppercase; color:rgba(0,0,0,.4); margin:8px 0 8px;">United Kingdom</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px; border:1.5px solid #5D3FD3;">
+              <div>
+                <div style="display:flex; align-items:center; gap:6px;"><span style="font: 600 13.5px Inter, sans-serif;">Kharis London Central</span><span style="font: 700 9px Inter,sans-serif; padding: 2px 6px; background:#5D3FD3; color:#fff; border-radius:3px; letter-spacing:.06em;">MAIN</span></div>
+                <div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 10:00 AM</div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5D3FD3" stroke-width="2.5"><path d="M4 12l6 6L20 6"/></svg>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="font: 600 13.5px Inter, sans-serif;">Kharis Chatham</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 10:30 AM</div></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="font: 600 13.5px Inter, sans-serif;">Kharis Bristol</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 10:30 AM</div></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="font: 600 13.5px Inter, sans-serif;">Kharis Nottingham</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 10:00 AM</div></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="font: 600 13.5px Inter, sans-serif;">Kharis Reading</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 10:30 AM</div></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="font: 600 13.5px Inter, sans-serif;">Kharis Orpington</div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Sundays · 11:00 AM</div></div>
+            </div>
+          </div>
+          <div style="font: 600 10px Inter, sans-serif; letter-spacing:.14em; text-transform:uppercase; color:rgba(0,0,0,.4); margin:16px 0 8px;">West Africa</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="display:flex; align-items:center; gap:6px;"><span style="font: 600 13.5px Inter, sans-serif;">Kharis Accra</span><span style="font: 700 9px Inter,sans-serif; padding: 2px 6px; background:rgba(93,63,211,.14); color:#5D3FD3; border-radius:3px;">MAIN</span></div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Greater Accra · Ghana</div></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#fff; border-radius:8px;">
+              <div><div style="display:flex; align-items:center; gap:6px;"><span style="font: 600 13.5px Inter, sans-serif;">Kharis Freetown</span><span style="font: 700 9px Inter,sans-serif; padding: 2px 6px; background:rgba(93,63,211,.14); color:#5D3FD3; border-radius:3px;">MAIN</span></div><div style="font: 400 11px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:2px;">Western Area · Sierra Leone</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; bottom:0; left:0; right:0; padding:16px 22px 24px; background: linear-gradient(to top, #fafafa 60%, transparent);">
+          <button style="width:100%; height:46px; border-radius:8px; background: linear-gradient(135deg, #451ebb, #5d3fd3); color:#fff; border:0; font: 600 14px Inter, sans-serif;">Continue</button>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(0,0,0,.35); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth 1a: email + password + biometric -->
+  <div class="dv-opt" id="A-auth-1a">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-auth-1a">A-auth-1a</a>Email + password + biometric</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background:#fafafa;">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; inset:44px 0 30px; padding:24px 22px; overflow-y:auto;">
+          <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px;">
+            <div style="width:48px; height:48px; border-radius:12px; background: linear-gradient(135deg, #451ebb, #5d3fd3); display:flex; align-items:center; justify-content:center;">
+              <img src="uploads/Kharis_Logo_transparent_noText.png" alt="Kharis" style="width:34px; height:34px; object-fit:contain;">
+            </div>
+            <div style="font: 500 11px Inter, sans-serif; color:rgba(0,0,0,.5); letter-spacing:.15em; text-transform:uppercase; margin-top:10px;">Kharis Church</div>
+            <h1 style="font: 700 22px/1.15 Inter, sans-serif; margin:12px 0 4px;">Welcome Back</h1>
+            <p style="font: 400 12px Inter, sans-serif; color:rgba(0,0,0,.5); margin:0;">Sign in to continue</p>
+          </div>
+
+          <div style="background:#fff; border-radius:12px; padding:18px 16px; box-shadow: 0 8px 40px rgba(26,28,28,.05);">
+            <label style="display:block; font: 600 10px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.55); margin-bottom:6px;">Email address</label>
+            <input value="daniel@kharis.org" style="width:100%; height:38px; border-radius:6px; border:1px solid rgba(0,0,0,.12); background:transparent; padding:0 10px; font: 400 13px Inter, sans-serif; box-sizing:border-box; outline:none;">
+
+            <div style="display:flex; justify-content:space-between; margin: 14px 0 6px;">
+              <label style="font: 600 10px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.55);">Password</label>
+              <a style="font: 600 10.5px Inter, sans-serif; color:#5D3FD3;">Forgot?</a>
+            </div>
+            <input type="password" value="password" style="width:100%; height:38px; border-radius:6px; border:1px solid rgba(0,0,0,.12); background:transparent; padding:0 10px; font: 400 13px Inter, sans-serif; box-sizing:border-box; outline:none;">
+
+            <button style="width:100%; height:42px; border-radius:8px; background: linear-gradient(135deg, #451ebb, #5d3fd3); color:#fff; border:0; font: 600 13px Inter, sans-serif; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:6px;">Sign in <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg></button>
+
+            <div style="display:flex; align-items:center; gap:8px; margin: 14px 0 10px;">
+              <div style="flex:1; height:1px; background:rgba(0,0,0,.08);"></div>
+              <span style="font: 500 9.5px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.35);">Or use</span>
+              <div style="flex:1; height:1px; background:rgba(0,0,0,.08);"></div>
+            </div>
+
+            <button style="width:100%; height:44px; border-radius:8px; background:rgba(93,63,211,.06); border:1.5px dashed rgba(93,63,211,.35); color:#5D3FD3; font: 600 13px Inter, sans-serif; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 11a4 4 0 100-8 4 4 0 000 8z"/><path d="M4 22a8 8 0 0116 0"/><circle cx="12" cy="12" r="10" opacity=".25"/></svg>
+              Sign in with Face ID
+            </button>
+          </div>
+
+          <p style="text-align:center; font: 400 11.5px Inter, sans-serif; color:rgba(0,0,0,.5); margin-top:18px;">New here? <span style="color:#5D3FD3; font-weight:600;">Create account</span></p>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(0,0,0,.35); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth 1b: magic link -->
+  <div class="dv-opt" id="A-auth-1b">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-auth-1b">A-auth-1b</a>Magic link · passwordless</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background:#fafafa;">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; inset:44px 0 30px; padding:24px 22px;">
+          <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px;">
+            <div style="width:48px; height:48px; border-radius:12px; background: linear-gradient(135deg, #451ebb, #5d3fd3); display:flex; align-items:center; justify-content:center;">
+              <img src="uploads/Kharis_Logo_transparent_noText.png" alt="Kharis" style="width:34px; height:34px; object-fit:contain;">
+            </div>
+            <div style="font: 500 11px Inter, sans-serif; color:rgba(0,0,0,.5); letter-spacing:.15em; text-transform:uppercase; margin-top:10px;">Kharis Church</div>
+            <h1 style="font: 700 22px/1.2 Inter, sans-serif; margin:12px 0 4px; text-align:center;">Sign in without a password</h1>
+            <p style="font: 400 12.5px/1.45 Inter, sans-serif; color:rgba(0,0,0,.55); margin:4px 0 0; text-align:center; max-width:210px;">Enter your church email — we&rsquo;ll send you a magic link to sign in.</p>
+          </div>
+
+          <div style="background:#fff; border-radius:12px; padding:18px 16px; box-shadow: 0 8px 40px rgba(26,28,28,.05);">
+            <label style="display:block; font: 600 10px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.55); margin-bottom:6px;">Church email</label>
+            <input value="daniel@kharis.org" style="width:100%; height:42px; border-radius:8px; border:1.5px solid #f8b537; background:transparent; padding:0 12px; font: 500 13px Inter, sans-serif; box-sizing:border-box; outline:none; box-shadow: 0 0 0 3px rgba(248,181,55,.15);">
+
+            <button style="width:100%; height:44px; border-radius:8px; background: linear-gradient(135deg, #451ebb, #5d3fd3); color:#fff; border:0; font: 600 13px Inter, sans-serif; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+              Email me a sign-in link
+            </button>
+            <p style="font: 400 10.5px/1.45 Inter, sans-serif; color:rgba(0,0,0,.4); margin:10px 0 0; text-align:center;">By continuing you agree to Kharis&rsquo; terms.</p>
+          </div>
+
+          <div style="margin-top:18px; padding:14px 14px; background:rgba(248,181,55,.09); border-radius:8px; display:flex; gap:10px; align-items:flex-start;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8801C" stroke-width="1.75" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <div style="font: 400 11px/1.45 Inter, sans-serif; color:#8a5a08;">Only members already added by an admin can sign in. Ask your branch admin if this doesn&rsquo;t work.</div>
+          </div>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(0,0,0,.35); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth 1c: SSO -->
+  <div class="dv-opt" id="A-auth-1c">
+    <div class="dv-olabel"><a class="dv-oid" href="#A-auth-1c">A-auth-1c</a>SSO-forward</div>
+    <div style="position:relative; width:280px; height:600px; background:#0a0a0a; border-radius:38px; padding:10px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.35);">
+      <div style="width:100%; height:100%; border-radius:30px; overflow:hidden; position:relative; background: linear-gradient(180deg, #fafafa 0%, #eeeaff 100%);">
+        <div style="position:absolute; top:9px; left:50%; transform:translateX(-50%); width:100px; height:28px; background:#000; border-radius:16px; z-index:5;"></div>
+        <div style="position:absolute; inset:44px 0 30px; padding:24px 22px; display:flex; flex-direction:column;">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="width:62px; height:62px; border-radius:16px; background: linear-gradient(135deg, #451ebb, #5d3fd3); display:flex; align-items:center; justify-content:center; box-shadow: 0 20px 40px -12px rgba(93,63,211,.5);">
+              <img src="uploads/Kharis_Logo_transparent_noText.png" alt="Kharis" style="width:44px; height:44px; object-fit:contain;">
+            </div>
+            <h1 style="font: 700 22px/1.2 Inter, sans-serif; margin:18px 0 6px; text-align:center;">Welcome to Kairos</h1>
+            <p style="font: 400 13px Inter, sans-serif; color:rgba(0,0,0,.55); margin:0; text-align:center;">Choose how you&rsquo;d like to sign in</p>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button style="width:100%; height:48px; border-radius:8px; background:#000; color:#fff; border:0; font: 600 13.5px Inter, sans-serif; display:flex; align-items:center; justify-content:center; gap:10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+              Continue with Apple
+            </button>
+            <button style="width:100%; height:48px; border-radius:8px; background:#fff; color:#1a1c1c; border:1px solid rgba(0,0,0,.1); font: 600 13.5px Inter, sans-serif; display:flex; align-items:center; justify-content:center; gap:10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC04" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continue with Google
+            </button>
+            <div style="display:flex; align-items:center; gap:8px; margin: 6px 0;">
+              <div style="flex:1; height:1px; background:rgba(0,0,0,.1);"></div>
+              <span style="font: 500 9.5px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.4);">or</span>
+              <div style="flex:1; height:1px; background:rgba(0,0,0,.1);"></div>
+            </div>
+            <button style="width:100%; height:48px; border-radius:8px; background:transparent; color:#5D3FD3; border:1.5px solid #5D3FD3; font: 600 13.5px Inter, sans-serif;">Continue with email</button>
+          </div>
+
+          <p style="text-align:center; font: 400 10.5px/1.45 Inter, sans-serif; color:rgba(0,0,0,.42); margin: 16px 0 0;">By continuing you agree to Kharis&rsquo; terms &amp; privacy policy.</p>
+        </div>
+        <div style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:110px; height:4px; background:rgba(0,0,0,.35); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- SECTION B · Home dashboard (iOS + Android, light + dark)      -->
+<!-- ============================================================= -->
+<div style="max-width: 1400px; margin: 80px auto 24px;">
+  <div style="font: 700 11px Inter, sans-serif; letter-spacing:.15em; text-transform:uppercase; color:rgba(0,0,0,.4); margin-bottom:6px;">B</div>
+  <h2 style="font: 700 24px/1.2 Inter, sans-serif; margin:0 0 8px; letter-spacing:-.01em;">Home dashboard — hero comparison</h2>
+  <p style="font: 400 13.5px/1.55 Inter, sans-serif; color:rgba(0,0,0,.55); margin:0 0 28px; max-width:720px;">
+    Same content, native chrome. iOS uses SF-style status bar + dynamic island; Android uses Material 3 status pill + pure-black nav gestures. Dark version tuned to the web app&rsquo;s <span style="font-family:ui-monospace,monospace; font-size:12px;">.dark</span> tokens.
+  </p>
+</div>
+
+<div style="max-width:1400px; margin:0 auto 40px; display:flex; gap:40px; flex-wrap:wrap; align-items:flex-start;">
+
+  <!-- iOS Home Light -->
+  <div class="dv-opt" id="B-home-ios-light">
+    <div class="dv-olabel"><a class="dv-oid" href="#B-home-ios-light">B-home-ios-light</a>Home · iOS · light</div>
+    {{ iosHomeLight }}
+  </div>
+
+  <!-- Android Home Light -->
+  <div class="dv-opt" id="B-home-android-light">
+    <div class="dv-olabel"><a class="dv-oid" href="#B-home-android-light">B-home-android-light</a>Home · Android · light</div>
+    {{ androidHomeLight }}
+  </div>
+
+  <!-- iOS Home Dark -->
+  <div class="dv-opt" id="B-home-ios-dark">
+    <div class="dv-olabel"><a class="dv-oid" href="#B-home-ios-dark">B-home-ios-dark</a>Home · iOS · dark</div>
+    {{ iosHomeDark }}
+  </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- SECTION C · Core member screens                                -->
+<!-- ============================================================= -->
+<div style="max-width: 1400px; margin: 80px auto 24px;">
+  <div style="font: 700 11px Inter, sans-serif; letter-spacing:.15em; text-transform:uppercase; color:rgba(0,0,0,.4); margin-bottom:6px;">C</div>
+  <h2 style="font: 700 24px/1.2 Inter, sans-serif; margin:0 0 8px; letter-spacing:-.01em;">Core member screens</h2>
+  <p style="font: 400 13.5px/1.55 Inter, sans-serif; color:rgba(0,0,0,.55); margin:0 0 28px; max-width:720px;">
+    Everyone with a Kairos account sees these. Directory, your fellowship, your next service check-in, giving, profile.
+  </p>
+</div>
+
+<div style="max-width:1400px; margin:0 auto 40px; display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start;">
+  <div class="dv-opt" id="C-directory"><div class="dv-olabel"><a class="dv-oid" href="#C-directory">C-directory</a>Community · directory</div>{{ community }}</div>
+  <div class="dv-opt" id="C-fellowship"><div class="dv-olabel"><a class="dv-oid" href="#C-fellowship">C-fellowship</a>My fellowship · roll-call</div>{{ fellowshipDetail }}</div>
+  <div class="dv-opt" id="C-checkin"><div class="dv-olabel"><a class="dv-oid" href="#C-checkin">C-checkin</a>Attendance check-in</div>{{ checkin }}</div>
+  <div class="dv-opt" id="C-give"><div class="dv-olabel"><a class="dv-oid" href="#C-give">C-give</a>Give · WebView</div>{{ give }}</div>
+  <div class="dv-opt" id="C-profile"><div class="dv-olabel"><a class="dv-oid" href="#C-profile">C-profile</a>Profile · my data</div>{{ profile }}</div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SECTION D · Leader screens                                     -->
+<!-- ============================================================= -->
+<div style="max-width: 1400px; margin: 80px auto 24px;">
+  <div style="font: 700 11px Inter, sans-serif; letter-spacing:.15em; text-transform:uppercase; color:rgba(0,0,0,.4); margin-bottom:6px;">D</div>
+  <h2 style="font: 700 24px/1.2 Inter, sans-serif; margin:0 0 8px; letter-spacing:-.01em;">Leader &amp; admin screens</h2>
+  <p style="font: 400 13.5px/1.55 Inter, sans-serif; color:rgba(0,0,0,.55); margin:0 0 28px; max-width:720px;">
+    Surfaced under &ldquo;More&rdquo; when the signed-in member holds fellowship/department leader or branch admin grants. Kanban is horizontally scrollable — one column visible at a time on phone.
+  </p>
+</div>
+
+<div style="max-width:1400px; margin:0 auto 40px; display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start;">
+  <div class="dv-opt" id="D-rota"><div class="dv-olabel"><a class="dv-oid" href="#D-rota">D-rota</a>Rota · my next duty + swap</div>{{ rota }}</div>
+  <div class="dv-opt" id="D-followups"><div class="dv-olabel"><a class="dv-oid" href="#D-followups">D-followups</a>Follow-up kanban</div>{{ followups }}</div>
+  <div class="dv-opt" id="D-approvals"><div class="dv-olabel"><a class="dv-oid" href="#D-approvals">D-approvals</a>Approvals inbox</div>{{ approvals }}</div>
+  <div class="dv-opt" id="D-nb"><div class="dv-olabel"><a class="dv-oid" href="#D-nb">D-nb</a>New Believer journey</div>{{ newBelievers }}</div>
+  <div class="dv-opt" id="D-notif"><div class="dv-olabel"><a class="dv-oid" href="#D-notif">D-notif</a>Notifications</div>{{ notifications }}</div>
+</div>
+
+<p class="dv-next" style="max-width:1400px; margin:60px auto 20px;">
+  Try next: &ldquo;expand <a class="dv-oid" href="#C-fellowship">C-fellowship</a> into the full meeting flow&rdquo; · &ldquo;show <a class="dv-oid" href="#D-rota">D-rota</a> as an interactive swap flow&rdquo; · &ldquo;more like <a class="dv-oid" href="#B-home-ios-light">B-home-ios-light</a> but Pastor role&rdquo; · &ldquo;split-screen tablet layouts&rdquo; · &ldquo;native Stripe give flow&rdquo;
+</p>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tab: 'home', dark: false };
+
+  pickTab = (e) => {
+    const k = e.currentTarget.getAttribute('data-key');
+    this.setState({ tab: k });
+  };
+  toggleDark = () => this.setState({ dark: !this.state.dark });
+
+  renderVals() {
+    const dark = this.state.dark;
+    const tab = this.state.tab;
+
+    const bg = dark ? '#0a0a0f' : '#fafafa';
+    const statusFg = dark ? '#e5e5e5' : '#1a1c1c';
+    const tabBg = dark ? 'rgba(20,20,25,.92)' : 'rgba(255,255,255,.92)';
+    const tabBorder = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+    const homeInd = dark ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.35)';
+
+    const tabDefs = [
+      { k: 'home',      label: 'Home',      icon: this.icon('home') },
+      { k: 'community', label: 'Community', icon: this.icon('users') },
+      { k: 'checkin',   label: 'Check-in',  icon: this.icon('check') },
+      { k: 'give',      label: 'Give',      icon: this.icon('heart') },
+      { k: 'more',      label: 'More',      icon: this.icon('grid') },
+    ];
+    const activeColor = '#5D3FD3';
+    const inactiveColor = dark ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.45)';
+    const tabs = tabDefs.map(t => ({
+      ...t,
+      color: tab === t.k ? activeColor : inactiveColor,
+    }));
+
+    const tabLabel = tabDefs.find(t => t.k === tab).label;
+
+    return {
+      bg, statusFg, tabBg, tabBorder, homeInd,
+      tabs, tabLabel,
+      pickTab: this.pickTab,
+      toggleDark: this.toggleDark,
+      tabContent: this.renderTabContent(tab, dark),
+
+      iosHomeLight:    this.renderHomeStatic('ios',     false),
+      iosHomeDark:     this.renderHomeStatic('ios',     true),
+      androidHomeLight:this.renderHomeStatic('android', false),
+
+      community:       this.renderCommunity(),
+      fellowshipDetail:this.renderFellowship(),
+      checkin:         this.renderCheckin(),
+      give:            this.renderGive(),
+      profile:         this.renderProfile(),
+      rota:            this.renderRota(),
+      followups:       this.renderFollowups(),
+      approvals:       this.renderApprovals(),
+      newBelievers:    this.renderNB(),
+      notifications:   this.renderNotifications(),
+      adminCheckin:    this.renderAdminCheckin(),
+      attendanceCompare: this.renderAttendanceCompare(),
+    };
+  }
+
+  renderAdminCheckin() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const surf = this.surface.bind(this, false);
+    const queue = [
+      { i:'RA', n:'Ruth Adeleke',      m:'Confirmed · K-Group',     c:'#5D3FD3', state:'checked', time:'9:47 AM' },
+      { i:'TB', n:'Tobi Balogun',      m:'Confirmed · Choir',       c:'#f8b537', state:'checked', time:'9:49 AM' },
+      { i:'AB', n:'Amina Bello',       m:'Confirmed · New Believer',c:'#10b981', state:'checking' },
+      { i:'JS', n:'John Smith',        m:'First-timer · walk-in',   c:'#3b82f6', state:'firsttimer' },
+      { i:'FK', n:'Fatima Kamara',     m:'Confirmed · Ushers',      c:'#e11d48', state:'ready' },
+      { i:'DA', n:'David Appiah',      m:'Visitor · from Accra',    c:'#a488ff', state:'ready' },
+    ];
+    const stateBadge = (s) => {
+      if (s === 'checked')    return { bg:'rgba(16,185,129,.15)', fg:'#059669', label:'CHECKED IN' };
+      if (s === 'checking')   return { bg:'rgba(93,63,211,.15)',  fg:'#5D3FD3', label:'CHECKING…' };
+      if (s === 'firsttimer') return { bg:'rgba(248,181,55,.2)',  fg:'#b8801c', label:'FIRST-TIMER' };
+      return { bg:'rgba(0,0,0,.05)', fg:ink(.55), label:'TAP' };
+    };
+    const content = R('div', { style: { padding: '0 0 100px' } },
+      // Sticky top header
+      R('div', { style: { padding: '14px 16px 12px', background:'linear-gradient(135deg,#3b0764,#5d3fd3)', color:'#fff', position:'relative', overflow:'hidden' } },
+        R('div', { style: { position:'absolute', right:-30, top:-30, width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle, rgba(248,181,55,.35), transparent 70%)' } }),
+        R('div', { style: { display:'flex', alignItems:'center', gap:10 } },
+          R('img', { src:'uploads/Kharis_Logo_transparent_noText.png', alt:'', style:{ width:26, height:26, objectFit:'contain', opacity:.9 } }),
+          R('div', { style:{ flex:1 } },
+            R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', opacity: .7 } }, 'Check-in desk · Kharis London Central'),
+            R('div', { style: { font: '700 16px/1.15 Inter, sans-serif' } }, 'Sunday Service · 10:00 AM')
+          ),
+          R('div', { style:{ padding:'4px 8px', background:'rgba(255,255,255,.18)', borderRadius:5, font:'600 10px Inter' } }, 'Live')
+        ),
+        R('div', { style: { display:'flex', gap:8, marginTop:12 } },
+          R('div', { style:{ flex:1, background:'rgba(0,0,0,.2)', borderRadius:8, padding:'8px 10px' } },
+            R('div', { style:{ font:'700 20px Inter' } }, '128'),
+            R('div', { style:{ font:'500 9.5px Inter', opacity:.7, letterSpacing:'.08em', textTransform:'uppercase' } }, 'Checked in')
+          ),
+          R('div', { style:{ flex:1, background:'rgba(0,0,0,.2)', borderRadius:8, padding:'8px 10px' } },
+            R('div', { style:{ font:'700 20px Inter', color:'#f8b537' } }, '4'),
+            R('div', { style:{ font:'500 9.5px Inter', opacity:.7, letterSpacing:'.08em', textTransform:'uppercase' } }, 'First-timers')
+          ),
+          R('div', { style:{ flex:1, background:'rgba(0,0,0,.2)', borderRadius:8, padding:'8px 10px' } },
+            R('div', { style:{ font:'700 20px Inter' } }, '43'),
+            R('div', { style:{ font:'500 9.5px Inter', opacity:.7, letterSpacing:'.08em', textTransform:'uppercase' } }, 'Absent')
+          ),
+        )
+      ),
+      // Scanner + search
+      R('div', { style: { padding: '14px 16px 12px', background:'#fff', borderBottom:`1px solid ${ink(.06)}`, position:'sticky', top:0, zIndex:2 } },
+        R('div', { style:{ display:'flex', gap:8, marginBottom:10 } },
+          R('button', { style:{ flex:1, height:44, borderRadius:8, background:'linear-gradient(135deg,#451ebb,#5d3fd3)', color:'#fff', border:0, font:'600 12.5px Inter', display:'flex', alignItems:'center', justifyContent:'center', gap:6 } },
+            R('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:1.75 },
+              R('path', { d:'M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2' }),
+              R('path', { d:'M7 12h10' })
+            ),
+            'Scan QR'
+          ),
+          R('button', { style:{ flex:1, height:44, borderRadius:8, background:'#fff', color:'#5D3FD3', border:'1.5px solid #5D3FD3', font:'600 12.5px Inter', display:'flex', alignItems:'center', justifyContent:'center', gap:6 } },
+            R('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:1.75 },
+              R('path', { d:'M12 5v14M5 12h14' })
+            ),
+            'Walk-in'
+          )
+        ),
+        R('div', { style:{ position:'relative' } },
+          R('svg', { width:14, height:14, viewBox:'0 0 24 24', fill:'none', stroke:ink(.4), strokeWidth:1.75, style:{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)' } },
+            R('circle', { cx:11, cy:11, r:8 }), R('path', { d:'M21 21l-4.35-4.35' })
+          ),
+          R('input', { placeholder:'Search member by name, phone…', style:{ width:'100%', height:38, borderRadius:8, border:`1px solid ${ink(.1)}`, background:'#fafafa', padding:'0 12px 0 32px', font:'400 12.5px Inter', boxSizing:'border-box', outline:'none' } })
+        )
+      ),
+      // Queue heading
+      R('div', { style: { padding:'12px 16px 6px', display:'flex', alignItems:'center' } },
+        R('div', { style:{ flex:1, font:'600 10px Inter', letterSpacing:'.14em', textTransform:'uppercase', color:ink(.5) } }, 'At the desk · last 6'),
+        R('span', { style:{ font:'500 11px Inter', color:'#5D3FD3' } }, 'View all →')
+      ),
+      // Queue rows
+      R('div', { style:{ padding:'0 12px' } },
+        queue.map((m,i) => {
+          const b = stateBadge(m.state);
+          return R('div', { key:i, style:{ display:'flex', alignItems:'center', gap:11, padding:12, background:'#fff', borderRadius:8, marginBottom:6, borderLeft: m.state==='firsttimer' ? '3px solid #f8b537' : m.state==='checking' ? '3px solid #5D3FD3' : '3px solid transparent' } },
+            R('div', { style:{ width:38, height:38, borderRadius:'50%', background:m.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', font:'600 12px Inter', flexShrink:0 } }, m.i),
+            R('div', { style:{ flex:1, minWidth:0 } },
+              R('div', { style:{ display:'flex', alignItems:'center', gap:6 } },
+                R('span', { style:{ font:'600 13px Inter' } }, m.n),
+                m.time && R('span', { style:{ font:'500 10px Inter', color:ink(.45) } }, '· ' + m.time)
+              ),
+              R('div', { style:{ font:'400 11px Inter', color:ink(.55) } }, m.m)
+            ),
+            m.state === 'ready' ?
+              R('button', { style:{ background:'#5D3FD3', color:'#fff', border:0, borderRadius:6, padding:'8px 12px', font:'600 11.5px Inter', display:'flex', alignItems:'center', gap:5 } },
+                R('svg', { width:12, height:12, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2.5 }, R('path', { d:'M5 12l5 5L20 7' })),
+                'Check in'
+              ) :
+            m.state === 'checking' ?
+              R('div', { style:{ width:22, height:22, border:'2.5px solid rgba(93,63,211,.2)', borderTopColor:'#5D3FD3', borderRadius:'50%', animation:'spin 0.8s linear infinite' } }) :
+            m.state === 'firsttimer' ?
+              R('button', { style:{ background:'#f8b537', color:'#fff', border:0, borderRadius:6, padding:'8px 12px', font:'600 11.5px Inter' } }, 'Register') :
+              R('span', { style:{ font:'700 9px Inter', padding:'3px 7px', background:b.bg, color:b.fg, borderRadius:4, letterSpacing:'.06em' } }, b.label)
+          );
+        })
+      ),
+      // Family group tip
+      R('div', { style:{ margin:'14px 16px 0', padding:12, background:'rgba(248,181,55,.09)', borderRadius:8, display:'flex', gap:10, alignItems:'flex-start' } },
+        R('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'#b8801c', strokeWidth:1.75, style:{ flexShrink:0, marginTop:1 } },
+          R('circle', { cx:12, cy:12, r:10 }), R('path', { d:'M12 8v4M12 16h.01' })
+        ),
+        R('div', { style:{ font:'400 11.5px/1.45 Inter', color:'#8a5a08' } },
+          R('span', { style:{ fontWeight:600 } }, 'Tip: '),
+          'long-press a member to check in their whole family group at once.'
+        )
+      )
+    );
+    return this.frame({ os:'ios', dark:false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'checkin', 'ios')) });
+  }
+
+  renderAttendanceCompare() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const weeks = [
+      { l:'22 Jun', v:168 },
+      { l:'29 Jun', v:184 },
+      { l:'06 Jul', v:172 },
+      { l:'13 Jul', v:191 },
+      { l:'20 Jul', v:175 },
+      { l:'27 Jul', v:128, current:true },
+    ];
+    const maxV = 200;
+    const missing = [
+      { i:'JO', n:'Joseph Owusu',       m:'K-Group · London', w:'3 weeks', c:'#5D3FD3', overdue:true },
+      { i:'MB', n:'Mary Boakye',        m:'New Breeds',       w:'2 weeks', c:'#f8b537', overdue:true },
+      { i:'PA', n:'Priscilla Ansah',    m:'Choir',            w:'2 weeks', c:'#10b981' },
+      { i:'KD', n:'Kwame Danso',        m:'Ushers',           w:'1 week',  c:'#3b82f6' },
+      { i:'ET', n:'Esther Tetteh',      m:'K-Group · London', w:'1 week',  c:'#e11d48' },
+      { i:'BF', n:'Benjamin Fosu',      m:'Kharis Express',   w:'1 week',  c:'#a488ff' },
+    ];
+    const content = R('div', { style:{ padding:'0 0 100px' } },
+      // Header
+      R('div', { style:{ padding:'14px 16px 14px', background:'#fff', borderBottom:`1px solid ${ink(.06)}` } },
+        R('div', { style:{ display:'flex', alignItems:'center', gap:10, marginBottom:12 } },
+          R('button', { style:{ width:32, height:32, borderRadius:8, background:'#fff', border:`1px solid ${ink(.08)}`, display:'flex', alignItems:'center', justifyContent:'center' } },
+            R('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:1.75 }, R('path', { d:'M15 18l-6-6 6-6' }))
+          ),
+          R('div', { style:{ flex:1 } },
+            R('div', { style:{ font:'700 18px/1.15 Inter', letterSpacing:'-.01em' } }, 'Service attendance'),
+            R('div', { style:{ font:'400 11px Inter', color:ink(.55) } }, 'Kharis London Central · Sundays')
+          ),
+          R('button', { style:{ width:32, height:32, borderRadius:8, background:'#fff', border:`1px solid ${ink(.08)}`, display:'flex', alignItems:'center', justifyContent:'center' } },
+            R('svg', { width:15, height:15, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:1.75 }, R('path', { d:'M12 5v14M5 12h14' }))
+          )
+        ),
+        R('div', { style:{ display:'flex', gap:6, overflowX:'auto' } },
+          [{l:'6 weeks',a:true},{l:'3 months'},{l:'YTD'},{l:'Compare branches'}].map(f =>
+            R('div', { key:f.l, style:{ padding:'6px 10px', background:f.a?'#5D3FD3':'#fafafa', color:f.a?'#fff':ink(.7), borderRadius:6, font:'600 11px Inter', whiteSpace:'nowrap', border:f.a?0:`1px solid ${ink(.06)}` } }, f.l)
+          )
+        )
+      ),
+      // Hero stat
+      R('div', { style:{ padding:'18px 16px 4px', background:'linear-gradient(180deg,#faf7f2 0%,transparent 100%)' } },
+        R('div', { style:{ display:'flex', alignItems:'baseline', gap:10 } },
+          R('span', { style:{ font:'800 42px/1 Inter, sans-serif', letterSpacing:'-.02em' } }, '128'),
+          R('div', null,
+            R('div', { style:{ font:'500 11.5px Inter', color:ink(.5) } }, 'checked in today'),
+            R('div', { style:{ font:'600 12px Inter', color:'#e11d48', display:'flex', alignItems:'center', gap:3 } },
+              R('svg', { width:12, height:12, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2.5 }, R('path', { d:'M7 17l10-10M17 7v10M7 7h10' })),
+              '−26% vs. 6-week avg'
+            )
+          )
+        ),
+        R('div', { style:{ font:'400 11px Inter', color:ink(.5), marginTop:8 } }, '43 confirmed members not yet seen · service ends 12:00')
+      ),
+      // Bar chart
+      R('div', { style:{ padding:'16px 16px 12px' } },
+        R('div', { style:{ display:'flex', alignItems:'flex-end', gap:8, height:130, borderBottom:`1px solid ${ink(.08)}`, paddingBottom:6 } },
+          weeks.map(w =>
+            R('div', { key:w.l, style:{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:5 } },
+              R('div', { style:{ font:'600 10px Inter', color: w.current ? '#5D3FD3' : ink(.55) } }, w.v),
+              R('div', { style:{ width:'100%', height:`${(w.v/maxV)*100}%`, background: w.current ? 'linear-gradient(to top,#451ebb,#a488ff)' : ink(.12), borderRadius:'4px 4px 0 0' } })
+            )
+          )
+        ),
+        R('div', { style:{ display:'flex', gap:8, marginTop:6 } },
+          weeks.map(w => R('div', { key:w.l, style:{ flex:1, textAlign:'center', font:'500 9.5px Inter', color: w.current ? '#5D3FD3' : ink(.4), fontWeight: w.current ? 700 : 500 } }, w.l))
+        ),
+        R('div', { style:{ marginTop:12, padding:'10px 12px', background:'rgba(93,63,211,.06)', borderRadius:8, display:'flex', gap:8, alignItems:'center' } },
+          R('div', { style:{ width:20, height:20, borderRadius:5, background:'#5D3FD3', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center' } },
+            R('svg', { width:12, height:12, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2 }, R('path', { d:'M9 12l2 2 4-4' }))
+          ),
+          R('div', { style:{ font:'400 11px/1.4 Inter', color:ink(.75), flex:1 } },
+            R('span', { style:{ fontWeight:600 } }, 'Insight: '), 'attendance dips first Sundays. Consider a rota check.'
+          )
+        )
+      ),
+      // By fellowship breakdown
+      R('div', { style:{ padding:'10px 16px 8px', font:'600 10px Inter', letterSpacing:'.14em', textTransform:'uppercase', color:ink(.5) } }, 'By fellowship · today'),
+      R('div', { style:{ padding:'0 16px' } },
+        [
+          { l:'Grace K-Group',   here:8,  total:11, c:'#5D3FD3' },
+          { l:'Northfleet K-Group', here:6, total:9,  c:'#f8b537' },
+          { l:'Kharis Express',  here:12, total:24, c:'#10b981' },
+          { l:'New Breeds',      here:5,  total:15, c:'#e11d48', low:true },
+        ].map((f,i) =>
+          R('div', { key:i, style:{ display:'flex', alignItems:'center', gap:10, padding:10, background:'#fff', borderRadius:8, marginBottom:6 } },
+            R('div', { style:{ width:32, height:32, borderRadius:8, background:`${f.c}22`, color:f.c, display:'flex', alignItems:'center', justifyContent:'center', font:'700 11px Inter' } },
+              Math.round((f.here/f.total)*100) + '%'
+            ),
+            R('div', { style:{ flex:1, minWidth:0 } },
+              R('div', { style:{ font:'600 12.5px Inter' } }, f.l),
+              R('div', { style:{ display:'flex', alignItems:'center', gap:6, marginTop:5 } },
+                R('div', { style:{ flex:1, height:4, background:ink(.06), borderRadius:2, overflow:'hidden' } },
+                  R('div', { style:{ width:`${(f.here/f.total)*100}%`, height:'100%', background:f.c } })
+                ),
+                R('span', { style:{ font:'500 10.5px Inter', color:ink(.55), flexShrink:0 } }, `${f.here} of ${f.total}`)
+              )
+            ),
+            f.low && R('span', { style:{ font:'700 9px Inter', padding:'2px 6px', background:'rgba(225,29,72,.12)', color:'#e11d48', borderRadius:3, letterSpacing:'.06em' } }, 'LOW')
+          )
+        )
+      ),
+      // Missing list
+      R('div', { style:{ padding:'16px 16px 6px', display:'flex', alignItems:'baseline' } },
+        R('div', { style:{ flex:1, font:'600 10px Inter', letterSpacing:'.14em', textTransform:'uppercase', color:ink(.5) } }, 'Missing today'),
+        R('span', { style:{ font:'700 10px Inter', padding:'3px 8px', background:'rgba(225,29,72,.12)', color:'#e11d48', borderRadius:10 } }, '43')
+      ),
+      R('div', { style:{ padding:'0 16px' } },
+        missing.map((m,i) =>
+          R('div', { key:i, style:{ display:'flex', alignItems:'center', gap:11, padding:11, background:'#fff', borderRadius:8, marginBottom:6, borderLeft: m.overdue ? '3px solid #e11d48' : '3px solid transparent' } },
+            R('div', { style:{ width:36, height:36, borderRadius:'50%', background:m.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', font:'600 11.5px Inter' } }, m.i),
+            R('div', { style:{ flex:1, minWidth:0 } },
+              R('div', { style:{ font:'600 12.5px Inter' } }, m.n),
+              R('div', { style:{ font:'400 10.5px Inter', color:ink(.55) } }, m.m)
+            ),
+            R('div', { style:{ textAlign:'right' } },
+              R('div', { style:{ font:'700 10.5px Inter', color: m.overdue ? '#e11d48' : '#b8801c' } }, `Away ${m.w}`),
+              R('button', { style:{ marginTop:3, background:'transparent', border:0, color:'#5D3FD3', font:'600 11px Inter', padding:0 } }, 'Assign →')
+            )
+          )
+        ),
+        R('button', { style:{ width:'100%', marginTop:6, height:38, background:'transparent', border:`1px dashed ${ink(.2)}`, borderRadius:8, color:ink(.6), font:'600 11.5px Inter' } }, 'See all 43 missing')
+      )
+    );
+    return this.frame({ os:'ios', dark:false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  icon(name) {
+    const paths = {
+      home:  'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10',
+      users: 'M17 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M13 7a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+      check: 'M9 12l2 2 4-4M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+      heart: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z',
+      grid:  'M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z',
+    };
+    return React.createElement('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' },
+      React.createElement('path', { d: paths[name] }));
+  }
+
+  // ---------- Interactive tab content ----------
+  renderTabContent(tab, dark) {
+    switch (tab) {
+      case 'home':      return this.renderHomeContent(dark);
+      case 'community': return this.renderCommunityContent(dark);
+      case 'checkin':   return this.renderCheckinContent(dark);
+      case 'give':      return this.renderGiveContent(dark);
+      case 'more':      return this.renderMoreContent(dark);
+    }
+  }
+
+  ink(dark, alpha = 1) {
+    return dark ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
+  }
+  surface(dark, level = 0) {
+    if (dark) return level === 0 ? '#0a0a0f' : level === 1 ? '#141419' : '#1a1a22';
+    return level === 0 ? '#fafafa' : level === 1 ? '#ffffff' : '#f4f2ee';
+  }
+
+  renderHomeContent(dark) {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, dark);
+    const surf = this.surface.bind(this, dark);
+    const cardStyle = { background: surf(1), borderRadius: 8, padding: 14, boxShadow: dark ? '0 1px 0 rgba(255,255,255,.03)' : '0 1px 3px rgba(0,0,0,.04)' };
+    return R('div', { style: { padding: '18px 16px 20px', color: ink(1) } },
+      // greeting
+      R('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 } },
+        R('div', null,
+          R('div', { style: { font: '500 11px Inter, sans-serif', color: ink(.5), letterSpacing: '.02em' } }, 'Wednesday · 22 July'),
+          R('div', { style: { font: '700 22px/1.15 Inter, sans-serif', marginTop: 2, letterSpacing: '-.01em' } }, 'Good day, Daniel'),
+        ),
+        R('div', { style: { position: 'relative' } },
+          R('div', { style: { width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#a488ff,#5D3FD3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', font: '600 12px Inter' } }, 'DB'),
+          R('div', { style: { position: 'absolute', top: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#f8b537', border: `2px solid ${surf(0)}` } })
+        )
+      ),
+      // upcoming service
+      R('div', { style: { ...cardStyle, background: 'linear-gradient(135deg,#3b0764,#5D3FD3)', color: '#fff', padding: 16, position: 'relative', overflow: 'hidden' } },
+        R('div', { style: { position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(248,181,55,.35), transparent 60%)' } }),
+        R('div', { style: { font: '600 10px Inter, sans-serif', letterSpacing: '.14em', textTransform: 'uppercase', opacity: .7 } }, 'Upcoming service'),
+        R('div', { style: { font: '700 18px/1.25 Inter, sans-serif', margin: '4px 0 8px' } }, 'Sunday Service'),
+        R('div', { style: { font: '400 12px Inter, sans-serif', opacity: .8, marginBottom: 10 } }, 'Kharis London Central · Sun 10:00 AM'),
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.15)' } },
+          R('div', { style: { width: 26, height: 26, borderRadius: '50%', background: '#f8b537', color: '#3b0764', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 10px Inter' } }, 'DA'),
+          R('div', { style: { font: '500 12px Inter', flex: 1 } }, 'Rev Dr David Antwi'),
+          R('button', { style: { background: 'rgba(255,255,255,.14)', border: 0, color: '#fff', borderRadius: 6, padding: '6px 10px', font: '600 11px Inter', cursor: 'pointer' } }, 'Remind me')
+        )
+      ),
+      // Fellowship + Rota row
+      R('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 } },
+        R('div', { style: cardStyle },
+          R('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 } },
+            R('div', { style: { width: 6, height: 6, borderRadius: '50%', background: '#f8b537' } }),
+            R('span', { style: { font: '600 9.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: ink(.5) } }, 'Fellowship')
+          ),
+          R('div', { style: { font: '700 13.5px/1.25 Inter', marginBottom: 2 } }, 'Grace K-Group'),
+          R('div', { style: { font: '400 10.5px Inter', color: ink(.5) } }, 'Wed 7:00 PM · today'),
+          R('div', { style: { marginTop: 8, display: 'flex', gap: 4 } }, [1,2,3,4].map(i =>
+            R('div', { key: i, style: { width: 20, height: 20, borderRadius: '50%', background: `hsl(${i*60},60%,60%)`, marginLeft: i === 1 ? 0 : -6, border: `2px solid ${surf(1)}` } })
+          ), R('div', { style: { width: 20, height: 20, borderRadius: '50%', background: ink(.08), color: ink(.6), display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 8px Inter', marginLeft: -6, border: `2px solid ${surf(1)}` } }, '+7'))
+        ),
+        R('div', { style: cardStyle },
+          R('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 } },
+            R('div', { style: { width: 6, height: 6, borderRadius: '50%', background: '#5D3FD3' } }),
+            R('span', { style: { font: '600 9.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: ink(.5) } }, 'Next rota')
+          ),
+          R('div', { style: { font: '700 13.5px/1.25 Inter', marginBottom: 2 } }, 'Ushering'),
+          R('div', { style: { font: '400 10.5px Inter', color: ink(.5) } }, 'Sun 10:00 · door 2'),
+          R('button', { style: { marginTop: 8, background: 'transparent', color: '#5D3FD3', border: `1px solid ${ink(.1)}`, borderRadius: 5, padding: '4px 8px', font: '600 10px Inter', width: '100%' } }, 'Request swap')
+        )
+      ),
+      // Alerts
+      R('div', { style: { marginTop: 12, ...cardStyle, background: dark ? 'rgba(248,181,55,.08)' : 'rgba(248,181,55,.12)', border: `1px solid rgba(248,181,55,.25)` } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+          R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: '#b8801c', strokeWidth: 1.75 },
+            R('circle', { cx: 12, cy: 12, r: 10 }), R('path', { d: 'M12 8v4M12 16h.01' })
+          ),
+          R('div', { style: { font: '600 12px Inter', color: '#8a5a08', flex: 1 } }, '2 approvals awaiting you'),
+          R('span', { style: { font: '600 10px Inter', color: '#5D3FD3' } }, 'View →')
+        )
+      ),
+      // Verse of the day
+      R('div', { style: { marginTop: 12, ...cardStyle, borderLeft: '3px solid #f8b537', padding: '12px 14px' } },
+        R('div', { style: { font: '600 9.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: '#b8801c', marginBottom: 6 } }, 'Daily verse'),
+        R('div', { style: { font: '400 14px/1.4 Inter', color: ink(.85), fontStyle: 'italic' } }, '&ldquo;Be still and know that I am God.&rdquo;'),
+        R('div', { style: { font: '600 11px Inter', color: ink(.5), marginTop: 6 } }, '— Psalm 46:10')
+      ),
+      // Announcement
+      R('div', { style: { marginTop: 12, ...cardStyle } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 } },
+          R('span', { style: { font: '600 9.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: ink(.5) } }, 'Announcement'),
+          R('span', { style: { font: '600 9px Inter', padding: '2px 6px', background: 'rgba(93,63,211,.14)', color: '#5D3FD3', borderRadius: 3 } }, 'PASTORAL')
+        ),
+        R('div', { style: { font: '600 13px/1.35 Inter' } }, 'Fasting week begins Monday'),
+        R('div', { style: { font: '400 11.5px/1.45 Inter', color: ink(.55), marginTop: 4 } }, 'Join us for the first seven days of August. Prayer guide will be posted here.')
+      ),
+    );
+  }
+
+  renderCommunityContent(dark) {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, dark);
+    const surf = this.surface.bind(this, dark);
+    const cardStyle = { background: surf(1), borderRadius: 8, padding: 12 };
+    const people = [
+      { i:'RA', n:'Ruth Adeleke',     m:'Kharis London Central', c:'#5D3FD3' },
+      { i:'TB', n:'Tobi Balogun',     m:'Grace K-Group',         c:'#f8b537' },
+      { i:'AB', n:'Amina Bello',      m:'Kharis London Central', c:'#10b981' },
+      { i:'CN', n:'Chidera Nnamani',  m:'Kharis Express London', c:'#e11d48' },
+      { i:'SW', n:'Sarah Williams',   m:'Choir · London',        c:'#3b82f6' },
+      { i:'DA', n:'David Appiah',     m:'Ushers · Accra',        c:'#5D3FD3' },
+    ];
+    return R('div', { style: { padding: '18px 16px 20px', color: ink(1) } },
+      R('div', { style: { font: '700 22px/1.15 Inter', letterSpacing: '-.01em', marginBottom: 4 } }, 'Community'),
+      R('div', { style: { font: '400 12px Inter', color: ink(.5), marginBottom: 14 } }, 'Members &middot; fellowships &middot; departments'),
+      R('div', { style: { display: 'flex', gap: 6, background: surf(2), padding: 3, borderRadius: 8, marginBottom: 14 } },
+        ['People','Fellowships','Departments'].map((l,i) =>
+          R('div', { key: l, style: { flex: 1, textAlign: 'center', padding: '8px 0', font: '600 11.5px Inter', borderRadius: 6, background: i===0 ? surf(1) : 'transparent', color: i===0 ? ink(.9) : ink(.55), boxShadow: i===0 && !dark ? '0 1px 3px rgba(0,0,0,.05)' : 'none' } }, l)
+        )
+      ),
+      R('div', { style: { position: 'relative', marginBottom: 12 } },
+        R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.35), strokeWidth: 1.75, style: { position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' } },
+          R('circle', { cx: 11, cy: 11, r: 8 }), R('path', { d: 'M21 21l-4.35-4.35' })
+        ),
+        R('input', { placeholder: 'Search by name, branch, fellowship…', style: { width: '100%', height: 38, borderRadius: 8, border: `1px solid ${ink(.08)}`, background: surf(1), color: ink(1), padding: '0 12px 0 32px', font: '400 12.5px Inter', outline: 'none', boxSizing: 'border-box' } })
+      ),
+      R('div', { style: { display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 12, paddingBottom: 4 } },
+        ['All 245','K-Group','Kharis Express','KOC','New Breeds','Choir'].map((f,i) =>
+          R('div', { key: f, style: { padding: '6px 10px', background: i===0 ? '#5D3FD3' : surf(1), color: i===0 ? '#fff' : ink(.7), borderRadius: 6, font: '600 11px Inter', whiteSpace: 'nowrap' } }, f)
+        )
+      ),
+      R('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+        people.map(p =>
+          R('div', { key: p.n, style: { ...cardStyle, display: 'flex', alignItems: 'center', gap: 12 } },
+            R('div', { style: { width: 38, height: 38, borderRadius: '50%', background: p.c, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 12px Inter' } }, p.i),
+            R('div', { style: { flex: 1, minWidth: 0 } },
+              R('div', { style: { font: '600 13px Inter' } }, p.n),
+              R('div', { style: { font: '400 11px Inter', color: ink(.5) } }, p.m)
+            ),
+            R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.35), strokeWidth: 1.75 },
+              R('path', { d: 'M9 18l6-6-6-6' })
+            )
+          )
+        )
+      )
+    );
+  }
+
+  renderCheckinContent(dark) {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, dark);
+    const surf = this.surface.bind(this, dark);
+    return R('div', { style: { padding: '18px 16px', color: ink(1), minHeight: '100%', display: 'flex', flexDirection: 'column' } },
+      R('div', { style: { font: '700 22px/1.15 Inter', letterSpacing: '-.01em' } }, 'Check-in'),
+      R('div', { style: { font: '400 12px Inter', color: ink(.5), marginTop: 4, marginBottom: 18 } }, 'One tap to mark yourself present'),
+      R('div', { style: { background: 'linear-gradient(135deg,#3b0764,#5d3fd3)', color: '#fff', borderRadius: 12, padding: 18, position: 'relative', overflow: 'hidden' } },
+        R('div', { style: { position: 'absolute', right: -20, bottom: -20, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(248,181,55,.35), transparent 70%)' } }),
+        R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', opacity: .7 } }, 'Happening now'),
+        R('div', { style: { font: '700 20px/1.2 Inter', margin: '6px 0 4px' } }, 'Sunday Service'),
+        R('div', { style: { font: '400 12px Inter', opacity: .8 } }, 'Kharis London Central · 10:00 AM'),
+        R('div', { style: { marginTop: 14, background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 8, padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: 6 } },
+          R('div', { style: { width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse-dot 1.5s ease-in-out infinite' } }),
+          R('span', { style: { font: '600 10.5px Inter' } }, 'Check-in window open · 45 min')
+        )
+      ),
+      R('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '28px 0 20px' } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 } },
+          R('div', { style: { width: 28, height: 28, borderRadius: '50%', background: '#5D3FD3', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 12px Inter' } }, 'DB'),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 13px Inter' } }, 'Daniel Boateng'),
+            R('div', { style: { font: '400 11px Inter', color: ink(.5) } }, 'Kharis London Central')
+          )
+        ),
+        R('button', { style: { width: '100%', height: 56, borderRadius: 12, background: 'linear-gradient(135deg,#451ebb,#5d3fd3)', color: '#fff', border: 0, boxShadow: '0 12px 30px -12px rgba(93,63,211,.55)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, font: '600 15px Inter' } },
+          R('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.25, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            R('path', { d: 'M5 12l5 5L20 7' })
+          ),
+          'I\u2019m here'
+        ),
+        R('div', { style: { font: '400 11.5px Inter', color: ink(.45), marginTop: 12, textAlign: 'center' } }, 'Tap once to mark yourself present')
+      ),
+      R('div', { style: { background: surf(1), borderRadius: 8, padding: 12, display: 'flex', alignItems: 'center', gap: 10 } },
+        R('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: '#10b981', strokeWidth: 1.75 },
+          R('path', { d: 'M22 11.08V12a10 10 0 11-5.93-9.14' }), R('path', { d: 'M22 4L12 14.01l-3-3' })
+        ),
+        R('div', { style: { flex: 1 } },
+          R('div', { style: { font: '600 12px Inter' } }, 'This month'),
+          R('div', { style: { font: '400 10.5px Inter', color: ink(.5) } }, 'You checked in 3 of 3 Sundays')
+        ),
+        R('div', { style: { font: '700 18px Inter', color: '#10b981' } }, '100%')
+      )
+    );
+  }
+
+  renderGiveContent(dark) {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, dark);
+    const surf = this.surface.bind(this, dark);
+    return R('div', { style: { padding: 0, color: ink(1), background: '#fff', minHeight: '100%' } },
+      // WebView chrome
+      R('div', { style: { padding: '10px 12px', background: '#f4f2ee', borderBottom: '1px solid rgba(0,0,0,.08)', display: 'flex', alignItems: 'center', gap: 8 } },
+        R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'rgba(0,0,0,.5)', strokeWidth: 1.75 },
+          R('rect', { x: 3, y: 11, width: 18, height: 11, rx: 2 }), R('path', { d: 'M7 11V7a5 5 0 0110 0v4' })
+        ),
+        R('div', { style: { font: '500 11px ui-monospace, monospace', color: 'rgba(0,0,0,.55)', flex: 1 } }, 'give.kharis.org'),
+        R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'rgba(0,0,0,.5)', strokeWidth: 1.75 },
+          R('path', { d: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' })
+        )
+      ),
+      R('div', { style: { padding: '22px 20px 18px', textAlign: 'center', background: 'linear-gradient(180deg,#faf7f2 0%,#fff 100%)', color: '#1a1c1c' } },
+        R('div', { style: { width: 44, height: 44, margin: '0 auto 12px', borderRadius: 12, background: 'linear-gradient(135deg,#451ebb,#5d3fd3)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+          R('img', { src: 'uploads/Kharis_Logo_transparent_noText.png', alt: 'Kharis', style: { width: 28, height: 28, objectFit: 'contain' } })
+        ),
+        R('div', { style: { font: '700 18px/1.2 Inter', letterSpacing: '-.01em' } }, 'Give to Kharis'),
+        R('div', { style: { font: '400 12px Inter', color: 'rgba(0,0,0,.55)', marginTop: 4 } }, '&ldquo;Every man according as he purposeth in his heart&rdquo;')
+      ),
+      R('div', { style: { padding: '4px 20px 20px', color: '#1a1c1c' } },
+        R('div', { style: { font: '600 10.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(0,0,0,.5)', margin: '8px 0 8px' } }, 'Purpose'),
+        R('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
+          ['Tithe','Offering','Building fund','Missions'].map((p,i) =>
+            R('div', { key: p, style: { padding: '12px 12px', background: i===0 ? 'rgba(93,63,211,.08)' : '#fff', border: i===0 ? '1.5px solid #5D3FD3' : '1px solid rgba(0,0,0,.08)', borderRadius: 8 } },
+              R('div', { style: { font: '600 12.5px Inter', color: i===0 ? '#5D3FD3' : '#1a1c1c' } }, p)
+            )
+          )
+        ),
+        R('div', { style: { font: '600 10.5px Inter', letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(0,0,0,.5)', margin: '18px 0 8px' } }, 'Amount'),
+        R('div', { style: { background: '#fff', border: '1px solid rgba(0,0,0,.08)', borderRadius: 8, padding: '14px 14px', display: 'flex', alignItems: 'baseline', gap: 6 } },
+          R('span', { style: { font: '600 20px Inter', color: 'rgba(0,0,0,.4)' } }, '£'),
+          R('span', { style: { font: '700 30px/1 Inter', letterSpacing: '-.02em' } }, '25'),
+          R('span', { style: { font: '400 14px Inter', color: 'rgba(0,0,0,.4)' } }, '.00')
+        ),
+        R('div', { style: { display: 'flex', gap: 6, marginTop: 8 } },
+          ['£10','£25','£50','£100'].map((a,i) =>
+            R('div', { key: a, style: { flex: 1, textAlign: 'center', padding: '8px 0', background: i===1 ? '#5D3FD3' : '#fff', color: i===1 ? '#fff' : 'rgba(0,0,0,.7)', border: i===1 ? 0 : '1px solid rgba(0,0,0,.08)', borderRadius: 6, font: '600 12px Inter' } }, a)
+          )
+        ),
+        R('button', { style: { width: '100%', marginTop: 18, height: 46, borderRadius: 8, background: 'linear-gradient(135deg,#451ebb,#5d3fd3)', color: '#fff', border: 0, font: '600 14px Inter' } }, 'Continue to payment'),
+        R('div', { style: { marginTop: 12, textAlign: 'center', font: '400 10.5px Inter', color: 'rgba(0,0,0,.4)' } }, 'Secured by Stripe · payment stays on the web'),
+      )
+    );
+  }
+
+  renderMoreContent(dark) {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, dark);
+    const surf = this.surface.bind(this, dark);
+    const items = [
+      { g: 'For you', l: [
+        { icon: 'user', label: 'Profile', sub: 'Personal details, emergency contact' },
+        { icon: 'bell', label: 'Notifications', sub: '3 new', badge: '3' },
+        { icon: 'clock', label: 'My attendance', sub: '12-week history' },
+        { icon: 'heart', label: 'Giving history', sub: '£340 this year' },
+        { icon: 'book', label: 'New Believer journey', sub: 'Session 3 of 4', progress: 75 },
+      ]},
+      { g: 'Leader tools', l: [
+        { icon: 'clip', label: 'Approvals', sub: '2 waiting on you', badge: '2', accent: true },
+        { icon: 'users', label: 'Follow-ups', sub: '4 souls overdue', accent: true },
+        { icon: 'cal', label: 'Rota', sub: 'Next duty: Sun 10:00' },
+      ]},
+      { g: 'Settings', l: [
+        { icon: 'moon', label: 'Appearance', sub: 'Auto (system)' },
+        { icon: 'globe', label: 'Language', sub: 'English' },
+        { icon: 'shield', label: 'Privacy &amp; consent' },
+        { icon: 'help', label: 'Help &amp; support' },
+        { icon: 'logout', label: 'Sign out', destructive: true },
+      ]},
+    ];
+    return R('div', { style: { padding: '18px 16px 20px', color: ink(1) } },
+      R('div', { style: { font: '700 22px/1.15 Inter', letterSpacing: '-.01em' } }, 'More'),
+      R('div', { style: { font: '400 12px Inter', color: ink(.5), marginTop: 4, marginBottom: 18 } }, 'Everything else'),
+      R('div', { style: { background: 'linear-gradient(135deg,rgba(93,63,211,.1),rgba(248,181,55,.1))', borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 } },
+        R('div', { style: { width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,#a488ff,#5D3FD3)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 15px Inter' } }, 'DB'),
+        R('div', { style: { flex: 1, minWidth: 0 } },
+          R('div', { style: { font: '700 14px Inter' } }, 'Daniel Boateng'),
+          R('div', { style: { font: '400 11px Inter', color: ink(.55) } }, 'Kharis London Central · Choir lead'),
+        ),
+        R('span', { style: { font: '600 9.5px Inter', padding: '3px 8px', background: 'rgba(93,63,211,.15)', color: '#5D3FD3', borderRadius: 4 } }, 'LEADER')
+      ),
+      ...items.map(g =>
+        R('div', { key: g.g, style: { marginBottom: 22 } },
+          R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.4), marginBottom: 8, padding: '0 4px' } }, g.g),
+          R('div', { style: { background: surf(1), borderRadius: 10, overflow: 'hidden' } },
+            g.l.map((it, i) =>
+              R('div', { key: it.label, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderTop: i === 0 ? 'none' : `1px solid ${ink(.05)}` } },
+                R('div', { style: { width: 30, height: 30, borderRadius: 7, background: it.destructive ? 'rgba(225,29,72,.1)' : it.accent ? 'rgba(248,181,55,.15)' : dark ? 'rgba(255,255,255,.06)' : 'rgba(93,63,211,.1)', color: it.destructive ? '#e11d48' : it.accent ? '#b8801c' : '#5D3FD3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 } }, this.smallIcon(it.icon)),
+                R('div', { style: { flex: 1, minWidth: 0 } },
+                  R('div', { style: { font: '600 13px Inter', color: it.destructive ? '#e11d48' : ink(.9) } }, it.label),
+                  it.sub && R('div', { style: { font: '400 11px Inter', color: ink(.5), marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, it.sub)
+                ),
+                it.badge && R('span', { style: { font: '700 10px Inter', padding: '2px 7px', background: '#e11d48', color: '#fff', borderRadius: 10, minWidth: 16, textAlign: 'center' } }, it.badge),
+                !it.destructive && R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.3), strokeWidth: 1.75 }, R('path', { d: 'M9 18l6-6-6-6' }))
+              )
+            )
+          )
+        )
+      ),
+      R('div', { style: { textAlign: 'center', font: '400 10px Inter', color: ink(.35), padding: '10px 0 24px' } }, 'Kairos v1.0 · Kharis Church')
+    );
+  }
+
+  smallIcon(k) {
+    const R = React.createElement;
+    const paths = {
+      user: 'M20 21v-2a4 4 0 00-3-3.87M4 21v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M12 7a3 3 0 11-6 0 3 3 0 016 0z',
+      bell: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
+      clock:'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2',
+      heart:'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z',
+      book: 'M4 19.5A2.5 2.5 0 016.5 17H20V2H6.5A2.5 2.5 0 004 4.5v15zM20 22H6.5a2.5 2.5 0 010-5H20',
+      clip: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+      users:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M13 7a4 4 0 11-8 0 4 4 0 018 0M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+      cal:  'M3 4h18v18H3zM16 2v4M8 2v4M3 10h18',
+      moon: 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z',
+      globe:'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20',
+      shield:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+      help: 'M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+      logout:'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
+    };
+    return R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, R('path', { d: paths[k] }));
+  }
+
+  // ---------- Static phone-frame renderers ----------
+  frame({ os, dark, children, w = 340, h = 720 }) {
+    const R = React.createElement;
+    const bezel = os === 'ios' ? 44 : 32;
+    const inner = os === 'ios' ? 34 : 24;
+    return R('div', { style: { position: 'relative', width: w, height: h, background: '#0a0a0a', borderRadius: bezel, padding: 12, boxShadow: '0 40px 80px -30px rgba(0,0,0,.4), 0 0 0 2px #232323 inset' } },
+      R('div', { style: { width: '100%', height: '100%', borderRadius: inner, overflow: 'hidden', position: 'relative', background: dark ? '#0a0a0f' : '#fafafa' } },
+        // Status bar
+        R('div', { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 22px 0', zIndex: 5, color: dark ? '#e5e5e5' : '#1a1c1c' } },
+          R('div', { style: { font: '600 13px Inter' } }, '10:12'),
+          R('div', { style: { display: 'flex', gap: 5 } },
+            R('svg', { width: 15, height: 10, viewBox: '0 0 17 11', fill: 'currentColor' },
+              R('rect', { x: 0, y: 7, width: 3, height: 4, rx: .5 }),
+              R('rect', { x: 5, y: 4.5, width: 3, height: 6.5, rx: .5 }),
+              R('rect', { x: 10, y: 2, width: 3, height: 9, rx: .5 })
+            ),
+            R('svg', { width: 22, height: 10, viewBox: '0 0 26 12', fill: 'none' },
+              R('rect', { x: .5, y: .5, width: 22, height: 11, rx: 3, stroke: 'currentColor', opacity: .4 }),
+              R('rect', { x: 2, y: 2, width: 19, height: 8, rx: 1.5, fill: 'currentColor' })
+            )
+          )
+        ),
+        os === 'ios'
+          ? R('div', { style: { position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)', width: 108, height: 30, background: '#000', borderRadius: 18, zIndex: 6 } })
+          : R('div', { style: { position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 10, height: 10, background: '#111', borderRadius: '50%', zIndex: 6 } }),
+        // slot
+        R('div', { style: { position: 'absolute', inset: '44px 0 0', overflow: 'hidden' } }, children),
+        // home indicator
+        os === 'ios'
+          ? R('div', { style: { position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 118, height: 4, background: dark ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.35)', borderRadius: 3, zIndex: 8 } })
+          : R('div', { style: { position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 90, height: 3, background: dark ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.5)', borderRadius: 2, zIndex: 8 } })
+      )
+    );
+  }
+
+  tabBarStatic(dark, activeKey = 'home', os = 'ios') {
+    const R = React.createElement;
+    const items = [
+      { k: 'home',      label: 'Home',      icon: 'home' },
+      { k: 'community', label: 'Community', icon: 'users' },
+      { k: 'checkin',   label: 'Check-in',  icon: 'check' },
+      { k: 'give',      label: 'Give',      icon: 'heart' },
+      { k: 'more',      label: 'More',      icon: 'grid' },
+    ];
+    const ink = this.ink.bind(this, dark);
+    const bg = dark ? 'rgba(20,20,25,.92)' : 'rgba(255,255,255,.92)';
+    return R('div', { style: { position: 'absolute', bottom: 0, left: 0, right: 0, height: os === 'ios' ? 78 : 62, background: bg, backdropFilter: 'blur(16px)', borderTop: `1px solid ${ink(.06)}`, display: 'flex', padding: os === 'ios' ? '8px 4px 22px' : '8px 4px 8px' } },
+      items.map(it =>
+        R('div', { key: it.k, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: activeKey === it.k ? '#5D3FD3' : ink(.45) } },
+          this.icon(it.icon),
+          R('span', { style: { font: '600 10px Inter' } }, it.label)
+        )
+      )
+    );
+  }
+
+  renderHomeStatic(os, dark) {
+    return this.frame({
+      os, dark,
+      children: React.createElement('div', null,
+        this.renderHomeContent(dark),
+        this.tabBarStatic(dark, 'home', os)
+      )
+    });
+  }
+
+  // A generic screen wrapper for the standard 5-tab shell with a title area
+  screen({ title, children }) {
+    const R = React.createElement;
+    return this.frame({
+      os: 'ios', dark: false,
+      children: R('div', null,
+        R('div', { style: { padding: '16px 16px 100px', height: '100%', overflow: 'auto', boxSizing: 'border-box' } }, children),
+        this.tabBarStatic(false, 'more', 'ios')
+      )
+    });
+  }
+
+  renderCommunity()       { return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, this.renderCommunityContent(false), this.tabBarStatic(false, 'community', 'ios')) }); }
+
+  renderCheckin()         { return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, this.renderCheckinContent(false), this.tabBarStatic(false, 'checkin', 'ios')) }); }
+
+  renderGive()            { return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, this.renderGiveContent(false), this.tabBarStatic(false, 'give', 'ios')) }); }
+
+  renderProfile() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const surf = this.surface.bind(this, false);
+    const content = R('div', { style: { padding: '18px 16px 100px', color: ink(1) } },
+      R('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '18px 0 22px' } },
+        R('div', { style: { position: 'relative' } },
+          R('div', { style: { width: 88, height: 88, borderRadius: '50%', background: 'linear-gradient(135deg,#a488ff,#5D3FD3)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 30px Inter', boxShadow: '0 20px 40px -12px rgba(93,63,211,.4)' } }, 'DB'),
+          R('div', { style: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: '#fff', border: '3px solid #fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: '#5D3FD3', strokeWidth: 2 }, R('path', { d: 'M12 5v14M5 12h14' }))
+          )
+        ),
+        R('div', { style: { font: '700 20px Inter', marginTop: 14 } }, 'Daniel Boateng'),
+        R('div', { style: { font: '400 12px Inter', color: ink(.55), marginTop: 2 } }, 'daniel@kharis.org · +44 7700 000 101'),
+        R('div', { style: { display: 'flex', gap: 6, marginTop: 8 } },
+          R('span', { style: { font: '600 9.5px Inter', padding: '3px 8px', background: 'rgba(93,63,211,.14)', color: '#5D3FD3', borderRadius: 4, letterSpacing: '.06em' } }, 'CONFIRMED MEMBER'),
+          R('span', { style: { font: '600 9.5px Inter', padding: '3px 8px', background: 'rgba(248,181,55,.18)', color: '#8a5a08', borderRadius: 4, letterSpacing: '.06em' } }, 'CHOIR LEAD')
+        )
+      ),
+      R('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 22 } },
+        [
+          { l: 'Since', v: '2021', s: 'Sep 12' },
+          { l: 'Attendance', v: '86%', s: '12 mo' },
+          { l: 'Given', v: '£340', s: 'YTD' },
+        ].map(s =>
+          R('div', { key: s.l, style: { background: surf(1), borderRadius: 8, padding: 12, textAlign: 'center' } },
+            R('div', { style: { font: '700 18px Inter', color: '#5D3FD3' } }, s.v),
+            R('div', { style: { font: '600 9.5px Inter', letterSpacing: '.1em', textTransform: 'uppercase', color: ink(.5), marginTop: 4 } }, s.l),
+            R('div', { style: { font: '400 10px Inter', color: ink(.4), marginTop: 2 } }, s.s)
+          )
+        )
+      ),
+      R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.45), padding: '0 4px 8px' } }, 'Church context'),
+      R('div', { style: { background: surf(1), borderRadius: 10, overflow: 'hidden', marginBottom: 20 } },
+        [
+          { l: 'Home branch', v: 'Kharis London Central', edit: false },
+          { l: 'Fellowship', v: 'Grace K-Group', edit: true },
+          { l: 'Departments', v: 'Choir (Lead) · Ushers', edit: true },
+        ].map((it, i) =>
+          R('div', { key: it.l, style: { display: 'flex', alignItems: 'center', padding: '13px 14px', borderTop: i === 0 ? 'none' : `1px solid ${ink(.05)}` } },
+            R('div', { style: { flex: 1 } },
+              R('div', { style: { font: '400 11px Inter', color: ink(.5) } }, it.l),
+              R('div', { style: { font: '600 13px Inter', marginTop: 2 } }, it.v)
+            ),
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.3), strokeWidth: 1.75 }, R('path', { d: 'M9 18l6-6-6-6' }))
+          )
+        )
+      ),
+      R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.45), padding: '0 4px 8px' } }, 'Personal'),
+      R('div', { style: { background: surf(1), borderRadius: 10, overflow: 'hidden' } },
+        [
+          { l: 'Date of birth', v: '14 March 1992' },
+          { l: 'Address', v: 'Camden, London NW1 2AB' },
+          { l: 'Emergency contact', v: 'Ama Boateng · +44 7700 202' },
+        ].map((it, i) =>
+          R('div', { key: it.l, style: { display: 'flex', alignItems: 'center', padding: '13px 14px', borderTop: i === 0 ? 'none' : `1px solid ${ink(.05)}` } },
+            R('div', { style: { flex: 1 } },
+              R('div', { style: { font: '400 11px Inter', color: ink(.5) } }, it.l),
+              R('div', { style: { font: '600 13px Inter', marginTop: 2 } }, it.v)
+            ),
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.3), strokeWidth: 1.75 }, R('path', { d: 'M9 18l6-6-6-6' }))
+          )
+        )
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  renderFellowship() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const surf = this.surface.bind(this, false);
+    const members = [
+      { i:'RA', n:'Ruth Adeleke',   status: 'present', c:'#5D3FD3' },
+      { i:'TB', n:'Tobi Balogun',   status: 'present', c:'#f8b537' },
+      { i:'AB', n:'Amina Bello',    status: 'late',    c:'#10b981' },
+      { i:'CN', n:'Chidera Nnamani',status: 'absent',  c:'#e11d48' },
+      { i:'IC', n:'Isatu Conteh',   status: 'excused', c:'#3b82f6' },
+      { i:'NA', n:'Naomi Adebayo',  status: 'unset',   c:'#a488ff' },
+      { i:'DF', n:'Deborah Fashina',status: 'unset',   c:'#f8b537' },
+      { i:'AS', n:'Afia Sarpong',   status: 'unset',   c:'#10b981' },
+    ];
+    const badgeStyle = (s) => {
+      if (s === 'present') return { bg: 'rgba(16,185,129,.15)', fg: '#059669', label: 'PRESENT' };
+      if (s === 'late')    return { bg: 'rgba(248,181,55,.18)', fg: '#b8801c', label: 'LATE' };
+      if (s === 'absent')  return { bg: 'rgba(225,29,72,.12)',  fg: '#e11d48', label: 'ABSENT' };
+      if (s === 'excused') return { bg: 'rgba(59,130,246,.12)', fg: '#3b82f6', label: 'EXCUSED' };
+      return { bg: 'rgba(0,0,0,.05)', fg: 'rgba(0,0,0,.45)', label: 'TAP' };
+    };
+    const content = R('div', { style: { padding: '14px 0 100px' } },
+      R('div', { style: { padding: '4px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 } },
+        R('button', { style: { width: 32, height: 32, borderRadius: 8, background: '#fff', border: '1px solid rgba(0,0,0,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+          R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }, R('path', { d: 'M15 18l-6-6 6-6' }))
+        ),
+        R('div', { style: { flex: 1, minWidth: 0 } },
+          R('div', { style: { font: '600 15px Inter' } }, 'Grace K-Group'),
+          R('div', { style: { font: '400 11px Inter', color: ink(.5) } }, 'Wed 22 July · 7:00 PM')
+        ),
+        R('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }, R('circle', { cx: 12, cy: 12, r: 1 }), R('circle', { cx: 19, cy: 12, r: 1 }), R('circle', { cx: 5, cy: 12, r: 1 }))
+      ),
+      R('div', { style: { padding: '0 16px 12px' } },
+        R('div', { style: { background: 'linear-gradient(135deg,#3b0764,#5d3fd3)', color: '#fff', padding: 14, borderRadius: 10, position: 'relative', overflow: 'hidden' } },
+          R('div', { style: { position: 'absolute', right: -20, bottom: -20, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(248,181,55,.3), transparent 70%)' } }),
+          R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', opacity: .7 } }, 'Tonight\u2019s meeting'),
+          R('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, margin: '6px 0 4px' } },
+            R('span', { style: { font: '700 26px Inter' } }, '5'),
+            R('span', { style: { font: '400 12px Inter', opacity: .8 } }, 'of 11 recorded')
+          ),
+          R('div', { style: { height: 4, background: 'rgba(255,255,255,.15)', borderRadius: 2, overflow: 'hidden', margin: '8px 0 4px' } },
+            R('div', { style: { width: '45%', height: '100%', background: '#f8b537' } })
+          ),
+          R('div', { style: { font: '400 11px Inter', opacity: .8 } }, 'Tap a member below to mark their status')
+        )
+      ),
+      R('div', { style: { display: 'flex', gap: 6, padding: '0 16px', overflowX: 'auto', marginBottom: 8 } },
+        ['All (11)','Not marked (6)','Present (2)','Absent (1)','New here'].map((f,i) =>
+          R('div', { key: f, style: { padding: '6px 10px', background: i===0 ? '#5D3FD3' : '#fff', color: i===0 ? '#fff' : ink(.7), borderRadius: 6, font: '600 11px Inter', whiteSpace: 'nowrap', border: i===0 ? 0 : '1px solid rgba(0,0,0,.06)' } }, f)
+        )
+      ),
+      R('div', { style: { padding: '4px 16px' } },
+        members.map((m,i) => {
+          const b = badgeStyle(m.status);
+          return R('div', { key: m.n, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', background: '#fff', borderRadius: 8, marginTop: i === 0 ? 0 : 6 } },
+            R('div', { style: { width: 36, height: 36, borderRadius: '50%', background: m.c, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 11px Inter' } }, m.i),
+            R('div', { style: { flex: 1 } },
+              R('div', { style: { font: '600 13px Inter' } }, m.n),
+              R('div', { style: { font: '400 10.5px Inter', color: ink(.5) } }, i === 0 ? 'K-Group · joined Mar 2024' : 'K-Group member')
+            ),
+            R('span', { style: { font: '700 9px Inter', padding: '3px 7px', background: b.bg, color: b.fg, borderRadius: 4, letterSpacing: '.06em' } }, b.label)
+          );
+        })
+      ),
+      R('div', { style: { position: 'sticky', bottom: 78, background: 'linear-gradient(to top, #fafafa 60%, transparent)', padding: '12px 16px 0' } },
+        R('button', { style: { width: '100%', height: 44, borderRadius: 8, background: 'linear-gradient(135deg,#451ebb,#5d3fd3)', color: '#fff', border: 0, font: '600 13.5px Inter' } }, 'Save meeting attendance')
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'community', 'ios')) });
+  }
+
+  renderRota() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const content = R('div', { style: { padding: '16px 16px 100px' } },
+      R('div', { style: { font: '700 22px Inter', letterSpacing: '-.01em' } }, 'My rota'),
+      R('div', { style: { font: '400 12px Inter', color: ink(.55), marginTop: 4, marginBottom: 16 } }, 'Your ushering + choir duties'),
+      // Next duty hero
+      R('div', { style: { background: 'linear-gradient(135deg,#3b0764,#5d3fd3)', color: '#fff', padding: 16, borderRadius: 12, position: 'relative', overflow: 'hidden' } },
+        R('div', { style: { position: 'absolute', right: -30, top: -30, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(248,181,55,.4), transparent 60%)' } }),
+        R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', opacity: .7 } }, 'Next duty · in 4 days'),
+        R('div', { style: { font: '700 22px/1.2 Inter', margin: '6px 0 4px' } }, 'Sunday · 26 July'),
+        R('div', { style: { display: 'flex', gap: 12, marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.15)' } },
+          R('div', null,
+            R('div', { style: { font: '400 10px Inter', opacity: .65, letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Role'),
+            R('div', { style: { font: '600 13px Inter', marginTop: 2 } }, 'Head usher')
+          ),
+          R('div', null,
+            R('div', { style: { font: '400 10px Inter', opacity: .65, letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Time'),
+            R('div', { style: { font: '600 13px Inter', marginTop: 2 } }, '9:30 – 12:00')
+          ),
+          R('div', null,
+            R('div', { style: { font: '400 10px Inter', opacity: .65, letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Station'),
+            R('div', { style: { font: '600 13px Inter', marginTop: 2 } }, 'Door 2')
+          )
+        ),
+        R('div', { style: { display: 'flex', gap: 8, marginTop: 14 } },
+          R('button', { style: { flex: 1, background: '#fff', color: '#5D3FD3', border: 0, borderRadius: 8, padding: '10px 0', font: '600 12px Inter' } }, 'Confirm'),
+          R('button', { style: { flex: 1, background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.25)', borderRadius: 8, padding: '10px 0', font: '600 12px Inter' } }, 'Request swap')
+        )
+      ),
+      // Swap request panel
+      R('div', { style: { marginTop: 14, background: '#fff', borderRadius: 10, padding: 14 } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
+          R('div', { style: { width: 24, height: 24, borderRadius: 5, background: 'rgba(248,181,55,.2)', color: '#b8801c', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, R('path', { d: 'M17 3l4 4-4 4M3 7h18M7 21l-4-4 4-4M21 17H3' }))
+          ),
+          R('div', { style: { font: '600 11.5px Inter' } }, '1 swap request awaiting you')
+        ),
+        R('div', { style: { padding: 12, background: '#fafafa', borderRadius: 8, marginBottom: 8 } },
+          R('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 } },
+            R('div', { style: { width: 30, height: 30, borderRadius: '50%', background: '#f8b537', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 11px Inter' } }, 'TB'),
+            R('div', { style: { flex: 1 } },
+              R('div', { style: { font: '600 12.5px Inter' } }, 'Tobi Balogun'),
+              R('div', { style: { font: '400 10.5px Inter', color: ink(.55) } }, 'wants to swap: Sun 2 Aug ↔ Sun 26 Jul')
+            )
+          ),
+          R('div', { style: { display: 'flex', gap: 6 } },
+            R('button', { style: { flex: 1, background: '#5D3FD3', color: '#fff', border: 0, borderRadius: 6, padding: '7px 0', font: '600 11px Inter' } }, 'Accept'),
+            R('button', { style: { flex: 1, background: '#fff', color: ink(.7), border: '1px solid rgba(0,0,0,.1)', borderRadius: 6, padding: '7px 0', font: '600 11px Inter' } }, 'Decline'),
+          )
+        )
+      ),
+      // Upcoming
+      R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.5), margin: '18px 4px 8px' } }, 'Upcoming'),
+      [
+        { d: '02', m: 'Aug', l: 'Ushering · Head usher', t: 'Sun 9:30 – 12:00 · Door 2', dept: 'Ushers', c: '#5D3FD3' },
+        { d: '02', m: 'Aug', l: 'Choir · Backup vocals', t: 'Sun 10:00 – 12:00 · Stage', dept: 'Choir', c: '#f8b537' },
+        { d: '09', m: 'Aug', l: 'Ushering · Head usher', t: 'Sun 9:30 – 12:00 · Door 2', dept: 'Ushers', c: '#5D3FD3' },
+        { d: '13', m: 'Aug', l: 'Kharis Express · Setup', t: 'Fri 5:30 – 6:30 · Hall B', dept: 'Fellowship', c: '#10b981' },
+      ].map((r,i) =>
+        R('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#fff', borderRadius: 8, marginBottom: 6 } },
+          R('div', { style: { width: 42, height: 42, borderRadius: 8, background: `${r.c}22`, color: r.c, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+            R('div', { style: { font: '700 14px/1 Inter' } }, r.d),
+            R('div', { style: { font: '600 9px Inter', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 1 } }, r.m)
+          ),
+          R('div', { style: { flex: 1, minWidth: 0 } },
+            R('div', { style: { font: '600 12.5px Inter' } }, r.l),
+            R('div', { style: { font: '400 10.5px Inter', color: ink(.55), marginTop: 1 } }, r.t)
+          ),
+          R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ink(.3), strokeWidth: 1.75 }, R('path', { d: 'M9 18l6-6-6-6' }))
+        )
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  renderFollowups() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const col = ({ title, count, color, cards, bg }) =>
+      R('div', { style: { flex: '0 0 240px', display: 'flex', flexDirection: 'column', gap: 8 } },
+        R('div', { style: { padding: '8px 10px', background: bg, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 } },
+          R('div', { style: { width: 8, height: 8, borderRadius: '50%', background: color } }),
+          R('span', { style: { font: '700 10.5px Inter', letterSpacing: '.1em', textTransform: 'uppercase', color: ink(.75) } }, title),
+          R('span', { style: { font: '700 10px Inter', color: ink(.55), marginLeft: 'auto' } }, count),
+        ),
+        cards.map((c,i) =>
+          R('div', { key: i, style: { background: '#fff', borderRadius: 8, padding: 12, boxShadow: '0 1px 3px rgba(0,0,0,.04)', borderLeft: `3px solid ${color}` } },
+            R('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+              R('div', { style: { width: 6, height: 6, borderRadius: '50%', background: c.overdue ? '#e11d48' : '#10b981' } }),
+              R('div', { style: { font: '600 12.5px Inter' } }, c.n),
+            ),
+            R('div', { style: { font: '400 10.5px Inter', color: ink(.5), marginTop: 3 } }, c.src),
+            R('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: `1px solid ${ink(.06)}` } },
+              R('span', { style: { font: '500 10.5px Inter', color: c.overdue ? '#e11d48' : ink(.55) } }, c.time),
+              R('div', { style: { width: 22, height: 22, borderRadius: '50%', background: c.by.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 9px Inter' } }, c.by.i)
+            )
+          )
+        )
+      );
+
+    const content = R('div', { style: { padding: '16px 0 100px' } },
+      R('div', { style: { padding: '0 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 } },
+        R('div', { style: { flex: 1 } },
+          R('div', { style: { font: '700 22px Inter', letterSpacing: '-.01em' } }, 'Follow-ups'),
+          R('div', { style: { font: '400 12px Inter', color: ink(.55) } }, 'Souls pipeline · 12 open')
+        ),
+        R('div', { style: { display: 'flex', gap: 6 } },
+          R('button', { style: { width: 34, height: 34, borderRadius: 8, background: '#fff', border: '1px solid rgba(0,0,0,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }, R('path', { d: 'M3 6h18M6 12h12M10 18h4' }))
+          ),
+          R('button', { style: { height: 34, padding: '0 12px', borderRadius: 8, background: 'linear-gradient(135deg,#451ebb,#5d3fd3)', border: 0, color: '#fff', font: '600 12px Inter', display: 'flex', alignItems: 'center', gap: 6 } },
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, R('path', { d: 'M12 5v14M5 12h14' })),
+            'Capture'
+          )
+        )
+      ),
+      R('div', { style: { padding: '10px 16px 0', display: 'flex', gap: 8 } },
+        R('div', { style: { flex: 1, padding: '10px 12px', background: 'rgba(225,29,72,.08)', border: '1px solid rgba(225,29,72,.18)', borderRadius: 8 } },
+          R('div', { style: { font: '700 18px Inter', color: '#e11d48' } }, '4'),
+          R('div', { style: { font: '500 10px Inter', color: '#a01840', letterSpacing: '.06em' } }, 'OVERDUE')
+        ),
+        R('div', { style: { flex: 1, padding: '10px 12px', background: 'rgba(248,181,55,.12)', border: '1px solid rgba(248,181,55,.22)', borderRadius: 8 } },
+          R('div', { style: { font: '700 18px Inter', color: '#b8801c' } }, '5'),
+          R('div', { style: { font: '500 10px Inter', color: '#8a5a08', letterSpacing: '.06em' } }, 'THIS WEEK')
+        ),
+        R('div', { style: { flex: 1, padding: '10px 12px', background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.22)', borderRadius: 8 } },
+          R('div', { style: { font: '700 18px Inter', color: '#059669' } }, '3'),
+          R('div', { style: { font: '500 10px Inter', color: '#047857', letterSpacing: '.06em' } }, 'CONVERTED')
+        )
+      ),
+      R('div', { style: { padding: '14px 16px 4px', display: 'flex', gap: 10, overflowX: 'auto' } },
+        col({ title: 'NEW', count: '2', color: '#5D3FD3', bg: 'rgba(93,63,211,.08)', cards: [
+          { n: 'Kwame Boateng', src: 'Sun 20 Jul · Sunday service', time: 'Not yet contacted', overdue: false, by: { i:'DB', color:'#5D3FD3' } },
+          { n: 'Sarah Mensah',  src: 'Jesus Campaign · Accra',       time: 'Assigned 2h ago',    overdue: false, by: { i:'YK', color:'#f8b537' } },
+        ]}),
+        col({ title: 'FOLLOWING UP', count: '4', color: '#f8b537', bg: 'rgba(248,181,55,.15)', cards: [
+          { n: 'John Smith', src: 'First-timer form · Chatham', time: 'Overdue · 5 days', overdue: true, by: { i:'DB', color:'#5D3FD3' } },
+          { n: 'Fatima Kamara', src: 'Ad-hoc capture · Freetown', time: 'Called yesterday', overdue: false, by: { i:'AT', color:'#10b981' } },
+        ]}),
+        col({ title: 'INTERESTED', count: '3', color: '#3b82f6', bg: 'rgba(59,130,246,.1)', cards: [
+          { n: 'Emmanuel Osei', src: '3rd visit · Kumasi', time: 'Meeting Fri 7:00 PM', overdue: false, by: { i:'KO', color:'#3b82f6' } },
+        ]}),
+        col({ title: 'CONVERTED', count: '3', color: '#10b981', bg: 'rgba(16,185,129,.12)', cards: [
+          { n: 'Naomi Adebayo', src: 'Altar call · 11 Jul', time: 'Enrolled in NB', overdue: false, by: { i:'GM', color:'#10b981' } },
+        ]}),
+      ),
+      R('div', { style: { padding: '4px 16px 0', font: '400 11px Inter', color: ink(.4), textAlign: 'center' } }, '← swipe to move a card between columns')
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  renderApprovals() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const content = R('div', { style: { padding: '16px 16px 100px' } },
+      R('div', { style: { font: '700 22px Inter', letterSpacing: '-.01em' } }, 'Approvals'),
+      R('div', { style: { font: '400 12px Inter', color: ink(.55), marginTop: 4, marginBottom: 16 } }, 'Waiting on you'),
+      R('div', { style: { display: 'flex', gap: 6, marginBottom: 14 } },
+        [
+          { l: 'All', c: '7', a: true },
+          { l: 'Members', c: '3' },
+          { l: 'Depts', c: '2' },
+          { l: 'Fellowship', c: '2' },
+        ].map((t,i) =>
+          R('div', { key: t.l, style: { padding: '6px 12px', background: t.a ? '#5D3FD3' : '#fff', color: t.a ? '#fff' : ink(.7), borderRadius: 6, font: '600 11.5px Inter', display: 'flex', alignItems: 'center', gap: 5 } },
+            t.l,
+            R('span', { style: { fontWeight: 700, fontSize: 10, padding: '1px 6px', background: t.a ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.06)', borderRadius: 10 } }, t.c)
+          )
+        )
+      ),
+      // Member approval card
+      R('div', { style: { background: '#fff', borderRadius: 10, padding: 14, marginBottom: 8 } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 } },
+          R('span', { style: { font: '700 9px Inter', padding: '2px 6px', background: 'rgba(93,63,211,.14)', color: '#5D3FD3', borderRadius: 3, letterSpacing: '.08em' } }, 'MEMBER SIGNUP'),
+          R('span', { style: { font: '400 10.5px Inter', color: ink(.5), marginLeft: 'auto' } }, '2 hours ago'),
+        ),
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 } },
+          R('div', { style: { width: 42, height: 42, borderRadius: '50%', background: '#f8b537', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 13px Inter' } }, 'AA'),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 14px Inter' } }, 'Akosua Amoah'),
+            R('div', { style: { font: '400 11px Inter', color: ink(.55) } }, 'akosua@gmail.com · +233 20 456 7890')
+          )
+        ),
+        R('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10, padding: 10, background: '#fafafa', borderRadius: 6 } },
+          R('div', null, R('div', { style: { font: '400 9.5px Inter', letterSpacing: '.06em', color: ink(.5), textTransform: 'uppercase' } }, 'Home branch'), R('div', { style: { font: '600 11px Inter', marginTop: 1 } }, 'Kharis Accra')),
+          R('div', null, R('div', { style: { font: '400 9.5px Inter', letterSpacing: '.06em', color: ink(.5), textTransform: 'uppercase' } }, 'DOB'), R('div', { style: { font: '600 11px Inter', marginTop: 1 } }, '3 Feb 1998')),
+        ),
+        R('div', { style: { display: 'flex', gap: 6 } },
+          R('button', { style: { flex: 1, background: '#5D3FD3', color: '#fff', border: 0, borderRadius: 6, padding: '9px 0', font: '600 12px Inter', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 } },
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.5 }, R('path', { d: 'M5 12l5 5L20 7' })),
+            'Approve'
+          ),
+          R('button', { style: { flex: 1, background: '#fff', color: '#e11d48', border: '1px solid rgba(225,29,72,.2)', borderRadius: 6, padding: '9px 0', font: '600 12px Inter' } }, 'Reject'),
+          R('button', { style: { width: 40, background: '#fff', color: ink(.5), border: '1px solid rgba(0,0,0,.08)', borderRadius: 6, padding: '9px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }, R('circle', { cx: 12, cy: 12, r: 1 }), R('circle', { cx: 19, cy: 12, r: 1 }), R('circle', { cx: 5, cy: 12, r: 1 }))
+          )
+        )
+      ),
+      // Department join request
+      R('div', { style: { background: '#fff', borderRadius: 10, padding: 14, marginBottom: 8 } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 } },
+          R('span', { style: { font: '700 9px Inter', padding: '2px 6px', background: 'rgba(59,130,246,.15)', color: '#3b82f6', borderRadius: 3, letterSpacing: '.08em' } }, 'DEPT JOIN'),
+          R('span', { style: { font: '400 10.5px Inter', color: ink(.5), marginLeft: 'auto' } }, 'yesterday'),
+        ),
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 } },
+          R('div', { style: { width: 42, height: 42, borderRadius: '50%', background: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 13px Inter' } }, 'JS'),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 14px Inter' } }, 'John Smith'),
+            R('div', { style: { font: '400 11px Inter', color: ink(.55) } }, 'wants to join ', R('span', { style: { color: '#3b82f6', fontWeight: 600 } }, 'Choir · London'))
+          )
+        ),
+        R('div', { style: { padding: 10, background: '#fafafa', borderRadius: 6, marginBottom: 10 } },
+          R('div', { style: { font: '400 10px Inter', letterSpacing: '.06em', color: ink(.5), textTransform: 'uppercase' } }, 'Note from applicant'),
+          R('div', { style: { font: '400 11.5px/1.4 Inter', marginTop: 3, fontStyle: 'italic' } }, '&ldquo;I sing tenor and would love to serve. Available Sundays.&rdquo;')
+        ),
+        R('div', { style: { display: 'flex', gap: 6 } },
+          R('button', { style: { flex: 1, background: '#5D3FD3', color: '#fff', border: 0, borderRadius: 6, padding: '9px 0', font: '600 12px Inter' } }, 'Schedule interview'),
+          R('button', { style: { flex: 1, background: '#fff', color: ink(.5), border: '1px solid rgba(0,0,0,.08)', borderRadius: 6, padding: '9px 0', font: '600 12px Inter' } }, 'Reject')
+        )
+      ),
+      // Fellowship join
+      R('div', { style: { background: '#fff', borderRadius: 10, padding: 14 } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 } },
+          R('span', { style: { font: '700 9px Inter', padding: '2px 6px', background: 'rgba(16,185,129,.15)', color: '#059669', borderRadius: 3, letterSpacing: '.08em' } }, 'FELLOWSHIP'),
+          R('span', { style: { font: '400 10.5px Inter', color: ink(.5), marginLeft: 'auto' } }, '3 days ago'),
+        ),
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          R('div', { style: { width: 42, height: 42, borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 13px Inter' } }, 'AT'),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 14px Inter' } }, 'Adama Turay'),
+            R('div', { style: { font: '400 11px Inter', color: ink(.55) } }, 'wants to join ', R('span', { style: { color: '#059669', fontWeight: 600 } }, 'Grace K-Group'))
+          )
+        )
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  renderNB() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const stages = [
+      { i: '1', t: 'Foundations of Faith',       done: true,  d: 'Sun 30 Jun · Kwame Asante' },
+      { i: '2', t: 'Who is a Christian',         done: true,  d: 'Sun 07 Jul · Kwame Asante' },
+      { i: '3', t: 'Working out your Salvation', done: false, active: true, d: 'Sun 21 Jul · today' },
+      { i: '4', t: 'The Importance of Fellowship', done: false, d: 'Sun 28 Jul · not yet' },
+      { i: '★', t: 'Completed',                  done: false, d: 'Certificate + department match' },
+    ];
+    const content = R('div', { style: { padding: '16px 16px 100px' } },
+      R('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 } },
+        R('button', { style: { width: 32, height: 32, borderRadius: 8, background: '#fff', border: '1px solid rgba(0,0,0,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+          R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }, R('path', { d: 'M15 18l-6-6 6-6' }))
+        ),
+        R('div', null,
+          R('div', { style: { font: '700 20px Inter', letterSpacing: '-.01em' } }, 'New Believer journey'),
+          R('div', { style: { font: '400 11.5px Inter', color: ink(.55) } }, 'From enrolment to a serving home')
+        ),
+      ),
+      R('div', { style: { marginTop: 16, background: 'linear-gradient(135deg,#faf7f2,#fff)', border: '1px solid rgba(248,181,55,.25)', borderRadius: 12, padding: 16 } },
+        R('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          R('div', { style: { width: 44, height: 44, borderRadius: '50%', background: '#f8b537', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 15px Inter' } }, 'RA'),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '700 15px Inter' } }, 'Ruth Adeleke'),
+            R('div', { style: { font: '400 11px Inter', color: ink(.55) } }, 'Enrolled 16 Jun · Kharis London Central')
+          )
+        ),
+        R('div', { style: { marginTop: 14 } },
+          R('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: 6 } },
+            R('span', { style: { font: '600 11px Inter' } }, 'Progress'),
+            R('span', { style: { font: '600 11px Inter', color: '#b8801c' } }, '2 of 4 sessions · 50%')
+          ),
+          R('div', { style: { height: 6, background: 'rgba(0,0,0,.05)', borderRadius: 3, overflow: 'hidden' } },
+            R('div', { style: { width: '50%', height: '100%', background: 'linear-gradient(to right, #f8b537, #e6a020)' } })
+          )
+        ),
+        R('div', { style: { display: 'flex', gap: 12, marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(0,0,0,.08)' } },
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 9.5px Inter', letterSpacing: '.08em', color: ink(.5), textTransform: 'uppercase' } }, 'Teacher'),
+            R('div', { style: { font: '600 12px Inter', marginTop: 2 } }, 'James Okonkwo')
+          ),
+          R('div', { style: { flex: 1 } },
+            R('div', { style: { font: '600 9.5px Inter', letterSpacing: '.08em', color: ink(.5), textTransform: 'uppercase' } }, 'Mentor'),
+            R('div', { style: { font: '600 12px Inter', marginTop: 2 } }, 'Sarah Williams')
+          )
+        )
+      ),
+      R('div', { style: { font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.5), margin: '20px 4px 10px' } }, 'Sessions'),
+      R('div', { style: { position: 'relative', paddingLeft: 8 } },
+        R('div', { style: { position: 'absolute', left: 22, top: 12, bottom: 12, width: 2, background: 'rgba(0,0,0,.06)' } }),
+        stages.map((s, i) =>
+          R('div', { key: s.i, style: { display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12, position: 'relative' } },
+            R('div', { style: { width: 30, height: 30, borderRadius: '50%', background: s.done ? '#10b981' : s.active ? '#f8b537' : '#fff', color: s.done ? '#fff' : s.active ? '#fff' : ink(.45), border: s.done || s.active ? 0 : '2px dashed rgba(0,0,0,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '700 12px Inter', zIndex: 1, flexShrink: 0 } },
+              s.done ? R('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.5 }, R('path', { d: 'M5 12l5 5L20 7' })) : s.i
+            ),
+            R('div', { style: { flex: 1, padding: 12, background: s.active ? 'rgba(248,181,55,.08)' : '#fff', border: s.active ? '1.5px solid rgba(248,181,55,.4)' : '1px solid rgba(0,0,0,.06)', borderRadius: 8, marginTop: -3 } },
+              R('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                R('div', { style: { font: '600 13px Inter' } }, s.t),
+                s.active && R('span', { style: { font: '700 9px Inter', padding: '2px 6px', background: '#f8b537', color: '#fff', borderRadius: 3, letterSpacing: '.06em' } }, 'IN PROGRESS')
+              ),
+              R('div', { style: { font: '400 11px Inter', color: ink(.55), marginTop: 3 } }, s.d),
+              s.active && R('button', { style: { marginTop: 10, background: '#5D3FD3', color: '#fff', border: 0, borderRadius: 6, padding: '8px 14px', font: '600 11.5px Inter' } }, 'Mark attendance')
+            )
+          )
+        )
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+
+  renderNotifications() {
+    const R = React.createElement;
+    const ink = this.ink.bind(this, false);
+    const items = [
+      { g: 'Today', l: [
+        { i: 'alert', c: '#e11d48', t: 'Overdue follow-up: John Smith', s: 'Last contact 5 days ago · Chatham', a: '2h ago', unread: true },
+        { i: 'clip',  c: '#5D3FD3', t: 'Akosua Amoah signed up', s: 'Approve or reject her registration', a: '2h ago', unread: true },
+        { i: 'cal',   c: '#f8b537', t: 'Ushering duty · Sunday 26 July', s: 'Reminder · door 2 at 9:30 AM', a: '4h ago' },
+      ]},
+      { g: 'This week', l: [
+        { i: 'bell',  c: '#3b82f6', t: 'Rev Dr Antwi posted an announcement', s: 'Fasting week starts Monday…', a: 'Mon' },
+        { i: 'book',  c: '#10b981', t: 'Ruth completed session 2', s: 'New Believer journey', a: 'Sun' },
+        { i: 'users', c: '#5D3FD3', t: 'Tobi requested a rota swap', s: 'Sun 26 Jul ↔ Sun 2 Aug', a: 'Sun' },
+      ]},
+      { g: 'Older', l: [
+        { i: 'heart', c: '#f8b537', t: 'Giving receipt · £25 tithe', s: 'Payment confirmed via Stripe', a: '20 Jul' },
+      ]},
+    ];
+    const content = R('div', { style: { padding: '16px 0 100px' } },
+      R('div', { style: { padding: '0 16px 12px', display: 'flex', alignItems: 'center' } },
+        R('div', { style: { flex: 1 } },
+          R('div', { style: { font: '700 22px Inter', letterSpacing: '-.01em' } }, 'Notifications'),
+          R('div', { style: { font: '400 12px Inter', color: ink(.55) } }, '3 unread')
+        ),
+        R('button', { style: { background: 'transparent', border: 0, font: '600 11.5px Inter', color: '#5D3FD3' } }, 'Mark all read')
+      ),
+      items.map(g =>
+        R('div', { key: g.g, style: { marginBottom: 14 } },
+          R('div', { style: { padding: '10px 16px 6px', font: '600 10px Inter', letterSpacing: '.14em', textTransform: 'uppercase', color: ink(.4) } }, g.g),
+          g.l.map((n,i) =>
+            R('div', { key: i, style: { padding: '12px 16px', background: n.unread ? 'rgba(93,63,211,.04)' : 'transparent', display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative' } },
+              n.unread && R('div', { style: { position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', width: 6, height: 6, borderRadius: '50%', background: '#5D3FD3' } }),
+              R('div', { style: { width: 34, height: 34, borderRadius: 8, background: `${n.c}22`, color: n.c, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, this.smallIcon(n.i)),
+              R('div', { style: { flex: 1, minWidth: 0 } },
+                R('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6 } },
+                  R('div', { style: { font: '600 12.5px Inter', flex: 1 } }, n.t),
+                  R('span', { style: { font: '500 10px Inter', color: ink(.4), flexShrink: 0 } }, n.a),
+                ),
+                R('div', { style: { font: '400 11.5px/1.4 Inter', color: ink(.55), marginTop: 2 } }, n.s)
+              )
+            )
+          )
+        )
+      )
+    );
+    return this.frame({ os: 'ios', dark: false, children: React.createElement('div', null, content, this.tabBarStatic(false, 'more', 'ios')) });
+  }
+}
+</script>
+</body>
+</html>
