@@ -16,6 +16,8 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   error?: string | null;
   secureToggle?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
+  leadingSlot?: React.ReactNode;
+  trailingSlot?: React.ReactNode;
 }
 
 export function Input({
@@ -24,6 +26,8 @@ export function Input({
   secureToggle = false,
   secureTextEntry: secureTextEntryProp,
   containerStyle,
+  leadingSlot,
+  trailingSlot,
   onFocus,
   onBlur,
   ...rest
@@ -42,6 +46,7 @@ export function Input({
           !!error && styles.fieldError,
         ]}
       >
+        {leadingSlot ? <View style={styles.leadingSlot}>{leadingSlot}</View> : null}
         <TextInput
           {...rest}
           secureTextEntry={isSecure}
@@ -56,6 +61,7 @@ export function Input({
           style={styles.input}
           placeholderTextColor="rgba(26,28,28,0.4)"
         />
+        {trailingSlot ? <View style={styles.trailingSlot}>{trailingSlot}</View> : null}
         {secureToggle && secureTextEntryProp ? (
           <Pressable
             onPress={() => setShowSecure((v) => !v)}
@@ -102,6 +108,12 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.ink,
     paddingVertical: spacing.sm,
+  },
+  leadingSlot: {
+    marginRight: spacing.sm,
+  },
+  trailingSlot: {
+    marginLeft: spacing.sm,
   },
   toggle: {
     paddingHorizontal: spacing.sm,

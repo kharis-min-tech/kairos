@@ -18,7 +18,7 @@ function mockSuccess(body: unknown, status = 200) {
   mockFetch.mockResolvedValue({
     ok: true,
     status,
-    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
   });
 }
 
@@ -26,7 +26,7 @@ function mockFailure(body: unknown, status: number) {
   mockFetch.mockResolvedValue({
     ok: false,
     status,
-    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
   });
 }
 

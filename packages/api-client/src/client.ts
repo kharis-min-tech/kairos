@@ -1,5 +1,24 @@
 import { ApiClientError } from './errors';
 
+// Read a fetch Response as text first, then try to JSON-parse. If parsing
+// fails (server returned HTML from an edge 404, or a bare "Not Found" text),
+// throw an ApiClientError that surfaces the status + a trimmed snippet of
+// the body — so callers see "GET /foo → 404: <!DOCTYPE html>…" instead of
+// the opaque "JSON Parse error: Unexpected character N".
+async function parseJsonSafely(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (text === '') return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    const snippet = text.length > 160 ? `${text.slice(0, 160)}…` : text;
+    throw new ApiClientError(
+      response.status,
+      `Server returned non-JSON (${response.status}): ${snippet}`,
+    );
+  }
+}
+
 interface ClientConfig {
   baseUrl: string;
   getToken?: () => string | null;
@@ -38,7 +57,7 @@ export class ApiClient {
         body: JSON.stringify({ refreshToken }),
       });
 
-      const data = (await res.json()) as Record<string, unknown>;
+      const data = (await parseJsonSafely(res)) as Record<string, unknown>;
       if (!res.ok) throw new Error('Refresh failed');
 
       const payload = data.data as { accessToken: string; refreshToken: string };
@@ -78,7 +97,7 @@ export class ApiClient {
       }
     }
 
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = (await parseJsonSafely(response)) as Record<string, unknown>;
 
     if (!response.ok) {
       throw new ApiClientError(
@@ -113,7 +132,7 @@ export class ApiClient {
       body: formData,
     });
 
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = (await parseJsonSafely(response)) as Record<string, unknown>;
     if (!response.ok) {
       throw new ApiClientError(
         response.status,
@@ -135,7 +154,7 @@ export class ApiClient {
     });
 
     if (!response.ok) {
-      const data = (await response.json()) as Record<string, unknown>;
+      const data = (await parseJsonSafely(response)) as Record<string, unknown>;
       throw new ApiClientError(
         response.status,
         (data.message as string) ?? 'Request failed',

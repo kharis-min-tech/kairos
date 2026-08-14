@@ -312,11 +312,13 @@ export function MemberForm({
 
           <FieldLabel label="Secondary branch" />
           <View style={styles.deputyRow}>
-            <PickerField
-              value={secondaryBranchLabel}
-              placeholder="Choose a secondary branch (optional)"
-              onPress={() => setOpenPicker('secondaryBranch')}
-            />
+            <View style={{ flex: 1 }}>
+              <PickerField
+                value={secondaryBranchLabel}
+                placeholder="Choose a secondary branch (optional)"
+                onPress={() => setOpenPicker('secondaryBranch')}
+              />
+            </View>
             {secondaryBranchId ? (
               <Pressable
                 onPress={() => setSecondaryBranchId(null)}
