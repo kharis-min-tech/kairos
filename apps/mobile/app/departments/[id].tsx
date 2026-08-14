@@ -7,8 +7,8 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -78,28 +78,22 @@ export default function DepartmentDetail() {
     [members.data],
   );
 
-  function confirmRemoveMember(memberId: string, name: string) {
-    Alert.alert(
-      'Remove from department?',
-      `Remove ${name} from this department. They keep their member record; only this department membership is ended.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            removeMember.mutate(memberId, {
-              onError: (err) => {
-                Alert.alert(
-                  'Remove failed',
-                  err instanceof Error ? err.message : 'Please try again in a moment.',
-                );
-              },
-            });
-          },
-        },
-      ],
-    );
+  async function confirmRemoveMember(memberId: string, name: string) {
+    const ok = await alert.confirm({
+      title: 'Remove from department?',
+      message: `Remove ${name} from this department. They keep their member record; only this department membership is ended.`,
+      confirmLabel: 'Remove',
+      destructive: true,
+    });
+    if (!ok) return;
+    removeMember.mutate(memberId, {
+      onError: (err) => {
+        alert.info(
+          'Remove failed',
+          err instanceof Error ? err.message : 'Please try again in a moment.',
+        );
+      },
+    });
   }
 
   return (
@@ -288,7 +282,7 @@ export default function DepartmentDetail() {
             setPickerOpen(false);
             addMember.mutate(memberId, {
               onError: (err) => {
-                Alert.alert(
+                alert.info(
                   'Add failed',
                   err instanceof Error ? err.message : 'Please try again in a moment.',
                 );

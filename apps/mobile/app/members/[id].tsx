@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
-  Alert,
   Modal,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -105,55 +105,45 @@ export default function MemberProfile() {
     },
   });
 
-  function confirmDeactivate(name: string) {
-    Alert.alert(
-      'Deactivate member?',
-      `Deactivate ${name}. They lose access and stop appearing in the directory. You can reactivate them later.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Deactivate',
-          style: 'destructive',
-          onPress: () =>
-            deactivate.mutate(undefined, {
-              onError: (err) =>
-                Alert.alert(
-                  'Deactivate failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+  async function confirmDeactivate(name: string) {
+    const ok = await alert.confirm({
+      title: 'Deactivate member?',
+      message: `Deactivate ${name}. They lose access and stop appearing in the directory. You can reactivate them later.`,
+      confirmLabel: 'Deactivate',
+      destructive: true,
+    });
+    if (!ok) return;
+    deactivate.mutate(undefined, {
+      onError: (err) =>
+        alert.info(
+          'Deactivate failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
-  function confirmReject(name: string) {
-    Alert.alert(
-      'Reject signup?',
-      `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: () =>
-            approve.mutate(false, {
-              onError: (err) =>
-                Alert.alert(
-                  'Reject failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+  async function confirmReject(name: string) {
+    const ok = await alert.confirm({
+      title: 'Reject signup?',
+      message: `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
+      confirmLabel: 'Reject',
+      destructive: true,
+    });
+    if (!ok) return;
+    approve.mutate(false, {
+      onError: (err) =>
+        alert.info(
+          'Reject failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
   function markClassComplete() {
     const iso = new Date().toISOString();
     setClassComplete.mutate(iso, {
       onError: (err) =>
-        Alert.alert(
+        alert.info(
           'Save failed',
           err instanceof Error ? err.message : 'Please try again.',
         ),
@@ -177,30 +167,25 @@ export default function MemberProfile() {
 
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
 
-  function confirmRemoveRole(
+  async function confirmRemoveRole(
     assignmentId: string,
     roleName: string,
     branchName?: string,
   ) {
-    Alert.alert(
-      'Revoke role?',
-      `Remove the ${roleName} role${branchName ? ` for ${branchName}` : ''}. The member keeps everything else.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Revoke',
-          style: 'destructive',
-          onPress: () =>
-            removeRole.mutate(assignmentId, {
-              onError: (err) =>
-                Alert.alert(
-                  'Revoke failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+    const ok = await alert.confirm({
+      title: 'Revoke role?',
+      message: `Remove the ${roleName} role${branchName ? ` for ${branchName}` : ''}. The member keeps everything else.`,
+      confirmLabel: 'Revoke',
+      destructive: true,
+    });
+    if (!ok) return;
+    removeRole.mutate(assignmentId, {
+      onError: (err) =>
+        alert.info(
+          'Revoke failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
   const fellowships = useQuery({
@@ -560,7 +545,7 @@ export default function MemberProfile() {
                     onPress={() =>
                       approve.mutate(true, {
                         onError: (err) =>
-                          Alert.alert(
+                          alert.info(
                             'Approve failed',
                             err instanceof Error ? err.message : 'Please try again.',
                           ),
@@ -630,7 +615,7 @@ export default function MemberProfile() {
                 onPress={() =>
                   reactivate.mutate(undefined, {
                     onError: (err) =>
-                      Alert.alert(
+                      alert.info(
                         'Reactivate failed',
                         err instanceof Error ? err.message : 'Please try again.',
                       ),
@@ -663,7 +648,7 @@ export default function MemberProfile() {
             { roleId, branchId },
             {
               onError: (err) =>
-                Alert.alert(
+                alert.info(
                   'Assign failed',
                   err instanceof Error ? err.message : 'Please try again.',
                 ),

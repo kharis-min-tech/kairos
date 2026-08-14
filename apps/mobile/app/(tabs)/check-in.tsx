@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
@@ -36,10 +37,9 @@ export default function CheckIn() {
   }, [services.data]);
 
   const handleCheckIn = () => {
-    Alert.alert(
+    alert.info(
       "You're in — almost",
       'Self check-in from mobile needs a backend endpoint that isn\'t shipped yet. In the meantime, see the desk or a leader to be marked in.',
-      [{ text: 'OK' }],
     );
   };
 

@@ -8,8 +8,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -63,7 +63,7 @@ export default function AdminCheckin() {
       qc.invalidateQueries({ queryKey: ['attendance', 'roster', serviceId] });
     },
     onError: (e: Error) => {
-      Alert.alert('Check-in failed', e.message);
+      alert.info('Check-in failed', e.message);
     },
   });
 
@@ -123,14 +123,14 @@ export default function AdminCheckin() {
         <Button
           label="Scan QR"
           size="sm"
-          onPress={() => Alert.alert('QR', 'Camera scanner lands in a follow-up.')}
+          onPress={() => alert.info('QR', 'Camera scanner lands in a follow-up.')}
           iconLeft={<ScanLine color="#ffffff" size={14} strokeWidth={2} />}
         />
         <Button
           label="Walk-in"
           size="sm"
           variant="outline"
-          onPress={() => Alert.alert('Walk-in', 'Visitor walk-in form lands in a follow-up.')}
+          onPress={() => alert.info('Walk-in', 'Visitor walk-in form lands in a follow-up.')}
           iconLeft={<UserPlus color={colors.primary} size={14} strokeWidth={2} />}
         />
         <View style={styles.searchField}>

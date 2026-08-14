@@ -8,9 +8,9 @@ import {
   RefreshControl,
   Modal,
   ScrollView,
-  Alert,
   FlatList,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -64,33 +64,28 @@ export default function Regions() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['regions'] }),
   });
 
-  function confirmDelete(r: Region) {
+  async function confirmDelete(r: Region) {
     if ((r.branchCount ?? 0) > 0) {
-      Alert.alert(
+      alert.info(
         'Region has branches',
         `${r.regionName} has ${r.branchCount} branch${r.branchCount === 1 ? '' : 'es'} attached. Move or delete those first.`,
       );
       return;
     }
-    Alert.alert(
-      'Delete region?',
-      `Delete ${r.regionName}. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () =>
-            remove.mutate(r.id, {
-              onError: (err) =>
-                Alert.alert(
-                  'Delete failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+    const ok = await alert.confirm({
+      title: 'Delete region?',
+      message: `Delete ${r.regionName}. This can't be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    remove.mutate(r.id, {
+      onError: (err) =>
+        alert.info(
+          'Delete failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
   return (
@@ -218,7 +213,7 @@ export default function Regions() {
             }
             setOpenForm(null);
           } catch (err) {
-            Alert.alert(
+            alert.info(
               'Save failed',
               err instanceof Error ? err.message : 'Please try again.',
             );

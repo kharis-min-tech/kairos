@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  Alert,
   Modal,
   FlatList,
   Vibration,
@@ -40,6 +39,7 @@ import type {
   RecordAttendanceRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { alert } from '@/lib/alert';
 import {
   enqueueRollcall,
   flushPendingRollcall,
@@ -277,22 +277,25 @@ export default function RollcallMeeting() {
         // save supersedes it — nuke the queued entry so it doesn't fire later.
         await flushPendingRollcall(meetingId);
         setPendingLocally(false);
-        Alert.alert('Saved', 'Attendance recorded.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        alert.show({
+          title: 'Saved',
+          message: 'Attendance recorded.',
+          buttons: [
+            { label: 'OK', variant: 'primary', onPress: () => router.back() },
+          ],
+        });
       },
       onError: async (err) => {
         // Cache-and-retry: keep the user's tap-set locally so it's not lost.
         try {
           await enqueueRollcall({ fellowshipId, meetingId, payload });
           setPendingLocally(true);
-          Alert.alert(
+          alert.info(
             'Saved locally',
             "We couldn't reach the server, but your attendance is safe on this device — we'll sync it as soon as you're back online.",
-            [{ text: 'OK' }],
           );
         } catch {
-          Alert.alert(
+          alert.info(
             'Save failed',
             err instanceof Error ? err.message : 'Please try again in a moment.',
           );
@@ -310,9 +313,9 @@ export default function RollcallMeeting() {
       qc.invalidateQueries({
         queryKey: ['fellowships', fellowshipId, 'meetings', meetingId, 'attendance'],
       });
-      Alert.alert('Synced', 'Your attendance was uploaded.');
+      alert.info('Synced', 'Your attendance was uploaded.');
     } else if (result === 'kept') {
-      Alert.alert(
+      alert.info(
         'Still offline',
         "Couldn't reach the server. Your attendance is safe locally — we'll keep trying.",
       );

@@ -5,8 +5,8 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -62,30 +62,25 @@ export default function EditFellowship() {
     }
   }
 
-  function confirmDelete() {
-    Alert.alert(
-      'Delete fellowship?',
-      "This deactivates the fellowship and hides it from the directory. Members and past meetings are preserved but the fellowship won't accept new activity.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await remove.mutateAsync();
-            } catch (err) {
-              setDeleting(false);
-              Alert.alert(
-                'Delete failed',
-                err instanceof Error ? err.message : 'Please try again in a moment.',
-              );
-            }
-          },
-        },
-      ],
-    );
+  async function confirmDelete() {
+    const ok = await alert.confirm({
+      title: 'Delete fellowship?',
+      message:
+        "This deactivates the fellowship and hides it from the directory. Members and past meetings are preserved but the fellowship won't accept new activity.",
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await remove.mutateAsync();
+    } catch (err) {
+      setDeleting(false);
+      alert.info(
+        'Delete failed',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      );
+    }
   }
 
   if (fellowship.isLoading) {

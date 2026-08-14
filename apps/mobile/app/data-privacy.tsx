@@ -5,13 +5,13 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  Alert,
   Share,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { alert } from '@/lib/alert';
 import { ChevronLeft, Download, Trash2, ShieldOff } from 'lucide-react-native';
 import {
   Button,
@@ -56,7 +56,7 @@ export default function DataPrivacy() {
         message: json,
       });
     } catch (err) {
-      Alert.alert(
+      alert.info(
         'Export failed',
         err instanceof Error ? err.message : 'Could not export your data. Try again shortly.',
       );
