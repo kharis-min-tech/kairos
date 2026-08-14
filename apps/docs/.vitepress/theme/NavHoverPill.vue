@@ -74,10 +74,14 @@ function showOverlay() {
   if (overlay) return
   overlay = document.createElement('div')
   overlay.id = 'nav-touch-overlay'
-  // Full screen, sits just below the nav bar, captures taps
+  // Covers below the nav bar only — leaves nav bar itself clickable
+  const navHeight = document.querySelector<HTMLElement>('.VPNav')?.offsetHeight ?? 64
   Object.assign(overlay.style, {
     position: 'fixed',
-    inset: '0',
+    top: `${navHeight}px`,
+    left: '0',
+    right: '0',
+    bottom: '0',
     zIndex: '9998',
     background: 'transparent',
     WebkitTapHighlightColor: 'transparent',
