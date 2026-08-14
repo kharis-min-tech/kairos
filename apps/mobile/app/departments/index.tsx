@@ -121,27 +121,23 @@ export default function DepartmentsDirectory() {
       </View>
 
       <View style={styles.controlsBlock}>
-        <View style={styles.searchWrap}>
-          <Search
-            color="rgba(26,28,28,0.4)"
-            size={16}
-            strokeWidth={1.5}
-            style={styles.searchIcon}
-          />
-          <Input
-            value={searchInput}
-            onChangeText={setSearchInput}
-            placeholder="Search departments"
-            autoCapitalize="none"
-            autoCorrect={false}
-            containerStyle={{ flex: 1 }}
-          />
-          {searchInput.length > 0 ? (
-            <Pressable onPress={() => setSearchInput('')} style={styles.clearBtn} hitSlop={8}>
-              <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
-            </Pressable>
-          ) : null}
-        </View>
+        <Input
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder="Search departments"
+          autoCapitalize="none"
+          autoCorrect={false}
+          leadingSlot={
+            <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+          }
+          trailingSlot={
+            searchInput.length > 0 ? (
+              <Pressable onPress={() => setSearchInput('')} hitSlop={8}>
+                <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+              </Pressable>
+            ) : null
+          }
+        />
 
         <View style={styles.filterRow}>
           <ScopeChip
@@ -339,23 +335,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
     gap: spacing.sm,
-  },
-  searchWrap: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: spacing.md,
-    top: '50%',
-    marginTop: -8,
-    zIndex: 1,
-  },
-  clearBtn: {
-    position: 'absolute',
-    right: spacing.md,
-    padding: 4,
   },
   filterRow: {
     flexDirection: 'row',

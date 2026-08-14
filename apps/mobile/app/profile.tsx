@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Pencil, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, Pencil } from 'lucide-react-native';
 import { Avatar, Badge, Card, colors, spacing, typography } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -126,7 +126,7 @@ export default function Profile() {
         </Section>
 
         <Pressable
-          onPress={() => Alert.alert('Edit profile', 'Edit flow lands in a later phase.')}
+          onPress={() => router.push(`/members/edit/${user.id}`)}
           style={styles.editRow}
         >
           <Pencil color={colors.primary} size={16} strokeWidth={1.5} />
@@ -159,16 +159,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function RowItem({ label, value }: { label: string; value: string }) {
   return (
-    <Pressable
-      onPress={() => Alert.alert(label, 'Edit lands in a later phase.')}
-      style={styles.rowItem}
-    >
+    <View style={styles.rowItem}>
       <View style={styles.rowText}>
         <Text style={styles.rowLabel}>{label}</Text>
         <Text style={styles.rowValue}>{value}</Text>
       </View>
-      <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
-    </Pressable>
+    </View>
   );
 }
 

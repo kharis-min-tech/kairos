@@ -107,8 +107,16 @@ export default function MyBranch() {
               onPress={() => setScope('home')}
               style={[styles.chip, scope === 'home' && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, scope === 'home' && styles.chipLabelActive]}>
-                Home · {home?.branchName}
+              <Text
+                style={[styles.chipEyebrow, scope === 'home' && styles.chipLabelActive]}
+              >
+                HOME
+              </Text>
+              <Text
+                style={[styles.chipLabel, scope === 'home' && styles.chipLabelActive]}
+                numberOfLines={1}
+              >
+                {home?.branchName ?? '—'}
               </Text>
             </Pressable>
             <Pressable
@@ -116,9 +124,15 @@ export default function MyBranch() {
               style={[styles.chip, scope === 'secondary' && styles.chipActive]}
             >
               <Text
-                style={[styles.chipLabel, scope === 'secondary' && styles.chipLabelActive]}
+                style={[styles.chipEyebrow, scope === 'secondary' && styles.chipLabelActive]}
               >
-                Secondary · {secondary.branchName}
+                SECONDARY
+              </Text>
+              <Text
+                style={[styles.chipLabel, scope === 'secondary' && styles.chipLabelActive]}
+                numberOfLines={1}
+              >
+                {secondary.branchName}
               </Text>
             </Pressable>
           </View>
@@ -305,14 +319,22 @@ const styles = StyleSheet.create({
   },
   chip: {
     flex: 1,
+    minWidth: 0,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
+    borderRadius: radii.md,
     backgroundColor: colors.subtleLight,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 2,
   },
   chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '500' },
+  chipEyebrow: {
+    ...typography.eyebrow,
+    color: 'rgba(26,28,28,0.55)',
+    letterSpacing: 1.1,
+    fontSize: 10,
+  },
+  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
   heroCard: {
     borderRadius: radii.lg,

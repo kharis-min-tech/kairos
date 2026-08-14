@@ -196,11 +196,6 @@ export default function More() {
             label="Branch settings"
             onPress={() => router.push('/branches')}
           />
-          <NavRow
-            icon={Users}
-            label="Users & roles"
-            onPress={() => router.push('/branches')}
-          />
           <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
         </Section>
 
@@ -238,7 +233,7 @@ export default function More() {
           <NavRow
             icon={Info}
             label="About Kairos"
-            onPress={() => Linking.openURL(`${HELP_URL}/about`)}
+            onPress={() => Linking.openURL(HELP_URL)}
           />
         </Section>
 
