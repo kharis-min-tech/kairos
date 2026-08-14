@@ -68,9 +68,22 @@ interface FormState {
   rows: Record<string, RowValues[]>;
 }
 
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function seedValue(f: FormFieldDef): FieldValue {
+  if (f.defaultValue !== undefined) {
+    if (f.type === 'date' && f.defaultValue === 'today') return todayIso();
+    if (f.type === 'checkbox') return Boolean(f.defaultValue);
+    return typeof f.defaultValue === 'string' ? f.defaultValue : '';
+  }
+  return f.type === 'checkbox' ? false : '';
+}
+
 function emptyRow(group: RepeatableGroupDef): RowValues {
   const row: RowValues = {};
-  for (const f of group.fields) row[f.id] = f.type === 'checkbox' ? false : '';
+  for (const f of group.fields) row[f.id] = seedValue(f);
   return row;
 }
 
@@ -79,7 +92,7 @@ function initialState(def: FormDefinition): FormState {
   const rows: Record<string, RowValues[]> = {};
   for (const block of def.blocks) {
     if (block.kind === 'section') {
-      for (const f of block.fields) values[f.id] = f.type === 'checkbox' ? false : '';
+      for (const f of block.fields) values[f.id] = seedValue(f);
     } else {
       const min = block.min ?? 0;
       rows[block.id] = Array.from({ length: min }, () => emptyRow(block));
