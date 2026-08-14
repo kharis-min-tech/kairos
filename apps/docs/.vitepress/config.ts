@@ -8,6 +8,8 @@ export default defineConfig({
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
   head: [
+    ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+    ['link', { rel: 'apple-touch-icon', href: '/favicon.png' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['link', {
@@ -16,7 +18,7 @@ export default defineConfig({
     }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' }],
     ['meta', { name: 'theme-color', content: '#6D28D9', media: '(prefers-color-scheme: light)' }],
-    ['meta', { name: 'theme-color', content: '#0f0d14', media: '(prefers-color-scheme: dark)' }],
+    ['meta', { name: 'theme-color', content: '#0a0a0a', media: '(prefers-color-scheme: dark)' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }],
   ],
@@ -147,8 +149,6 @@ export default defineConfig({
         items: [
           { text: 'FAQ', link: '/faq' },
           { text: 'Release Notes', link: '/release-notes' },
-          { text: 'Terms & Conditions', link: '/legal/terms' },
-          { text: 'Privacy Notice', link: '/legal/privacy' },
         ],
       },
     ],
@@ -161,11 +161,11 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Ruthhilary/KairosDocument' },
+      { icon: 'github', link: 'https://github.com/kharis-min-tech/kairos' },
     ],
 
     footer: {
-      message: 'Kairos — Church Administration System by Kharis Church · <a href="/KairosDocument/legal/terms">Terms</a> · <a href="/KairosDocument/legal/privacy">Privacy</a>',
+      message: 'Kairos — Church Administration System by Kharis Church',
     },
 
     outline: {
