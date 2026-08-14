@@ -7,8 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
@@ -64,9 +64,13 @@ export default function ChangePassword() {
     if (!validate()) return;
     try {
       await change.mutateAsync({ currentPassword, newPassword });
-      Alert.alert('Password changed', 'Your password has been updated.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      alert.show({
+        title: 'Password changed',
+        message: 'Your password has been updated.',
+        buttons: [
+          { label: 'OK', variant: 'primary', onPress: () => router.back() },
+        ],
+      });
     } catch (err) {
       setServerError(
         err instanceof Error ? err.message : 'Could not change password. Please try again.',

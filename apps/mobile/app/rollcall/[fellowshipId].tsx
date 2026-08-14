@@ -7,8 +7,8 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -81,7 +81,7 @@ export default function RollcallFellowship() {
       { meetingDate: toISODate(new Date()) },
       {
         onError: (err) => {
-          Alert.alert(
+          alert.info(
             'Could not start meeting',
             err instanceof Error ? err.message : 'Please try again in a moment.',
           );

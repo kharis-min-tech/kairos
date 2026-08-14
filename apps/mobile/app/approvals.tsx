@@ -6,8 +6,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -38,7 +38,7 @@ export default function Approvals() {
       qc.invalidateQueries({ queryKey: ['members'] });
     },
     onError: (e: Error) => {
-      Alert.alert('Approve failed', e.message);
+      alert.info('Approve failed', e.message);
     },
   });
 
@@ -49,23 +49,18 @@ export default function Approvals() {
       qc.invalidateQueries({ queryKey: ['members'] });
     },
     onError: (e: Error) => {
-      Alert.alert('Reject failed', e.message);
+      alert.info('Reject failed', e.message);
     },
   });
 
-  function confirmReject(memberId: string, name: string) {
-    Alert.alert(
-      'Reject signup?',
-      `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: () => reject.mutate(memberId),
-        },
-      ],
-    );
+  async function confirmReject(memberId: string, name: string) {
+    const ok = await alert.confirm({
+      title: 'Reject signup?',
+      message: `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
+      confirmLabel: 'Reject',
+      destructive: true,
+    });
+    if (ok) reject.mutate(memberId);
   }
 
   return (

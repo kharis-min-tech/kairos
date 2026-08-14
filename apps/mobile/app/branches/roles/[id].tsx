@@ -7,8 +7,8 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -77,26 +77,21 @@ export default function BranchRoles() {
     [activeAssignments],
   );
 
-  function confirmRevoke(assignmentId: string, name: string) {
-    Alert.alert(
-      'Revoke branch admin?',
-      `Remove ${name} as a Branch System Admin. They keep their member record and any other roles.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Revoke',
-          style: 'destructive',
-          onPress: () =>
-            revoke.mutate(assignmentId, {
-              onError: (err) =>
-                Alert.alert(
-                  'Revoke failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+  async function confirmRevoke(assignmentId: string, name: string) {
+    const ok = await alert.confirm({
+      title: 'Revoke branch admin?',
+      message: `Remove ${name} as a Branch System Admin. They keep their member record and any other roles.`,
+      confirmLabel: 'Revoke',
+      destructive: true,
+    });
+    if (!ok) return;
+    revoke.mutate(assignmentId, {
+      onError: (err) =>
+        alert.info(
+          'Revoke failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
   return (
@@ -235,7 +230,7 @@ export default function BranchRoles() {
             setPickerOpen(false);
             assign.mutate(memberId, {
               onError: (err) =>
-                Alert.alert(
+                alert.info(
                   'Assign failed',
                   err instanceof Error ? err.message : 'Please try again.',
                 ),

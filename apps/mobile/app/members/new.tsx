@@ -5,9 +5,9 @@ import {
   StyleSheet,
   Pressable,
   Share,
-  Alert,
   Platform,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -62,7 +62,7 @@ export default function NewMember() {
         message: `Welcome to Kairos! Sign in with:\nEmail: ${created.member.email}\nTemporary password: ${created.generatedPassword}\n\nYou'll be prompted to change this on first sign-in.`,
       });
     } catch (err) {
-      Alert.alert(
+      alert.info(
         'Share failed',
         err instanceof Error ? err.message : 'Please try again.',
       );

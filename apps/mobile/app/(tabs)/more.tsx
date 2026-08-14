@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -39,18 +40,16 @@ export default function More() {
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
 
-  const handleSignOut = () => {
-    Alert.alert('Sign out', 'You will need to sign in again to use the app.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await clearSession();
-          router.replace('/(auth)/login');
-        },
-      },
-    ]);
+  const handleSignOut = async () => {
+    const confirmed = await alert.confirm({
+      title: 'Sign out',
+      message: 'You will need to sign in again to use the app.',
+      confirmLabel: 'Sign out',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    await clearSession();
+    router.replace('/(auth)/login');
   };
 
   return (
@@ -272,7 +271,7 @@ function NavRow({
 function SoonRow({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <Pressable
-      onPress={() => Alert.alert(label, 'Coming in a later mobile pass. Available on web.')}
+      onPress={() => alert.info(label, 'Coming in a later mobile pass. Available on web.')}
       style={styles.row}
     >
       <View style={styles.rowIcon}>

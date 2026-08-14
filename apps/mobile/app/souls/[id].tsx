@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -133,37 +133,32 @@ export default function SoulDetail() {
     if (newStatus === s.status) return;
     updateStatus.mutate(newStatus, {
       onError: (err) =>
-        Alert.alert(
+        alert.info(
           'Update failed',
           err instanceof Error ? err.message : 'Please try again.',
         ),
     });
   }
 
-  function confirmConvert() {
+  async function confirmConvert() {
     if (!s) return;
     if (s.convertedToMemberId) {
-      Alert.alert('Already converted', 'This soul has already been converted to a member.');
+      alert.info('Already converted', 'This soul has already been converted to a member.');
       return;
     }
-    Alert.alert(
-      'Convert to member?',
-      `Convert ${s.firstName} ${s.lastName} into a full member record. This creates a new Member and links it to this soul.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Convert',
-          onPress: () =>
-            convert.mutate(undefined, {
-              onError: (err) =>
-                Alert.alert(
-                  'Convert failed',
-                  err instanceof Error ? err.message : 'Please try again.',
-                ),
-            }),
-        },
-      ],
-    );
+    const ok = await alert.confirm({
+      title: 'Convert to member?',
+      message: `Convert ${s.firstName} ${s.lastName} into a full member record. This creates a new Member and links it to this soul.`,
+      confirmLabel: 'Convert',
+    });
+    if (!ok) return;
+    convert.mutate(undefined, {
+      onError: (err) =>
+        alert.info(
+          'Convert failed',
+          err instanceof Error ? err.message : 'Please try again.',
+        ),
+    });
   }
 
   return (

@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registerAuthCallbacks } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useOnboardingStore } from '@/store/onboarding';
+import { AlertHost } from '@/components/alert-host';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Already prevented / not available — safe to ignore.
@@ -55,6 +56,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StatusBar style="auto" />
         {ready ? <Stack screenOptions={{ headerShown: false }} /> : null}
+        <AlertHost />
       </SafeAreaProvider>
     </QueryClientProvider>
   );

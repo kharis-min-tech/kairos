@@ -5,8 +5,8 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -63,30 +63,25 @@ export default function EditDepartment() {
     }
   }
 
-  function confirmDelete() {
-    Alert.alert(
-      'Deactivate department?',
-      "This deactivates the department and hides it from the directory. The team's history is preserved but the department won't accept new activity.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Deactivate',
-          style: 'destructive',
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await remove.mutateAsync();
-            } catch (err) {
-              setDeleting(false);
-              Alert.alert(
-                'Deactivate failed',
-                err instanceof Error ? err.message : 'Please try again in a moment.',
-              );
-            }
-          },
-        },
-      ],
-    );
+  async function confirmDelete() {
+    const ok = await alert.confirm({
+      title: 'Deactivate department?',
+      message:
+        "This deactivates the department and hides it from the directory. The team's history is preserved but the department won't accept new activity.",
+      confirmLabel: 'Deactivate',
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await remove.mutateAsync();
+    } catch (err) {
+      setDeleting(false);
+      alert.info(
+        'Deactivate failed',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      );
+    }
   }
 
   if (department.isLoading) {

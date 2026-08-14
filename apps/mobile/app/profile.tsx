@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -57,7 +58,7 @@ export default function Profile() {
               lastName={user.lastName}
             />
             <Pressable
-              onPress={() => Alert.alert('Edit photo', 'Photo editor lands in a later phase.')}
+              onPress={() => alert.info('Edit photo', 'Photo editor lands in a later phase.')}
               style={styles.editBadge}
               accessibilityLabel="Edit photo"
             >

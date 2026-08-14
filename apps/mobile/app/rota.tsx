@@ -7,8 +7,8 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -88,7 +88,7 @@ export default function MyRota() {
                   size="sm"
                   variant="secondary"
                   onPress={() =>
-                    Alert.alert('Confirm duty', 'Confirm/swap flow lands with the backend endpoint.')
+                    alert.info('Confirm duty', 'Confirm/swap flow lands with the backend endpoint.')
                   }
                   style={styles.heroButton}
                 />
@@ -97,7 +97,7 @@ export default function MyRota() {
                   size="sm"
                   variant="outline"
                   onPress={() =>
-                    Alert.alert('Swap', 'Swap-request flow lands in a follow-up.')
+                    alert.info('Swap', 'Swap-request flow lands in a follow-up.')
                   }
                   style={styles.heroButton}
                 />

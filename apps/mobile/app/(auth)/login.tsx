@@ -7,8 +7,8 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
+import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -105,7 +105,7 @@ export default function LoginScreen() {
 
             <Pressable
               onPress={() =>
-                Alert.alert('Reset password', 'Password reset coming soon.')
+                alert.info('Reset password', 'Password reset coming soon.')
               }
               style={styles.forgotRow}
               hitSlop={6}
@@ -132,7 +132,7 @@ export default function LoginScreen() {
 
             <Pressable
               onPress={() =>
-                Alert.alert(
+                alert.info(
                   'Face ID',
                   'Biometric sign-in becomes available after you sign in once with your email and password.',
                 )
@@ -146,7 +146,7 @@ export default function LoginScreen() {
 
           <Pressable
             onPress={() =>
-              Alert.alert(
+              alert.info(
                 'Create account',
                 'Account creation flow will land in the next release. In the meantime, an admin can add you.',
               )
