@@ -45,7 +45,7 @@ export default function RollcallLanding() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Rollcall</Text>
+        <Text style={styles.headerTitle}>Fellowship attendance</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -77,7 +77,7 @@ export default function RollcallLanding() {
             </View>
             <Text style={styles.emptyTitle}>No fellowships to lead</Text>
             <Text style={styles.emptyMeta}>
-              Rollcall becomes available once you&apos;re assigned to a fellowship. Leaders
+              Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders
               and members alike can record attendance for their group.
             </Text>
           </Card>

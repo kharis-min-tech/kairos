@@ -10,6 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ChevronRight } from 'lucide-react-native';
 import { Avatar, Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
@@ -72,6 +73,7 @@ export default function Community() {
 }
 
 function PeopleList({ search }: { search: string }) {
+  const router = useRouter();
   const query = useQuery({
     queryKey: ['members', 'community', search],
     queryFn: async () => {
@@ -105,7 +107,7 @@ function PeopleList({ search }: { search: string }) {
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
       renderItem={({ item }) => (
-        <View style={styles.row}>
+        <Pressable onPress={() => router.push(`/members/${item.id}`)} style={styles.row}>
           <Avatar
             size="sm"
             photoUrl={item.photoUrl}
@@ -119,13 +121,14 @@ function PeopleList({ search }: { search: string }) {
             <Text style={styles.rowMeta}>{item.branchName ?? item.email}</Text>
           </View>
           <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
-        </View>
+        </Pressable>
       )}
     />
   );
 }
 
 function FellowshipsList({ search }: { search: string }) {
+  const router = useRouter();
   const query = useQuery({
     queryKey: ['fellowships', 'community'],
     queryFn: async () => {
@@ -159,7 +162,10 @@ function FellowshipsList({ search }: { search: string }) {
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
       renderItem={({ item }) => (
-        <View style={styles.row}>
+        <Pressable
+          onPress={() => router.push(`/fellowships/${item.id}`)}
+          style={styles.row}
+        >
           <View style={styles.groupDot} />
           <View style={styles.rowText}>
             <View style={styles.rowTitleLine}>
@@ -169,13 +175,14 @@ function FellowshipsList({ search }: { search: string }) {
             <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
           </View>
           <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
-        </View>
+        </Pressable>
       )}
     />
   );
 }
 
 function DepartmentsList({ search }: { search: string }) {
+  const router = useRouter();
   const query = useQuery({
     queryKey: ['departments', 'community'],
     queryFn: async () => {
@@ -211,14 +218,17 @@ function DepartmentsList({ search }: { search: string }) {
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
       renderItem={({ item }) => (
-        <View style={styles.row}>
+        <Pressable
+          onPress={() => router.push(`/departments/${item.id}`)}
+          style={styles.row}
+        >
           <View style={[styles.groupDot, { backgroundColor: colors.info }]} />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>{item.departmentName}</Text>
             <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
           </View>
           <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
-        </View>
+        </Pressable>
       )}
     />
   );

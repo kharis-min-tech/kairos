@@ -8,12 +8,13 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Check, Circle } from 'lucide-react-native';
 import { Avatar, Card, Badge, ProgressBar, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth';
 
 const SESSION_TITLES = [
   '1 · Foundations of Faith',
@@ -26,14 +27,18 @@ const TOTAL_SESSIONS = SESSION_TITLES.length;
 
 export default function NewBelievers() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ scope?: 'mine' | 'all' }>();
+  const userId = useAuthStore((s) => s.user?.id);
+  const personalScope = params.scope === 'mine';
 
   const enrollments = useQuery({
-    queryKey: ['new-believers', 'enrollments'],
+    queryKey: ['new-believers', 'enrollments', personalScope ? 'mine' : 'all'],
     queryFn: async () => {
       const res = await api.newBelievers.enrollments.list();
       const payload = res.data;
       if (!payload) return [];
-      return Array.isArray(payload) ? payload : (payload.data ?? []);
+      const rows = Array.isArray(payload) ? payload : (payload.data ?? []);
+      return personalScope && userId ? rows.filter((e) => e.memberId === userId) : rows;
     },
   });
 
@@ -43,7 +48,9 @@ export default function NewBelievers() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New Believer journey</Text>
+        <Text style={styles.headerTitle}>
+          {personalScope ? 'My New Believer journey' : 'New Believers pipeline'}
+        </Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -61,9 +68,13 @@ export default function NewBelievers() {
           <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
         ) : (enrollments.data ?? []).length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No active enrollments</Text>
+            <Text style={styles.emptyTitle}>
+              {personalScope ? 'You’re not enrolled' : 'No active enrollments'}
+            </Text>
             <Text style={styles.emptyMeta}>
-              New Believers you teach or mentor will appear here.
+              {personalScope
+                ? 'Enrol in the New Believers class via your branch team to track your journey here.'
+                : 'New Believers you teach or mentor will appear here.'}
             </Text>
           </View>
         ) : (
@@ -85,6 +96,9 @@ export default function NewBelievers() {
                   ? `${e.mentorFirstName} ${e.mentorLastName ?? ''}`.trim()
                   : null
               }
+              onPress={
+                personalScope ? undefined : () => router.push(`/members/${e.memberId}`)
+              }
             />
           ))
         )}
@@ -101,6 +115,7 @@ interface EnrollmentCardProps {
   completed: number;
   teacherName: string | null;
   mentorName: string | null;
+  onPress?: () => void;
 }
 
 function EnrollmentCard({
@@ -111,10 +126,13 @@ function EnrollmentCard({
   completed,
   teacherName,
   mentorName,
+  onPress,
 }: EnrollmentCardProps) {
   const progressValue = Math.min(1, completed / TOTAL_SESSIONS);
+  const Wrapper = onPress ? Pressable : View;
   return (
-    <Card padding="md" style={styles.enrollmentCard}>
+    <Wrapper onPress={onPress}>
+      <Card padding="md" style={styles.enrollmentCard}>
       <View style={styles.enrollmentHeader}>
         <Avatar size="md" firstName={firstName} lastName={lastName} />
         <View style={styles.enrollmentText}>
@@ -181,7 +199,8 @@ function EnrollmentCard({
           {mentorName ? <RoleTile label="Mentor" value={mentorName} /> : null}
         </View>
       ) : null}
-    </Card>
+      </Card>
+    </Wrapper>
   );
 }
 

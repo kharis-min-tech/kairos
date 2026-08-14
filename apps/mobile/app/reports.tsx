@@ -20,12 +20,14 @@ import {
   BarChart3,
   Sparkles,
   PieChart,
+  LayoutGrid,
 } from 'lucide-react-native';
 import Svg, { Rect, Circle, Line as SvgLine, Text as SvgText, G } from 'react-native-svg';
 import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
-import type { FrequencyBucketKey } from '@kairos/types';
+import type { AttendanceHeatmap, FrequencyBucketKey } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { formatShortDate } from '@kairos/core';
+import { useAuthStore } from '@/store/auth';
 
 type WindowMonths = 3 | 6 | 12;
 type WindowChoice = { value: WindowMonths; label: string };
@@ -60,11 +62,26 @@ function formatPct(rate: number): string {
 export default function Reports() {
   const router = useRouter();
   const [engagedWindowMonths, setEngagedWindowMonths] = useState<WindowMonths>(3);
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
 
   const summary = useQuery({
     queryKey: ['attendance', 'reports', 'summary', { weeks: 4 }],
     queryFn: async () =>
       (await api.attendance.summary({ weeks: 4 })).data ?? null,
+  });
+
+  const heatmap = useQuery({
+    queryKey: ['attendance', 'reports', 'heatmap', { branchId, weeks: 8, engagedWindowMonths }],
+    enabled: !!branchId,
+    queryFn: async () =>
+      (
+        await api.attendance.heatmap({
+          branchId: branchId!,
+          weeks: 8,
+          engagedWindowMonths,
+          engagedOnly: true,
+        })
+      ).data ?? null,
   });
 
   const trends = useQuery({
@@ -97,7 +114,8 @@ export default function Reports() {
     trends.isFetching ||
     frequency.isFetching ||
     firstTime.isFetching ||
-    missing.isFetching;
+    missing.isFetching ||
+    heatmap.isFetching;
 
   const refresh = () => {
     summary.refetch();
@@ -105,6 +123,7 @@ export default function Reports() {
     frequency.refetch();
     firstTime.refetch();
     missing.refetch();
+    heatmap.refetch();
   };
 
   return (
@@ -132,6 +151,13 @@ export default function Reports() {
           data={trends.data ?? []}
           loading={trends.isLoading}
           error={trends.error}
+        />
+
+        <HeatmapCard
+          data={heatmap.data}
+          loading={heatmap.isLoading}
+          error={heatmap.error}
+          hasBranch={!!branchId}
         />
 
         <View>
@@ -723,6 +749,135 @@ function FirstTimeChart({
   );
 }
 
+function HeatmapCard({
+  data,
+  loading,
+  error,
+  hasBranch,
+}: {
+  data: AttendanceHeatmap | null | undefined;
+  loading: boolean;
+  error: unknown;
+  hasBranch: boolean;
+}) {
+  return (
+    <View>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconTile}>
+          <LayoutGrid color={colors.primary} size={14} strokeWidth={1.5} />
+        </View>
+        <Text style={styles.sectionTitle}>Attendance heatmap</Text>
+      </View>
+      <Card padding="md" style={{ gap: spacing.sm }}>
+        {!hasBranch ? (
+          <Text style={styles.emptyLine}>
+            Set a home branch on your profile to see the heatmap.
+          </Text>
+        ) : loading ? (
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+        ) : error ? (
+          <Text style={styles.errorLine}>
+            {error instanceof Error ? error.message : 'Could not load this report.'}
+          </Text>
+        ) : !data || data.services.length === 0 || data.members.length === 0 ? (
+          <Text style={styles.emptyLine}>
+            Not enough attendance data to draw the heatmap yet.
+          </Text>
+        ) : (
+          <HeatmapGrid data={data} />
+        )}
+      </Card>
+    </View>
+  );
+}
+
+function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
+  // Render the last 8 services (most recent on the right) and the top 15
+  // members by attendancePct. Anything beyond falls off the grid — the full
+  // heatmap lives on web.
+  const services = data.services.slice(-8);
+  const startIdx = data.services.length - services.length;
+  const members = [...data.members]
+    .sort((a, b) => b.attendancePct - a.attendancePct)
+    .slice(0, 15);
+
+  const nameW = 92;
+  const cellSize = 22;
+  const cellGap = 3;
+
+  const cellColor = (status: string): string => {
+    if (status === 'present') return colors.success;
+    if (status === 'late') return colors.gold;
+    if (status === 'virtual') return colors.info;
+    return 'rgba(26,28,28,0.08)';
+  };
+
+  return (
+    <View style={{ gap: spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+        <View style={{ width: nameW }} />
+        {services.map((s) => {
+          const d = new Date(s.serviceDate);
+          const label = `${d.getDate()}/${d.getMonth() + 1}`;
+          return (
+            <Text
+              key={s.id}
+              style={[
+                styles.heatmapAxisLabel,
+                { width: cellSize, marginRight: cellGap },
+              ]}
+            >
+              {label}
+            </Text>
+          );
+        })}
+      </View>
+      {members.map((m) => (
+        <View key={m.memberId} style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={[styles.heatmapNameLabel, { width: nameW }]} numberOfLines={1}>
+            {m.firstName} {m.lastName[0] ?? ''}.
+          </Text>
+          {services.map((s, i) => {
+            const cellStatus = m.cells[startIdx + i] ?? 'absent';
+            return (
+              <View
+                key={s.id}
+                style={{
+                  width: cellSize,
+                  height: cellSize,
+                  marginRight: cellGap,
+                  borderRadius: 4,
+                  backgroundColor: cellColor(cellStatus),
+                }}
+              />
+            );
+          })}
+        </View>
+      ))}
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.success }]} />
+          <Text style={styles.legendLabel}>Present</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.gold }]} />
+          <Text style={styles.legendLabel}>Late</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.info }]} />
+          <Text style={styles.legendLabel}>Virtual</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View
+            style={[styles.legendSwatch, { backgroundColor: 'rgba(26,28,28,0.08)' }]}
+          />
+          <Text style={styles.legendLabel}>Absent</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function MissingMembersCard({
   data,
   loading,
@@ -937,6 +1092,16 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 2,
+  },
+  heatmapAxisLabel: {
+    ...typography.meta,
+    fontSize: 9,
+    color: 'rgba(26,28,28,0.55)',
+    textAlign: 'center',
+  },
+  heatmapNameLabel: {
+    ...typography.meta,
+    color: colors.ink,
   },
   legendLabel: {
     ...typography.meta,

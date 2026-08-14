@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import {
   LogOut,
   ChevronRight,
-  User,
   Bell,
   BookOpen,
   Calendar,
@@ -21,7 +20,6 @@ import {
   PieChart,
   Map,
   FileText,
-  Send,
   Shield,
   Lock,
   History,
@@ -79,7 +77,6 @@ export default function More() {
         </Pressable>
 
         <Section label="For you">
-          <NavRow icon={User} label="Profile" onPress={() => router.push('/profile')} />
           <NavRow
             icon={Bell}
             label="Notifications"
@@ -87,8 +84,8 @@ export default function More() {
           />
           <NavRow
             icon={BookOpen}
-            label="New Believer journey"
-            onPress={() => router.push('/new-believers')}
+            label="My New Believer journey"
+            onPress={() => router.push('/new-believers?scope=mine')}
           />
           <NavRow
             icon={Calendar}
@@ -162,18 +159,13 @@ export default function More() {
           <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
           <NavRow
             icon={ClipboardList}
-            label="Rollcall"
+            label="Fellowship attendance"
             onPress={() => router.push('/rollcall')}
           />
         </Section>
 
         <Section label="Forms">
           <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
-          <NavRow
-            icon={Send}
-            label="First-timer capture"
-            onPress={() => router.push('/forms/first_time_visitor')}
-          />
         </Section>
 
         <Section label="Reports & analytics">
