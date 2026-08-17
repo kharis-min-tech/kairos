@@ -13,6 +13,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.kharis.kairos',
+    // Universal-links: when the OS sees an https link on kairos.kharis.org
+    // (or staging) whose path matches the AASA file, it opens the app instead
+    // of Safari. AASA files live at apps/web/public/.well-known/.
+    associatedDomains: [
+      'applinks:kairos.kharis.org',
+      'applinks:staging.kairos.kharis.org',
+    ],
   },
   android: {
     package: 'com.kharis.kairos',
@@ -20,6 +27,39 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#5D3FD3',
     },
+    // App-links: same idea as iOS. `autoVerify: true` tells the OS to verify
+    // the assetlinks.json from the domain on install; when it passes, the app
+    // wins the deep-link intent silently. Password reset + email verify are
+    // the two paths currently mailed out.
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/reset-password',
+          },
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/verify-email',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/reset-password',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/verify-email',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
   },
   web: {
     favicon: './assets/favicon.png',

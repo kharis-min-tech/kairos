@@ -18,15 +18,19 @@ import { api } from '@/lib/api-client';
 
 const MIN_PASSWORD = 8;
 
+/**
+ * Password reset screen. Reads the token from `?token=` — matching the URL
+ * shape the API mails out (`/reset-password?token=XXX`) so a universal-link
+ * tap opens straight into this screen with the token already populated.
+ */
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const { token } = useLocalSearchParams<{ token: string }>();
+  const { token } = useLocalSearchParams<{ token?: string }>();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Basic client validation — server has the real rules.
   const validation = useMemo(() => {
     if (!password) return null;
     if (password.length < MIN_PASSWORD)

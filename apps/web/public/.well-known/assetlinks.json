@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kharis.kairos",
+      "sha256_cert_fingerprints": [
+        "11:74:D0:AA:64:0A:00:30:75:FF:16:9D:5D:37:E9:C6:9B:C8:BF:58:A9:59:8E:16:BC:E8:5F:48:5E:64:62:06"
+      ]
+    }
+  }
+]
