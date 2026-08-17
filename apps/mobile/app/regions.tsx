@@ -9,6 +9,8 @@ import {
   Modal,
   ScrollView,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -272,6 +274,10 @@ function RegionFormSheet({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <Pressable style={styles.modalBackdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHandle} />
@@ -341,6 +347,10 @@ function RegionFormSheet({
         transparent
         onRequestClose={() => setCountryPickerOpen(false)}
       >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
         <Pressable style={styles.modalBackdrop} onPress={() => setCountryPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
@@ -393,7 +403,9 @@ function RegionFormSheet({
             </Pressable>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

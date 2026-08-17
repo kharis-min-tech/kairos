@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Search, UserPlus, Check } from 'lucide-react-native';
@@ -83,6 +85,10 @@ export function MemberPickerSheet({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <Pressable style={styles.modalBackdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHandle} />
@@ -147,6 +153,7 @@ export function MemberPickerSheet({
           </Pressable>
         </Pressable>
       </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
