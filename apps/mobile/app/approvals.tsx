@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, UserPlus, UsersRound, Building2 } from 'lucide-react-native';
-import { Badge, Card, colors, spacing, typography, radii } from '@kairos/ui-native';
+import { Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { MeApprovalItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -82,6 +82,7 @@ export default function Approvals() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {FILTERS.map((f) => (
@@ -188,14 +189,17 @@ const styles = StyleSheet.create({
   },
   subTitle: { ...typography.screenTitle, color: colors.ink },
   subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
+  chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
     paddingHorizontal: spacing.lg,
     gap: spacing.xs,
     paddingBottom: spacing.md,
+    alignItems: 'center',
   },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    height: 32,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: colors.subtleLight,
   },

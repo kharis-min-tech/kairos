@@ -57,7 +57,13 @@ export default function Home() {
             <Text style={styles.dateLabel}>{dateHeader}</Text>
             <Text style={styles.greeting}>Good day, {user?.firstName ?? 'friend'}</Text>
           </View>
-          <View style={styles.avatarWrap}>
+          <Pressable
+            onPress={() => router.push('/profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            hitSlop={8}
+            style={styles.avatarWrap}
+          >
             <Avatar
               size="md"
               photoUrl={user?.photoUrl}
@@ -65,7 +71,7 @@ export default function Home() {
               lastName={user?.lastName}
               notificationDot
             />
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.serviceCard}>

@@ -149,6 +149,7 @@ export default function SoulsDirectory() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.statusChipScroll}
           contentContainerStyle={styles.statusChipRow}
         >
           {STATUS_FILTERS.map((s) => {
@@ -319,13 +320,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: spacing.sm,
   },
+  statusChipScroll: { flexGrow: 0, flexShrink: 0 },
   statusChipRow: {
     gap: spacing.xs,
     paddingRight: spacing.lg,
+    alignItems: 'center',
   },
   statusChip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    height: 32,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: colors.subtleLight,
   },

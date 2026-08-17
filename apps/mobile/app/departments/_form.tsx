@@ -202,12 +202,14 @@ export function DepartmentForm({
 
           <FieldLabel label="Deputy" />
           <View style={styles.deputyRow}>
-            <PickerField
-              value={deputyName}
-              placeholder={branchId ? 'Choose a deputy (optional)' : 'Choose a branch first'}
-              onPress={branchId ? () => setOpenPicker('deputy') : undefined}
-              disabled={!branchId}
-            />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <PickerField
+                value={deputyName}
+                placeholder={branchId ? 'Choose a deputy (optional)' : 'Choose a branch first'}
+                onPress={branchId ? () => setOpenPicker('deputy') : undefined}
+                disabled={!branchId}
+              />
+            </View>
             {deputyMemberId ? (
               <Pressable
                 onPress={() => setDeputyMemberId(null)}

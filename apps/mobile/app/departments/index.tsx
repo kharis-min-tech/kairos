@@ -155,6 +155,7 @@ export default function DepartmentsDirectory() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.typeChipScroll}
           contentContainerStyle={styles.typeChipRow}
         >
           <TypeChip
@@ -358,13 +359,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '600',
   },
+  typeChipScroll: { flexGrow: 0, flexShrink: 0 },
   typeChipRow: {
     gap: spacing.xs,
     paddingRight: spacing.lg,
+    alignItems: 'center',
   },
   typeChip: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    height: 30,
+    justifyContent: 'center',
     borderRadius: radii.sm,
     backgroundColor: colors.cardLight,
     borderWidth: 1,

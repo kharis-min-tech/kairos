@@ -104,6 +104,7 @@ export default function FollowUps() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {FILTERS.map((f) => (
@@ -216,14 +217,17 @@ const styles = StyleSheet.create({
   },
   subTitle: { ...typography.screenTitle, color: colors.ink },
   subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
+  chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
     paddingHorizontal: spacing.lg,
     gap: spacing.xs,
     paddingBottom: spacing.md,
+    alignItems: 'center',
   },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    height: 32,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: colors.subtleLight,
   },

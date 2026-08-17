@@ -219,7 +219,11 @@ export default function MyDepartment() {
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
-                    <View key={m.id} style={styles.memberRow}>
+                    <Pressable
+                      key={m.id}
+                      onPress={() => router.push(`/members/${m.memberId}` as never)}
+                      style={styles.memberRow}
+                    >
                       <Avatar
                         size="sm"
                         photoUrl={m.memberPhotoUrl ?? undefined}
@@ -234,7 +238,7 @@ export default function MyDepartment() {
                       {m.membershipStatus === 'probation' ? (
                         <Badge label="Probation" variant="gold" size="sm" />
                       ) : null}
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               )}

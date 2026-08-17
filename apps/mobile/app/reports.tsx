@@ -791,6 +791,16 @@ function HeatmapCard({
   );
 }
 
+// Heatmap palette — matched to the web version so the two views feel like the
+// same tool. present=emerald-500, virtual=sky-500, late=amber-500, absent is a
+// hollow dashed red outline (fills through shape as well as colour for
+// red-green colour-vision users).
+const HEATMAP_PRESENT = '#10b981';
+const HEATMAP_VIRTUAL = '#0ea5e9';
+const HEATMAP_LATE = '#f59e0b';
+const HEATMAP_ABSENT_BG = 'rgba(254,226,226,0.6)'; // red-100 @ 60%
+const HEATMAP_ABSENT_BORDER = '#fca5a5'; // red-300
+
 function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
   // Render the last 8 services (most recent on the right) and the top 15
   // members by attendancePct. Anything beyond falls off the grid — the full
@@ -804,13 +814,6 @@ function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
   const nameW = 92;
   const cellSize = 22;
   const cellGap = 3;
-
-  const cellColor = (status: string): string => {
-    if (status === 'present') return colors.success;
-    if (status === 'late') return colors.gold;
-    if (status === 'virtual') return colors.info;
-    return 'rgba(26,28,28,0.08)';
-  };
 
   return (
     <View style={{ gap: spacing.sm }}>
@@ -840,15 +843,11 @@ function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
           {services.map((s, i) => {
             const cellStatus = m.cells[startIdx + i] ?? 'absent';
             return (
-              <View
+              <HeatmapCell
                 key={s.id}
-                style={{
-                  width: cellSize,
-                  height: cellSize,
-                  marginRight: cellGap,
-                  borderRadius: 4,
-                  backgroundColor: cellColor(cellStatus),
-                }}
+                status={cellStatus}
+                size={cellSize}
+                marginRight={cellGap}
               />
             );
           })}
@@ -856,25 +855,77 @@ function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
       ))}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.success }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_PRESENT }]} />
           <Text style={styles.legendLabel}>Present</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.gold }]} />
-          <Text style={styles.legendLabel}>Late</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.info }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_VIRTUAL }]} />
           <Text style={styles.legendLabel}>Virtual</Text>
         </View>
         <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_LATE }]} />
+          <Text style={styles.legendLabel}>Late</Text>
+        </View>
+        <View style={styles.legendItem}>
           <View
-            style={[styles.legendSwatch, { backgroundColor: 'rgba(26,28,28,0.08)' }]}
+            style={[
+              styles.legendSwatch,
+              {
+                backgroundColor: HEATMAP_ABSENT_BG,
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: HEATMAP_ABSENT_BORDER,
+              },
+            ]}
           />
           <Text style={styles.legendLabel}>Absent</Text>
         </View>
       </View>
     </View>
+  );
+}
+
+function HeatmapCell({
+  status,
+  size,
+  marginRight,
+}: {
+  status: string;
+  size: number;
+  marginRight: number;
+}) {
+  if (status === 'absent') {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          marginRight,
+          borderRadius: 4,
+          backgroundColor: HEATMAP_ABSENT_BG,
+          borderWidth: 1,
+          borderStyle: 'dashed',
+          borderColor: HEATMAP_ABSENT_BORDER,
+        }}
+      />
+    );
+  }
+  const bg =
+    status === 'present'
+      ? HEATMAP_PRESENT
+      : status === 'virtual'
+        ? HEATMAP_VIRTUAL
+        : HEATMAP_LATE;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        marginRight,
+        borderRadius: 4,
+        backgroundColor: bg,
+      }}
+    />
   );
 }
 
