@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["Z9TTRH45X3.com.kharis.kairos"],
+        "components": [
+          {
+            "/": "/reset-password*",
+            "comment": "Password reset — opens the mobile app when installed."
+          },
+          {
+            "/": "/verify-email*",
+            "comment": "Email verification — opens the mobile app when installed."
+          }
+        ]
+      }
+    ]
+  }
+}

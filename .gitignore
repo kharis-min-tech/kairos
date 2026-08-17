@@ -14,3 +14,8 @@ grant-proposal/
 
 # Windows/WSL mark-of-the-web metadata
 *:Zone.Identifier
+
+# Android signing keystores — private material. `eas credentials --download`
+# drops these into apps/mobile/; they must never be committed.
+*.jks
+*.keystore

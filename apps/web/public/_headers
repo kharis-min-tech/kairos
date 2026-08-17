@@ -1,0 +1,11 @@
+# Apple + Android universal-link / app-link association files.
+#
+# Apple's spec requires application/json + no auth prompt + no redirect. The
+# file has no extension, so Cloudflare Pages guesses application/octet-stream —
+# force the right MIME here.
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
