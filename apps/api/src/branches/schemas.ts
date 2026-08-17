@@ -17,6 +17,12 @@ export const createBranchSchema = z.object({
   email: z.string().email().max(100).optional(),
   establishedDate: z.string().optional(),
   serviceSchedule: z.array(serviceScheduleItemSchema).optional(),
+  // Self-check-in configuration — tuned per branch via the mobile My-Branch
+  // screen. Bounds mirror the DB CHECK constraints in migration 0041.
+  selfCheckInEnabled: z.boolean().optional(),
+  selfCheckInOpenMinutesBefore: z.number().int().min(0).max(240).optional(),
+  selfCheckInCloseMinutesAfter: z.number().int().min(0).max(480).optional(),
+  selfCheckInLateAfterMinutes: z.number().int().min(0).max(480).optional(),
 });
 
 export const updateBranchSchema = createBranchSchema.partial();

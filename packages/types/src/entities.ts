@@ -63,6 +63,10 @@ export interface Branch extends BaseEntity {
   establishedDate: string | null; // ISO date string
   isActive: boolean;
   serviceSchedule?: ServiceSchedule[];
+  selfCheckInEnabled: boolean;
+  selfCheckInOpenMinutesBefore: number;
+  selfCheckInCloseMinutesAfter: number;
+  selfCheckInLateAfterMinutes: number;
 }
 
 export interface BranchWithRegion extends Branch {

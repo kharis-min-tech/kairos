@@ -444,6 +444,121 @@ describe('recordAttendance', () => {
   });
 });
 
+// ── selfCheckIn ────────────────────────────────────────────
+
+describe('selfCheckIn', () => {
+  // Times are all "now = 2026-05-24T09:15:00Z"; service starts 09:00.
+  // With defaults (open 30 min before, close 90 after, late after 30) the
+  // window is [08:30, 10:30] and status flips to Late after 09:30.
+  const now = new Date('2026-05-24T09:15:00Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  const configRow = (overrides: Partial<{
+    enabled: boolean;
+    openBefore: number;
+    closeAfter: number;
+    lateAfter: number;
+    serviceDate: Date;
+    isActive: boolean;
+  }> = {}) => [{
+    serviceId,
+    serviceDate: overrides.serviceDate ?? new Date('2026-05-24T09:00:00Z'),
+    isActive: overrides.isActive ?? true,
+    branchId,
+    enabled: overrides.enabled ?? true,
+    openBefore: overrides.openBefore ?? 30,
+    closeAfter: overrides.closeAfter ?? 90,
+    lateAfter: overrides.lateAfter ?? 30,
+  }];
+
+  it('records Present inside the window before the late threshold', async () => {
+    setupSelectSequence(
+      configRow(), // service+branch config
+      [],          // no existing attendance row
+    );
+    setupInsert(undefined);
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.status).toBe('Present');
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('records Late when past the late threshold but inside the close window', async () => {
+    vi.setSystemTime(new Date('2026-05-24T09:45:00Z'));
+    setupSelectSequence(configRow(), []);
+    setupInsert(undefined);
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.status).toBe('Late');
+  });
+
+  it('rejects when window has not opened yet', async () => {
+    vi.setSystemTime(new Date('2026-05-24T08:00:00Z'));
+    setupSelectSequence(configRow());
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects when window has closed', async () => {
+    vi.setSystemTime(new Date('2026-05-24T11:00:00Z'));
+    setupSelectSequence(configRow());
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects when branch has self-check-in disabled', async () => {
+    setupSelectSequence(configRow({ enabled: false }));
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects cross-branch attempt from a non-admin', async () => {
+    setupSelectSequence([{
+      serviceId,
+      serviceDate: new Date('2026-05-24T09:00:00Z'),
+      isActive: true,
+      branchId: otherBranchId, // not the caller's branch
+      enabled: true,
+      openBefore: 30,
+      closeAfter: 90,
+      lateAfter: 30,
+    }]);
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('is idempotent — returns the existing row if the member already checked in', async () => {
+    setupSelectSequence(
+      configRow(),
+      [{ status: 'Present', arrivalTime: new Date('2026-05-24T09:05:00Z') }],
+    );
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.alreadyCheckedIn).toBe(true);
+    expect(r.status).toBe('Present');
+  });
+
+  it('throws NotFound for an inactive or missing service', async () => {
+    setupSelectSequence([]);
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+});
+
 // ── listAttendance ─────────────────────────────────────────
 
 describe('listAttendance', () => {

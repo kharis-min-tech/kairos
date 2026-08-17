@@ -186,6 +186,10 @@ export interface CreateBranchRequest {
   email?: string;
   establishedDate?: string;
   serviceSchedule?: { day: string; time: string; type: string }[];
+  selfCheckInEnabled?: boolean;
+  selfCheckInOpenMinutesBefore?: number;
+  selfCheckInCloseMinutesAfter?: number;
+  selfCheckInLateAfterMinutes?: number;
 }
 
 export interface UpdateBranchRequest extends Partial<CreateBranchRequest> {}
@@ -980,6 +984,30 @@ export interface ServiceAttendanceRow {
   isFirstTimeVisitor: boolean;
   recordedBy: string;
   recordedAt: string;
+}
+
+// ── Self check-in ─────────────────────────────────────────
+
+export interface SelfCheckInResult {
+  serviceId: string;
+  memberId: string;
+  status: 'Present' | 'Late';
+  arrivalTime: string;
+  alreadyCheckedIn: boolean;
+}
+
+/** Per-service check-in candidate the mobile Check-in tab renders. */
+export interface SelfCheckInCandidate {
+  serviceId: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+  windowOpensAt: string;
+  windowClosesAt: string;
+  lateAfterAt: string;
+  /** `open` = tap to check in. `opens-soon` = show countdown. `closed` = past the window. */
+  status: 'open' | 'opens-soon' | 'closed';
+  minutesUntilOpen: number | null;
 }
 
 export interface AttendanceTrendPoint {

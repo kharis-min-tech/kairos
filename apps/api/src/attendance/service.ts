@@ -733,6 +733,208 @@ export async function recordAttendance(
   return { recorded: rows.length };
 }
 
+// ── Self-check-in ─────────────────────────────────────────
+//
+// The signed-in member records their own attendance. Guardrails against
+// fraud/backdating live on the branch: an admin sets a window
+// [startTime − openMinutesBefore, startTime + closeMinutesAfter] plus a late
+// threshold. Idempotent — repeat calls inside the window return the existing
+// row rather than 409, so a jittery tap doesn't upset the caller.
+
+export interface SelfCheckInResult {
+  serviceId: string;
+  memberId: string;
+  status: 'Present' | 'Late';
+  arrivalTime: string;
+  alreadyCheckedIn: boolean;
+}
+
+export async function selfCheckIn(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+): Promise<SelfCheckInResult> {
+  // Grab the service + its branch's self-check-in config in one query so
+  // the window math + gates run against the same snapshot.
+  const [row] = await db
+    .select({
+      serviceId: services.id,
+      serviceDate: services.serviceDate,
+      isActive: services.isActive,
+      branchId: services.branchId,
+      enabled: branches.selfCheckInEnabled,
+      openBefore: branches.selfCheckInOpenMinutesBefore,
+      closeAfter: branches.selfCheckInCloseMinutesAfter,
+      lateAfter: branches.selfCheckInLateAfterMinutes,
+    })
+    .from(services)
+    .innerJoin(branches, eq(services.branchId, branches.id))
+    .where(eq(services.id, serviceId))
+    .limit(1);
+
+  if (!row || !row.isActive) throw new NotFoundError('Service');
+
+  // Cross-branch attempt: your home branch is your check-in scope. Admin/
+  // pastor bypass the branch match — useful when they're visiting a satellite.
+  if (row.branchId !== auth.branchId && !authHasCapability(auth, 'branch:read')) {
+    throw new ForbiddenError('You can only self-check-in at your home branch');
+  }
+
+  if (!row.enabled) {
+    throw new ForbiddenError(
+      'Self check-in is turned off for this branch. Ask an usher to record you.',
+    );
+  }
+
+  const now = new Date();
+  const start = new Date(row.serviceDate);
+  const opensAt = new Date(start.getTime() - row.openBefore * 60_000);
+  const closesAt = new Date(start.getTime() + row.closeAfter * 60_000);
+  const lateAt = new Date(start.getTime() + row.lateAfter * 60_000);
+
+  if (now < opensAt) {
+    const minsUntil = Math.ceil((opensAt.getTime() - now.getTime()) / 60_000);
+    throw new ForbiddenError(
+      `Self check-in isn't open yet — opens in ${minsUntil} minute${minsUntil === 1 ? '' : 's'}.`,
+    );
+  }
+  if (now > closesAt) {
+    throw new ForbiddenError(
+      'Self check-in has closed for this service. Ask an usher to record you.',
+    );
+  }
+
+  // Idempotent: return the existing row if the member already checked in.
+  const [existing] = await db
+    .select({
+      status: serviceAttendance.attendanceStatus,
+      arrivalTime: serviceAttendance.arrivalTime,
+    })
+    .from(serviceAttendance)
+    .where(
+      and(
+        eq(serviceAttendance.serviceId, serviceId),
+        eq(serviceAttendance.memberId, auth.memberId),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    return {
+      serviceId,
+      memberId: auth.memberId,
+      status: existing.status as 'Present' | 'Late',
+      arrivalTime: (existing.arrivalTime ?? now).toISOString(),
+      alreadyCheckedIn: true,
+    };
+  }
+
+  const status: 'Present' | 'Late' = now > lateAt ? 'Late' : 'Present';
+
+  await db.insert(serviceAttendance).values({
+    serviceId,
+    memberId: auth.memberId,
+    attendanceStatus: status,
+    arrivalTime: now,
+    isFirstTimeVisitor: false,
+    recordedBy: auth.memberId,
+  });
+
+  return {
+    serviceId,
+    memberId: auth.memberId,
+    status,
+    arrivalTime: now.toISOString(),
+    alreadyCheckedIn: false,
+  };
+}
+
+/**
+ * Small helper the mobile Check-in tab uses to pick a service without
+ * duplicating window math client-side. Returns the services on the caller's
+ * home branch today whose window is currently open, most-relevant first.
+ */
+export interface CheckInCandidate {
+  serviceId: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+  windowOpensAt: string;
+  windowClosesAt: string;
+  lateAfterAt: string;
+  status: 'open' | 'opens-soon' | 'closed';
+  minutesUntilOpen: number | null;
+}
+
+export async function listSelfCheckInCandidates(
+  db: Database,
+  auth: AuthContext,
+): Promise<CheckInCandidate[]> {
+  const branchId = auth.branchId;
+  if (!branchId) return [];
+
+  // "Today" spans a wide window so we still surface a 9am service at 7pm
+  // ("closed") for the UI to explain, and a 9am service at 6am ("opens-soon").
+  const today = new Date();
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const rows = await db
+    .select({
+      serviceId: services.id,
+      serviceDate: services.serviceDate,
+      serviceType: services.serviceType,
+      serviceTitle: services.serviceTitle,
+      enabled: branches.selfCheckInEnabled,
+      openBefore: branches.selfCheckInOpenMinutesBefore,
+      closeAfter: branches.selfCheckInCloseMinutesAfter,
+      lateAfter: branches.selfCheckInLateAfterMinutes,
+    })
+    .from(services)
+    .innerJoin(branches, eq(services.branchId, branches.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, startOfDay),
+        lte(services.serviceDate, endOfDay),
+      ),
+    )
+    .orderBy(services.serviceDate);
+
+  const now = Date.now();
+  return rows
+    .filter((r) => r.enabled)
+    .map((r) => {
+      const start = new Date(r.serviceDate).getTime();
+      const opensAt = start - r.openBefore * 60_000;
+      const closesAt = start + r.closeAfter * 60_000;
+      const lateAt = start + r.lateAfter * 60_000;
+      let status: CheckInCandidate['status'];
+      let minutesUntilOpen: number | null = null;
+      if (now < opensAt) {
+        status = 'opens-soon';
+        minutesUntilOpen = Math.ceil((opensAt - now) / 60_000);
+      } else if (now > closesAt) {
+        status = 'closed';
+      } else {
+        status = 'open';
+      }
+      return {
+        serviceId: r.serviceId,
+        serviceDate: new Date(r.serviceDate).toISOString(),
+        serviceType: r.serviceType,
+        serviceTitle: r.serviceTitle,
+        windowOpensAt: new Date(opensAt).toISOString(),
+        windowClosesAt: new Date(closesAt).toISOString(),
+        lateAfterAt: new Date(lateAt).toISOString(),
+        status,
+        minutesUntilOpen,
+      };
+    });
+}
+
 export async function listAttendance(db: Database, auth: AuthContext, serviceId: string) {
   await getService(db, auth, serviceId);
 

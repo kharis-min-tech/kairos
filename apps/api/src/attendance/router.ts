@@ -34,6 +34,8 @@ import {
   getAttendanceByBranch,
   getAttendanceSummary,
   canRecordAttendance,
+  selfCheckIn,
+  listSelfCheckInCandidates,
   getCohortDiff,
   getMyAttendance,
   getDepartmentAttendance,
@@ -207,6 +209,31 @@ attendanceRouter.post(
     return c.json(successResponse(result, 'Attendance recorded'), 201);
   },
 );
+
+// Self check-in — signed-in member records their own attendance inside the
+// branch-configured window. See selfCheckIn service comment for the guardrails.
+attendanceRouter.post('/services/:id/self-check-in', async (c) => {
+  const auth = getAuth(c);
+  const result = await selfCheckIn(db, auth, c.req.param('id')!);
+  return c.json(
+    successResponse(
+      result,
+      result.alreadyCheckedIn
+        ? `Already checked in — status: ${result.status}`
+        : `Checked in as ${result.status}`,
+    ),
+    result.alreadyCheckedIn ? 200 : 201,
+  );
+});
+
+// Candidates: today's services with per-service window state so the mobile
+// Check-in tab can render the CTA (open) / countdown (opens-soon) / hint (closed)
+// without duplicating the window math.
+attendanceRouter.get('/self-check-in/candidates', async (c) => {
+  const auth = getAuth(c);
+  const result = await listSelfCheckInCandidates(db, auth);
+  return c.json(successResponse(result));
+});
 
 attendanceRouter.get('/services/:id/records', async (c) => {
   const auth = getAuth(c);

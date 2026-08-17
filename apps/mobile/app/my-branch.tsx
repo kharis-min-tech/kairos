@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,18 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  TextInput,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Map, MapPin, Phone, Mail, Calendar, Pencil } from 'lucide-react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, Map, MapPin, Phone, Mail, Calendar, Pencil, ScanLine } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   colors,
   gradients,
@@ -25,6 +28,7 @@ import {
   typography,
 } from '@kairos/ui-native';
 import type { BranchWithRegion } from '@kairos/types';
+import { alert } from '@/lib/alert';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
@@ -51,6 +55,15 @@ export default function MyBranch() {
     queryKey: ['branch-leadership', active?.id],
     enabled: !!active?.id,
     queryFn: async () => (await api.leadership.list(active!.id)).data ?? [],
+  });
+
+  // Full authenticated branch record — needed for the self-check-in config,
+  // since the public listing only projects id/name/region.
+  const canManageBranch = user?.systemRole === 'admin';
+  const branchDetail = useQuery({
+    queryKey: ['branch-detail', active?.id],
+    enabled: !!active?.id && canManageBranch,
+    queryFn: async () => (await api.branches.get(active!.id)).data!,
   });
 
   const currentLeaders = useMemo(
@@ -255,10 +268,155 @@ export default function MyBranch() {
                 ))}
               </View>
             ) : null}
+
+            {canManageBranch && branchDetail.data ? (
+              <SelfCheckInSettingsCard branch={branchDetail.data} />
+            ) : null}
           </>
         ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+interface SelfCheckInBranch {
+  id: string;
+  selfCheckInEnabled: boolean;
+  selfCheckInOpenMinutesBefore: number;
+  selfCheckInCloseMinutesAfter: number;
+  selfCheckInLateAfterMinutes: number;
+}
+
+function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState(branch.selfCheckInEnabled);
+  const [openBefore, setOpenBefore] = useState(String(branch.selfCheckInOpenMinutesBefore));
+  const [closeAfter, setCloseAfter] = useState(String(branch.selfCheckInCloseMinutesAfter));
+  const [lateAfter, setLateAfter] = useState(String(branch.selfCheckInLateAfterMinutes));
+
+  // Rehydrate when the server row changes (e.g. after refresh).
+  useEffect(() => {
+    setEnabled(branch.selfCheckInEnabled);
+    setOpenBefore(String(branch.selfCheckInOpenMinutesBefore));
+    setCloseAfter(String(branch.selfCheckInCloseMinutesAfter));
+    setLateAfter(String(branch.selfCheckInLateAfterMinutes));
+  }, [branch]);
+
+  const dirty =
+    enabled !== branch.selfCheckInEnabled ||
+    Number(openBefore) !== branch.selfCheckInOpenMinutesBefore ||
+    Number(closeAfter) !== branch.selfCheckInCloseMinutesAfter ||
+    Number(lateAfter) !== branch.selfCheckInLateAfterMinutes;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const openN = Math.max(0, Math.min(240, Number(openBefore) || 0));
+      const closeN = Math.max(0, Math.min(480, Number(closeAfter) || 0));
+      const lateN = Math.max(0, Math.min(480, Number(lateAfter) || 0));
+      const res = await api.branches.update(branch.id, {
+        selfCheckInEnabled: enabled,
+        selfCheckInOpenMinutesBefore: openN,
+        selfCheckInCloseMinutesAfter: closeN,
+        selfCheckInLateAfterMinutes: lateN,
+      });
+      if (!res.success) throw new Error(res.message ?? 'Save failed');
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['branch-detail', branch.id] });
+      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
+      alert.info('Saved', 'Self check-in settings updated.');
+    },
+    onError: (e: Error) =>
+      alert.info('Could not save', e.message ?? 'Please try again.'),
+  });
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconTile}>
+          <ScanLine color={colors.primary} size={16} strokeWidth={1.5} />
+        </View>
+        <Text style={styles.sectionHeaderText}>Self check-in</Text>
+      </View>
+
+      <Card padding="md" style={{ gap: spacing.md }}>
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1, paddingRight: spacing.sm }}>
+            <Text style={styles.settingTitle}>Enabled for this branch</Text>
+            <Text style={styles.settingMeta}>
+              When off, members won&apos;t see the &ldquo;I&apos;m here&rdquo; button.
+              Attendance is only recorded by a desk volunteer.
+            </Text>
+          </View>
+          <Switch
+            value={enabled}
+            onValueChange={setEnabled}
+            trackColor={{ false: 'rgba(26,28,28,0.15)', true: colors.primary }}
+            thumbColor="#ffffff"
+          />
+        </View>
+
+        <MinuteField
+          label="Opens (minutes before start)"
+          value={openBefore}
+          onChangeText={setOpenBefore}
+          disabled={!enabled}
+        />
+        <MinuteField
+          label="Closes (minutes after start)"
+          value={closeAfter}
+          onChangeText={setCloseAfter}
+          disabled={!enabled}
+          hint="Anyone tapping after this is told the desk needs to record them."
+        />
+        <MinuteField
+          label="Marked Late after (minutes)"
+          value={lateAfter}
+          onChangeText={setLateAfter}
+          disabled={!enabled}
+          hint="Check-ins past this point stamp as Late instead of Present."
+        />
+
+        <Button
+          label={save.isPending ? 'Saving…' : 'Save changes'}
+          onPress={() => save.mutate()}
+          loading={save.isPending}
+          disabled={!dirty || save.isPending}
+        />
+      </Card>
+    </View>
+  );
+}
+
+function MinuteField({
+  label,
+  value,
+  onChangeText,
+  disabled,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  disabled?: boolean;
+  hint?: string;
+}) {
+  return (
+    <View style={{ gap: 4 }}>
+      <Text style={styles.settingTitle}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType="number-pad"
+        editable={!disabled}
+        style={[
+          styles.minuteInput,
+          disabled ? styles.minuteInputDisabled : null,
+        ]}
+      />
+      {hint ? <Text style={styles.settingMeta}>{hint}</Text> : null}
+    </View>
   );
 }
 
@@ -462,5 +620,34 @@ const styles = StyleSheet.create({
     color: 'rgba(26,28,28,0.6)',
     textAlign: 'center',
     lineHeight: 20,
+  },
+
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingTitle: {
+    ...typography.body,
+    color: colors.ink,
+    fontWeight: '600',
+  },
+  settingMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.6)',
+    lineHeight: 16,
+  },
+  minuteInput: {
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.15)',
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    ...typography.body,
+    color: colors.ink,
+    backgroundColor: colors.cardLight,
+  },
+  minuteInputDisabled: {
+    backgroundColor: colors.subtleLight,
+    color: 'rgba(26,28,28,0.4)',
   },
 });
