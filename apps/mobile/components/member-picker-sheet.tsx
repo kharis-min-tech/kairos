@@ -89,23 +89,17 @@ export function MemberPickerSheet({
           <Text style={styles.sheetTitle}>{title}</Text>
           <Text style={styles.sheetSub}>{subtitle}</Text>
 
-          <View style={styles.searchWrap}>
-            <Search
-              color="rgba(26,28,28,0.4)"
-              size={16}
-              strokeWidth={1.5}
-              style={styles.searchIcon}
-            />
-            <Input
-              value={searchInput}
-              onChangeText={setSearchInput}
-              placeholder="Search by name or email"
-              autoCapitalize="none"
-              autoCorrect={false}
-              containerStyle={{ flex: 1 }}
-              autoFocus
-            />
-          </View>
+          <Input
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="Search by name or email"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+            leadingSlot={
+              <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+            }
+          />
 
           <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
             {results.isLoading ? (
@@ -187,18 +181,6 @@ const styles = StyleSheet.create({
     ...typography.meta,
     color: 'rgba(26,28,28,0.6)',
     marginTop: -6,
-  },
-  searchWrap: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: spacing.md,
-    top: '50%',
-    marginTop: -8,
-    zIndex: 1,
   },
   row: {
     flexDirection: 'row',

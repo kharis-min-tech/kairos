@@ -14,7 +14,7 @@ import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Plus, Check, Map as MapIcon } from 'lucide-react-native';
+import { ChevronLeft, Plus, Check, Map as MapIcon, Search } from 'lucide-react-native';
 import {
   Badge,
   Button,
@@ -351,6 +351,9 @@ function RegionFormSheet({
               placeholder="Search countries"
               autoCapitalize="none"
               autoCorrect={false}
+              leadingSlot={
+                <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+              }
             />
             <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
               {filteredCountries.map((c) => {

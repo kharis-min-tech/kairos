@@ -108,6 +108,7 @@ export default function MyFellowship() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.chipsScroll}
             contentContainerStyle={styles.chipsRow}
           >
             {fellowships.map((f) => {
@@ -213,7 +214,11 @@ export default function MyFellowship() {
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
-                    <View key={m.id} style={styles.memberRow}>
+                    <Pressable
+                      key={m.id}
+                      onPress={() => router.push(`/members/${m.memberId}` as never)}
+                      style={styles.memberRow}
+                    >
                       <Avatar
                         size="sm"
                         photoUrl={m.memberPhotoUrl ?? undefined}
@@ -228,7 +233,7 @@ export default function MyFellowship() {
                           <Text style={styles.memberMeta}>New Believer · {m.nbStage}</Text>
                         ) : null}
                       </View>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               )}
@@ -295,13 +300,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
+  chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
     gap: spacing.sm,
     paddingRight: spacing.lg,
+    alignItems: 'center',
   },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    height: 32,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: colors.subtleLight,
   },

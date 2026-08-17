@@ -97,7 +97,9 @@ export default function NewBelievers() {
                   : null
               }
               onPress={
-                personalScope ? undefined : () => router.push(`/members/${e.memberId}`)
+                personalScope
+                  ? undefined
+                  : () => router.push(`/new-believers/${e.id}` as never)
               }
             />
           ))
