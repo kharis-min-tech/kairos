@@ -104,9 +104,7 @@ export default function LoginScreen() {
             />
 
             <Pressable
-              onPress={() =>
-                alert.info('Reset password', 'Password reset coming soon.')
-              }
+              onPress={() => router.push('/(auth)/forgot-password' as never)}
               style={styles.forgotRow}
               hitSlop={6}
             >
@@ -145,12 +143,7 @@ export default function LoginScreen() {
           </View>
 
           <Pressable
-            onPress={() =>
-              alert.info(
-                'Create account',
-                'Account creation flow will land in the next release. In the meantime, an admin can add you.',
-              )
-            }
+            onPress={() => router.push('/(auth)/signup' as never)}
             style={styles.signupRow}
             hitSlop={8}
           >

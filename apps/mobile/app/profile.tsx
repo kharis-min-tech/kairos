@@ -1,8 +1,10 @@
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Pencil } from 'lucide-react-native';
 import { Avatar, Badge, Card, colors, spacing, typography } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
@@ -12,6 +14,53 @@ import { useAuthStore } from '@/store/auth';
 export default function Profile() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleEditPhoto() {
+    if (!user) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      alert.info(
+        'Permission needed',
+        'Grant photo library access in Settings to change your profile photo.',
+      );
+      return;
+    }
+    const pick = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (pick.canceled || !pick.assets?.[0]) return;
+    const asset = pick.assets[0];
+
+    setUploading(true);
+    try {
+      const mint = await api.media.mintUploadUrl({ purpose: 'profile-photo' });
+      const { uploadUrl, deliveryUrl } = mint.data!;
+
+      const form = new FormData();
+      // RN's FormData accepts { uri, name, type } for file parts.
+      form.append('file', {
+        uri: asset.uri,
+        name: 'upload.jpg',
+        type: 'image/jpeg',
+      } as unknown as Blob);
+
+      const res = await fetch(uploadUrl, { method: 'POST', body: form });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+
+      await api.members.update(user.id, { photoUrl: deliveryUrl });
+      await updateUser({ photoUrl: deliveryUrl });
+      alert.info('Photo updated', 'Your new profile photo is live.');
+    } catch (e) {
+      alert.info('Upload failed', e instanceof Error ? e.message : 'Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const branches = useQuery({
     queryKey: ['branches', 'public'],
@@ -58,11 +107,16 @@ export default function Profile() {
               lastName={user.lastName}
             />
             <Pressable
-              onPress={() => alert.info('Edit photo', 'Photo editor lands in a later phase.')}
+              onPress={uploading ? undefined : handleEditPhoto}
               style={styles.editBadge}
               accessibilityLabel="Edit photo"
+              disabled={uploading}
             >
-              <Pencil color="#ffffff" size={12} strokeWidth={2} />
+              {uploading ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Pencil color="#ffffff" size={12} strokeWidth={2} />
+              )}
             </Pressable>
           </View>
           <Text style={styles.name}>

@@ -1,0 +1,605 @@
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  MailCheck,
+} from 'lucide-react-native';
+import {
+  Button,
+  Input,
+  colors,
+  gradients,
+  radii,
+  spacing,
+  typography,
+} from '@kairos/ui-native';
+import { api } from '@/lib/api-client';
+
+const MIN_PASSWORD = 8;
+
+type PickerKind = 'branch' | 'gender' | null;
+
+const GENDERS: ('Male' | 'Female')[] = ['Male', 'Female'];
+
+export default function SignupScreen() {
+  const router = useRouter();
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState(''); // YYYY-MM-DD
+  const [gender, setGender] = useState<'Male' | 'Female' | ''>('');
+  const [homeBranchId, setHomeBranchId] = useState('');
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const [picker, setPicker] = useState<PickerKind>(null);
+
+  const branches = useQuery({
+    queryKey: ['branches', 'public'],
+    queryFn: async () => (await api.branches.listPublic()).data ?? [],
+  });
+
+  const branchLabel = useMemo(() => {
+    const b = branches.data?.find((br) => br.id === homeBranchId);
+    return b ? `${b.branchName}${b.regionName ? ` · ${b.regionName}` : ''}` : '';
+  }, [branches.data, homeBranchId]);
+
+  function validate() {
+    const next: Record<string, string> = {};
+    if (!firstName.trim()) next['firstName'] = 'Required';
+    if (!lastName.trim()) next['lastName'] = 'Required';
+    if (!email.trim()) next['email'] = 'Required';
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()))
+      next['email'] = 'Enter a valid email';
+    if (!password) next['password'] = 'Required';
+    else if (password.length < MIN_PASSWORD)
+      next['password'] = `At least ${MIN_PASSWORD} characters`;
+    if (!homeBranchId) next['homeBranchId'] = 'Choose your home branch';
+    if (!acceptedPolicies) next['acceptedPolicies'] = 'Required to create an account';
+    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth))
+      next['dateOfBirth'] = 'Use YYYY-MM-DD';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
+  const signup = useMutation({
+    mutationFn: async () => {
+      const res = await api.auth.signup({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        password,
+        dateOfBirth: dateOfBirth || undefined,
+        gender: gender || undefined,
+        homeBranchId,
+        acceptedPolicies,
+      });
+      if (!res.success) throw new Error(res.message ?? 'Sign up failed');
+      return res.data;
+    },
+    onSuccess: () => setDone(true),
+    onError: (e: Error) => setServerError(e.message ?? 'Something went wrong'),
+  });
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Create account</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.brand}>
+            <View style={styles.logoTile}>
+              <LinearGradient
+                colors={gradients.brand}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.logoGradientFill}
+              />
+              <Text style={styles.logoK}>K</Text>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            {done ? (
+              <>
+                <View style={styles.successBadge}>
+                  <MailCheck color={colors.success} size={22} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.title}>Check your inbox</Text>
+                <Text style={styles.body}>
+                  We&apos;ve sent a link to{' '}
+                  <Text style={styles.bodyStrong}>{email.trim()}</Text> to verify your
+                  email. Once verified, an admin will approve your account for
+                  sign-in.
+                </Text>
+                <Button
+                  label="Back to sign in"
+                  size="lg"
+                  fullWidth
+                  onPress={() => router.replace('/(auth)/login')}
+                  style={{ marginTop: spacing.md }}
+                />
+              </>
+            ) : (
+              <>
+                <Text style={styles.title}>Join Kharis Church</Text>
+                <Text style={styles.body}>
+                  Create your account. An admin will approve access before you
+                  can sign in.
+                </Text>
+
+                {serverError ? (
+                  <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>{serverError}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.pairRow}>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      label="First name"
+                      value={firstName}
+                      onChangeText={(v) => {
+                        setFirstName(v);
+                        setErrors((p) => ({ ...p, firstName: '' }));
+                      }}
+                      autoCapitalize="words"
+                      error={errors['firstName']}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      label="Last name"
+                      value={lastName}
+                      onChangeText={(v) => {
+                        setLastName(v);
+                        setErrors((p) => ({ ...p, lastName: '' }));
+                      }}
+                      autoCapitalize="words"
+                      error={errors['lastName']}
+                    />
+                  </View>
+                </View>
+
+                <Input
+                  label="Email"
+                  value={email}
+                  onChangeText={(v) => {
+                    setEmail(v);
+                    setErrors((p) => ({ ...p, email: '' }));
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  error={errors['email']}
+                  containerStyle={{ marginTop: spacing.md }}
+                />
+
+                <Input
+                  label="Phone (optional)"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  containerStyle={{ marginTop: spacing.md }}
+                />
+
+                <View style={{ marginTop: spacing.md, gap: 4 }}>
+                  <Text style={styles.fieldLabel}>Home branch</Text>
+                  <PickerRow
+                    value={branchLabel}
+                    placeholder={
+                      branches.isLoading ? 'Loading branches…' : 'Choose your home branch'
+                    }
+                    onPress={() => setPicker('branch')}
+                    error={errors['homeBranchId']}
+                  />
+                </View>
+
+                <View style={styles.pairRow}>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      label="Date of birth"
+                      value={dateOfBirth}
+                      onChangeText={setDateOfBirth}
+                      placeholder="YYYY-MM-DD"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      error={errors['dateOfBirth']}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fieldLabel}>Gender</Text>
+                    <PickerRow
+                      value={gender}
+                      placeholder="—"
+                      onPress={() => setPicker('gender')}
+                    />
+                  </View>
+                </View>
+
+                <Input
+                  label="Password"
+                  value={password}
+                  onChangeText={(v) => {
+                    setPassword(v);
+                    setErrors((p) => ({ ...p, password: '' }));
+                  }}
+                  secureTextEntry
+                  secureToggle
+                  placeholder={`At least ${MIN_PASSWORD} characters`}
+                  error={errors['password']}
+                  containerStyle={{ marginTop: spacing.md }}
+                />
+
+                <Pressable
+                  onPress={() => {
+                    setAcceptedPolicies((p) => !p);
+                    setErrors((p) => ({ ...p, acceptedPolicies: '' }));
+                  }}
+                  style={styles.consentRow}
+                >
+                  <View
+                    style={[
+                      styles.consentBox,
+                      acceptedPolicies && styles.consentBoxChecked,
+                    ]}
+                  >
+                    {acceptedPolicies ? (
+                      <Check color="#ffffff" size={12} strokeWidth={2.5} />
+                    ) : null}
+                  </View>
+                  <Text style={styles.consentText}>
+                    I accept the Terms of Service and Privacy Notice.
+                  </Text>
+                </Pressable>
+                {errors['acceptedPolicies'] ? (
+                  <Text style={styles.errorLine}>{errors['acceptedPolicies']}</Text>
+                ) : null}
+
+                <Button
+                  label="Create account"
+                  onPress={() => {
+                    setServerError(null);
+                    if (validate()) signup.mutate();
+                  }}
+                  loading={signup.isPending}
+                  size="lg"
+                  fullWidth
+                  iconRight={<ArrowRight color="#ffffff" size={16} strokeWidth={2} />}
+                  style={{ marginTop: spacing.lg }}
+                />
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Branch picker */}
+      <Modal
+        visible={picker === 'branch'}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPicker(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Home branch</Text>
+            <ScrollView style={{ maxHeight: 400 }}>
+              {(branches.data ?? []).map((b) => {
+                const active = b.id === homeBranchId;
+                return (
+                  <Pressable
+                    key={b.id}
+                    onPress={() => {
+                      setHomeBranchId(b.id);
+                      setErrors((p) => ({ ...p, homeBranchId: '' }));
+                      setPicker(null);
+                    }}
+                    style={[styles.sheetRow, active && styles.sheetRowActive]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.sheetRowLabel,
+                          active && styles.sheetRowLabelActive,
+                        ]}
+                      >
+                        {b.branchName}
+                      </Text>
+                      {b.regionName ? (
+                        <Text style={styles.sheetRowMeta}>{b.regionName}</Text>
+                      ) : null}
+                    </View>
+                    {active ? (
+                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Gender picker */}
+      <Modal
+        visible={picker === 'gender'}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPicker(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Gender</Text>
+            {GENDERS.map((g) => {
+              const active = g === gender;
+              return (
+                <Pressable
+                  key={g}
+                  onPress={() => {
+                    setGender(g);
+                    setPicker(null);
+                  }}
+                  style={[styles.sheetRow, active && styles.sheetRowActive]}
+                >
+                  <Text
+                    style={[
+                      styles.sheetRowLabel,
+                      active && styles.sheetRowLabelActive,
+                    ]}
+                  >
+                    {g}
+                  </Text>
+                  {active ? (
+                    <Check color={colors.primary} size={16} strokeWidth={2} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+function PickerRow({
+  value,
+  placeholder,
+  onPress,
+  error,
+}: {
+  value: string;
+  placeholder: string;
+  onPress: () => void;
+  error?: string;
+}) {
+  return (
+    <View style={{ gap: 4 }}>
+      <Pressable
+        onPress={onPress}
+        style={[styles.pickerField, error ? styles.pickerFieldError : null]}
+      >
+        <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
+          {value || placeholder}
+        </Text>
+        <ChevronRight color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+      </Pressable>
+      {error ? <Text style={styles.errorLine}>{error}</Text> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.pageLight },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  scroll: {
+    padding: spacing.lg,
+    gap: spacing.lg,
+  },
+  brand: { alignItems: 'center', marginTop: spacing.md },
+  logoTile: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoGradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
+  card: {
+    backgroundColor: colors.cardLight,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  title: { ...typography.screenTitle, color: colors.ink },
+  body: {
+    ...typography.body,
+    color: 'rgba(26,28,28,0.7)',
+    lineHeight: 20,
+  },
+  bodyStrong: { color: colors.ink, fontWeight: '600' },
+  successBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  errorBanner: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.danger,
+    marginTop: spacing.sm,
+  },
+  errorText: { ...typography.meta, color: colors.danger },
+  errorLine: { ...typography.meta, color: colors.danger },
+
+  pairRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  fieldLabel: {
+    ...typography.eyebrow,
+    color: colors.ink,
+    opacity: 0.6,
+    marginBottom: spacing.xs,
+  },
+  pickerField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.cardLight,
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.12)',
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
+  },
+  pickerFieldError: {
+    borderColor: colors.danger,
+    borderWidth: 1.5,
+  },
+  pickerValue: { ...typography.body, color: colors.ink, flex: 1 },
+  pickerPlaceholder: {
+    ...typography.body,
+    color: 'rgba(26,28,28,0.4)',
+    flex: 1,
+  },
+
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  consentBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: 'rgba(26,28,28,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  consentBoxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  consentText: {
+    ...typography.body,
+    color: colors.ink,
+    flex: 1,
+    lineHeight: 20,
+  },
+
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: {
+    ...typography.cardTitle,
+    color: colors.ink,
+    marginBottom: spacing.xs,
+  },
+  sheetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+    gap: spacing.sm,
+  },
+  sheetRowActive: {
+    backgroundColor: 'rgba(93,63,211,0.08)',
+  },
+  sheetRowLabel: {
+    ...typography.body,
+    color: colors.ink,
+  },
+  sheetRowLabelActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  sheetRowMeta: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+  },
+});
