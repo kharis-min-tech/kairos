@@ -401,6 +401,7 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
       notes: newBelieverAttendance.notes,
       recordedAt: newBelieverAttendance.recordedAt,
       sessionDate: newBelieverSessions.sessionDate,
+      sessionStage: newBelieverSessions.sessionStage,
       topic: newBelieverSessions.topic,
     })
     .from(newBelieverAttendance)
@@ -575,6 +576,24 @@ export async function updateEnrollment(
       throw new ForbiddenError('This member is currently enrolled as a New Believers student and cannot be assigned as a teacher');
     }
   }
+  // Attendance-first gate on mark-session-complete: setting sessionCompletedAt
+  // for a session stage that wasn't already marked requires the student to
+  // have an attendance row for that stage. Blocks the feedback modal from
+  // saving before a teacher has actually taken the register in a session.
+  if (data.sessionCompletedAt) {
+    const existingCompleted = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
+    const newlyCompletedStages = Object.keys(data.sessionCompletedAt).filter(
+      (stage) => SESSION_STAGES.has(stage) && !existingCompleted[stage],
+    );
+    for (const stage of newlyCompletedStages) {
+      if (!(await hasAttendedSessionStage(db, enrollmentId, stage))) {
+        throw new ForbiddenError(
+          `Cannot mark ${stage} complete until attendance has been recorded for that session.`,
+        );
+      }
+    }
+  }
+
   if (
     data.stage &&
     data.stage !== existing.stage &&

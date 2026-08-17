@@ -100,6 +100,15 @@ export default function EnrollmentDetail() {
     isSessionStage &&
     !!sessionCompletedAt[data!.stage] &&
     !!sessionFeedback[data!.stage]?.trim();
+  // Attendance-first gate mirror of the API rule. We can't mark a session
+  // complete (or advance from it) until an attendance row exists at that stage.
+  const hasAttendedCurrentStage =
+    isSessionStage &&
+    !!(data?.attendanceHistory ?? []).some(
+      (a) => a.sessionStage === data!.stage && a.attended,
+    );
+  const canMarkComplete = isSessionStage && hasAttendedCurrentStage && !currentSessionDone;
+  const missingAttendance = isSessionStage && !hasAttendedCurrentStage;
 
   function openMarkComplete(shouldAdvance: boolean) {
     if (!data) return;
@@ -130,6 +139,13 @@ export default function EnrollmentDetail() {
 
   async function advanceStage() {
     if (!data || !nextStage) return;
+    if (missingAttendance) {
+      alert.info(
+        'Mark attendance first',
+        `Record ${data.memberFirstName}’s attendance for ${stageDef?.label ?? data.stage} in the Sessions area before advancing.`,
+      );
+      return;
+    }
     if (isSessionStage && !currentSessionDone) {
       openMarkComplete(true);
       return;
@@ -247,20 +263,35 @@ export default function EnrollmentDetail() {
               ) : null}
             </Card>
 
+            {missingAttendance ? (
+              <Pressable
+                onPress={() => router.push('/new-believers/sessions' as never)}
+                style={styles.attendanceHintCard}
+              >
+                <Text style={styles.attendanceHintTitle}>
+                  Attendance needed first
+                </Text>
+                <Text style={styles.attendanceHintBody}>
+                  Before marking {stageDef?.label ?? data.stage} complete, take
+                  attendance in the session. Tap here to open Sessions.
+                </Text>
+              </Pressable>
+            ) : null}
+
             <View style={styles.actionRow}>
               {isSessionStage && !currentSessionDone ? (
                 <Button
                   label="Mark session complete"
                   variant="secondary"
                   onPress={() => openMarkComplete(false)}
-                  disabled={update.isPending}
+                  disabled={update.isPending || !canMarkComplete}
                 />
               ) : null}
               {nextStage ? (
                 <Button
                   label={`Advance to ${nextStage.label}`}
                   onPress={advanceStage}
-                  disabled={update.isPending}
+                  disabled={update.isPending || missingAttendance}
                 />
               ) : null}
             </View>
@@ -534,6 +565,25 @@ const styles = StyleSheet.create({
   sessionChipInProgressText: { color: colors.goldDark },
 
   actionRow: { gap: spacing.sm },
+
+  attendanceHintCard: {
+    backgroundColor: 'rgba(248,181,55,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,181,55,0.35)',
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: 4,
+  },
+  attendanceHintTitle: {
+    ...typography.body,
+    color: colors.goldDark,
+    fontWeight: '700',
+  },
+  attendanceHintBody: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.7)',
+    lineHeight: 16,
+  },
 
   sectionTitle: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
 

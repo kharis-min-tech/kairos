@@ -428,6 +428,9 @@ describe('updateEnrollment stage advancement', () => {
   it('allows advancing from a session stage when completion and feedback are supplied together', async () => {
     setupSelectSequence(
       [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+      // My new mark-session-complete gate: attendance check for session-1
+      [{ sessionId: 'session-a' }],
+      // Existing stage-advance gate: attendance check for session-1
       [{ sessionId: 'session-a' }],
     );
     setupUpdate([{ id: enrollmentId, stage: 'session-2', branchId }]);
@@ -441,6 +444,8 @@ describe('updateEnrollment stage advancement', () => {
   });
 
   it('refuses to advance from a session stage without matching present attendance', async () => {
+    // With the mark-session-complete gate in place, this now fails at the
+    // earlier gate — same underlying rule, different message.
     setupSelectSequence(
       [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
       [],
@@ -452,7 +457,37 @@ describe('updateEnrollment stage advancement', () => {
         sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
         sessionFeedback: { 'session-1': 'Ready for the next session.' },
       }),
-    ).rejects.toThrow(/attendance has been marked present/);
+    ).rejects.toThrow(/attendance/);
+  });
+
+  it('refuses to mark a session stage complete without attendance (no stage change)', async () => {
+    setupSelectSequence(
+      [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+      // No attendance row for session-1
+      [],
+    );
+    const { updateEnrollment } = await import('./service');
+    await expect(
+      updateEnrollment(mockDb, adminAuth, enrollmentId, {
+        sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+        sessionFeedback: { 'session-1': 'Went well.' },
+      }),
+    ).rejects.toThrow(/Cannot mark session-1 complete/);
+  });
+
+  it('allows marking a session stage complete when attendance exists (no stage change)', async () => {
+    setupSelectSequence(
+      [{ branchId, stage: 'session-1', sessionCompletedAt: {}, sessionFeedback: {}, mentorId: null, memberId }],
+      // Attendance row exists
+      [{ sessionId: 'session-a' }],
+    );
+    setupUpdate([{ id: enrollmentId, stage: 'session-1', branchId }]);
+    const { updateEnrollment } = await import('./service');
+    const result = await updateEnrollment(mockDb, adminAuth, enrollmentId, {
+      sessionCompletedAt: { 'session-1': new Date('2026-05-01').toISOString() },
+      sessionFeedback: { 'session-1': 'Went well.' },
+    });
+    expect(result.stage).toBe('session-1');
   });
 
   it('allows reversing a session move without requiring feedback for the current stage', async () => {

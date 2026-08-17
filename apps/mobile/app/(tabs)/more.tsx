@@ -13,6 +13,7 @@ import {
   UsersRound,
   Building2,
   Sparkles,
+  CalendarClock,
   UserPlus,
   Handshake,
   CheckSquare,
@@ -122,6 +123,11 @@ export default function More() {
             icon={Sparkles}
             label="New Believers pipeline"
             onPress={() => router.push('/new-believers')}
+          />
+          <NavRow
+            icon={CalendarClock}
+            label="New Believers sessions"
+            onPress={() => router.push('/new-believers/sessions' as never)}
           />
           <NavRow
             icon={UserPlus}

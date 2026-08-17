@@ -51,6 +51,7 @@ import type {
   SwitchActiveBranchResponse,
   // New Believers
   NewBelieverEnrollment,
+  NewBelieverEnrollmentDetail,
   NewBelieverEnrollmentWithMember,
   NewBelieverSession,
   NewBelieverAttendanceWithMember,
@@ -1056,7 +1057,7 @@ export function createApiClient(
         alerts: () =>
           client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>('/api/new-believers/enrollments/alerts'),
         get: (id: string) =>
-          client.get<ApiResponse<NewBelieverEnrollmentWithMember>>(`/api/new-believers/enrollments/${id}`),
+          client.get<ApiResponse<NewBelieverEnrollmentDetail>>(`/api/new-believers/enrollments/${id}`),
         create: (data: CreateEnrollmentRequest) =>
           client.post<ApiResponse<NewBelieverEnrollment>>('/api/new-believers/enrollments', data),
         update: (id: string, data: UpdateEnrollmentRequest) =>

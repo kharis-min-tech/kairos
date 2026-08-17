@@ -26,6 +26,7 @@ export interface EnrollmentCardData {
 export interface AttendanceLogItem {
   sessionId: string;
   sessionDate: string;
+  sessionStage: string;
   topic?: string | null;
   attended: boolean;
   notes?: string | null;
