@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Check, Circle } from 'lucide-react-native';
+import { ChevronLeft, Check, Circle, CalendarClock } from 'lucide-react-native';
 import { Avatar, Card, Badge, ProgressBar, colors, spacing, typography, radii } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -51,7 +51,17 @@ export default function NewBelievers() {
         <Text style={styles.headerTitle}>
           {personalScope ? 'My New Believer journey' : 'New Believers pipeline'}
         </Text>
-        <View style={{ width: 24 }} />
+        {personalScope ? (
+          <View style={{ width: 24 }} />
+        ) : (
+          <Pressable
+            onPress={() => router.push('/new-believers/sessions' as never)}
+            hitSlop={8}
+            accessibilityLabel="Open sessions"
+          >
+            <CalendarClock color={colors.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        )}
       </View>
 
       <ScrollView

@@ -398,6 +398,26 @@ export interface NewBelieverEnrollmentWithMember extends NewBelieverEnrollment {
   mentorLastName?: string | null;
 }
 
+export interface NewBelieverAttendanceLogItem {
+  sessionId: string;
+  sessionDate: string;
+  sessionStage: string;
+  topic?: string | null;
+  attended: boolean;
+  notes?: string | null;
+  recordedAt?: string | null;
+}
+
+/**
+ * Return shape of `GET /api/new-believers/enrollments/:id`. Extends the list
+ * row with the per-enrollment attendance history the server joins in — used
+ * by the mobile enrollment detail to gate "Mark session complete" when no
+ * attendance row exists for the current stage.
+ */
+export type NewBelieverEnrollmentDetail = NewBelieverEnrollmentWithMember & {
+  attendanceHistory?: NewBelieverAttendanceLogItem[];
+};
+
 export interface NewBelieverSession {
   id: string;
   branchId: string;
