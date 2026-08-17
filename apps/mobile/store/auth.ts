@@ -17,6 +17,7 @@ interface AuthState {
   hydrate: () => Promise<void>;
   setSession: (tokens: AuthTokens, user: MemberProfile) => Promise<void>;
   updateTokens: (tokens: AuthTokens) => Promise<void>;
+  updateUser: (patch: Partial<MemberProfile>) => Promise<void>;
   clearSession: () => Promise<void>;
 }
 
@@ -71,6 +72,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       refreshToken: tokens.refreshToken,
     });
     setSessionTokens(tokens);
+  },
+
+  updateUser: async (patch) => {
+    const current = useAuthStore.getState().user;
+    if (!current) return;
+    const next = { ...current, ...patch };
+    await AsyncStorage.setItem(KEY_USER, JSON.stringify(next));
+    set({ user: next });
   },
 
   clearSession: async () => {

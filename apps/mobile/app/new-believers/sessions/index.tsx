@@ -16,7 +16,6 @@ import {
   Badge,
   Card,
   colors,
-  radii,
   spacing,
   typography,
 } from '@kairos/ui-native';
@@ -49,7 +48,7 @@ export default function NewBelieverSessionsIndex() {
     queryFn: async () => (await api.newBelievers.sessions.list({ branchId })).data ?? [],
   });
 
-  const rows = sessions.data ?? [];
+  const rows = useMemo(() => sessions.data ?? [], [sessions.data]);
   const upcoming = useMemo(
     () =>
       rows

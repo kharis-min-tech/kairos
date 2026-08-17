@@ -37,6 +37,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         backgroundColor: '#5D3FD3',
       },
     ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission:
+          'Kairos needs access to your photo library so you can pick a profile photo.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
