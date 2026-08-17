@@ -9,6 +9,8 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -409,43 +411,48 @@ export default function EnrollmentDetail() {
         transparent
         onRequestClose={() => setFeedbackOpen(false)}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setFeedbackOpen(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>
-              {advanceAfter ? 'Session feedback required' : 'Mark session complete'}
-            </Text>
-            <Text style={styles.sheetHint}>
-              {advanceAfter
-                ? `Record feedback before moving to ${nextStage?.label ?? 'the next stage'}.`
-                : 'Record feedback for this session before marking it complete.'}
-            </Text>
-            <TextInput
-              multiline
-              value={feedback}
-              onChangeText={setFeedback}
-              placeholder="How did the session go?"
-              placeholderTextColor="rgba(26,28,28,0.4)"
-              style={styles.feedbackInput}
-            />
-            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Cancel"
-                  variant="ghost"
-                  onPress={() => setFeedbackOpen(false)}
-                />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setFeedbackOpen(false)}>
+            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.sheetHandle} />
+              <Text style={styles.sheetTitle}>
+                {advanceAfter ? 'Session feedback required' : 'Mark session complete'}
+              </Text>
+              <Text style={styles.sheetHint}>
+                {advanceAfter
+                  ? `Record feedback before moving to ${nextStage?.label ?? 'the next stage'}.`
+                  : 'Record feedback for this session before marking it complete.'}
+              </Text>
+              <TextInput
+                multiline
+                value={feedback}
+                onChangeText={setFeedback}
+                placeholder="How did the session go?"
+                placeholderTextColor="rgba(26,28,28,0.4)"
+                style={styles.feedbackInput}
+              />
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Cancel"
+                    variant="ghost"
+                    onPress={() => setFeedbackOpen(false)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={advanceAfter ? 'Confirm & advance' : 'Confirm & complete'}
+                    onPress={confirmMarkComplete}
+                    disabled={!feedback.trim() || update.isPending}
+                  />
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label={advanceAfter ? 'Confirm & advance' : 'Confirm & complete'}
-                  onPress={confirmMarkComplete}
-                  disabled={!feedback.trim() || update.isPending}
-                />
-              </View>
-            </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

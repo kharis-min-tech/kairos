@@ -7,6 +7,8 @@ import {
   Pressable,
   Share,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -158,7 +160,11 @@ export default function DataPrivacy() {
         animationType="fade"
         onRequestClose={() => (deleteMutation.isPending ? undefined : setDeleteOpen(false))}
       >
-        <View style={styles.modalBackdrop}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <ShieldOff color={colors.danger} size={20} strokeWidth={1.5} />
@@ -214,6 +220,7 @@ export default function DataPrivacy() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
