@@ -1,23 +1,56 @@
-import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Modal,
+} from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useQuery } from '@tanstack/react-query';
-import { Check } from 'lucide-react-native';
-import { Avatar, Card, colors, spacing, typography, radii, gradients, shadows } from '@kairos/ui-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, Clock, X as XIcon } from 'lucide-react-native';
+import {
+  Avatar,
+  Card,
+  colors,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  shadows,
+} from '@kairos/ui-native';
+import type { SelfCheckInCandidate } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
+function formatServiceTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatServiceLabel(c: SelfCheckInCandidate): string {
+  const time = formatServiceTime(c.serviceDate);
+  const label = c.serviceTitle ?? c.serviceType;
+  return `${label} · ${time}`;
+}
+
 export default function CheckIn() {
   const user = useAuthStore((s) => s.user);
+  const qc = useQueryClient();
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  const services = useQuery({
-    queryKey: ['attendance', 'services', 'upcoming'],
-    queryFn: async () => {
-      const res = await api.attendance.listServices({ limit: 5 });
-      return res.data?.data ?? [];
-    },
+  const candidates = useQuery({
+    queryKey: ['attendance', 'self-check-in', 'candidates'],
+    queryFn: async () =>
+      (await api.attendance.selfCheckInCandidates()).data ?? [],
+    // Poll every 60s while the tab is mounted so a window that opens mid-view
+    // flips to "open" without needing a manual refresh.
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 
   const stats = useQuery({
@@ -26,22 +59,56 @@ export default function CheckIn() {
     enabled: !!user,
   });
 
-  const nextService = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return (services.data ?? [])
-      .filter((s) => new Date(s.serviceDate) >= today)
-      .sort(
-        (a, b) => new Date(a.serviceDate).getTime() - new Date(b.serviceDate).getTime(),
-      )[0];
-  }, [services.data]);
+  const rows = candidates.data ?? [];
+  const openRows = useMemo(() => rows.filter((r) => r.status === 'open'), [rows]);
+  const openingSoonRows = useMemo(
+    () => rows.filter((r) => r.status === 'opens-soon'),
+    [rows],
+  );
+  const closedRows = useMemo(
+    () => rows.filter((r) => r.status === 'closed'),
+    [rows],
+  );
 
-  const handleCheckIn = () => {
-    alert.info(
-      "You're in — almost",
-      'Self check-in from mobile needs a backend endpoint that isn\'t shipped yet. In the meantime, see the desk or a leader to be marked in.',
-    );
-  };
+  const nextOpening = openingSoonRows[0];
+  const nextService = openRows[0] ?? nextOpening ?? closedRows[0];
+  const canCheckIn = openRows.length > 0;
+
+  const checkIn = useMutation({
+    mutationFn: async (serviceId: string) => {
+      const res = await api.attendance.selfCheckIn(serviceId);
+      if (!res.success || !res.data) {
+        throw new Error(res.message ?? 'Check-in failed');
+      }
+      return res.data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
+      qc.invalidateQueries({ queryKey: ['analytics', 'member'] });
+      const title = data.alreadyCheckedIn
+        ? "You're already checked in"
+        : data.status === 'Late'
+          ? "You're checked in — marked Late"
+          : "You're in";
+      const body = data.alreadyCheckedIn
+        ? `Recorded as ${data.status}.`
+        : data.status === 'Late'
+          ? "The service already started, but you're recorded."
+          : 'Have a great service.';
+      alert.info(title, body);
+    },
+    onError: (e: Error) =>
+      alert.info('Check-in failed', e.message ?? 'Please try again.'),
+  });
+
+  function handleCheckInPress() {
+    if (!canCheckIn) return;
+    if (openRows.length === 1) {
+      checkIn.mutate(openRows[0]!.serviceId);
+      return;
+    }
+    setPickerOpen(true);
+  }
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : 'Signed in';
   const attendanceTotal = stats.data?.recentAttendance?.total ?? 0;
@@ -52,7 +119,9 @@ export default function CheckIn() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Check-in</Text>
-          <Text style={styles.subtitle}>One tap marks you present at the live service.</Text>
+          <Text style={styles.subtitle}>
+            One tap marks you present at the live service.
+          </Text>
         </View>
 
         <View style={styles.happeningCard}>
@@ -64,25 +133,51 @@ export default function CheckIn() {
           />
           <View style={styles.happeningContent}>
             <View style={styles.happeningEyebrowRow}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.happeningEyebrow}>Happening now</Text>
+              <View
+                style={[
+                  styles.pulseDot,
+                  canCheckIn ? null : styles.pulseDotDim,
+                ]}
+              />
+              <Text style={styles.happeningEyebrow}>
+                {canCheckIn
+                  ? 'Happening now'
+                  : nextOpening
+                    ? 'Opening soon'
+                    : 'Today'}
+              </Text>
             </View>
-            {services.isLoading ? (
+            {candidates.isLoading ? (
               <ActivityIndicator color="#ffffff" style={{ marginTop: spacing.sm }} />
             ) : nextService ? (
               <>
-                <Text style={styles.happeningTitle}>{nextService.serviceTitle ?? nextService.serviceType}</Text>
+                <Text style={styles.happeningTitle}>
+                  {nextService.serviceTitle ?? nextService.serviceType}
+                </Text>
                 <Text style={styles.happeningMeta}>
-                  {nextService.branchName ?? 'Kharis'} ·{' '}
                   {new Date(nextService.serviceDate).toLocaleDateString('en-GB', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
-                  })}
+                  })}{' '}
+                  · {formatServiceTime(nextService.serviceDate)}
                 </Text>
-                <View style={styles.windowPill}>
-                  <Text style={styles.windowLabel}>Check-in window open</Text>
-                </View>
+                {canCheckIn ? (
+                  <View style={styles.windowPill}>
+                    <Text style={styles.windowLabel}>Check-in window open</Text>
+                  </View>
+                ) : nextOpening ? (
+                  <View style={styles.windowPill}>
+                    <Clock color="#ffffff" size={12} strokeWidth={1.5} />
+                    <Text style={styles.windowLabel}>
+                      Opens in {nextOpening.minutesUntilOpen} min
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={[styles.windowPill, styles.windowPillMuted]}>
+                    <Text style={styles.windowLabel}>Check-in closed</Text>
+                  </View>
+                )}
               </>
             ) : (
               <>
@@ -107,12 +202,12 @@ export default function CheckIn() {
         </View>
 
         <Pressable
-          onPress={handleCheckIn}
-          disabled={!nextService}
+          onPress={handleCheckInPress}
+          disabled={!canCheckIn || checkIn.isPending}
           style={({ pressed }) => [
             styles.checkinPill,
             shadows.buttonHero,
-            (!nextService || pressed) && { opacity: 0.9 },
+            (!canCheckIn || pressed || checkIn.isPending) && { opacity: 0.85 },
           ]}
         >
           <LinearGradient
@@ -121,11 +216,27 @@ export default function CheckIn() {
             end={{ x: 1, y: 1 }}
             style={styles.checkinPillBg}
           />
-          <Check color="#ffffff" size={20} strokeWidth={2} />
-          <Text style={styles.checkinLabel}>I&apos;m here</Text>
+          {checkIn.isPending ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <Check color="#ffffff" size={20} strokeWidth={2} />
+          )}
+          <Text style={styles.checkinLabel}>
+            {checkIn.isPending ? 'Checking in…' : "I'm here"}
+          </Text>
         </Pressable>
 
-        <Text style={styles.caption}>Tap once to mark yourself present.</Text>
+        <Text style={styles.caption}>
+          {canCheckIn
+            ? openRows.length > 1
+              ? 'You have two services open — you\'ll be asked which one.'
+              : 'Tap once to mark yourself present.'
+            : nextOpening
+              ? `Opens in ${nextOpening.minutesUntilOpen} minute${nextOpening.minutesUntilOpen === 1 ? '' : 's'}.`
+              : closedRows.length > 0
+                ? 'Ask a leader to record your attendance.'
+                : 'Nothing scheduled to check into today.'}
+        </Text>
 
         <Card padding="md" style={styles.statCard}>
           <Text style={styles.statEyebrow}>Recent attendance</Text>
@@ -141,6 +252,43 @@ export default function CheckIn() {
           </Text>
         </Card>
       </ScrollView>
+
+      {/* Multi-service picker — only used when two services' windows overlap. */}
+      <Modal
+        visible={pickerOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPickerOpen(false)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setPickerOpen(false)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Which service?</Text>
+            <Text style={styles.sheetHint}>
+              Two check-in windows are open right now. Pick the one you&apos;re at.
+            </Text>
+            {openRows.map((r) => (
+              <Pressable
+                key={r.serviceId}
+                onPress={() => {
+                  setPickerOpen(false);
+                  checkIn.mutate(r.serviceId);
+                }}
+                style={styles.sheetRow}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetRowLabel}>{formatServiceLabel(r)}</Text>
+                </View>
+                <Check color={colors.primary} size={16} strokeWidth={2} />
+              </Pressable>
+            ))}
+            <Pressable style={styles.sheetCancel} onPress={() => setPickerOpen(false)}>
+              <XIcon color="rgba(26,28,28,0.55)" size={16} strokeWidth={1.5} />
+              <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -183,6 +331,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.success,
   },
+  pulseDotDim: { backgroundColor: 'rgba(255,255,255,0.5)' },
   happeningEyebrow: {
     ...typography.eyebrow,
     color: 'rgba(255,255,255,0.7)',
@@ -198,12 +347,16 @@ const styles = StyleSheet.create({
   },
   windowPill: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: 'rgba(255,255,255,0.16)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radii.pill,
     marginTop: spacing.sm,
   },
+  windowPillMuted: { backgroundColor: 'rgba(255,255,255,0.08)' },
   windowLabel: {
     ...typography.meta,
     color: '#ffffff',
@@ -217,14 +370,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   identityText: { gap: 2 },
-  identityName: {
-    ...typography.cardTitle,
-    color: colors.ink,
-  },
-  identityMeta: {
-    ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
-  },
+  identityName: { ...typography.cardTitle, color: colors.ink },
+  identityMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
 
   checkinPill: {
     height: 56,
@@ -257,10 +404,51 @@ const styles = StyleSheet.create({
 
   statCard: { gap: spacing.xs },
   statEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
-  statNumber: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.ink,
-  },
+  statNumber: { fontSize: 26, fontWeight: '800', color: colors.ink },
   statMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: { ...typography.cardTitle, color: colors.ink },
+  sheetHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    marginBottom: spacing.sm,
+  },
+  sheetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+  },
+  sheetRowLabel: { ...typography.body, color: colors.ink },
+  sheetCancel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  sheetCancelLabel: { ...typography.button, color: 'rgba(26,28,28,0.7)' },
 });

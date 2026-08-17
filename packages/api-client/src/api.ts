@@ -113,6 +113,8 @@ import type {
   RecordServiceAttendanceRequest,
   RecordAttendanceResult,
   ServiceAttendanceRow,
+  SelfCheckInResult,
+  SelfCheckInCandidate,
   AttendanceTrendPoint,
   AttendanceTrendsParams,
   MissingMember,
@@ -1194,6 +1196,12 @@ export function createApiClient(
         client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
       listAttendance: (serviceId: string) =>
         client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
+      selfCheckIn: (serviceId: string) =>
+        client.post<ApiResponse<SelfCheckInResult>>(
+          `/api/attendance/services/${encodeURIComponent(serviceId)}/self-check-in`,
+        ),
+      selfCheckInCandidates: () =>
+        client.get<ApiResponse<SelfCheckInCandidate[]>>('/api/attendance/self-check-in/candidates'),
 
       trends: (params?: AttendanceTrendsParams) => {
         const qs = new URLSearchParams();
