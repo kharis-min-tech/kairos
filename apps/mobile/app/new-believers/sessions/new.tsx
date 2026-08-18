@@ -61,6 +61,17 @@ export default function CreateSession() {
       (await api.members.list({ branchId, limit: 500 })).data?.data ?? [],
   });
 
+  const existingSessions = useQuery({
+    queryKey: ['new-believers', 'sessions', branchId],
+    enabled: !!branchId,
+    queryFn: async () =>
+      (await api.newBelievers.sessions.list({ branchId })).data ?? [],
+  });
+
+  const duplicate = (existingSessions.data ?? []).find(
+    (s) => s.sessionStage === stage && s.sessionDate.slice(0, 10) === sessionDate,
+  );
+
   const teacherName = branchMembers.data?.find((m) => m.id === teacherId);
   const teacherLabel = teacherName
     ? `${teacherName.firstName} ${teacherName.lastName}`
@@ -162,17 +173,41 @@ export default function CreateSession() {
             />
           </Card>
 
+          {duplicate ? (
+            <View style={styles.dupBanner}>
+              <Text style={styles.dupTitle}>Session already exists</Text>
+              <Text style={styles.dupBody}>
+                A {stageLabel} session on {sessionDate} is already on the books for
+                this branch. Creating another will result in a duplicate. Pick a
+                different stage or date if you didn&apos;t mean to.
+              </Text>
+            </View>
+          ) : null}
+
           <Button
             label={create.isPending ? 'Creating…' : 'Create session'}
             size="lg"
             fullWidth
             loading={create.isPending}
-            onPress={() => {
+            onPress={async () => {
               if (!branchId) {
-                alert.info('No home branch', 'Set a home branch on your profile before creating a session.');
+                alert.info(
+                  'No home branch',
+                  'Set a home branch on your profile before creating a session.',
+                );
                 return;
               }
-              if (validate()) create.mutate();
+              if (!validate()) return;
+              if (duplicate) {
+                const ok = await alert.confirm({
+                  title: 'Create anyway?',
+                  message: `A ${stageLabel} session on ${sessionDate} already exists in this branch. Are you sure you want to create a duplicate?`,
+                  confirmLabel: 'Create anyway',
+                  destructive: true,
+                });
+                if (!ok) return;
+              }
+              create.mutate();
             }}
           />
         </ScrollView>
@@ -376,6 +411,16 @@ function makeStyles(c: ThemeColors) {
   sheetRowActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
   sheetRowLabel: { ...typography.body, color: c.ink },
   sheetRowLabelActive: { color: c.primary, fontWeight: '600' },
+  dupBanner: {
+    backgroundColor: 'rgba(248,181,55,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,181,55,0.35)',
+    padding: spacing.md,
+    borderRadius: radii.md,
+    gap: 4,
+  },
+  dupTitle: { ...typography.body, color: c.goldDark, fontWeight: '700' },
+  dupBody: { ...typography.meta, color: c.goldDark, lineHeight: 15 },
 });
 }
 
