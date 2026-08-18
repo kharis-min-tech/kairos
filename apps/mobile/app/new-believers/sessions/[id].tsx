@@ -16,10 +16,12 @@ import {
   Avatar,
   Button,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { NewBelieverEnrollmentWithMember } from '@kairos/types';
@@ -38,6 +40,8 @@ interface RosterRow {
 }
 
 export default function NewBelieverSessionDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
@@ -143,7 +147,7 @@ export default function NewBelieverSessionDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Session</Text>
         <View style={{ width: 24 }} />
@@ -159,12 +163,12 @@ export default function NewBelieverSessionDetail() {
               enrolled.refetch();
               attendance.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !session.data ? (
           <Text style={styles.emptyText}>Session not found.</Text>
         ) : (
@@ -174,18 +178,18 @@ export default function NewBelieverSessionDetail() {
               <Text style={styles.title}>{session.data.topic ?? 'Session'}</Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
-                  <Calendar color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                  <Calendar color={c.inkMuted} size={14} strokeWidth={1.5} />
                   <Text style={styles.metaText}>{formatShortDate(session.data.sessionDate)}</Text>
                 </View>
                 {session.data.location ? (
                   <View style={styles.metaItem}>
-                    <MapPin color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                    <MapPin color={c.inkMuted} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>{session.data.location}</Text>
                   </View>
                 ) : null}
                 {session.data.teacherFirstName ? (
                   <View style={styles.metaItem}>
-                    <User color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                    <User color={c.inkMuted} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>
                       {session.data.teacherFirstName} {session.data.teacherLastName ?? ''}
                     </Text>
@@ -258,6 +262,8 @@ function RosterRowView({
   dirty: boolean;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.rosterRow}>
@@ -275,6 +281,8 @@ function RosterRowView({
 }
 
 function StatusPill({ status }: { status: Status }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   if (status === 'present') {
     return (
       <View style={[styles.pill, styles.pillPresent]}>
@@ -298,8 +306,9 @@ function StatusPill({ status }: { status: Status }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -307,7 +316,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: 120,
@@ -315,18 +324,18 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
 
   stageLabel: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 1.2,
   },
   title: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   metaRow: {
     flexDirection: 'row',
@@ -341,7 +350,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
   },
 
   sectionBlock: { gap: spacing.sm },
@@ -349,16 +358,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     gap: 2,
   },
-  sectionTitle: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
-  sectionMeta: { ...typography.meta, color: 'rgba(26,28,28,0.5)' },
+  sectionTitle: { ...typography.eyebrow, color: c.inkMuted },
+  sectionMeta: { ...typography.meta, color: c.inkFaded },
 
   rosterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
-  rosterName: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  rosterDirty: { ...typography.meta, color: colors.goldDark, fontSize: 11 },
+  rosterName: { ...typography.body, color: c.ink, fontWeight: '500' },
+  rosterDirty: { ...typography.meta, color: c.goldDark, fontSize: 11 },
 
   pill: {
     flexDirection: 'row',
@@ -368,13 +377,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radii.pill,
   },
-  pillPresent: { backgroundColor: colors.success },
-  pillAbsent: { backgroundColor: colors.danger },
+  pillPresent: { backgroundColor: c.success },
+  pillAbsent: { backgroundColor: c.danger },
   pillEmpty: {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(26,28,28,0.25)',
+    borderColor: c.inkVeryFaded,
   },
   pillLabel: {
     ...typography.meta,
@@ -383,7 +392,7 @@ const styles = StyleSheet.create({
   },
   pillLabelEmpty: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
 
   footerBar: {
@@ -393,10 +402,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     padding: spacing.lg,
     paddingBottom: spacing.xl,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
     flexDirection: 'row',
     gap: spacing.sm,
   },
 });
+}
+

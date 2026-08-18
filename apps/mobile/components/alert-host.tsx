@@ -1,8 +1,17 @@
 import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { useAlertStore, type AlertButton } from '@/lib/alert';
 
 export function AlertHost() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const current = useAlertStore((s) => s.current);
   const hide = useAlertStore((s) => s.hide);
   const open = !!current;
@@ -78,7 +87,8 @@ export function AlertHost() {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(10,10,15,0.5)',
@@ -89,14 +99,14 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
   },
   title: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   message: {
     ...typography.body,
@@ -121,13 +131,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonPrimary: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   buttonDestructive: {
-    backgroundColor: colors.danger,
+    backgroundColor: c.danger,
   },
   buttonCancel: {
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   buttonLabel: {
     ...typography.body,
@@ -135,5 +145,7 @@ const styles = StyleSheet.create({
   },
   buttonLabelPrimary: { color: '#ffffff' },
   buttonLabelDestructive: { color: '#ffffff' },
-  buttonLabelCancel: { color: colors.ink },
+  buttonLabelCancel: { color: c.ink },
 });
+}
+

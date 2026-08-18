@@ -18,12 +18,25 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
-import { Card, Badge, Button, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
+import {
+  Card,
+  Badge,
+  Button,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 type DutyRow = NonNullable<Awaited<ReturnType<typeof api.me.rota>>['data']>[number];
 
 export default function MyRota() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -104,7 +117,7 @@ export default function MyRota() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My rota</Text>
         <View style={{ width: 24 }} />
@@ -116,12 +129,12 @@ export default function MyRota() {
           <RefreshControl
             refreshing={rota.isFetching}
             onRefresh={() => rota.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {rota.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {next ? (
@@ -230,6 +243,8 @@ function SwapRequestSheet({
   onConfirm: () => void;
   submitting: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onCancel}>
       <KeyboardAvoidingView
@@ -253,7 +268,7 @@ function SwapRequestSheet({
               value={reason}
               onChangeText={onReasonChange}
               placeholder="Optional — why you can't make it"
-              placeholderTextColor="rgba(26,28,28,0.4)"
+              placeholderTextColor={c.inkFaded}
               style={styles.sheetInput}
               editable={!submitting}
             />
@@ -282,6 +297,8 @@ function SwapRequestSheet({
 }
 
 function HeroField({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.heroField}>
       <Text style={styles.heroFieldLabel}>{label}</Text>
@@ -317,8 +334,9 @@ function badgeVariant(status: string): 'primary' | 'success' | 'gold' | 'neutral
   return 'neutral';
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -326,7 +344,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -379,11 +397,11 @@ const styles = StyleSheet.create({
   heroButton: { flex: 1, backgroundColor: 'rgba(255,255,255,0.14)' },
 
   emptyCard: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
-  emptyMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
+  emptyMeta: { ...typography.meta, color: c.inkMuted },
 
   section: { gap: spacing.sm },
-  sectionTitle: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  sectionTitle: { ...typography.eyebrow, color: c.inkMuted },
   upcomingList: { gap: spacing.sm },
   dutyCard: {
     flexDirection: 'row',
@@ -401,18 +419,18 @@ const styles = StyleSheet.create({
   dateTileMonth: {
     fontSize: 8,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 0.8,
   },
   dateTileDay: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     lineHeight: 20,
   },
   dutyText: { flex: 1, gap: 2 },
-  dutyTitle: { ...typography.cardTitle, color: colors.ink },
-  dutyMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  dutyTitle: { ...typography.cardTitle, color: c.ink },
+  dutyMeta: { ...typography.meta, color: c.inkMuted },
 
   backdrop: {
     flex: 1,
@@ -420,7 +438,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -431,14 +449,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink },
-  sheetMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  sheetTitle: { ...typography.cardTitle, color: c.ink },
+  sheetMeta: { ...typography.meta, color: c.inkMuted },
   sheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginTop: spacing.xs,
     marginBottom: spacing.sm,
     lineHeight: 16,
@@ -446,11 +464,11 @@ const styles = StyleSheet.create({
   sheetInput: {
     minHeight: 96,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     padding: spacing.md,
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     textAlignVertical: 'top',
   },
   sheetFooter: {
@@ -459,3 +477,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
 });
+}
+

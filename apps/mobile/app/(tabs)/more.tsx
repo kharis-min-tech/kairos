@@ -31,12 +31,24 @@ import {
   Info,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Badge, Card, Avatar, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  Avatar,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
 
 const HELP_URL = 'https://docs.kairos.kharis.org';
 
 export default function More() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -72,7 +84,7 @@ export default function More() {
               </Text>
               <Text style={styles.profileMeta}>{user?.email ?? ''}</Text>
             </View>
-            <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+            <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
           </Card>
         </Pressable>
 
@@ -233,7 +245,11 @@ export default function More() {
             label="Recent activity"
             onPress={() => router.push('/recent-activity')}
           />
-          <SoonRow icon={Palette} label="Appearance" />
+          <NavRow
+            icon={Palette}
+            label="Appearance"
+            onPress={() => router.push('/appearance' as never)}
+          />
         </Section>
 
         <Section label="Help">
@@ -250,7 +266,7 @@ export default function More() {
         </Section>
 
         <Pressable onPress={handleSignOut} style={styles.signOutRow}>
-          <LogOut color={colors.danger} size={18} strokeWidth={1.5} />
+          <LogOut color={c.danger} size={18} strokeWidth={1.5} />
           <Text style={styles.signOutLabel}>Sign out</Text>
         </Pressable>
 
@@ -261,6 +277,7 @@ export default function More() {
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.group}>
       <Text style={styles.groupLabel}>{label}</Text>
@@ -278,41 +295,29 @@ function NavRow({
   label: string;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.rowIcon}>
-        <Icon color={colors.primary} size={18} strokeWidth={1.5} />
+        <Icon color={c.primary} size={18} strokeWidth={1.5} />
       </View>
       <Text style={styles.rowLabel}>{label}</Text>
-      <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+      <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
     </Pressable>
   );
 }
 
-function SoonRow({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
-  return (
-    <Pressable
-      onPress={() => alert.info(label, 'Coming in a later mobile pass. Available on web.')}
-      style={styles.row}
-    >
-      <View style={styles.rowIcon}>
-        <Icon color="rgba(26,28,28,0.35)" size={18} strokeWidth={1.5} />
-      </View>
-      <Text style={[styles.rowLabel, styles.rowLabelSoon]}>{label}</Text>
-      <Badge label="Soon" variant="neutral" size="sm" />
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   scroll: {
     padding: spacing.lg,
     gap: spacing.lg,
   },
   pageTitle: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   profileCard: {
     flexDirection: 'row',
@@ -320,19 +325,19 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   profileText: { flex: 1, gap: 2 },
-  profileName: { ...typography.cardTitle, color: colors.ink },
-  profileMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  profileName: { ...typography.cardTitle, color: c.ink },
+  profileMeta: { ...typography.meta, color: c.inkMuted },
   group: { gap: spacing.xs },
   groupLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     marginBottom: spacing.xs,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
@@ -345,8 +350,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { ...typography.body, color: colors.ink, flex: 1 },
-  rowLabelSoon: { color: 'rgba(26,28,28,0.6)' },
+  rowLabel: { ...typography.body, color: c.ink, flex: 1 },
+  rowLabelSoon: { color: c.inkMuted },
   signOutRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -356,13 +361,15 @@ const styles = StyleSheet.create({
   },
   signOutLabel: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     fontWeight: '600',
   },
   footerLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.lg,
   },
 });
+}
+

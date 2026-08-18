@@ -20,7 +20,15 @@ import {
   Building2,
   Sparkles,
 } from 'lucide-react-native';
-import { Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Badge,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { MeFollowupItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -58,6 +66,8 @@ function daysAgo(iso: string | null): number | null {
 }
 
 export default function FollowUps() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [filter, setFilter] = useState<FilterKind>('all');
 
@@ -88,7 +98,7 @@ export default function FollowUps() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Follow-ups</Text>
         <View style={{ width: 24 }} />
@@ -128,13 +138,13 @@ export default function FollowUps() {
           <RefreshControl
             refreshing={inbox.isFetching}
             onRefresh={() => inbox.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
           inbox.isLoading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+            <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
           ) : (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>All caught up</Text>
@@ -159,6 +169,8 @@ function FollowupRow({
   item: MeFollowupItem;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const meta = KIND_META[item.kind];
   const Icon = meta.icon;
   const contextLabel =
@@ -181,7 +193,7 @@ function FollowupRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.iconTile}>
-        <Icon color={colors.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.primary} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
@@ -195,13 +207,14 @@ function FollowupRow({
         </Text>
         <Text style={styles.rowMetaFaded}>{tailLabel}</Text>
       </View>
-      <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+      <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,14 +222,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   subHeader: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
     gap: 2,
   },
-  subTitle: { ...typography.screenTitle, color: colors.ink },
-  subMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)', lineHeight: 16 },
+  subTitle: { ...typography.screenTitle, color: c.ink },
+  subMeta: { ...typography.meta, color: c.inkMuted, lineHeight: 16 },
   chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
     paddingHorizontal: spacing.lg,
@@ -229,10 +242,10 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipActive: { backgroundColor: c.primary },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -243,17 +256,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
@@ -270,7 +283,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
-  rowMetaFaded: { ...typography.meta, color: 'rgba(26,28,28,0.4)', fontSize: 11 },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
+  rowMetaFaded: { ...typography.meta, color: c.inkFaded, fontSize: 11 },
 });
+}
+

@@ -20,7 +20,17 @@ import {
   Plus,
   MapPin,
 } from 'lucide-react-native';
-import { Badge, Card, Input, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  Input,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 function useDebounced<T>(value: T, delay: number): T {
@@ -33,6 +43,8 @@ function useDebounced<T>(value: T, delay: number): T {
 }
 
 export default function BranchesDirectory() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounced(searchInput.trim().toLowerCase(), 250);
@@ -57,7 +69,7 @@ export default function BranchesDirectory() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Branches</Text>
         <Pressable
@@ -66,7 +78,7 @@ export default function BranchesDirectory() {
           testID="new-branch-btn"
           accessibilityLabel="New branch"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -78,12 +90,12 @@ export default function BranchesDirectory() {
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
-            <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+            <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           }
           trailingSlot={
             searchInput.length > 0 ? (
               <Pressable onPress={() => setSearchInput('')} hitSlop={8}>
-                <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+                <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
             ) : null
           }
@@ -102,13 +114,13 @@ export default function BranchesDirectory() {
           <RefreshControl
             refreshing={branches.isRefetching}
             onRefresh={() => branches.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             {branches.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
             ) : null}
             {branches.isError ? (
               <Card padding="md">
@@ -129,7 +141,7 @@ export default function BranchesDirectory() {
           showEmpty ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <Building2 color={colors.primary} size={22} strokeWidth={1.5} />
+                <Building2 color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No branches</Text>
               <Text style={styles.emptyMeta}>
@@ -147,7 +159,7 @@ export default function BranchesDirectory() {
           >
             <Card padding="md" style={styles.rowCard}>
               <View style={styles.rowIconTile}>
-                <Building2 color={colors.primary} size={18} strokeWidth={1.5} />
+                <Building2 color={c.primary} size={18} strokeWidth={1.5} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={styles.rowTitleLine}>
@@ -157,13 +169,13 @@ export default function BranchesDirectory() {
                   <Badge label={b.branchType} variant="primary" size="sm" />
                 </View>
                 <View style={styles.rowMetaLine}>
-                  <MapPin color="rgba(26,28,28,0.45)" size={12} strokeWidth={1.5} />
+                  <MapPin color={c.inkFaded} size={12} strokeWidth={1.5} />
                   <Text style={styles.rowMeta} numberOfLines={1}>
                     {[b.regionName, b.city].filter(Boolean).join(' · ') || '—'}
                   </Text>
                 </View>
               </View>
-              <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+              <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
             </Card>
           </Pressable>
         )}
@@ -172,8 +184,9 @@ export default function BranchesDirectory() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -181,7 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -194,7 +207,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   rowWrap: {
@@ -218,7 +231,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowName: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMetaLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -226,7 +239,7 @@ const styles = StyleSheet.create({
   },
   rowMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   emptyCard: {
     alignItems: 'center',
@@ -240,15 +253,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
 });
+}
+

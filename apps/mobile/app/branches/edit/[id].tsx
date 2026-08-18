@@ -11,12 +11,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { UpdateBranchRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { BranchForm } from '../_form';
 
 export default function EditBranch() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -87,12 +97,12 @@ export default function EditBranch() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Edit branch</Text>
           <View style={{ width: 24 }} />
         </View>
-        <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+        <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
       </SafeAreaView>
     );
   }
@@ -102,7 +112,7 @@ export default function EditBranch() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Edit branch</Text>
           <View style={{ width: 24 }} />
@@ -137,7 +147,7 @@ export default function EditBranch() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {b.branchName}
@@ -161,7 +171,7 @@ export default function EditBranch() {
             >
               <Card padding="md" style={styles.linkCard}>
                 <View style={styles.linkIconTile}>
-                  <ShieldCheck color={colors.primary} size={18} strokeWidth={1.5} />
+                  <ShieldCheck color={c.primary} size={18} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={styles.linkTitle}>Branch admins</Text>
@@ -170,7 +180,7 @@ export default function EditBranch() {
                     this branch.
                   </Text>
                 </View>
-                <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+                <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
               </Card>
             </Pressable>
 
@@ -187,7 +197,7 @@ export default function EditBranch() {
                   (deleting || remove.isPending) && { opacity: 0.6 },
                 ]}
               >
-                <Trash2 color={colors.danger} size={16} strokeWidth={1.5} />
+                <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
                 <Text style={styles.dangerBtnLabel}>
                   {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate branch'}
                 </Text>
@@ -203,8 +213,9 @@ export default function EditBranch() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,14 +223,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   centered: {
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.sm,
   },
-  errorTitle: { ...typography.cardTitle, color: colors.ink },
-  errorMeta: { ...typography.body, color: 'rgba(26,28,28,0.6)', textAlign: 'center' },
+  errorTitle: { ...typography.cardTitle, color: c.ink },
+  errorMeta: { ...typography.body, color: c.inkMuted, textAlign: 'center' },
   linkCardWrap: {
     marginTop: spacing.md,
   },
@@ -236,10 +247,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  linkTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   linkMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   dangerZone: {
@@ -253,7 +264,7 @@ const styles = StyleSheet.create({
   },
   dangerEyebrow: {
     ...typography.eyebrow,
-    color: colors.danger,
+    color: c.danger,
   },
   dangerBtn: {
     flexDirection: 'row',
@@ -264,17 +275,19 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: 'rgba(225,29,72,0.4)',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
   },
   dangerBtnLabel: {
     ...typography.button,
-    color: colors.danger,
+    color: c.danger,
     fontSize: 14,
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
 });
+}
+

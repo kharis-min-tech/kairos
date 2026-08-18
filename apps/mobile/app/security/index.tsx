@@ -9,16 +9,26 @@ import {
   History,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 
 export default function SecurityHub() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Security</Text>
         <View style={{ width: 24 }} />
@@ -69,24 +79,27 @@ function NavLink({
   meta: string;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.linkCard}>
         <View style={styles.iconTile}>
-          <Icon color={colors.primary} size={18} strokeWidth={1.5} />
+          <Icon color={c.primary} size={18} strokeWidth={1.5} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={styles.linkTitle}>{title}</Text>
           <Text style={styles.linkMeta}>{meta}</Text>
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -94,15 +107,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.body, color: 'rgba(26,28,28,0.6)', lineHeight: 20 },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.body, color: c.inkMuted, lineHeight: 20 },
   list: { gap: spacing.sm },
   linkCard: {
     flexDirection: 'row',
@@ -117,10 +130,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  linkTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   linkMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
 });
+}
+

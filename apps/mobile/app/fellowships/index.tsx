@@ -25,10 +25,12 @@ import {
   Badge,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { FellowshipType, FellowshipWithBranch } from '@kairos/types';
 import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
@@ -49,6 +51,8 @@ function useDebounced<T>(value: T, delay: number): T {
 }
 
 export default function FellowshipsDirectory() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const homeBranchId = user?.homeBranchId ?? undefined;
@@ -104,7 +108,7 @@ export default function FellowshipsDirectory() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Fellowships</Text>
         <Pressable
@@ -113,7 +117,7 @@ export default function FellowshipsDirectory() {
           testID="new-fellowship-btn"
           accessibilityLabel="New fellowship"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -125,12 +129,12 @@ export default function FellowshipsDirectory() {
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
-            <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+            <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           }
           trailingSlot={
             searchInput.length > 0 ? (
               <Pressable onPress={() => setSearchInput('')} hitSlop={8}>
-                <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+                <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
             ) : null
           }
@@ -189,13 +193,13 @@ export default function FellowshipsDirectory() {
           <RefreshControl
             refreshing={list.isRefetching}
             onRefresh={() => list.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             {list.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
             ) : null}
 
             {list.isError ? (
@@ -220,7 +224,7 @@ export default function FellowshipsDirectory() {
           showEmpty ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <UsersRound color={colors.primary} size={22} strokeWidth={1.5} />
+                <UsersRound color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No fellowships found</Text>
               <Text style={styles.emptyMeta}>
@@ -235,7 +239,7 @@ export default function FellowshipsDirectory() {
           <Pressable onPress={() => router.push(`/fellowships/${f.id}`)} style={styles.rowWrap}>
             <Card padding="md" style={styles.rowCard}>
               <View style={styles.rowIconTile}>
-                <UsersRound color={colors.primary} size={18} strokeWidth={1.5} />
+                <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.rowName} numberOfLines={1}>
@@ -251,20 +255,20 @@ export default function FellowshipsDirectory() {
                 </View>
                 {(f.meetingDay || f.meetingTime) ? (
                   <View style={styles.scheduleLine}>
-                    <Calendar color="rgba(26,28,28,0.45)" size={12} strokeWidth={1.5} />
+                    <Calendar color={c.inkFaded} size={12} strokeWidth={1.5} />
                     <Text style={styles.rowSubMeta}>
                       {[f.meetingDay, f.meetingTime].filter(Boolean).join(' · ')}
                     </Text>
                   </View>
                 ) : null}
               </View>
-              <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+              <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
             </Card>
           </Pressable>
         )}
         ListFooterComponent={
           list.isFetchingNextPage ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : filtered.length > 0 ? (
@@ -285,6 +289,8 @@ function ScopeChip({
   onPress: () => void;
   label: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -306,6 +312,8 @@ function TypeChip({
   onPress: () => void;
   label: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -328,8 +336,9 @@ export function useBranchOptions() {
   });
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -337,7 +346,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -351,14 +360,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   scopeChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   scopeChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   scopeChipLabelActive: {
@@ -376,20 +385,20 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     borderRadius: radii.sm,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.1)',
+    borderColor: c.border,
   },
   typeChipActive: {
     backgroundColor: 'rgba(93,63,211,0.1)',
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
   typeChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
   },
   typeChipLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '700',
   },
   container: {
@@ -399,7 +408,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   rowWrap: {
@@ -420,7 +429,7 @@ const styles = StyleSheet.create({
   },
   rowName: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   rowMetaLine: {
@@ -431,7 +440,7 @@ const styles = StyleSheet.create({
   },
   rowMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   scheduleLine: {
     flexDirection: 'row',
@@ -441,7 +450,7 @@ const styles = StyleSheet.create({
   },
   rowSubMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   emptyCard: {
     alignItems: 'center',
@@ -455,21 +464,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   endOfList: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.md,
   },
 });
+}
+

@@ -16,10 +16,12 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { ServiceAttendanceRow } from '@kairos/types';
@@ -32,6 +34,8 @@ const STATUS_TONE: Record<string, 'success' | 'gold' | 'info' | 'neutral'> = {
 };
 
 export default function AttendanceServiceDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [statusFilter, setStatusFilter] =
@@ -70,7 +74,7 @@ export default function AttendanceServiceDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Service</Text>
         <View style={{ width: 24 }} />
@@ -85,12 +89,12 @@ export default function AttendanceServiceDetail() {
               service.refetch();
               attendance.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !service.data ? (
           <Text style={styles.emptyText}>Service not found.</Text>
         ) : (
@@ -104,20 +108,20 @@ export default function AttendanceServiceDetail() {
               </Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
-                  <Calendar color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                  <Calendar color={c.inkMuted} size={14} strokeWidth={1.5} />
                   <Text style={styles.metaText}>
                     {formatShortDate(service.data.serviceDate)}
                   </Text>
                 </View>
                 {service.data.branchName ? (
                   <View style={styles.metaItem}>
-                    <MapPin color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                    <MapPin color={c.inkMuted} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>{service.data.branchName}</Text>
                   </View>
                 ) : null}
                 {service.data.preacherName ? (
                   <View style={styles.metaItem}>
-                    <User color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+                    <User color={c.inkMuted} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>{service.data.preacherName}</Text>
                   </View>
                 ) : null}
@@ -128,10 +132,10 @@ export default function AttendanceServiceDetail() {
             </Card>
 
             <View style={styles.summaryRow}>
-              <SummaryTile label="Total" value={total} tone={colors.primary} />
-              <SummaryTile label="Present" value={counts.Present ?? 0} tone={colors.success} />
-              <SummaryTile label="Late" value={counts.Late ?? 0} tone={colors.gold} />
-              <SummaryTile label="Virtual" value={counts.Virtual ?? 0} tone={colors.info} />
+              <SummaryTile label="Total" value={total} tone={c.primary} />
+              <SummaryTile label="Present" value={counts.Present ?? 0} tone={c.success} />
+              <SummaryTile label="Late" value={counts.Late ?? 0} tone={c.gold} />
+              <SummaryTile label="Virtual" value={counts.Virtual ?? 0} tone={c.info} />
             </View>
 
             <ScrollView
@@ -171,6 +175,8 @@ export default function AttendanceServiceDetail() {
 }
 
 function SummaryTile({ label, value, tone }: { label: string; value: number; tone: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={[styles.summaryTile, { borderLeftColor: tone }]}>
       <Text style={[styles.summaryValue, { color: tone }]}>{value}</Text>
@@ -186,6 +192,8 @@ function AttendeeRow({
   row: ServiceAttendanceRow;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const tone = STATUS_TONE[row.attendanceStatus] ?? 'neutral';
   return (
     <Pressable onPress={onPress}>
@@ -213,8 +221,9 @@ function AttendeeRow({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -222,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -230,17 +239,17 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     marginTop: spacing.xl,
   },
 
   stageLabel: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 1.2,
   },
-  title: { ...typography.cardTitle, color: colors.ink },
+  title: { ...typography.cardTitle, color: c.ink },
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -248,10 +257,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  metaText: { ...typography.meta, color: c.inkMuted },
   topic: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     fontStyle: 'italic',
     marginTop: spacing.xs,
   },
@@ -259,14 +268,14 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', gap: spacing.xs },
   summaryTile: {
     flex: 1,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.sm,
     borderLeftWidth: 3,
     alignItems: 'flex-start',
   },
   summaryValue: { fontSize: 18, fontWeight: '800' },
-  summaryLabel: { ...typography.meta, color: 'rgba(26,28,28,0.6)', fontWeight: '600' },
+  summaryLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
 
   chipsRow: {
     gap: spacing.xs,
@@ -277,13 +286,15 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipActive: { backgroundColor: c.primary },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  rowName: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowName: { ...typography.body, color: c.ink, fontWeight: '600' },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
 });
+}
+

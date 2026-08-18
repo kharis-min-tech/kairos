@@ -26,17 +26,21 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 export default function DepartmentDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const caps = useCapabilities();
@@ -110,7 +114,7 @@ export default function DepartmentDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {d?.departmentName ?? 'Department'}
@@ -121,7 +125,7 @@ export default function DepartmentDetail() {
             hitSlop={8}
             accessibilityLabel="Edit department"
           >
-            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+            <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
         ) : (
           <View style={{ width: 24 }} />
@@ -134,12 +138,12 @@ export default function DepartmentDetail() {
           <RefreshControl
             refreshing={department.isFetching || members.isFetching}
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {department.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {department.isError || (!department.isLoading && !d) ? (
@@ -203,7 +207,7 @@ export default function DepartmentDetail() {
 
             {d.pendingJoinRequestCount ? (
               <Card padding="md" style={styles.pendingCard}>
-                <Handshake color={colors.gold} size={16} strokeWidth={1.5} />
+                <Handshake color={c.gold} size={16} strokeWidth={1.5} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.pendingTitle}>
                     {d.pendingJoinRequestCount} pending join request
@@ -223,7 +227,7 @@ export default function DepartmentDetail() {
                 style={styles.rotaCard}
               >
                 <View style={styles.rotaIconTile}>
-                  <ClipboardList color={colors.primary} size={16} strokeWidth={1.5} />
+                  <ClipboardList color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={styles.rotaTitle}>Rota</Text>
@@ -231,14 +235,14 @@ export default function DepartmentDetail() {
                     Templates, generation, per-slot assignments
                   </Text>
                 </View>
-                <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+                <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
               </Pressable>
             ) : null}
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
-                  <Users color={colors.primary} size={14} strokeWidth={1.5} />
+                  <Users color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionTitle}>Team</Text>
                 <Badge
@@ -252,11 +256,11 @@ export default function DepartmentDetail() {
                   hitSlop={6}
                   accessibilityLabel="Add member"
                 >
-                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                  <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                 </Pressable>
               </View>
               {members.isLoading ? (
-                <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.sm }} />
+                <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (members.data ?? []).length === 0 ? (
                 <Text style={styles.emptyLine}>No members recorded yet.</Text>
               ) : (
@@ -323,8 +327,9 @@ export default function DepartmentDetail() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -332,7 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -345,7 +350,7 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     letterSpacing: 1.2,
   },
   heroTitle: { ...typography.screenTitle, color: '#ffffff' },
@@ -391,25 +396,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
   memberList: { gap: spacing.xs },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
-  memberName: { ...typography.body, color: colors.ink },
+  memberName: { ...typography.body, color: c.ink },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     padding: spacing.md,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   addMemberBtn: {
     width: 28,
@@ -421,7 +426,7 @@ const styles = StyleSheet.create({
   },
   longPressHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.45)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -435,13 +440,13 @@ const styles = StyleSheet.create({
   },
   pendingTitle: {
     ...typography.body,
-    color: colors.goldDark,
+    color: c.goldDark,
     fontWeight: '700',
     fontSize: 13,
   },
   pendingMeta: {
     ...typography.meta,
-    color: colors.goldDark,
+    color: c.goldDark,
     marginTop: 2,
     lineHeight: 15,
   },
@@ -450,7 +455,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
     borderWidth: 1,
@@ -464,6 +469,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rotaTitle: { ...typography.body, color: colors.ink, fontWeight: '700' },
-  rotaMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rotaTitle: { ...typography.body, color: c.ink, fontWeight: '700' },
+  rotaMeta: { ...typography.meta, color: c.inkMuted },
 });
+}
+

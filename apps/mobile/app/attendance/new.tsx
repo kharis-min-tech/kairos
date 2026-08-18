@@ -17,10 +17,12 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { ServiceType } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -29,6 +31,8 @@ import { alert } from '@/lib/alert';
 const TYPE_OPTIONS: ServiceType[] = ['Sunday', 'Midweek', 'Special'];
 
 export default function CreateService() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -87,7 +91,7 @@ export default function CreateService() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>New service</Text>
         <View style={{ width: 24 }} />
@@ -206,7 +210,7 @@ export default function CreateService() {
                   >
                     {t}
                   </Text>
-                  {active ? <Check color={colors.primary} size={16} strokeWidth={2} /> : null}
+                  {active ? <Check color={c.primary} size={16} strokeWidth={2} /> : null}
                 </Pressable>
               );
             })}
@@ -224,16 +228,19 @@ function PickerField({
   value: string;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress} style={styles.pickerField}>
       <Text style={styles.pickerValue}>{value}</Text>
-      <ChevronRight color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+      <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,7 +248,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -249,7 +256,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
     marginBottom: 4,
   },
@@ -258,21 +265,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
-  pickerValue: { ...typography.body, color: colors.ink, flex: 1 },
+  pickerValue: { ...typography.body, color: c.ink, flex: 1 },
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -283,10 +290,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink, marginBottom: spacing.xs },
+  sheetTitle: { ...typography.cardTitle, color: c.ink, marginBottom: spacing.xs },
   sheetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -296,6 +303,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   sheetRowActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
-  sheetRowLabel: { ...typography.body, color: colors.ink },
-  sheetRowLabelActive: { color: colors.primary, fontWeight: '600' },
+  sheetRowLabel: { ...typography.body, color: c.ink },
+  sheetRowLabelActive: { color: c.primary, fontWeight: '600' },
 });
+}
+

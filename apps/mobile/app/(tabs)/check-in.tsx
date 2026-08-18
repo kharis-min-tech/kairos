@@ -16,12 +16,14 @@ import { Check, Clock, X as XIcon } from 'lucide-react-native';
 import {
   Avatar,
   Card,
-  colors,
   spacing,
   typography,
   radii,
   gradients,
   shadows,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { SelfCheckInCandidate } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -39,6 +41,8 @@ function formatServiceLabel(c: SelfCheckInCandidate): string {
 }
 
 export default function CheckIn() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -279,11 +283,11 @@ export default function CheckIn() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sheetRowLabel}>{formatServiceLabel(r)}</Text>
                 </View>
-                <Check color={colors.primary} size={16} strokeWidth={2} />
+                <Check color={c.primary} size={16} strokeWidth={2} />
               </Pressable>
             ))}
             <Pressable style={styles.sheetCancel} onPress={() => setPickerOpen(false)}>
-              <XIcon color="rgba(26,28,28,0.55)" size={16} strokeWidth={1.5} />
+              <XIcon color={c.inkMuted} size={16} strokeWidth={1.5} />
               <Text style={styles.sheetCancelLabel}>Cancel</Text>
             </Pressable>
           </Pressable>
@@ -293,16 +297,17 @@ export default function CheckIn() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   container: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   header: { paddingTop: spacing.md, gap: 2 },
-  title: { ...typography.screenTitle, color: colors.ink },
-  subtitle: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  title: { ...typography.screenTitle, color: c.ink },
+  subtitle: { ...typography.meta, color: c.inkMuted },
 
   happeningCard: {
     borderRadius: radii.lg,
@@ -329,7 +334,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
   },
   pulseDotDim: { backgroundColor: 'rgba(255,255,255,0.5)' },
   happeningEyebrow: {
@@ -370,8 +375,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   identityText: { gap: 2 },
-  identityName: { ...typography.cardTitle, color: colors.ink },
-  identityMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  identityName: { ...typography.cardTitle, color: c.ink },
+  identityMeta: { ...typography.meta, color: c.inkMuted },
 
   checkinPill: {
     height: 56,
@@ -397,15 +402,15 @@ const styles = StyleSheet.create({
   },
   caption: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     marginTop: -spacing.xs,
   },
 
   statCard: { gap: spacing.xs },
-  statEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
-  statNumber: { fontSize: 26, fontWeight: '800', color: colors.ink },
-  statMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  statEyebrow: { ...typography.eyebrow, color: c.inkMuted },
+  statNumber: { fontSize: 26, fontWeight: '800', color: c.ink },
+  statMeta: { ...typography.meta, color: c.inkMuted },
 
   backdrop: {
     flex: 1,
@@ -413,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -424,13 +429,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink },
+  sheetTitle: { ...typography.cardTitle, color: c.ink },
   sheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
   },
   sheetRow: {
@@ -441,7 +446,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radii.md,
   },
-  sheetRowLabel: { ...typography.body, color: colors.ink },
+  sheetRowLabel: { ...typography.body, color: c.ink },
   sheetCancel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -450,5 +455,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginTop: spacing.sm,
   },
-  sheetCancelLabel: { ...typography.button, color: 'rgba(26,28,28,0.7)' },
+  sheetCancelLabel: { ...typography.button, color: c.inkMuted },
 });
+}
+

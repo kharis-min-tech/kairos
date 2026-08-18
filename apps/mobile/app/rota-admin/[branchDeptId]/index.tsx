@@ -26,10 +26,12 @@ import {
   Badge,
   Button,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type {
@@ -49,6 +51,8 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
  * / pool CRUD stays on web — those are low-frequency setup tasks.
  */
 export default function RotaAdmin() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { branchDeptId } = useLocalSearchParams<{ branchDeptId: string }>();
   const qc = useQueryClient();
@@ -136,7 +140,7 @@ export default function RotaAdmin() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {dept.data?.departmentName ?? 'Rota'}
@@ -150,22 +154,22 @@ export default function RotaAdmin() {
           <RefreshControl
             refreshing={templates.isFetching || instances.isFetching}
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {stats.data ? (
           <View style={styles.statRow}>
-            <StatTile label="Upcoming" value={stats.data.upcomingCount} tone={colors.primary} />
-            <StatTile label="Published" value={stats.data.publishedCount} tone={colors.success} />
-            <StatTile label="Draft" value={stats.data.draftCount} tone={colors.gold} />
+            <StatTile label="Upcoming" value={stats.data.upcomingCount} tone={c.primary} />
+            <StatTile label="Published" value={stats.data.publishedCount} tone={c.success} />
+            <StatTile label="Draft" value={stats.data.draftCount} tone={c.gold} />
           </View>
         ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Templates</Text>
           {templates.isLoading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : rows.length === 0 ? (
             <Card padding="md">
               <Text style={styles.emptyText}>
@@ -191,7 +195,7 @@ export default function RotaAdmin() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming instances</Text>
           {instances.isLoading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : instRows.length === 0 ? (
             <Card padding="md">
               <Text style={styles.emptyText}>
@@ -235,13 +239,15 @@ function TemplateRow({
   template: RotaTemplateWithSummary;
   onGenerate: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const last = template.lastGeneratedAt
     ? `last generated ${formatShortDate(template.lastGeneratedAt)}`
     : 'never generated';
   return (
     <Card padding="md" style={styles.templateRow}>
       <View style={styles.templateIconTile}>
-        <ClipboardList color={colors.primary} size={16} strokeWidth={1.5} />
+        <ClipboardList color={c.primary} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.templateTitleLine}>
@@ -272,6 +278,8 @@ function InstanceRow({
   instance: RotaInstanceWithSummary;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.instanceRow}>
@@ -319,13 +327,15 @@ function InstanceRow({
             </View>
           ) : null}
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
 function StatTile({ label, value, tone }: { label: string; value: number; tone: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={[styles.statTile, { borderLeftColor: tone }]}>
       <Text style={[styles.statValue, { color: tone }]}>{value}</Text>
@@ -353,6 +363,8 @@ function GenerateSheet({
   onConfirm: () => void;
   submitting: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onCancel}>
       <KeyboardAvoidingView
@@ -378,7 +390,7 @@ function GenerateSheet({
               value={startDate}
               onChangeText={onStartChange}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor="rgba(26,28,28,0.4)"
+              placeholderTextColor={c.inkFaded}
               style={styles.sheetInput}
               autoCapitalize="none"
               autoCorrect={false}
@@ -390,7 +402,7 @@ function GenerateSheet({
               value={weeks}
               onChangeText={onWeeksChange}
               placeholder="4"
-              placeholderTextColor="rgba(26,28,28,0.4)"
+              placeholderTextColor={c.inkFaded}
               style={styles.sheetInput}
               keyboardType="number-pad"
               editable={!submitting}
@@ -430,8 +442,9 @@ function GenerateSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -439,7 +452,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -449,24 +462,24 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', gap: spacing.xs },
   statTile: {
     flex: 1,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.sm,
     borderLeftWidth: 3,
     gap: 2,
   },
   statValue: { fontSize: 20, fontWeight: '800' },
-  statLabel: { ...typography.meta, color: 'rgba(26,28,28,0.65)', fontWeight: '600' },
+  statLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
 
   section: { gap: spacing.sm },
   sectionTitle: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
 
@@ -480,14 +493,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   templateTitleLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  templateName: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  templateMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
-  templateMetaFaded: { ...typography.meta, color: 'rgba(26,28,28,0.45)', fontSize: 11 },
+  templateName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  templateMeta: { ...typography.meta, color: c.inkMuted },
+  templateMetaFaded: { ...typography.meta, color: c.inkFaded, fontSize: 11 },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radii.pill,
@@ -510,18 +523,18 @@ const styles = StyleSheet.create({
   dateTileMonth: {
     fontSize: 8,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 0.8,
   },
   dateTileDay: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     lineHeight: 20,
   },
   instanceTitleLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  instanceName: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  instanceMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  instanceName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  instanceMeta: { ...typography.meta, color: c.inkMuted },
   assigneeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -530,7 +543,7 @@ const styles = StyleSheet.create({
   },
   assigneeMore: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginLeft: spacing.xs,
   },
 
@@ -540,7 +553,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -551,34 +564,34 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink },
-  sheetMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  sheetTitle: { ...typography.cardTitle, color: c.ink },
+  sheetMeta: { ...typography.meta, color: c.inkMuted },
   sheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginTop: spacing.xs,
     marginBottom: spacing.sm,
     lineHeight: 16,
   },
   sheetLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
     marginTop: spacing.sm,
     marginBottom: 4,
   },
   sheetInput: {
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     ...typography.body,
-    color: colors.ink,
-    backgroundColor: colors.cardLight,
+    color: c.ink,
+    backgroundColor: c.card,
   },
   sheetFooter: {
     flexDirection: 'row',
@@ -587,8 +600,10 @@ const styles = StyleSheet.create({
   },
   sheetWarning: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
     marginTop: spacing.sm,
     textAlign: 'center',
   },
 });
+}
+

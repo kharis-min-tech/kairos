@@ -13,7 +13,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ChevronRight } from 'lucide-react-native';
-import { Avatar, Badge, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Avatar,
+  Badge,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 type Segment = 'people' | 'fellowships' | 'departments';
@@ -25,6 +34,8 @@ const SEGMENTS: { key: Segment; label: string }[] = [
 ];
 
 export default function Community() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const [segment, setSegment] = useState<Segment>('people');
   const [search, setSearch] = useState('');
 
@@ -53,11 +64,11 @@ export default function Community() {
       </View>
 
       <View style={styles.searchField}>
-        <Search color="rgba(26,28,28,0.4)" size={18} strokeWidth={1.5} />
+        <Search color={c.inkFaded} size={18} strokeWidth={1.5} />
         <TextInput
           style={styles.searchInput}
           placeholder={`Search ${SEGMENTS.find((s) => s.key === segment)?.label.toLowerCase()}`}
-          placeholderTextColor="rgba(26,28,28,0.4)"
+          placeholderTextColor={c.inkFaded}
           value={search}
           onChangeText={setSearch}
           autoCapitalize="none"
@@ -73,6 +84,8 @@ export default function Community() {
 }
 
 function PeopleList({ search }: { search: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const query = useQuery({
     queryKey: ['members', 'community', search],
@@ -95,12 +108,12 @@ function PeopleList({ search }: { search: string }) {
         <RefreshControl
           refreshing={query.isFetching}
           onRefresh={() => query.refetch()}
-          tintColor={colors.primary}
+          tintColor={c.primary}
         />
       }
       ListEmptyComponent={
         query.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
           <Text style={styles.emptyText}>No members found.</Text>
         )
@@ -120,7 +133,7 @@ function PeopleList({ search }: { search: string }) {
             </Text>
             <Text style={styles.rowMeta}>{item.branchName ?? item.email}</Text>
           </View>
-          <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Pressable>
       )}
     />
@@ -128,6 +141,8 @@ function PeopleList({ search }: { search: string }) {
 }
 
 function FellowshipsList({ search }: { search: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const query = useQuery({
     queryKey: ['fellowships', 'community'],
@@ -150,12 +165,12 @@ function FellowshipsList({ search }: { search: string }) {
         <RefreshControl
           refreshing={query.isFetching}
           onRefresh={() => query.refetch()}
-          tintColor={colors.primary}
+          tintColor={c.primary}
         />
       }
       ListEmptyComponent={
         query.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
           <Text style={styles.emptyText}>No fellowships found.</Text>
         )
@@ -174,7 +189,7 @@ function FellowshipsList({ search }: { search: string }) {
             </View>
             <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
           </View>
-          <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Pressable>
       )}
     />
@@ -182,6 +197,8 @@ function FellowshipsList({ search }: { search: string }) {
 }
 
 function DepartmentsList({ search }: { search: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const query = useQuery({
     queryKey: ['departments', 'community'],
@@ -206,12 +223,12 @@ function DepartmentsList({ search }: { search: string }) {
         <RefreshControl
           refreshing={query.isFetching}
           onRefresh={() => query.refetch()}
-          tintColor={colors.primary}
+          tintColor={c.primary}
         />
       }
       ListEmptyComponent={
         query.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
           <Text style={styles.emptyText}>No departments found.</Text>
         )
@@ -222,32 +239,33 @@ function DepartmentsList({ search }: { search: string }) {
           onPress={() => router.push(`/departments/${item.id}`)}
           style={styles.row}
         >
-          <View style={[styles.groupDot, { backgroundColor: colors.info }]} />
+          <View style={[styles.groupDot, { backgroundColor: c.info }]} />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>{item.departmentName}</Text>
             <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
           </View>
-          <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Pressable>
       )}
     />
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     gap: 2,
   },
-  title: { ...typography.screenTitle, color: colors.ink },
-  subtitle: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  title: { ...typography.screenTitle, color: c.ink },
+  subtitle: { ...typography.meta, color: c.inkMuted },
 
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
     borderRadius: radii.md,
     padding: 3,
     marginHorizontal: spacing.lg,
@@ -262,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
   },
   segmentActive: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -271,10 +289,10 @@ const styles = StyleSheet.create({
   },
   segmentLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontWeight: '600',
   },
-  segmentLabelActive: { color: colors.ink },
+  segmentLabelActive: { color: c.ink },
 
   searchField: {
     flexDirection: 'row',
@@ -282,9 +300,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     height: 40,
@@ -292,7 +310,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
   },
 
   listContent: {
@@ -302,7 +320,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xl,
   },
@@ -311,7 +329,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
@@ -319,7 +337,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   rowText: { flex: 1, gap: 2 },
   rowTitleLine: {
@@ -328,6 +346,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  rowTitle: { ...typography.cardTitle, color: colors.ink },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  rowTitle: { ...typography.cardTitle, color: c.ink },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
 });
+}
+

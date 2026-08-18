@@ -21,10 +21,12 @@ import {
   Badge,
   Button,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
@@ -61,6 +63,8 @@ function getNextStage(stage: string): StageDef | undefined {
 }
 
 export default function EnrollmentDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
@@ -211,7 +215,7 @@ export default function EnrollmentDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Enrollment</Text>
         <View style={{ width: 24 }} />
@@ -223,12 +227,12 @@ export default function EnrollmentDetail() {
           <RefreshControl
             refreshing={enrollment.isFetching}
             onRefresh={() => enrollment.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {enrollment.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !data ? (
           <Text style={styles.emptyText}>Enrollment not found.</Text>
         ) : (
@@ -449,7 +453,7 @@ export default function EnrollmentDetail() {
                     {s.label}
                   </Text>
                   {active ? (
-                    <Check color={colors.primary} size={16} strokeWidth={2} />
+                    <Check color={c.primary} size={16} strokeWidth={2} />
                   ) : null}
                 </Pressable>
               );
@@ -485,7 +489,7 @@ export default function EnrollmentDetail() {
                 value={feedback}
                 onChangeText={setFeedback}
                 placeholder="How did the session go?"
-                placeholderTextColor="rgba(26,28,28,0.4)"
+                placeholderTextColor={c.inkFaded}
                 style={styles.feedbackInput}
               />
               <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
@@ -542,6 +546,8 @@ function DetailRow({
   value: string;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -549,15 +555,16 @@ function DetailRow({
       style={styles.detailRow}
     >
       <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={[styles.detailValue, onPress && { color: colors.primary }]}>
+      <Text style={[styles.detailValue, onPress && { color: c.primary }]}>
         {value}
       </Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -565,11 +572,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     marginTop: spacing.xxl,
   },
@@ -579,8 +586,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  title: { ...typography.cardTitle, color: colors.ink },
-  meta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  title: { ...typography.cardTitle, color: c.ink },
+  meta: { ...typography.meta, color: c.inkMuted },
 
   progressRow: {
     flexDirection: 'row',
@@ -591,9 +598,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
   },
-  progressCellDone: { backgroundColor: colors.primary },
+  progressCellDone: { backgroundColor: c.primary },
 
   sessionChip: {
     alignSelf: 'flex-start',
@@ -606,7 +613,7 @@ const styles = StyleSheet.create({
   sessionChipInProgress: { backgroundColor: 'rgba(248,181,55,0.2)' },
   sessionChipText: { ...typography.meta, fontWeight: '600' },
   sessionChipDoneText: { color: '#047857' },
-  sessionChipInProgressText: { color: colors.goldDark },
+  sessionChipInProgressText: { color: c.goldDark },
 
   actionRow: { gap: spacing.sm },
 
@@ -620,16 +627,16 @@ const styles = StyleSheet.create({
   },
   attendanceHintTitle: {
     ...typography.body,
-    color: colors.goldDark,
+    color: c.goldDark,
     fontWeight: '700',
   },
   attendanceHintBody: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
 
-  sectionTitle: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  sectionTitle: { ...typography.eyebrow, color: c.inkMuted },
 
   detailRow: {
     flexDirection: 'row',
@@ -637,9 +644,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xs,
   },
-  detailLabel: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
-  detailValue: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  notesBody: { ...typography.body, color: colors.ink, marginTop: 4 },
+  detailLabel: { ...typography.meta, color: c.inkMuted },
+  detailValue: { ...typography.body, color: c.ink, fontWeight: '600' },
+  notesBody: { ...typography.body, color: c.ink, marginTop: 4 },
 
   journeyRow: {
     flexDirection: 'row',
@@ -653,23 +660,23 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
   },
-  journeyDotDone: { backgroundColor: colors.success },
-  journeyDotCurrent: { backgroundColor: colors.primary },
-  journeyDotIntegrated: { backgroundColor: colors.gold },
+  journeyDotDone: { backgroundColor: c.success },
+  journeyDotCurrent: { backgroundColor: c.primary },
+  journeyDotIntegrated: { backgroundColor: c.gold },
   journeyDotIndex: {
     fontSize: 11,
     fontWeight: '700',
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   journeyLabel: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     flex: 1,
   },
-  journeyLabelCurrent: { color: colors.primary, fontWeight: '600' },
-  journeyLabelDone: { color: 'rgba(26,28,28,0.75)' },
+  journeyLabelCurrent: { color: c.primary, fontWeight: '600' },
+  journeyLabelDone: { color: c.inkMuted },
   journeyBadge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -678,7 +685,7 @@ const styles = StyleSheet.create({
   journeyBadgeActive: { backgroundColor: 'rgba(248,181,55,0.2)' },
   journeyBadgeDone: { backgroundColor: 'rgba(16,185,129,0.15)' },
   journeyBadgeText: { ...typography.meta, fontWeight: '600' },
-  journeyBadgeActiveText: { color: colors.goldDark },
+  journeyBadgeActiveText: { color: c.goldDark },
   journeyBadgeDoneText: { color: '#047857' },
 
   deactivateRow: {
@@ -688,7 +695,7 @@ const styles = StyleSheet.create({
   },
   deactivateText: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     fontWeight: '600',
   },
 
@@ -698,7 +705,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -709,13 +716,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink, marginBottom: spacing.xs },
+  sheetTitle: { ...typography.cardTitle, color: c.ink, marginBottom: spacing.xs },
   sheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
   },
   sheetOption: {
@@ -727,16 +734,18 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   sheetOptionActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
-  sheetOptionLabel: { ...typography.body, color: colors.ink },
-  sheetOptionLabelActive: { color: colors.primary, fontWeight: '600' },
+  sheetOptionLabel: { ...typography.body, color: c.ink },
+  sheetOptionLabelActive: { color: c.primary, fontWeight: '600' },
   feedbackInput: {
     minHeight: 96,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     padding: spacing.md,
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     textAlignVertical: 'top',
   },
 });
+}
+

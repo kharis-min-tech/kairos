@@ -23,17 +23,21 @@ import {
 import {
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { OutreachProgramWithDetails } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 
 export default function OutreachDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
@@ -62,7 +66,7 @@ export default function OutreachDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {p?.programName ?? 'Outreach'}
@@ -79,12 +83,12 @@ export default function OutreachDetail() {
               program.refetch();
               souls.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {program.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {program.isError || (!program.isLoading && !p) ? (
@@ -148,7 +152,7 @@ export default function OutreachDetail() {
                   style={styles.contactRow}
                 >
                   <View style={styles.contactIconTile}>
-                    <MapPin color={colors.primary} size={16} strokeWidth={1.5} />
+                    <MapPin color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.contactValue}>
                     {[p.address, p.city].filter(Boolean).join(', ')}
@@ -183,7 +187,7 @@ export default function OutreachDetail() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
-                  <Heart color={colors.primary} size={14} strokeWidth={1.5} />
+                  <Heart color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionTitle}>Souls captured</Text>
                 <Badge
@@ -193,7 +197,7 @@ export default function OutreachDetail() {
                 />
               </View>
               {souls.isLoading ? (
-                <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.sm }} />
+                <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (souls.data ?? []).length === 0 ? (
                 <Card padding="md">
                   <Text style={styles.emptyLine}>
@@ -216,7 +220,7 @@ export default function OutreachDetail() {
                     >
                       <Card padding="md" style={styles.soulRow}>
                         <View style={styles.soulIconTile}>
-                          <Users color={colors.primary} size={16} strokeWidth={1.5} />
+                          <Users color={c.primary} size={16} strokeWidth={1.5} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.soulName} numberOfLines={1}>
@@ -228,7 +232,7 @@ export default function OutreachDetail() {
                           </Text>
                         </View>
                         <ChevronRight
-                          color="rgba(26,28,28,0.3)"
+                          color={c.inkVeryFaded}
                           size={16}
                           strokeWidth={1.5}
                         />
@@ -248,8 +252,9 @@ export default function OutreachDetail() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -292,7 +297,7 @@ const styles = StyleSheet.create({
   },
   heroBadgePillGoldLabel: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     fontSize: 9,
   },
   heroTitle: { ...typography.screenTitle, color: '#ffffff' },
@@ -315,7 +320,7 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   contactRow: {
     flexDirection: 'row',
@@ -333,7 +338,7 @@ const styles = StyleSheet.create({
   },
   contactValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   statsGrid: {
@@ -351,11 +356,11 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 22,
     fontWeight: '800',
-    color: colors.primary,
+    color: c.primary,
   },
   statLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     fontSize: 10,
     fontWeight: '600',
     letterSpacing: 0.5,
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
   },
   coordinator: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     marginTop: spacing.xs,
   },
   section: { gap: spacing.sm },
@@ -381,7 +386,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
   soulRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -395,17 +400,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  soulName: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  soulMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  soulName: { ...typography.body, color: c.ink, fontWeight: '500' },
+  soulMeta: { ...typography.meta, color: c.inkMuted },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   viewAllLink: {
     ...typography.body,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
     fontSize: 13,
     textAlign: 'center',
@@ -413,6 +418,8 @@ const styles = StyleSheet.create({
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
 });
+}
+

@@ -19,7 +19,16 @@ import {
   Plus,
   CheckCircle2,
 } from 'lucide-react-native';
-import { Button, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Button,
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { CreateFellowshipMeetingRequest, FellowshipMeeting } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
@@ -38,6 +47,8 @@ function formatMeetingDate(iso: string | Date): string {
 }
 
 export default function RollcallFellowship() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ fellowshipId: string }>();
@@ -95,7 +106,7 @@ export default function RollcallFellowship() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {fellowship.data?.fellowshipName ?? 'Fellowship attendance'}
@@ -112,7 +123,7 @@ export default function RollcallFellowship() {
               meetings.refetch();
               fellowship.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -134,7 +145,7 @@ export default function RollcallFellowship() {
         />
 
         {meetings.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {upcoming.length > 0 ? (
@@ -171,7 +182,7 @@ export default function RollcallFellowship() {
         {!meetings.isLoading && rows.length === 0 ? (
           <Card padding="md" style={styles.emptyCard}>
             <View style={styles.emptyIconTile}>
-              <Calendar color={colors.primary} size={22} strokeWidth={1.5} />
+              <Calendar color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>No meetings yet</Text>
             <Text style={styles.emptyMeta}>
@@ -194,6 +205,8 @@ function MeetingRow({
   onPress: () => void;
   muted?: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.rowCard}>
@@ -204,9 +217,9 @@ function MeetingRow({
           ]}
         >
           {muted ? (
-            <CheckCircle2 color="rgba(26,28,28,0.5)" size={18} strokeWidth={1.5} />
+            <CheckCircle2 color={c.inkFaded} size={18} strokeWidth={1.5} />
           ) : (
-            <Calendar color={colors.primary} size={18} strokeWidth={1.5} />
+            <Calendar color={c.primary} size={18} strokeWidth={1.5} />
           )}
         </View>
         <View style={{ flex: 1, gap: 2 }}>
@@ -222,14 +235,15 @@ function MeetingRow({
             </Text>
           ) : null}
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -237,18 +251,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
   },
   list: { gap: spacing.sm },
@@ -266,10 +280,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowIconTileMuted: {
-    backgroundColor: 'rgba(26,28,28,0.06)',
+    backgroundColor: c.divider,
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
   emptyCard: {
     alignItems: 'center',
     gap: spacing.md,
@@ -282,11 +296,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
 });
+}
+

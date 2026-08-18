@@ -14,11 +14,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Fingerprint } from 'lucide-react-native';
-import { Button, Input, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
+import {
+  Button,
+  Input,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function LoginScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
   const [email, setEmail] = useState('');
@@ -137,7 +149,7 @@ export default function LoginScreen() {
               }
               style={styles.biometricButton}
             >
-              <Fingerprint color={colors.primary} size={18} strokeWidth={1.5} />
+              <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
               <Text style={styles.biometricLabel}>Sign in with Face ID</Text>
             </Pressable>
           </View>
@@ -156,8 +168,9 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,
@@ -192,11 +205,11 @@ const styles = StyleSheet.create({
   },
   brandLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     letterSpacing: 2.2,
   },
   card: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.xl,
     shadowColor: '#000',
@@ -208,7 +221,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   errorBanner: {
     backgroundColor: 'rgba(225,29,72,0.08)',
@@ -217,7 +230,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   forgotRow: {
     alignSelf: 'flex-end',
@@ -225,7 +238,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   dividerRow: {
@@ -237,11 +250,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
   },
   dividerLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   biometricButton: {
     flexDirection: 'row',
@@ -250,14 +263,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderStyle: 'dashed',
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: c.primary,
     borderRadius: radii.lg,
     backgroundColor: 'rgba(93,63,211,0.06)',
     height: 46,
   },
   biometricLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
   signupRow: {
     flexDirection: 'row',
@@ -266,11 +279,13 @@ const styles = StyleSheet.create({
   },
   signupPrompt: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   signupLink: {
     ...typography.body,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
 });
+}
+

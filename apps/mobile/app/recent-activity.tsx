@@ -21,7 +21,17 @@ import {
   MailWarning,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Badge, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  colors,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { AUDIT_ACTION_LABEL, AuditAction, type AuditLogRow } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
@@ -49,7 +59,7 @@ function actionVisual(action: AuditAction): ActionVisual {
     case AuditAction.EmailChangeReverted:
       return { Icon: MailWarning, tone: colors.danger, tint: 'rgba(225,29,72,0.1)' };
     default:
-      return { Icon: ShieldCheck, tone: 'rgba(26,28,28,0.5)', tint: 'rgba(26,28,28,0.08)' };
+      return { Icon: ShieldCheck, tone: 'rgba(120,120,128,0.5)', tint: 'rgba(120,120,128,0.1)' };
   }
 }
 
@@ -62,6 +72,8 @@ function formatTime(iso: string): string {
 }
 
 export default function RecentActivity() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   const activity = useQuery({
@@ -73,7 +85,7 @@ export default function RecentActivity() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Recent activity</Text>
         <View style={{ width: 24 }} />
@@ -85,7 +97,7 @@ export default function RecentActivity() {
           <RefreshControl
             refreshing={activity.isFetching}
             onRefresh={() => activity.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -97,7 +109,7 @@ export default function RecentActivity() {
         </View>
 
         {activity.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {activity.isError ? (
@@ -154,8 +166,9 @@ export default function RecentActivity() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -163,22 +176,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     paddingVertical: spacing.md,
   },
@@ -190,7 +203,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   iconTile: {
     width: 32,
@@ -205,14 +218,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  entryLabel: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  entryLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
   entryMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   entryUserAgent: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.45)',
+    color: c.inkFaded,
     fontSize: 10,
   },
 });
+}
+

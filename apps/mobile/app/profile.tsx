@@ -6,12 +6,23 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Pencil } from 'lucide-react-native';
-import { Avatar, Badge, Card, colors, spacing, typography } from '@kairos/ui-native';
+import {
+  Avatar,
+  Badge,
+  Card,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function Profile() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -91,7 +102,7 @@ export default function Profile() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Profile</Text>
         <View style={{ width: 24 }} />
@@ -184,7 +195,7 @@ export default function Profile() {
           onPress={() => router.push(`/members/edit/${user.id}`)}
           style={styles.editRow}
         >
-          <Pencil color={colors.primary} size={16} strokeWidth={1.5} />
+          <Pencil color={c.primary} size={16} strokeWidth={1.5} />
           <Text style={styles.editLabel}>Edit profile</Text>
         </Pressable>
       </ScrollView>
@@ -193,6 +204,8 @@ export default function Profile() {
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Card padding="md" style={styles.statTile}>
       <Text style={styles.statLabel}>{label}</Text>
@@ -202,6 +215,8 @@ function StatTile({ label, value }: { label: string; value: string }) {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -213,6 +228,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function RowItem({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.rowItem}>
       <View style={styles.rowText}>
@@ -223,8 +240,9 @@ function RowItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,7 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
@@ -251,18 +269,18 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.cardLight,
+    borderColor: c.card,
   },
   name: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     marginTop: spacing.sm,
   },
-  contact: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  contact: { ...typography.meta, color: c.inkMuted },
   badgeRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -281,12 +299,12 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.ink,
+    color: c.ink,
   },
 
   section: {
@@ -295,7 +313,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   sectionCard: {
     overflow: 'hidden',
@@ -307,11 +325,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(26,28,28,0.05)',
+    borderBottomColor: c.divider,
   },
   rowText: { flex: 1, gap: 2 },
-  rowLabel: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
-  rowValue: { ...typography.body, color: colors.ink },
+  rowLabel: { ...typography.meta, color: c.inkMuted },
+  rowValue: { ...typography.body, color: c.ink },
 
   editRow: {
     flexDirection: 'row',
@@ -322,14 +340,16 @@ const styles = StyleSheet.create({
   },
   editLabel: {
     ...typography.body,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
 
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xxl,
   },
 });
+}
+

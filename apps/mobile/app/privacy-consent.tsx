@@ -20,7 +20,16 @@ import {
   AlertTriangle,
   ExternalLink,
 } from 'lucide-react-native';
-import { Badge, Button, Card, colors, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Button,
+  Card,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import {
   CONSENT_TYPE_LABEL,
   CONSENT_TYPE_DESCRIPTION,
@@ -43,6 +52,8 @@ function docHrefFor(consentType: ConsentType): string | null {
 const QUERY_KEY = ['me', 'consent'] as const;
 
 export default function PrivacyConsent() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -63,7 +74,7 @@ export default function PrivacyConsent() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Privacy & consent</Text>
         <View style={{ width: 24 }} />
@@ -75,7 +86,7 @@ export default function PrivacyConsent() {
           <RefreshControl
             refreshing={consent.isFetching}
             onRefresh={() => consent.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -88,12 +99,12 @@ export default function PrivacyConsent() {
 
         <Card padding="md">
           <View style={styles.cardTitleRow}>
-            <FileText color={colors.primary} size={16} strokeWidth={1.5} />
+            <FileText color={c.primary} size={16} strokeWidth={1.5} />
             <Text style={styles.cardTitle}>Consent records</Text>
           </View>
 
           {consent.isLoading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.lg }} />
+            <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.lg }} />
           ) : null}
 
           {consent.isError ? (
@@ -116,10 +127,10 @@ export default function PrivacyConsent() {
               status.granted === true ? Check : status.granted === false ? X : AlertTriangle;
             const tone =
               status.granted === true
-                ? colors.successText
+                ? c.successText
                 : status.granted === false
-                  ? colors.danger
-                  : colors.goldDark;
+                  ? c.danger
+                  : c.goldDark;
             const href = docHrefFor(status.consentType);
 
             return (
@@ -142,7 +153,7 @@ export default function PrivacyConsent() {
                   {href ? (
                     <Pressable onPress={() => Linking.openURL(href)} style={styles.docLink}>
                       <Text style={styles.docLinkLabel}>Read the current version</Text>
-                      <ExternalLink color={colors.primary} size={12} strokeWidth={1.5} />
+                      <ExternalLink color={c.primary} size={12} strokeWidth={1.5} />
                     </Pressable>
                   ) : null}
                   <View style={styles.stateLine}>
@@ -193,8 +204,9 @@ export default function PrivacyConsent() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,25 +214,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   cardTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  cardTitle: { ...typography.cardTitle, color: colors.ink },
+  cardTitle: { ...typography.cardTitle, color: c.ink },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     marginVertical: spacing.md,
   },
   consentRow: {
@@ -231,7 +243,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   rowTitleLine: {
     flexDirection: 'row',
@@ -239,8 +251,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  consentLabel: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  consentDesc: { ...typography.meta, color: 'rgba(26,28,28,0.6)', lineHeight: 15 },
+  consentLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
+  consentDesc: { ...typography.meta, color: c.inkMuted, lineHeight: 15 },
   docLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,7 +261,7 @@ const styles = StyleSheet.create({
   },
   docLinkLabel: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   stateLine: {
@@ -265,17 +277,19 @@ const styles = StyleSheet.create({
   },
   stateMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   needsAcceptLine: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
     marginTop: spacing.xs,
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
 });
+}
+

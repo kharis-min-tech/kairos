@@ -11,7 +11,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Bell, Lock } from 'lucide-react-native';
-import { Badge, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_LABEL,
@@ -43,6 +52,8 @@ function fromSelect(value: SelectValue): { enabled: boolean; cadence: Notificati
 const QUERY_KEY = ['me', 'notification-preferences'] as const;
 
 export default function NotificationPreferences() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -65,7 +76,7 @@ export default function NotificationPreferences() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={{ width: 24 }} />
@@ -77,7 +88,7 @@ export default function NotificationPreferences() {
           <RefreshControl
             refreshing={prefs.isFetching}
             onRefresh={() => prefs.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -89,7 +100,7 @@ export default function NotificationPreferences() {
         </View>
 
         {prefs.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {prefs.isError ? (
@@ -104,7 +115,7 @@ export default function NotificationPreferences() {
         {prefs.data ? (
           <Card padding="md">
             <View style={styles.cardTitleRow}>
-              <Bell color={colors.primary} size={16} strokeWidth={1.5} />
+              <Bell color={c.primary} size={16} strokeWidth={1.5} />
               <Text style={styles.cardTitle}>By category</Text>
             </View>
 
@@ -126,7 +137,7 @@ export default function NotificationPreferences() {
                     </Text>
                     {isSecurity ? (
                       <View style={styles.lockedBadge}>
-                        <Lock color={colors.primary} size={10} strokeWidth={2} />
+                        <Lock color={c.primary} size={10} strokeWidth={2} />
                         <Badge label="Always on" variant="primary" size="sm" />
                       </View>
                     ) : null}
@@ -184,8 +195,9 @@ export default function NotificationPreferences() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,25 +205,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   cardTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  cardTitle: { ...typography.cardTitle, color: colors.ink },
+  cardTitle: { ...typography.cardTitle, color: c.ink },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   prefRow: {
     gap: spacing.xs,
@@ -219,7 +231,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   prefTitleLine: {
     flexDirection: 'row',
@@ -227,7 +239,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  prefLabel: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  prefLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
   lockedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -235,12 +247,12 @@ const styles = StyleSheet.create({
   },
   prefDesc: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
     borderRadius: radii.md,
     padding: 3,
     gap: 3,
@@ -254,7 +266,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segmentActive: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -267,17 +279,19 @@ const styles = StyleSheet.create({
   segmentLabel: {
     ...typography.body,
     fontSize: 13,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     fontWeight: '500',
   },
   segmentLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '700',
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
 });
+}
+

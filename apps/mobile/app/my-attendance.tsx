@@ -16,11 +16,13 @@ import { ChevronLeft, Flame, Calendar } from 'lucide-react-native';
 import {
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -56,6 +58,8 @@ function formatPct(rate: number): string {
 }
 
 export default function MyAttendance() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [weeks, setWeeks] = useState<Window>(12);
 
@@ -70,7 +74,7 @@ export default function MyAttendance() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My attendance</Text>
         <View style={{ width: 24 }} />
@@ -82,7 +86,7 @@ export default function MyAttendance() {
           <RefreshControl
             refreshing={snapshot.isFetching}
             onRefresh={() => snapshot.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -106,7 +110,7 @@ export default function MyAttendance() {
         </View>
 
         {snapshot.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {snapshot.isError ? (
@@ -136,7 +140,7 @@ export default function MyAttendance() {
               <View style={styles.streakRow}>
                 <View style={styles.streakIconTile}>
                   <Flame
-                    color={s.currentStreak.kind === 'attended' ? colors.gold : '#ffffff'}
+                    color={s.currentStreak.kind === 'attended' ? c.gold : '#ffffff'}
                     size={16}
                     strokeWidth={1.5}
                   />
@@ -154,10 +158,10 @@ export default function MyAttendance() {
             <Card padding="md" style={{ gap: spacing.sm }}>
               <Text style={styles.sectionEyebrow}>BREAKDOWN</Text>
               <View style={styles.miniStatsRow}>
-                <MiniStat label="Present" value={s.presentOnTimeCount} tone={colors.successText} />
-                <MiniStat label="Late" value={s.lateCount} tone={colors.goldDark} />
-                <MiniStat label="Virtual" value={s.virtualCount} tone={colors.info} />
-                <MiniStat label="Missed" value={s.missedCount} tone={colors.danger} />
+                <MiniStat label="Present" value={s.presentOnTimeCount} tone={c.successText} />
+                <MiniStat label="Late" value={s.lateCount} tone={c.goldDark} />
+                <MiniStat label="Virtual" value={s.virtualCount} tone={c.info} />
+                <MiniStat label="Missed" value={s.missedCount} tone={c.danger} />
               </View>
             </Card>
 
@@ -166,7 +170,7 @@ export default function MyAttendance() {
                 <Text style={styles.sectionEyebrow}>LAST SERVICE</Text>
                 <View style={styles.lastServiceRow}>
                   <View style={styles.lastServiceIconTile}>
-                    <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
+                    <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.lastServiceLabel}>
@@ -240,6 +244,8 @@ function MiniStat({
   value: number;
   tone: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.miniStat}>
       <Text style={[styles.miniStatValue, { color: tone }]}>{value}</Text>
@@ -248,8 +254,9 @@ function MiniStat({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,7 +264,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -271,12 +278,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   windowChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
-  windowLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  windowLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   windowLabelActive: { color: '#ffffff' },
   heroCard: {
     borderRadius: radii.lg,
@@ -323,7 +330,7 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   section: { gap: spacing.sm },
   miniStatsRow: {
@@ -341,7 +348,7 @@ const styles = StyleSheet.create({
   },
   miniStatLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontSize: 10,
     fontWeight: '600',
     letterSpacing: 0.4,
@@ -364,12 +371,12 @@ const styles = StyleSheet.create({
   },
   lastServiceLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   lastServiceMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: 2,
   },
   historyRow: {
@@ -380,23 +387,25 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   historyDate: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '700',
     minWidth: 60,
   },
-  historyLabel: { ...typography.body, color: colors.ink },
+  historyLabel: { ...typography.body, color: c.ink },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
 });
+}
+

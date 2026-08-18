@@ -12,11 +12,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, UsersRound, ClipboardList } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function RollcallLanding() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const memberId = user?.id;
@@ -43,7 +53,7 @@ export default function RollcallLanding() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Fellowship attendance</Text>
         <View style={{ width: 24 }} />
@@ -55,7 +65,7 @@ export default function RollcallLanding() {
           <RefreshControl
             refreshing={fellowships.isFetching}
             onRefresh={() => fellowships.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -67,13 +77,13 @@ export default function RollcallLanding() {
         </View>
 
         {fellowships.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {!fellowships.isLoading && rows.length === 0 ? (
           <Card padding="md" style={styles.emptyCard}>
             <View style={styles.emptyIconTile}>
-              <ClipboardList color={colors.primary} size={22} strokeWidth={1.5} />
+              <ClipboardList color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>No fellowships to lead</Text>
             <Text style={styles.emptyMeta}>
@@ -89,7 +99,7 @@ export default function RollcallLanding() {
               <Pressable key={f.id} onPress={() => router.push(`/rollcall/${f.id}`)}>
                 <Card padding="md" style={styles.rowCard}>
                   <View style={styles.iconTile}>
-                    <UsersRound color={colors.primary} size={18} strokeWidth={1.5} />
+                    <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.rowTitle} numberOfLines={1}>
@@ -101,7 +111,7 @@ export default function RollcallLanding() {
                       </Text>
                     ) : null}
                   </View>
-                  <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+                  <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
                 </Card>
               </Pressable>
             ))}
@@ -112,8 +122,9 @@ export default function RollcallLanding() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -121,15 +132,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   list: { gap: spacing.sm },
   rowCard: {
     flexDirection: 'row',
@@ -144,8 +155,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
   emptyCard: {
     alignItems: 'center',
     gap: spacing.md,
@@ -158,11 +169,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
 });
+}
+

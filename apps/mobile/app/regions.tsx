@@ -22,10 +22,12 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { CreateRegionRequest, Region, UpdateRegionRequest } from '@kairos/types';
 import { COUNTRIES_BY_CONTINENT } from '@kairos/core';
@@ -36,6 +38,8 @@ const ALL_COUNTRIES: string[] = Object.values(COUNTRIES_BY_CONTINENT)
   .sort();
 
 export default function Regions() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -94,7 +98,7 @@ export default function Regions() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Regions</Text>
         <Pressable
@@ -106,7 +110,7 @@ export default function Regions() {
           testID="new-region-btn"
           accessibilityLabel="New region"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -118,13 +122,13 @@ export default function Regions() {
           <RefreshControl
             refreshing={regions.isRefetching}
             onRefresh={() => regions.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             {regions.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
             ) : null}
             {regions.isError ? (
               <Card padding="md">
@@ -144,7 +148,7 @@ export default function Regions() {
           !regions.isLoading ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <MapIcon color={colors.primary} size={22} strokeWidth={1.5} />
+                <MapIcon color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No regions yet</Text>
               <Text style={styles.emptyMeta}>Tap + to create the first one.</Text>
@@ -165,7 +169,7 @@ export default function Regions() {
             >
               <Card padding="md" style={styles.rowCard}>
                 <View style={styles.rowIconTile}>
-                  <MapIcon color={colors.primary} size={18} strokeWidth={1.5} />
+                  <MapIcon color={c.primary} size={18} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={styles.rowName} numberOfLines={1}>
@@ -241,6 +245,8 @@ function RegionFormSheet({
   onClose: () => void;
   onSubmit: (data: CreateRegionRequest) => Promise<void> | void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const [regionName, setRegionName] = useState(initial?.regionName ?? '');
   const [country, setCountry] = useState(initial?.country ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -362,18 +368,18 @@ function RegionFormSheet({
               autoCapitalize="none"
               autoCorrect={false}
               leadingSlot={
-                <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+                <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
               }
             />
             <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
-              {filteredCountries.map((c) => {
-                const selected = country === c;
+              {filteredCountries.map((countryName) => {
+                const selected = country === countryName;
                 return (
                   <Pressable
-                    key={c}
+                    key={countryName}
                     style={[styles.sheetOption, selected && styles.sheetOptionActive]}
                     onPress={() => {
-                      setCountry(c);
+                      setCountry(countryName);
                       setErrors((p) => {
                         const n = { ...p };
                         delete n['country'];
@@ -389,10 +395,10 @@ function RegionFormSheet({
                         selected && styles.sheetOptionLabelActive,
                       ]}
                     >
-                      {c}
+                      {countryName}
                     </Text>
                     {selected ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : null}
                   </Pressable>
                 );
@@ -410,8 +416,9 @@ function RegionFormSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -419,14 +426,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   introBlurb: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 16,
     paddingHorizontal: spacing.xs,
   },
@@ -446,8 +453,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowName: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowName: { ...typography.body, color: c.ink, fontWeight: '600' },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
   rowRight: {
     alignItems: 'flex-end',
   },
@@ -463,20 +470,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
     marginTop: spacing.md,
@@ -488,7 +495,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     paddingHorizontal: spacing.lg,
@@ -500,36 +507,36 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
   },
   sheetTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
   },
   pickerField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
   pickerFieldError: {
-    borderColor: colors.danger,
+    borderColor: c.danger,
     borderWidth: 1.5,
   },
-  pickerValue: { ...typography.body, color: colors.ink, flex: 1 },
+  pickerValue: { ...typography.body, color: c.ink, flex: 1 },
   pickerPlaceholder: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     flex: 1,
   },
   sheetOption: {
@@ -539,14 +546,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.08)',
+    borderBottomColor: c.divider,
   },
   sheetOptionActive: {
     backgroundColor: 'rgba(93,63,211,0.06)',
   },
-  sheetOptionLabel: { ...typography.body, color: colors.ink },
+  sheetOptionLabel: { ...typography.body, color: c.ink },
   sheetOptionLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   sheetActions: {
@@ -560,6 +567,8 @@ const styles = StyleSheet.create({
   },
   sheetCancelLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
 });
+}
+

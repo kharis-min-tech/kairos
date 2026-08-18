@@ -12,13 +12,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, UserX } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 const WINDOW_CHOICES = [3, 4, 6, 8, 12] as const;
 type WindowChoice = (typeof WINDOW_CHOICES)[number];
 
 export default function MissingMembersFullList() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [services, setServices] = useState<WindowChoice>(3);
 
@@ -34,7 +44,7 @@ export default function MissingMembersFullList() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Not seen recently</Text>
         <View style={{ width: 24 }} />
@@ -66,16 +76,16 @@ export default function MissingMembersFullList() {
           <RefreshControl
             refreshing={rows.isFetching}
             onRefresh={() => rows.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {rows.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : data.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <UserX color={colors.primary} size={22} strokeWidth={1.5} />
+              <UserX color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>All accounted for</Text>
             <Text style={styles.emptyMeta}>
@@ -131,8 +141,9 @@ export default function MissingMembersFullList() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,23 +151,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   filterRow: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
     gap: spacing.xs,
   },
-  filterLabel: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  filterLabel: { ...typography.eyebrow, color: c.inkMuted },
   chipRow: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
   chip: {
     paddingHorizontal: spacing.md,
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipActive: { backgroundColor: c.primary },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
   container: {
     padding: spacing.lg,
@@ -165,7 +176,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
     marginBottom: spacing.xs,
   },
@@ -178,24 +189,24 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(26,28,28,0.06)',
+    backgroundColor: c.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rankNum: { fontSize: 11, fontWeight: '700', color: 'rgba(26,28,28,0.6)' },
-  name: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  meta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rankNum: { fontSize: 11, fontWeight: '700', color: c.inkMuted },
+  name: { ...typography.body, color: c.ink, fontWeight: '600' },
+  meta: { ...typography.meta, color: c.inkMuted },
   streakPill: {
     minWidth: 36,
     height: 28,
     paddingHorizontal: spacing.sm,
     borderRadius: radii.pill,
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  streakPillHot: { backgroundColor: colors.danger },
-  streakLabel: { fontSize: 13, fontWeight: '700', color: colors.ink },
+  streakPillHot: { backgroundColor: c.danger },
+  streakLabel: { fontSize: 13, fontWeight: '700', color: c.ink },
   streakLabelHot: { color: '#ffffff' },
   empty: { alignItems: 'center', gap: spacing.xs },
   emptyIcon: {
@@ -207,10 +218,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
 });
+}
+

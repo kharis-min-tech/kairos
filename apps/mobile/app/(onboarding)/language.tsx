@@ -3,7 +3,15 @@ import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Globe, Check } from 'lucide-react-native';
-import { Button, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Button,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { useOnboardingStore, type Language } from '@/store/onboarding';
 
 interface Option {
@@ -20,6 +28,8 @@ const OPTIONS: Option[] = [
 ];
 
 export default function LanguageScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const savedLanguage = useOnboardingStore((s) => s.language);
   const setLanguage = useOnboardingStore((s) => s.setLanguage);
@@ -30,7 +40,7 @@ export default function LanguageScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <View style={styles.iconTile}>
-            <Globe color={colors.primary} size={20} strokeWidth={1.5} />
+            <Globe color={c.primary} size={20} strokeWidth={1.5} />
           </View>
           <Text style={styles.title}>Choose your language</Text>
           <Text style={styles.subtitle}>You can change this later in Settings.</Text>
@@ -73,8 +83,9 @@ export default function LanguageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   scroll: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -95,49 +106,51 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     marginTop: spacing.sm,
   },
   subtitle: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   options: { gap: spacing.sm },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
     padding: spacing.md,
   },
   optionSelected: {
-    borderColor: colors.primary,
+    borderColor: c.primary,
     borderWidth: 1.5,
   },
   optionText: { flex: 1, gap: 2 },
-  optionLabel: { ...typography.cardTitle, color: colors.ink },
-  optionSublabel: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  optionLabel: { ...typography.cardTitle, color: c.ink },
+  optionSublabel: { ...typography.meta, color: c.inkMuted },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.2)',
+    borderColor: c.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
+    borderColor: c.primary,
+    backgroundColor: c.primary,
   },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(26,28,28,0.06)',
+    borderTopColor: c.divider,
   },
 });
+}
+

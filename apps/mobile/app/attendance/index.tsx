@@ -12,7 +12,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Plus, Calendar } from 'lucide-react-native';
-import { Badge, Card, colors, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { ServiceSummary } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -22,6 +30,8 @@ function isFuture(iso: string): boolean {
 }
 
 export default function AttendanceServicesList() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   const services = useQuery({
@@ -54,7 +64,7 @@ export default function AttendanceServicesList() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Services</Text>
         <Pressable
@@ -62,7 +72,7 @@ export default function AttendanceServicesList() {
           hitSlop={8}
           accessibilityLabel="Create service"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -72,16 +82,16 @@ export default function AttendanceServicesList() {
           <RefreshControl
             refreshing={services.isFetching}
             onRefresh={() => services.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {services.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <Calendar color={colors.primary} size={22} strokeWidth={1.5} />
+              <Calendar color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>No services yet</Text>
             <Text style={styles.emptyMeta}>
@@ -128,6 +138,8 @@ function ServiceRow({
   service: ServiceSummary;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const time = new Date(service.serviceDate).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
@@ -147,14 +159,15 @@ function ServiceRow({
             {service.branchName ? ` · ${service.branchName}` : ''}
           </Text>
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -162,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -171,7 +184,7 @@ const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   groupHeader: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   row: {
@@ -184,8 +197,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
   empty: { alignItems: 'center', gap: spacing.xs },
   emptyIcon: {
     width: 44,
@@ -196,10 +209,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
 });
+}
+

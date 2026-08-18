@@ -11,7 +11,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle2, XCircle, ChevronLeft } from 'lucide-react-native';
-import { Button, colors, gradients, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Button,
+  gradients,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 /**
@@ -20,6 +29,8 @@ import { api } from '@/lib/api-client';
  * app instead of the browser. Auto-posts the token on mount.
  */
 export default function VerifyEmailScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token?: string }>();
   const [state, setState] = useState<'idle' | 'verifying' | 'done' | 'error'>(
@@ -53,7 +64,7 @@ export default function VerifyEmailScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Verify email</Text>
         <View style={{ width: 24 }} />
@@ -75,14 +86,14 @@ export default function VerifyEmailScreen() {
         <View style={styles.card}>
           {state === 'verifying' ? (
             <>
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={c.primary} />
               <Text style={styles.title}>Verifying…</Text>
               <Text style={styles.body}>Just a moment.</Text>
             </>
           ) : state === 'done' ? (
             <>
               <View style={[styles.badge, styles.badgeGood]}>
-                <CheckCircle2 color={colors.success} size={22} strokeWidth={1.5} />
+                <CheckCircle2 color={c.success} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.title}>Email verified</Text>
               <Text style={styles.body}>
@@ -99,7 +110,7 @@ export default function VerifyEmailScreen() {
           ) : (
             <>
               <View style={[styles.badge, styles.badgeBad]}>
-                <XCircle color={colors.danger} size={22} strokeWidth={1.5} />
+                <XCircle color={c.danger} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.title}>Could not verify</Text>
               <Text style={styles.body}>
@@ -120,8 +131,9 @@ export default function VerifyEmailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -129,7 +141,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   scroll: {
     padding: spacing.lg,
     gap: spacing.lg,
@@ -152,16 +164,16 @@ const styles = StyleSheet.create({
   },
   logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
   card: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
     alignItems: 'center',
   },
-  title: { ...typography.screenTitle, color: colors.ink, textAlign: 'center' },
+  title: { ...typography.screenTitle, color: c.ink, textAlign: 'center' },
   body: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
     textAlign: 'center',
   },
@@ -175,3 +187,5 @@ const styles = StyleSheet.create({
   badgeGood: { backgroundColor: 'rgba(16,185,129,0.12)' },
   badgeBad: { backgroundColor: 'rgba(239,68,68,0.12)' },
 });
+}
+

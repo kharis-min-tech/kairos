@@ -33,11 +33,13 @@ import {
   Badge,
   Button,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -53,6 +55,8 @@ function formatMeetingDate(iso: string | Date): string {
 }
 
 export default function FellowshipDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -195,7 +199,7 @@ export default function FellowshipDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {f?.fellowshipName ?? 'Fellowship'}
@@ -206,7 +210,7 @@ export default function FellowshipDetail() {
             hitSlop={8}
             accessibilityLabel="Edit fellowship"
           >
-            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+            <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
         ) : (
           <View style={{ width: 24 }} />
@@ -224,12 +228,12 @@ export default function FellowshipDetail() {
               joinRequests.isFetching
             }
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {fellowship.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {fellowship.isError || (!fellowship.isLoading && !f) ? (
@@ -293,7 +297,7 @@ export default function FellowshipDetail() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconTile}>
-                    <Handshake color={colors.gold} size={14} strokeWidth={1.5} />
+                    <Handshake color={c.gold} size={14} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.sectionTitle}>Join requests</Text>
                   <Badge
@@ -339,7 +343,7 @@ export default function FellowshipDetail() {
                           hitSlop={4}
                           disabled={reviewRequest.isPending}
                         >
-                          <X color={colors.danger} size={14} strokeWidth={2} />
+                          <X color={c.danger} size={14} strokeWidth={2} />
                         </Pressable>
                         <Pressable
                           onPress={() =>
@@ -364,7 +368,7 @@ export default function FellowshipDetail() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
-                  <Users color={colors.primary} size={14} strokeWidth={1.5} />
+                  <Users color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionTitle}>Members</Text>
                 <Badge
@@ -378,11 +382,11 @@ export default function FellowshipDetail() {
                   hitSlop={6}
                   accessibilityLabel="Add member"
                 >
-                  <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                  <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                 </Pressable>
               </View>
               {members.isLoading ? (
-                <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.sm }} />
+                <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (members.data ?? []).length === 0 ? (
                 <Text style={styles.emptyLine}>No members recorded yet.</Text>
               ) : (
@@ -426,7 +430,7 @@ export default function FellowshipDetail() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
-                  <Calendar color={colors.primary} size={14} strokeWidth={1.5} />
+                  <Calendar color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionTitle}>Meetings</Text>
                 <Pressable
@@ -435,7 +439,7 @@ export default function FellowshipDetail() {
                   hitSlop={6}
                   accessibilityLabel="Log a meeting"
                 >
-                  <Plus color={colors.primary} size={16} strokeWidth={1.5} />
+                  <Plus color={c.primary} size={16} strokeWidth={1.5} />
                 </Pressable>
               </View>
               {recentPast.length === 0 ? (
@@ -517,7 +521,7 @@ export default function FellowshipDetail() {
                 value={meetingDate}
                 onChangeText={setMeetingDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="rgba(26,28,28,0.4)"
+                placeholderTextColor={c.inkFaded}
                 style={styles.meetingInput}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -529,7 +533,7 @@ export default function FellowshipDetail() {
                 value={meetingTitle}
                 onChangeText={setMeetingTitle}
                 placeholder="e.g. Bible study"
-                placeholderTextColor="rgba(26,28,28,0.4)"
+                placeholderTextColor={c.inkFaded}
                 style={styles.meetingInput}
                 editable={!createMeeting.isPending}
               />
@@ -539,7 +543,7 @@ export default function FellowshipDetail() {
                 value={meetingLocation}
                 onChangeText={setMeetingLocation}
                 placeholder="e.g. Main hall"
-                placeholderTextColor="rgba(26,28,28,0.4)"
+                placeholderTextColor={c.inkFaded}
                 style={styles.meetingInput}
                 editable={!createMeeting.isPending}
               />
@@ -570,8 +574,9 @@ export default function FellowshipDetail() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -579,7 +584,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -592,7 +597,7 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     letterSpacing: 1.2,
   },
   heroTitle: { ...typography.screenTitle, color: '#ffffff' },
@@ -634,21 +639,21 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   nextDate: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     fontSize: 20,
   },
   nextTitle: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   nextMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   section: { gap: spacing.sm },
   sectionHeader: {
@@ -664,7 +669,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
   addMemberBtn: {
     width: 28,
     height: 28,
@@ -678,20 +683,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
-  memberName: { ...typography.body, color: colors.ink },
+  memberName: { ...typography.body, color: c.ink },
   longPressHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.45)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     padding: spacing.md,
   },
   requestRow: {
@@ -702,11 +707,11 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   requestNote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: 2,
     fontStyle: 'italic',
     lineHeight: 15,
@@ -719,7 +724,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: radii.pill,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -738,7 +743,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
@@ -752,14 +757,14 @@ const styles = StyleSheet.create({
   },
   meetingDateLabel: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '700',
   },
-  meetingTitle: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  meetingMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  meetingTitle: { ...typography.body, color: c.ink, fontWeight: '500' },
+  meetingMeta: { ...typography.meta, color: c.inkMuted },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
 
   meetingBackdrop: {
@@ -768,7 +773,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   meetingSheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -779,31 +784,33 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  meetingSheetTitle: { ...typography.cardTitle, color: colors.ink },
+  meetingSheetTitle: { ...typography.cardTitle, color: c.ink },
   meetingSheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
     lineHeight: 16,
   },
   meetingLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
     marginTop: spacing.sm,
     marginBottom: 4,
   },
   meetingInput: {
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     ...typography.body,
-    color: colors.ink,
-    backgroundColor: colors.cardLight,
+    color: c.ink,
+    backgroundColor: c.card,
   },
 });
+}
+

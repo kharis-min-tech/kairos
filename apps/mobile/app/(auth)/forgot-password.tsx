@@ -13,10 +13,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, MailCheck } from 'lucide-react-native';
-import { Button, Input, colors, gradients, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Button,
+  Input,
+  gradients,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 export default function ForgotPasswordScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -38,7 +50,7 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Reset password</Text>
         <View style={{ width: 24 }} />
@@ -68,7 +80,7 @@ export default function ForgotPasswordScreen() {
             {sent ? (
               <>
                 <View style={styles.successBadge}>
-                  <MailCheck color={colors.success} size={22} strokeWidth={1.5} />
+                  <MailCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.title}>Check your inbox</Text>
                 <Text style={styles.body}>
@@ -136,8 +148,9 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -145,7 +158,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   scroll: {
     padding: spacing.lg,
     gap: spacing.lg,
@@ -172,27 +185,27 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   card: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
   },
   title: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   body: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
   bodyStrong: {
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   bodyFaded: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
   successBadge: {
@@ -209,8 +222,10 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     padding: spacing.sm,
     borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
+    borderLeftColor: c.danger,
     marginTop: spacing.sm,
   },
-  errorText: { ...typography.meta, color: colors.danger },
+  errorText: { ...typography.meta, color: c.danger },
 });
+}
+

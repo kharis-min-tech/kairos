@@ -25,10 +25,12 @@ import {
   Badge,
   Button,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type {
@@ -47,6 +49,8 @@ const STATUS_TONE: Record<string, 'primary' | 'success' | 'gold' | 'danger' | 'n
 };
 
 export default function RotaInstanceDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { branchDeptId, instanceId } = useLocalSearchParams<{
     branchDeptId: string;
@@ -160,7 +164,7 @@ export default function RotaInstanceDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Rota instance</Text>
         <View style={{ width: 24 }} />
@@ -175,12 +179,12 @@ export default function RotaInstanceDetail() {
               instance.refetch();
               pool.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !instance.data ? (
           <Text style={styles.emptyText}>Instance not found.</Text>
         ) : (
@@ -202,7 +206,7 @@ export default function RotaInstanceDetail() {
                     {formatShortDate(instance.data.serviceDate)}
                   </Text>
                   <View style={styles.metaLine}>
-                    <Calendar color="rgba(26,28,28,0.55)" size={12} strokeWidth={1.5} />
+                    <Calendar color={c.inkMuted} size={12} strokeWidth={1.5} />
                     <Text style={styles.metaText}>
                       {assignments.filter((a) => a.memberId).length}/{assignments.length}{' '}
                       slots filled
@@ -300,6 +304,8 @@ function AssignmentRow({
   onPress: () => void;
   onClear?: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const tone = STATUS_TONE[row.status] ?? 'neutral';
   return (
     <Card padding="md" style={styles.assignRow}>
@@ -330,11 +336,11 @@ function AssignmentRow({
       </View>
       <View style={styles.rowActions}>
         <Pressable onPress={onPress} hitSlop={6} style={styles.rowActionBtn}>
-          <ChevronRight color={colors.primary} size={18} strokeWidth={1.5} />
+          <ChevronRight color={c.primary} size={18} strokeWidth={1.5} />
         </Pressable>
         {onClear ? (
           <Pressable onPress={onClear} hitSlop={6} style={styles.rowActionBtn}>
-            <UserMinus color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+            <UserMinus color={c.inkFaded} size={14} strokeWidth={1.5} />
           </Pressable>
         ) : null}
       </View>
@@ -359,6 +365,8 @@ function PoolPickerSheet({
   onPick: (memberId: string) => void;
   submitting: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const sorted = useMemo(
     () =>
       pool
@@ -379,7 +387,7 @@ function PoolPickerSheet({
 
           {loading ? (
             <ActivityIndicator
-              color={colors.primary}
+              color={c.primary}
               style={{ marginVertical: spacing.md }}
             />
           ) : sorted.length === 0 ? (
@@ -423,7 +431,7 @@ function PoolPickerSheet({
                         ) : null}
                       </View>
                       {active ? (
-                        <Check color={colors.primary} size={16} strokeWidth={2} />
+                        <Check color={c.primary} size={16} strokeWidth={2} />
                       ) : null}
                     </Pressable>
                   );
@@ -436,7 +444,7 @@ function PoolPickerSheet({
             onPress={onCancel}
             disabled={submitting}
           >
-            <XIcon color="rgba(26,28,28,0.55)" size={14} strokeWidth={1.5} />
+            <XIcon color={c.inkMuted} size={14} strokeWidth={1.5} />
             <Text style={styles.sheetCancelLabel}>Cancel</Text>
           </Pressable>
         </Pressable>
@@ -445,8 +453,9 @@ function PoolPickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,7 +463,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -462,7 +471,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     padding: spacing.md,
   },
@@ -479,25 +488,25 @@ const styles = StyleSheet.create({
   dateTileMonth: {
     fontSize: 9,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 0.8,
   },
   dateTileDay: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     lineHeight: 22,
   },
-  title: { ...typography.cardTitle, color: colors.ink },
+  title: { ...typography.cardTitle, color: c.ink },
   metaLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  metaText: { ...typography.meta, color: c.inkMuted },
 
   actionRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
 
   section: { gap: spacing.sm },
   sectionTitle: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
 
@@ -506,20 +515,20 @@ const styles = StyleSheet.create({
     width: 72,
     minHeight: 40,
     borderRadius: radii.sm,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xs,
   },
   roleTileLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '700',
     textAlign: 'center',
   },
   memberChunk: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  memberName: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  openLabel: { ...typography.body, color: colors.primary, fontWeight: '600' },
+  memberName: { ...typography.body, color: c.ink, fontWeight: '600' },
+  openLabel: { ...typography.body, color: c.primary, fontWeight: '600' },
   rowActions: { flexDirection: 'column', gap: spacing.xs, alignItems: 'flex-end' },
   rowActionBtn: {
     width: 28,
@@ -527,7 +536,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
 
   backdrop: {
@@ -536,7 +545,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -547,13 +556,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { ...typography.cardTitle, color: colors.ink },
+  sheetTitle: { ...typography.cardTitle, color: c.ink },
   sheetHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
     lineHeight: 16,
   },
@@ -566,8 +575,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   poolRowActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
-  poolPreferred: { ...typography.meta, color: colors.success, fontWeight: '600' },
-  poolOtherRole: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  poolPreferred: { ...typography.meta, color: c.success, fontWeight: '600' },
+  poolOtherRole: { ...typography.meta, color: c.inkMuted },
   sheetCancel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -576,5 +585,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginTop: spacing.sm,
   },
-  sheetCancelLabel: { ...typography.button, color: 'rgba(26,28,28,0.7)' },
+  sheetCancelLabel: { ...typography.button, color: c.inkMuted },
 });
+}
+

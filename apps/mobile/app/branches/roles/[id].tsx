@@ -22,16 +22,20 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 export default function BranchRoles() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -98,7 +102,7 @@ export default function BranchRoles() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           Branch admins
@@ -108,7 +112,7 @@ export default function BranchRoles() {
           hitSlop={8}
           accessibilityLabel="Add branch admin"
         >
-          <UserPlus color={colors.primary} size={22} strokeWidth={1.5} />
+          <UserPlus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -121,7 +125,7 @@ export default function BranchRoles() {
               assignments.refetch();
               branch.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -136,7 +140,7 @@ export default function BranchRoles() {
         ) : null}
 
         {assignments.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {assignments.isError ? (
@@ -153,7 +157,7 @@ export default function BranchRoles() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconTile}>
-              <ShieldCheck color={colors.primary} size={14} strokeWidth={1.5} />
+              <ShieldCheck color={c.primary} size={14} strokeWidth={1.5} />
             </View>
             <Text style={styles.sectionTitle}>Branch System Admins</Text>
             <Badge label={String(activeAssignments.length)} variant="neutral" size="sm" />
@@ -162,7 +166,7 @@ export default function BranchRoles() {
           {activeAssignments.length === 0 && !assignments.isLoading ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <UserIcon color={colors.primary} size={22} strokeWidth={1.5} />
+                <UserIcon color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No branch admins yet</Text>
               <Text style={styles.emptyMeta}>
@@ -242,8 +246,9 @@ export default function BranchRoles() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -251,15 +256,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 4 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.body, color: 'rgba(26,28,28,0.65)', lineHeight: 20 },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.body, color: c.inkMuted, lineHeight: 20 },
   section: { gap: spacing.sm },
   sectionHeader: {
     flexDirection: 'row',
@@ -274,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
   adminRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -283,18 +288,18 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
-  memberName: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  memberMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  memberName: { ...typography.body, color: c.ink, fontWeight: '600' },
+  memberMeta: { ...typography.meta, color: c.inkMuted },
   assignedLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     fontSize: 10,
   },
   longPressHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.45)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -310,21 +315,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
 });
+}
+
