@@ -44,9 +44,11 @@ import {
   type SubmitFormRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { apiBaseUrl } from '@/lib/config';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
-const WEB_FORMS_BASE = 'https://kairos.kharis.org/forms';
+// Mirror the API origin so staging builds don't cross-link into prod.
+const WEB_FORMS_BASE = `${apiBaseUrl.replace(/\/$/, '')}/forms`;
 
 const FORM_TITLES: Record<FormType, string> = {
   first_time_visitor: 'First-Time Visitor',
