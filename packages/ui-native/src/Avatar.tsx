@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from './tokens';
+import { useColors } from './theme';
 
 type SizeName = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -27,6 +27,7 @@ export function Avatar({
   lastName,
   notificationDot = false,
 }: AvatarProps) {
+  const c = useColors();
   const px = typeof size === 'number' ? size : SIZE_PX[size];
   const initials = getInitials(firstName, lastName);
   const dotSize = Math.max(6, Math.round(px * 0.22));
@@ -48,7 +49,7 @@ export function Avatar({
         ) : (
           <>
             <LinearGradient
-              colors={[colors.primaryLight, colors.primary]}
+              colors={[c.primaryLight, c.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -63,7 +64,7 @@ export function Avatar({
             <Text
               style={[
                 styles.initials,
-                { fontSize: Math.round(px * 0.38) },
+                { color: c.onPrimary, fontSize: Math.round(px * 0.38) },
               ]}
             >
               {initials}
@@ -81,6 +82,8 @@ export function Avatar({
               borderRadius: dotSize / 2,
               right: -1,
               top: -1,
+              backgroundColor: c.gold,
+              borderColor: c.card,
             },
           ]}
         />
@@ -103,14 +106,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   initials: {
-    color: '#ffffff',
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   dot: {
     position: 'absolute',
-    backgroundColor: colors.gold,
     borderWidth: 2,
-    borderColor: colors.cardLight,
   },
 });

@@ -10,7 +10,8 @@ import {
   type TextStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, radii, spacing, shadows, gradients } from './tokens';
+import { radii, spacing, shadows, gradients } from './tokens';
+import { useColors, useThemedStyles, type ThemeColors } from './theme';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type Size = 'sm' | 'md' | 'lg';
@@ -40,19 +41,28 @@ export function Button({
   fullWidth = false,
   style,
 }: ButtonProps) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const isDisabled = disabled || loading;
+
+  const labelStyle =
+    variant === 'primary'
+      ? styles.labelPrimary
+      : variant === 'secondary'
+        ? styles.labelSecondary
+        : styles.labelBrand;
 
   const content = (
     <View style={styles.content}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? '#ffffff' : colors.primary}
+          color={variant === 'primary' ? c.onPrimary : c.primary}
           size="small"
         />
       ) : (
         <>
           {iconLeft ? <View style={styles.icon}>{iconLeft}</View> : null}
-          <Text style={[styles.label, LABEL_SIZE[size], LABEL_COLOR[variant]]}>
+          <Text style={[styles.label, LABEL_SIZE[size], labelStyle]}>
             {label}
           </Text>
           {iconRight ? <View style={styles.icon}>{iconRight}</View> : null}
@@ -87,12 +97,19 @@ export function Button({
     );
   }
 
+  const variantStyle =
+    variant === 'secondary'
+      ? styles.variantSecondary
+      : variant === 'outline'
+        ? styles.variantOutline
+        : styles.variantGhost;
+
   return (
     <Pressable
       onPress={isDisabled ? undefined : onPress}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={[...baseStyle, VARIANT_STYLE[variant], style]}
+      style={[...baseStyle, variantStyle, style]}
     >
       {content}
     </Pressable>
@@ -111,48 +128,47 @@ const LABEL_SIZE: Record<Size, TextStyle> = {
   lg: { fontSize: 16 },
 };
 
-const VARIANT_STYLE: Record<Exclude<Variant, 'primary'>, ViewStyle> = {
-  secondary: { backgroundColor: colors.subtleLight },
-  outline: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: 'transparent' },
-  ghost: { backgroundColor: 'transparent' },
-};
-
-const LABEL_COLOR: Record<Variant, TextStyle> = {
-  primary: { color: '#ffffff' },
-  secondary: { color: colors.ink },
-  outline: { color: colors.primary },
-  ghost: { color: colors.primary },
-};
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radii.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  label: {
-    fontWeight: '600',
-    letterSpacing: 0.1,
-  },
-  icon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fullWidth: { alignSelf: 'stretch' },
-  disabled: { opacity: 0.5 },
-  gradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: radii.lg,
-  },
-});
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    base: {
+      borderRadius: radii.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    label: {
+      fontWeight: '600',
+      letterSpacing: 0.1,
+    },
+    icon: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    fullWidth: { alignSelf: 'stretch' },
+    disabled: { opacity: 0.5 },
+    gradientFill: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: radii.lg,
+    },
+    variantSecondary: { backgroundColor: c.subtle },
+    variantOutline: {
+      borderWidth: 1.5,
+      borderColor: c.primary,
+      backgroundColor: 'transparent',
+    },
+    variantGhost: { backgroundColor: 'transparent' },
+    labelPrimary: { color: c.onPrimary },
+    labelSecondary: { color: c.ink },
+    labelBrand: { color: c.primary },
+  });
+}

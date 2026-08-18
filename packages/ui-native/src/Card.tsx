@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Pressable,
@@ -6,7 +6,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, radii, spacing, shadows } from './tokens';
+import { radii, spacing, shadows } from './tokens';
+import { useColors } from './theme';
 
 type Padding = 'none' | 'sm' | 'md' | 'lg';
 type Variant = 'default' | 'subtle' | 'elevated';
@@ -26,9 +27,17 @@ export function Card({
   onPress,
   style,
 }: CardProps) {
+  const c = useColors();
+  const variantStyle = useMemo<ViewStyle>(
+    () => ({
+      backgroundColor: variant === 'subtle' ? c.subtle : c.card,
+    }),
+    [c, variant],
+  );
+
   const combined = [
     styles.base,
-    VARIANT_STYLE[variant],
+    variantStyle,
     PADDING_STYLE[padding],
     variant === 'default' && shadows.card,
     style,
@@ -43,12 +52,6 @@ export function Card({
   }
   return <View style={combined}>{children}</View>;
 }
-
-const VARIANT_STYLE: Record<Variant, ViewStyle> = {
-  default: { backgroundColor: colors.cardLight },
-  subtle: { backgroundColor: colors.subtleLight },
-  elevated: { backgroundColor: colors.cardLight },
-};
 
 const PADDING_STYLE: Record<Padding, ViewStyle> = {
   none: {},
