@@ -74,11 +74,20 @@ function formatPct(rate: number): string {
 
 type ScopeKind = 'branch' | 'department' | 'fellowship';
 
+type WindowWeeks = 4 | 8 | 12 | 26;
+const WEEK_PRESETS: { value: WindowWeeks; label: string }[] = [
+  { value: 4, label: '4w' },
+  { value: 8, label: '8w' },
+  { value: 12, label: '12w' },
+  { value: 26, label: '26w' },
+];
+
 export default function Reports() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
   const [engagedWindowMonths, setEngagedWindowMonths] = useState<WindowMonths>(3);
+  const [windowWeeks, setWindowWeeks] = useState<WindowWeeks>(8);
   const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
 
   // Scope filter — reports default to the whole branch. Picking a dept or
@@ -130,19 +139,19 @@ export default function Reports() {
   }, [scope, departments.data, fellowships.data]);
 
   const summary = useQuery({
-    queryKey: ['attendance', 'reports', 'summary', { weeks: 4, ...scopeParams }],
+    queryKey: ['attendance', 'reports', 'summary', { weeks: windowWeeks, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.summary({ weeks: 4, ...scopeParams })).data ?? null,
+      (await api.attendance.summary({ weeks: windowWeeks, ...scopeParams })).data ?? null,
   });
 
   const heatmap = useQuery({
-    queryKey: ['attendance', 'reports', 'heatmap', { branchId, weeks: 8, engagedWindowMonths, ...scopeParams }],
+    queryKey: ['attendance', 'reports', 'heatmap', { branchId, weeks: windowWeeks, engagedWindowMonths, ...scopeParams }],
     enabled: !!branchId,
     queryFn: async () =>
       (
         await api.attendance.heatmap({
           branchId: branchId!,
-          weeks: 8,
+          weeks: windowWeeks,
           engagedWindowMonths,
           engagedOnly: true,
           ...scopeParams,
@@ -151,9 +160,14 @@ export default function Reports() {
   });
 
   const trends = useQuery({
-    queryKey: ['attendance', 'reports', 'trends', { weeks: 12, ...scopeParams }],
+    queryKey: ['attendance', 'reports', 'trends', { weeks: Math.max(12, windowWeeks) as WindowWeeks, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.trends({ weeks: 12, ...scopeParams })).data ?? [],
+      (
+        await api.attendance.trends({
+          weeks: Math.max(12, windowWeeks),
+          ...scopeParams,
+        })
+      ).data ?? [],
   });
 
   const frequency = useQuery({
@@ -164,9 +178,9 @@ export default function Reports() {
   });
 
   const firstTime = useQuery({
-    queryKey: ['attendance', 'reports', 'first-time-returning', { weeks: 8, ...scopeParams }],
+    queryKey: ['attendance', 'reports', 'first-time-returning', { weeks: windowWeeks, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.firstTimeReturning({ weeks: 8, ...scopeParams })).data ?? [],
+      (await api.attendance.firstTimeReturning({ weeks: windowWeeks, ...scopeParams })).data ?? [],
   });
 
   const missing = useQuery({
@@ -246,6 +260,26 @@ export default function Reports() {
               <Text style={styles.scopeClearLabel}>Clear</Text>
             </Pressable>
           ) : null}
+        </View>
+
+        <View style={styles.presetRow}>
+          <Text style={styles.presetLabel}>Window</Text>
+          {WEEK_PRESETS.map((p) => {
+            const active = p.value === windowWeeks;
+            return (
+              <Pressable
+                key={p.value}
+                onPress={() => setWindowWeeks(p.value)}
+                style={[styles.presetChip, active && styles.presetChipActive]}
+              >
+                <Text
+                  style={[styles.presetChipLabel, active && styles.presetChipLabelActive]}
+                >
+                  {p.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         <SummaryTile summary={summary.data} loading={summary.isLoading} error={summary.error} />
@@ -1489,6 +1523,30 @@ function makeStyles(c: ThemeColors) {
     color: c.inkMuted,
     fontWeight: '600',
   },
+  presetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  presetLabel: {
+    ...typography.eyebrow,
+    color: c.inkMuted,
+    marginRight: spacing.xs,
+  },
+  presetChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+    backgroundColor: c.card,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  presetChipActive: {
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    borderColor: c.primary,
+  },
+  presetChipLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
+  presetChipLabelActive: { color: c.primary, fontWeight: '700' },
 
   scopeBackdrop: {
     flex: 1,
