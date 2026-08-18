@@ -2,9 +2,19 @@ import { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
+import {
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 
 export default function Splash() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   useEffect(() => {
@@ -34,8 +44,8 @@ export default function Splash() {
         <View style={styles.scripture}>
           <Text style={styles.scriptureText}>
             &ldquo;Let all things be done{' '}
-            <Text style={{ color: colors.primaryLight }}>decently</Text> and in{' '}
-            <Text style={{ color: colors.gold }}>order</Text>.&rdquo;
+            <Text style={{ color: c.primaryLight }}>decently</Text> and in{' '}
+            <Text style={{ color: c.gold }}>order</Text>.&rdquo;
           </Text>
           <Text style={styles.scriptureRef}>1 Cor 14:40</Text>
         </View>
@@ -46,7 +56,8 @@ export default function Splash() {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
   container: { flex: 1 },
   gradientFill: {
     position: 'absolute',
@@ -112,3 +123,5 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
   },
 });
+}
+

@@ -12,7 +12,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Search, X, Users, Plus } from 'lucide-react-native';
-import { Avatar, Badge, Card, Input, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Avatar,
+  Badge,
+  Card,
+  Input,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { MemberWithBranchProtected } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
@@ -30,6 +41,8 @@ function useDebounced<T>(value: T, delay: number): T {
 }
 
 export default function MembersDirectory() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
@@ -65,7 +78,7 @@ export default function MembersDirectory() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Members</Text>
         <Pressable
@@ -74,7 +87,7 @@ export default function MembersDirectory() {
           testID="new-member-btn"
           accessibilityLabel="New member"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -86,12 +99,12 @@ export default function MembersDirectory() {
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
-            <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+            <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           }
           trailingSlot={
             searchInput.length > 0 ? (
               <Pressable onPress={() => setSearchInput('')} hitSlop={8}>
-                <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+                <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
             ) : null
           }
@@ -133,13 +146,13 @@ export default function MembersDirectory() {
           <RefreshControl
             refreshing={members.isRefetching}
             onRefresh={() => members.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             {members.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
             ) : null}
 
             {members.isError ? (
@@ -162,7 +175,7 @@ export default function MembersDirectory() {
           showEmpty ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <Users color={colors.primary} size={22} strokeWidth={1.5} />
+                <Users color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No members found</Text>
               <Text style={styles.emptyMeta}>
@@ -205,13 +218,13 @@ export default function MembersDirectory() {
                   </Text>
                 ) : null}
               </View>
-              <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+              <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
             </Card>
           </Pressable>
         )}
         ListFooterComponent={
           members.isFetchingNextPage ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
           ) : members.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : rows.length > 0 ? (
@@ -223,8 +236,9 @@ export default function MembersDirectory() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,7 +246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
@@ -246,14 +260,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   filterChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   filterLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   filterLabelActive: {
@@ -267,7 +281,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   rowWrap: {
@@ -284,9 +298,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  rowName: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
-  rowSubMeta: { ...typography.meta, color: 'rgba(26,28,28,0.45)' },
+  rowName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
+  rowSubMeta: { ...typography.meta, color: c.inkFaded },
   emptyCard: {
     alignItems: 'center',
     gap: spacing.md,
@@ -299,21 +313,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   endOfList: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.md,
   },
 });
+}
+

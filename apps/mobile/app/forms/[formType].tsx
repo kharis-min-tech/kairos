@@ -26,10 +26,12 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import {
   FORM_DEFINITIONS,
@@ -118,6 +120,8 @@ function isFilled(v: FieldValue): boolean {
 }
 
 export default function FormRenderer() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ formType: string }>();
   const formType = params.formType;
@@ -151,11 +155,13 @@ function NotFoundState({
   message: string;
   onBack: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={onBack} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Form</Text>
         <View style={{ width: 24 }} />
@@ -170,13 +176,15 @@ function NotFoundState({
 }
 
 function BespokePlaceholder({ formType, onBack }: { formType: FormType; onBack: () => void }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const title = FORM_TITLES[formType];
   const href = `${WEB_FORMS_BASE}/${formType}`;
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={onBack} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>{title}</Text>
         <View style={{ width: 24 }} />
@@ -184,7 +192,7 @@ function BespokePlaceholder({ formType, onBack }: { formType: FormType; onBack: 
       <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1, justifyContent: 'center' }]}>
         <Card padding="md" style={{ gap: spacing.md, alignItems: 'center' }}>
           <View style={styles.webIconTile}>
-            <ExternalLink color={colors.primary} size={24} strokeWidth={1.5} />
+            <ExternalLink color={c.primary} size={24} strokeWidth={1.5} />
           </View>
           <Text style={[styles.emptyTitle, { textAlign: 'center' }]}>{title}</Text>
           <Text style={[styles.emptyMessage, { textAlign: 'center' }]}>
@@ -212,6 +220,8 @@ function DeclarativeForm({
   definition: FormDefinition;
   onDone: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const now = useMemo(() => new Date(), []);
   const [state, setState] = useState<FormState>(() => initialState(definition));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -366,7 +376,7 @@ function DeclarativeForm({
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={onDone} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {definition.title}
@@ -451,11 +461,13 @@ function SuccessScreen({
   message: string;
   onDone: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.centered}>
         <View style={styles.successIcon}>
-          <CheckCircle2 color={colors.success} size={48} strokeWidth={1.5} />
+          <CheckCircle2 color={c.success} size={48} strokeWidth={1.5} />
         </View>
         <Text style={styles.successTitle}>{title}</Text>
         <Text style={styles.emptyMessage}>{message}</Text>
@@ -478,6 +490,8 @@ function SectionBlock({
   setValue: (id: string, value: FieldValue) => void;
   now: Date;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const values = state.values as Record<string, unknown>;
   const visibleFields = block.fields.filter((f) =>
     f.visibleWhen ? evaluateCondition(f.visibleWhen, values, now) : true,
@@ -521,6 +535,8 @@ function RepeatableBlock({
   removeRow: (group: RepeatableGroupDef, index: number) => void;
   now: Date;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const itemLabel = block.itemLabel ?? 'Item';
   const canAdd = block.max === undefined || rows.length < block.max;
   const min = block.min ?? 0;
@@ -541,7 +557,7 @@ function RepeatableBlock({
                   hitSlop={8}
                   style={styles.removeRowBtn}
                 >
-                  <Trash2 color={colors.danger} size={14} strokeWidth={1.5} />
+                  <Trash2 color={c.danger} size={14} strokeWidth={1.5} />
                   <Text style={styles.removeRowLabel}>Remove</Text>
                 </Pressable>
               ) : null}
@@ -567,7 +583,7 @@ function RepeatableBlock({
       </View>
       {canAdd ? (
         <Pressable style={styles.addRowBtn} onPress={() => addRow(block)}>
-          <Plus color={colors.primary} size={16} strokeWidth={1.5} />
+          <Plus color={c.primary} size={16} strokeWidth={1.5} />
           <Text style={styles.addRowLabel}>Add {itemLabel.toLowerCase()}</Text>
         </Pressable>
       ) : null}
@@ -587,6 +603,8 @@ function FieldRenderer({
   errorKey: string;
   error: string | undefined;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   if (field.type === 'checkbox') {
     return (
       <CheckboxRow
@@ -692,6 +710,8 @@ function FieldRenderer({
 }
 
 function FieldLabel({ label, required }: { label: string; required?: boolean }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.fieldLabelRow}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -711,6 +731,8 @@ function CheckboxRow({
   label: string;
   error?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={{ gap: spacing.xs }}>
       <Pressable style={styles.checkboxRow} onPress={() => onChange(!value)}>
@@ -743,6 +765,8 @@ function SelectField({
   helpText?: string;
   error?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
 
@@ -753,7 +777,7 @@ function SelectField({
         <Text style={selected ? styles.selectValue : styles.selectPlaceholder}>
           {selected ? selected.label : placeholder}
         </Text>
-        <ChevronRight color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
       </Pressable>
       {helpText ? <Text style={styles.helpText}>{helpText}</Text> : null}
       {error ? <Text style={styles.errorLine}>{error}</Text> : null}
@@ -789,7 +813,7 @@ function SelectField({
                       {opt.label}
                     </Text>
                     {isSelected ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : null}
                   </Pressable>
                 );
@@ -805,8 +829,9 @@ function SelectField({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -814,7 +839,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -835,10 +860,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.screenTitle, color: colors.ink },
+  emptyTitle: { ...typography.screenTitle, color: c.ink },
   emptyMessage: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -852,12 +877,12 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     marginTop: spacing.sm,
   },
   formDescription: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
   section: {
@@ -865,12 +890,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     fontSize: 17,
   },
   sectionDesc: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   fieldLabelRow: {
@@ -880,16 +905,16 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
   },
   requiredMark: {
     ...typography.eyebrow,
-    color: colors.danger,
+    color: c.danger,
   },
   helpText: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   radioRow: {
@@ -902,65 +927,65 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.12)',
-    backgroundColor: colors.cardLight,
+    borderColor: c.border,
+    backgroundColor: c.card,
   },
   radioChipActive: {
-    borderColor: colors.primary,
+    borderColor: c.primary,
     backgroundColor: 'rgba(93,63,211,0.08)',
   },
   radioChipLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   radioChipLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   selectField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
-  selectValue: { ...typography.body, color: colors.ink, flex: 1 },
+  selectValue: { ...typography.body, color: c.ink, flex: 1 },
   selectPlaceholder: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     flex: 1,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
   },
   checkboxBox: {
     width: 20,
     height: 20,
     borderRadius: radii.xs,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.35)',
+    borderColor: c.inkVeryFaded,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
   checkboxBoxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   checkboxLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
     lineHeight: 19,
   },
@@ -971,7 +996,7 @@ const styles = StyleSheet.create({
   },
   rowHeaderLabel: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     fontSize: 14,
   },
   removeRowBtn: {
@@ -981,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   removeRowLabel: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
     fontWeight: '600',
   },
   addRowBtn: {
@@ -999,21 +1024,21 @@ const styles = StyleSheet.create({
   },
   addRowLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
     fontSize: 14,
   },
   consentTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   consentBody: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
   errorLine: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
   },
   modalBackdrop: {
     flex: 1,
@@ -1021,7 +1046,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   selectSheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     paddingHorizontal: spacing.lg,
@@ -1033,12 +1058,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
   },
   selectSheetTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   selectOption: {
     flexDirection: 'row',
@@ -1047,14 +1072,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.08)',
+    borderBottomColor: c.divider,
   },
   selectOptionActive: {
     backgroundColor: 'rgba(93,63,211,0.06)',
   },
-  selectOptionLabel: { ...typography.body, color: colors.ink },
+  selectOptionLabel: { ...typography.body, color: c.ink },
   selectOptionLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   selectCancelBtn: {
@@ -1063,6 +1088,8 @@ const styles = StyleSheet.create({
   },
   selectCancelLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
 });
+}
+

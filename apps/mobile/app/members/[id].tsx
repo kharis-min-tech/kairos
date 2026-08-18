@@ -41,11 +41,13 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
@@ -61,6 +63,8 @@ function formatDate(iso: string | Date | null | undefined): string {
 }
 
 export default function MemberProfile() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -224,12 +228,12 @@ export default function MemberProfile() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Member</Text>
           <View style={{ width: 24 }} />
         </View>
-        <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+        <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
       </SafeAreaView>
     );
   }
@@ -239,7 +243,7 @@ export default function MemberProfile() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Member</Text>
           <View style={{ width: 24 }} />
@@ -270,7 +274,7 @@ export default function MemberProfile() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {m.firstName} {m.lastName}
@@ -280,7 +284,7 @@ export default function MemberProfile() {
           hitSlop={8}
           accessibilityLabel="Edit member"
         >
-          <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+          <Pencil color={c.primary} size={20} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -292,7 +296,7 @@ export default function MemberProfile() {
               member.isFetching || fellowships.isFetching || departments.isFetching
             }
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -314,7 +318,7 @@ export default function MemberProfile() {
             </View>
             {isConfirmed ? (
               <View style={styles.heroBadgePillGold}>
-                <BadgeCheck color={colors.gold} size={10} strokeWidth={2} />
+                <BadgeCheck color={c.gold} size={10} strokeWidth={2} />
                 <Text style={styles.heroBadgePillGoldLabel}>CONFIRMED</Text>
               </View>
             ) : null}
@@ -331,7 +335,7 @@ export default function MemberProfile() {
 
         {m.redacted ? (
           <Card padding="md" style={styles.redactedBanner}>
-            <Shield color={colors.info} size={16} strokeWidth={1.5} />
+            <Shield color={c.info} size={16} strokeWidth={1.5} />
             <Text style={styles.redactedLabel}>
               Contact details are redacted because this record is protected. Reach out to a
               branch admin if you need more information.
@@ -349,7 +353,7 @@ export default function MemberProfile() {
                 style={styles.contactRow}
               >
                 <View style={styles.contactIconTile}>
-                  <Mail color={colors.primary} size={16} strokeWidth={1.5} />
+                  <Mail color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.contactValue} numberOfLines={1}>
                   {m.email}
@@ -362,7 +366,7 @@ export default function MemberProfile() {
                 style={styles.contactRow}
               >
                 <View style={styles.contactIconTile}>
-                  <Phone color={colors.primary} size={16} strokeWidth={1.5} />
+                  <Phone color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.contactValue}>{m.phone}</Text>
               </Pressable>
@@ -379,7 +383,7 @@ export default function MemberProfile() {
                 style={styles.contactRow}
               >
                 <View style={styles.contactIconTile}>
-                  <MapPin color={colors.primary} size={16} strokeWidth={1.5} />
+                  <MapPin color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.contactValue}>
                   {[m.address, m.city, m.postalCode].filter(Boolean).join(', ') || '—'}
@@ -392,27 +396,27 @@ export default function MemberProfile() {
         <Card padding="md" style={{ gap: spacing.sm }}>
           <Text style={styles.sectionEyebrow}>MEMBERSHIP</Text>
           <InfoRow
-            icon={<Calendar color={colors.primary} size={14} strokeWidth={1.5} />}
+            icon={<Calendar color={c.primary} size={14} strokeWidth={1.5} />}
             label="Member since"
             value={formatDate(m.membershipDate)}
           />
           {m.membershipClassCompletedAt ? (
             <InfoRow
-              icon={<BadgeCheck color={colors.gold} size={14} strokeWidth={1.5} />}
+              icon={<BadgeCheck color={c.gold} size={14} strokeWidth={1.5} />}
               label="Class completed"
               value={formatDate(m.membershipClassCompletedAt)}
             />
           ) : null}
           {m.secondaryBranchId ? (
             <InfoRow
-              icon={<Building2 color={colors.primary} size={14} strokeWidth={1.5} />}
+              icon={<Building2 color={c.primary} size={14} strokeWidth={1.5} />}
               label="Secondary branch"
               value={m.isAtSecondaryBranch ? 'Currently visiting' : 'Registered'}
             />
           ) : null}
           {!m.redacted && m.dateOfBirth ? (
             <InfoRow
-              icon={<Calendar color={colors.primary} size={14} strokeWidth={1.5} />}
+              icon={<Calendar color={c.primary} size={14} strokeWidth={1.5} />}
               label="Date of birth"
               value={formatDate(m.dateOfBirth)}
             />
@@ -460,7 +464,7 @@ export default function MemberProfile() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconTile}>
-              <Sparkles color={colors.primary} size={14} strokeWidth={1.5} />
+              <Sparkles color={c.primary} size={14} strokeWidth={1.5} />
             </View>
             <Text style={styles.sectionTitle}>Roles</Text>
             <Pressable
@@ -469,12 +473,12 @@ export default function MemberProfile() {
               hitSlop={6}
               accessibilityLabel="Add role"
             >
-              <Plus color={colors.primary} size={16} strokeWidth={1.5} />
+              <Plus color={c.primary} size={16} strokeWidth={1.5} />
             </Pressable>
           </View>
           <Card padding="md" style={{ gap: spacing.xs }}>
             {roles.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.sm }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.sm }} />
             ) : (roles.data ?? []).length === 0 ? (
               <Text style={styles.emptyLine}>No roles assigned. Tap + to add one.</Text>
             ) : (
@@ -518,7 +522,7 @@ export default function MemberProfile() {
                 style={styles.contactRow}
               >
                 <View style={styles.contactIconTile}>
-                  <Phone color={colors.primary} size={16} strokeWidth={1.5} />
+                  <Phone color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.contactValue}>{m.emergencyContactPhone}</Text>
               </Pressable>
@@ -529,7 +533,7 @@ export default function MemberProfile() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconTile}>
-              <Settings color={colors.primary} size={14} strokeWidth={1.5} />
+              <Settings color={c.primary} size={14} strokeWidth={1.5} />
             </View>
             <Text style={styles.sectionTitle}>Manage</Text>
           </View>
@@ -563,8 +567,8 @@ export default function MemberProfile() {
                     onPress={() => confirmReject(`${m.firstName} ${m.lastName}`)}
                     disabled={approve.isPending}
                   >
-                    <X color={colors.danger} size={14} strokeWidth={2} />
-                    <Text style={[styles.manageBtnLabel, { color: colors.danger }]}>
+                    <X color={c.danger} size={14} strokeWidth={2} />
+                    <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
                       Reject
                     </Text>
                   </Pressable>
@@ -579,8 +583,8 @@ export default function MemberProfile() {
                 onPress={markClassComplete}
                 disabled={setClassComplete.isPending}
               >
-                <Award color={colors.gold} size={14} strokeWidth={1.5} />
-                <Text style={[styles.manageBtnLabel, { color: colors.goldDark }]}>
+                <Award color={c.gold} size={14} strokeWidth={1.5} />
+                <Text style={[styles.manageBtnLabel, { color: c.goldDark }]}>
                   {setClassComplete.isPending
                     ? 'Saving…'
                     : 'Mark 4-week class complete'}
@@ -590,7 +594,7 @@ export default function MemberProfile() {
 
             {m.membershipClassCompletedAt ? (
               <View style={styles.confirmedRow}>
-                <BadgeCheck color={colors.gold} size={14} strokeWidth={1.5} />
+                <BadgeCheck color={c.gold} size={14} strokeWidth={1.5} />
                 <Text style={styles.confirmedLabel}>
                   Membership class completed{' '}
                   {formatDate(m.membershipClassCompletedAt)}
@@ -604,8 +608,8 @@ export default function MemberProfile() {
                 onPress={() => confirmDeactivate(`${m.firstName} ${m.lastName}`)}
                 disabled={deactivate.isPending}
               >
-                <UserX color={colors.danger} size={14} strokeWidth={1.5} />
-                <Text style={[styles.manageBtnLabel, { color: colors.danger }]}>
+                <UserX color={c.danger} size={14} strokeWidth={1.5} />
+                <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
                   {deactivate.isPending ? 'Deactivating…' : 'Deactivate member'}
                 </Text>
               </Pressable>
@@ -671,6 +675,8 @@ function RolePickerSheet({
   defaultBranchId: string;
   onPick: (roleId: string, branchId: string) => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const allRoles = useQuery({
     queryKey: ['members', 'roles', 'listAll'],
     enabled: open,
@@ -699,7 +705,7 @@ function RolePickerSheet({
 
           <ScrollView style={{ maxHeight: 380 }}>
             {allRoles.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
             ) : (
               (allRoles.data ?? []).map((r) => {
                 const isSelected = pickedRoleId === r.id;
@@ -721,10 +727,10 @@ function RolePickerSheet({
                       ) : null}
                     </View>
                     {isSelected ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : (
                       <ChevronRight
-                        color="rgba(26,28,28,0.3)"
+                        color={c.inkVeryFaded}
                         size={16}
                         strokeWidth={1.5}
                       />
@@ -802,6 +808,8 @@ function InfoRow({
   label: string;
   value: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoIcon}>{icon}</View>
@@ -824,17 +832,19 @@ function Section({
   loading?: boolean;
   children: React.ReactNode;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <Icon color={colors.primary} size={14} strokeWidth={1.5} />
+          <Icon color={c.primary} size={14} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.xs }}>
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.sm }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.sm }} />
         ) : (
           children
         )}
@@ -843,8 +853,9 @@ function Section({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -852,7 +863,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -863,8 +874,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  errorTitle: { ...typography.cardTitle, color: colors.ink },
-  errorMeta: { ...typography.body, color: 'rgba(26,28,28,0.6)', textAlign: 'center' },
+  errorTitle: { ...typography.cardTitle, color: c.ink },
+  errorMeta: { ...typography.body, color: c.inkMuted, textAlign: 'center' },
   heroCard: {
     borderRadius: radii.lg,
     padding: spacing.lg,
@@ -899,7 +910,7 @@ const styles = StyleSheet.create({
   },
   heroBadgePillGoldLabel: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     fontSize: 9,
   },
   heroBadgePillRed: {
@@ -934,13 +945,13 @@ const styles = StyleSheet.create({
   },
   redactedLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
     lineHeight: 15,
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   contactRow: {
     flexDirection: 'row',
@@ -958,7 +969,7 @@ const styles = StyleSheet.create({
   },
   contactValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   infoRow: {
@@ -973,12 +984,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     flex: 1,
   },
   infoValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
     flexShrink: 1,
     maxWidth: '60%',
@@ -998,15 +1009,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
   linkRow: {
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.06)',
+    borderBottomColor: c.divider,
     gap: 2,
   },
-  linkRowLabel: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  linkRowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  linkRowLabel: { ...typography.body, color: c.ink, fontWeight: '500' },
+  linkRowMeta: { ...typography.meta, color: c.inkMuted },
   roleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1015,17 +1026,17 @@ const styles = StyleSheet.create({
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     padding: spacing.sm,
   },
   emergencyName: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   manageBlurb: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
   manageRow: {
@@ -1034,7 +1045,7 @@ const styles = StyleSheet.create({
   },
   manageDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
     marginVertical: spacing.xs,
   },
   manageBtn: {
@@ -1047,17 +1058,17 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   manageBtnPrimary: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   manageBtnOutline: {
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
-    backgroundColor: colors.cardLight,
+    borderColor: c.border,
+    backgroundColor: c.card,
   },
   manageBtnDanger: {
     borderWidth: 1.5,
     borderColor: 'rgba(225,29,72,0.4)',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
   },
   manageBtnLabel: {
     ...typography.button,
@@ -1076,12 +1087,12 @@ const styles = StyleSheet.create({
   },
   confirmedLabel: {
     ...typography.meta,
-    color: colors.goldDark,
+    color: c.goldDark,
     fontWeight: '600',
   },
   manageFootnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     marginTop: spacing.xs,
     lineHeight: 15,
   },
@@ -1095,7 +1106,7 @@ const styles = StyleSheet.create({
   },
   longPressHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.45)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -1105,7 +1116,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   rolePickerSheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     paddingHorizontal: spacing.lg,
@@ -1117,16 +1128,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
   },
   rolePickerTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   rolePickerSub: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: -6,
   },
   rolePickerOption: {
@@ -1137,19 +1148,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radii.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.06)',
+    borderBottomColor: c.divider,
   },
   rolePickerOptionActive: {
     backgroundColor: 'rgba(93,63,211,0.06)',
   },
   rolePickerOptionLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   rolePickerOptionMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginTop: 2,
     lineHeight: 15,
   },
@@ -1158,20 +1169,20 @@ const styles = StyleSheet.create({
   },
   branchPickerLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   branchChip: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   branchChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   branchChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   branchChipLabelActive: {
@@ -1190,12 +1201,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
-    backgroundColor: colors.cardLight,
+    borderColor: c.border,
+    backgroundColor: c.card,
   },
   rolePickerCancelLabel: {
     ...typography.button,
-    color: colors.ink,
+    color: c.ink,
     fontSize: 14,
   },
   rolePickerAssign: {
@@ -1204,7 +1215,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.md,
     borderRadius: radii.md,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   rolePickerAssignLabel: {
     ...typography.button,
@@ -1212,3 +1223,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+}
+

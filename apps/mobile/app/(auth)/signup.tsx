@@ -23,11 +23,13 @@ import {
 import {
   Button,
   Input,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
@@ -38,6 +40,8 @@ type PickerKind = 'branch' | 'gender' | null;
 const GENDERS: ('Male' | 'Female')[] = ['Male', 'Female'];
 
 export default function SignupScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState('');
@@ -108,7 +112,7 @@ export default function SignupScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Create account</Text>
         <View style={{ width: 24 }} />
@@ -138,7 +142,7 @@ export default function SignupScreen() {
             {done ? (
               <>
                 <View style={styles.successBadge}>
-                  <MailCheck color={colors.success} size={22} strokeWidth={1.5} />
+                  <MailCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.title}>Check your inbox</Text>
                 <Text style={styles.body}>
@@ -350,7 +354,7 @@ export default function SignupScreen() {
                       ) : null}
                     </View>
                     {active ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : null}
                   </Pressable>
                 );
@@ -391,7 +395,7 @@ export default function SignupScreen() {
                     {g}
                   </Text>
                   {active ? (
-                    <Check color={colors.primary} size={16} strokeWidth={2} />
+                    <Check color={c.primary} size={16} strokeWidth={2} />
                   ) : null}
                 </Pressable>
               );
@@ -414,6 +418,8 @@ function PickerRow({
   onPress: () => void;
   error?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={{ gap: 4 }}>
       <Pressable
@@ -423,15 +429,16 @@ function PickerRow({
         <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
           {value || placeholder}
         </Text>
-        <ChevronRight color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
       </Pressable>
       {error ? <Text style={styles.errorLine}>{error}</Text> : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -439,7 +446,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   scroll: {
     padding: spacing.lg,
     gap: spacing.lg,
@@ -462,18 +469,18 @@ const styles = StyleSheet.create({
   },
   logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
   card: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  title: { ...typography.screenTitle, color: colors.ink },
+  title: { ...typography.screenTitle, color: c.ink },
   body: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
-  bodyStrong: { color: colors.ink, fontWeight: '600' },
+  bodyStrong: { color: c.ink, fontWeight: '600' },
   successBadge: {
     width: 44,
     height: 44,
@@ -488,11 +495,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     padding: spacing.sm,
     borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
+    borderLeftColor: c.danger,
     marginTop: spacing.sm,
   },
-  errorText: { ...typography.meta, color: colors.danger },
-  errorLine: { ...typography.meta, color: colors.danger },
+  errorText: { ...typography.meta, color: c.danger },
+  errorLine: { ...typography.meta, color: c.danger },
 
   pairRow: {
     flexDirection: 'row',
@@ -501,7 +508,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
     marginBottom: spacing.xs,
   },
@@ -509,21 +516,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
   pickerFieldError: {
-    borderColor: colors.danger,
+    borderColor: c.danger,
     borderWidth: 1.5,
   },
-  pickerValue: { ...typography.body, color: colors.ink, flex: 1 },
+  pickerValue: { ...typography.body, color: c.ink, flex: 1 },
   pickerPlaceholder: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     flex: 1,
   },
 
@@ -538,17 +545,17 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.3)',
+    borderColor: c.inkVeryFaded,
     alignItems: 'center',
     justifyContent: 'center',
   },
   consentBoxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   consentText: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
     lineHeight: 20,
   },
@@ -559,7 +566,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -570,12 +577,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
   sheetTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     marginBottom: spacing.xs,
   },
   sheetRow: {
@@ -592,14 +599,16 @@ const styles = StyleSheet.create({
   },
   sheetRowLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
   },
   sheetRowLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   sheetRowMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
 });
+}
+

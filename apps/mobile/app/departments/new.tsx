@@ -4,7 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@kairos/ui-native';
+import {
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { DepartmentForm } from './_form';
@@ -12,6 +18,8 @@ import { DepartmentForm } from './_form';
 type CreatePayload = Parameters<typeof api.departments.create>[0];
 
 export default function NewDepartment() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
@@ -44,7 +52,7 @@ export default function NewDepartment() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>New department</Text>
         <View style={{ width: 24 }} />
@@ -69,8 +77,9 @@ export default function NewDepartment() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,11 +87,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
 });
+}
+

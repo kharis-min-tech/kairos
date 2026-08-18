@@ -6,3 +6,4 @@ export { ProgressBar } from './ProgressBar';
 export { Avatar } from './Avatar';
 
 export * from './tokens';
+export * from './theme';

@@ -15,10 +15,12 @@ import { Search, UserPlus, Check } from 'lucide-react-native';
 import {
   Avatar,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
@@ -63,6 +65,8 @@ export function MemberPickerSheet({
   subtitle = 'Search members in this branch. Tap to add.',
   selectedMemberId,
 }: MemberPickerSheetProps) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const [searchInput, setSearchInput] = useState('');
   const debounced = useDebounced(searchInput.trim(), 250);
 
@@ -103,13 +107,13 @@ export function MemberPickerSheet({
             autoCorrect={false}
             autoFocus
             leadingSlot={
-              <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+              <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
             }
           />
 
           <ScrollView style={{ maxHeight: 340 }} keyboardShouldPersistTaps="handled">
             {results.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
             ) : filtered.length === 0 ? (
               <Text style={styles.empty}>
                 {debounced
@@ -138,9 +142,9 @@ export function MemberPickerSheet({
                       ) : null}
                     </View>
                     {isSelected ? (
-                      <Check color={colors.success} size={18} strokeWidth={2} />
+                      <Check color={c.success} size={18} strokeWidth={2} />
                     ) : (
-                      <UserPlus color={colors.primary} size={16} strokeWidth={1.5} />
+                      <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                     )}
                   </Pressable>
                 );
@@ -158,14 +162,15 @@ export function MemberPickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(10,10,15,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     paddingHorizontal: spacing.lg,
@@ -177,16 +182,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
   },
   sheetTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   sheetSub: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: -6,
   },
   row: {
@@ -195,13 +200,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.06)',
+    borderBottomColor: c.divider,
   },
-  name: { ...typography.body, color: colors.ink, fontWeight: '500' },
-  meta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  name: { ...typography.body, color: c.ink, fontWeight: '500' },
+  meta: { ...typography.meta, color: c.inkMuted },
   empty: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     paddingVertical: spacing.lg,
   },
@@ -211,6 +216,8 @@ const styles = StyleSheet.create({
   },
   cancelLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
 });
+}
+

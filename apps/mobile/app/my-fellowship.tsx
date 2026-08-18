@@ -17,16 +17,20 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function MyFellowship() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const memberId = user?.id;
@@ -80,7 +84,7 @@ export default function MyFellowship() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My fellowship</Text>
         <View style={{ width: 24 }} />
@@ -92,12 +96,12 @@ export default function MyFellowship() {
           <RefreshControl
             refreshing={list.isFetching || members.isFetching || meetings.isFetching}
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {list.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {!list.isLoading && fellowships.length === 0 ? (
@@ -200,7 +204,7 @@ export default function MyFellowship() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconTile}>
-                  <UsersRound color={colors.primary} size={16} strokeWidth={1.5} />
+                  <UsersRound color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionHeaderText}>
                   Members
@@ -208,7 +212,7 @@ export default function MyFellowship() {
                 <Badge label={String(members.data?.length ?? 0)} variant="neutral" size="sm" />
               </View>
               {members.isLoading ? (
-                <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+                <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
               ) : (members.data ?? []).length === 0 ? (
                 <Text style={styles.emptyLine}>No members recorded yet.</Text>
               ) : (
@@ -243,7 +247,7 @@ export default function MyFellowship() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconTile}>
-                    <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
+                    <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.sectionHeaderText}>Recent meetings</Text>
                 </View>
@@ -270,10 +274,12 @@ export default function MyFellowship() {
 }
 
 function EmptyState() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Card padding="md" style={styles.emptyCard}>
       <View style={styles.emptyIconTile}>
-        <Users color={colors.primary} size={22} strokeWidth={1.5} />
+        <Users color={c.primary} size={22} strokeWidth={1.5} />
       </View>
       <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
       <Text style={styles.emptyMeta}>
@@ -285,8 +291,9 @@ function EmptyState() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,7 +301,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -311,10 +318,10 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '500' },
+  chipActive: { backgroundColor: c.primary },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '500' },
   chipLabelActive: { color: '#ffffff' },
   heroCard: {
     borderRadius: radii.lg,
@@ -323,7 +330,7 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     letterSpacing: 1.2,
   },
   heroTitle: {
@@ -385,20 +392,20 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   sectionTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   sectionMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
   },
   memberList: {
     gap: spacing.xs,
@@ -407,34 +414,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
-  memberName: { ...typography.body, color: colors.ink },
-  memberMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  memberName: { ...typography.body, color: c.ink },
+  memberMeta: { ...typography.meta, color: c.inkMuted },
   meetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
   meetingDate: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
     width: 56,
   },
   meetingTitle: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     padding: spacing.md,
   },
   emptyCard: {
@@ -449,11 +456,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
 });
+}
+

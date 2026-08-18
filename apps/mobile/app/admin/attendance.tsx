@@ -14,7 +14,17 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, TrendingDown, TrendingUp } from 'lucide-react-native';
 import Svg, { Rect, Text as SvgText, G } from 'react-native-svg';
-import { Avatar, Card, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Avatar,
+  Card,
+  colors,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 type Range = '6w' | '3m' | 'ytd';
@@ -31,6 +41,8 @@ const RANGE_LABELS: Record<Range, string> = {
 };
 
 export default function AttendanceComparison() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [range, setRange] = useState<Range>('6w');
   const weeks = RANGE_WEEKS[range];
@@ -63,7 +75,7 @@ export default function AttendanceComparison() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>Service attendance</Text>
@@ -81,7 +93,7 @@ export default function AttendanceComparison() {
               trends.refetch();
               missing.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -103,7 +115,7 @@ export default function AttendanceComparison() {
         </View>
 
         {trends.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
           <Card padding="lg" style={styles.heroCard}>
             <Text style={styles.heroEyebrow}>This week</Text>
@@ -114,14 +126,14 @@ export default function AttendanceComparison() {
             {priorAvg > 0 ? (
               <View style={[styles.deltaRow, !trendUp && styles.deltaDown]}>
                 {trendUp ? (
-                  <TrendingUp color={colors.successText} size={14} strokeWidth={2} />
+                  <TrendingUp color={c.successText} size={14} strokeWidth={2} />
                 ) : (
-                  <TrendingDown color={colors.danger} size={14} strokeWidth={2} />
+                  <TrendingDown color={c.danger} size={14} strokeWidth={2} />
                 )}
                 <Text
                   style={[
                     styles.deltaLabel,
-                    { color: trendUp ? colors.successText : colors.danger },
+                    { color: trendUp ? c.successText : c.danger },
                   ]}
                 >
                   {trendUp ? '+' : ''}
@@ -152,7 +164,7 @@ export default function AttendanceComparison() {
           </View>
 
           {missing.isLoading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : (missing.data ?? []).length === 0 ? (
             <Card padding="md">
               <Text style={styles.emptyText}>Everyone accounted for.</Text>
@@ -191,6 +203,7 @@ function BarChart({
 }: {
   data: { weekStart: string; attendees: number }[];
 }) {
+  const c = useColors();
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;
   const chartHeight = 120;
@@ -222,7 +235,7 @@ function BarChart({
               x={x + barWidth / 2}
               y={chartHeight - 4}
               fontSize={9}
-              fill="rgba(26,28,28,0.55)"
+              fill={c.inkMuted}
               textAnchor="middle"
             >
               {weekShortLabel(point.weekStart)}
@@ -239,8 +252,9 @@ function weekShortLabel(iso: string): string {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,8 +263,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   headerText: { flex: 1, gap: 2 },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
-  headerSub: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  headerSub: { ...typography.meta, color: c.inkMuted },
 
   container: {
     padding: spacing.lg,
@@ -266,29 +280,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   rangeChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   rangeLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     fontWeight: '600',
   },
   rangeLabelActive: { color: '#ffffff' },
 
   heroCard: { gap: spacing.xs },
-  heroEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  heroEyebrow: { ...typography.eyebrow, color: c.inkMuted },
   heroNumber: {
     fontSize: 32,
     fontWeight: '800',
-    color: colors.ink,
+    color: c.ink,
   },
   heroUnit: {
     fontSize: 15,
     fontWeight: '500',
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   deltaRow: {
     flexDirection: 'row',
@@ -300,14 +314,14 @@ const styles = StyleSheet.create({
   deltaLabel: { ...typography.meta, fontWeight: '600' },
   heroMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginTop: spacing.xs,
   },
 
   chartCard: { gap: spacing.sm },
   chartLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
 
   section: { gap: spacing.sm, marginTop: spacing.sm },
@@ -318,11 +332,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   sectionCount: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: c.primary,
   },
 
   missingCard: {
@@ -336,15 +350,17 @@ const styles = StyleSheet.create({
   },
   missingRowDivider: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(26,28,28,0.06)',
+    borderTopColor: c.divider,
   },
   missingText: { flex: 1, gap: 2 },
-  missingName: { ...typography.cardTitle, color: colors.ink, fontSize: 13 },
-  missingMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  missingName: { ...typography.cardTitle, color: c.ink, fontSize: 13 },
+  missingMeta: { ...typography.meta, color: c.inkMuted },
 
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
 });
+}
+

@@ -5,11 +5,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Bell } from 'lucide-react-native';
-import { Avatar, Card, Badge, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
+import {
+  Avatar,
+  Card,
+  Badge,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function Home() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
@@ -48,7 +61,7 @@ export default function Home() {
           <RefreshControl
             refreshing={rota.isFetching}
             onRefresh={() => rota.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -132,7 +145,7 @@ export default function Home() {
             onPress={() => router.push('/my-fellowship')}
           >
             <Card padding="md" style={styles.fellowshipCard}>
-              <View style={[styles.dutyDot, { backgroundColor: colors.gold }]} />
+              <View style={[styles.dutyDot, { backgroundColor: c.gold }]} />
               <Text style={styles.dutyEyebrow}>FELLOWSHIP</Text>
               {myFellowship.data ? (
                 <>
@@ -178,8 +191,9 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   container: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -193,8 +207,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   greetingText: { flex: 1, gap: 2 },
-  dateLabel: { ...typography.meta, color: 'rgba(26,28,28,0.5)' },
-  greeting: { ...typography.screenTitle, color: colors.ink },
+  dateLabel: { ...typography.meta, color: c.inkFaded },
+  greeting: { ...typography.screenTitle, color: c.ink },
   avatarWrap: {},
 
   serviceCard: {
@@ -235,7 +249,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.gold,
+    backgroundColor: c.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -266,29 +280,29 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
-  dutyEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.5)' },
-  dutyTitle: { ...typography.cardTitle, color: colors.ink },
-  dutyMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
-  dutySub: { ...typography.meta, color: 'rgba(26,28,28,0.5)' },
+  dutyEyebrow: { ...typography.eyebrow, color: c.inkFaded },
+  dutyTitle: { ...typography.cardTitle, color: c.ink },
+  dutyMeta: { ...typography.meta, color: c.inkMuted },
+  dutySub: { ...typography.meta, color: c.inkFaded },
 
   verseCard: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.lg,
     borderLeftWidth: 3,
-    borderLeftColor: colors.gold,
+    borderLeftColor: c.gold,
     gap: spacing.xs,
   },
-  verseEyebrow: { ...typography.eyebrow, color: colors.goldDark },
+  verseEyebrow: { ...typography.eyebrow, color: c.goldDark },
   verseText: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontStyle: 'italic',
     lineHeight: 20,
   },
-  verseRef: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  verseRef: { ...typography.meta, color: c.inkMuted },
 
   announcementCard: { gap: spacing.xs },
   announcementHeader: {
@@ -296,7 +310,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  announcementEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.5)' },
-  announcementTitle: { ...typography.cardTitle, color: colors.ink },
-  announcementBody: { ...typography.body, color: 'rgba(26,28,28,0.65)' },
+  announcementEyebrow: { ...typography.eyebrow, color: c.inkFaded },
+  announcementTitle: { ...typography.cardTitle, color: c.ink },
+  announcementBody: { ...typography.body, color: c.inkMuted },
 });
+}
+

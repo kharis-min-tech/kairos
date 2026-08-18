@@ -15,10 +15,12 @@ import { ChevronLeft, Check, KeyRound } from 'lucide-react-native';
 import {
   Button,
   Card,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type {
   CreateMemberRequest,
@@ -29,6 +31,8 @@ import { api } from '@/lib/api-client';
 import { MemberForm } from './_form';
 
 export default function NewMember() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
@@ -80,7 +84,7 @@ export default function NewMember() {
 
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
-            <Check color={colors.success} size={48} strokeWidth={2} />
+            <Check color={c.success} size={48} strokeWidth={2} />
           </View>
           <Text style={styles.successTitle}>
             {created.member.firstName} {created.member.lastName} is set up
@@ -101,7 +105,7 @@ export default function NewMember() {
             <View style={styles.credRow}>
               <Text style={styles.credLabel}>Temporary password</Text>
               <View style={styles.credPwPill}>
-                <KeyRound color={colors.primary} size={14} strokeWidth={1.5} />
+                <KeyRound color={c.primary} size={14} strokeWidth={1.5} />
                 <Text style={styles.credPwText} selectable>
                   {created.generatedPassword}
                 </Text>
@@ -144,7 +148,7 @@ export default function NewMember() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>New member</Text>
         <View style={{ width: 24 }} />
@@ -170,8 +174,9 @@ export default function NewMember() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,10 +184,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
@@ -202,13 +207,13 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
   successMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: spacing.md,
@@ -223,16 +228,16 @@ const styles = StyleSheet.create({
   },
   credDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(26,28,28,0.08)',
+    backgroundColor: c.divider,
     marginVertical: spacing.xs,
   },
   credLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   credValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   credPwPill: {
@@ -246,14 +251,14 @@ const styles = StyleSheet.create({
   },
   credPwText: {
     ...typography.body,
-    color: colors.primary,
+    color: c.primary,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontWeight: '700',
     flex: 1,
   },
   credHint: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     marginTop: 4,
     lineHeight: 15,
   },
@@ -263,3 +268,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
 });
+}
+

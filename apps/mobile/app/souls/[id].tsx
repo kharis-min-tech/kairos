@@ -27,11 +27,13 @@ import {
   Avatar,
   Badge,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -59,6 +61,8 @@ const STATUS_VARIANT: Record<
 };
 
 export default function SoulDetail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -165,7 +169,7 @@ export default function SoulDetail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {s ? `${s.firstName} ${s.lastName}` : 'Soul'}
@@ -182,12 +186,12 @@ export default function SoulDetail() {
               soul.refetch();
               followUps.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {soul.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {soul.isError || (!soul.isLoading && !s) ? (
@@ -222,7 +226,7 @@ export default function SoulDetail() {
                 ) : null}
                 {s.convertedToMemberId ? (
                   <View style={styles.heroBadgePillGold}>
-                    <BadgeCheck color={colors.gold} size={10} strokeWidth={2} />
+                    <BadgeCheck color={c.gold} size={10} strokeWidth={2} />
                     <Text style={styles.heroBadgePillGoldLabel}>CONVERTED</Text>
                   </View>
                 ) : null}
@@ -244,7 +248,7 @@ export default function SoulDetail() {
                     style={styles.contactRow}
                   >
                     <View style={styles.contactIconTile}>
-                      <Phone color={colors.primary} size={16} strokeWidth={1.5} />
+                      <Phone color={c.primary} size={16} strokeWidth={1.5} />
                     </View>
                     <Text style={styles.contactValue}>{s.phone}</Text>
                   </Pressable>
@@ -255,7 +259,7 @@ export default function SoulDetail() {
                     style={styles.contactRow}
                   >
                     <View style={styles.contactIconTile}>
-                      <Mail color={colors.primary} size={16} strokeWidth={1.5} />
+                      <Mail color={c.primary} size={16} strokeWidth={1.5} />
                     </View>
                     <Text style={styles.contactValue} numberOfLines={1}>
                       {s.email}
@@ -274,7 +278,7 @@ export default function SoulDetail() {
                     style={styles.contactRow}
                   >
                     <View style={styles.contactIconTile}>
-                      <MapPin color={colors.primary} size={16} strokeWidth={1.5} />
+                      <MapPin color={c.primary} size={16} strokeWidth={1.5} />
                     </View>
                     <Text style={styles.contactValue}>
                       {[s.address, s.city].filter(Boolean).join(', ')}
@@ -403,7 +407,7 @@ export default function SoulDetail() {
               >
                 <Card padding="md" style={styles.linkCard}>
                   <View style={styles.linkIconTile}>
-                    <Heart color={colors.primary} size={18} strokeWidth={1.5} />
+                    <Heart color={c.primary} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.linkTitle}>Captured at</Text>
@@ -444,7 +448,7 @@ export default function SoulDetail() {
               >
                 <Card padding="md" style={styles.linkCard}>
                   <View style={styles.linkIconTile}>
-                    <BadgeCheck color={colors.success} size={18} strokeWidth={1.5} />
+                    <BadgeCheck color={c.success} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.linkTitle}>Converted to member</Text>
@@ -462,8 +466,9 @@ export default function SoulDetail() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -471,7 +476,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink, flex: 1, textAlign: 'center' },
+  headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -512,7 +517,7 @@ const styles = StyleSheet.create({
   },
   heroBadgePillGoldLabel: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     fontSize: 9,
   },
   heroName: {
@@ -527,7 +532,7 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   contactRow: {
     flexDirection: 'row',
@@ -545,7 +550,7 @@ const styles = StyleSheet.create({
   },
   contactValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   statusRow: {
@@ -561,16 +566,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
-    backgroundColor: colors.cardLight,
+    borderColor: c.border,
+    backgroundColor: c.card,
   },
   statusChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   statusChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   statusChipLabelActive: {
@@ -578,7 +583,7 @@ const styles = StyleSheet.create({
   },
   helpText: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   assignedRow: {
@@ -587,11 +592,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  memberName: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  memberMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  memberName: { ...typography.body, color: c.ink, fontWeight: '600' },
+  memberMeta: { ...typography.meta, color: c.inkMuted },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     lineHeight: 19,
   },
   followUpRow: {
@@ -601,18 +606,18 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   followUpDate: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '700',
     minWidth: 60,
   },
-  followUpTitle: { ...typography.body, color: colors.ink, fontWeight: '500' },
+  followUpTitle: { ...typography.body, color: c.ink, fontWeight: '500' },
   followUpNotes: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
   linkCard: {
@@ -628,16 +633,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkTitle: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  linkTitle: { ...typography.eyebrow, color: c.inkMuted },
   linkMeta: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
     marginTop: 2,
   },
   notesBody: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     lineHeight: 20,
   },
   convertBtn: {
@@ -647,7 +652,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     borderRadius: radii.lg,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
   },
   convertBtnLabel: {
     ...typography.button,
@@ -655,6 +660,8 @@ const styles = StyleSheet.create({
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
 });
+}
+

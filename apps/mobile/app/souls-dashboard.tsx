@@ -12,7 +12,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Handshake, Users, Flame } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  colors,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -30,7 +39,7 @@ const STATUS_TONE: Record<string, string> = {
   Interested: colors.info,
   Converted: colors.success,
   'Not Interested': colors.danger,
-  'Lost Contact': 'rgba(26,28,28,0.35)',
+  'Lost Contact': 'rgba(120,120,128,0.5)',
 };
 
 interface Overview {
@@ -47,6 +56,8 @@ interface FollowUpsOverview {
 }
 
 export default function SoulsDashboard() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   const overview = useQuery({
@@ -84,7 +95,7 @@ export default function SoulsDashboard() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Souls dashboard</Text>
         <View style={{ width: 24 }} />
@@ -93,17 +104,17 @@ export default function SoulsDashboard() {
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={refresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={isFetching} onRefresh={refresh} tintColor={c.primary} />
         }
       >
         {overview.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (
           <>
             <Card padding="md" style={{ gap: spacing.sm }}>
               <View style={styles.headline}>
                 <View style={styles.headlineIcon}>
-                  <Users color={colors.primary} size={18} strokeWidth={1.5} />
+                  <Users color={c.primary} size={18} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.headlineNum}>{total}</Text>
@@ -114,9 +125,9 @@ export default function SoulsDashboard() {
               </View>
 
               <View style={styles.ragRow}>
-                <RagTile label="Red" count={rag.RED} color={colors.danger} />
-                <RagTile label="Amber" count={rag.AMBER} color={colors.gold} />
-                <RagTile label="Green" count={rag.GREEN} color={colors.success} />
+                <RagTile label="Red" count={rag.RED} color={c.danger} />
+                <RagTile label="Amber" count={rag.AMBER} color={c.gold} />
+                <RagTile label="Green" count={rag.GREEN} color={c.success} />
               </View>
               <Text style={styles.ragHint}>
                 RAG reflects follow-up freshness. Red = missed &gt; 14 days.
@@ -129,7 +140,7 @@ export default function SoulsDashboard() {
                 <View style={{ gap: spacing.xs }}>
                   {statusRows.map((r) => {
                     const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
-                    const tone = STATUS_TONE[r.status] ?? 'rgba(26,28,28,0.4)';
+                    const tone = STATUS_TONE[r.status] ?? c.inkFaded;
                     return (
                       <View key={r.status} style={styles.statusRow}>
                         <View style={styles.statusHeader}>
@@ -160,13 +171,13 @@ export default function SoulsDashboard() {
                 <StatTile
                   label="Overdue"
                   value={String(followUpsOverdue)}
-                  tone={followUpsOverdue > 0 ? colors.danger : 'rgba(26,28,28,0.5)'}
+                  tone={followUpsOverdue > 0 ? c.danger : c.inkFaded}
                   icon={<Flame color="#ffffff" size={14} strokeWidth={2} />}
                 />
                 <StatTile
                   label="Due this week"
                   value={String(followUpsDueThisWeek)}
-                  tone={colors.primary}
+                  tone={c.primary}
                 />
               </View>
             </View>
@@ -186,8 +197,8 @@ export default function SoulsDashboard() {
                     : 'You\'re clear'
                 }
                 onPress={() => router.push('/follow-ups')}
-                iconTone={colors.gold}
-                icon={<Handshake color={colors.gold} size={16} strokeWidth={1.5} />}
+                iconTone={c.gold}
+                icon={<Handshake color={c.gold} size={16} strokeWidth={1.5} />}
               />
             </View>
           </>
@@ -198,6 +209,8 @@ export default function SoulsDashboard() {
 }
 
 function RagTile({ label, count, color }: { label: string; count: number; color: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={[styles.ragTile, { backgroundColor: `${color}20` }]}>
       <Text style={[styles.ragNum, { color }]}>{count}</Text>
@@ -217,6 +230,8 @@ function StatTile({
   tone: string;
   icon?: React.ReactNode;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={[styles.statTile, { borderLeftColor: tone }]}>
       <View style={styles.statTileHead}>
@@ -243,11 +258,13 @@ function LinkRow({
   icon?: React.ReactNode;
   iconTone?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.linkRow}>
         {icon ? (
-          <View style={[styles.linkIcon, { backgroundColor: `${iconTone ?? colors.primary}20` }]}>
+          <View style={[styles.linkIcon, { backgroundColor: `${iconTone ?? c.primary}20` }]}>
             {icon}
           </View>
         ) : null}
@@ -255,14 +272,15 @@ function LinkRow({
           <Text style={styles.linkLabel}>{label}</Text>
           <Text style={styles.linkSub}>{sub}</Text>
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,7 +288,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -286,8 +304,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headlineNum: { fontSize: 28, fontWeight: '800', color: colors.ink },
-  headlineLabel: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  headlineNum: { fontSize: 28, fontWeight: '800', color: c.ink },
+  headlineLabel: { ...typography.meta, color: c.inkMuted },
 
   ragRow: { flexDirection: 'row', gap: spacing.sm },
   ragTile: {
@@ -298,13 +316,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   ragNum: { fontSize: 22, fontWeight: '800' },
-  ragLabel: { ...typography.meta, color: 'rgba(26,28,28,0.65)', fontWeight: '600' },
-  ragHint: { ...typography.meta, color: 'rgba(26,28,28,0.5)', lineHeight: 14 },
+  ragLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
+  ragHint: { ...typography.meta, color: c.inkFaded, lineHeight: 14 },
 
   section: { gap: spacing.sm },
   sectionTitle: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
 
@@ -315,12 +333,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusLabel: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  statusCount: { ...typography.body, color: colors.ink, fontWeight: '700' },
+  statusLabel: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  statusCount: { ...typography.body, color: c.ink, fontWeight: '700' },
   statusBarTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(26,28,28,0.06)',
+    backgroundColor: c.divider,
     overflow: 'hidden',
   },
   statusBarFill: { height: '100%', borderRadius: 3 },
@@ -328,7 +346,7 @@ const styles = StyleSheet.create({
   tileRow: { flexDirection: 'row', gap: spacing.sm },
   statTile: {
     flex: 1,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
     borderLeftWidth: 3,
@@ -342,7 +360,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statTileLabel: { ...typography.meta, color: 'rgba(26,28,28,0.65)', fontWeight: '600' },
+  statTileLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
   statTileValue: { fontSize: 22, fontWeight: '800' },
 
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
@@ -353,6 +371,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkLabel: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  linkSub: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  linkLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
+  linkSub: { ...typography.meta, color: c.inkMuted },
 });
+}
+

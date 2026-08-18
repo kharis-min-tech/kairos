@@ -10,12 +10,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@kairos/ui-native';
+import {
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { UpdateMemberRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { MemberForm } from '../_form';
 
 export default function EditMember() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ id: string }>();
@@ -55,12 +63,12 @@ export default function EditMember() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Edit member</Text>
           <View style={{ width: 24 }} />
         </View>
-        <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+        <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
       </SafeAreaView>
     );
   }
@@ -70,7 +78,7 @@ export default function EditMember() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+            <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
           <Text style={styles.headerTitle}>Edit member</Text>
           <View style={{ width: 24 }} />
@@ -113,7 +121,7 @@ export default function EditMember() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           Edit {m.firstName}
@@ -134,8 +142,9 @@ export default function EditMember() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -143,12 +152,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   centered: {
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.sm,
   },
-  errorTitle: { ...typography.cardTitle, color: colors.ink },
-  errorMeta: { ...typography.body, color: 'rgba(26,28,28,0.6)', textAlign: 'center' },
+  errorTitle: { ...typography.cardTitle, color: c.ink },
+  errorMeta: { ...typography.body, color: c.inkMuted, textAlign: 'center' },
 });
+}
+

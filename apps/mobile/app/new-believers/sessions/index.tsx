@@ -15,9 +15,11 @@ import { ChevronLeft, Plus, ChevronRight, Calendar, MapPin, User } from 'lucide-
 import {
   Badge,
   Card,
-  colors,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { NewBelieverSession } from '@kairos/types';
@@ -39,6 +41,8 @@ function isUpcoming(sessionDate: string): boolean {
 }
 
 export default function NewBelieverSessionsIndex() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const branchId = useAuthStore((s) => s.user?.homeBranchId);
 
@@ -74,7 +78,7 @@ export default function NewBelieverSessionsIndex() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Sessions</Text>
         <Pressable
@@ -82,7 +86,7 @@ export default function NewBelieverSessionsIndex() {
           hitSlop={8}
           accessibilityLabel="Create new session"
         >
-          <Plus color={colors.primary} size={22} strokeWidth={1.5} />
+          <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -92,12 +96,12 @@ export default function NewBelieverSessionsIndex() {
           <RefreshControl
             refreshing={sessions.isFetching}
             onRefresh={() => sessions.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {sessions.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>No sessions yet</Text>
@@ -139,6 +143,8 @@ function SessionRow({
   session: NewBelieverSession;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const stageLabel = STAGE_LABELS[session.sessionStage] ?? session.sessionStage;
   return (
     <Pressable onPress={onPress}>
@@ -152,12 +158,12 @@ function SessionRow({
           </View>
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Calendar color="rgba(26,28,28,0.55)" size={12} strokeWidth={1.5} />
+              <Calendar color={c.inkMuted} size={12} strokeWidth={1.5} />
               <Text style={styles.metaText}>{formatShortDate(session.sessionDate)}</Text>
             </View>
             {session.location ? (
               <View style={styles.metaItem}>
-                <MapPin color="rgba(26,28,28,0.55)" size={12} strokeWidth={1.5} />
+                <MapPin color={c.inkMuted} size={12} strokeWidth={1.5} />
                 <Text style={styles.metaText} numberOfLines={1}>
                   {session.location}
                 </Text>
@@ -165,7 +171,7 @@ function SessionRow({
             ) : null}
             {session.teacherFirstName ? (
               <View style={styles.metaItem}>
-                <User color="rgba(26,28,28,0.55)" size={12} strokeWidth={1.5} />
+                <User color={c.inkMuted} size={12} strokeWidth={1.5} />
                 <Text style={styles.metaText} numberOfLines={1}>
                   {session.teacherFirstName} {session.teacherLastName ?? ''}
                 </Text>
@@ -173,14 +179,15 @@ function SessionRow({
             ) : null}
           </View>
         </View>
-        <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
       </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -199,10 +206,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
@@ -211,7 +218,7 @@ const styles = StyleSheet.create({
   },
   groupHeader: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   row: {
@@ -224,7 +231,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -237,6 +244,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
   },
 });
+}
+

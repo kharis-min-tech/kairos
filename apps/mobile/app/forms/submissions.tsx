@@ -12,7 +12,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react-native';
-import { Badge, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type { FormSubmission, FormType } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -52,6 +61,8 @@ const STATUS_FILTERS: { key: 'all' | 'new' | 'reviewed' | 'converted' | 'dismiss
 ];
 
 export default function FormsSubmissions() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [formType, setFormType] = useState<FormType | 'all'>('all');
   const [status, setStatus] = useState<'all' | 'new' | 'reviewed' | 'converted' | 'dismissed'>('all');
@@ -73,7 +84,7 @@ export default function FormsSubmissions() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Form submissions</Text>
         <View style={{ width: 24 }} />
@@ -139,16 +150,16 @@ export default function FormsSubmissions() {
           <RefreshControl
             refreshing={rows.isFetching}
             onRefresh={() => rows.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {rows.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <FileText color={colors.primary} size={22} strokeWidth={1.5} />
+              <FileText color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>No submissions</Text>
             <Text style={styles.emptyMeta}>
@@ -164,6 +175,8 @@ export default function FormsSubmissions() {
 }
 
 function Row({ row }: { row: FormSubmission }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const formLabel = FORM_LABEL[row.formType] ?? row.formType;
   const statusTone = STATUS_TONE[row.status] ?? 'neutral';
   const subject = (row.payload as { firstName?: string; lastName?: string }) ?? {};
@@ -182,13 +195,14 @@ function Row({ row }: { row: FormSubmission }) {
         </Text>
       </View>
       <Badge label={row.status} variant={statusTone} size="sm" />
-      <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+      <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
     </Card>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,7 +210,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   filters: {
     paddingBottom: spacing.sm,
     gap: spacing.xs,
@@ -212,14 +226,14 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipActive: { backgroundColor: c.primary },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
-  statusChip: { borderWidth: 1, borderColor: 'rgba(26,28,28,0.08)', backgroundColor: colors.cardLight },
-  statusChipActive: { borderColor: colors.gold, backgroundColor: 'rgba(248,181,55,0.15)' },
-  statusChipLabelActive: { color: colors.goldDark },
+  statusChip: { borderWidth: 1, borderColor: c.divider, backgroundColor: c.card },
+  statusChipActive: { borderColor: c.gold, backgroundColor: 'rgba(248,181,55,0.15)' },
+  statusChipLabelActive: { color: c.goldDark },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -235,8 +249,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowTitle: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
   empty: { alignItems: 'center', gap: spacing.xs },
   emptyIcon: {
     width: 44,
@@ -247,10 +261,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
 });
+}
+

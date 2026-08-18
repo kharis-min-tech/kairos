@@ -15,10 +15,12 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { CreateFellowshipRequest, FellowshipType } from '@kairos/types';
 import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
@@ -76,6 +78,8 @@ export function FellowshipForm({
   onSubmit,
   footer,
 }: FellowshipFormProps) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const branches = useQuery({
     queryKey: ['branches', 'listPublic'],
     queryFn: async () => (await api.branches.listPublic()).data ?? [],
@@ -275,6 +279,8 @@ export function FellowshipForm({
 }
 
 function FieldLabel({ label, required }: { label: string; required?: boolean }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.fieldLabelRow}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -294,6 +300,8 @@ function PickerField({
   onPress: () => void;
   error?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={{ gap: 4 }}>
       <Pressable
@@ -303,7 +311,7 @@ function PickerField({
         <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
           {value || placeholder}
         </Text>
-        <ChevronRight color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+        <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
       </Pressable>
       {error ? <Text style={styles.errorLine}>{error}</Text> : null}
     </View>
@@ -325,6 +333,8 @@ function PickerSheet({
   selected: string;
   onSelect: (value: string) => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.modalBackdrop} onPress={onClose}>
@@ -352,7 +362,7 @@ function PickerSheet({
                     {opt.label}
                   </Text>
                   {isSelected ? (
-                    <Check color={colors.primary} size={16} strokeWidth={2} />
+                    <Check color={c.primary} size={16} strokeWidth={2} />
                   ) : null}
                 </Pressable>
               );
@@ -367,7 +377,8 @@ function PickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -375,7 +386,7 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   fieldLabelRow: {
     flexDirection: 'row',
@@ -384,36 +395,36 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
   },
   requiredMark: {
     ...typography.eyebrow,
-    color: colors.danger,
+    color: c.danger,
   },
   pickerField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
+    borderColor: c.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
   pickerFieldError: {
-    borderColor: colors.danger,
+    borderColor: c.danger,
     borderWidth: 1.5,
   },
-  pickerValue: { ...typography.body, color: colors.ink, flex: 1 },
+  pickerValue: { ...typography.body, color: c.ink, flex: 1 },
   pickerPlaceholder: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     flex: 1,
   },
   errorLine: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
   },
   modalBackdrop: {
     flex: 1,
@@ -421,7 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     paddingHorizontal: spacing.lg,
@@ -433,12 +444,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
   },
   sheetTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   sheetOption: {
     flexDirection: 'row',
@@ -447,14 +458,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(26,28,28,0.08)',
+    borderBottomColor: c.divider,
   },
   sheetOptionActive: {
     backgroundColor: 'rgba(93,63,211,0.06)',
   },
-  sheetOptionLabel: { ...typography.body, color: colors.ink },
+  sheetOptionLabel: { ...typography.body, color: c.ink },
   sheetOptionLabelActive: {
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   sheetCancel: {
@@ -463,6 +474,8 @@ const styles = StyleSheet.create({
   },
   sheetCancelLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
 });
+}
+

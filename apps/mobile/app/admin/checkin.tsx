@@ -15,10 +15,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Search, ScanLine, UserPlus } from 'lucide-react-native';
-import { Avatar, Badge, Button, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
+import {
+  Avatar,
+  Badge,
+  Button,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 export default function AdminCheckin() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
@@ -131,14 +144,14 @@ export default function AdminCheckin() {
           size="sm"
           variant="outline"
           onPress={() => alert.info('Walk-in', 'Visitor walk-in form lands in a follow-up.')}
-          iconLeft={<UserPlus color={colors.primary} size={14} strokeWidth={2} />}
+          iconLeft={<UserPlus color={c.primary} size={14} strokeWidth={2} />}
         />
         <View style={styles.searchField}>
-          <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+          <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search"
-            placeholderTextColor="rgba(26,28,28,0.4)"
+            placeholderTextColor={c.inkFaded}
             value={search}
             onChangeText={setSearch}
             autoCapitalize="none"
@@ -163,7 +176,7 @@ export default function AdminCheckin() {
             <RefreshControl
               refreshing={roster.isFetching}
               onRefresh={() => roster.refetch()}
-              tintColor={colors.primary}
+              tintColor={c.primary}
             />
           }
           ListHeaderComponent={
@@ -173,7 +186,7 @@ export default function AdminCheckin() {
           }
           ListEmptyComponent={
             roster.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
             ) : (
               <Text style={styles.emptyText}>No matches.</Text>
             )
@@ -223,6 +236,8 @@ export default function AdminCheckin() {
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.statTile}>
       <Text style={styles.statValue}>{value}</Text>
@@ -231,8 +246,9 @@ function StatTile({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   gradientHeader: {
     paddingBottom: spacing.md,
   },
@@ -277,7 +293,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
   },
   liveLabel: {
     ...typography.meta,
@@ -314,18 +330,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.pageLight,
+    backgroundColor: c.page,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(26,28,28,0.06)',
+    borderBottomColor: c.divider,
   },
   searchField: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
     borderRadius: radii.md,
     paddingHorizontal: spacing.sm,
     height: 36,
@@ -333,7 +349,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
   },
 
   emptyBlock: {
@@ -341,15 +357,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
   emptyText: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xl,
   },
@@ -361,22 +377,24 @@ const styles = StyleSheet.create({
   },
   queueLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
   rowCheckedIn: {
     borderLeftWidth: 3,
-    borderLeftColor: colors.success,
+    borderLeftColor: c.success,
   },
   rowText: { flex: 1, gap: spacing.xs },
-  rowName: { ...typography.cardTitle, color: colors.ink },
-  rowMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  rowName: { ...typography.cardTitle, color: c.ink },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
 });
+}
+

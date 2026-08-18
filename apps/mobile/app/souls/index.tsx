@@ -25,10 +25,12 @@ import {
   Badge,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -82,6 +84,8 @@ interface SoulRow {
 }
 
 export default function SoulsDirectory() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
@@ -119,11 +123,11 @@ export default function SoulsDirectory() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Souls</Text>
         <Pressable onPress={() => router.push('/follow-ups')} hitSlop={8}>
-          <Handshake color={colors.primary} size={22} strokeWidth={1.5} />
+          <Handshake color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
       </View>
 
@@ -135,12 +139,12 @@ export default function SoulsDirectory() {
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
-            <Search color="rgba(26,28,28,0.4)" size={16} strokeWidth={1.5} />
+            <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           }
           trailingSlot={
             searchInput.length > 0 ? (
               <Pressable onPress={() => setSearchInput('')} hitSlop={8}>
-                <X color="rgba(26,28,28,0.5)" size={14} strokeWidth={1.5} />
+                <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
             ) : null
           }
@@ -206,13 +210,13 @@ export default function SoulsDirectory() {
           <RefreshControl
             refreshing={list.isRefetching}
             onRefresh={() => list.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
         ListHeaderComponent={
           <View style={{ marginBottom: spacing.md }}>
             {list.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+              <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
             ) : null}
             {list.isError ? (
               <Card padding="md">
@@ -235,7 +239,7 @@ export default function SoulsDirectory() {
           showEmpty ? (
             <Card padding="md" style={styles.emptyCard}>
               <View style={styles.emptyIconTile}>
-                <Handshake color={colors.primary} size={22} strokeWidth={1.5} />
+                <Handshake color={c.primary} size={22} strokeWidth={1.5} />
               </View>
               <Text style={styles.emptyTitle}>No souls found</Text>
               <Text style={styles.emptyMeta}>
@@ -263,7 +267,7 @@ export default function SoulsDirectory() {
                 <View style={styles.rowMetaLine}>
                   {s.phone ? (
                     <>
-                      <Phone color="rgba(26,28,28,0.45)" size={12} strokeWidth={1.5} />
+                      <Phone color={c.inkFaded} size={12} strokeWidth={1.5} />
                       <Text style={styles.rowMeta}>{s.phone}</Text>
                     </>
                   ) : (
@@ -274,8 +278,8 @@ export default function SoulsDirectory() {
                   {s.isOverdue ? (
                     <>
                       <Text style={styles.rowMetaDot}>·</Text>
-                      <AlertCircle color={colors.danger} size={12} strokeWidth={1.5} />
-                      <Text style={[styles.rowMeta, { color: colors.danger }]}>Overdue</Text>
+                      <AlertCircle color={c.danger} size={12} strokeWidth={1.5} />
+                      <Text style={[styles.rowMeta, { color: c.danger }]}>Overdue</Text>
                     </>
                   ) : null}
                 </View>
@@ -287,13 +291,13 @@ export default function SoulsDirectory() {
                   <Text style={styles.rowSubMeta}>Unassigned</Text>
                 )}
               </View>
-              <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+              <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
             </Card>
           </Pressable>
         )}
         ListFooterComponent={
           list.isFetchingNextPage ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : rows.length > 0 ? (
@@ -305,8 +309,9 @@ export default function SoulsDirectory() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -314,7 +319,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -331,14 +336,14 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   statusChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   statusChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   statusChipLabelActive: {
@@ -356,15 +361,15 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: radii.xs,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.3)',
+    borderColor: c.inkVeryFaded,
     alignItems: 'center',
     justifyContent: 'center',
   },
   overdueBoxChecked: {
-    backgroundColor: colors.danger,
-    borderColor: colors.danger,
+    backgroundColor: c.danger,
+    borderColor: c.danger,
   },
-  overdueLabel: { ...typography.meta, color: colors.ink },
+  overdueLabel: { ...typography.meta, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingTop: 0,
@@ -372,7 +377,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
   rowWrap: {
@@ -388,7 +393,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  rowName: { ...typography.body, color: colors.ink, fontWeight: '600', flex: 1 },
+  rowName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMetaLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,15 +403,15 @@ const styles = StyleSheet.create({
   },
   rowMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   rowMetaDot: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   rowSubMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     marginTop: 2,
   },
   emptyCard: {
@@ -421,21 +426,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   endOfList: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.4)',
+    color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.md,
   },
 });
+}
+

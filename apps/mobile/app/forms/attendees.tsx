@@ -17,10 +17,11 @@ import {
   Badge,
   Button,
   Card,
-  colors,
-  radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
@@ -32,6 +33,8 @@ import { alert } from '@/lib/alert';
  * to either promote (via NB enrollment elsewhere) or archive in bulk.
  */
 export default function FormsAttendees() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -84,7 +87,7 @@ export default function FormsAttendees() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Dormant attendees</Text>
         <View style={{ width: 24 }} />
@@ -101,16 +104,16 @@ export default function FormsAttendees() {
           <RefreshControl
             refreshing={rows.isFetching}
             onRefresh={() => rows.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {rows.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <Users color={colors.primary} size={22} strokeWidth={1.5} />
+              <Users color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>All caught up</Text>
             <Text style={styles.emptyMeta}>
@@ -174,8 +177,9 @@ export default function FormsAttendees() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -183,10 +187,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   subMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
     lineHeight: 16,
@@ -207,13 +211,13 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.3)',
+    borderColor: c.inkVeryFaded,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  name: { ...typography.body, color: colors.ink, fontWeight: '600' },
-  meta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  checkOn: { backgroundColor: c.primary, borderColor: c.primary },
+  name: { ...typography.body, color: c.ink, fontWeight: '600' },
+  meta: { ...typography.meta, color: c.inkMuted },
   empty: { alignItems: 'center', gap: spacing.xs },
   emptyIcon: {
     width: 44,
@@ -224,10 +228,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
   footerBar: {
@@ -237,10 +241,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     padding: spacing.lg,
     paddingBottom: spacing.xl,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
     flexDirection: 'row',
     gap: spacing.sm,
   },
 });
+}
+

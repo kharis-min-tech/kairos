@@ -11,7 +11,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, FileText } from 'lucide-react-native';
-import { Badge, Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Badge,
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { FormSubmission, FormSubmissionStatus, FormType } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
@@ -61,6 +70,8 @@ function formatDate(iso: string | Date): string {
 }
 
 export default function MyFormSubmissions() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const submissions = useQuery({
     queryKey: ['me', 'form-submissions'],
@@ -73,7 +84,7 @@ export default function MyFormSubmissions() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My submissions</Text>
         <View style={{ width: 24 }} />
@@ -85,7 +96,7 @@ export default function MyFormSubmissions() {
           <RefreshControl
             refreshing={submissions.isFetching}
             onRefresh={() => submissions.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
@@ -97,7 +108,7 @@ export default function MyFormSubmissions() {
         </View>
 
         {submissions.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
         ) : null}
 
         {submissions.isError ? (
@@ -114,7 +125,7 @@ export default function MyFormSubmissions() {
         {submissions.data && rows.length === 0 ? (
           <Card padding="md" style={styles.emptyCard}>
             <View style={styles.emptyIconTile}>
-              <FileText color={colors.primary} size={22} strokeWidth={1.5} />
+              <FileText color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>Nothing here yet</Text>
             <Text style={styles.emptyMeta}>
@@ -134,7 +145,7 @@ export default function MyFormSubmissions() {
               return (
                 <Card key={row.id} padding="md" style={styles.rowCard}>
                   <View style={styles.rowIconTile}>
-                    <FileText color={colors.primary} size={18} strokeWidth={1.5} />
+                    <FileText color={c.primary} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={styles.rowTitleLine}>
@@ -172,8 +183,9 @@ export default function MyFormSubmissions() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -181,18 +193,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   list: {
     gap: spacing.sm,
@@ -218,13 +230,13 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
     flex: 1,
   },
   rowSubject: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
   },
   rowMetaLine: {
     flexDirection: 'row',
@@ -234,11 +246,11 @@ const styles = StyleSheet.create({
   },
   rowMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   rowMetaDot: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
   },
   emptyCard: {
     alignItems: 'center',
@@ -252,11 +264,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
 });
+}
+

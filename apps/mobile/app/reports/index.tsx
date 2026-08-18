@@ -27,7 +27,16 @@ import {
   Filter,
 } from 'lucide-react-native';
 import Svg, { Rect, Circle, Line as SvgLine, Text as SvgText, G } from 'react-native-svg';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  colors,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { AttendanceHeatmap, FrequencyBucketKey } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { formatShortDate } from '@kairos/core';
@@ -66,6 +75,8 @@ function formatPct(rate: number): string {
 type ScopeKind = 'branch' | 'department' | 'fellowship';
 
 export default function Reports() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const [engagedWindowMonths, setEngagedWindowMonths] = useState<WindowMonths>(3);
   const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
@@ -185,7 +196,7 @@ export default function Reports() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>Reports</Text>
@@ -197,7 +208,7 @@ export default function Reports() {
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={refresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={isFetching} onRefresh={refresh} tintColor={c.primary} />
         }
       >
         <View style={styles.scopeRow}>
@@ -209,7 +220,7 @@ export default function Reports() {
             ]}
           >
             <Filter
-              color={scopeKind === 'branch' ? '#ffffff' : colors.primary}
+              color={scopeKind === 'branch' ? '#ffffff' : c.primary}
               size={12}
               strokeWidth={1.5}
             />
@@ -255,7 +266,7 @@ export default function Reports() {
         <View>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconTile}>
-              <PieChart color={colors.primary} size={14} strokeWidth={1.5} />
+              <PieChart color={c.primary} size={14} strokeWidth={1.5} />
             </View>
             <Text style={styles.sectionTitle}>How often people show up</Text>
           </View>
@@ -336,6 +347,8 @@ function ScopePickerModal({
   scopeId: string | null;
   onPick: (kind: ScopeKind, id: string | null) => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.scopeBackdrop} onPress={onClose}>
@@ -352,7 +365,7 @@ function ScopePickerModal({
           >
             <Text style={styles.scopeSheetRowLabel}>Whole branch</Text>
             {scopeKind === 'branch' ? (
-              <Check color={colors.primary} size={16} strokeWidth={2} />
+              <Check color={c.primary} size={16} strokeWidth={2} />
             ) : null}
           </Pressable>
 
@@ -371,10 +384,10 @@ function ScopePickerModal({
                   >
                     <Text style={styles.scopeSheetRowLabel}>{d.departmentName}</Text>
                     {active ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : (
                       <ChevronRight
-                        color="rgba(26,28,28,0.3)"
+                        color={c.inkVeryFaded}
                         size={14}
                         strokeWidth={1.5}
                       />
@@ -400,10 +413,10 @@ function ScopePickerModal({
                   >
                     <Text style={styles.scopeSheetRowLabel}>{f.fellowshipName}</Text>
                     {active ? (
-                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                      <Check color={c.primary} size={16} strokeWidth={2} />
                     ) : (
                       <ChevronRight
-                        color="rgba(26,28,28,0.3)"
+                        color={c.inkVeryFaded}
                         size={14}
                         strokeWidth={1.5}
                       />
@@ -431,10 +444,12 @@ function SummaryTile({
   loading: boolean;
   error: unknown;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   if (loading) {
     return (
       <Card padding="md">
-        <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+        <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
       </Card>
     );
   }
@@ -463,9 +478,9 @@ function SummaryTile({
           </Text>
         </View>
         <View style={styles.miniStats}>
-          <MiniStat label="Present" value={bd.present} tone={colors.successText} />
-          <MiniStat label="Late" value={bd.late} tone={colors.goldDark} />
-          <MiniStat label="Virtual" value={bd.virtual} tone={colors.info} />
+          <MiniStat label="Present" value={bd.present} tone={c.successText} />
+          <MiniStat label="Late" value={bd.late} tone={c.goldDark} />
+          <MiniStat label="Virtual" value={bd.virtual} tone={c.info} />
         </View>
       </View>
     </Card>
@@ -473,6 +488,8 @@ function SummaryTile({
 }
 
 function MiniStat({ label, value, tone }: { label: string; value: number; tone: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.miniStat}>
       <Text style={[styles.miniStatValue, { color: tone }]}>{value.toLocaleString()}</Text>
@@ -490,6 +507,8 @@ function TrendsCard({
   loading: boolean;
   error: unknown;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const priorAvg = useMemo(() => {
     if (data.length < 2) return 0;
     const prior = data.slice(0, -1);
@@ -508,13 +527,13 @@ function TrendsCard({
     <View>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <BarChart3 color={colors.primary} size={14} strokeWidth={1.5} />
+          <BarChart3 color={c.primary} size={14} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionTitle}>Weekly attendance</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.md }}>
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
         ) : error ? (
           <Text style={styles.errorLine}>
             {error instanceof Error ? error.message : 'Could not load trends.'}
@@ -541,14 +560,14 @@ function TrendsCard({
                     ]}
                   >
                     {trendUp ? (
-                      <TrendingUp color={colors.successText} size={14} strokeWidth={2} />
+                      <TrendingUp color={c.successText} size={14} strokeWidth={2} />
                     ) : (
-                      <TrendingDown color={colors.danger} size={14} strokeWidth={2} />
+                      <TrendingDown color={c.danger} size={14} strokeWidth={2} />
                     )}
                     <Text
                       style={[
                         styles.deltaLabel,
-                        { color: trendUp ? colors.successText : colors.danger },
+                        { color: trendUp ? c.successText : c.danger },
                       ]}
                     >
                       {delta > 0 ? `+${delta}%` : `${delta}%`}
@@ -570,6 +589,8 @@ function TrendsChart({
 }: {
   data: { weekStart: string; attendees: number; distinctAttendees: number }[];
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const width = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
   const height = 140;
   const paddingLeft = 28;
@@ -597,7 +618,7 @@ function TrendsChart({
                 x2={paddingLeft + innerW}
                 y1={y}
                 y2={y}
-                stroke="rgba(26,28,28,0.08)"
+                stroke={c.divider}
                 strokeWidth={1}
               />
             );
@@ -611,7 +632,7 @@ function TrendsChart({
                 x={paddingLeft - 4}
                 y={y + 3}
                 fontSize={9}
-                fill="rgba(26,28,28,0.45)"
+                fill={c.inkFaded}
                 textAnchor="end"
               >
                 {value}
@@ -632,7 +653,7 @@ function TrendsChart({
                 width={barW}
                 height={barH}
                 rx={2}
-                fill={colors.primary}
+                fill={c.primary}
                 opacity={0.85}
               />
             );
@@ -648,7 +669,7 @@ function TrendsChart({
                 cx={cx}
                 cy={cy}
                 r={2.5}
-                fill={colors.gold}
+                fill={c.gold}
               />
             );
           })}
@@ -665,7 +686,7 @@ function TrendsChart({
                 x2={x2}
                 y1={y1}
                 y2={y2}
-                stroke={colors.gold}
+                stroke={c.gold}
                 strokeWidth={1.5}
               />
             );
@@ -683,7 +704,7 @@ function TrendsChart({
                 x={cx}
                 y={height - 6}
                 fontSize={8}
-                fill="rgba(26,28,28,0.45)"
+                fill={c.inkFaded}
                 textAnchor="middle"
               >
                 {formatShortDate(p.weekStart, '')}
@@ -694,11 +715,11 @@ function TrendsChart({
       </Svg>
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.primary }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: c.primary }]} />
           <Text style={styles.legendLabel}>Check-ins</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.gold }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: c.gold }]} />
           <Text style={styles.legendLabel}>Distinct members</Text>
         </View>
       </View>
@@ -728,10 +749,12 @@ function FrequencyBucketsCard({
   loading: boolean;
   error: unknown;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   if (loading) {
     return (
       <Card padding="md">
-        <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+        <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
       </Card>
     );
   }
@@ -797,6 +820,8 @@ function FirstTimeReturningCard({
   loading: boolean;
   error: unknown;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const totals = useMemo(() => {
     let ft = 0;
     let ret = 0;
@@ -811,13 +836,13 @@ function FirstTimeReturningCard({
     <View>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <Sparkles color={colors.primary} size={14} strokeWidth={1.5} />
+          <Sparkles color={c.primary} size={14} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionTitle}>First-time vs returning</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.md }}>
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
         ) : error ? (
           <Text style={styles.errorLine}>
             {error instanceof Error ? error.message : 'Could not load this report.'}
@@ -832,7 +857,7 @@ function FirstTimeReturningCard({
                 <Text style={styles.headlineSub}>first-timers · last 8 weeks</Text>
               </View>
               <View style={styles.miniStats}>
-                <MiniStat label="Returning" value={totals.ret} tone={colors.primary} />
+                <MiniStat label="Returning" value={totals.ret} tone={c.primary} />
               </View>
             </View>
             <FirstTimeChart data={data} />
@@ -848,6 +873,8 @@ function FirstTimeChart({
 }: {
   data: { weekStart: string; firstTime: number; returning: number }[];
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const width = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
   const height = 120;
   const paddingLeft = 28;
@@ -873,7 +900,7 @@ function FirstTimeChart({
                 x2={paddingLeft + innerW}
                 y1={y}
                 y2={y}
-                stroke="rgba(26,28,28,0.08)"
+                stroke={c.divider}
                 strokeWidth={1}
               />
             );
@@ -887,7 +914,7 @@ function FirstTimeChart({
                 x={paddingLeft - 4}
                 y={y + 3}
                 fontSize={9}
-                fill="rgba(26,28,28,0.45)"
+                fill={c.inkFaded}
                 textAnchor="end"
               >
                 {value}
@@ -909,12 +936,12 @@ function FirstTimeChart({
                   y={retY}
                   width={barW}
                   height={retH}
-                  fill={colors.primary}
+                  fill={c.primary}
                   opacity={0.85}
                   rx={2}
                 />
                 {p.firstTime > 0 ? (
-                  <Rect x={x} y={ftY} width={barW} height={ftH} fill={colors.gold} rx={2} />
+                  <Rect x={x} y={ftY} width={barW} height={ftH} fill={c.gold} rx={2} />
                 ) : null}
               </G>
             );
@@ -932,7 +959,7 @@ function FirstTimeChart({
                 x={cx}
                 y={height - 6}
                 fontSize={8}
-                fill="rgba(26,28,28,0.45)"
+                fill={c.inkFaded}
                 textAnchor="middle"
               >
                 {formatShortDate(p.weekStart, '')}
@@ -943,11 +970,11 @@ function FirstTimeChart({
       </Svg>
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.gold }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: c.gold }]} />
           <Text style={styles.legendLabel}>First-time</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.primary }]} />
+          <View style={[styles.legendSwatch, { backgroundColor: c.primary }]} />
           <Text style={styles.legendLabel}>Returning</Text>
         </View>
       </View>
@@ -966,11 +993,13 @@ function HeatmapCard({
   error: unknown;
   hasBranch: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <LayoutGrid color={colors.primary} size={14} strokeWidth={1.5} />
+          <LayoutGrid color={c.primary} size={14} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionTitle}>Attendance heatmap</Text>
       </View>
@@ -980,7 +1009,7 @@ function HeatmapCard({
             Set a home branch on your profile to see the heatmap.
           </Text>
         ) : loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
         ) : error ? (
           <Text style={styles.errorLine}>
             {error instanceof Error ? error.message : 'Could not load this report.'}
@@ -1008,6 +1037,8 @@ const HEATMAP_ABSENT_BG = 'rgba(254,226,226,0.6)'; // red-100 @ 60%
 const HEATMAP_ABSENT_BORDER = '#fca5a5'; // red-300
 
 function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   // Render the last 8 services (most recent on the right) and the top 15
   // members by attendancePct. Anything beyond falls off the grid — the full
   // heatmap lives on web.
@@ -1144,18 +1175,20 @@ function MissingMembersCard({
   loading: boolean;
   error: unknown;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   return (
     <View>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <UserX color={colors.primary} size={14} strokeWidth={1.5} />
+          <UserX color={c.primary} size={14} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionTitle}>Not seen recently</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.sm }}>
         {loading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
         ) : error ? (
           <Text style={styles.errorLine}>
             {error instanceof Error ? error.message : 'Could not load this report.'}
@@ -1195,8 +1228,9 @@ function MissingMembersCard({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1205,8 +1239,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   headerText: { flex: 1, alignItems: 'center' },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
-  headerSub: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  headerSub: { ...typography.meta, color: c.inkMuted },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -1226,8 +1260,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionTitle: { ...typography.cardTitle, color: colors.ink, flex: 1 },
-  sectionEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
+  sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
+  sectionEyebrow: { ...typography.eyebrow, color: c.inkMuted },
   summaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1241,12 +1275,12 @@ const styles = StyleSheet.create({
   headlineNumber: {
     fontSize: 32,
     fontWeight: '800',
-    color: colors.ink,
+    color: c.ink,
     letterSpacing: -0.4,
   },
   headlineSub: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: 2,
   },
   miniStats: {
@@ -1263,7 +1297,7 @@ const styles = StyleSheet.create({
   },
   miniStatLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontSize: 10,
   },
   deltaChip: {
@@ -1287,14 +1321,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   windowChipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
   windowChipLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   windowChipLabelActive: {
@@ -1302,7 +1336,7 @@ const styles = StyleSheet.create({
   },
   subMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   freqRowTop: {
     flexDirection: 'row',
@@ -1311,17 +1345,17 @@ const styles = StyleSheet.create({
   },
   freqLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   freqCount: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '700',
   },
   freqPct: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontWeight: '500',
   },
   freqTrack: {
@@ -1335,7 +1369,7 @@ const styles = StyleSheet.create({
   },
   freqDesc: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontSize: 10,
     lineHeight: 14,
   },
@@ -1358,16 +1392,16 @@ const styles = StyleSheet.create({
   heatmapAxisLabel: {
     ...typography.meta,
     fontSize: 9,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
   heatmapNameLabel: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
   },
   legendLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
   },
   missingRow: {
     flexDirection: 'row',
@@ -1378,17 +1412,17 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(26,28,28,0.08)',
+    borderTopColor: c.divider,
   },
   missingName: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
     flex: 1,
   },
   missingMeta: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
   },
   missingSeeMore: {
     alignSelf: 'flex-end',
@@ -1398,22 +1432,22 @@ const styles = StyleSheet.create({
   },
   missingSeeMoreLabel: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     paddingVertical: spacing.sm,
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
@@ -1437,12 +1471,12 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   scopeChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   scopeChipLabel: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
   },
   scopeChipLabelActive: { color: '#ffffff' },
@@ -1452,7 +1486,7 @@ const styles = StyleSheet.create({
   },
   scopeClearLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     fontWeight: '600',
   },
 
@@ -1462,7 +1496,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   scopeSheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -1473,13 +1507,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     marginBottom: spacing.sm,
   },
-  scopeSheetTitle: { ...typography.cardTitle, color: colors.ink, marginBottom: spacing.xs },
+  scopeSheetTitle: { ...typography.cardTitle, color: c.ink, marginBottom: spacing.xs },
   scopeSheetHeader: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginTop: spacing.md,
     marginBottom: spacing.xs,
   },
@@ -1492,10 +1526,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   scopeSheetRowActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
-  scopeSheetRowLabel: { ...typography.body, color: colors.ink, flex: 1 },
+  scopeSheetRowLabel: { ...typography.body, color: c.ink, flex: 1 },
   scopeEmpty: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     padding: spacing.md,
   },
 });
+}
+

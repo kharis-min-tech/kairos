@@ -13,7 +13,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, ShieldCheck } from 'lucide-react-native';
-import { Button, Input, colors, gradients, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Button,
+  Input,
+  gradients,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
 const MIN_PASSWORD = 8;
@@ -24,6 +34,8 @@ const MIN_PASSWORD = 8;
  * tap opens straight into this screen with the token already populated.
  */
 export default function ResetPasswordScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token?: string }>();
   const [password, setPassword] = useState('');
@@ -57,7 +69,7 @@ export default function ResetPasswordScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Reset password</Text>
         <View style={{ width: 24 }} />
@@ -87,7 +99,7 @@ export default function ResetPasswordScreen() {
             {done ? (
               <>
                 <View style={styles.successBadge}>
-                  <ShieldCheck color={colors.success} size={22} strokeWidth={1.5} />
+                  <ShieldCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.title}>Password updated</Text>
                 <Text style={styles.body}>
@@ -168,8 +180,9 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   scroll: {
     padding: spacing.lg,
     gap: spacing.lg,
@@ -204,15 +217,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   card: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  title: { ...typography.screenTitle, color: colors.ink },
+  title: { ...typography.screenTitle, color: c.ink },
   body: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
   successBadge: {
@@ -229,8 +242,10 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     padding: spacing.sm,
     borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
+    borderLeftColor: c.danger,
     marginTop: spacing.sm,
   },
-  errorText: { ...typography.meta, color: colors.danger },
+  errorText: { ...typography.meta, color: c.danger },
 });
+}
+

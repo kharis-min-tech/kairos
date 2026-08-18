@@ -21,11 +21,13 @@ import {
   Badge,
   Button,
   Card,
-  colors,
   gradients,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { BranchWithRegion } from '@kairos/types';
 import { alert } from '@/lib/alert';
@@ -36,6 +38,8 @@ import { useAuthStore } from '@/store/auth';
 type Scope = 'home' | 'secondary';
 
 export default function MyBranch() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
@@ -88,7 +92,7 @@ export default function MyBranch() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My branch</Text>
         {active ? (
@@ -97,7 +101,7 @@ export default function MyBranch() {
             hitSlop={8}
             accessibilityLabel="Edit branch"
           >
-            <Pencil color={colors.primary} size={20} strokeWidth={1.5} />
+            <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
         ) : (
           <View style={{ width: 24 }} />
@@ -110,12 +114,12 @@ export default function MyBranch() {
           <RefreshControl
             refreshing={branches.isFetching || leadership.isFetching}
             onRefresh={refresh}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {branches.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
         {!branches.isLoading && !home ? <EmptyState /> : null}
@@ -218,7 +222,7 @@ export default function MyBranch() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconTile}>
-                    <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
+                    <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.sectionHeaderText}>Services</Text>
                 </View>
@@ -236,7 +240,7 @@ export default function MyBranch() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconTile}>
-                    <Map color={colors.primary} size={16} strokeWidth={1.5} />
+                    <Map color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.sectionHeaderText}>Leadership</Text>
                 </View>
@@ -294,6 +298,8 @@ interface SelfCheckInBranch {
 }
 
 function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const qc = useQueryClient();
   const [enabled, setEnabled] = useState(branch.selfCheckInEnabled);
   const [openBefore, setOpenBefore] = useState(String(branch.selfCheckInOpenMinutesBefore));
@@ -341,7 +347,7 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconTile}>
-          <ScanLine color={colors.primary} size={16} strokeWidth={1.5} />
+          <ScanLine color={c.primary} size={16} strokeWidth={1.5} />
         </View>
         <Text style={styles.sectionHeaderText}>Self check-in</Text>
       </View>
@@ -358,7 +364,7 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
           <Switch
             value={enabled}
             onValueChange={setEnabled}
-            trackColor={{ false: 'rgba(26,28,28,0.15)', true: colors.primary }}
+            trackColor={{ false: c.inkGhost, true: c.primary }}
             thumbColor="#ffffff"
           />
         </View>
@@ -408,6 +414,8 @@ function MinuteField({
   disabled?: boolean;
   hint?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={{ gap: 4 }}>
       <Text style={styles.settingTitle}>{label}</Text>
@@ -435,10 +443,12 @@ function ContactRow({
   label: string;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Pressable onPress={onPress} style={styles.contactRow}>
       <View style={styles.contactIconTile}>
-        <Icon color={colors.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.primary} size={16} strokeWidth={1.5} />
       </View>
       <Text style={styles.contactLabel} numberOfLines={2}>
         {label}
@@ -448,10 +458,12 @@ function ContactRow({
 }
 
 function EmptyState() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <Card padding="md" style={styles.emptyCard}>
       <View style={styles.emptyIconTile}>
-        <Map color={colors.primary} size={22} strokeWidth={1.5} />
+        <Map color={c.primary} size={22} strokeWidth={1.5} />
       </View>
       <Text style={styles.emptyTitle}>No home branch set</Text>
       <Text style={styles.emptyMeta}>
@@ -462,8 +474,9 @@ function EmptyState() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -471,7 +484,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -487,18 +500,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.md,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
     alignItems: 'flex-start',
     gap: 2,
   },
-  chipActive: { backgroundColor: colors.primary },
+  chipActive: { backgroundColor: c.primary },
   chipEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     letterSpacing: 1.1,
     fontSize: 10,
   },
-  chipLabel: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  chipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
   chipLabelActive: { color: '#ffffff' },
   heroCard: {
     borderRadius: radii.lg,
@@ -512,7 +525,7 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     ...typography.eyebrow,
-    color: colors.gold,
+    color: c.gold,
     letterSpacing: 1.2,
   },
   heroTitle: {
@@ -541,12 +554,12 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   sectionEyebrow: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     marginBottom: spacing.xs,
   },
   contactRow: {
@@ -565,47 +578,47 @@ const styles = StyleSheet.create({
   },
   contactLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
   serviceDay: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
     width: 90,
   },
   serviceType: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
   },
   serviceTime: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
   },
   leaderCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
   },
   leaderRole: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   leaderName: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   emptyCard: {
@@ -620,10 +633,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -634,26 +647,28 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   settingMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 16,
   },
   minuteInput: {
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.15)',
+    borderColor: c.inkGhost,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     ...typography.body,
-    color: colors.ink,
-    backgroundColor: colors.cardLight,
+    color: c.ink,
+    backgroundColor: c.card,
   },
   minuteInputDisabled: {
-    backgroundColor: colors.subtleLight,
-    color: 'rgba(26,28,28,0.4)',
+    backgroundColor: c.subtle,
+    color: c.inkFaded,
   },
 });
+}
+

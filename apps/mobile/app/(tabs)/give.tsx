@@ -1,11 +1,17 @@
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import { colors } from '@kairos/ui-native';
+import {
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 
 const GIVING_URL = 'https://kharis.org/giving/';
 
 export default function Give() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <WebView
@@ -14,7 +20,7 @@ export default function Give() {
         startInLoadingState
         renderLoading={() => (
           <View style={styles.loading}>
-            <ActivityIndicator color={colors.primary} size="large" />
+            <ActivityIndicator color={c.primary} size="large" />
           </View>
         )}
         // Giving stays on the web; keep any Stripe redirects inside the WebView.
@@ -24,8 +30,9 @@ export default function Give() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   webview: { flex: 1 },
   loading: {
     position: 'absolute',
@@ -35,6 +42,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pageLight,
+    backgroundColor: c.page,
   },
 });
+}
+

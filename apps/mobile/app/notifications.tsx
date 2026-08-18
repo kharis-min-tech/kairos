@@ -2,16 +2,26 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Bell } from 'lucide-react-native';
-import { Card, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Card,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 
 export default function Notifications() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={{ width: 24 }} />
@@ -23,7 +33,7 @@ export default function Notifications() {
 
       <View style={styles.emptyBlock}>
         <View style={styles.iconTile}>
-          <Bell color={colors.primary} size={22} strokeWidth={1.5} />
+          <Bell color={c.primary} size={22} strokeWidth={1.5} />
         </View>
         <Text style={styles.emptyTitle}>Nothing here yet</Text>
         <Text style={styles.emptyMeta}>
@@ -44,8 +54,9 @@ export default function Notifications() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -53,12 +64,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   subHeader: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  subTitle: { ...typography.screenTitle, color: colors.ink },
+  subTitle: { ...typography.screenTitle, color: c.ink },
   emptyBlock: {
     padding: spacing.xl,
     alignItems: 'center',
@@ -72,10 +83,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -83,6 +94,8 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     gap: spacing.xs,
   },
-  metaEyebrow: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
-  metaLine: { ...typography.body, color: 'rgba(26,28,28,0.65)' },
+  metaEyebrow: { ...typography.eyebrow, color: c.inkMuted },
+  metaLine: { ...typography.body, color: c.inkMuted },
 });
+}
+

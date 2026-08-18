@@ -31,6 +31,9 @@ import {
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type {
   AttendanceStatus,
@@ -105,6 +108,8 @@ function formatMeetingDate(iso: string | Date): string {
 }
 
 export default function RollcallMeeting() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const params = useLocalSearchParams<{ fellowshipId: string; meetingId: string }>();
@@ -329,7 +334,7 @@ export default function RollcallMeeting() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Rollcall</Text>
         <View style={{ width: 24 }} />
@@ -347,7 +352,7 @@ export default function RollcallMeeting() {
           <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
             {meeting ? (
               <View style={styles.meetingBanner}>
-                <Calendar color={colors.primary} size={16} strokeWidth={1.5} />
+                <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                 <Text style={styles.meetingBannerLabel}>
                   {meeting.meetingTitle ?? 'Meeting'} ·{' '}
                   {formatMeetingDate(meeting.meetingDate)}
@@ -357,7 +362,7 @@ export default function RollcallMeeting() {
 
             {pendingLocally ? (
               <View style={styles.offlineBanner}>
-                <CloudOff color={colors.goldDark} size={16} strokeWidth={1.5} />
+                <CloudOff color={c.goldDark} size={16} strokeWidth={1.5} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.offlineTitle}>Saved locally · will sync</Text>
                   <Text style={styles.offlineMeta}>
@@ -405,8 +410,8 @@ export default function RollcallMeeting() {
                   onPress={() => markAll('Present')}
                   hitSlop={4}
                 >
-                  <CheckCheck color={colors.successText} size={14} strokeWidth={2} />
-                  <Text style={[styles.batchBtnLabel, { color: colors.successText }]}>
+                  <CheckCheck color={c.successText} size={14} strokeWidth={2} />
+                  <Text style={[styles.batchBtnLabel, { color: c.successText }]}>
                     All present
                   </Text>
                 </Pressable>
@@ -415,8 +420,8 @@ export default function RollcallMeeting() {
                   onPress={() => markAll('Absent')}
                   hitSlop={4}
                 >
-                  <UserX color={colors.danger} size={14} strokeWidth={2} />
-                  <Text style={[styles.batchBtnLabel, { color: colors.danger }]}>
+                  <UserX color={c.danger} size={14} strokeWidth={2} />
+                  <Text style={[styles.batchBtnLabel, { color: c.danger }]}>
                     All not-here
                   </Text>
                 </Pressable>
@@ -425,7 +430,7 @@ export default function RollcallMeeting() {
 
             {isBusy ? (
               <ActivityIndicator
-                color={colors.primary}
+                color={c.primary}
                 style={{ marginTop: spacing.md }}
               />
             ) : null}
@@ -574,8 +579,9 @@ export default function RollcallMeeting() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -583,7 +589,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -599,7 +605,7 @@ const styles = StyleSheet.create({
   },
   meetingBannerLabel: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
     flex: 1,
   },
@@ -616,13 +622,13 @@ const styles = StyleSheet.create({
   },
   offlineTitle: {
     ...typography.body,
-    color: colors.goldDark,
+    color: c.goldDark,
     fontWeight: '700',
     fontSize: 13,
   },
   offlineMeta: {
     ...typography.meta,
-    color: colors.goldDark,
+    color: c.goldDark,
     marginTop: 2,
     lineHeight: 14,
   },
@@ -630,7 +636,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    backgroundColor: colors.goldDark,
+    backgroundColor: c.goldDark,
   },
   retryBtnLabel: {
     ...typography.meta,
@@ -668,9 +674,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingVertical: spacing.sm,
     borderRadius: radii.md,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.1)',
+    borderColor: c.border,
   },
   batchBtnLabel: {
     ...typography.meta,
@@ -684,8 +690,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
-    backgroundColor: colors.cardLight,
-    borderColor: 'rgba(26,28,28,0.06)',
+    backgroundColor: c.card,
+    borderColor: c.divider,
   },
   memberRowFirst: {
     borderTopLeftRadius: radii.md,
@@ -704,7 +710,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flex: 1,
   },
-  memberName: { ...typography.body, color: colors.ink, fontWeight: '500' },
+  memberName: { ...typography.body, color: c.ink, fontWeight: '500' },
   statusPill: {
     minWidth: 92,
     paddingHorizontal: spacing.md,
@@ -720,12 +726,12 @@ const styles = StyleSheet.create({
   },
   emptyLine: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     textAlign: 'center',
   },
   footnote: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
   },
@@ -735,7 +741,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   pickerSheet: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     padding: spacing.lg,
@@ -745,18 +751,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(26,28,28,0.15)',
+    backgroundColor: c.inkGhost,
     alignSelf: 'center',
     marginBottom: spacing.md,
   },
   pickerTitle: {
     ...typography.cardTitle,
-    color: colors.ink,
+    color: c.ink,
     fontSize: 17,
   },
   pickerSub: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     marginTop: 2,
   },
   pickerOption: {
@@ -768,11 +774,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: 'transparent',
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
   },
   pickerOptionLabel: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '500',
   },
   pickerCancel: {
@@ -782,6 +788,8 @@ const styles = StyleSheet.create({
   },
   pickerCancelLabel: {
     ...typography.button,
-    color: colors.primary,
+    color: c.primary,
   },
 });
+}
+

@@ -20,10 +20,12 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import type { DeleteAccountRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
@@ -32,6 +34,8 @@ import { useAuthStore } from '@/store/auth';
 const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
 export default function DataPrivacy() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -159,7 +163,7 @@ ${sections}
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Data &amp; privacy</Text>
         <View style={{ width: 24 }} />
@@ -176,7 +180,7 @@ ${sections}
         <Card padding="md" style={styles.actionCard}>
           <View style={styles.actionHeader}>
             <View style={[styles.iconTile, { backgroundColor: 'rgba(93,63,211,0.1)' }]}>
-              <Download color={colors.primary} size={18} strokeWidth={1.5} />
+              <Download color={c.primary} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.actionTitle}>Export my data</Text>
@@ -199,7 +203,7 @@ ${sections}
         <Card padding="md" style={styles.actionCard}>
           <View style={styles.actionHeader}>
             <View style={[styles.iconTile, { backgroundColor: 'rgba(225,29,72,0.1)' }]}>
-              <Trash2 color={colors.danger} size={18} strokeWidth={1.5} />
+              <Trash2 color={c.danger} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.actionTitle}>Delete my account</Text>
@@ -228,7 +232,7 @@ ${sections}
           <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <ShieldOff color={colors.danger} size={20} strokeWidth={1.5} />
+              <ShieldOff color={c.danger} size={20} strokeWidth={1.5} />
               <Text style={styles.modalTitle}>Delete my account</Text>
             </View>
             <Text style={styles.modalDescription}>
@@ -287,8 +291,9 @@ ${sections}
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -296,15 +301,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   actionCard: {
     gap: spacing.md,
   },
@@ -320,10 +325,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionTitle: { ...typography.body, color: colors.ink, fontWeight: '600' },
+  actionTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   actionMeta: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   deleteButton: {
@@ -337,7 +342,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonLabel: {
     ...typography.button,
-    color: colors.danger,
+    color: c.danger,
     fontSize: 13,
   },
   modalBackdrop: {
@@ -347,7 +352,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   modalCard: {
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.sm,
@@ -359,17 +364,17 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...typography.cardTitle,
-    color: colors.danger,
+    color: c.danger,
     fontSize: 17,
   },
   modalDescription: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.75)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
   modalError: {
     ...typography.meta,
-    color: colors.danger,
+    color: c.danger,
   },
   modalFooter: {
     flexDirection: 'row',
@@ -381,7 +386,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderRadius: radii.lg,
-    backgroundColor: colors.danger,
+    backgroundColor: c.danger,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
@@ -391,3 +396,5 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 });
+}
+

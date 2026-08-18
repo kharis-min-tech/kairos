@@ -12,12 +12,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Search, Check } from 'lucide-react-native';
-import { Button, Badge, ProgressBar, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Button,
+  Badge,
+  ProgressBar,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import type { BranchWithRegion } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useOnboardingStore } from '@/store/onboarding';
 
 export default function BranchScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const savedBranchId = useOnboardingStore((s) => s.branchId);
   const setBranchId = useOnboardingStore((s) => s.setBranchId);
@@ -46,10 +58,10 @@ export default function BranchScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <View style={styles.progressWrap}>
-          <ProgressBar value={2 / 3} color={colors.primary} height={4} />
+          <ProgressBar value={2 / 3} color={c.primary} height={4} />
         </View>
         <Text style={styles.stepLabel}>2 of 3</Text>
       </View>
@@ -58,11 +70,11 @@ export default function BranchScreen() {
         <Text style={styles.title}>Where do you fellowship?</Text>
 
         <View style={styles.searchField}>
-          <Search color="rgba(26,28,28,0.4)" size={18} strokeWidth={1.5} />
+          <Search color={c.inkFaded} size={18} strokeWidth={1.5} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search branches"
-            placeholderTextColor="rgba(26,28,28,0.4)"
+            placeholderTextColor={c.inkFaded}
             value={search}
             onChangeText={setSearch}
             autoCapitalize="none"
@@ -71,7 +83,7 @@ export default function BranchScreen() {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : null}
 
         {isError ? (
@@ -132,8 +144,9 @@ export default function BranchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -144,7 +157,7 @@ const styles = StyleSheet.create({
   progressWrap: { flex: 1 },
   stepLabel: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   scroll: {
     paddingHorizontal: spacing.lg,
@@ -153,15 +166,15 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
   },
   searchField: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     height: 44,
@@ -169,32 +182,32 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
   },
   errorText: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     textAlign: 'center',
     marginTop: spacing.lg,
   },
   group: { gap: spacing.sm },
   groupLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardLight,
+    backgroundColor: c.card,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.08)',
+    borderColor: c.divider,
     padding: spacing.md,
     gap: spacing.md,
   },
   rowSelected: {
-    borderColor: colors.primary,
+    borderColor: c.primary,
     borderWidth: 1.5,
   },
   rowInfo: { flex: 1, gap: spacing.xs },
@@ -204,26 +217,28 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  rowTitle: { ...typography.cardTitle, color: colors.ink },
-  rowSub: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  rowTitle: { ...typography.cardTitle, color: c.ink },
+  rowSub: { ...typography.meta, color: c.inkMuted },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.2)',
+    borderColor: c.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
+    borderColor: c.primary,
+    backgroundColor: c.primary,
   },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(26,28,28,0.06)',
+    borderTopColor: c.divider,
   },
 });
+}
+

@@ -12,7 +12,15 @@ import {
   HandHeart,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { FORM_DEFINITIONS, type FormType } from '@kairos/types';
 
 interface FormTile {
@@ -62,13 +70,15 @@ const TILES: FormTile[] = [
 ];
 
 export default function FormsLanding() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Forms</Text>
         <View style={{ width: 24 }} />
@@ -92,7 +102,7 @@ export default function FormsLanding() {
               >
                 <Card padding="md" style={styles.tileCard}>
                   <View style={styles.iconTile}>
-                    <tile.Icon color={colors.primary} size={22} strokeWidth={1.5} />
+                    <tile.Icon color={c.primary} size={22} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.tileTitle}>{tile.title}</Text>
@@ -101,7 +111,7 @@ export default function FormsLanding() {
                       {declarative ? 'Open form' : 'View on web'}
                     </Text>
                   </View>
-                  <ChevronRight color="rgba(26,28,28,0.3)" size={18} strokeWidth={1.5} />
+                  <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
                 </Card>
               </Pressable>
             );
@@ -112,8 +122,9 @@ export default function FormsLanding() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -121,15 +132,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   introBlock: { gap: 2 },
-  introTitle: { ...typography.screenTitle, color: colors.ink },
-  introMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
   tileList: {
     gap: spacing.md,
   },
@@ -146,16 +157,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tileTitle: { ...typography.cardTitle, color: colors.ink },
+  tileTitle: { ...typography.cardTitle, color: c.ink },
   tileDesc: {
     ...typography.meta,
-    color: 'rgba(26,28,28,0.6)',
+    color: c.inkMuted,
     lineHeight: 15,
   },
   tileCta: {
     ...typography.meta,
-    color: colors.primary,
+    color: c.primary,
     fontWeight: '600',
     marginTop: 4,
   },
 });
+}
+

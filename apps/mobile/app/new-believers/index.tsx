@@ -11,7 +11,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Check, Circle, CalendarClock } from 'lucide-react-native';
-import { Avatar, Card, Badge, ProgressBar, colors, spacing, typography, radii } from '@kairos/ui-native';
+import {
+  Avatar,
+  Card,
+  Badge,
+  ProgressBar,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
@@ -26,6 +37,8 @@ const SESSION_TITLES = [
 const TOTAL_SESSIONS = SESSION_TITLES.length;
 
 export default function NewBelievers() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ scope?: 'mine' | 'all' }>();
   const userId = useAuthStore((s) => s.user?.id);
@@ -46,7 +59,7 @@ export default function NewBelievers() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {personalScope ? 'My New Believer journey' : 'New Believers pipeline'}
@@ -59,7 +72,7 @@ export default function NewBelievers() {
             hitSlop={8}
             accessibilityLabel="Open sessions"
           >
-            <CalendarClock color={colors.primary} size={22} strokeWidth={1.5} />
+            <CalendarClock color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
         )}
       </View>
@@ -70,12 +83,12 @@ export default function NewBelievers() {
           <RefreshControl
             refreshing={enrollments.isFetching}
             onRefresh={() => enrollments.refetch()}
-            tintColor={colors.primary}
+            tintColor={c.primary}
           />
         }
       >
         {enrollments.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xxl }} />
+          <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (enrollments.data ?? []).length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>
@@ -140,6 +153,8 @@ function EnrollmentCard({
   mentorName,
   onPress,
 }: EnrollmentCardProps) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const progressValue = Math.min(1, completed / TOTAL_SESSIONS);
   const Wrapper = onPress ? Pressable : View;
   return (
@@ -167,7 +182,7 @@ function EnrollmentCard({
             {Math.round(progressValue * 100)}%
           </Text>
         </View>
-        <ProgressBar value={progressValue} color={colors.gold} height={6} />
+        <ProgressBar value={progressValue} color={c.gold} height={6} />
       </View>
 
       <View style={styles.timeline}>
@@ -186,7 +201,7 @@ function EnrollmentCard({
                 {isDone ? (
                   <Check color="#ffffff" size={10} strokeWidth={2.5} />
                 ) : isActive ? (
-                  <Circle color={colors.goldDark} size={8} strokeWidth={2} />
+                  <Circle color={c.goldDark} size={8} strokeWidth={2} />
                 ) : null}
               </View>
               <Text
@@ -217,6 +232,8 @@ function EnrollmentCard({
 }
 
 function RoleTile({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   return (
     <View style={styles.roleTile}>
       <Text style={styles.roleLabel}>{label}</Text>
@@ -230,8 +247,9 @@ function countCompleted(sessionCompletedAt: Record<string, string> | null | unde
   return Object.keys(sessionCompletedAt).length;
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,7 +257,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -250,10 +268,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: colors.ink },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
     textAlign: 'center',
     marginHorizontal: spacing.xl,
   },
@@ -265,18 +283,18 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   enrollmentText: { flex: 1, gap: 2 },
-  enrollmentName: { ...typography.cardTitle, color: colors.ink },
-  enrollmentMeta: { ...typography.meta, color: 'rgba(26,28,28,0.55)' },
+  enrollmentName: { ...typography.cardTitle, color: c.ink },
+  enrollmentMeta: { ...typography.meta, color: c.inkMuted },
 
   progressBlock: { gap: spacing.xs },
   progressLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  progressLabel: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+  progressLabel: { ...typography.meta, color: c.inkMuted },
   progressPercent: {
     ...typography.meta,
-    color: colors.goldDark,
+    color: c.goldDark,
     fontWeight: '700',
   },
 
@@ -291,36 +309,38 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1.5,
-    borderColor: 'rgba(26,28,28,0.2)',
+    borderColor: c.borderStrong,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
   },
   timelineDotDone: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
+    backgroundColor: c.success,
+    borderColor: c.success,
     borderStyle: 'solid',
   },
   timelineDotActive: {
-    borderColor: colors.gold,
+    borderColor: c.gold,
     borderStyle: 'solid',
   },
   timelineLabel: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.5)',
+    color: c.inkFaded,
     flex: 1,
   },
-  timelineLabelDone: { color: colors.ink },
-  timelineLabelActive: { color: colors.ink, fontWeight: '600' },
+  timelineLabelDone: { color: c.ink },
+  timelineLabelActive: { color: c.ink, fontWeight: '600' },
 
   rolesRow: { flexDirection: 'row', gap: spacing.sm },
   roleTile: {
     flex: 1,
-    backgroundColor: colors.subtleLight,
+    backgroundColor: c.subtle,
     borderRadius: radii.md,
     padding: spacing.sm,
     gap: 2,
   },
-  roleLabel: { ...typography.eyebrow, color: 'rgba(26,28,28,0.55)' },
-  roleValue: { ...typography.meta, color: colors.ink, fontWeight: '600' },
+  roleLabel: { ...typography.eyebrow, color: c.inkMuted },
+  roleValue: { ...typography.meta, color: c.ink, fontWeight: '600' },
 });
+}
+

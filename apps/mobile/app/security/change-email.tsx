@@ -16,15 +16,19 @@ import {
   Button,
   Card,
   Input,
-  colors,
   radii,
   spacing,
   typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
 export default function ChangeEmail() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -86,7 +90,7 @@ export default function ChangeEmail() {
         </View>
         <View style={styles.centered}>
           <View style={styles.successIcon}>
-            <Mail color={colors.primary} size={48} strokeWidth={1.5} />
+            <Mail color={c.primary} size={48} strokeWidth={1.5} />
           </View>
           <Text style={styles.successTitle}>Confirm your new email</Text>
           <Text style={styles.successMeta}>
@@ -111,7 +115,7 @@ export default function ChangeEmail() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <ChevronLeft color={colors.ink} size={24} strokeWidth={1.5} />
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Change email</Text>
         <View style={{ width: 24 }} />
@@ -127,7 +131,7 @@ export default function ChangeEmail() {
         >
           <View style={styles.introRow}>
             <View style={styles.introIcon}>
-              <Mail color={colors.primary} size={22} strokeWidth={1.5} />
+              <Mail color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.introText}>
               We&apos;ll send a confirmation link to the new address. Both the old and
@@ -191,8 +195,9 @@ export default function ChangeEmail() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.pageLight },
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.cardTitle, color: colors.ink },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
   container: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -224,27 +229,27 @@ const styles = StyleSheet.create({
   },
   introText: {
     ...typography.meta,
-    color: colors.ink,
+    color: c.ink,
     flex: 1,
     lineHeight: 16,
   },
   currentLabel: {
     ...typography.eyebrow,
-    color: 'rgba(26,28,28,0.55)',
+    color: c.inkMuted,
   },
   currentValue: {
     ...typography.body,
-    color: colors.ink,
+    color: c.ink,
     fontWeight: '600',
   },
   fieldLabel: {
     ...typography.eyebrow,
-    color: colors.ink,
+    color: c.ink,
     opacity: 0.6,
   },
   errorLine: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
   },
   centered: {
     padding: spacing.xl,
@@ -262,15 +267,17 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...typography.screenTitle,
-    color: colors.ink,
+    color: c.ink,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
   successMeta: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.65)',
+    color: c.inkMuted,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: spacing.md,
   },
 });
+}
+
