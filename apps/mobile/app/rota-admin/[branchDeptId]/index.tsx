@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ClipboardList,
   Plus,
+  Repeat,
   Zap,
 } from 'lucide-react-native';
 import {
@@ -210,6 +211,22 @@ export default function RotaAdmin() {
             ))
           )}
         </View>
+
+        <Pressable
+          style={styles.linkCard}
+          onPress={() =>
+            router.push(`/rota-admin/${branchDeptId}/swap-requests` as never)
+          }
+        >
+          <View style={styles.linkIconTile}>
+            <Repeat color={c.primary} size={16} strokeWidth={1.5} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={styles.linkTitle}>Swap requests</Text>
+            <Text style={styles.linkMeta}>Approve or reject pending swaps</Text>
+          </View>
+          <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+        </Pressable>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming instances</Text>
@@ -512,6 +529,26 @@ function makeStyles(c: ThemeColors) {
     backgroundColor: 'rgba(93,63,211,0.1)',
   },
   newBtnLabel: { ...typography.meta, color: c.primary, fontWeight: '700' },
+  linkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: c.card,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(93,63,211,0.12)',
+  },
+  linkIconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkTitle: { ...typography.body, color: c.ink, fontWeight: '700' },
+  linkMeta: { ...typography.meta, color: c.inkMuted },
   emptyText: {
     ...typography.body,
     color: c.inkMuted,
