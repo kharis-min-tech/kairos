@@ -30,6 +30,7 @@ import {
 import type { BranchWithRegion } from '@kairos/types';
 import { alert } from '@/lib/alert';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
 
 type Scope = 'home' | 'secondary';
@@ -58,8 +59,13 @@ export default function MyBranch() {
   });
 
   // Full authenticated branch record — needed for the self-check-in config,
-  // since the public listing only projects id/name/region.
-  const canManageBranch = user?.systemRole === 'admin';
+  // since the public listing only projects id/name/region. Gated on
+  // `branch:write` so BranchAdmin grants surface the settings card, not just
+  // system admins.
+  const caps = useCapabilities();
+  const canManageBranch = active
+    ? caps.has('branch:write', { kind: 'branch', id: active.id })
+    : false;
   const branchDetail = useQuery({
     queryKey: ['branch-detail', active?.id],
     enabled: !!active?.id && canManageBranch,
