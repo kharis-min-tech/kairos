@@ -205,20 +205,27 @@ export default function DepartmentDetail() {
               </View>
             </LinearGradient>
 
-            {d.pendingJoinRequestCount ? (
-              <Card padding="md" style={styles.pendingCard}>
-                <Handshake color={c.gold} size={16} strokeWidth={1.5} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pendingTitle}>
-                    {d.pendingJoinRequestCount} pending join request
-                    {d.pendingJoinRequestCount === 1 ? '' : 's'}
-                  </Text>
-                  <Text style={styles.pendingMeta}>
-                    Interview scheduling and offer flow live on the web. Open{' '}
-                    kairos.kharis.org to review.
+            {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
+              <Pressable
+                onPress={() => router.push(`/departments/${id}/recruitment` as never)}
+                style={[
+                  styles.rotaCard,
+                  d.pendingJoinRequestCount ? styles.recruitPendingCard : null,
+                ]}
+              >
+                <View style={styles.rotaIconTile}>
+                  <Handshake color={c.primary} size={16} strokeWidth={1.5} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.rotaTitle}>Recruitment</Text>
+                  <Text style={styles.rotaMeta}>
+                    {d.pendingJoinRequestCount
+                      ? `${d.pendingJoinRequestCount} awaiting review — interview → offer`
+                      : 'Intake, interviews, offers, probation'}
                   </Text>
                 </View>
-              </Card>
+                <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+              </Pressable>
             ) : null}
 
             {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
@@ -430,27 +437,6 @@ function makeStyles(c: ThemeColors) {
     textAlign: 'center',
     marginTop: spacing.xs,
   },
-  pendingCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(248,181,55,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(248,181,55,0.35)',
-  },
-  pendingTitle: {
-    ...typography.body,
-    color: c.goldDark,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  pendingMeta: {
-    ...typography.meta,
-    color: c.goldDark,
-    marginTop: 2,
-    lineHeight: 15,
-  },
-
   rotaCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,6 +446,10 @@ function makeStyles(c: ThemeColors) {
     padding: spacing.md,
     borderWidth: 1,
     borderColor: 'rgba(93,63,211,0.12)',
+  },
+  recruitPendingCard: {
+    backgroundColor: 'rgba(248,181,55,0.08)',
+    borderColor: 'rgba(248,181,55,0.35)',
   },
   rotaIconTile: {
     width: 36,
