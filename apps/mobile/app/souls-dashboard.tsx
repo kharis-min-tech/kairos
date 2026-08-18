@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import Svg, { G, Path, Text as SvgText, Circle } from 'react-native-svg';
 import { ChevronLeft, ChevronRight, Handshake, Sparkles, Users, Flame } from 'lucide-react-native';
 import {
   Card,
@@ -111,7 +112,7 @@ export default function SoulsDashboard() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (
           <>
-            <Card padding="md" style={{ gap: spacing.sm }}>
+            <Card padding="md" style={{ gap: spacing.md }}>
               <View style={styles.headline}>
                 <View style={styles.headlineIcon}>
                   <Users color={c.primary} size={18} strokeWidth={1.5} />
@@ -124,10 +125,21 @@ export default function SoulsDashboard() {
                 </View>
               </View>
 
-              <View style={styles.ragRow}>
-                <RagTile label="Red" count={rag.RED} color={c.danger} />
-                <RagTile label="Amber" count={rag.AMBER} color={c.gold} />
-                <RagTile label="Green" count={rag.GREEN} color={c.success} />
+              <View style={styles.donutRow}>
+                <Donut
+                  segments={[
+                    { value: rag.RED, color: c.danger, label: 'Red' },
+                    { value: rag.AMBER, color: c.gold, label: 'Amber' },
+                    { value: rag.GREEN, color: c.success, label: 'Green' },
+                  ]}
+                  centerLabel={String(total)}
+                  centerSub="total"
+                />
+                <View style={{ flex: 1, gap: spacing.xs }}>
+                  <RagLegendRow label="Red" value={rag.RED} tone={c.danger} />
+                  <RagLegendRow label="Amber" value={rag.AMBER} tone={c.gold} />
+                  <RagLegendRow label="Green" value={rag.GREEN} tone={c.success} />
+                </View>
               </View>
               <Text style={styles.ragHint}>
                 RAG reflects follow-up freshness. Red = missed &gt; 14 days.
@@ -135,34 +147,37 @@ export default function SoulsDashboard() {
             </Card>
 
             {statusRows.length > 0 ? (
-              <View style={styles.section}>
+              <Card padding="md" style={{ gap: spacing.md }}>
                 <Text style={styles.sectionTitle}>By status</Text>
-                <View style={{ gap: spacing.xs }}>
-                  {statusRows.map((r) => {
-                    const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
-                    const tone = STATUS_TONE[r.status] ?? c.inkFaded;
-                    return (
-                      <View key={r.status} style={styles.statusRow}>
-                        <View style={styles.statusHeader}>
-                          <View style={[styles.statusDot, { backgroundColor: tone }]} />
-                          <Text style={styles.statusLabel}>
+                <View style={styles.donutRow}>
+                  <Donut
+                    segments={statusRows.map((r) => ({
+                      value: r.count,
+                      color: STATUS_TONE[r.status] ?? c.inkFaded,
+                      label: STATUS_LABEL[r.status] ?? r.status,
+                    }))}
+                    centerLabel={String(total)}
+                    centerSub="souls"
+                  />
+                  <View style={{ flex: 1, gap: spacing.xs }}>
+                    {statusRows.map((r) => {
+                      const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
+                      const tone = STATUS_TONE[r.status] ?? c.inkFaded;
+                      return (
+                        <View key={r.status} style={styles.legendRow}>
+                          <View style={[styles.legendSwatch, { backgroundColor: tone }]} />
+                          <Text style={styles.legendLabel} numberOfLines={1}>
                             {STATUS_LABEL[r.status] ?? r.status}
                           </Text>
-                          <Text style={styles.statusCount}>{r.count}</Text>
+                          <Text style={styles.statusCountText}>
+                            {r.count} · {pct}%
+                          </Text>
                         </View>
-                        <View style={styles.statusBarTrack}>
-                          <View
-                            style={[
-                              styles.statusBarFill,
-                              { backgroundColor: tone, width: `${pct}%` },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    );
-                  })}
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
+              </Card>
             ) : null}
 
             <View style={styles.section}>
@@ -215,13 +230,142 @@ export default function SoulsDashboard() {
   );
 }
 
-function RagTile({ label, count, color }: { label: string; count: number; color: string }) {
+interface DonutSegment {
+  value: number;
+  color: string;
+  label: string;
+}
+
+/**
+ * Compact donut chart — 120px, colour-per-segment, centre label. Renders
+ * empty-state (grey ring) when total is 0 so the block never disappears.
+ */
+function Donut({
+  segments,
+  centerLabel,
+  centerSub,
+}: {
+  segments: DonutSegment[];
+  centerLabel: string;
+  centerSub?: string;
+}) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const size = 120;
+  const strokeWidth = 18;
+  const radius = (size - strokeWidth) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+
+  if (total === 0) {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <Svg width={size} height={size}>
+          <Circle
+            cx={cx}
+            cy={cy}
+            r={radius}
+            stroke={c.divider}
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <SvgText
+            x={cx}
+            y={cy + 5}
+            fontSize={18}
+            fontWeight="700"
+            fill={c.inkMuted}
+            textAnchor="middle"
+          >
+            0
+          </SvgText>
+        </Svg>
+      </View>
+    );
+  }
+
+  let cumulative = 0;
   return (
-    <View style={[styles.ragTile, { backgroundColor: `${color}20` }]}>
-      <Text style={[styles.ragNum, { color }]}>{count}</Text>
-      <Text style={styles.ragLabel}>{label}</Text>
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size}>
+        <G rotation={-90} originX={cx} originY={cy}>
+          {segments.map((seg, i) => {
+            if (seg.value === 0) return null;
+            const fraction = seg.value / total;
+            const startAngle = cumulative * 2 * Math.PI;
+            const endAngle = (cumulative + fraction) * 2 * Math.PI;
+            cumulative += fraction;
+            const path = arcPath(cx, cy, radius, startAngle, endAngle);
+            return (
+              <Path
+                key={i}
+                d={path}
+                stroke={seg.color}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="butt"
+              />
+            );
+          })}
+        </G>
+        <SvgText
+          x={cx}
+          y={cy - 2}
+          fontSize={20}
+          fontWeight="800"
+          fill={c.ink}
+          textAnchor="middle"
+        >
+          {centerLabel}
+        </SvgText>
+        {centerSub ? (
+          <SvgText
+            x={cx}
+            y={cy + 16}
+            fontSize={9}
+            fontWeight="600"
+            fill={c.inkMuted}
+            textAnchor="middle"
+          >
+            {centerSub.toUpperCase()}
+          </SvgText>
+        ) : null}
+      </Svg>
+    </View>
+  );
+}
+
+/** SVG arc path — degrees expressed in radians; returns a stroke-only arc. */
+function arcPath(cx: number, cy: number, r: number, start: number, end: number): string {
+  // A full circle drawn as one arc is a special case — SVG needs two arcs.
+  const isFull = end - start >= 2 * Math.PI - 0.001;
+  if (isFull) {
+    return `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy}`;
+  }
+  const x1 = cx + r * Math.cos(start);
+  const y1 = cy + r * Math.sin(start);
+  const x2 = cx + r * Math.cos(end);
+  const y2 = cy + r * Math.sin(end);
+  const largeArc = end - start > Math.PI ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+}
+
+function RagLegendRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View style={styles.legendRow}>
+      <View style={[styles.legendSwatch, { backgroundColor: tone }]} />
+      <Text style={styles.legendLabel}>{label}</Text>
+      <Text style={[styles.legendValue, { color: tone }]}>{value}</Text>
     </View>
   );
 }
@@ -314,16 +458,25 @@ function makeStyles(c: ThemeColors) {
   headlineNum: { fontSize: 28, fontWeight: '800', color: c.ink },
   headlineLabel: { ...typography.meta, color: c.inkMuted },
 
-  ragRow: { flexDirection: 'row', gap: spacing.sm },
-  ragTile: {
-    flex: 1,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
+  donutRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: spacing.md,
   },
-  ragNum: { fontSize: 22, fontWeight: '800' },
-  ragLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: 2,
+  },
+  legendSwatch: {
+    width: 12,
+    height: 12,
+    borderRadius: 3,
+  },
+  legendLabel: { ...typography.body, color: c.ink, flex: 1, fontWeight: '500' },
+  legendValue: { ...typography.body, fontWeight: '800' },
+  statusCountText: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
   ragHint: { ...typography.meta, color: c.inkFaded, lineHeight: 14 },
 
   section: { gap: spacing.sm },
@@ -332,23 +485,6 @@ function makeStyles(c: ThemeColors) {
     color: c.inkMuted,
     paddingHorizontal: spacing.xs,
   },
-
-  statusRow: { gap: 4 },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusLabel: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
-  statusCount: { ...typography.body, color: c.ink, fontWeight: '700' },
-  statusBarTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: c.divider,
-    overflow: 'hidden',
-  },
-  statusBarFill: { height: '100%', borderRadius: 3 },
 
   tileRow: { flexDirection: 'row', gap: spacing.sm },
   statTile: {
