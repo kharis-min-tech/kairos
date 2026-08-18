@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Plus,
   Zap,
 } from 'lucide-react-native';
 import {
@@ -47,9 +48,9 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 /**
  * Rota admin — templates & instances for a single branch department.
  *
- * Deliberate mobile scope: this surface lets leaders view templates, kick off
- * generation, and drill into an instance to swap assignments. Template / slot
- * / pool CRUD stays on web — those are low-frequency setup tasks.
+ * Full parity with web: templates, roles, pool, and instance drill-down all
+ * live on-device. Tap a template to edit its metadata / roles / pool; the
+ * "+ New" button creates a fresh template.
  */
 export default function RotaAdmin() {
   const styles = useThemedStyles(makeStyles);
@@ -168,14 +169,26 @@ export default function RotaAdmin() {
         ) : null}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Templates</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Templates</Text>
+            <Pressable
+              onPress={() =>
+                router.push(`/rota-admin/${branchDeptId}/template/new` as never)
+              }
+              style={styles.newBtn}
+              hitSlop={6}
+            >
+              <Plus color={c.primary} size={14} strokeWidth={2} />
+              <Text style={styles.newBtnLabel}>New</Text>
+            </Pressable>
+          </View>
           {templates.isLoading ? (
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : rows.length === 0 ? (
             <Card padding="md">
               <Text style={styles.emptyText}>
-                No templates yet. Set one up on the web dashboard, then generate
-                instances from here.
+                No templates yet. Tap New to set up your first one — pick a
+                weekday, add roles, and add pool members.
               </Text>
             </Card>
           ) : (
@@ -183,6 +196,11 @@ export default function RotaAdmin() {
               <TemplateRow
                 key={t.id}
                 template={t}
+                onOpen={() =>
+                  router.push(
+                    `/rota-admin/${branchDeptId}/template/${t.id}` as never,
+                  )
+                }
                 onGenerate={() => {
                   setGenFor(t);
                   setGenWeeks('4');
@@ -235,9 +253,11 @@ export default function RotaAdmin() {
 
 function TemplateRow({
   template,
+  onOpen,
   onGenerate,
 }: {
   template: RotaTemplateWithSummary;
+  onOpen: () => void;
   onGenerate: () => void;
 }) {
   const styles = useThemedStyles(makeStyles);
@@ -246,29 +266,31 @@ function TemplateRow({
     ? `last generated ${formatShortDate(template.lastGeneratedAt)}`
     : 'never generated';
   return (
-    <Card padding="md" style={styles.templateRow}>
-      <View style={styles.templateIconTile}>
-        <ClipboardList color={c.primary} size={16} strokeWidth={1.5} />
-      </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <View style={styles.templateTitleLine}>
-          <Text style={styles.templateName} numberOfLines={1}>
-            {template.name}
-          </Text>
-          <Badge label={WEEKDAYS[template.weekday] ?? '?'} variant="primary" size="sm" />
+    <Pressable onPress={onOpen}>
+      <Card padding="md" style={styles.templateRow}>
+        <View style={styles.templateIconTile}>
+          <ClipboardList color={c.primary} size={16} strokeWidth={1.5} />
         </View>
-        <Text style={styles.templateMeta}>
-          {template.slotCount} role{template.slotCount === 1 ? '' : 's'} ·{' '}
-          {template.positionCount} position{template.positionCount === 1 ? '' : 's'} ·{' '}
-          {template.poolCount} in pool
-        </Text>
-        <Text style={styles.templateMetaFaded}>{last}</Text>
-      </View>
-      <Pressable onPress={onGenerate} style={styles.generateBtn} hitSlop={6}>
-        <Zap color="#ffffff" size={14} strokeWidth={2} />
-        <Text style={styles.generateLabel}>Generate</Text>
-      </Pressable>
-    </Card>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={styles.templateTitleLine}>
+            <Text style={styles.templateName} numberOfLines={1}>
+              {template.name}
+            </Text>
+            <Badge label={WEEKDAYS[template.weekday] ?? '?'} variant="primary" size="sm" />
+          </View>
+          <Text style={styles.templateMeta}>
+            {template.slotCount} role{template.slotCount === 1 ? '' : 's'} ·{' '}
+            {template.positionCount} position{template.positionCount === 1 ? '' : 's'} ·{' '}
+            {template.poolCount} in pool
+          </Text>
+          <Text style={styles.templateMetaFaded}>{last}</Text>
+        </View>
+        <Pressable onPress={onGenerate} style={styles.generateBtn} hitSlop={6}>
+          <Zap color="#ffffff" size={14} strokeWidth={2} />
+          <Text style={styles.generateLabel}>Generate</Text>
+        </Pressable>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -428,7 +450,7 @@ function GenerateSheet({
             </View>
             {template.poolCount === 0 ? (
               <Text style={styles.sheetWarning}>
-                Add members to the template pool on web before generating.
+                Tap the template to add pool members before generating.
               </Text>
             ) : null}
           </Pressable>
@@ -468,11 +490,28 @@ function makeStyles(c: ThemeColors) {
   statLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
 
   section: { gap: spacing.sm },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
+  },
   sectionTitle: {
     ...typography.eyebrow,
     color: c.inkMuted,
     paddingHorizontal: spacing.xs,
+    flex: 1,
   },
+  newBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+  },
+  newBtnLabel: { ...typography.meta, color: c.primary, fontWeight: '700' },
   emptyText: {
     ...typography.body,
     color: c.inkMuted,
