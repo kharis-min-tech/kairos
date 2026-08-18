@@ -37,8 +37,11 @@ import {
   type RecordConsentRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { apiBaseUrl } from '@/lib/config';
 
-const LEGAL_BASE = 'https://kairos.kharis.org/legal';
+// Derive legal pages from the same origin as the API so staging builds land
+// on staging.kairos.kharis.org/legal/* rather than production.
+const LEGAL_BASE = `${apiBaseUrl.replace(/\/$/, '')}/legal`;
 
 function docHrefFor(consentType: ConsentType): string | null {
   if (consentType === ConsentType.Terms) return `${LEGAL_BASE}/terms`;

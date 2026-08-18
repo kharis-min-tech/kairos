@@ -110,7 +110,7 @@ function makeStyles(c: ThemeColors) {
   },
   message: {
     ...typography.body,
-    color: 'rgba(26,28,28,0.7)',
+    color: c.inkMuted,
     lineHeight: 20,
   },
   buttonRow: {
