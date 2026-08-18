@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   Calendar,
@@ -19,6 +20,7 @@ import {
   Users,
   Heart,
   ChevronRight,
+  UserPlus,
 } from 'lucide-react-native';
 import {
   Badge,
@@ -34,6 +36,8 @@ import {
 import type { OutreachProgramWithDetails } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { alert } from '@/lib/alert';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 export default function OutreachDetail() {
   const styles = useThemedStyles(makeStyles);
@@ -61,6 +65,17 @@ export default function OutreachDetail() {
   });
 
   const p = program.data;
+  const qc = useQueryClient();
+  const [workerPickerOpen, setWorkerPickerOpen] = useState(false);
+  const registerWorker = useMutation({
+    mutationFn: async (memberId: string) =>
+      (await api.outreach.programs.registerWorker(id, { memberId })).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['outreach', 'programs', id] });
+    },
+    onError: (e: Error) =>
+      alert.info('Could not add worker', e.message ?? 'Please try again.'),
+  });
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -182,6 +197,16 @@ export default function OutreachDetail() {
                   Coordinator: {p.coordinatorFirstName} {p.coordinatorLastName ?? ''}
                 </Text>
               ) : null}
+              <Pressable
+                onPress={() => setWorkerPickerOpen(true)}
+                style={styles.addWorkerBtn}
+                disabled={registerWorker.isPending}
+              >
+                <UserPlus color={c.primary} size={14} strokeWidth={2} />
+                <Text style={styles.addWorkerLabel}>
+                  {registerWorker.isPending ? 'Adding…' : 'Register a worker'}
+                </Text>
+              </Pressable>
             </Card>
 
             <View style={styles.section}>
@@ -248,6 +273,20 @@ export default function OutreachDetail() {
           </>
         ) : null}
       </ScrollView>
+
+      {p ? (
+        <MemberPickerSheet
+          open={workerPickerOpen}
+          onClose={() => setWorkerPickerOpen(false)}
+          branchId={p.branchId}
+          title="Register worker"
+          subtitle="Members in this branch who worked on this outreach."
+          onPick={(memberId) => {
+            setWorkerPickerOpen(false);
+            registerWorker.mutate(memberId);
+          }}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -387,6 +426,18 @@ function makeStyles(c: ThemeColors) {
     justifyContent: 'center',
   },
   sectionTitle: { ...typography.cardTitle, color: c.ink, flex: 1 },
+  addWorkerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    marginTop: spacing.xs,
+  },
+  addWorkerLabel: { ...typography.meta, color: c.primary, fontWeight: '700' },
   soulRow: {
     flexDirection: 'row',
     alignItems: 'center',
