@@ -13,7 +13,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Users, Pencil, UserPlus, Handshake } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Users,
+  Pencil,
+  UserPlus,
+  Handshake,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -25,11 +33,13 @@ import {
   typography,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 export default function DepartmentDetail() {
   const router = useRouter();
   const qc = useQueryClient();
+  const caps = useCapabilities();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
 
@@ -205,6 +215,24 @@ export default function DepartmentDetail() {
                   </Text>
                 </View>
               </Card>
+            ) : null}
+
+            {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
+              <Pressable
+                onPress={() => router.push(`/rota-admin/${id}` as never)}
+                style={styles.rotaCard}
+              >
+                <View style={styles.rotaIconTile}>
+                  <ClipboardList color={colors.primary} size={16} strokeWidth={1.5} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.rotaTitle}>Rota</Text>
+                  <Text style={styles.rotaMeta}>
+                    Templates, generation, per-slot assignments
+                  </Text>
+                </View>
+                <ChevronRight color="rgba(26,28,28,0.3)" size={16} strokeWidth={1.5} />
+              </Pressable>
             ) : null}
 
             <View style={styles.section}>
@@ -417,4 +445,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 15,
   },
+
+  rotaCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.cardLight,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(93,63,211,0.12)',
+  },
+  rotaIconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rotaTitle: { ...typography.body, color: colors.ink, fontWeight: '700' },
+  rotaMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
 });
