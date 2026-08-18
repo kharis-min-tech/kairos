@@ -21,6 +21,8 @@ import {
   Pencil,
   UserPlus,
   Handshake,
+  Shirt,
+  PhoneCall,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -240,6 +242,42 @@ export default function DepartmentDetail() {
                   <Text style={styles.rotaTitle}>Rota</Text>
                   <Text style={styles.rotaMeta}>
                     Templates, generation, per-slot assignments
+                  </Text>
+                </View>
+                <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+              </Pressable>
+            ) : null}
+
+            {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
+              <Pressable
+                onPress={() => router.push(`/departments/${id}/followups` as never)}
+                style={styles.rotaCard}
+              >
+                <View style={styles.rotaIconTile}>
+                  <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.rotaTitle}>Follow-ups</Text>
+                  <Text style={styles.rotaMeta}>
+                    Overdue members, contact log, next-touch reminders
+                  </Text>
+                </View>
+                <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+              </Pressable>
+            ) : null}
+
+            {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
+              <Pressable
+                onPress={() => router.push(`/departments/${id}/uniforms` as never)}
+                style={styles.rotaCard}
+              >
+                <View style={styles.rotaIconTile}>
+                  <Shirt color={c.primary} size={16} strokeWidth={1.5} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.rotaTitle}>Uniforms</Text>
+                  <Text style={styles.rotaMeta}>
+                    Outfit library + per-service assignments
                   </Text>
                 </View>
                 <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
