@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Handshake, Users, Flame } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Handshake, Sparkles, Users, Flame } from 'lucide-react-native';
 import {
   Card,
   colors,
@@ -184,6 +184,13 @@ export default function SoulsDashboard() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Jump to</Text>
+              <LinkRow
+                label="Capture a soul"
+                sub="Log an evangelism encounter"
+                onPress={() => router.push('/souls/capture' as never)}
+                iconTone={c.primary}
+                icon={<Sparkles color={c.primary} size={16} strokeWidth={1.5} />}
+              />
               <LinkRow
                 label="All souls"
                 sub={`${total} in scope`}
