@@ -19,6 +19,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
+  ChevronRight,
   Calendar,
   Users,
   Pencil,
@@ -27,6 +28,8 @@ import {
   Check,
   X,
   Handshake,
+  BarChart3,
+  PhoneCall,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -293,6 +296,38 @@ export default function FellowshipDetail() {
                 ) : null}
               </Card>
             ) : null}
+
+            <Pressable
+              onPress={() => router.push(`/fellowships/${id}/attendance` as never)}
+              style={styles.linkCard}
+            >
+              <View style={styles.linkIconTile}>
+                <BarChart3 color={c.primary} size={16} strokeWidth={1.5} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.linkTitle}>Attendance</Text>
+                <Text style={styles.linkMeta}>
+                  Services + meetings rates, per-member breakdown
+                </Text>
+              </View>
+              <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push(`/fellowships/${id}/followups` as never)}
+              style={styles.linkCard}
+            >
+              <View style={styles.linkIconTile}>
+                <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.linkTitle}>Follow-ups</Text>
+                <Text style={styles.linkMeta}>
+                  Overdue members, contact log, next-touch reminders
+                </Text>
+              </View>
+              <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+            </Pressable>
 
             {pendingRequests.length > 0 ? (
               <View style={styles.section}>
@@ -652,6 +687,26 @@ function makeStyles(c: ThemeColors) {
     ...typography.meta,
     color: c.inkMuted,
   },
+  linkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: c.card,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(93,63,211,0.12)',
+  },
+  linkIconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkTitle: { ...typography.body, color: c.ink, fontWeight: '700' },
+  linkMeta: { ...typography.meta, color: c.inkMuted },
   section: { gap: spacing.sm },
   sectionHeader: {
     flexDirection: 'row',
