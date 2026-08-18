@@ -11,7 +11,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Search, X, Users, Plus } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  X,
+  Users,
+  Plus,
+  ShieldCheck,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -26,6 +34,7 @@ import {
 } from '@kairos/ui-native';
 import type { MemberWithBranchProtected } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 
 type TypeFilter = 'all' | 'member' | 'attendee';
 
@@ -47,6 +56,8 @@ export default function MembersDirectory() {
   const [searchInput, setSearchInput] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const debouncedSearch = useDebounced(searchInput.trim(), 300);
+  const caps = useCapabilities();
+  const canAdmin = caps.has('signup:approve') || caps.has('branch:write');
 
   const members = useInfiniteQuery({
     queryKey: ['members', 'list-infinite', { search: debouncedSearch, memberType: typeFilter }],
@@ -81,14 +92,25 @@ export default function MembersDirectory() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Members</Text>
-        <Pressable
-          onPress={() => router.push('/members/new')}
-          hitSlop={8}
-          testID="new-member-btn"
-          accessibilityLabel="New member"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          {canAdmin ? (
+            <Pressable
+              onPress={() => router.push('/members/admin')}
+              hitSlop={8}
+              accessibilityLabel="Members admin"
+            >
+              <ShieldCheck color={c.primary} size={20} strokeWidth={1.5} />
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => router.push('/members/new')}
+            hitSlop={8}
+            testID="new-member-btn"
+            accessibilityLabel="New member"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.controlsBlock}>
@@ -247,6 +269,7 @@ function makeStyles(c: ThemeColors) {
     paddingVertical: spacing.md,
   },
   headerTitle: { ...typography.cardTitle, color: c.ink },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
