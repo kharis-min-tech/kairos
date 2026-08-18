@@ -5,7 +5,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { ChevronLeft, Pencil } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Bell,
+  Palette,
+  ShieldCheck,
+  Download,
+  FileText,
+  Trash2,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -198,8 +208,86 @@ export default function Profile() {
           <Pencil color={c.primary} size={16} strokeWidth={1.5} />
           <Text style={styles.editLabel}>Edit profile</Text>
         </Pressable>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Settings</Text>
+          <Card padding="none" style={styles.sectionCard}>
+            <SettingsRow
+              icon={<Bell color={c.primary} size={16} strokeWidth={1.5} />}
+              label="Notifications"
+              hint="Manage what you're pinged for"
+              onPress={() => router.push('/notification-preferences')}
+            />
+            <SettingsRow
+              icon={<Palette color={c.primary} size={16} strokeWidth={1.5} />}
+              label="Appearance"
+              hint="Light, dark, or system"
+              onPress={() => router.push('/appearance' as never)}
+            />
+            <SettingsRow
+              icon={<ShieldCheck color={c.primary} size={16} strokeWidth={1.5} />}
+              label="Security"
+              hint="Password, email, sign-in activity"
+              onPress={() => router.push('/security')}
+            />
+            <SettingsRow
+              icon={<Download color={c.primary} size={16} strokeWidth={1.5} />}
+              label="Export my data"
+              hint="Download everything we hold on you"
+              onPress={() => router.push('/settings/export' as never)}
+            />
+            <SettingsRow
+              icon={<FileText color={c.primary} size={16} strokeWidth={1.5} />}
+              label="Consent history"
+              hint="Terms, privacy, safeguarding"
+              onPress={() => router.push('/settings/consent' as never)}
+            />
+            <SettingsRow
+              icon={<Trash2 color={c.danger} size={16} strokeWidth={1.5} />}
+              label="Delete my account"
+              hint="Permanently remove your account"
+              destructive
+              last
+              onPress={() => router.push('/settings/delete-account' as never)}
+            />
+          </Card>
+        </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SettingsRow({
+  icon,
+  label,
+  hint,
+  onPress,
+  destructive,
+  last,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  hint?: string;
+  onPress: () => void;
+  destructive?: boolean;
+  last?: boolean;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.settingsRow, last && { borderBottomWidth: 0 }]}
+    >
+      {icon}
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.settingsLabel, destructive && { color: c.danger }]}>
+          {label}
+        </Text>
+        {hint ? <Text style={styles.settingsHint}>{hint}</Text> : null}
+      </View>
+      <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+    </Pressable>
   );
 }
 
@@ -350,6 +438,17 @@ function makeStyles(c: ThemeColors) {
     textAlign: 'center',
     marginTop: spacing.xxl,
   },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: c.divider,
+  },
+  settingsLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
+  settingsHint: { ...typography.meta, color: c.inkMuted, marginTop: 2 },
 });
 }
 
