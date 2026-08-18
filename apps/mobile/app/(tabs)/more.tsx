@@ -135,6 +135,11 @@ export default function More() {
             onPress={() => router.push('/outreach')}
           />
           <NavRow icon={Handshake} label="Souls" onPress={() => router.push('/souls')} />
+          <NavRow
+            icon={PieChart}
+            label="Souls dashboard"
+            onPress={() => router.push('/souls-dashboard' as never)}
+          />
         </Section>
 
         <Section label="Groups">
@@ -171,14 +176,24 @@ export default function More() {
 
         <Section label="Forms">
           <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
+          <NavRow
+            icon={ClipboardList}
+            label="Submissions"
+            onPress={() => router.push('/forms/submissions' as never)}
+          />
+          <NavRow
+            icon={Users}
+            label="Dormant attendees"
+            onPress={() => router.push('/forms/attendees' as never)}
+          />
         </Section>
 
         <Section label="Reports & analytics">
           <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
           <NavRow
             icon={BarChart3}
-            label="Service attendance"
-            onPress={() => router.push('/admin/attendance')}
+            label="Services"
+            onPress={() => router.push('/attendance' as never)}
           />
         </Section>
 
