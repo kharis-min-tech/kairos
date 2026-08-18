@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react-native';
 import {
   Button,
   Card,
@@ -29,6 +29,8 @@ import {
 import type { ServiceType } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useAuthStore } from '@/store/auth';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 const TYPE_OPTIONS: ServiceType[] = ['Sunday', 'Midweek', 'Special'];
 
@@ -38,6 +40,9 @@ export default function CreateService() {
   const router = useRouter();
   const qc = useQueryClient();
 
+  const user = useAuthStore((s) => s.user);
+  const branchId = user?.homeBranchId ?? '';
+
   const [serviceType, setServiceType] = useState<ServiceType>('Sunday');
   const [serviceDate, setServiceDate] = useState<string>(
     new Date().toISOString().slice(0, 10),
@@ -45,9 +50,21 @@ export default function CreateService() {
   const [serviceTime, setServiceTime] = useState<string>('09:00');
   const [serviceTitle, setServiceTitle] = useState('');
   const [topic, setTopic] = useState('');
+  const [preacherId, setPreacherId] = useState('');
   const [expectedAttendance, setExpectedAttendance] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [preacherPickerOpen, setPreacherPickerOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const preacherLookup = useQuery({
+    queryKey: ['members', 'preacher', preacherId],
+    enabled: !!preacherId,
+    queryFn: async () => (await api.members.get(preacherId)).data ?? null,
+  });
+  const preacherLabel = useMemo(() => {
+    const m = preacherLookup.data;
+    return m ? `${m.firstName} ${m.lastName}` : '';
+  }, [preacherLookup.data]);
 
   const create = useMutation({
     mutationFn: async () => {
@@ -61,6 +78,7 @@ export default function CreateService() {
         serviceType,
         serviceTitle: serviceType === 'Special' ? serviceTitle.trim() : undefined,
         topic: topic.trim() || undefined,
+        preacherId: preacherId || undefined,
         expectedAttendance: Number.isFinite(expected) ? expected : undefined,
       });
       if (!res.success) throw new Error(res.message ?? 'Could not create service');
@@ -155,6 +173,34 @@ export default function CreateService() {
               autoCapitalize="sentences"
             />
 
+            <Text style={styles.fieldLabel}>Preacher (optional)</Text>
+            <Pressable
+              style={styles.pickerField}
+              onPress={() => setPreacherPickerOpen(true)}
+            >
+              <Text
+                style={[
+                  styles.pickerValue,
+                  !preacherLabel && { color: c.inkFaded },
+                ]}
+              >
+                {preacherLabel || 'Pick a preacher'}
+              </Text>
+              {preacherId ? (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setPreacherId('');
+                  }}
+                  hitSlop={8}
+                >
+                  <X color={c.inkFaded} size={14} strokeWidth={1.5} />
+                </Pressable>
+              ) : (
+                <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
+              )}
+            </Pressable>
+
             <Text style={styles.fieldLabel}>Expected attendance (optional)</Text>
             <Input
               value={expectedAttendance}
@@ -176,6 +222,19 @@ export default function CreateService() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <MemberPickerSheet
+        open={preacherPickerOpen}
+        onClose={() => setPreacherPickerOpen(false)}
+        branchId={branchId}
+        selectedMemberId={preacherId}
+        title="Pick preacher"
+        subtitle="Any member in this branch can be tagged as the preacher."
+        onPick={(id) => {
+          setPreacherId(id);
+          setPreacherPickerOpen(false);
+        }}
+      />
 
       <Modal
         visible={pickerOpen}
