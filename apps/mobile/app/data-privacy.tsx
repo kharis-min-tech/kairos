@@ -5,11 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  Share,
   Modal,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -52,11 +53,31 @@ export default function DataPrivacy() {
       const res = await api.me.exportData();
       const data = res.data;
       if (!data) throw new Error('Export returned no data');
-      const json = JSON.stringify(data, null, 2);
-      await Share.share({
-        title: `Kharis — my data (${new Date().toISOString().slice(0, 10)})`,
-        message: json,
-      });
+
+      // Write to a real .html file and hand it to the OS share sheet as an
+      // attachment. Beats dumping raw JSON into the message body: recipients
+      // can archive it, mail it to themselves, save to cloud drive, etc.
+      const stamp = new Date().toISOString().slice(0, 10);
+      const filename = `kharis-my-data-${stamp}.html`;
+      const html = renderExportHtml(data as Record<string, unknown>, stamp);
+
+      const file = new File(Paths.cache, filename);
+      file.create({ overwrite: true });
+      file.write(html);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        alert.info(
+          'Saved',
+          `Your data was written to ${filename} but sharing isn't available on this device.`,
+        );
+      } else {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'text/html',
+          dialogTitle: `Kharis — my data (${stamp})`,
+          UTI: 'public.html',
+        });
+      }
     } catch (err) {
       alert.info(
         'Export failed',
@@ -65,6 +86,46 @@ export default function DataPrivacy() {
     } finally {
       setExporting(false);
     }
+  }
+
+  function renderExportHtml(data: Record<string, unknown>, stamp: string): string {
+    // Minimal, printable HTML with each top-level key as an <h2>, values as
+    // <pre> JSON. Not trying to mirror the web's polished layout — this is a
+    // legible archive for the member, and keeps the surface tiny so it stays
+    // maintainable without a template engine on device.
+    const esc = (s: string) =>
+      s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const sections = Object.entries(data)
+      .map(
+        ([k, v]) =>
+          `<section><h2>${esc(k)}</h2><pre>${esc(JSON.stringify(v, null, 2))}</pre></section>`,
+      )
+      .join('\n');
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kharis — my data (${esc(stamp)})</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1a1c1c; }
+  header { border-bottom: 1px solid rgba(26,28,28,0.1); padding-bottom: 16px; margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; color: #5D3FD3; }
+  h2 { color: #5D3FD3; margin-top: 24px; }
+  pre { background: #fafafa; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+  .meta { color: rgba(26,28,28,0.6); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kharis — my data</h1>
+  <p class="meta">Exported ${esc(stamp)}</p>
+</header>
+${sections}
+</body>
+</html>`;
   }
 
   function openDeleteDialog() {

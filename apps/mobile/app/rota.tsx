@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,25 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
 import { Card, Badge, Button, colors, spacing, typography, radii, gradients } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 
+type DutyRow = NonNullable<Awaited<ReturnType<typeof api.me.rota>>['data']>[number];
+
 export default function MyRota() {
   const router = useRouter();
+  const qc = useQueryClient();
 
   const rota = useQuery({
     queryKey: ['me', 'rota', 'all'],
@@ -31,6 +38,57 @@ export default function MyRota() {
       return res.data ?? [];
     },
   });
+
+  const [swapDuty, setSwapDuty] = useState<DutyRow | null>(null);
+  const [swapReason, setSwapReason] = useState('');
+
+  const confirm = useMutation({
+    mutationFn: async (duty: DutyRow) => {
+      const res = await api.departments.rota.updateAssignment(
+        duty.branchDepartmentId,
+        duty.instanceId,
+        duty.assignmentId,
+        { status: 'Confirmed' },
+      );
+      if (!res.success) throw new Error(res.message ?? 'Confirm failed');
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me', 'rota'] });
+      alert.info("You're confirmed", 'Thanks for letting the team know.');
+    },
+    onError: (e: Error) =>
+      alert.info('Could not confirm', e.message ?? 'Please try again.'),
+  });
+
+  const requestSwap = useMutation({
+    mutationFn: async ({ duty, reason }: { duty: DutyRow; reason: string }) => {
+      const res = await api.departments.rota.createSwapRequest(
+        duty.branchDepartmentId,
+        duty.instanceId,
+        duty.assignmentId,
+        { reason: reason.trim() || undefined },
+      );
+      if (!res.success) throw new Error(res.message ?? 'Swap request failed');
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me', 'rota'] });
+      setSwapDuty(null);
+      setSwapReason('');
+      alert.info(
+        'Swap requested',
+        'Your rota lead has been notified. Someone from the pool can pick it up.',
+      );
+    },
+    onError: (e: Error) =>
+      alert.info('Could not request swap', e.message ?? 'Please try again.'),
+  });
+
+  function openSwapSheet(duty: DutyRow) {
+    setSwapDuty(duty);
+    setSwapReason('');
+  }
 
   const sorted = useMemo(
     () =>
@@ -84,21 +142,21 @@ export default function MyRota() {
               </View>
               <View style={styles.heroActions}>
                 <Button
-                  label="Confirm"
+                  label={next.status.toLowerCase().includes('confirm') ? 'Confirmed' : 'Confirm'}
                   size="sm"
                   variant="secondary"
-                  onPress={() =>
-                    alert.info('Confirm duty', 'Confirm/swap flow lands with the backend endpoint.')
+                  loading={confirm.isPending}
+                  disabled={
+                    confirm.isPending || next.status.toLowerCase().includes('confirm')
                   }
+                  onPress={() => confirm.mutate(next)}
                   style={styles.heroButton}
                 />
                 <Button
                   label="Request swap"
                   size="sm"
                   variant="outline"
-                  onPress={() =>
-                    alert.info('Swap', 'Swap-request flow lands in a follow-up.')
-                  }
+                  onPress={() => openSwapSheet(next)}
                   style={styles.heroButton}
                 />
               </View>
@@ -114,6 +172,20 @@ export default function MyRota() {
             </Card>
           )
         )}
+
+        {swapDuty ? (
+          <SwapRequestSheet
+            duty={swapDuty}
+            reason={swapReason}
+            onReasonChange={setSwapReason}
+            onCancel={() => {
+              setSwapDuty(null);
+              setSwapReason('');
+            }}
+            onConfirm={() => requestSwap.mutate({ duty: swapDuty, reason: swapReason })}
+            submitting={requestSwap.isPending}
+          />
+        ) : null}
 
         {upcoming.length ? (
           <View style={styles.section}>
@@ -140,6 +212,72 @@ export default function MyRota() {
         ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SwapRequestSheet({
+  duty,
+  reason,
+  onReasonChange,
+  onCancel,
+  onConfirm,
+  submitting,
+}: {
+  duty: DutyRow;
+  reason: string;
+  onReasonChange: (v: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+  submitting: boolean;
+}) {
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onCancel}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={styles.backdrop} onPress={submitting ? undefined : onCancel}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Request a swap</Text>
+            <Text style={styles.sheetMeta}>
+              {duty.slotRoleName} · {longDate(duty.serviceDate)}
+              {duty.startTime ? ` · ${duty.startTime}` : ''}
+            </Text>
+            <Text style={styles.sheetHint}>
+              Your rota lead is notified and can offer this slot to another
+              member of the pool. Add a note if there&apos;s context that helps.
+            </Text>
+            <TextInput
+              multiline
+              value={reason}
+              onChangeText={onReasonChange}
+              placeholder="Optional — why you can't make it"
+              placeholderTextColor="rgba(26,28,28,0.4)"
+              style={styles.sheetInput}
+              editable={!submitting}
+            />
+            <View style={styles.sheetFooter}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Cancel"
+                  variant="ghost"
+                  onPress={onCancel}
+                  disabled={submitting}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label={submitting ? 'Sending…' : 'Request swap'}
+                  onPress={onConfirm}
+                  loading={submitting}
+                />
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
@@ -275,4 +413,49 @@ const styles = StyleSheet.create({
   dutyText: { flex: 1, gap: 2 },
   dutyTitle: { ...typography.cardTitle, color: colors.ink },
   dutyMeta: { ...typography.meta, color: 'rgba(26,28,28,0.6)' },
+
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: { ...typography.cardTitle, color: colors.ink },
+  sheetMeta: { ...typography.meta, color: 'rgba(26,28,28,0.65)' },
+  sheetHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    lineHeight: 16,
+  },
+  sheetInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.12)',
+    borderRadius: radii.md,
+    padding: spacing.md,
+    ...typography.body,
+    color: colors.ink,
+    textAlignVertical: 'top',
+  },
+  sheetFooter: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
 });

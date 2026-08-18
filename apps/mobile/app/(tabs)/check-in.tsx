@@ -59,7 +59,7 @@ export default function CheckIn() {
     enabled: !!user,
   });
 
-  const rows = candidates.data ?? [];
+  const rows = useMemo(() => candidates.data ?? [], [candidates.data]);
   const openRows = useMemo(() => rows.filter((r) => r.status === 'open'), [rows]);
   const openingSoonRows = useMemo(
     () => rows.filter((r) => r.status === 'opens-soon'),

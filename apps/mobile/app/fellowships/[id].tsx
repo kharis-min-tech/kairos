@@ -7,6 +7,10 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +22,7 @@ import {
   Calendar,
   Users,
   Pencil,
+  Plus,
   UserPlus,
   Check,
   X,
@@ -26,6 +31,7 @@ import {
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   colors,
   gradients,
@@ -110,6 +116,34 @@ export default function FellowshipDetail() {
   });
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [logMeetingOpen, setLogMeetingOpen] = useState(false);
+  const [meetingDate, setMeetingDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [meetingTitle, setMeetingTitle] = useState('');
+  const [meetingLocation, setMeetingLocation] = useState('');
+
+  const createMeeting = useMutation({
+    mutationFn: async () => {
+      const res = await api.fellowships.meetings.create(id, {
+        meetingDate,
+        meetingTitle: meetingTitle.trim() || undefined,
+        location: meetingLocation.trim() || undefined,
+      });
+      if (!res.success) throw new Error(res.message ?? 'Could not log meeting');
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fellowships', id, 'meetings'] });
+      setLogMeetingOpen(false);
+      setMeetingTitle('');
+      setMeetingLocation('');
+      setMeetingDate(new Date().toISOString().slice(0, 10));
+      alert.info('Meeting logged', undefined);
+    },
+    onError: (e: Error) =>
+      alert.info('Failed to log meeting', e.message ?? 'Please try again.'),
+  });
 
   const refresh = () => {
     fellowship.refetch();
@@ -389,14 +423,26 @@ export default function FellowshipDetail() {
               )}
             </View>
 
-            {recentPast.length > 0 ? (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionIconTile}>
-                    <Calendar color={colors.primary} size={14} strokeWidth={1.5} />
-                  </View>
-                  <Text style={styles.sectionTitle}>Recent meetings</Text>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconTile}>
+                  <Calendar color={colors.primary} size={14} strokeWidth={1.5} />
                 </View>
+                <Text style={styles.sectionTitle}>Meetings</Text>
+                <Pressable
+                  onPress={() => setLogMeetingOpen(true)}
+                  style={styles.addMemberBtn}
+                  hitSlop={6}
+                  accessibilityLabel="Log a meeting"
+                >
+                  <Plus color={colors.primary} size={16} strokeWidth={1.5} />
+                </Pressable>
+              </View>
+              {recentPast.length === 0 ? (
+                <Text style={styles.emptyLine}>
+                  No meetings logged yet. Tap + to record one.
+                </Text>
+              ) : (
                 <View style={styles.meetingList}>
                   {recentPast.map((m) => (
                     <View key={m.id} style={styles.meetingRow}>
@@ -418,8 +464,8 @@ export default function FellowshipDetail() {
                     </View>
                   ))}
                 </View>
-              </View>
-            ) : null}
+              )}
+            </View>
           </>
         ) : null}
       </ScrollView>
@@ -443,6 +489,83 @@ export default function FellowshipDetail() {
           }}
         />
       ) : null}
+
+      <Modal
+        visible={logMeetingOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLogMeetingOpen(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable
+            style={styles.meetingBackdrop}
+            onPress={() => (createMeeting.isPending ? undefined : setLogMeetingOpen(false))}
+          >
+            <Pressable style={styles.meetingSheet} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.meetingSheetHandle} />
+              <Text style={styles.meetingSheetTitle}>Log a meeting</Text>
+              <Text style={styles.meetingSheetHint}>
+                Record when the fellowship met. Attendance can be added later
+                from the meeting card.
+              </Text>
+
+              <Text style={styles.meetingLabel}>Date</Text>
+              <TextInput
+                value={meetingDate}
+                onChangeText={setMeetingDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="rgba(26,28,28,0.4)"
+                style={styles.meetingInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!createMeeting.isPending}
+              />
+
+              <Text style={styles.meetingLabel}>Title (optional)</Text>
+              <TextInput
+                value={meetingTitle}
+                onChangeText={setMeetingTitle}
+                placeholder="e.g. Bible study"
+                placeholderTextColor="rgba(26,28,28,0.4)"
+                style={styles.meetingInput}
+                editable={!createMeeting.isPending}
+              />
+
+              <Text style={styles.meetingLabel}>Location (optional)</Text>
+              <TextInput
+                value={meetingLocation}
+                onChangeText={setMeetingLocation}
+                placeholder="e.g. Main hall"
+                placeholderTextColor="rgba(26,28,28,0.4)"
+                style={styles.meetingInput}
+                editable={!createMeeting.isPending}
+              />
+
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Cancel"
+                    variant="ghost"
+                    onPress={() => setLogMeetingOpen(false)}
+                    disabled={createMeeting.isPending}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={createMeeting.isPending ? 'Saving…' : 'Log meeting'}
+                    onPress={() => createMeeting.mutate()}
+                    loading={createMeeting.isPending}
+                    disabled={!meetingDate.trim()}
+                  />
+                </View>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -637,5 +760,50 @@ const styles = StyleSheet.create({
   errorLine: {
     ...typography.body,
     color: colors.danger,
+  },
+
+  meetingBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  meetingSheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  meetingSheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    marginBottom: spacing.sm,
+  },
+  meetingSheetTitle: { ...typography.cardTitle, color: colors.ink },
+  meetingSheetHint: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    marginBottom: spacing.sm,
+    lineHeight: 16,
+  },
+  meetingLabel: {
+    ...typography.eyebrow,
+    color: colors.ink,
+    opacity: 0.6,
+    marginTop: spacing.sm,
+    marginBottom: 4,
+  },
+  meetingInput: {
+    borderWidth: 1,
+    borderColor: 'rgba(26,28,28,0.12)',
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    ...typography.body,
+    color: colors.ink,
+    backgroundColor: colors.cardLight,
   },
 });
