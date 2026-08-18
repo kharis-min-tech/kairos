@@ -15,6 +15,7 @@ import {
   Button,
   Card,
   Input,
+  TimePicker,
   radii,
   spacing,
   typography,
@@ -202,13 +203,10 @@ export function FellowshipForm({
           />
 
           <FieldLabel label="Meeting time" />
-          <Input
+          <TimePicker
             value={meetingTime}
-            onChangeText={setMeetingTime}
-            placeholder="e.g. 18:30"
-            keyboardType="numbers-and-punctuation"
-            autoCapitalize="none"
-            autoCorrect={false}
+            onChange={setMeetingTime}
+            minuteInterval={5}
           />
 
           <FieldLabel label="Schedule" />

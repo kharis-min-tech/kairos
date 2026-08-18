@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import {
   Button,
   Card,
+  DatePicker,
   Input,
   radii,
   spacing,
@@ -142,17 +143,13 @@ export default function NewOutreachProgram() {
               error={errors['programName']}
             />
 
-            <FieldLabel label="Program date" required />
-            <Input
+            <DatePicker
+              label="Program date"
               value={programDate}
-              onChangeText={(v) => {
+              onChange={(v) => {
                 setProgramDate(v);
                 clearError('programDate');
               }}
-              placeholder="YYYY-MM-DD"
-              keyboardType="numbers-and-punctuation"
-              autoCapitalize="none"
-              autoCorrect={false}
               error={errors['programDate']}
             />
 

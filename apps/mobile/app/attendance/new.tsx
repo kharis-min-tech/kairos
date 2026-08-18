@@ -16,7 +16,9 @@ import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import {
   Button,
   Card,
+  DatePicker,
   Input,
+  TimePicker,
   radii,
   spacing,
   typography,
@@ -74,8 +76,8 @@ export default function CreateService() {
 
   function validate(): boolean {
     const next: Record<string, string> = {};
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(serviceDate)) next['date'] = 'Use YYYY-MM-DD';
-    if (!/^\d{2}:\d{2}(:\d{2})?$/.test(serviceTime)) next['time'] = 'Use HH:MM';
+    if (!serviceDate) next['date'] = 'Pick a date';
+    if (!serviceTime) next['time'] = 'Pick a time';
     if (serviceType === 'Special' && !serviceTitle.trim())
       next['title'] = 'Special services need a title';
     if (
@@ -114,25 +116,19 @@ export default function CreateService() {
 
             <View style={styles.rowFields}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Date</Text>
-                <Input
+                <DatePicker
+                  label="Date"
                   value={serviceDate}
-                  onChangeText={setServiceDate}
-                  placeholder="YYYY-MM-DD"
-                  autoCapitalize="none"
-                  autoCorrect={false}
+                  onChange={setServiceDate}
                   error={errors['date']}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Time</Text>
-                <Input
+                <TimePicker
+                  label="Time"
                   value={serviceTime}
-                  onChangeText={setServiceTime}
-                  placeholder="09:00"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="numbers-and-punctuation"
+                  onChange={setServiceTime}
+                  minuteInterval={5}
                   error={errors['time']}
                 />
               </View>

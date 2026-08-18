@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import {
   Button,
+  DatePicker,
   Input,
   gradients,
   radii,
@@ -82,8 +83,7 @@ export default function SignupScreen() {
       next['password'] = `At least ${MIN_PASSWORD} characters`;
     if (!homeBranchId) next['homeBranchId'] = 'Choose your home branch';
     if (!acceptedPolicies) next['acceptedPolicies'] = 'Required to create an account';
-    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth))
-      next['dateOfBirth'] = 'Use YYYY-MM-DD';
+    // Format is enforced by the DatePicker — no client-side check needed.
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -239,13 +239,15 @@ export default function SignupScreen() {
 
                 <View style={styles.pairRow}>
                   <View style={{ flex: 1 }}>
-                    <Input
+                    <DatePicker
                       label="Date of birth"
                       value={dateOfBirth}
-                      onChangeText={setDateOfBirth}
-                      placeholder="YYYY-MM-DD"
-                      autoCapitalize="none"
-                      autoCorrect={false}
+                      onChange={(v) => {
+                        setDateOfBirth(v);
+                        setErrors((p) => ({ ...p, dateOfBirth: '' }));
+                      }}
+                      placeholder="Pick a date"
+                      maximumDate={new Date()}
                       error={errors['dateOfBirth']}
                     />
                   </View>

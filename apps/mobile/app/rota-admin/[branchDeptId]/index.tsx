@@ -26,6 +26,7 @@ import {
   Badge,
   Button,
   Card,
+  DatePicker,
   radii,
   spacing,
   typography,
@@ -385,16 +386,11 @@ function GenerateSheet({
               assignments — no double-booking.
             </Text>
 
-            <Text style={styles.sheetLabel}>Start date</Text>
-            <TextInput
+            <DatePicker
+              label="Start date"
               value={startDate}
-              onChangeText={onStartChange}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={c.inkFaded}
-              style={styles.sheetInput}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!submitting}
+              onChange={onStartChange}
+              disabled={submitting}
             />
 
             <Text style={styles.sheetLabel}>Weeks to generate</Text>
@@ -423,7 +419,7 @@ function GenerateSheet({
                   onPress={onConfirm}
                   loading={submitting}
                   disabled={
-                    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+                    !startDate ||
                     Number(weeks) < 1 ||
                     template.poolCount === 0
                   }
