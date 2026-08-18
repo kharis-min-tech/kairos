@@ -9,7 +9,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, radii, spacing, typography } from './tokens';
+import { radii, spacing, typography } from './tokens';
+import { useThemedStyles, type ThemeColors } from './theme';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -32,6 +33,7 @@ export function Input({
   onBlur,
   ...rest
 }: InputProps) {
+  const styles = useThemedStyles(makeStyles);
   const [focused, setFocused] = useState(false);
   const [showSecure, setShowSecure] = useState(false);
   const isSecure = secureTextEntryProp && !showSecure;
@@ -59,7 +61,7 @@ export function Input({
             onBlur?.(e);
           }}
           style={styles.input}
-          placeholderTextColor="rgba(26,28,28,0.4)"
+          placeholderTextColor={styles.placeholderColor.color}
         />
         {trailingSlot ? <View style={styles.trailingSlot}>{trailingSlot}</View> : null}
         {secureToggle && secureTextEntryProp ? (
@@ -78,55 +80,60 @@ export function Input({
   );
 }
 
-const styles = StyleSheet.create({
-  label: {
-    ...typography.eyebrow,
-    color: colors.ink,
-    opacity: 0.6,
-    marginBottom: spacing.xs,
-  },
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardLight,
-    borderWidth: 1,
-    borderColor: 'rgba(26,28,28,0.12)',
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-  },
-  fieldFocused: {
-    borderColor: colors.gold,
-    borderWidth: 1.5,
-  },
-  fieldError: {
-    borderColor: colors.danger,
-    borderWidth: 1.5,
-  },
-  input: {
-    flex: 1,
-    ...typography.body,
-    color: colors.ink,
-    paddingVertical: spacing.sm,
-  },
-  leadingSlot: {
-    marginRight: spacing.sm,
-  },
-  trailingSlot: {
-    marginLeft: spacing.sm,
-  },
-  toggle: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  toggleLabel: {
-    ...typography.meta,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  errorText: {
-    ...typography.meta,
-    color: colors.danger,
-    marginTop: spacing.xs,
-  },
-});
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    label: {
+      ...typography.eyebrow,
+      color: c.ink,
+      opacity: 0.6,
+      marginBottom: spacing.xs,
+    },
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing.md,
+      minHeight: 44,
+    },
+    fieldFocused: {
+      borderColor: c.gold,
+      borderWidth: 1.5,
+    },
+    fieldError: {
+      borderColor: c.danger,
+      borderWidth: 1.5,
+    },
+    input: {
+      flex: 1,
+      ...typography.body,
+      color: c.ink,
+      paddingVertical: spacing.sm,
+    },
+    // placeholderTextColor takes a raw string, not a style — expose it as a
+    // reachable field so the caller can read the resolved value.
+    placeholderColor: { color: c.inkFaded },
+    leadingSlot: {
+      marginRight: spacing.sm,
+    },
+    trailingSlot: {
+      marginLeft: spacing.sm,
+    },
+    toggle: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    toggleLabel: {
+      ...typography.meta,
+      color: c.primary,
+      fontWeight: '600',
+    },
+    errorText: {
+      ...typography.meta,
+      color: c.danger,
+      marginTop: spacing.xs,
+    },
+  });
+}

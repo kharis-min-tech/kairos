@@ -1,20 +1,21 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { Home, Users, Hand, Heart, Menu } from 'lucide-react-native';
-import { colors } from '@kairos/ui-native';
+import { useColors } from '@kairos/ui-native';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 88 : 72;
 
 export default function TabsLayout() {
+  const c = useColors();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: 'rgba(26,28,28,0.45)',
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.inkFaded,
         tabBarStyle: {
-          backgroundColor: 'rgba(255,255,255,0.96)',
-          borderTopColor: 'rgba(26,28,28,0.06)',
+          backgroundColor: c.card,
+          borderTopColor: c.divider,
           borderTopWidth: 1,
           height: TAB_BAR_HEIGHT,
           paddingTop: 10,

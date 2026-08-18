@@ -2,6 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { Appearance, useColorScheme } from 'react-native';
 import { darkColors, lightColors, type ThemeColors } from './tokens';
 
+export type { ThemeColors };
 export type ThemeMode = 'system' | 'light' | 'dark';
 
 export interface ThemeContextValue {
