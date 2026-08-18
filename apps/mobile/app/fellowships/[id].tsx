@@ -33,6 +33,7 @@ import {
   Badge,
   Button,
   Card,
+  DatePicker,
   gradients,
   radii,
   spacing,
@@ -516,16 +517,12 @@ export default function FellowshipDetail() {
                 from the meeting card.
               </Text>
 
-              <Text style={styles.meetingLabel}>Date</Text>
-              <TextInput
+              <DatePicker
+                label="Date"
                 value={meetingDate}
-                onChangeText={setMeetingDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={c.inkFaded}
-                style={styles.meetingInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!createMeeting.isPending}
+                onChange={setMeetingDate}
+                disabled={createMeeting.isPending}
+                maximumDate={new Date()}
               />
 
               <Text style={styles.meetingLabel}>Title (optional)</Text>

@@ -14,6 +14,7 @@ import { ChevronRight, Check, X } from 'lucide-react-native';
 import {
   Button,
   Card,
+  DatePicker,
   Input,
   radii,
   spacing,
@@ -224,14 +225,11 @@ export function MemberForm({
             autoCapitalize="words"
           />
 
-          <FieldLabel label="Date of birth" />
-          <Input
+          <DatePicker
+            label="Date of birth"
             value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-            autoCapitalize="none"
-            autoCorrect={false}
+            onChange={setDateOfBirth}
+            maximumDate={new Date()}
           />
 
           <FieldLabel label="Gender" />

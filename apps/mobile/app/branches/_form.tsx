@@ -14,7 +14,9 @@ import { ChevronRight, Check, Plus, Trash2 } from 'lucide-react-native';
 import {
   Button,
   Card,
+  DatePicker,
   Input,
+  TimePicker,
   radii,
   spacing,
   typography,
@@ -206,14 +208,11 @@ export function BranchForm({
             })}
           </View>
 
-          <FieldLabel label="Established date" />
-          <Input
+          <DatePicker
+            label="Established date"
             value={establishedDate}
-            onChangeText={setEstablishedDate}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-            autoCapitalize="none"
-            autoCorrect={false}
+            onChange={setEstablishedDate}
+            maximumDate={new Date()}
           />
         </Card>
 
@@ -282,12 +281,10 @@ export function BranchForm({
                   </View>
                   <View style={{ flex: 1 }}>
                     <FieldLabel label="Time" />
-                    <Input
+                    <TimePicker
                       value={row.time}
-                      onChangeText={(v) => updateServiceRow(idx, { time: v })}
-                      placeholder="18:00"
-                      keyboardType="numbers-and-punctuation"
-                      autoCapitalize="none"
+                      onChange={(v) => updateServiceRow(idx, { time: v })}
+                      minuteInterval={5}
                     />
                   </View>
                 </View>

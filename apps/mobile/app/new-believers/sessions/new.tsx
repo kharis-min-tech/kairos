@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import {
   Button,
   Card,
+  DatePicker,
   Input,
   radii,
   spacing,
@@ -118,13 +119,10 @@ export default function CreateSession() {
               onPress={() => setPickerOpen('stage')}
             />
 
-            <FieldLabel label="Date" required />
-            <Input
+            <DatePicker
+              label="Date"
               value={sessionDate}
-              onChangeText={setSessionDate}
-              placeholder="YYYY-MM-DD"
-              autoCapitalize="none"
-              autoCorrect={false}
+              onChange={setSessionDate}
               error={errors['sessionDate']}
             />
 
