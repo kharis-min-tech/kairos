@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -37,6 +38,14 @@ import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 
 type TypeFilter = 'all' | 'member' | 'attendee';
+type StatusFilter = 'all' | 'approved' | 'pending' | 'rejected';
+
+const STATUS_LABEL: Record<StatusFilter, string> = {
+  all: 'All statuses',
+  approved: 'Approved',
+  pending: 'Pending',
+  rejected: 'Rejected',
+};
 
 const PAGE_SIZE = 25;
 
@@ -55,17 +64,23 @@ export default function MembersDirectory() {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const debouncedSearch = useDebounced(searchInput.trim(), 300);
   const caps = useCapabilities();
   const canAdmin = caps.has('signup:approve') || caps.has('branch:write');
 
   const members = useInfiniteQuery({
-    queryKey: ['members', 'list-infinite', { search: debouncedSearch, memberType: typeFilter }],
+    queryKey: [
+      'members',
+      'list-infinite',
+      { search: debouncedSearch, memberType: typeFilter, approvalStatus: statusFilter },
+    ],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       const res = await api.members.list({
         search: debouncedSearch || undefined,
         memberType: typeFilter === 'all' ? undefined : typeFilter,
+        approvalStatus: statusFilter === 'all' ? undefined : statusFilter,
         page: pageParam,
         limit: PAGE_SIZE,
       });
@@ -148,6 +163,31 @@ export default function MembersDirectory() {
             );
           })}
         </View>
+
+        {canAdmin ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
+            {(Object.keys(STATUS_LABEL) as StatusFilter[]).map((s) => {
+              const selected = statusFilter === s;
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => setStatusFilter(s)}
+                  style={[styles.filterChip, selected && styles.filterChipActive]}
+                >
+                  <Text
+                    style={[styles.filterLabel, selected && styles.filterLabelActive]}
+                  >
+                    {STATUS_LABEL[s]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
       </View>
 
       <FlatList
