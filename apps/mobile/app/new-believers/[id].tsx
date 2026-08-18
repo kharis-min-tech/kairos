@@ -30,6 +30,7 @@ import { formatShortDate } from '@kairos/core';
 import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 interface StageDef {
   value: NewBelieverStageValue;
@@ -83,6 +84,7 @@ export default function EnrollmentDetail() {
   const [advanceAfter, setAdvanceAfter] = useState(false);
 
   const [stageSheetOpen, setStageSheetOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState<'teacher' | 'mentor' | null>(null);
 
   const data = enrollment.data;
   const stageDef = useMemo(
@@ -155,6 +157,25 @@ export default function EnrollmentDetail() {
       alert.info(`Advanced to ${nextStage.label}`, undefined);
     } catch (e) {
       alert.info('Failed to advance', e instanceof Error ? e.message : 'Please try again.');
+    }
+  }
+
+  async function assignRole(kind: 'teacher' | 'mentor', memberId: string | null) {
+    if (!data) return;
+    setPickerOpen(null);
+    const payload: UpdateEnrollmentRequest =
+      kind === 'teacher' ? { teacherId: memberId } : { mentorId: memberId };
+    try {
+      await update.mutateAsync(payload);
+      alert.info(
+        `${kind === 'teacher' ? 'Teacher' : 'Mentor'} ${memberId ? 'updated' : 'cleared'}`,
+        undefined,
+      );
+    } catch (e) {
+      alert.info(
+        `Failed to update ${kind}`,
+        e instanceof Error ? e.message : 'Please try again.',
+      );
     }
   }
 
@@ -308,16 +329,18 @@ export default function EnrollmentDetail() {
                 value={
                   data.teacherFirstName
                     ? `${data.teacherFirstName} ${data.teacherLastName ?? ''}`.trim()
-                    : '—'
+                    : 'Not assigned'
                 }
+                onPress={() => setPickerOpen('teacher')}
               />
               <DetailRow
                 label="Mentor"
                 value={
                   data.mentorFirstName
                     ? `${data.mentorFirstName} ${data.mentorLastName ?? ''}`.trim()
-                    : '—'
+                    : 'Not assigned'
                 }
+                onPress={() => setPickerOpen('mentor')}
               />
               <DetailRow
                 label="Completed"
@@ -485,6 +508,27 @@ export default function EnrollmentDetail() {
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Teacher / Mentor picker — shared branch-scoped members sheet. */}
+      {data && pickerOpen ? (
+        <MemberPickerSheet
+          open={!!pickerOpen}
+          onClose={() => setPickerOpen(null)}
+          branchId={data.branchId}
+          title={pickerOpen === 'teacher' ? 'Pick a teacher' : 'Pick a mentor'}
+          subtitle={
+            pickerOpen === 'teacher'
+              ? 'Search members in this branch. Teachers can\'t be currently enrolled as students.'
+              : 'Search members in this branch. Mentors follow up with the student one-to-one.'
+          }
+          selectedMemberId={
+            pickerOpen === 'teacher'
+              ? data.teacherId ?? undefined
+              : data.mentorId ?? undefined
+          }
+          onPick={(memberId) => assignRole(pickerOpen, memberId)}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

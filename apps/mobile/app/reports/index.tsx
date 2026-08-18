@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   ChevronLeft,
+  ChevronRight,
+  Check,
   TrendingDown,
   TrendingUp,
   UserX,
@@ -21,6 +24,7 @@ import {
   Sparkles,
   PieChart,
   LayoutGrid,
+  Filter,
 } from 'lucide-react-native';
 import Svg, { Rect, Circle, Line as SvgLine, Text as SvgText, G } from 'react-native-svg';
 import { Card, colors, radii, spacing, typography } from '@kairos/ui-native';
@@ -59,19 +63,69 @@ function formatPct(rate: number): string {
   return `${pct}%`;
 }
 
+type ScopeKind = 'branch' | 'department' | 'fellowship';
+
 export default function Reports() {
   const router = useRouter();
   const [engagedWindowMonths, setEngagedWindowMonths] = useState<WindowMonths>(3);
   const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
 
+  // Scope filter — reports default to the whole branch. Picking a dept or
+  // fellowship narrows every downstream report to that group's members.
+  const [scopeKind, setScopeKind] = useState<ScopeKind>('branch');
+  const [scopeId, setScopeId] = useState<string | null>(null);
+  const [scopePickerOpen, setScopePickerOpen] = useState<ScopeKind | null>(null);
+
+  const departments = useQuery({
+    queryKey: ['reports', 'scope', 'departments', branchId],
+    enabled: !!branchId,
+    queryFn: async () => {
+      const res = await api.departments.list({ branchId: branchId!, limit: 100 });
+      return res.data?.data ?? [];
+    },
+  });
+  const fellowships = useQuery({
+    queryKey: ['reports', 'scope', 'fellowships', branchId],
+    enabled: !!branchId,
+    queryFn: async () => {
+      const res = await api.fellowships.list({ branchId: branchId!, limit: 100 });
+      return res.data?.data ?? [];
+    },
+  });
+
+  const scope = useMemo(() => {
+    if (scopeKind === 'branch' || !scopeId) return null;
+    return { kind: scopeKind, id: scopeId } as const;
+  }, [scopeKind, scopeId]);
+
+  const scopeParams = useMemo(
+    () =>
+      scope?.kind === 'department'
+        ? { departmentId: scope.id }
+        : scope?.kind === 'fellowship'
+          ? { fellowshipId: scope.id }
+          : {},
+    [scope],
+  );
+
+  const scopeLabel = useMemo(() => {
+    if (!scope) return 'Whole branch';
+    if (scope.kind === 'department') {
+      const d = departments.data?.find((x) => x.id === scope.id);
+      return d ? `Dept · ${d.departmentName}` : 'Department';
+    }
+    const f = fellowships.data?.find((x) => x.id === scope.id);
+    return f ? `Fellowship · ${f.fellowshipName}` : 'Fellowship';
+  }, [scope, departments.data, fellowships.data]);
+
   const summary = useQuery({
-    queryKey: ['attendance', 'reports', 'summary', { weeks: 4 }],
+    queryKey: ['attendance', 'reports', 'summary', { weeks: 4, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.summary({ weeks: 4 })).data ?? null,
+      (await api.attendance.summary({ weeks: 4, ...scopeParams })).data ?? null,
   });
 
   const heatmap = useQuery({
-    queryKey: ['attendance', 'reports', 'heatmap', { branchId, weeks: 8, engagedWindowMonths }],
+    queryKey: ['attendance', 'reports', 'heatmap', { branchId, weeks: 8, engagedWindowMonths, ...scopeParams }],
     enabled: !!branchId,
     queryFn: async () =>
       (
@@ -80,33 +134,34 @@ export default function Reports() {
           weeks: 8,
           engagedWindowMonths,
           engagedOnly: true,
+          ...scopeParams,
         })
       ).data ?? null,
   });
 
   const trends = useQuery({
-    queryKey: ['attendance', 'reports', 'trends', { weeks: 12 }],
+    queryKey: ['attendance', 'reports', 'trends', { weeks: 12, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.trends({ weeks: 12 })).data ?? [],
+      (await api.attendance.trends({ weeks: 12, ...scopeParams })).data ?? [],
   });
 
   const frequency = useQuery({
-    queryKey: ['attendance', 'reports', 'frequency-buckets', { engagedWindowMonths }],
+    queryKey: ['attendance', 'reports', 'frequency-buckets', { engagedWindowMonths, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.frequencyBuckets({ engagedWindowMonths })).data ??
+      (await api.attendance.frequencyBuckets({ engagedWindowMonths, ...scopeParams })).data ??
       null,
   });
 
   const firstTime = useQuery({
-    queryKey: ['attendance', 'reports', 'first-time-returning', { weeks: 8 }],
+    queryKey: ['attendance', 'reports', 'first-time-returning', { weeks: 8, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.firstTimeReturning({ weeks: 8 })).data ?? [],
+      (await api.attendance.firstTimeReturning({ weeks: 8, ...scopeParams })).data ?? [],
   });
 
   const missing = useQuery({
-    queryKey: ['attendance', 'reports', 'missing-members', { services: 3 }],
+    queryKey: ['attendance', 'reports', 'missing-members', { services: 3, ...scopeParams }],
     queryFn: async () =>
-      (await api.attendance.missingMembers({ services: 3 })).data ?? [],
+      (await api.attendance.missingMembers({ services: 3, ...scopeParams })).data ?? [],
   });
 
   const isFetching =
@@ -145,6 +200,43 @@ export default function Reports() {
           <RefreshControl refreshing={isFetching} onRefresh={refresh} tintColor={colors.primary} />
         }
       >
+        <View style={styles.scopeRow}>
+          <Pressable
+            onPress={() => setScopePickerOpen('branch')}
+            style={[
+              styles.scopeChip,
+              scopeKind === 'branch' && styles.scopeChipActive,
+            ]}
+          >
+            <Filter
+              color={scopeKind === 'branch' ? '#ffffff' : colors.primary}
+              size={12}
+              strokeWidth={1.5}
+            />
+            <Text
+              style={[
+                styles.scopeChipLabel,
+                scopeKind === 'branch' && styles.scopeChipLabelActive,
+              ]}
+              numberOfLines={1}
+            >
+              {scopeLabel}
+            </Text>
+          </Pressable>
+          {scope ? (
+            <Pressable
+              onPress={() => {
+                setScopeKind('branch');
+                setScopeId(null);
+              }}
+              hitSlop={6}
+              style={styles.scopeClear}
+            >
+              <Text style={styles.scopeClearLabel}>Clear</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
         <SummaryTile summary={summary.data} loading={summary.isLoading} error={summary.error} />
 
         <TrendsCard
@@ -205,11 +297,125 @@ export default function Reports() {
         />
 
         <Text style={styles.footnote}>
-          Reports are scoped to your branch. Admins with cross-branch access see all
-          branches; use the web to filter by department or fellowship.
+          Reports are scoped to your branch. Filter by department or fellowship
+          from the chip above.
         </Text>
       </ScrollView>
+
+      <ScopePickerModal
+        open={!!scopePickerOpen}
+        onClose={() => setScopePickerOpen(null)}
+        departments={departments.data ?? []}
+        fellowships={fellowships.data ?? []}
+        scopeKind={scopeKind}
+        scopeId={scopeId}
+        onPick={(kind, id) => {
+          setScopeKind(kind);
+          setScopeId(id);
+          setScopePickerOpen(null);
+        }}
+      />
     </SafeAreaView>
+  );
+}
+
+function ScopePickerModal({
+  open,
+  onClose,
+  departments,
+  fellowships,
+  scopeKind,
+  scopeId,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  departments: { id: string; departmentName: string }[];
+  fellowships: { id: string; fellowshipName: string }[];
+  scopeKind: ScopeKind;
+  scopeId: string | null;
+  onPick: (kind: ScopeKind, id: string | null) => void;
+}) {
+  return (
+    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.scopeBackdrop} onPress={onClose}>
+        <Pressable style={styles.scopeSheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.scopeSheetHandle} />
+          <Text style={styles.scopeSheetTitle}>Filter reports by…</Text>
+
+          <Pressable
+            onPress={() => onPick('branch', null)}
+            style={[
+              styles.scopeSheetRow,
+              scopeKind === 'branch' && styles.scopeSheetRowActive,
+            ]}
+          >
+            <Text style={styles.scopeSheetRowLabel}>Whole branch</Text>
+            {scopeKind === 'branch' ? (
+              <Check color={colors.primary} size={16} strokeWidth={2} />
+            ) : null}
+          </Pressable>
+
+          <Text style={styles.scopeSheetHeader}>Departments</Text>
+          <ScrollView style={{ maxHeight: 200 }}>
+            {departments.length === 0 ? (
+              <Text style={styles.scopeEmpty}>No departments in this branch.</Text>
+            ) : (
+              departments.map((d) => {
+                const active = scopeKind === 'department' && scopeId === d.id;
+                return (
+                  <Pressable
+                    key={d.id}
+                    onPress={() => onPick('department', d.id)}
+                    style={[styles.scopeSheetRow, active && styles.scopeSheetRowActive]}
+                  >
+                    <Text style={styles.scopeSheetRowLabel}>{d.departmentName}</Text>
+                    {active ? (
+                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                    ) : (
+                      <ChevronRight
+                        color="rgba(26,28,28,0.3)"
+                        size={14}
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <Text style={styles.scopeSheetHeader}>Fellowships</Text>
+          <ScrollView style={{ maxHeight: 200 }}>
+            {fellowships.length === 0 ? (
+              <Text style={styles.scopeEmpty}>No fellowships in this branch.</Text>
+            ) : (
+              fellowships.map((f) => {
+                const active = scopeKind === 'fellowship' && scopeId === f.id;
+                return (
+                  <Pressable
+                    key={f.id}
+                    onPress={() => onPick('fellowship', f.id)}
+                    style={[styles.scopeSheetRow, active && styles.scopeSheetRowActive]}
+                  >
+                    <Text style={styles.scopeSheetRowLabel}>{f.fellowshipName}</Text>
+                    {active ? (
+                      <Check color={colors.primary} size={16} strokeWidth={2} />
+                    ) : (
+                      <ChevronRight
+                        color="rgba(26,28,28,0.3)"
+                        size={14}
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 
@@ -975,9 +1181,14 @@ function MissingMembersCard({
           ))
         )}
         {data.length > 5 ? (
-          <Text style={styles.subMeta}>
-            + {data.length - 5} more · open on web for the full list
-          </Text>
+          <Pressable
+            onPress={() => router.push('/reports/missing-members' as never)}
+            style={styles.missingSeeMore}
+          >
+            <Text style={styles.missingSeeMoreLabel}>
+              See all {data.length} →
+            </Text>
+          </Pressable>
         ) : null}
       </Card>
     </View>
@@ -1179,6 +1390,17 @@ const styles = StyleSheet.create({
     ...typography.meta,
     color: colors.danger,
   },
+  missingSeeMore: {
+    alignSelf: 'flex-end',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  missingSeeMoreLabel: {
+    ...typography.meta,
+    color: colors.primary,
+    fontWeight: '600',
+  },
   errorLine: {
     ...typography.body,
     color: colors.danger,
@@ -1194,5 +1416,86 @@ const styles = StyleSheet.create({
     color: 'rgba(26,28,28,0.5)',
     paddingHorizontal: spacing.xs,
     lineHeight: 15,
+  },
+
+  scopeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  scopeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    height: 32,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(93,63,211,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(93,63,211,0.15)',
+    flexShrink: 1,
+    maxWidth: '80%',
+  },
+  scopeChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  scopeChipLabel: {
+    ...typography.meta,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  scopeChipLabelActive: { color: '#ffffff' },
+  scopeClear: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  scopeClearLabel: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    fontWeight: '600',
+  },
+
+  scopeBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  scopeSheet: {
+    backgroundColor: colors.cardLight,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  scopeSheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(26,28,28,0.15)',
+    marginBottom: spacing.sm,
+  },
+  scopeSheetTitle: { ...typography.cardTitle, color: colors.ink, marginBottom: spacing.xs },
+  scopeSheetHeader: {
+    ...typography.eyebrow,
+    color: 'rgba(26,28,28,0.55)',
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  scopeSheetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+  },
+  scopeSheetRowActive: { backgroundColor: 'rgba(93,63,211,0.08)' },
+  scopeSheetRowLabel: { ...typography.body, color: colors.ink, flex: 1 },
+  scopeEmpty: {
+    ...typography.meta,
+    color: 'rgba(26,28,28,0.55)',
+    padding: spacing.md,
   },
 });
