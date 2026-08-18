@@ -84,6 +84,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           'Kairos needs access to your photo library so you can pick a profile photo.',
       },
     ],
+    '@react-native-community/datetimepicker',
   ],
   experiments: {
     typedRoutes: true,
