@@ -46,6 +46,7 @@ export default function SignupScreen() {
   const router = useRouter();
 
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -53,6 +54,13 @@ export default function SignupScreen() {
   const [dateOfBirth, setDateOfBirth] = useState(''); // YYYY-MM-DD
   const [gender, setGender] = useState<'Male' | 'Female' | ''>('');
   const [homeBranchId, setHomeBranchId] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [emergencyRel, setEmergencyRel] = useState('');
+  const [showMore, setShowMore] = useState(false);
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,6 +100,7 @@ export default function SignupScreen() {
     mutationFn: async () => {
       const res = await api.auth.signup({
         firstName: firstName.trim(),
+        middleName: middleName.trim() || undefined,
         lastName: lastName.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
@@ -99,6 +108,12 @@ export default function SignupScreen() {
         dateOfBirth: dateOfBirth || undefined,
         gender: gender || undefined,
         homeBranchId,
+        address: address.trim() || undefined,
+        city: city.trim() || undefined,
+        postalCode: postalCode.trim() || undefined,
+        emergencyContactName: emergencyName.trim() || undefined,
+        emergencyContactPhone: emergencyPhone.trim() || undefined,
+        emergencyContactRelationship: emergencyRel.trim() || undefined,
         acceptedPolicies,
       });
       if (!res.success) throw new Error(res.message ?? 'Sign up failed');
@@ -201,6 +216,14 @@ export default function SignupScreen() {
                 </View>
 
                 <Input
+                  label="Middle name (optional)"
+                  value={middleName}
+                  onChangeText={setMiddleName}
+                  autoCapitalize="words"
+                  containerStyle={{ marginTop: spacing.md }}
+                />
+
+                <Input
                   label="Email"
                   value={email}
                   onChangeText={(v) => {
@@ -260,6 +283,74 @@ export default function SignupScreen() {
                     />
                   </View>
                 </View>
+
+                <Pressable
+                  onPress={() => setShowMore((p) => !p)}
+                  style={styles.moreToggle}
+                  hitSlop={6}
+                >
+                  <Text style={styles.moreToggleLabel}>
+                    {showMore
+                      ? 'Hide address & emergency contact'
+                      : 'Add address & emergency contact (optional)'}
+                  </Text>
+                </Pressable>
+
+                {showMore ? (
+                  <>
+                    <Input
+                      label="Address"
+                      value={address}
+                      onChangeText={setAddress}
+                      autoCapitalize="words"
+                      containerStyle={{ marginTop: spacing.md }}
+                    />
+                    <View style={styles.pairRow}>
+                      <View style={{ flex: 1 }}>
+                        <Input
+                          label="City"
+                          value={city}
+                          onChangeText={setCity}
+                          autoCapitalize="words"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Input
+                          label="Postal code"
+                          value={postalCode}
+                          onChangeText={setPostalCode}
+                          autoCapitalize="characters"
+                        />
+                      </View>
+                    </View>
+                    <Input
+                      label="Emergency contact name"
+                      value={emergencyName}
+                      onChangeText={setEmergencyName}
+                      autoCapitalize="words"
+                      containerStyle={{ marginTop: spacing.md }}
+                    />
+                    <View style={styles.pairRow}>
+                      <View style={{ flex: 1 }}>
+                        <Input
+                          label="Emergency phone"
+                          value={emergencyPhone}
+                          onChangeText={setEmergencyPhone}
+                          keyboardType="phone-pad"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Input
+                          label="Relationship"
+                          value={emergencyRel}
+                          onChangeText={setEmergencyRel}
+                          placeholder="e.g. Spouse"
+                        />
+                      </View>
+                    </View>
+                  </>
+                ) : null}
 
                 <Input
                   label="Password"
@@ -502,6 +593,8 @@ function makeStyles(c: ThemeColors) {
   },
   errorText: { ...typography.meta, color: c.danger },
   errorLine: { ...typography.meta, color: c.danger },
+  moreToggle: { paddingVertical: spacing.sm, marginTop: spacing.xs },
+  moreToggleLabel: { ...typography.body, color: c.primary, fontWeight: '600' },
 
   pairRow: {
     flexDirection: 'row',
