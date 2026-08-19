@@ -185,6 +185,7 @@ export default function LoginScreen() {
               actionLabel="sign-in"
               onResult={handleOAuthResult}
               disabled={login.isPending}
+              variant="icons"
             />
 
             <Pressable

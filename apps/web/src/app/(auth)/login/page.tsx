@@ -95,18 +95,6 @@ function LoginContent() {
             </div>
           )}
 
-          {/* Federated sign-in first — the fastest path for returning members. */}
-          <OAuthButtonGroup returnTo="/dashboard" actionLabel="sign-in" disabled={isSubmitting} />
-
-          <div className="relative py-1">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted-foreground/10" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">or sign in with email</span>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1.5">
               <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -182,6 +170,17 @@ function LoginContent() {
                 </>
               )}
             </button>
+
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-muted-foreground/10" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">or continue with</span>
+              </div>
+            </div>
+
+            <OAuthButtonGroup returnTo="/dashboard" actionLabel="sign-in" disabled={isSubmitting} variant="icons" />
 
             <p className="text-center text-sm text-muted-foreground/70">
               Don&apos;t have an account?{' '}

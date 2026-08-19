@@ -222,21 +222,6 @@ export default function SignupScreen() {
                   can sign in.
                 </Text>
 
-                <OAuthButtonGroup
-                  actionLabel="continue"
-                  onResult={handleOAuthResult}
-                  disabled={signup.isPending}
-                />
-                <Text style={styles.ssoCaption}>
-                  You&apos;ll pick your branch during onboarding.
-                </Text>
-
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerLabel}>Or fill in the form</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
                 {serverError ? (
                   <View style={styles.errorBanner}>
                     <Text style={styles.errorText}>{serverError}</Text>
@@ -444,6 +429,22 @@ export default function SignupScreen() {
                   iconRight={<ArrowRight color="#ffffff" size={16} strokeWidth={2} />}
                   style={{ marginTop: spacing.lg }}
                 />
+
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerLabel}>Or continue with</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <OAuthButtonGroup
+                  actionLabel="continue"
+                  onResult={handleOAuthResult}
+                  disabled={signup.isPending}
+                  variant="icons"
+                />
+                <Text style={styles.ssoCaption}>
+                  You&apos;ll pick your branch during onboarding.
+                </Text>
               </>
             )}
           </View>
