@@ -86,12 +86,48 @@ export function AddressAutofillGroup({
   labels,
 }: AddressAutofillGroupProps) {
   const [justPicked, setJustPicked] = React.useState(false);
+  // OSM fallback state: fires in parallel with Mapbox's AddressAutofill when
+  // the user types in line1. Renders a supplementary dropdown so users in
+  // regions where Mapbox coverage is thin (Ghana, Sierra Leone, Nigeria) can
+  // still find their address via community-mapped OSM data.
+  const [osmHits, setOsmHits] = React.useState<OsmSuggestion[]>([]);
+  const osmTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const set = <K extends keyof AddressAutofillValue>(k: K, v: AddressAutofillValue[K]) => {
     // The user just typed — the pick hint is stale, clear it.
     setJustPicked(false);
     onChange({ ...value, [k]: v });
   };
+
+  // Debounced OSM fetch driven off line1 changes.
+  React.useEffect(() => {
+    const q = value.line1?.trim() ?? '';
+    if (q.length < 3) {
+      setOsmHits([]);
+      return;
+    }
+    if (osmTimerRef.current) clearTimeout(osmTimerRef.current);
+    osmTimerRef.current = setTimeout(() => {
+      void fetchOsmSuggestions(q, country).then(setOsmHits);
+    }, 500);
+    return () => {
+      if (osmTimerRef.current) clearTimeout(osmTimerRef.current);
+    };
+  }, [value.line1, country]);
+
+  function pickOsm(s: OsmSuggestion) {
+    setOsmHits([]);
+    onChange({
+      line1: s.addressLine1 || value.line1,
+      line2: value.line2,
+      city: s.city || value.city,
+      postalCode: s.postcode || value.postalCode,
+      country: s.countryCode?.toUpperCase() ?? value.country,
+      latitude: s.lat,
+      longitude: s.lng,
+    });
+    setJustPicked(true);
+  }
 
   const line1Label = labels?.line1 ?? 'Address';
   const line2Label = labels?.line2 ?? 'Apartment, suite, etc. (optional)';
@@ -112,6 +148,26 @@ export function AddressAutofillGroup({
         />
         {justPicked && !value.line1?.trim() ? (
           <p className="mt-1 text-xs italic text-muted-foreground">{hint}</p>
+        ) : null}
+        {osmHits.length > 0 ? (
+          <div className="mt-1 overflow-hidden rounded-lg border border-border bg-background shadow-md">
+            <div className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Also found via OpenStreetMap
+            </div>
+            {osmHits.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => pickOsm(s)}
+                className="block w-full border-t border-border/50 px-3 py-2 text-left text-sm hover:bg-muted/60"
+              >
+                <div className="font-medium">{s.name}</div>
+                <div className="text-xs text-muted-foreground line-clamp-1">
+                  {s.place_formatted}
+                </div>
+              </button>
+            ))}
+          </div>
         ) : null}
       </FieldRow>
 
@@ -192,6 +248,81 @@ export function AddressAutofillGroup({
       {fields}
     </AddressAutofill>
   );
+}
+
+interface OsmSuggestion {
+  id: string;
+  name: string;
+  place_formatted: string;
+  lat: number;
+  lng: number;
+  addressLine1: string;
+  city: string;
+  postcode: string;
+  countryCode?: string;
+}
+
+interface NominatimResult {
+  place_id: number;
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: {
+    house_number?: string;
+    road?: string;
+    pedestrian?: string;
+    suburb?: string;
+    neighbourhood?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    postcode?: string;
+    country_code?: string;
+  };
+}
+
+async function fetchOsmSuggestions(
+  query: string,
+  country: string | undefined,
+): Promise<OsmSuggestion[]> {
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('q', query);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('limit', '4');
+  if (country) url.searchParams.set('countrycodes', country);
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'Accept-Language': 'en' },
+    });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as NominatimResult[];
+    return rows.map((r) => {
+      const a = r.address ?? {};
+      const streetLabel = [a.house_number, a.road ?? a.pedestrian]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      const shortLabel =
+        streetLabel ||
+        a.suburb ||
+        a.neighbourhood ||
+        (r.display_name.split(',')[0] ?? '').trim();
+      return {
+        id: `osm:${r.place_id}`,
+        name: shortLabel,
+        place_formatted: r.display_name,
+        lat: parseFloat(r.lat),
+        lng: parseFloat(r.lon),
+        addressLine1: streetLabel,
+        city: a.city ?? a.town ?? a.village ?? '',
+        postcode: a.postcode ?? '',
+        countryCode: a.country_code,
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 function FieldRow({
