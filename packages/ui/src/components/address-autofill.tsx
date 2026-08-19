@@ -85,13 +85,20 @@ export function AddressAutofillGroup({
   errors,
   labels,
 }: AddressAutofillGroupProps) {
-  const set = <K extends keyof AddressAutofillValue>(k: K, v: AddressAutofillValue[K]) =>
+  const [justPicked, setJustPicked] = React.useState(false);
+
+  const set = <K extends keyof AddressAutofillValue>(k: K, v: AddressAutofillValue[K]) => {
+    // The user just typed — the pick hint is stale, clear it.
+    setJustPicked(false);
     onChange({ ...value, [k]: v });
+  };
 
   const line1Label = labels?.line1 ?? 'Address';
   const line2Label = labels?.line2 ?? 'Apartment, suite, etc. (optional)';
   const cityLabel = labels?.city ?? 'City';
   const postalLabel = labels?.postalCode ?? 'Postal code';
+
+  const hint = 'Not detected — add if you know it.';
 
   const fields = (
     <div className={cn('grid gap-3', className)}>
@@ -103,6 +110,9 @@ export function AddressAutofillGroup({
           disabled={disabled}
           placeholder="Start typing your address…"
         />
+        {justPicked && !value.line1?.trim() ? (
+          <p className="mt-1 text-xs italic text-muted-foreground">{hint}</p>
+        ) : null}
       </FieldRow>
 
       {showLine2 ? (
@@ -124,6 +134,9 @@ export function AddressAutofillGroup({
             autoComplete="address-level2"
             disabled={disabled}
           />
+          {justPicked && !value.city?.trim() ? (
+            <p className="mt-1 text-xs italic text-muted-foreground">{hint}</p>
+          ) : null}
         </FieldRow>
         <FieldRow label={postalLabel} error={errors?.postalCode}>
           <Input
@@ -132,6 +145,9 @@ export function AddressAutofillGroup({
             autoComplete="postal-code"
             disabled={disabled}
           />
+          {justPicked && !value.postalCode?.trim() ? (
+            <p className="mt-1 text-xs italic text-muted-foreground">{hint}</p>
+          ) : null}
         </FieldRow>
       </div>
     </div>
@@ -170,6 +186,7 @@ export function AddressAutofillGroup({
           latitude: typeof lat === 'number' ? lat : value.latitude,
           longitude: typeof lng === 'number' ? lng : value.longitude,
         });
+        setJustPicked(true);
       }}
     >
       {fields}
