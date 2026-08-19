@@ -55,13 +55,13 @@ export function QrScannerModal({
         controlsRef.current = await reader.decodeFromConstraints(
           constraints,
           video,
-          (result, err, controls) => {
+          (result, _err, controls) => {
             if (result && !decodedRef.current) {
               decodedRef.current = true;
               controls.stop();
               onScan(result.getText());
             }
-            // `err` fires ~15x/sec while looking for a code — noise, ignore.
+            // `_err` fires ~15x/sec while looking for a code — noise, ignore.
           },
         );
         if (!cancelled) setStarting(false);
