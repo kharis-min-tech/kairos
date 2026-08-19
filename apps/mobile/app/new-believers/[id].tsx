@@ -459,20 +459,20 @@ export default function EnrollmentDetail() {
                   variant="neutral"
                   size="sm"
                 />
-                <Pressable
-                  onPress={() => setMentorNoteOpen(true)}
-                  hitSlop={6}
-                  style={styles.mentorAddBtn}
-                  accessibilityLabel="Record follow-up"
-                >
-                  <MessageSquarePlus color={c.primary} size={16} strokeWidth={1.5} />
-                </Pressable>
               </View>
+
+              <Button
+                label="Record follow-up"
+                variant="primary"
+                iconLeft={<MessageSquarePlus color="#ffffff" size={14} strokeWidth={2} />}
+                onPress={() => setMentorNoteOpen(true)}
+              />
+
               {mentorFollowups.isLoading ? (
                 <ActivityIndicator color={c.primary} />
               ) : (mentorFollowups.data ?? []).length === 0 ? (
                 <Text style={styles.mentorEmpty}>
-                  No follow-ups recorded yet. Tap + to log the first one.
+                  No follow-ups recorded yet — record the first one above.
                 </Text>
               ) : (
                 (mentorFollowups.data ?? []).map((f) => (

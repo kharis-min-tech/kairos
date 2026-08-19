@@ -95,9 +95,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     // Brand-tints the Android app theme so the native datetime picker (and
     // other Material widgets) render highlights + buttons in Modern Sanctuary
-    // purple instead of the default Material teal. iOS uses the accentColor
-    // prop on the picker component itself, wired inside DatePicker.tsx.
-    ['./plugins/with-android-brand-tint', { color: '#5D3FD3' }],
+    // purple instead of the default Material teal. Dark mode uses the lighter
+    // `primaryLight` (#a488ff) to keep the accent readable on the dark
+    // picker surface. iOS uses the accentColor prop on the picker component
+    // itself, wired inside DatePicker.tsx / TimePicker.tsx.
+    [
+      './plugins/with-android-brand-tint',
+      { color: '#5D3FD3', colorNight: '#a488ff' },
+    ],
   ],
   experiments: {
     typedRoutes: true,

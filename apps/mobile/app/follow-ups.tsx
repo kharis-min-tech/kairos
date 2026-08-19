@@ -239,6 +239,7 @@ function makeStyles(c: ThemeColors) {
   subMeta: { ...typography.meta, color: c.inkMuted, lineHeight: 16 },
   chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
+    flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     gap: spacing.xs,
     paddingBottom: spacing.md,

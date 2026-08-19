@@ -278,6 +278,7 @@ function makeStyles(c: ThemeColors) {
   summaryLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
 
   chipsRow: {
+    flexDirection: 'row',
     gap: spacing.xs,
     alignItems: 'center',
   },
