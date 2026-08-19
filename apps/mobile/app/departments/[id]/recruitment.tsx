@@ -306,12 +306,23 @@ function ApplicantCard({
     row.status,
   );
 
+  // Primary action for the current stage — tapping the card body opens this
+  // sheet directly so the leader can act without extra taps. Terminal-status
+  // cards (rejected/withdrawn/active/probation_failed) fall back to opening
+  // the member profile.
+  const primaryAction = canSchedule
+    ? onSchedule
+    : canRecord
+      ? onRecord
+      : canOffer
+        ? onOffer
+        : canProbation
+          ? onProbation
+          : () => router.push(`/members/${row.memberId}`);
+
   return (
     <Card padding="md" style={{ gap: spacing.sm }}>
-      <Pressable
-        style={styles.appHeader}
-        onPress={() => router.push(`/members/${row.memberId}`)}
-      >
+      <Pressable style={styles.appHeader} onPress={primaryAction}>
         <Avatar
           size="md"
           photoUrl={row.memberPhotoUrl ?? undefined}
@@ -329,6 +340,14 @@ function ApplicantCard({
           ) : null}
         </View>
         <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push(`/members/${row.memberId}`)}
+        hitSlop={4}
+        style={styles.profileLinkRow}
+      >
+        <Text style={styles.profileLink}>View member profile →</Text>
       </Pressable>
 
       {row.notes ? (
@@ -1004,6 +1023,8 @@ function makeStyles(c: ThemeColors) {
     },
     appName: { ...typography.body, color: c.ink, fontWeight: '700' },
     appMeta: { ...typography.meta, color: c.inkMuted },
+    profileLinkRow: { paddingVertical: 2 },
+    profileLink: { ...typography.meta, color: c.primary, fontWeight: '600' },
     notesBlock: {
       flexDirection: 'row',
       gap: spacing.xs,

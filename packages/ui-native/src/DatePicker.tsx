@@ -14,7 +14,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { Calendar, ChevronDown } from 'lucide-react-native';
 import { radii, spacing, typography } from './tokens';
-import { useColors, useThemedStyles, type ThemeColors } from './theme';
+import { useColors, useTheme, useThemedStyles, type ThemeColors } from './theme';
 
 interface DatePickerProps {
   /** ISO date string `YYYY-MM-DD` (or empty). */
@@ -48,6 +48,7 @@ export function DatePicker({
 }: DatePickerProps) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const { scheme } = useTheme();
   const [open, setOpen] = useState(false);
 
   const currentDate = useMemo(() => {
@@ -119,7 +120,8 @@ export function DatePicker({
                   onChange={handleChange}
                   minimumDate={minimumDate}
                   maximumDate={maximumDate}
-                  themeVariant="light"
+                  themeVariant={scheme}
+                  accentColor={c.primary}
                 />
                 <Pressable style={styles.doneButton} onPress={() => setOpen(false)}>
                   <Text style={styles.doneLabel}>Done</Text>

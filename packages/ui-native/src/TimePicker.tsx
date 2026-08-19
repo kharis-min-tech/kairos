@@ -14,7 +14,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { Clock, ChevronDown } from 'lucide-react-native';
 import { radii, spacing, typography } from './tokens';
-import { useColors, useThemedStyles, type ThemeColors } from './theme';
+import { useColors, useTheme, useThemedStyles, type ThemeColors } from './theme';
 
 interface TimePickerProps {
   /** `HH:MM` or `HH:MM:SS` string (or empty). Component returns `HH:MM`. */
@@ -45,6 +45,7 @@ export function TimePicker({
 }: TimePickerProps) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const { scheme } = useTheme();
   const [open, setOpen] = useState(false);
 
   const currentDate = useMemo(() => {
@@ -114,7 +115,8 @@ export function TimePicker({
                   display="spinner"
                   onChange={handleChange}
                   minuteInterval={minuteInterval}
-                  themeVariant="light"
+                  themeVariant={scheme}
+                  accentColor={c.primary}
                 />
                 <Pressable style={styles.doneButton} onPress={() => setOpen(false)}>
                   <Text style={styles.doneLabel}>Done</Text>
