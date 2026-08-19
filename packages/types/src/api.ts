@@ -109,6 +109,22 @@ export interface OAuthConfirmLinkRequest {
   password: string;
 }
 
+/**
+ * Phase 1.5 SSO onboarding — the caller (an SSO-signup member with
+ * `mustCompleteProfile === true`) submits the missing profile fields so the
+ * server can flip the flag and route them to /pending-approval.
+ *
+ * `acceptedPolicies` is only required if the user has not already accepted
+ * the current published Terms + Privacy version. Server double-checks and
+ * inserts consent records only when needed. Address / emergency contact are
+ * optional here (they can be filled later from the regular profile edit).
+ */
+export interface CompleteOAuthProfileRequest {
+  phone: string;
+  homeBranchId: string;
+  acceptedPolicies?: boolean;
+}
+
 // ── Auth Context (decoded JWT) ─────────────────────────────
 
 export interface AuthContext {

@@ -63,3 +63,16 @@ export const requestEmailChangeSchema = z.object({
 export const tokenSchema = z.object({
   token: z.string().min(1, 'Token is required'),
 });
+
+// Phase 1.5 Better-Auth: SSO-onboarding submit. `acceptedPolicies` stays
+// optional at the schema layer — the service double-checks whether the
+// caller has already accepted the current published T&C/Privacy versions
+// and only enforces the checkbox when a fresh consent record is needed.
+export const completeOauthProfileSchema = z.object({
+  phone: z
+    .string()
+    .min(1, 'Phone is required')
+    .max(20, 'Phone is too long'),
+  homeBranchId: z.string().uuid('Please pick a branch'),
+  acceptedPolicies: z.boolean().optional(),
+});

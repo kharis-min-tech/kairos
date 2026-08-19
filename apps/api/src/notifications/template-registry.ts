@@ -14,12 +14,14 @@ import {
   renderRoleGranted,
   renderRoleRevoked,
   renderSigninNewDevice,
+  renderOAuthProviderLinked,
   renderProfileUpdatedByAdmin,
   digestPasswordResetRequested,
   digestPasswordChanged,
   digestRoleGranted,
   digestRoleRevoked,
   digestSigninNewDevice,
+  digestOAuthProviderLinked,
   digestProfileUpdatedByAdmin,
 } from './templates/security';
 import {
@@ -93,6 +95,11 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     category: NotificationCategory.Security,
     render: renderSigninNewDevice,
     digestLine: digestSigninNewDevice,
+  },
+  [NotificationEventType.SecurityOAuthProviderLinked]: {
+    category: NotificationCategory.Security,
+    render: renderOAuthProviderLinked,
+    digestLine: digestOAuthProviderLinked,
   },
   [NotificationEventType.SecurityProfileUpdatedByAdmin]: {
     category: NotificationCategory.Security,

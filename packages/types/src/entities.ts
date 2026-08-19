@@ -114,6 +114,12 @@ export interface Member extends BaseEntity {
   membershipClassCompletedAt: string | null;
   emailVerified: boolean;
   mustChangePassword: boolean;
+  // Phase 1.5 Better-Auth: TRUE while an OAuth-signup member still needs to
+  // fill phone, home branch, and T&C consent via the onboarding profile
+  // screen. Dashboard guards redirect to /profile?onboarding=1 until the
+  // POST /api/auth/complete-oauth-profile endpoint clears it. Password
+  // signups always come back FALSE.
+  mustCompleteProfile: boolean;
 }
 
 export interface MemberWithBranch extends Member {

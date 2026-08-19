@@ -60,6 +60,12 @@ export const members = pgTable('members', {
   emailVerificationExpiry: timestamp('email_verification_expiry'),
   lastLoginAt: timestamp('last_login_at'),
   mustChangePassword: boolean('must_change_password').default(false).notNull(),
+  // Phase 1.5 Better-Auth: TRUE while an OAuth-signup member still needs
+  // to fill phone, home branch, and T&C consent through the onboarding
+  // profile screen. The dashboard guard redirects to /profile?onboarding=1
+  // until the flag is cleared by POST /api/auth/complete-oauth-profile.
+  // Password signups always land as FALSE; SSO signups start TRUE.
+  mustCompleteProfile: boolean('must_complete_profile').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

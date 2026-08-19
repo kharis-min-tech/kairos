@@ -232,6 +232,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [mustChangePassword, router]);
 
+  // Phase 1.5 Better-Auth: SSO onboarding + approval gates. Redirect priority
+  // is: mustCompleteProfile → profile onboarding, else pending approval →
+  // /pending-approval, else normal dashboard. The profile page itself must
+  // stay reachable during onboarding so the user can actually fill it in.
+  const mustCompleteProfile =
+    (user as { mustCompleteProfile?: boolean })?.mustCompleteProfile === true;
+  const approvalStatus = user?.approvalStatus ?? null;
+  useEffect(() => {
+    if (!user) return;
+    if (mustCompleteProfile) {
+      // Allow the profile page to render — that's where onboarding happens.
+      if (pathname !== '/profile') {
+        router.replace('/profile?onboarding=1');
+      }
+      return;
+    }
+    if (approvalStatus && approvalStatus !== 'approved') {
+      if (pathname !== '/pending-approval') {
+        router.replace('/pending-approval');
+      }
+    }
+  }, [user, mustCompleteProfile, approvalStatus, pathname, router]);
+
   // Consent gate: any required policy that hasn't been accepted forces the
   // caller to /accept-policies before the dashboard renders. Mirrors the
   // mustChangePassword gate above. The API middleware provides the same

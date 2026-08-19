@@ -1,7 +1,22 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { KharisCardHeader } from '../kharis-logo';
+import { useAuthStore } from '@/lib/auth-store';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function PendingApprovalPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { logout, accessToken } = useAuthStore();
+
+  function handleSignOut() {
+    logout();
+    queryClient.clear();
+    router.replace('/login');
+  }
+
   return (
     <>
       <KharisCardHeader
@@ -33,23 +48,35 @@ export default function PendingApprovalPage() {
             </p>
           </div>
 
-          <div className="relative py-1">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted-foreground/10" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">
-                or
-              </span>
-            </div>
-          </div>
+          {accessToken ? (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="h-11 w-full rounded-lg border border-[#5D3FD3]/30 bg-transparent text-sm font-semibold text-[#5D3FD3] transition-colors hover:bg-[#5D3FD3]/5"
+            >
+              Sign out
+            </button>
+          ) : (
+            <>
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/10" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">
+                    or
+                  </span>
+                </div>
+              </div>
 
-          <p className="text-center text-sm text-muted-foreground/70">
-            Already approved?{' '}
-            <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
-              Sign in
-            </Link>
-          </p>
+              <p className="text-center text-sm text-muted-foreground/70">
+                Already approved?{' '}
+                <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
+                  Sign in
+                </Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </>

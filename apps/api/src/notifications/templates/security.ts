@@ -119,6 +119,38 @@ export function renderSigninNewDevice(p: SecuritySigninNewDevicePayload) {
   };
 }
 
+export interface SecurityOAuthProviderLinkedPayload {
+  memberName: string;
+  providerLabel: string;
+  occurredAt: Date;
+  securityUrl: string;
+}
+
+export function renderOAuthProviderLinked(p: SecurityOAuthProviderLinkedPayload) {
+  const when = p.occurredAt.toLocaleString('en-GB');
+  return {
+    subject: `New sign-in method added to your Kharis account`,
+    html: renderLayout({
+      heading: 'New sign-in method added',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p>You signed in to Kairos with <strong>${escapeHtml(p.providerLabel)}</strong>
+           for the first time on <strong>${escapeHtml(when)}</strong>. That
+           provider is now linked to your Kharis Church account, so you can
+           use it to sign in again in the future.</p>
+        <p>If this was you, no action is needed.</p>
+        <p>If this wasn't you, secure your account by changing your password
+           and disconnecting the provider from your security settings.</p>
+      `,
+      cta: { label: 'Review account security', url: p.securityUrl },
+    }),
+  };
+}
+
+export function digestOAuthProviderLinked(p: SecurityOAuthProviderLinkedPayload): string {
+  return `New sign-in method linked: ${p.providerLabel}`;
+}
+
 export interface SecurityRoleRevokedPayload {
   memberName: string;
   roleName: string;

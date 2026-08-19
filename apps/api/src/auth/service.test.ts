@@ -583,3 +583,154 @@ describe('getMe', () => {
       .rejects.toThrow('not found');
   });
 });
+
+describe('completeOauthProfile', () => {
+  // Chain factory local to this suite — the parent-scope helpers assume
+  // a single .select() call per test, but completeOauthProfile runs
+  // several (member, branch, phone conflict, consent lookups).
+  function chainReturning(data: unknown) {
+    const self: Record<string, unknown> = {};
+    for (const m of [
+      'from',
+      'where',
+      'limit',
+      'innerJoin',
+      'leftJoin',
+      'orderBy',
+    ]) {
+      self[m] = vi.fn(() => self);
+    }
+    self.then = (resolve: (v: unknown) => unknown) => resolve(data);
+    return self;
+  }
+
+  const ONBOARDING_MEMBER = {
+    ...baseMember,
+    approvalStatus: 'pending',
+    isActive: false,
+    passwordHash: '',
+    mustCompleteProfile: true,
+  };
+
+  const AUTH_CONTEXT = {
+    memberId: ONBOARDING_MEMBER.id,
+    email: ONBOARDING_MEMBER.email,
+    systemRole: 'member' as const,
+    branchId: ONBOARDING_MEMBER.homeBranchId,
+    activeRole: 'member' as const,
+    branchSystemAdminBranchIds: [],
+    branchDataAdminBranchIds: [],
+    grants: [],
+  };
+
+  it('rejects when the caller is not in onboarding state', async () => {
+    const notOnboarding = { ...ONBOARDING_MEMBER, mustCompleteProfile: false };
+    let call = 0;
+    mockSelect.mockImplementation(() => {
+      call += 1;
+      if (call === 1) return chainReturning([notOnboarding]);
+      return chainReturning([]);
+    });
+
+    const { completeOauthProfile } = await import('./service');
+    await expect(
+      completeOauthProfile(mockDb, AUTH_CONTEXT, {
+        phone: '0700 000 0000',
+        homeBranchId: 'branch-a',
+      }),
+    ).rejects.toThrow(/already completed onboarding/);
+  });
+
+  it('rejects unknown / inactive branch with a clean validation error', async () => {
+    let call = 0;
+    mockSelect.mockImplementation(() => {
+      call += 1;
+      if (call === 1) return chainReturning([ONBOARDING_MEMBER]);
+      if (call === 2) return chainReturning([]); // branch lookup returns nothing
+      return chainReturning([]);
+    });
+
+    const { completeOauthProfile } = await import('./service');
+    await expect(
+      completeOauthProfile(mockDb, AUTH_CONTEXT, {
+        phone: '0700 000 0000',
+        homeBranchId: '00000000-0000-0000-0000-000000000000',
+      }),
+    ).rejects.toThrow(/pick an active branch/);
+  });
+
+  it('rejects when consent is required but the checkbox is unchecked', async () => {
+    let call = 0;
+    mockSelect.mockImplementation(() => {
+      call += 1;
+      if (call === 1) return chainReturning([ONBOARDING_MEMBER]);
+      if (call === 2) return chainReturning([{ id: 'branch-a' }]); // branch OK
+      if (call === 3) return chainReturning([]); // no phone conflict
+      // consent lookups (terms + privacy) — neither exists
+      return chainReturning([]);
+    });
+
+    const { completeOauthProfile } = await import('./service');
+    await expect(
+      completeOauthProfile(mockDb, AUTH_CONTEXT, {
+        phone: '0700 000 0000',
+        homeBranchId: 'branch-a',
+        // acceptedPolicies omitted
+      }),
+    ).rejects.toThrow(/accept the Terms/);
+  });
+
+  it('happy path: writes consent + clears the flag + returns the fresh profile', async () => {
+    let call = 0;
+    mockSelect.mockImplementation(() => {
+      call += 1;
+      if (call === 1) return chainReturning([ONBOARDING_MEMBER]);
+      if (call === 2) return chainReturning([{ id: 'branch-a' }]);
+      if (call === 3) return chainReturning([]); // no phone conflict
+      // consent lookups — neither exists
+      return chainReturning([]);
+    });
+
+    // insert() for consent records (single call, awaited)
+    const insertValues = vi.fn(() => Promise.resolve(undefined));
+    mockInsert.mockReturnValue({ values: insertValues });
+
+    // update() → returning(fresh member row)
+    const updatedRow = {
+      ...ONBOARDING_MEMBER,
+      phone: '0700 000 0000',
+      homeBranchId: 'branch-a',
+      mustCompleteProfile: false,
+    };
+    const returningFn = vi.fn(() => Promise.resolve([updatedRow]));
+    const whereFn = vi.fn(() => ({ returning: returningFn }));
+    mockSet.mockReturnValue({ where: whereFn });
+    mockUpdate.mockReturnValue({ set: mockSet });
+
+    const { completeOauthProfile } = await import('./service');
+    const result = await completeOauthProfile(mockDb, AUTH_CONTEXT, {
+      phone: '0700 000 0000',
+      homeBranchId: 'branch-a',
+      acceptedPolicies: true,
+    });
+
+    expect(result.mustCompleteProfile).toBe(false);
+    expect(result.phone).toBe('0700 000 0000');
+    expect(result.homeBranchId).toBe('branch-a');
+
+    // Consent rows were inserted (terms + privacy, one call with 2 rows)
+    expect(insertValues).toHaveBeenCalledTimes(1);
+    const firstCall = insertValues.mock.calls[0] as unknown as Array<Array<{ consentType: string }>>;
+    const rows = firstCall[0]!;
+    expect(rows.map((r) => r.consentType).sort()).toEqual(['privacy', 'terms']);
+
+    // members.mustCompleteProfile was set to false
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phone: '0700 000 0000',
+        homeBranchId: 'branch-a',
+        mustCompleteProfile: false,
+      }),
+    );
+  });
+});

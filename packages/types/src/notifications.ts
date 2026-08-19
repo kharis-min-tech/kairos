@@ -88,6 +88,7 @@ export const NotificationEventType = {
   SecurityRoleGranted: 'security.role_granted',
   SecurityRoleRevoked: 'security.role_revoked',
   SecuritySigninNewDevice: 'security.signin_new_device',
+  SecurityOAuthProviderLinked: 'security.oauth_provider_linked',
   SecurityEmailChangeRequested: 'security.email_change_requested',
   SecurityEmailChangeConfirmed: 'security.email_change_confirmed',
   SecurityEmailChangedAlert: 'security.email_changed_alert',

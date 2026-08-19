@@ -201,6 +201,9 @@ describe('findOrCreateMemberFromOAuth', () => {
         approvalStatus: 'pending',
         isActive: false,
         homeBranchId: DEFAULT_BRANCH_ID,
+        // Phase 1.5 — SSO signups must be marked so the dashboard guards
+        // send them through onboarding before they see any tabs.
+        mustCompleteProfile: true,
       }),
     );
 
@@ -251,6 +254,7 @@ describe('findOrCreateMemberFromOAuth', () => {
         email: 'sub-apple-999@apple.private-relay.local',
         firstName: 'Pending',
         lastName: 'Signup',
+        mustCompleteProfile: true,
       }),
     );
   });
