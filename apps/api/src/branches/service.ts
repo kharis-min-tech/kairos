@@ -132,6 +132,8 @@ export async function listBranches(db: Database, auth: AuthContext) {
       address: branches.address,
       city: branches.city,
       postalCode: branches.postalCode,
+      latitude: branches.latitude,
+      longitude: branches.longitude,
       phone: branches.phone,
       email: branches.email,
       establishedDate: branches.establishedDate,
@@ -169,6 +171,8 @@ export async function getBranch(db: Database, branchId: string, auth: AuthContex
       address: branches.address,
       city: branches.city,
       postalCode: branches.postalCode,
+      latitude: branches.latitude,
+      longitude: branches.longitude,
       phone: branches.phone,
       email: branches.email,
       establishedDate: branches.establishedDate,
@@ -198,6 +202,8 @@ export async function createBranch(
     address?: string;
     city?: string;
     postalCode?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     phone?: string;
     email?: string;
     establishedDate?: string;
@@ -215,6 +221,8 @@ export async function createBranch(
     address: input.address ?? null,
     city: input.city ?? null,
     postalCode: input.postalCode ?? null,
+    latitude: input.latitude ?? null,
+    longitude: input.longitude ?? null,
     phone: input.phone ?? null,
     email: input.email ?? null,
     establishedDate: input.establishedDate ?? null,

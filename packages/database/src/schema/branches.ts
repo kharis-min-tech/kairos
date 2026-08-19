@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, date, boolean, integer, timestamp, uniqueIndex, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, boolean, integer, timestamp, uniqueIndex, jsonb, doublePrecision } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { regions } from './regions';
 import { members } from './members';
@@ -13,6 +13,8 @@ export const branches = pgTable('branches', {
   address: text('address'),
   city: varchar('city', { length: 100 }),
   postalCode: varchar('postal_code', { length: 20 }),
+  latitude: doublePrecision('latitude'),
+  longitude: doublePrecision('longitude'),
   phone: varchar('phone', { length: 20 }),
   email: varchar('email', { length: 100 }),
   establishedDate: date('established_date'),

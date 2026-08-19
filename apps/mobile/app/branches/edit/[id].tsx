@@ -137,6 +137,8 @@ export default function EditBranch() {
     address: b.address ?? '',
     city: b.city ?? '',
     postalCode: b.postalCode ?? '',
+    latitude: b.latitude ?? null,
+    longitude: b.longitude ?? null,
     phone: b.phone ?? '',
     email: b.email ?? '',
     establishedDate: b.establishedDate ?? '',

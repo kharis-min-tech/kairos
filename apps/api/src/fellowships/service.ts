@@ -990,6 +990,10 @@ export async function reviewJoinRequest(
 
 export async function listFellowshipsForMap(db: Database, _auth: AuthContext) {
   try {
+    // Prefer the fellowship's own lat/lng; if unset, fall back to the parent
+     // branch's coords so a fellowship without its own address still lands on
+     // the map. COALESCE keeps the response shape stable — callers only look at
+     // `latitude`/`longitude`.
     const rows = await db.execute(sql`
       SELECT
         f.id,
@@ -1001,14 +1005,16 @@ export async function listFellowshipsForMap(db: Database, _auth: AuthContext) {
         f.meeting_schedule AS "meetingSchedule",
         f.meeting_day AS "meetingDay",
         f.meeting_time AS "meetingTime",
-        f.latitude,
-        f.longitude,
+        COALESCE(f.latitude, b.latitude) AS "latitude",
+        COALESCE(f.longitude, b.longitude) AS "longitude",
         f.country
       FROM fellowships f
       LEFT JOIN branches b ON f.branch_id = b.id
       WHERE f.is_active = true
-        AND f.latitude IS NOT NULL
-        AND f.longitude IS NOT NULL
+        AND (
+          (f.latitude IS NOT NULL AND f.longitude IS NOT NULL)
+          OR (b.latitude IS NOT NULL AND b.longitude IS NOT NULL)
+        )
     `);
     // postgres-js `db.execute` returns the RowList (an array) directly.
     return rows;

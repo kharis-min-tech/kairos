@@ -27,6 +27,8 @@ const schema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   postalCode: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   establishedDate: z.string().optional(),
@@ -94,6 +96,8 @@ export default function BranchDetailPage() {
       address: branch.address ?? '',
       city: branch.city ?? '',
       postalCode: branch.postalCode ?? '',
+      latitude: branch.latitude ?? null,
+      longitude: branch.longitude ?? null,
       phone: branch.phone ?? '',
       email: branch.email ?? '',
       establishedDate: branch.establishedDate ?? '',
@@ -110,6 +114,8 @@ export default function BranchDetailPage() {
         address: data.address || undefined,
         city: data.city || undefined,
         postalCode: data.postalCode || undefined,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
         phone: data.phone || undefined,
         email: data.email || undefined,
         establishedDate: data.establishedDate || undefined,
@@ -195,11 +201,15 @@ export default function BranchDetailPage() {
                 line1: watch('address') ?? '',
                 city: watch('city') ?? '',
                 postalCode: watch('postalCode') ?? '',
+                latitude: watch('latitude') ?? undefined,
+                longitude: watch('longitude') ?? undefined,
               }}
               onChange={(v) => {
                 setValue('address', v.line1, { shouldDirty: true });
                 setValue('city', v.city, { shouldDirty: true });
                 setValue('postalCode', v.postalCode, { shouldDirty: true });
+                if (typeof v.latitude === 'number') setValue('latitude', v.latitude, { shouldDirty: true });
+                if (typeof v.longitude === 'number') setValue('longitude', v.longitude, { shouldDirty: true });
               }}
             />
 
