@@ -35,6 +35,7 @@ import { recordAuditEvent, hasPriorSigninFromUserAgent } from '../audit/service'
 import { extractRequestContext } from '../audit/context';
 import { dispatchNotification } from '../notifications/service';
 import { AuditAction, AuditOutcome, NotificationEventType } from '@kairos/types';
+import { oauthRouter } from './oauth/router';
 
 export const authRouter = new Hono();
 
@@ -77,7 +78,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
       action: AuditAction.SigninSuccess,
       outcome: AuditOutcome.Success,
       ctx,
-      metadata: { isFirstLogin: result.isFirstLogin },
+      metadata: { method: 'password', isFirstLogin: result.isFirstLogin },
     });
 
     if (isNewDevice) {
@@ -101,7 +102,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
       outcome: AuditOutcome.Failure,
       attemptedEmail: body.email,
       ctx,
-      metadata: { reason: err instanceof Error ? err.message : 'unknown' },
+      metadata: { method: 'password', reason: err instanceof Error ? err.message : 'unknown' },
     });
     throw err;
   }
@@ -141,6 +142,11 @@ authRouter.post('/reset-password', zValidator('json', resetPasswordSchema), asyn
   await resetPassword(db, body.token, body.newPassword);
   return c.json(successResponse(undefined, 'Password reset successful'));
 });
+
+// OAuth sub-router — mixed public (/start, /callback, /confirm-link) and
+// authed (/connections) routes. Mount here so the authed ones inherit the
+// same base path (/api/auth/oauth/…) as the public start/callback.
+authRouter.route('/oauth', oauthRouter);
 
 // ── Protected routes ───────────────────────────────────────
 

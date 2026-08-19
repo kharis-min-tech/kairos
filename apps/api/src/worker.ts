@@ -36,6 +36,19 @@ export interface Env {
   CF_IMAGES_ACCOUNT_ID?: string;
   CF_IMAGES_ACCOUNT_HASH?: string;
   CF_IMAGES_TOKEN?: string;
+  // OAuth (Better-Auth Phase 1). All optional — a missing provider secret
+  // just makes that provider's /start return 501. See BETTER_AUTH_SETUP.md.
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  MICROSOFT_CLIENT_ID?: string;
+  MICROSOFT_CLIENT_SECRET?: string;
+  APPLE_CLIENT_ID?: string;
+  APPLE_TEAM_ID?: string;
+  APPLE_KEY_ID?: string;
+  APPLE_PRIVATE_KEY?: string;
+  // Optional override for the branch a new SSO-signup member is filed under.
+  // If unset the service falls through to the oldest active branch.
+  DEFAULT_HOME_BRANCH_ID?: string;
 }
 
 let app: ReturnType<typeof createApp> | null = null;

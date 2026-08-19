@@ -7,6 +7,7 @@ import {
   KeyRound,
   Mail,
   History,
+  Link2,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import {
@@ -55,6 +56,12 @@ export default function SecurityHub() {
             title="Change email"
             meta="Move your account to a new email. Both addresses get notified."
             onPress={() => router.push('/security/change-email')}
+          />
+          <NavLink
+            icon={Link2}
+            title="Connected accounts"
+            meta="Link or disconnect Google, Microsoft, and Apple sign-in."
+            onPress={() => router.push('/security/connections' as never)}
           />
           <NavLink
             icon={History}

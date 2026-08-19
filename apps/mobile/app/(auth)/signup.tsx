@@ -33,8 +33,12 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import type { Member } from '@kairos/types';
 import { api } from '@/lib/api-client';
-import { mapboxPublicToken } from '@/lib/config';
+import { apiBaseUrl, mapboxPublicToken } from '@/lib/config';
+import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
+import { OAuthButtonGroup } from '@/components/oauth-button-group';
+import { useAuthStore } from '@/store/auth';
 
 const MIN_PASSWORD = 8;
 
@@ -46,6 +50,7 @@ export default function SignupScreen() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
+  const setSession = useAuthStore((s) => s.setSession);
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -96,6 +101,39 @@ export default function SignupScreen() {
     // Format is enforced by the DatePicker — no client-side check needed.
     setErrors(next);
     return Object.keys(next).length === 0;
+  }
+
+  // OAuth (Better-Auth Phase 1). Sign-up via SSO is the same handshake as
+  // sign-in — the API auto-creates the member on first login. On the
+  // unverified-email collision path we route to `oauth-confirm-link`.
+  async function handleOAuthResult(result: OAuthStartResult) {
+    if (result.kind === 'cancelled') return;
+    if (result.kind === 'error') {
+      setServerError(mapOAuthErrorSlug(result.slug));
+      return;
+    }
+    if (result.kind === 'confirm_link') {
+      router.push({
+        pathname: '/(auth)/oauth-confirm-link' as never,
+        params: {
+          token: result.confirmationToken,
+          email: result.email,
+          provider: result.provider,
+        },
+      });
+      return;
+    }
+    try {
+      const member = await fetchMemberProfile(result.tokens.accessToken);
+      await setSession(result.tokens, member);
+      router.replace('/(tabs)');
+    } catch (err) {
+      setServerError(
+        err instanceof Error
+          ? err.message
+          : 'Signed in but could not load your profile.',
+      );
+    }
   }
 
   const signup = useMutation({
@@ -183,6 +221,21 @@ export default function SignupScreen() {
                   Create your account. An admin will approve access before you
                   can sign in.
                 </Text>
+
+                <OAuthButtonGroup
+                  actionLabel="continue"
+                  onResult={handleOAuthResult}
+                  disabled={signup.isPending}
+                />
+                <Text style={styles.ssoCaption}>
+                  You&apos;ll pick your branch during onboarding.
+                </Text>
+
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerLabel}>Or fill in the form</Text>
+                  <View style={styles.dividerLine} />
+                </View>
 
                 {serverError ? (
                   <View style={styles.errorBanner}>
@@ -488,6 +541,32 @@ export default function SignupScreen() {
   );
 }
 
+/**
+ * Fetch `/api/members/me` with an explicit bearer token. Used by the OAuth
+ * flow after the browser hands back tokens but before the api-client's
+ * token cache has been primed. Mirrors the login screen.
+ */
+async function fetchMemberProfile(accessToken: string): Promise<Member> {
+  const res = await fetch(`${apiBaseUrl.replace(/\/$/, '')}/api/members/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? 'Sign-in token was not accepted.'
+        : `Could not load your profile (HTTP ${res.status}).`,
+    );
+  }
+  const body = (await res.json()) as { success?: boolean; data?: Member; message?: string };
+  if (!body.success || !body.data) {
+    throw new Error(body.message ?? 'Could not load your profile.');
+  }
+  return body.data;
+}
+
 function PickerRow({
   value,
   placeholder,
@@ -583,6 +662,27 @@ function makeStyles(c: ThemeColors) {
   errorLine: { ...typography.meta, color: c.danger },
   moreToggle: { paddingVertical: spacing.sm, marginTop: spacing.xs },
   moreToggleLabel: { ...typography.body, color: c.primary, fontWeight: '600' },
+  ssoCaption: {
+    ...typography.meta,
+    color: c.inkMuted,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginVertical: spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: c.divider,
+  },
+  dividerLabel: {
+    ...typography.meta,
+    color: c.inkFaded,
+  },
 
   pairRow: {
     flexDirection: 'row',

@@ -1,37 +1,62 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import type * as UseAuthModule from '@/hooks/use-auth';
 
 const push = vi.fn();
+const replace = vi.fn();
+const mutateAsync = vi.fn();
+const persistAuthSuccess = vi.fn();
+let searchParamsString = '';
+
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, replace: vi.fn() }),
+  useRouter: () => ({ push, replace }),
+  useSearchParams: () => new URLSearchParams(searchParamsString),
 }));
 
-const mutateAsync = vi.fn();
-vi.mock('@/hooks/use-auth', async () => {
-  const actual = await vi.importActual<typeof UseAuthModule>('@/hooks/use-auth');
-  return {
-    ...actual,
-    useLogin: () => ({ mutateAsync, isPending: false }),
-    persistAuthSuccess: vi.fn(),
-  };
-});
+vi.mock('@/hooks/use-auth', () => ({
+  useLogin: () => ({ mutateAsync, isPending: false }),
+  persistAuthSuccess: (args: unknown) => persistAuthSuccess(args),
+}));
+
+vi.mock('@/lib/auth-store', () => ({
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({ accessToken: null }),
+}));
+
+vi.mock('@/lib/api', () => ({
+  api: {
+    auth: {
+      oauth: {
+        startUrl: (provider: string, returnTo?: string) =>
+          `https://api.test/api/auth/oauth/${provider}/start${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`,
+      },
+    },
+  },
+}));
 
 import LoginPage from './page';
-import { persistAuthSuccess } from '@/hooks/use-auth';
 
 function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 }
 
+const originalLocation = window.location;
+
 beforeEach(() => {
   push.mockReset();
+  replace.mockReset();
   mutateAsync.mockReset();
-  vi.mocked(persistAuthSuccess).mockReset();
+  persistAuthSuccess.mockReset();
+  searchParamsString = '';
+  const assign = vi.fn();
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: { ...originalLocation, assign },
+  });
 });
 
 const mockMember: Record<string, unknown> = {
@@ -42,6 +67,8 @@ const mockMember: Record<string, unknown> = {
   systemRole: 'member',
   mustChangePassword: false,
 };
+
+// ── Security regression ────────────────────────────────────
 
 describe('LoginPage — security regression', () => {
   it('does NOT render role tabs before credentials are supplied', () => {
@@ -54,13 +81,15 @@ describe('LoginPage — security regression', () => {
     expect(screen.queryByRole('tablist')).toBeNull();
   });
 
-  it('renders email + password fields and a sign-in button', () => {
+  it('renders email + password fields and a sign-in button', async () => {
     render(<LoginPage />, { wrapper });
-    expect(screen.getByLabelText(/Email Address/i)).toBeDefined();
+    await waitFor(() => expect(screen.getByLabelText(/Email Address/i)).toBeDefined());
     expect(screen.getByLabelText(/^Password$/i)).toBeDefined();
     expect(screen.getByRole('button', { name: /^Sign in$/i })).toBeDefined();
   });
 });
+
+// ── Single-role login flow ─────────────────────────────────
 
 describe('LoginPage — single-role flow', () => {
   it('persists and routes to /dashboard on plain success', async () => {
@@ -75,7 +104,7 @@ describe('LoginPage — single-role flow', () => {
     await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
     await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
 
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'));
     expect(mutateAsync).toHaveBeenCalledWith({ email: 'jane@example.com', password: 'pass123' });
     expect(persistAuthSuccess).toHaveBeenCalledWith({
       tokens: { accessToken: 'at', refreshToken: 'rt' },
@@ -96,7 +125,7 @@ describe('LoginPage — single-role flow', () => {
     await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
     await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
 
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/welcome'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/welcome'));
   });
 
   it('routes to /change-password when mustChangePassword is true', async () => {
@@ -111,12 +140,11 @@ describe('LoginPage — single-role flow', () => {
     await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
     await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
 
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/change-password'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/change-password'));
   });
 });
 
-// RBAC Phase 5a: the multi-role flow is removed. Login always returns
-// tokens directly; capabilities derive from grants on the access token.
+// ── Error display ──────────────────────────────────────────
 
 describe('LoginPage — error display', () => {
   it('shows the API error message in the alert region', async () => {
@@ -133,22 +161,57 @@ describe('LoginPage — error display', () => {
   });
 });
 
+// ── Preserved behavior ─────────────────────────────────────
+
 describe('LoginPage — preserved behavior', () => {
   it('toggles password visibility via labelled button', async () => {
     render(<LoginPage />, { wrapper });
-    const toggle = screen.getByRole('button', { name: 'Show password' });
+    const toggle = await screen.findByRole('button', { name: 'Show password' });
     await userEvent.click(toggle);
     expect(screen.getByRole('button', { name: 'Hide password' })).toBeDefined();
   });
+});
 
-  it('disables OAuth buttons with "coming soon" labels', () => {
+// ── OAuth SSO buttons (Phase 1 Better-Auth) ────────────────
+
+describe('LoginPage — OAuth', () => {
+  it('renders three SSO buttons for Google, Microsoft, and Apple', async () => {
     render(<LoginPage />, { wrapper });
-    const google = screen.getByRole('button', { name: /Google.*coming soon/i });
-    const apple = screen.getByRole('button', { name: /Apple ID.*coming soon/i });
-    expect(google).toBeDisabled();
-    expect(apple).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /sign in with google/i })).toBeDefined();
+    });
+    expect(screen.getByRole('button', { name: /sign in with microsoft/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /sign in with apple/i })).toBeDefined();
   });
 
-  // The stale-stash clearing test was removed in Phase 5a — the role-
-  // selection store no longer exists.
+  it('navigates to the API OAuth start URL when a provider button is clicked', async () => {
+    render(<LoginPage />, { wrapper });
+    const googleButton = await screen.findByRole('button', { name: /sign in with google/i });
+    fireEvent.click(googleButton);
+    expect(window.location.assign).toHaveBeenCalledWith(
+      'https://api.test/api/auth/oauth/google/start?returnTo=%2Fdashboard',
+    );
+
+    const msButton = screen.getByRole('button', { name: /sign in with microsoft/i });
+    fireEvent.click(msButton);
+    expect(window.location.assign).toHaveBeenCalledWith(
+      'https://api.test/api/auth/oauth/microsoft/start?returnTo=%2Fdashboard',
+    );
+  });
+
+  it('renders the friendly error banner when ?oauth_error=state_mismatch is present', async () => {
+    searchParamsString = 'oauth_error=state_mismatch';
+    render(<LoginPage />, { wrapper });
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toMatch(/session expired/i);
+    });
+  });
+
+  it('falls back to the generic provider_error copy for an unknown slug', async () => {
+    searchParamsString = 'oauth_error=totally_unknown';
+    render(<LoginPage />, { wrapper });
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toMatch(/provider returned an error/i);
+    });
+  });
 });
