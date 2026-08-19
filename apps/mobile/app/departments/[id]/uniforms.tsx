@@ -15,7 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Plus, Trash2, Shirt, Calendar } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, ChevronLeft, Plus, Trash2, Shirt, Calendar } from 'lucide-react-native';
 import {
   Badge,
   Button,
@@ -329,12 +330,68 @@ function OutfitSheet({
   onDone: () => void;
 }) {
   const styles = useThemedStyles(makeStyles);
+  const c = useColors();
   const [name, setName] = useState(outfit?.name ?? '');
   const [imageUrl, setImageUrl] = useState(outfit?.imageUrl ?? '');
+  const [uploading, setUploading] = useState(false);
   const [gender, setGender] = useState<UniformGenderTarget>(
     outfit?.genderTarget ?? UniformGenderTarget.Unisex,
   );
   const [notes, setNotes] = useState(outfit?.notes ?? '');
+
+  async function handlePickImage(source: 'library' | 'camera') {
+    const perm =
+      source === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      alert.info(
+        'Permission needed',
+        source === 'camera'
+          ? 'Grant camera access in Settings to take a photo.'
+          : 'Grant photo library access in Settings to pick a photo.',
+      );
+      return;
+    }
+    const pick =
+      source === 'camera'
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.85,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.85,
+          });
+    if (pick.canceled || !pick.assets?.[0]) return;
+    const asset = pick.assets[0];
+
+    setUploading(true);
+    try {
+      const mint = await api.media.mintUploadUrl({ purpose: 'uniform-outfit' });
+      const { uploadUrl, deliveryUrl } = mint.data!;
+      const form = new FormData();
+      form.append('file', {
+        uri: asset.uri,
+        name: 'upload.jpg',
+        type: 'image/jpeg',
+      } as unknown as Blob);
+      const res = await fetch(uploadUrl, { method: 'POST', body: form });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      setImageUrl(deliveryUrl);
+    } catch (e) {
+      alert.info(
+        'Upload failed',
+        e instanceof Error ? e.message : 'Please try again.',
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const mutate = useMutation({
     mutationFn: async () => {
@@ -369,15 +426,44 @@ function OutfitSheet({
         <Text style={styles.label}>Name</Text>
         <Input value={name} onChangeText={setName} placeholder="e.g. White shirt + black trousers" />
       </View>
-      <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Image URL</Text>
-        <Input
-          value={imageUrl}
-          onChangeText={setImageUrl}
-          placeholder="https://…"
-          autoCapitalize="none"
-          keyboardType="url"
-        />
+      <View style={{ gap: 6 }}>
+        <Text style={styles.label}>Photo</Text>
+        <View style={styles.uploadRow}>
+          <View style={styles.uploadPreview}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.uploadThumb} />
+            ) : (
+              <View style={[styles.uploadThumb, styles.uploadThumbFallback]}>
+                <Shirt color={c.primary} size={24} strokeWidth={1.5} />
+              </View>
+            )}
+            {uploading ? (
+              <View style={styles.uploadOverlay}>
+                <ActivityIndicator color="#ffffff" />
+              </View>
+            ) : null}
+          </View>
+          <View style={{ flex: 1, gap: spacing.xs }}>
+            <Pressable
+              style={styles.uploadBtn}
+              onPress={() => handlePickImage('library')}
+              disabled={uploading}
+            >
+              <Plus color={c.primary} size={14} strokeWidth={2} />
+              <Text style={styles.uploadBtnLabel}>
+                {imageUrl ? 'Change photo' : 'Choose from library'}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={styles.uploadBtn}
+              onPress={() => handlePickImage('camera')}
+              disabled={uploading}
+            >
+              <Camera color={c.primary} size={14} strokeWidth={2} />
+              <Text style={styles.uploadBtnLabel}>Take a photo</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
       <View style={{ gap: 4 }}>
         <Text style={styles.label}>Applies to</Text>
@@ -417,7 +503,7 @@ function OutfitSheet({
         loading={mutate.isPending}
         onPress={() => {
           if (!name.trim()) return alert.info('Missing name', 'Give the outfit a name.');
-          if (!imageUrl.trim()) return alert.info('Missing image', 'Add an image URL.');
+          if (!imageUrl.trim()) return alert.info('Missing photo', 'Pick a photo or take one first.');
           mutate.mutate();
         }}
       />
@@ -676,5 +762,33 @@ function makeStyles(c: ThemeColors) {
       backgroundColor: c.inkGhost,
     },
     sheetTitle: { ...typography.cardTitle, color: c.ink },
+    uploadRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+    uploadPreview: { position: 'relative' },
+    uploadThumb: {
+      width: 84,
+      height: 84,
+      borderRadius: radii.md,
+      backgroundColor: c.subtle,
+    },
+    uploadThumbFallback: { alignItems: 'center', justifyContent: 'center' },
+    uploadOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radii.md,
+    },
+    uploadBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: spacing.sm,
+      borderRadius: radii.md,
+      backgroundColor: 'rgba(93,63,211,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(93,63,211,0.2)',
+    },
+    uploadBtnLabel: { ...typography.meta, color: c.primary, fontWeight: '700' },
   });
 }

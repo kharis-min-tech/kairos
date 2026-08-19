@@ -83,14 +83,21 @@ export default function FollowUps() {
   }, [inbox.data, filter]);
 
   function handlePress(item: MeFollowupItem) {
+    // Land on the surface where the leader can record the next follow-up
+    // right now — the followups tab for fellowship + department, the enrollment
+    // detail page (with mentor followup form) for NB mentees, and the soul
+    // detail page for evangelism followups.
     if (item.kind === 'soul') {
       router.push(`/souls/${item.id}`);
     } else if (item.kind === 'fellowship_followup') {
-      router.push(`/fellowships/${item.fellowshipId}`);
+      router.push(`/fellowships/${item.fellowshipId}/followups` as never);
     } else if (item.kind === 'department_followup') {
-      router.push(`/departments/${item.branchDeptId}`);
+      router.push(`/departments/${item.branchDeptId}/followups` as never);
     } else {
-      router.push(`/members/${item.memberId}`);
+      // NB mentor followup — land on the enrollment detail (mentee context +
+      // journey progress) rather than the member profile. Recording a followup
+      // form on this screen is a follow-up ticket.
+      router.push(`/new-believers/${item.id}` as never);
     }
   }
 

@@ -62,12 +62,17 @@ export default function Approvals() {
   }, [inbox.data, filter]);
 
   function handlePress(item: MeApprovalItem) {
+    // Land on the surface where the user can act, not on the entity's default
+    // detail page — member signup → approval queue; department join → the
+    // recruitment pipeline (pending applicants). Fellowship join stays on
+    // the fellowship detail because pending requests already render inline
+    // at the top of that page.
     if (item.kind === 'member_signup') {
-      router.push(`/members/${item.subjectMemberId}`);
+      router.push('/members/admin');
     } else if (item.kind === 'fellowship_join') {
       router.push(`/fellowships/${item.fellowshipId}`);
     } else {
-      router.push(`/departments/${item.branchDeptId}`);
+      router.push(`/departments/${item.branchDeptId}/recruitment` as never);
     }
   }
 
