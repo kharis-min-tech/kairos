@@ -7,6 +7,10 @@ import Constants from 'expo-constants';
  *   staging → https://api-staging.kairos.kharis.org  (TBC)
  *   prod    → https://api.kairos.kharis.org         (TBC)
  */
-const extra = (Constants.expoConfig?.extra ?? {}) as { apiBaseUrl?: string };
+const extra = (Constants.expoConfig?.extra ?? {}) as {
+  apiBaseUrl?: string;
+  mapboxPublicToken?: string;
+};
 
 export const apiBaseUrl: string = extra.apiBaseUrl ?? 'http://localhost:3001';
+export const mapboxPublicToken: string | undefined = extra.mapboxPublicToken;
