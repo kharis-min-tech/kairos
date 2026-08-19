@@ -20,6 +20,7 @@ import {
   UsersRound,
   Plus,
   Calendar,
+  Map as MapIcon,
 } from 'lucide-react-native';
 import {
   Badge,
@@ -111,14 +112,23 @@ export default function FellowshipsDirectory() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Fellowships</Text>
-        <Pressable
-          onPress={() => router.push('/fellowships/new')}
-          hitSlop={8}
-          testID="new-fellowship-btn"
-          accessibilityLabel="New fellowship"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => router.push('/fellowships/map' as never)}
+            hitSlop={8}
+            accessibilityLabel="Open map"
+          >
+            <MapIcon color={c.primary} size={20} strokeWidth={1.5} />
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/fellowships/new')}
+            hitSlop={8}
+            testID="new-fellowship-btn"
+            accessibilityLabel="New fellowship"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.controlsBlock}>
@@ -347,6 +357,7 @@ function makeStyles(c: ThemeColors) {
     paddingVertical: spacing.md,
   },
   headerTitle: { ...typography.cardTitle, color: c.ink },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   controlsBlock: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
