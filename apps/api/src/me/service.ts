@@ -25,6 +25,7 @@ import {
 } from '@kairos/database';
 import type {
   AuthContext,
+  MeActivityItem,
   MeApprovalItem,
   MeFollowupItem,
   MeLeadershipResponse,
@@ -818,4 +819,154 @@ export async function listMyFollowups(
   }
 
   return items;
+}
+
+/**
+ * The log side of /follow-ups — every touchpoint the caller has personally
+ * recorded, most-recent first. Union of soul captures + fellowship + dept +
+ * NB mentor followups authored by the caller. Distinct rows per followup
+ * (unlike listMyFollowups which collapses mentors to one row per enrollment).
+ */
+export async function listMyActivity(
+  db: Database,
+  auth: AuthContext,
+): Promise<MeActivityItem[]> {
+  const items: MeActivityItem[] = [];
+
+  // 1) Souls assigned to me — the schema has `assignedMemberId` (who's
+  // following up) but no `capturedBy`, so we use the assignee as a proxy for
+  // "souls I'm working". Follow-up ticket: add capturedBy to souls schema.
+  const soulRows = await db
+    .select({
+      id: souls.id,
+      firstName: souls.firstName,
+      lastName: souls.lastName,
+      status: souls.status,
+      createdAt: souls.createdAt,
+    })
+    .from(souls)
+    .where(eq(souls.assignedMemberId, auth.memberId))
+    .orderBy(desc(souls.createdAt))
+    .limit(50);
+  for (const r of soulRows) {
+    items.push({
+      kind: 'soul_capture',
+      id: r.id,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+    });
+  }
+
+  // 2) Fellowship followups I recorded.
+  const fellowshipRows = await db
+    .select({
+      id: fellowshipFollowups.id,
+      memberId: fellowshipFollowups.memberId,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      fellowshipId: fellowshipFollowups.fellowshipId,
+      fellowshipName: fellowships.fellowshipName,
+      contactedAt: fellowshipFollowups.contactedAt,
+      notes: fellowshipFollowups.notes,
+    })
+    .from(fellowshipFollowups)
+    .innerJoin(members, eq(fellowshipFollowups.memberId, members.id))
+    .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
+    .where(eq(fellowshipFollowups.recordedById, auth.memberId))
+    .orderBy(desc(fellowshipFollowups.contactedAt))
+    .limit(50);
+  for (const r of fellowshipRows) {
+    items.push({
+      kind: 'fellowship_followup',
+      id: r.id,
+      memberId: r.memberId,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      fellowshipId: r.fellowshipId,
+      fellowshipName: r.fellowshipName,
+      contactedAt: r.contactedAt.toISOString(),
+      notes: r.notes,
+    });
+  }
+
+  // 3) Department followups I recorded.
+  const deptRows = await db
+    .select({
+      id: departmentFollowups.id,
+      memberId: departmentFollowups.memberId,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      branchDeptId: departmentFollowups.branchDepartmentId,
+      departmentName: departments.departmentName,
+      contactedAt: departmentFollowups.contactedAt,
+      notes: departmentFollowups.notes,
+    })
+    .from(departmentFollowups)
+    .innerJoin(members, eq(departmentFollowups.memberId, members.id))
+    .innerJoin(
+      branchDepartments,
+      eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
+    )
+    .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .where(eq(departmentFollowups.recordedById, auth.memberId))
+    .orderBy(desc(departmentFollowups.contactedAt))
+    .limit(50);
+  for (const r of deptRows) {
+    items.push({
+      kind: 'department_followup',
+      id: r.id,
+      memberId: r.memberId,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      branchDeptId: r.branchDeptId,
+      departmentName: r.departmentName,
+      contactedAt: r.contactedAt.toISOString(),
+      notes: r.notes,
+    });
+  }
+
+  // 4) NB mentor followups I recorded (via createdBy — the actual author,
+  // not the enrollment.mentorId which is the assigned mentor).
+  const mentorRows = await db
+    .select({
+      id: mentorFollowups.id,
+      enrollmentId: mentorFollowups.enrollmentId,
+      memberId: newBelieverEnrollments.memberId,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      contactedAt: mentorFollowups.contactedAt,
+      note: mentorFollowups.note,
+    })
+    .from(mentorFollowups)
+    .innerJoin(
+      newBelieverEnrollments,
+      eq(mentorFollowups.enrollmentId, newBelieverEnrollments.id),
+    )
+    .innerJoin(members, eq(newBelieverEnrollments.memberId, members.id))
+    .where(
+      and(
+        eq(mentorFollowups.createdBy, auth.memberId),
+        eq(mentorFollowups.isActive, true),
+      ),
+    )
+    .orderBy(desc(mentorFollowups.contactedAt))
+    .limit(50);
+  for (const r of mentorRows) {
+    items.push({
+      kind: 'mentor_followup',
+      id: r.id,
+      enrollmentId: r.enrollmentId,
+      memberId: r.memberId,
+      subjectName: `${r.firstName} ${r.lastName}`,
+      contactedAt: r.contactedAt.toISOString(),
+      note: r.note,
+    });
+  }
+
+  // Merge sort by timestamp, most recent first. Cap at 200 total items.
+  const timeOf = (i: MeActivityItem): number => {
+    if (i.kind === 'soul_capture') return new Date(i.createdAt).getTime();
+    return new Date(i.contactedAt).getTime();
+  };
+  items.sort((a, b) => timeOf(b) - timeOf(a));
+  return items.slice(0, 200);
 }

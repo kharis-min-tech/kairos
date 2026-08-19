@@ -1399,6 +1399,51 @@ export type MeFollowupItem =
       lastContactedAt: string | null;
     };
 
+/**
+ * The log side of the followups screen — every touchpoint the caller has
+ * personally recorded, most-recent first. Complements MeFollowupItem which is
+ * the inbox (things needing attention). Distinct entries per followup, unlike
+ * the mentor_enrollment kind in MeFollowupItem which collapses to one per
+ * enrollment.
+ */
+export type MeActivityItem =
+  | {
+      kind: 'soul_capture';
+      id: string;
+      subjectName: string;
+      status: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      contactedAt: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'department_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      contactedAt: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'mentor_followup';
+      id: string;
+      enrollmentId: string;
+      memberId: string;
+      subjectName: string;
+      contactedAt: string;
+      note: string;
+    };
+
 // ── Branch role management — Branch System Admin assignments ─
 
 export interface BranchRoleAssignment {
