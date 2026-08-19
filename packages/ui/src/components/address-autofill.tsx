@@ -24,6 +24,14 @@ export interface AddressAutofillValue {
   city: string;
   postalCode: string;
   country?: string;
+  /**
+   * Populated from the Mapbox retrieve response when the user picks a
+   * suggestion. Consumers that persist coordinates (branches, fellowships)
+   * should forward these to the API; consumers that don't care about coords
+   * (member address for postal correspondence only) can ignore them.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface AddressAutofillGroupProps {
@@ -135,6 +143,10 @@ export function AddressAutofillGroup({
         const feat = res.features?.[0];
         if (!feat) return;
         const p = feat.properties;
+        // Mapbox GeoJSON convention: geometry.coordinates is [lng, lat].
+        const coords = feat.geometry?.coordinates;
+        const lng = Array.isArray(coords) ? coords[0] : undefined;
+        const lat = Array.isArray(coords) ? coords[1] : undefined;
         onChange({
           line1:
             p.address_line1 ??
@@ -144,6 +156,8 @@ export function AddressAutofillGroup({
           city: p.address_level2 ?? value.city,
           postalCode: p.postcode ?? value.postalCode,
           country: p.country_code?.toUpperCase() ?? value.country,
+          latitude: typeof lat === 'number' ? lat : value.latitude,
+          longitude: typeof lng === 'number' ? lng : value.longitude,
         });
       }}
     >

@@ -52,6 +52,8 @@ export interface BranchFormValues {
   address: string;
   city: string;
   postalCode: string;
+  latitude: number | null;
+  longitude: number | null;
   phone: string;
   email: string;
   establishedDate: string;
@@ -97,6 +99,8 @@ export function BranchForm({
   const [address, setAddress] = useState(initial?.address ?? '');
   const [city, setCity] = useState(initial?.city ?? '');
   const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
+  const [latitude, setLatitude] = useState<number | null>(initial?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(initial?.longitude ?? null);
   const [phone, setPhone] = useState(initial?.phone ?? '');
   const [email, setEmail] = useState(initial?.email ?? '');
   const [establishedDate, setEstablishedDate] = useState(
@@ -141,6 +145,8 @@ export function BranchForm({
       ...(address.trim() ? { address: address.trim() } : {}),
       ...(city.trim() ? { city: city.trim() } : {}),
       ...(postalCode.trim() ? { postalCode: postalCode.trim() } : {}),
+      ...(latitude != null ? { latitude } : {}),
+      ...(longitude != null ? { longitude } : {}),
       ...(phone.trim() ? { phone: phone.trim() } : {}),
       ...(email.trim() ? { email: email.trim() } : {}),
       ...(establishedDate.trim() ? { establishedDate: establishedDate.trim() } : {}),
@@ -223,11 +229,19 @@ export function BranchForm({
 
           <AddressAutofillInput
             accessToken={mapboxPublicToken}
-            value={{ line1: address, city, postalCode }}
+            value={{
+              line1: address,
+              city,
+              postalCode,
+              latitude: latitude ?? undefined,
+              longitude: longitude ?? undefined,
+            }}
             onChange={(v) => {
               setAddress(v.line1);
               setCity(v.city);
               setPostalCode(v.postalCode);
+              if (typeof v.latitude === 'number') setLatitude(v.latitude);
+              if (typeof v.longitude === 'number') setLongitude(v.longitude);
             }}
           />
 

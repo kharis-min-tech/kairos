@@ -20,6 +20,13 @@ export interface AddressAutofillValue {
   city: string;
   postalCode: string;
   country?: string;
+  /**
+   * Populated from the Mapbox retrieve response when the user picks a
+   * suggestion. Consumers persist these where applicable (branches) so the
+   * fellowships map can render pins organically.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface AddressAutofillInputProps {
@@ -61,6 +68,10 @@ interface RetrieveFeature {
     postcode?: string;
     country_code?: string;
     name?: string;
+  };
+  geometry?: {
+    type: 'Point';
+    coordinates: [number, number]; // [lng, lat]
   };
 }
 
@@ -161,12 +172,17 @@ export function AddressAutofillInput({
       const feat = json.features?.[0];
       if (!feat) return;
       const p = feat.properties;
+      const coords = feat.geometry?.coordinates;
+      const lng = Array.isArray(coords) ? coords[0] : undefined;
+      const lat = Array.isArray(coords) ? coords[1] : undefined;
       onChange({
         line1: p.address_line1 ?? p.name ?? s.name,
         line2: value.line2,
         city: p.address_level2 ?? value.city,
         postalCode: p.postcode ?? value.postalCode,
         country: p.country_code?.toUpperCase() ?? value.country,
+        latitude: typeof lat === 'number' ? lat : value.latitude,
+        longitude: typeof lng === 'number' ? lng : value.longitude,
       });
     } finally {
       // Session token rotates after each successful retrieve to start the next

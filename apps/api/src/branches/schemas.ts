@@ -13,6 +13,8 @@ export const createBranchSchema = z.object({
   address: z.string().optional(),
   city: z.string().max(100).optional(),
   postalCode: z.string().max(20).optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   phone: z.string().max(20).optional(),
   email: z.string().email().max(100).optional(),
   establishedDate: z.string().optional(),

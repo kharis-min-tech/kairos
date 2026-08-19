@@ -182,6 +182,8 @@ export interface CreateBranchRequest {
   address?: string;
   city?: string;
   postalCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   phone?: string;
   email?: string;
   establishedDate?: string;
