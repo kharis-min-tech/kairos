@@ -11,6 +11,7 @@ import { AddressAutofillGroup, Button, Checkbox, Input, Label, Card, CardContent
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
+import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { KharisCardHeader } from '../kharis-logo';
 
 const signupSchema = z.object({
@@ -187,6 +188,25 @@ export default function SignupPage() {
           {/* Step 1: Personal Info */}
           {step === 0 && (
             <>
+              {/* Federated sign-up shortcut. Skips branch selection — the API
+                  routes new SSO accounts to DEFAULT_HOME_BRANCH_ID (or oldest
+                  branch as a fallback), then onboarding lets the user pick. */}
+              <div className="space-y-2">
+                <OAuthButtonGroup returnTo="/welcome" actionLabel="continue" />
+                <p className="text-center text-xs text-muted-foreground">
+                  You&apos;ll pick your branch during onboarding.
+                </p>
+              </div>
+
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/10" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">or sign up with email</span>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>

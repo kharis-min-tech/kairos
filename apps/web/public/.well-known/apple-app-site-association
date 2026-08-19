@@ -12,6 +12,14 @@
           {
             "/": "/verify-email*",
             "comment": "Email verification — opens the mobile app when installed."
+          },
+          {
+            "/": "/oauth-callback*",
+            "comment": "OAuth SSO return — opens the mobile app when installed."
+          },
+          {
+            "/": "/oauth-confirm-link*",
+            "comment": "OAuth account-link confirmation — opens the mobile app when installed."
           }
         ]
       }

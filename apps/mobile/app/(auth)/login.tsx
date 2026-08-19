@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Fingerprint } from 'lucide-react-native';
+import type { Member } from '@kairos/types';
 import {
   Button,
   Input,
@@ -26,7 +27,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { apiBaseUrl } from '@/lib/config';
+import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { OAuthButtonGroup } from '@/components/oauth-button-group';
 
 export default function LoginScreen() {
   const styles = useThemedStyles(makeStyles);
@@ -53,6 +57,43 @@ export default function LoginScreen() {
       setError(e.message ?? 'An error occurred');
     },
   });
+
+  // OAuth (Better-Auth Phase 1). The provider handshake happens in an
+  // in-app browser via `startOAuthFlow`; on `signed_in` we fetch /members/me
+  // with the returned bearer to hydrate the store before routing. On the
+  // unverified-email collision path we route to `oauth-confirm-link` for
+  // password confirmation before linking.
+  async function handleOAuthResult(result: OAuthStartResult) {
+    if (result.kind === 'cancelled') return;
+    if (result.kind === 'error') {
+      setError(mapOAuthErrorSlug(result.slug));
+      return;
+    }
+    if (result.kind === 'confirm_link') {
+      // expo-router typed-routes cache is stale for this newly-added screen;
+      // regenerates on next `expo start`. Casting to Href-compatible shape.
+      router.push({
+        pathname: '/(auth)/oauth-confirm-link' as never,
+        params: {
+          token: result.confirmationToken,
+          email: result.email,
+          provider: result.provider,
+        },
+      });
+      return;
+    }
+    try {
+      const member = await fetchMemberProfile(result.tokens.accessToken);
+      await setSession(result.tokens, member);
+      router.replace('/(tabs)');
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Signed in but could not load your profile.',
+      );
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -136,9 +177,15 @@ export default function LoginScreen() {
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerLabel}>Or use</Text>
+              <Text style={styles.dividerLabel}>Or continue with</Text>
               <View style={styles.dividerLine} />
             </View>
+
+            <OAuthButtonGroup
+              actionLabel="sign-in"
+              onResult={handleOAuthResult}
+              disabled={login.isPending}
+            />
 
             <Pressable
               onPress={() =>
@@ -166,6 +213,33 @@ export default function LoginScreen() {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+/**
+ * Fetch `/api/members/me` with an explicit bearer token. Used by the OAuth
+ * flow after the browser hands back tokens but before we've persisted them
+ * — the api-client's token cache hasn't been primed yet, so we bypass it
+ * with a raw fetch.
+ */
+async function fetchMemberProfile(accessToken: string): Promise<Member> {
+  const res = await fetch(`${apiBaseUrl.replace(/\/$/, '')}/api/members/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? 'Sign-in token was not accepted.'
+        : `Could not load your profile (HTTP ${res.status}).`,
+    );
+  }
+  const body = (await res.json()) as { success?: boolean; data?: Member; message?: string };
+  if (!body.success || !body.data) {
+    throw new Error(body.message ?? 'Could not load your profile.');
+  }
+  return body.data;
 }
 
 function makeStyles(c: ThemeColors) {

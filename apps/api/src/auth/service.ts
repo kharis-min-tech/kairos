@@ -322,7 +322,7 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   };
 }
 
-async function issueAuthenticatedSession(
+export async function issueAuthenticatedSession(
   db: Database,
   member: typeof members.$inferSelect,
   secrets: AuthSecrets,

@@ -29,8 +29,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     // App-links: same idea as iOS. `autoVerify: true` tells the OS to verify
     // the assetlinks.json from the domain on install; when it passes, the app
-    // wins the deep-link intent silently. Password reset + email verify are
-    // the two paths currently mailed out.
+    // wins the deep-link intent silently. Password reset, email verify, and
+    // the OAuth SSO callbacks are the paths currently intercepted.
     intentFilters: [
       {
         action: 'VIEW',
@@ -48,6 +48,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           },
           {
             scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/oauth-callback',
+          },
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/oauth-confirm-link',
+          },
+          {
+            scheme: 'https',
             host: 'staging.kairos.kharis.org',
             pathPrefix: '/reset-password',
           },
@@ -55,6 +65,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             scheme: 'https',
             host: 'staging.kairos.kharis.org',
             pathPrefix: '/verify-email',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/oauth-callback',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/oauth-confirm-link',
           },
         ],
         category: ['BROWSABLE', 'DEFAULT'],
@@ -113,6 +133,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001',
+    // OAuth (Better-Auth Phase 1): the API server redirects to
+    // `${FRONTEND_URL}/oauth-callback#...` after the IdP handshake. The
+    // mobile OAuth flow needs to know this base URL so
+    // `WebBrowser.openAuthSessionAsync` can detect the return and close the
+    // in-app browser. Falls back to same-host as the API for prod/staging.
+    frontendBaseUrl: process.env.EXPO_PUBLIC_FRONTEND_URL,
     mapboxPublicToken:
       process.env.MAPBOX_PUBLIC_TOKEN ?? process.env.EXPO_PUBLIC_MAPBOX_TOKEN,
     eas: {

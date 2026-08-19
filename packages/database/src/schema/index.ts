@@ -83,3 +83,20 @@ export {
   type ConsentRecord,
   type NewConsentRecord,
 } from './consent-records';
+export {
+  oauthAccounts,
+  oauthAccountsRelations,
+  type OAuthAccount,
+  type NewOAuthAccount,
+} from './oauth-accounts';
+export {
+  oauthSessions,
+  oauthSessionsRelations,
+  type OAuthSession,
+  type NewOAuthSession,
+} from './oauth-sessions';
+export {
+  oauthVerificationTokens,
+  type OAuthVerificationToken,
+  type NewOAuthVerificationToken,
+} from './oauth-verification-tokens';

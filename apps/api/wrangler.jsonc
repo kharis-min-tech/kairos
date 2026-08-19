@@ -36,6 +36,19 @@
   //   wrangler secret put SELF_CHECK_IN_QR_SECRET              # prod
   //   wrangler secret put --env staging SELF_CHECK_IN_QR_SECRET # staging
   // Generate with: openssl rand -base64 48
+  //
+  // OAuth (Better-Auth Phase 1) — see apps/api/BETTER_AUTH_SETUP.md for the
+  // provider-console setup. All optional at runtime; a missing provider
+  // secret makes that provider's /start return 501.
+  //   wrangler secret put GOOGLE_CLIENT_ID
+  //   wrangler secret put GOOGLE_CLIENT_SECRET
+  //   wrangler secret put MICROSOFT_CLIENT_ID
+  //   wrangler secret put MICROSOFT_CLIENT_SECRET
+  //   wrangler secret put APPLE_CLIENT_ID
+  //   wrangler secret put APPLE_TEAM_ID
+  //   wrangler secret put APPLE_KEY_ID
+  //   wrangler secret put APPLE_PRIVATE_KEY   # paste .p8 including PEM boundaries
+  //   wrangler secret put DEFAULT_HOME_BRANCH_ID   # optional; falls through to oldest branch
   "vars": {
     "AWS_REGION": "eu-west-2",
     "SES_CONFIGURATION_SET": "kairos-transactional"
