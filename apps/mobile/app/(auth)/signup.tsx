@@ -21,6 +21,7 @@ import {
   MailCheck,
 } from 'lucide-react-native';
 import {
+  AddressAutofillInput,
   Button,
   DatePicker,
   Input,
@@ -33,6 +34,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
 
 const MIN_PASSWORD = 8;
 
@@ -298,30 +300,16 @@ export default function SignupScreen() {
 
                 {showMore ? (
                   <>
-                    <Input
-                      label="Address"
-                      value={address}
-                      onChangeText={setAddress}
-                      autoCapitalize="words"
-                      containerStyle={{ marginTop: spacing.md }}
-                    />
-                    <View style={styles.pairRow}>
-                      <View style={{ flex: 1 }}>
-                        <Input
-                          label="City"
-                          value={city}
-                          onChangeText={setCity}
-                          autoCapitalize="words"
-                        />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Input
-                          label="Postal code"
-                          value={postalCode}
-                          onChangeText={setPostalCode}
-                          autoCapitalize="characters"
-                        />
-                      </View>
+                    <View style={{ marginTop: spacing.md }}>
+                      <AddressAutofillInput
+                        accessToken={mapboxPublicToken}
+                        value={{ line1: address, city, postalCode }}
+                        onChange={(v) => {
+                          setAddress(v.line1);
+                          setCity(v.city);
+                          setPostalCode(v.postalCode);
+                        }}
+                      />
                     </View>
                     <Input
                       label="Emergency contact name"

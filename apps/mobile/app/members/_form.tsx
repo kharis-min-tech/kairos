@@ -12,6 +12,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Check, X } from 'lucide-react-native';
 import {
+  AddressAutofillInput,
   Button,
   Card,
   DatePicker,
@@ -25,6 +26,7 @@ import {
 } from '@kairos/ui-native';
 import type { CreateMemberRequest, UpdateMemberRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
 
 export interface MemberFormValues {
   firstName: string;
@@ -285,14 +287,15 @@ export function MemberForm({
             autoCorrect={false}
           />
 
-          <FieldLabel label="Address" />
-          <Input value={address} onChangeText={setAddress} autoCapitalize="words" />
-
-          <FieldLabel label="City" />
-          <Input value={city} onChangeText={setCity} autoCapitalize="words" />
-
-          <FieldLabel label="Postal code" />
-          <Input value={postalCode} onChangeText={setPostalCode} autoCapitalize="characters" />
+          <AddressAutofillInput
+            accessToken={mapboxPublicToken}
+            value={{ line1: address, city, postalCode }}
+            onChange={(v) => {
+              setAddress(v.line1);
+              setCity(v.city);
+              setPostalCode(v.postalCode);
+            }}
+          />
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
@@ -334,26 +337,24 @@ export function MemberForm({
           </View>
 
           {secondaryBranchId ? (
-            <>
-              <FieldLabel label="Secondary address" />
-              <Input
-                value={secondaryAddress}
-                onChangeText={setSecondaryAddress}
-                autoCapitalize="words"
-              />
-              <FieldLabel label="Secondary city" />
-              <Input
-                value={secondaryCity}
-                onChangeText={setSecondaryCity}
-                autoCapitalize="words"
-              />
-              <FieldLabel label="Secondary postal code" />
-              <Input
-                value={secondaryPostalCode}
-                onChangeText={setSecondaryPostalCode}
-                autoCapitalize="characters"
-              />
-            </>
+            <AddressAutofillInput
+              accessToken={mapboxPublicToken}
+              labels={{
+                line1: 'Secondary address',
+                city: 'Secondary city',
+                postalCode: 'Secondary postal code',
+              }}
+              value={{
+                line1: secondaryAddress,
+                city: secondaryCity,
+                postalCode: secondaryPostalCode,
+              }}
+              onChange={(v) => {
+                setSecondaryAddress(v.line1);
+                setSecondaryCity(v.city);
+                setSecondaryPostalCode(v.postalCode);
+              }}
+            />
           ) : null}
         </Card>
 

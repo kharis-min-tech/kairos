@@ -12,6 +12,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Check, Plus, Trash2 } from 'lucide-react-native';
 import {
+  AddressAutofillInput,
   Button,
   Card,
   DatePicker,
@@ -32,6 +33,7 @@ import {
   type UpdateBranchRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
 
 const DAY_OPTIONS = [
   'Sunday',
@@ -219,17 +221,14 @@ export function BranchForm({
         <Card padding="md" style={{ gap: spacing.md }}>
           <Text style={styles.sectionEyebrow}>ADDRESS &amp; CONTACT</Text>
 
-          <FieldLabel label="Address" />
-          <Input value={address} onChangeText={setAddress} autoCapitalize="words" />
-
-          <FieldLabel label="City" />
-          <Input value={city} onChangeText={setCity} autoCapitalize="words" />
-
-          <FieldLabel label="Postal code" />
-          <Input
-            value={postalCode}
-            onChangeText={setPostalCode}
-            autoCapitalize="characters"
+          <AddressAutofillInput
+            accessToken={mapboxPublicToken}
+            value={{ line1: address, city, postalCode }}
+            onChange={(v) => {
+              setAddress(v.line1);
+              setCity(v.city);
+              setPostalCode(v.postalCode);
+            }}
           />
 
           <FieldLabel label="Phone" />
