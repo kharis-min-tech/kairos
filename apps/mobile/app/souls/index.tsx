@@ -342,6 +342,7 @@ function makeStyles(c: ThemeColors) {
   },
   statusChipScroll: { flexGrow: 0, flexShrink: 0 },
   statusChipRow: {
+    flexDirection: 'row',
     gap: spacing.xs,
     paddingRight: spacing.lg,
     alignItems: 'center',

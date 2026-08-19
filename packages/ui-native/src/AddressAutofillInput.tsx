@@ -4,11 +4,7 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Modal,
-  ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { Input } from './Input';
 import { radii, spacing, typography } from './tokens';
@@ -37,7 +33,12 @@ export interface AddressAutofillInputProps {
   accessToken?: string;
   value: AddressAutofillValue;
   onChange: (next: AddressAutofillValue) => void;
-  /** ISO-2 country code to bias suggestions. Defaults to 'gb'. */
+  /**
+   * ISO-2 country code (or comma-separated list, e.g. 'gb,gh') to bias
+   * suggestions. Undefined = worldwide, ranked by prominence. Pass this only
+   * when the form has strong signal — e.g. a branch's region.country — so
+   * users adding a Ghana branch aren't seeing UK-only results.
+   */
   country?: string;
   /** Show a separate line-2 field. Defaults to false. */
   showLine2?: boolean;
@@ -64,10 +65,13 @@ interface RetrieveFeature {
   properties: {
     address_line1?: string;
     address_line2?: string;
+    address_level1?: string;
     address_level2?: string;
     postcode?: string;
     country_code?: string;
     name?: string;
+    feature_type?: string;
+    place_formatted?: string;
   };
   geometry?: {
     type: 'Point';
@@ -91,7 +95,7 @@ export function AddressAutofillInput({
   accessToken,
   value,
   onChange,
-  country = 'gb',
+  country,
   showLine2 = false,
   labels,
   errors,
@@ -101,7 +105,6 @@ export function AddressAutofillInput({
   const c = useColors();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const [sessionToken, setSessionToken] = useState(() => generateSessionToken());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,13 +127,15 @@ export function AddressAutofillInput({
     set('line1', text);
     if (!accessToken || !text.trim() || text.trim().length < 3) {
       setSuggestions([]);
-      setOpen(false);
       return;
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    // 400ms matches the industry norm (Google Places ~300, Booking ~500) — a
+    // hair longer than 250 avoids the "the picker keeps popping while I'm
+    // still typing" annoyance.
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(text);
-    }, 250);
+    }, 400);
   }
 
   async function fetchSuggestions(query: string) {
@@ -142,14 +147,13 @@ export function AddressAutofillInput({
       url.searchParams.set('access_token', accessToken);
       url.searchParams.set('session_token', sessionToken);
       url.searchParams.set('language', 'en');
-      url.searchParams.set('country', country);
+      if (country) url.searchParams.set('country', country);
       url.searchParams.set('types', 'address,street,place,postcode');
       url.searchParams.set('limit', '6');
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error(`Suggest failed (${res.status})`);
       const json = (await res.json()) as { suggestions?: Suggestion[] };
       setSuggestions(json.suggestions ?? []);
-      setOpen((json.suggestions ?? []).length > 0);
     } catch {
       setSuggestions([]);
     } finally {
@@ -159,7 +163,7 @@ export function AddressAutofillInput({
 
   async function pick(s: Suggestion) {
     if (!accessToken) return;
-    setOpen(false);
+    setSuggestions([]);
     try {
       const url = new URL(
         `https://api.mapbox.com/search/searchbox/v1/retrieve/${encodeURIComponent(s.mapbox_id)}`,
@@ -175,8 +179,18 @@ export function AddressAutofillInput({
       const coords = feat.geometry?.coordinates;
       const lng = Array.isArray(coords) ? coords[0] : undefined;
       const lat = Array.isArray(coords) ? coords[1] : undefined;
+      // When the user picks a postcode-only or place-only suggestion, `name`
+      // is the postcode / place name itself — not a street address — and
+      // dumping it into line1 leaves the address field looking like a
+      // postcode. Only fall back to `name` for address/street/POI features
+      // where it genuinely reads as a street label.
+      const canUseNameForLine1 =
+        p.feature_type === 'address' ||
+        p.feature_type === 'street' ||
+        p.feature_type === 'poi';
+      const nextLine1 = p.address_line1 ?? (canUseNameForLine1 ? p.name : '') ?? '';
       onChange({
-        line1: p.address_line1 ?? p.name ?? s.name,
+        line1: nextLine1 || value.line1,
         line2: value.line2,
         city: p.address_level2 ?? value.city,
         postalCode: p.postcode ?? value.postalCode,
@@ -207,6 +221,24 @@ export function AddressAutofillInput({
             loading ? <ActivityIndicator size="small" color={c.primary} /> : null
           }
         />
+        {suggestions.length > 0 ? (
+          <View style={styles.suggestionsDropdown}>
+            {suggestions.map((s) => (
+              <Pressable
+                key={s.mapbox_id}
+                style={styles.suggestionRow}
+                onPress={() => pick(s)}
+              >
+                <Text style={styles.suggestionName} numberOfLines={1}>
+                  {s.name}
+                </Text>
+                <Text style={styles.suggestionMeta} numberOfLines={1}>
+                  {s.place_formatted}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       {showLine2 ? (
@@ -242,39 +274,6 @@ export function AddressAutofillInput({
           />
         </View>
       </View>
-
-      <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.sheetHandle} />
-              <Text style={styles.sheetTitle}>Pick an address</Text>
-              <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled">
-                {suggestions.length === 0 ? (
-                  <Text style={styles.emptyText}>No suggestions.</Text>
-                ) : (
-                  suggestions.map((s) => (
-                    <Pressable
-                      key={s.mapbox_id}
-                      style={styles.suggestionRow}
-                      onPress={() => pick(s)}
-                    >
-                      <Text style={styles.suggestionName}>{s.name}</Text>
-                      <Text style={styles.suggestionMeta}>{s.place_formatted}</Text>
-                    </Pressable>
-                  ))
-                )}
-              </ScrollView>
-              <Pressable style={styles.cancelBtn} onPress={() => setOpen(false)}>
-                <Text style={styles.cancelLabel}>Cancel</Text>
-              </Pressable>
-            </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
     </View>
   );
 }
@@ -292,33 +291,16 @@ function generateSessionToken(): string {
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
     pairRow: { flexDirection: 'row', gap: spacing.md },
-    backdrop: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      justifyContent: 'flex-end',
-    },
-    sheet: {
+    suggestionsDropdown: {
       backgroundColor: c.card,
-      borderTopLeftRadius: radii.lg,
-      borderTopRightRadius: radii.lg,
-      padding: spacing.lg,
-      gap: spacing.md,
-    },
-    sheetHandle: {
-      alignSelf: 'center',
-      width: 40,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: c.inkGhost,
-    },
-    sheetTitle: { ...typography.cardTitle, color: c.ink },
-    emptyText: {
-      ...typography.body,
-      color: c.inkMuted,
-      paddingVertical: spacing.md,
-      textAlign: 'center',
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+      marginTop: 4,
     },
     suggestionRow: {
+      paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.divider,
@@ -326,7 +308,5 @@ function makeStyles(c: ThemeColors) {
     },
     suggestionName: { ...typography.body, color: c.ink, fontWeight: '600' },
     suggestionMeta: { ...typography.meta, color: c.inkMuted },
-    cancelBtn: { alignItems: 'center', paddingVertical: spacing.sm },
-    cancelLabel: { ...typography.button, color: c.primary },
   });
 }

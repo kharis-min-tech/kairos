@@ -116,7 +116,7 @@ export function TimePicker({
                   onChange={handleChange}
                   minuteInterval={minuteInterval}
                   themeVariant={scheme}
-                  accentColor={c.primary}
+                  accentColor={scheme === 'dark' ? c.primaryLight : c.primary}
                 />
                 <Pressable style={styles.doneButton} onPress={() => setOpen(false)}>
                   <Text style={styles.doneLabel}>Done</Text>

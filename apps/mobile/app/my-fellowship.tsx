@@ -309,6 +309,7 @@ function makeStyles(c: ThemeColors) {
   },
   chipsScroll: { flexGrow: 0, flexShrink: 0 },
   chipsRow: {
+    flexDirection: 'row',
     gap: spacing.sm,
     paddingRight: spacing.lg,
     alignItems: 'center',

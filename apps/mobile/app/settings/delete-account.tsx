@@ -80,7 +80,7 @@ export default function DeleteAccountSettings() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.container}>
           <Card padding="md" style={{ gap: spacing.md, borderWidth: 1, borderColor: 'rgba(220,38,38,0.35)' }}>

@@ -387,6 +387,7 @@ function makeStyles(c: ThemeColors) {
   },
   typeChipScroll: { flexGrow: 0, flexShrink: 0 },
   typeChipRow: {
+    flexDirection: 'row',
     gap: spacing.xs,
     paddingRight: spacing.lg,
     alignItems: 'center',

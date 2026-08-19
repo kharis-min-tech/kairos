@@ -770,9 +770,11 @@ export async function listMyFollowups(
     }
   }
 
-  // 4) Mentor followups — surface one row per active enrollment the caller
-  // mentors, with the timestamp of the most recent note (so the caller can
-  // spot enrollments they haven't touched in a while).
+  // 4) Mentor followups — surface one row per active enrollment where the
+  // caller is EITHER the assigned mentor OR has personally logged at least
+  // one mentor followup (e.g. a co-mentor / NB-leader filling in for the
+  // primary). Prevents the "I recorded a followup but it doesn't show in
+  // my inbox" gap when a non-primary-mentor helped out.
   const mentorEnrollments = await db
     .select({
       id: newBelieverEnrollments.id,
@@ -792,8 +794,11 @@ export async function listMyFollowups(
     )
     .where(
       and(
-        eq(newBelieverEnrollments.mentorId, auth.memberId),
         eq(newBelieverEnrollments.isActive, true),
+        or(
+          eq(newBelieverEnrollments.mentorId, auth.memberId),
+          eq(mentorFollowups.createdBy, auth.memberId),
+        ),
       ),
     )
     .groupBy(

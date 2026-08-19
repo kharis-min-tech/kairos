@@ -45,7 +45,11 @@ export interface AddressAutofillGroupProps {
   onChange: (next: AddressAutofillValue) => void;
   /** Optional class applied to the outer wrapper. */
   className?: string;
-  /** Country ISO-2 code to bias the search. Defaults to 'gb'. */
+  /**
+   * ISO-2 country code (or comma-separated list) to bias suggestions.
+   * Undefined = worldwide, ranked by prominence. Pass this only when the
+   * form has strong signal about the country.
+   */
   country?: string;
   /** Show line 2 field. Defaults to false. */
   showLine2?: boolean;
@@ -75,7 +79,7 @@ export function AddressAutofillGroup({
   value,
   onChange,
   className,
-  country = 'gb',
+  country,
   showLine2 = false,
   disabled = false,
   errors,
@@ -138,7 +142,7 @@ export function AddressAutofillGroup({
   return (
     <AddressAutofill
       accessToken={accessToken}
-      options={{ country, language: 'en' }}
+      options={country ? { country, language: 'en' } : { language: 'en' }}
       onRetrieve={(res) => {
         const feat = res.features?.[0];
         if (!feat) return;
@@ -147,11 +151,18 @@ export function AddressAutofillGroup({
         const coords = feat.geometry?.coordinates;
         const lng = Array.isArray(coords) ? coords[0] : undefined;
         const lat = Array.isArray(coords) ? coords[1] : undefined;
+        // When the user picks a postcode-only or place suggestion, `feature_name`
+        // is the postcode / place — dumping it into line1 leaves the address
+        // field showing a postcode. Only trust the name when the feature is a
+        // real street-level result.
+        const canUseNameForLine1 =
+          (p as { feature_type?: string }).feature_type === 'address' ||
+          (p as { feature_type?: string }).feature_type === 'street' ||
+          (p as { feature_type?: string }).feature_type === 'poi';
+        const nextLine1 =
+          p.address_line1 ?? (canUseNameForLine1 ? p.feature_name : '') ?? '';
         onChange({
-          line1:
-            p.address_line1 ??
-            [p.feature_name].filter(Boolean).join(' ') ??
-            value.line1,
+          line1: nextLine1 || value.line1,
           line2: value.line2,
           city: p.address_level2 ?? value.city,
           postalCode: p.postcode ?? value.postalCode,

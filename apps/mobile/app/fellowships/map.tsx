@@ -145,14 +145,27 @@ export default function FellowshipsMap() {
 
   async function onLocatePostcode(query: string): Promise<string | null> {
     if (!query.trim() || pins.length === 0) return 'Nothing to locate against — no fellowships mapped yet.';
+    if (!mapboxPublicToken) return 'Search is unavailable.';
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query.trim())}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'en' } },
+      // Mapbox forward-geocode via the Search Box API. Same vendor as the
+      // basemap + the address autofill, so no rate-limit / User-Agent
+      // constraints (Nominatim's terms of use forbid heavy use from apps).
+      const url = new URL(
+        'https://api.mapbox.com/search/geocode/v6/forward',
       );
-      const data = (await res.json()) as { lat: string; lon: string }[];
-      if (!data || data.length === 0) return 'Location not found';
-      const userLatLng: [number, number] = [parseFloat(data[0]!.lat), parseFloat(data[0]!.lon)];
+      url.searchParams.set('q', query.trim());
+      url.searchParams.set('access_token', mapboxPublicToken);
+      url.searchParams.set('limit', '1');
+      url.searchParams.set('language', 'en');
+      const res = await fetch(url.toString());
+      if (!res.ok) return 'Location not found';
+      const data = (await res.json()) as {
+        features?: { geometry?: { coordinates: [number, number] } }[];
+      };
+      const coords = data.features?.[0]?.geometry?.coordinates;
+      if (!coords) return 'Location not found';
+      // Mapbox geocode returns [lng, lat]; rest of this file uses [lat, lng].
+      const userLatLng: [number, number] = [coords[1], coords[0]];
 
       let best: (FellowshipWithBranch & { latitude: number; longitude: number }) | null = null;
       let bestKm = Infinity;
@@ -204,7 +217,7 @@ export default function FellowshipsMap() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={{ flex: 1 }}>
           <MapView style={{ flex: 1 }} styleURL={styleURL}>

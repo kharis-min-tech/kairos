@@ -288,6 +288,7 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.lg,
   },
   chipsRow: {
+    flexDirection: 'row',
     gap: spacing.sm,
     paddingRight: spacing.lg,
   },

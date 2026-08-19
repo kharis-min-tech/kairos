@@ -747,7 +747,7 @@ function RolePickerSheet({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: spacing.xs }}
+                contentContainerStyle={{ flexDirection: 'row', gap: spacing.xs }}
               >
                 {(branches.data ?? []).map((b) => {
                   const active = branchId === b.id;
