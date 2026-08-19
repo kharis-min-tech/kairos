@@ -85,6 +85,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-community/datetimepicker',
+    [
+      '@rnmapbox/maps',
+      {
+        // Native SDK download uses this secret token at build time. Set via
+        // EAS secret `MAPBOX_DOWNLOAD_TOKEN` — never committed.
+        RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

@@ -34,6 +34,7 @@
     "@kairos/ui-native": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
+    "@rnmapbox/maps": "^10.3.5",
     "@tanstack/react-query": "^5.62.7",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.13",
