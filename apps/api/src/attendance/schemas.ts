@@ -158,6 +158,13 @@ export const groupAttendanceQuerySchema = z.object({
   weeks: z.coerce.number().int().positive().max(52).default(12),
 });
 
+// Rotating QR — admin polls a token every ~30s to display; member's scan
+// posts it back for verification. Signature check lives in self-check-in-qr.ts;
+// this only enforces the shape of the request body.
+export const selfCheckInQrBodySchema = z.object({
+  token: z.string().min(1, 'QR token is required').max(200),
+});
+
 // Cohort comparison — set-difference between any two service selections.
 // Returns members present in "A" (per `presentMode`) and absent from "B" (per `absentMode`).
 // Single-select inputs collapse: ANY and ALL produce the same answer.

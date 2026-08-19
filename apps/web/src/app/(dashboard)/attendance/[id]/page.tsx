@@ -4,8 +4,8 @@ export const runtime = 'edge';
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, Users } from 'lucide-react';
-import { Card, CardContent, cn } from '@kairos/ui';
+import { ChevronLeft, Users, QrCode } from 'lucide-react';
+import { Button, Card, CardContent, cn } from '@kairos/ui';
 import { useService, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
 import { ServiceType } from '@kairos/types';
@@ -97,7 +97,16 @@ export default function CheckInPage() {
           </Card>
 
           {canCheckIn ? (
-            <CheckInPanel serviceId={id} />
+            <>
+              <div className="flex justify-end">
+                <Link href={`/attendance/${id}/qr`}>
+                  <Button variant="outline">
+                    <QrCode className="mr-1.5 h-4 w-4" /> Show self-check-in QR
+                  </Button>
+                </Link>
+              </div>
+              <CheckInPanel serviceId={id} />
+            </>
           ) : (
             <Card>
               <CardContent className="py-8 text-center">

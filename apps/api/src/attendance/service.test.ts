@@ -1091,3 +1091,122 @@ describe('getMissingMembers with dept/fellowship filter', () => {
     expect(result).toEqual([]);
   });
 });
+
+// ── Rotating QR (admin-side token issuer + member-side verify) ────
+
+describe('generateQrToken', () => {
+  const secret = 'test-qr-secret';
+
+  it('returns a token + expiresAt for an Admin-dept caller', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      [{ value: 0 }], // count
+      deptCheck(true), // Admin dept → passes enforceServiceWriter
+    );
+    const { generateQrToken } = await import('./service');
+    const result = await generateQrToken(mockDb, adminDeptAuth, serviceId, secret);
+    expect(result.serviceId).toBe(serviceId);
+    expect(result.token.length).toBeGreaterThan(0);
+    expect(result.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it('forbids a plain member (not in Admin dept, no branch:read grant)', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
+      [{ value: 0 }],
+      deptCheck(false), // not in Admin dept
+    );
+    const { generateQrToken } = await import('./service');
+    await expect(generateQrToken(mockDb, memberAuth, serviceId, secret)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+});
+
+describe('selfCheckInWithQrToken', () => {
+  const secret = 'test-qr-secret-2';
+  const now = new Date('2026-05-24T09:15:00Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  const configRow = () => [{
+    serviceId,
+    serviceDate: new Date('2026-05-24T09:00:00Z'),
+    isActive: true,
+    branchId,
+    enabled: true,
+    openBefore: 30,
+    closeAfter: 90,
+    lateAfter: 30,
+  }];
+
+  it('accepts a current-bucket token and records Present', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, serviceId, now.getTime());
+
+    setupSelectSequence(configRow(), []); // service+branch, no existing attendance
+    setupInsert(undefined);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.status).toBe('Present');
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('accepts a previous-bucket token (grace window across the 30s boundary)', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    // Sign at a moment that lands in the previous bucket. `now` sits on a
+    // 30s boundary in these tests, so we move BACK to inside the previous
+    // bucket (any millisecond in [now - 30_000, now - 1]) — we pick 15_000ms
+    // before to leave headroom, then re-freeze the clock to `now` for verify.
+    const prevBucketTs = now.getTime() - 15_000;
+    const { token } = await signQrToken(secret, serviceId, prevBucketTs);
+    vi.setSystemTime(now); // make sure verify runs at `now`
+
+    setupSelectSequence(configRow(), []);
+    setupInsert(undefined);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('rejects a token signed more than one bucket ago (expired)', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    // Sign 90s ago → three buckets stale → rejected.
+    const { token } = await signQrToken(secret, serviceId, now.getTime() - 90_000);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('rejects a token signed for a different service', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, 'some-other-service-id', now.getTime());
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('is idempotent — a double-scan returns the existing row rather than inserting twice', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, serviceId, now.getTime());
+
+    setupSelectSequence(
+      configRow(),
+      [{ status: 'Present', arrivalTime: new Date('2026-05-24T09:05:00Z') }], // already checked in
+    );
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.alreadyCheckedIn).toBe(true);
+    expect(r.status).toBe('Present');
+  });
+});

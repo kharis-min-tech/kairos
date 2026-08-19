@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Search, ScanLine, UserPlus } from 'lucide-react-native';
+import { ChevronLeft, Search, ScanLine, UserPlus, QrCode } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -28,6 +28,19 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { QrScannerModal } from '@/components/qr-scanner-modal';
+
+/**
+ * Parse an admin-facing member QR. The scanner encodes each roster row as
+ * `kairos://member/{memberId}` — nothing more. Returning `null` on any
+ * mismatch keeps the caller's alert message uniform.
+ */
+function parseMemberQr(payload: string): string | null {
+  const prefix = 'kairos://member/';
+  if (!payload.startsWith(prefix)) return null;
+  const id = payload.slice(prefix.length).trim();
+  return id.length > 0 ? id : null;
+}
 
 export default function AdminCheckin() {
   const styles = useThemedStyles(makeStyles);
@@ -35,6 +48,7 @@ export default function AdminCheckin() {
   const router = useRouter();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Nearest upcoming service.
   const services = useQuery({
@@ -79,6 +93,21 @@ export default function AdminCheckin() {
       alert.info('Check-in failed', e.message);
     },
   });
+
+  function handleScannedMemberQr(payload: string) {
+    setScannerOpen(false);
+    const memberId = parseMemberQr(payload);
+    if (!memberId) {
+      alert.info('QR not recognised', "That isn't a Kairos member code.");
+      return;
+    }
+    const match = (roster.data ?? []).find((r) => r.memberId === memberId);
+    checkin.mutate({ memberId });
+    if (match) {
+      // Slight delay isn't needed — the alert stacks over the invalidated list.
+      alert.info('Checked in', `${match.firstName} ${match.lastName}`);
+    }
+  }
 
   const roasted = (roster.data ?? []).filter((r) =>
     search
@@ -136,15 +165,33 @@ export default function AdminCheckin() {
         <Button
           label="Scan QR"
           size="sm"
-          onPress={() => alert.info('QR', 'Camera scanner lands in a follow-up.')}
+          onPress={() => setScannerOpen(true)}
           iconLeft={<ScanLine color="#ffffff" size={14} strokeWidth={2} />}
         />
         <Button
           label="Walk-in"
           size="sm"
           variant="outline"
-          onPress={() => alert.info('Walk-in', 'Visitor walk-in form lands in a follow-up.')}
+          onPress={() => router.push('/forms/first_time_visitor')}
           iconLeft={<UserPlus color={c.primary} size={14} strokeWidth={2} />}
+        />
+        <Button
+          label="Show QR"
+          size="sm"
+          variant="outline"
+          onPress={() => {
+            if (!serviceId) {
+              alert.info('No service', 'Schedule a service before showing a QR code.');
+              return;
+            }
+            // expo-router typed-routes cache is stale for this newly-added screen;
+            // regenerates on next `expo start`. Casting to Href-compatible shape.
+            router.push({
+              pathname: '/admin/checkin-qr' as never,
+              params: { serviceId },
+            });
+          }}
+          iconLeft={<QrCode color={c.primary} size={14} strokeWidth={2} />}
         />
         <View style={styles.searchField}>
           <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
@@ -231,6 +278,14 @@ export default function AdminCheckin() {
           }}
         />
       )}
+
+      <QrScannerModal
+        visible={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScannedMemberQr}
+        title="Scan member code"
+        hint="Point the camera at a member's Kairos QR to check them in."
+      />
     </SafeAreaView>
   );
 }
