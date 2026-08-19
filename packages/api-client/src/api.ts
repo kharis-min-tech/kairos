@@ -9,6 +9,9 @@ import type {
   ResetPasswordRequest,
   VerifyEmailRequest,
   RefreshRequest,
+  OAuthConnection,
+  OAuthConfirmLinkRequest,
+  OAuthProviderId,
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
@@ -116,6 +119,8 @@ import type {
   ServiceAttendanceRow,
   SelfCheckInResult,
   SelfCheckInCandidate,
+  QrTokenPayload,
+  SelfCheckInQrRequest,
   AttendanceTrendPoint,
   AttendanceTrendsParams,
   MissingMember,
@@ -219,6 +224,23 @@ export function createApiClient(
         client.post<ApiResponse<void>>('/api/auth/email-change/confirm', data),
       undoEmailChange: (data: { token: string }) =>
         client.post<ApiResponse<{ resetToken: string }>>('/api/auth/email-change/undo', data),
+      oauth: {
+        /**
+         * Compose a top-level redirect URL to the provider handshake. NOT a
+         * fetch — callers `window.location.assign(...)` this. Kept here so
+         * base-URL construction lives with the rest of the auth surface.
+         */
+        startUrl: (provider: OAuthProviderId, returnTo?: string) => {
+          const qs = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+          return `${baseUrl.replace(/\/$/, '')}/api/auth/oauth/${provider}/start${qs}`;
+        },
+        listConnections: () =>
+          client.get<ApiResponse<OAuthConnection[]>>('/api/auth/oauth/connections'),
+        disconnect: (provider: OAuthProviderId) =>
+          client.delete<ApiResponse<OAuthConnection[]>>(`/api/auth/oauth/connections/${provider}`),
+        confirmLink: (data: OAuthConfirmLinkRequest) =>
+          client.post<ApiResponse<LoginResponse>>('/api/auth/oauth/confirm-link', data),
+      },
     },
 
     branches: {
@@ -1205,6 +1227,18 @@ export function createApiClient(
         ),
       selfCheckInCandidates: () =>
         client.get<ApiResponse<SelfCheckInCandidate[]>>('/api/attendance/self-check-in/candidates'),
+      // Rotating QR pair: admin polls `getQrToken`; member scan posts to `selfCheckInQr`.
+      // Verifier accepts the current or previous 30s bucket so a scan on the
+      // second before rotation still succeeds.
+      getQrToken: (serviceId: string) =>
+        client.get<ApiResponse<QrTokenPayload>>(
+          `/api/attendance/services/${encodeURIComponent(serviceId)}/qr-token`,
+        ),
+      selfCheckInQr: (params: { serviceId: string } & SelfCheckInQrRequest) =>
+        client.post<ApiResponse<SelfCheckInResult>>(
+          `/api/attendance/services/${encodeURIComponent(params.serviceId)}/self-check-in-qr`,
+          { token: params.token },
+        ),
 
       trends: (params?: AttendanceTrendsParams) => {
         const qs = new URLSearchParams();

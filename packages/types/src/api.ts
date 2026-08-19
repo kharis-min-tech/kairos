@@ -92,6 +92,23 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
+// ── OAuth (Better-Auth Phase 1) ────────────────────────────
+
+export type OAuthProviderId = 'google' | 'microsoft' | 'apple';
+
+export interface OAuthConnection {
+  provider: OAuthProviderId;
+  /** Provider-side email at link time. May be null for Apple hide-my-email. */
+  providerEmail: string | null;
+  connectedAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface OAuthConfirmLinkRequest {
+  confirmationToken: string;
+  password: string;
+}
+
 // ── Auth Context (decoded JWT) ─────────────────────────────
 
 export interface AuthContext {
@@ -999,6 +1016,22 @@ export interface SelfCheckInResult {
   status: 'Present' | 'Late';
   arrivalTime: string;
   alreadyCheckedIn: boolean;
+}
+
+/**
+ * Rotating QR token returned to admin-desk clients. Polled every ~30s.
+ * Client encodes the QR as `kairos://check-in/{serviceId}/{token}`.
+ */
+export interface QrTokenPayload {
+  token: string;
+  /** ms epoch when the current bucket ends — client should re-poll before then. */
+  expiresAt: number;
+  serviceId: string;
+}
+
+/** Body posted by the member scanner to the verify endpoint. */
+export interface SelfCheckInQrRequest {
+  token: string;
 }
 
 /** Per-service check-in candidate the mobile Check-in tab renders. */

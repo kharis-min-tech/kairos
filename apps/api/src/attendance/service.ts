@@ -18,6 +18,7 @@ import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 import { createMemberShell } from '../lib/member-shell';
 import { authHasAnyCapability } from '../lib/grants';
+import { signQrToken, verifyQrToken } from './self-check-in-qr';
 
 // ── Local auth helpers (per-module, not imported — see CLAUDE.md) ──
 
@@ -754,6 +755,21 @@ export async function selfCheckIn(
   auth: AuthContext,
   serviceId: string,
 ): Promise<SelfCheckInResult> {
+  return performSelfCheckIn(db, auth, serviceId);
+}
+
+/**
+ * Shared self-check-in core — window math + idempotency + insert. Called by
+ * the honour-system endpoint (`selfCheckIn`) AND by the QR verify endpoint
+ * (`selfCheckInWithQrToken`), so the Late math only lives here. Do not
+ * duplicate this logic in a new caller — refactor to hoist a step and
+ * reuse it.
+ */
+async function performSelfCheckIn(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+): Promise<SelfCheckInResult> {
   // Grab the service + its branch's self-check-in config in one query so
   // the window math + gates run against the same snapshot.
   const [row] = await db
@@ -846,6 +862,54 @@ export async function selfCheckIn(
     arrivalTime: now.toISOString(),
     alreadyCheckedIn: false,
   };
+}
+
+// ── Rotating QR (admin desk shows; member scans) ──────────
+//
+// Stateless HMAC — see self-check-in-qr.ts. Admin desk polls `generateQrToken`
+// every ~30s; the member's scan lands on `selfCheckInWithQrToken` which
+// verifies the signature, then defers to `performSelfCheckIn` for the actual
+// business logic (window math, Late threshold, idempotency).
+
+export interface QrTokenPayload {
+  token: string;
+  /** ms epoch when the current bucket ends. Client should poll before then. */
+  expiresAt: number;
+  /** Client can encode `kairos://check-in/{serviceId}/{token}` for the QR. */
+  serviceId: string;
+}
+
+export async function generateQrToken(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+  secret: string,
+): Promise<QrTokenPayload> {
+  // Reuse getService — it enforces branch scope + soft-delete for us.
+  const svc = await getService(db, auth, serviceId);
+  // Only admin-desk writers can display the QR (branch:read admin, pastor,
+  // or Admin-dept volunteer). Everyone else gets a 403.
+  await enforceServiceWriter(db, auth, svc.branchId);
+
+  const signed = await signQrToken(secret, serviceId);
+  return { token: signed.token, expiresAt: signed.expiresAt, serviceId };
+}
+
+export async function selfCheckInWithQrToken(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+  token: string,
+  secret: string,
+): Promise<SelfCheckInResult> {
+  try {
+    await verifyQrToken(secret, serviceId, token);
+  } catch (err) {
+    throw new ForbiddenError(
+      err instanceof Error && err.message ? err.message : 'QR token is invalid',
+    );
+  }
+  return performSelfCheckIn(db, auth, serviceId);
 }
 
 /**

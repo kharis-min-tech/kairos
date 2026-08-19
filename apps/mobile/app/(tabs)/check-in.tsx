@@ -12,7 +12,7 @@ import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Clock, X as XIcon } from 'lucide-react-native';
+import { Check, Clock, ScanLine, X as XIcon } from 'lucide-react-native';
 import {
   Avatar,
   Card,
@@ -28,6 +28,24 @@ import {
 import type { SelfCheckInCandidate } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { QrScannerModal } from '@/components/qr-scanner-modal';
+
+/**
+ * Parse a member self-check-in QR. Format: `kairos://check-in/{serviceId}/{token}`.
+ * Returns `null` for anything else (including the admin-facing member scheme)
+ * so the caller can surface a specific "not recognised" message.
+ */
+function parseCheckInQr(payload: string): { serviceId: string; token: string } | null {
+  const prefix = 'kairos://check-in/';
+  if (!payload.startsWith(prefix)) return null;
+  const rest = payload.slice(prefix.length);
+  const slash = rest.indexOf('/');
+  if (slash <= 0) return null;
+  const serviceId = rest.slice(0, slash);
+  const token = rest.slice(slash + 1);
+  if (!serviceId || !token) return null;
+  return { serviceId, token };
+}
 
 function formatServiceTime(iso: string): string {
   const d = new Date(iso);
@@ -46,6 +64,7 @@ export default function CheckIn() {
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const candidates = useQuery({
     queryKey: ['attendance', 'self-check-in', 'candidates'],
@@ -78,6 +97,23 @@ export default function CheckIn() {
   const nextService = openRows[0] ?? nextOpening ?? closedRows[0];
   const canCheckIn = openRows.length > 0;
 
+  function announceCheckIn(data: {
+    alreadyCheckedIn: boolean;
+    status: 'Present' | 'Late';
+  }) {
+    const title = data.alreadyCheckedIn
+      ? "You're already checked in"
+      : data.status === 'Late'
+        ? "You're checked in — marked Late"
+        : "You're in";
+    const body = data.alreadyCheckedIn
+      ? `Recorded as ${data.status}.`
+      : data.status === 'Late'
+        ? "The service already started, but you're recorded."
+        : 'Have a great service.';
+    alert.info(title, body);
+  }
+
   const checkIn = useMutation({
     mutationFn: async (serviceId: string) => {
       const res = await api.attendance.selfCheckIn(serviceId);
@@ -89,21 +125,38 @@ export default function CheckIn() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
       qc.invalidateQueries({ queryKey: ['analytics', 'member'] });
-      const title = data.alreadyCheckedIn
-        ? "You're already checked in"
-        : data.status === 'Late'
-          ? "You're checked in — marked Late"
-          : "You're in";
-      const body = data.alreadyCheckedIn
-        ? `Recorded as ${data.status}.`
-        : data.status === 'Late'
-          ? "The service already started, but you're recorded."
-          : 'Have a great service.';
-      alert.info(title, body);
+      announceCheckIn(data);
     },
     onError: (e: Error) =>
       alert.info('Check-in failed', e.message ?? 'Please try again.'),
   });
+
+  const checkInQr = useMutation({
+    mutationFn: async (params: { serviceId: string; token: string }) => {
+      const res = await api.attendance.selfCheckInQr(params);
+      if (!res.success || !res.data) {
+        throw new Error(res.message ?? 'Check-in failed');
+      }
+      return res.data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
+      qc.invalidateQueries({ queryKey: ['analytics', 'member'] });
+      announceCheckIn(data);
+    },
+    onError: (e: Error) =>
+      alert.info('Check-in failed', e.message ?? 'Please try again.'),
+  });
+
+  function handleScannedCheckInQr(payload: string) {
+    setScannerOpen(false);
+    const parsed = parseCheckInQr(payload);
+    if (!parsed) {
+      alert.info('QR not recognised', "That isn't a Kairos check-in code.");
+      return;
+    }
+    checkInQr.mutate(parsed);
+  }
 
   function handleCheckInPress() {
     if (!canCheckIn) return;
@@ -242,6 +295,28 @@ export default function CheckIn() {
                 : 'Nothing scheduled to check into today.'}
         </Text>
 
+        {/* Scan QR — secondary path, only when a window is open. Uses the
+            rotating admin-desk QR to bypass the honour-system tap. */}
+        {canCheckIn ? (
+          <Pressable
+            onPress={() => setScannerOpen(true)}
+            disabled={checkInQr.isPending}
+            style={({ pressed }) => [
+              styles.scanPill,
+              (pressed || checkInQr.isPending) && { opacity: 0.85 },
+            ]}
+          >
+            {checkInQr.isPending ? (
+              <ActivityIndicator color={c.primary} size="small" />
+            ) : (
+              <ScanLine color={c.primary} size={16} strokeWidth={2} />
+            )}
+            <Text style={styles.scanLabel}>
+              {checkInQr.isPending ? 'Checking in…' : 'Scan QR at the desk'}
+            </Text>
+          </Pressable>
+        ) : null}
+
         <Card padding="md" style={styles.statCard}>
           <Text style={styles.statEyebrow}>Recent attendance</Text>
           <Text style={styles.statNumber}>
@@ -293,6 +368,14 @@ export default function CheckIn() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <QrScannerModal
+        visible={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScannedCheckInQr}
+        title="Scan check-in QR"
+        hint="Point at the code on the admin's screen."
+      />
     </SafeAreaView>
   );
 }
@@ -405,6 +488,25 @@ function makeStyles(c: ThemeColors) {
     color: c.inkMuted,
     textAlign: 'center',
     marginTop: -spacing.xs,
+  },
+
+  scanPill: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: c.primaryTint,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  scanLabel: {
+    ...typography.button,
+    color: c.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 
   statCard: { gap: spacing.xs },

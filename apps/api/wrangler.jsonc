@@ -30,6 +30,12 @@
   //   wrangler secret put CF_IMAGES_ACCOUNT_HASH     # short public hash
   //   wrangler secret put CF_IMAGES_TOKEN            # API token with Images:Edit
   //   (…and `--env staging` variants for staging)
+  //
+  // Rotating QR (member self-check-in) secret — signs the stateless HMAC that
+  // encodes {serviceId, timeBucket}. See docs/self-check-in.md.
+  //   wrangler secret put SELF_CHECK_IN_QR_SECRET              # prod
+  //   wrangler secret put --env staging SELF_CHECK_IN_QR_SECRET # staging
+  // Generate with: openssl rand -base64 48
   "vars": {
     "AWS_REGION": "eu-west-2",
     "SES_CONFIGURATION_SET": "kairos-transactional"

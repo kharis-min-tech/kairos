@@ -39,6 +39,9 @@ const navItems: NavItem[] = [
   // /attendance is open to all — page-level gating (canRecord) hides write CTAs from non-writers,
   // and Admin-dept members (systemRole='member') need the entry point to reach the desk.
   { href: '/attendance', label: 'Attendance' },
+  // /attendance/check-in is the member self-check-in surface (honour system + QR scanner).
+  // Open to any authenticated member — the API 403s if the branch has self-check-in off.
+  { href: '/attendance/check-in', label: 'Check in' },
   { href: '/me/attendance', label: 'My Attendance' },
   { href: '/reports', label: 'Reports' },
   { href: '/new-believers', label: 'New Believers' },
@@ -104,6 +107,11 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
   '/attendance': (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  '/attendance/check-in': (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
     </svg>
   ),
   '/new-believers': (
