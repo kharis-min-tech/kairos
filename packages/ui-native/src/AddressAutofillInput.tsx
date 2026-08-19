@@ -54,11 +54,51 @@ export interface AddressAutofillInputProps {
   disabled?: boolean;
 }
 
-interface Suggestion {
-  mapbox_id: string;
-  name: string;
-  place_formatted: string;
-  address?: string;
+/**
+ * A unified suggestion — either a Mapbox Search Box result (needs a follow-up
+ * /retrieve call to resolve to full address + coords) or a Nominatim (OSM)
+ * result (comes back fully resolved on the first call). Nominatim gives us a
+ * fallback for regions where Mapbox coverage is thin (Ghana, Sierra Leone,
+ * Nigeria — community-driven OSM data is often stronger there).
+ */
+type Suggestion =
+  | {
+      source: 'mapbox';
+      id: string; // stable dedupe key + React key
+      mapbox_id: string;
+      name: string;
+      place_formatted: string;
+    }
+  | {
+      source: 'osm';
+      id: string;
+      name: string;
+      place_formatted: string;
+      lat: number;
+      lng: number;
+      addressLine1: string;
+      city: string;
+      postcode: string;
+      countryCode?: string;
+    };
+
+interface NominatimResult {
+  place_id: number;
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: {
+    house_number?: string;
+    road?: string;
+    pedestrian?: string;
+    suburb?: string;
+    neighbourhood?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    postcode?: string;
+    country_code?: string;
+  };
 }
 
 interface RetrieveFeature {
@@ -141,21 +181,36 @@ export function AddressAutofillInput({
   }
 
   async function fetchSuggestions(query: string) {
-    if (!accessToken) return;
     setLoading(true);
     try {
-      const url = new URL('https://api.mapbox.com/search/searchbox/v1/suggest');
-      url.searchParams.set('q', query);
-      url.searchParams.set('access_token', accessToken);
-      url.searchParams.set('session_token', sessionToken);
-      url.searchParams.set('language', 'en');
-      if (country) url.searchParams.set('country', country);
-      url.searchParams.set('types', 'address,street,place,postcode');
-      url.searchParams.set('limit', '6');
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`Suggest failed (${res.status})`);
-      const json = (await res.json()) as { suggestions?: Suggestion[] };
-      setSuggestions(json.suggestions ?? []);
+      // Fire Mapbox + Nominatim in parallel. Mapbox first (better UX,
+      // richer data), Nominatim fills gaps in West Africa where Mapbox
+      // coverage is thin. Nominatim's terms of service ask for a real
+      // User-Agent — sent below.
+      const [mapboxRaw, osmRaw] = await Promise.allSettled([
+        accessToken ? fetchMapboxSuggestions(query, accessToken, sessionToken, country) : Promise.resolve<Suggestion[]>([]),
+        fetchOsmSuggestions(query, country),
+      ]);
+      const mapboxHits =
+        mapboxRaw.status === 'fulfilled' ? mapboxRaw.value : [];
+      const osmHits = osmRaw.status === 'fulfilled' ? osmRaw.value : [];
+
+      // Merge: Mapbox first, then any OSM result that doesn't look like a
+      // near-duplicate. Dedupe is a rough label match — good enough for a
+      // suggestion list of 6 rows.
+      const merged: Suggestion[] = [...mapboxHits];
+      const seen = new Set(
+        mapboxHits.map((m) => normaliseLabel(m.place_formatted)),
+      );
+      for (const o of osmHits) {
+        const key = normaliseLabel(o.place_formatted);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(o);
+        if (merged.length >= 6) break;
+      }
+
+      setSuggestions(merged);
     } catch {
       setSuggestions([]);
     } finally {
@@ -164,8 +219,22 @@ export function AddressAutofillInput({
   }
 
   async function pick(s: Suggestion) {
-    if (!accessToken) return;
     setSuggestions([]);
+    if (s.source === 'osm') {
+      // Nominatim gives everything on the first call — no /retrieve step.
+      onChange({
+        line1: s.addressLine1 || value.line1,
+        line2: value.line2,
+        city: s.city || value.city,
+        postalCode: s.postcode || value.postalCode,
+        country: s.countryCode?.toUpperCase() ?? value.country,
+        latitude: s.lat,
+        longitude: s.lng,
+      });
+      setJustPicked(true);
+      return;
+    }
+    if (!accessToken) return;
     try {
       const url = new URL(
         `https://api.mapbox.com/search/searchbox/v1/retrieve/${encodeURIComponent(s.mapbox_id)}`,
@@ -231,7 +300,7 @@ export function AddressAutofillInput({
           <View style={styles.suggestionsDropdown}>
             {suggestions.map((s) => (
               <Pressable
-                key={s.mapbox_id}
+                key={s.id}
                 style={styles.suggestionRow}
                 onPress={() => pick(s)}
               >
@@ -294,6 +363,95 @@ export function AddressAutofillInput({
       </View>
     </View>
   );
+}
+
+async function fetchMapboxSuggestions(
+  query: string,
+  accessToken: string,
+  sessionToken: string,
+  country: string | undefined,
+): Promise<Suggestion[]> {
+  const url = new URL('https://api.mapbox.com/search/searchbox/v1/suggest');
+  url.searchParams.set('q', query);
+  url.searchParams.set('access_token', accessToken);
+  url.searchParams.set('session_token', sessionToken);
+  url.searchParams.set('language', 'en');
+  if (country) url.searchParams.set('country', country);
+  url.searchParams.set('types', 'address,street,place,postcode');
+  url.searchParams.set('limit', '6');
+  const res = await fetch(url.toString());
+  if (!res.ok) return [];
+  const json = (await res.json()) as {
+    suggestions?: {
+      mapbox_id: string;
+      name: string;
+      place_formatted: string;
+    }[];
+  };
+  return (json.suggestions ?? []).map<Suggestion>((s) => ({
+    source: 'mapbox',
+    id: `mapbox:${s.mapbox_id}`,
+    mapbox_id: s.mapbox_id,
+    name: s.name,
+    place_formatted: s.place_formatted,
+  }));
+}
+
+async function fetchOsmSuggestions(
+  query: string,
+  country: string | undefined,
+): Promise<Suggestion[]> {
+  // Nominatim is OpenStreetMap's free geocoder. Community-mapped data,
+  // which is often stronger than commercial in West Africa. Their terms of
+  // use require a real User-Agent identifying the app.
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('q', query);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('limit', '4');
+  if (country) url.searchParams.set('countrycodes', country);
+  try {
+    const res = await fetch(url.toString(), {
+      headers: {
+        'Accept-Language': 'en',
+        'User-Agent': 'Kairos/1.0 (kairos.kharis.org)',
+      },
+    });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as NominatimResult[];
+    return rows.map<Suggestion>((r) => {
+      const a = r.address ?? {};
+      const streetLabel = [a.house_number, a.road ?? a.pedestrian]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      const shortLabel =
+        streetLabel ||
+        a.suburb ||
+        a.neighbourhood ||
+        (r.display_name.split(',')[0] ?? '').trim();
+      return {
+        source: 'osm',
+        id: `osm:${r.place_id}`,
+        name: shortLabel,
+        place_formatted: r.display_name,
+        lat: parseFloat(r.lat),
+        lng: parseFloat(r.lon),
+        addressLine1: streetLabel,
+        city: a.city ?? a.town ?? a.village ?? '',
+        postcode: a.postcode ?? '',
+        countryCode: a.country_code,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+// Cheap normaliser for dedupe: lowercase + collapse whitespace + strip commas.
+// Same address returned by both Mapbox and OSM will hash to the same key.
+function normaliseLabel(label: string): string {
+  return label.toLowerCase().replace(/\s+/g, ' ').replace(/,/g, '').trim();
 }
 
 function generateSessionToken(): string {
