@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Check, Award } from 'lucide-react-native';
+import { ChevronLeft, Check, Award, MessageSquarePlus, Handshake } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -89,6 +89,38 @@ export default function EnrollmentDetail() {
 
   const [stageSheetOpen, setStageSheetOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<'teacher' | 'mentor' | null>(null);
+
+  const [mentorNoteOpen, setMentorNoteOpen] = useState(false);
+  const [mentorNote, setMentorNote] = useState('');
+
+  const mentorFollowups = useQuery({
+    queryKey: ['new-believers', 'enrollment', id, 'mentor-followups'],
+    queryFn: async () =>
+      (await api.newBelievers.enrollments.listMentorFollowups(id!)).data ?? [],
+    enabled: !!id,
+  });
+
+  const recordMentorFollowup = useMutation({
+    mutationFn: async () =>
+      (
+        await api.newBelievers.enrollments.createMentorFollowup(id!, {
+          note: mentorNote.trim(),
+        })
+      ).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ['new-believers', 'enrollment', id, 'mentor-followups'],
+      });
+      qc.invalidateQueries({ queryKey: ['me', 'followups'] });
+      setMentorNote('');
+      setMentorNoteOpen(false);
+    },
+    onError: (e) =>
+      alert.info(
+        'Could not save',
+        e instanceof Error ? e.message : 'Please try again.',
+      ),
+  });
 
   const data = enrollment.data;
   const stageDef = useMemo(
@@ -418,12 +450,99 @@ export default function EnrollmentDetail() {
               })}
             </Card>
 
+            <Card padding="md" style={{ gap: spacing.sm }}>
+              <View style={styles.mentorHeader}>
+                <Handshake color={c.primary} size={14} strokeWidth={1.5} />
+                <Text style={styles.sectionTitle}>Mentor follow-ups</Text>
+                <Badge
+                  label={String(mentorFollowups.data?.length ?? 0)}
+                  variant="neutral"
+                  size="sm"
+                />
+                <Pressable
+                  onPress={() => setMentorNoteOpen(true)}
+                  hitSlop={6}
+                  style={styles.mentorAddBtn}
+                  accessibilityLabel="Record follow-up"
+                >
+                  <MessageSquarePlus color={c.primary} size={16} strokeWidth={1.5} />
+                </Pressable>
+              </View>
+              {mentorFollowups.isLoading ? (
+                <ActivityIndicator color={c.primary} />
+              ) : (mentorFollowups.data ?? []).length === 0 ? (
+                <Text style={styles.mentorEmpty}>
+                  No follow-ups recorded yet. Tap + to log the first one.
+                </Text>
+              ) : (
+                (mentorFollowups.data ?? []).map((f) => (
+                  <View key={f.id} style={styles.mentorRow}>
+                    <Text style={styles.mentorRowMeta}>
+                      {new Date(f.contactedAt).toLocaleDateString()}
+                      {f.mentorFirstName
+                        ? ` · ${f.mentorFirstName} ${f.mentorLastName ?? ''}`.trim()
+                        : ''}
+                    </Text>
+                    <Text style={styles.mentorRowNote}>{f.note}</Text>
+                  </View>
+                ))
+              )}
+            </Card>
+
             <Pressable style={styles.deactivateRow} onPress={deactivate}>
               <Text style={styles.deactivateText}>Deactivate enrollment</Text>
             </Pressable>
           </>
         )}
       </ScrollView>
+
+      {/* Mentor follow-up sheet */}
+      <Modal
+        visible={mentorNoteOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setMentorNoteOpen(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setMentorNoteOpen(false)}>
+            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.sheetHandle} />
+              <Text style={styles.sheetTitle}>Record mentor follow-up</Text>
+              <Text style={styles.sheetHint}>
+                What did you cover today? Anything the next mentor or admin should
+                know.
+              </Text>
+              <TextInput
+                multiline
+                value={mentorNote}
+                onChangeText={setMentorNote}
+                placeholder="Encouragement, prayer points, next steps…"
+                placeholderTextColor={c.inkFaded}
+                style={styles.feedbackInput}
+              />
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Cancel"
+                    variant="ghost"
+                    onPress={() => setMentorNoteOpen(false)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={recordMentorFollowup.isPending ? 'Saving…' : 'Save follow-up'}
+                    onPress={() => recordMentorFollowup.mutate()}
+                    disabled={!mentorNote.trim() || recordMentorFollowup.isPending}
+                  />
+                </View>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Stage picker sheet */}
       <Modal
@@ -687,6 +806,33 @@ function makeStyles(c: ThemeColors) {
   journeyBadgeText: { ...typography.meta, fontWeight: '600' },
   journeyBadgeActiveText: { color: c.goldDark },
   journeyBadgeDoneText: { color: '#047857' },
+
+  mentorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  mentorAddBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mentorEmpty: {
+    ...typography.meta,
+    color: c.inkMuted,
+    paddingVertical: spacing.xs,
+  },
+  mentorRow: {
+    gap: 2,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: c.divider,
+  },
+  mentorRowMeta: { ...typography.meta, color: c.inkMuted },
+  mentorRowNote: { ...typography.body, color: c.ink, lineHeight: 18 },
 
   deactivateRow: {
     alignItems: 'center',
