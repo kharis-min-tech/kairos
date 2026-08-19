@@ -138,6 +138,11 @@ export default function EditFellowship() {
     meetingDay: f.meetingDay ?? '',
     meetingTime: f.meetingTime ?? '',
     meetingSchedule: f.meetingSchedule ?? '',
+    address: f.address ?? '',
+    city: f.city ?? '',
+    postalCode: f.postalCode ?? '',
+    latitude: f.latitude ?? null,
+    longitude: f.longitude ?? null,
   };
 
   return (

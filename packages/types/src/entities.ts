@@ -174,6 +174,9 @@ export interface Fellowship extends BaseEntity {
   meetingSchedule: string | null;
   meetingDay: string | null;
   meetingTime: string | null;
+  address: string | null;
+  city: string | null;
+  postalCode: string | null;
   latitude: number | null;
   longitude: number | null;
   country: string | null;
