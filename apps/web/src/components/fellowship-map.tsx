@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import { toast } from 'sonner';
 import type { FellowshipWithBranch } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
-import L from 'leaflet';
+import mapboxgl from 'mapbox-gl';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ type MapStage = 'globe' | 'country' | 'detail';
 interface CountryData {
   name: string;
   code: string;
-  center: [number, number]; // [lat, lng]
+  center: [number, number]; // [lat, lng] — kept in Leaflet order internally, converted to [lng, lat] when handing to Mapbox
   zoom: number;
 }
 
@@ -42,10 +42,13 @@ const TYPE_COLORS: Record<string, string> = {
   [FellowshipType.KharisOnCampusColleges]: '#f43f5e',
 };
 
-// Tile layers
-const MAP_TILES_DARK = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const MAP_TILES_LIGHT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const MAPBOX_STYLE_LIGHT = 'mapbox://styles/mapbox/streets-v12';
+const MAPBOX_STYLE_DARK = 'mapbox://styles/mapbox/dark-v11';
+
+// Convert [lat, lng] (Leaflet convention used in this file) to Mapbox's
+// [lng, lat] tuple type. Kept as a helper because every fly/marker/bounds call
+// otherwise risks silently swapping coordinates.
+const ll = ([lat, lng]: [number, number]): [number, number] => [lng, lat];
 
 // Known branch locations mapped to countries
 interface BranchFellowshipInfo {
@@ -58,7 +61,7 @@ interface BranchFellowshipInfo {
 interface BranchLocation {
   name: string;
   country: string;
-  coords: [number, number];
+  coords: [number, number]; // [lat, lng]
   fellowships: string[];
   fellowshipDetails: BranchFellowshipInfo[];
 }
@@ -113,18 +116,19 @@ const BRANCH_LOCATIONS: BranchLocation[] = [
   },
 ];
 
+const NEAREST_LINE_SOURCE = 'kairos-nearest-line';
+const NEAREST_LINE_LAYER = 'kairos-nearest-line-layer';
+
 // ── Component ──────────────────────────────────────────────
 
 // Helper: compute next meeting date from schedule string like "Every Wednesday, 7:00 PM"
 function getNextMeetingDate(schedule: string): string | null {
   const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
-  // Extract day name from schedule
   const lower = schedule.toLowerCase();
   const dayIndex = DAYS.findIndex((d) => lower.includes(d));
   if (dayIndex === -1) return null;
 
-  // Extract time
   const timeMatch = schedule.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
   let timeStr = '';
   if (timeMatch) {
@@ -134,11 +138,10 @@ function getNextMeetingDate(schedule: string): string | null {
     timeStr = ` at ${hours}:${mins} ${ampm}`;
   }
 
-  // Calculate next occurrence
   const today = new Date();
   const currentDay = today.getDay();
   let daysUntil = dayIndex - currentDay;
-  if (daysUntil <= 0) daysUntil += 7; // next week if today or past
+  if (daysUntil <= 0) daysUntil += 7;
 
   const nextDate = new Date(today);
   nextDate.setDate(today.getDate() + daysUntil);
@@ -149,12 +152,10 @@ function getNextMeetingDate(schedule: string): string | null {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const month = months[nextDate.getMonth()];
 
-  // Ordinal suffix
   const suffix = date === 1 || date === 21 || date === 31 ? 'st'
     : date === 2 || date === 22 ? 'nd'
     : date === 3 || date === 23 ? 'rd' : 'th';
 
-  // Is it this week or next?
   const label = daysUntil <= 7 ? 'This' : 'Next';
 
   return `${label} ${capitalDay}, ${date}${suffix} ${month}${timeStr}`;
@@ -291,14 +292,54 @@ interface FellowshipMapProps {
   focusedFellowship?: FellowshipWithBranch | null;
 }
 
+// Reusable HTML for a Mapbox branch marker element — mirrors the Leaflet
+// div-icon styling in the original implementation.
+function branchMarkerElement(): HTMLDivElement {
+  const el = document.createElement('div');
+  el.className = 'fellowship-marker-icon';
+  el.innerHTML = `
+    <div style="
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #6366f1;
+      border: 3px solid white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    ">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="none">
+        <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+      </svg>
+    </div>
+  `;
+  return el;
+}
+
+function userMarkerElement(): HTMLDivElement {
+  const el = document.createElement('div');
+  el.className = 'fellowship-marker-icon';
+  el.innerHTML = `<div style="width:20px;height:20px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`;
+  return el;
+}
+
+function smallBranchMarkerElement(): HTMLDivElement {
+  const el = document.createElement('div');
+  el.className = 'fellowship-marker-icon';
+  el.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#6366f1;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg></div>`;
+  return el;
+}
+
 export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps) {
   const { theme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapDestroyingRef = useRef(false);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const popupRef = useRef<L.Popup | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const popupRef = useRef<mapboxgl.Popup | null>(null);
 
   const [stage, setStage] = useState<MapStage>('globe');
   const [selectedCountry, setSelectedCountry] = useState<CountryData | null>(null);
@@ -318,7 +359,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
 
   const isDark = theme === 'dark';
 
-  // ── Listen for join button clicks from Leaflet popups ──
+  // ── Listen for join button clicks from Mapbox popups ──
 
   useEffect(() => {
     const handleJoin = (e: Event) => {
@@ -331,7 +372,6 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     const handleJoinStatic = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.name) {
-        // For static data (no ID), show the panel but won't be able to send API request
         setJoinPanelFellowship({ id: '', name: detail.name, type: detail.type, schedule: detail.schedule });
         setJoinRequestSent(false);
       }
@@ -363,7 +403,6 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         },
       );
     } else {
-      // Static fellowship — no API call possible
       setJoinRequestSent(true);
       toast.success('Request noted! Contact your branch admin to join this fellowship.');
     }
@@ -374,39 +413,38 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Destroy existing map if any
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    if (!token) {
+      // Without a token Mapbox refuses to render. Surface a hint rather than a
+      // silent grey box.
+      // eslint-disable-next-line no-console
+      console.warn('NEXT_PUBLIC_MAPBOX_TOKEN is not set — fellowship map disabled.');
+      return;
+    }
+    mapboxgl.accessToken = token;
+
     if (mapRef.current) {
       mapRef.current.remove();
       mapRef.current = null;
-      tileLayerRef.current = null;
     }
 
-    const map = L.map(mapContainer.current, {
-      center: [20, 0],
-      zoom: 2,
-      zoomControl: false,
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: isDark ? MAPBOX_STYLE_DARK : MAPBOX_STYLE_LIGHT,
+      center: [0, 20],
+      zoom: 1.5,
       attributionControl: false,
     });
 
-    const tileLayer = L.tileLayer(isDark ? MAP_TILES_DARK : MAP_TILES_LIGHT, {
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-    }).addTo(map);
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }));
 
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
-    tileLayerRef.current = tileLayer;
-    mapRef.current = map;
-
-    // Invalidate size to ensure tiles render
-    const timer = setTimeout(() => map.invalidateSize(), 200);
-
-    // Watch for container resize
+    const timer = setTimeout(() => map.resize(), 200);
     const container = mapContainer.current;
-    const observer = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
+    const observer = new ResizeObserver(() => map.resize());
     observer.observe(container);
+
+    mapRef.current = map;
 
     return () => {
       clearTimeout(timer);
@@ -414,26 +452,21 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       mapDestroyingRef.current = true;
       map.remove();
       mapRef.current = null;
-      tileLayerRef.current = null;
       mapDestroyingRef.current = false;
     };
   }, [isDark]);
-
-  // Theme change is handled by the map init effect above (recreates map)
 
   // ── React to focused fellowship from parent ────────────
 
   useEffect(() => {
     if (!mapRef.current || !focusedFellowship) return;
 
-    // Close any existing popup
     if (popupRef.current) {
       popupRef.current.remove();
       popupRef.current = null;
     }
 
-    // Known branch locations (fallback until DB has coordinates)
-    const BRANCH_LOCATIONS: Record<string, [number, number]> = {
+    const BRANCH_COORDS: Record<string, [number, number]> = {
       'Kharis London Central': [51.4934, -0.0998],
       'Kharis Manchester': [53.4808, -2.2426],
       'Kharis Accra': [5.6037, -0.1870],
@@ -443,18 +476,16 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
 
     const { fellowshipName, meetingSchedule, fellowshipType, branchName } = focusedFellowship;
 
-    // Try to get coordinates: first from fellowship data, then from branch lookup
     const { latitude, longitude } = focusedFellowship;
-    const branchFallback = branchName ? BRANCH_LOCATIONS[branchName] : undefined;
-    const coords: [number, number] | null =
+    const branchFallback = branchName ? BRANCH_COORDS[branchName] : undefined;
+    const latLng: [number, number] | null =
       latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined
         ? [latitude, longitude]
         : (branchFallback ?? null);
 
-    if (coords) {
-      mapRef.current.flyTo(coords, 12, { duration: 1.2 });
+    if (latLng) {
+      mapRef.current.flyTo({ center: ll(latLng), zoom: 12, duration: 1200 });
 
-      // Build popup content with next meeting date
       const color = TYPE_COLORS[fellowshipType] || '#6366f1';
       const nextMeeting = meetingSchedule ? getNextMeetingDate(meetingSchedule) : null;
       const scheduleInfo = nextMeeting
@@ -474,19 +505,18 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         </div>
       `;
 
-      const popup = L.popup({
+      const popup = new mapboxgl.Popup({
         closeButton: true,
         className: 'fellowship-focus-popup',
-        offset: [0, -10],
+        offset: 10,
       })
-        .setLatLng(coords)
-        .setContent(popupContent)
-        .openOn(mapRef.current);
+        .setLngLat(ll(latLng))
+        .setHTML(popupContent)
+        .addTo(mapRef.current);
 
-      // Fly back to world view when popup is closed (only if map still exists)
-      popup.on('remove', () => {
+      popup.on('close', () => {
         if (!mapDestroyingRef.current && mapRef.current) {
-          mapRef.current.flyTo([20, 0], 2, { duration: 1.5 });
+          mapRef.current.flyTo({ center: [0, 20], zoom: 1.5, duration: 1500 });
         }
       });
 
@@ -499,6 +529,13 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+
+    // Also clear any nearest-line source/layer that may still be present.
+    const map = mapRef.current;
+    if (map && map.isStyleLoaded()) {
+      if (map.getLayer(NEAREST_LINE_LAYER)) map.removeLayer(NEAREST_LINE_LAYER);
+      if (map.getSource(NEAREST_LINE_SOURCE)) map.removeSource(NEAREST_LINE_SOURCE);
+    }
   }, []);
 
   // ── Fly to country ─────────────────────────────────────
@@ -511,15 +548,13 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     setShowConfirmation(false);
     setJoinSubmitted(false);
 
-    // Close any popup
     if (popupRef.current) {
       popupRef.current.remove();
       popupRef.current = null;
     }
 
-    mapRef.current.flyTo(country.center, country.zoom, { duration: 1.5 });
+    mapRef.current.flyTo({ center: ll(country.center), zoom: country.zoom, duration: 1500 });
 
-    // Add branch markers for this country after fly animation
     setTimeout(() => {
       clearMarkers();
       if (!mapRef.current) return;
@@ -527,43 +562,12 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       const countryBranches = BRANCH_LOCATIONS.filter((b) => b.country === country.name);
 
       countryBranches.forEach((branch) => {
-        const icon = L.divIcon({
-          className: 'fellowship-marker-icon',
-          html: `
-            <div style="
-              width: 40px;
-              height: 40px;
-              border-radius: 50%;
-              background: #6366f1;
-              border: 3px solid white;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
-              transition: transform 0.2s;
-            ">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="none">
-                <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
-              </svg>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 20],
-        });
-
-        const marker = L.marker(branch.coords, { icon })
-          .addTo(mapRef.current!);
-
-        // Get actual fellowships for this branch — use API data if available, else static fallback
         const apiFellowships = fellowshipsRef.current.filter((f) => f.branchName === branch.name);
         const fellowshipTypes = branch.fellowships;
 
-        // Build expandable sections for each fellowship type using <details> (pure HTML, no JS)
         const fellowshipSections = fellowshipTypes.map((type) => {
           const color = TYPE_COLORS[type] || '#6366f1';
 
-          // Prefer API data, fall back to static details
           const apiMatching = apiFellowships.filter((f) => f.fellowshipType === type);
           const staticMatching = branch.fellowshipDetails.filter((f) => f.type === type);
 
@@ -620,17 +624,16 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
           </div>
         `;
 
-        marker.bindPopup(popupContent, {
-          offset: [0, -20],
-          maxWidth: 320,
+        const popup = new mapboxgl.Popup({
+          offset: 20,
+          maxWidth: '320px',
           className: 'fellowship-focus-popup',
-        });
+        }).setHTML(popupContent);
 
-        marker.bindTooltip(branch.name, {
-          direction: 'top',
-          offset: [0, -24],
-          className: 'fellowship-tooltip',
-        });
+        const marker = new mapboxgl.Marker({ element: branchMarkerElement() })
+          .setLngLat(ll(branch.coords))
+          .setPopup(popup)
+          .addTo(mapRef.current!);
 
         markersRef.current.push(marker);
       });
@@ -648,7 +651,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     clearMarkers();
 
     if (mapRef.current) {
-      mapRef.current.flyTo([20, 0], 2, { duration: 1.5 });
+      mapRef.current.flyTo({ center: [0, 20], zoom: 1.5, duration: 1500 });
     }
   };
 
@@ -661,7 +664,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
     setShowConfirmation(false);
 
     if (mapRef.current) {
-      mapRef.current.flyTo(selectedCountry.center, selectedCountry.zoom, { duration: 1.2 });
+      mapRef.current.flyTo({ center: ll(selectedCountry.center), zoom: selectedCountry.zoom, duration: 1200 });
     }
   };
 
@@ -715,7 +718,6 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       {/* Postcode search (above country search) */}
       <PostcodeSearch onLocate={(lat, lng) => {
         if (mapRef.current) {
-          // Find nearest branch
           let nearest: BranchLocation | null = null;
           let minDist = Infinity;
 
@@ -733,49 +735,60 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
           });
 
           if (nearest) {
-            setNearestBranch({ branch: nearest, distanceKm: minDist, userCoords: [lat, lng] });
+            const nearestBranchRef = nearest as BranchLocation;
+            setNearestBranch({ branch: nearestBranchRef, distanceKm: minDist, userCoords: [lat, lng] });
 
-            // Fit map to show both user location and nearest branch
-            const bounds = L.latLngBounds(
-              [lat, lng],
-              (nearest as BranchLocation).coords
-            );
-            mapRef.current.fitBounds(bounds, { padding: [60, 60], duration: 1.5 });
+            const bounds = new mapboxgl.LngLatBounds()
+              .extend([lng, lat])
+              .extend(ll(nearestBranchRef.coords));
+            mapRef.current.fitBounds(bounds, { padding: { top: 60, bottom: 60, left: 60, right: 60 }, duration: 1500 });
 
-            // Clear old markers and add user + branch markers
-            markersRef.current.forEach((m) => m.remove());
-            markersRef.current = [];
+            clearMarkers();
 
-            // User location marker (blue)
-            const userIcon = L.divIcon({
-              className: 'fellowship-marker-icon',
-              html: `<div style="width:20px;height:20px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
-            });
-            const userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(mapRef.current);
-            userMarker.bindTooltip('You', { direction: 'top', offset: [0, -12] });
+            const userMarker = new mapboxgl.Marker({ element: userMarkerElement() })
+              .setLngLat([lng, lat])
+              .setPopup(new mapboxgl.Popup({ offset: 12 }).setText('You'))
+              .addTo(mapRef.current);
             markersRef.current.push(userMarker);
 
-            // Branch marker (purple)
-            const branchIcon = L.divIcon({
-              className: 'fellowship-marker-icon',
-              html: `<div style="width:36px;height:36px;border-radius:50%;background:#6366f1;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg></div>`,
-              iconSize: [36, 36],
-              iconAnchor: [18, 18],
-            });
-            const branchMarker = L.marker((nearest as BranchLocation).coords, { icon: branchIcon }).addTo(mapRef.current);
-            branchMarker.bindTooltip((nearest as BranchLocation).name, { direction: 'top', offset: [0, -20] });
+            const branchMarker = new mapboxgl.Marker({ element: smallBranchMarkerElement() })
+              .setLngLat(ll(nearestBranchRef.coords))
+              .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(nearestBranchRef.name))
+              .addTo(mapRef.current);
             markersRef.current.push(branchMarker);
 
-            // Draw a line between them
-            const line = L.polyline([[lat, lng], (nearest as BranchLocation).coords], {
-              color: '#6366f1',
-              weight: 2,
-              dashArray: '6, 8',
-              opacity: 0.7,
-            }).addTo(mapRef.current);
-            markersRef.current.push(line as unknown as L.Marker);
+            // Dashed line between user and branch — GeoJSON source + line layer
+            const addLine = () => {
+              const map = mapRef.current;
+              if (!map) return;
+              if (map.getLayer(NEAREST_LINE_LAYER)) map.removeLayer(NEAREST_LINE_LAYER);
+              if (map.getSource(NEAREST_LINE_SOURCE)) map.removeSource(NEAREST_LINE_SOURCE);
+
+              map.addSource(NEAREST_LINE_SOURCE, {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: [[lng, lat], ll(nearestBranchRef.coords)],
+                  },
+                },
+              });
+              map.addLayer({
+                id: NEAREST_LINE_LAYER,
+                type: 'line',
+                source: NEAREST_LINE_SOURCE,
+                paint: {
+                  'line-color': '#6366f1',
+                  'line-width': 2,
+                  'line-dasharray': [2, 3],
+                  'line-opacity': 0.7,
+                },
+              });
+            };
+            if (mapRef.current.isStyleLoaded()) addLine();
+            else mapRef.current.once('load', addLine);
           }
         }
       }} />
@@ -933,11 +946,9 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <button
                   onClick={() => {
                     setNearestBranch(null);
-                    // Clear markers and fly back to original position
-                    markersRef.current.forEach((m) => m.remove());
-                    markersRef.current = [];
+                    clearMarkers();
                     if (mapRef.current) {
-                      mapRef.current.flyTo([20, 0], 2, { duration: 1.5 });
+                      mapRef.current.flyTo({ center: [0, 20], zoom: 1.5, duration: 1500 });
                     }
                   }}
                   className="text-muted-foreground hover:text-foreground p-1"
@@ -1037,33 +1048,17 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       {/* Custom styles */}
       {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx global>{`
-        .leaflet-container {
+        .mapboxgl-map {
           background: ${isDark ? '#0a0a12' : '#aad3df'} !important;
-        }
-        ${isDark ? `
-        .leaflet-tile-pane {
-          filter: invert(1) hue-rotate(180deg) brightness(0.7) contrast(1.3) sepia(0.4) saturate(1.5);
-        }
-        ` : ''}
-        .fellowship-marker-icon {
-          background: transparent !important;
-          border: none !important;
         }
         .fellowship-marker-icon > div:hover {
           transform: scale(1.2);
         }
-        .fellowship-tooltip {
-          background: var(--background, #fff);
-          color: var(--foreground, #000);
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: 8px;
-          padding: 4px 10px;
-          font-size: 12px;
-          font-weight: 500;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .fellowship-tooltip::before {
-          border-top-color: var(--border, #e5e7eb) !important;
+        /* Themed popup shell so the white-on-dark text isn't harsh. */
+        .mapboxgl-popup-content {
+          border-radius: 10px;
+          padding: 10px 12px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
       `}</style>
     </div>
