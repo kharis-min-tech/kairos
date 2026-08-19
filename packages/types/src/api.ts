@@ -374,8 +374,11 @@ export interface CreateFellowshipRequest {
   meetingSchedule?: string;
   meetingDay?: string;
   meetingTime?: string;
-  latitude?: number;
-  longitude?: number;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   country?: string;
 }
 

@@ -168,6 +168,14 @@ export async function getFellowship(db: Database, auth: AuthContext, id: string)
       leaderId: fellowships.leaderId,
       coLeaderId: fellowships.coLeaderId,
       meetingSchedule: fellowships.meetingSchedule,
+      meetingDay: fellowships.meetingDay,
+      meetingTime: fellowships.meetingTime,
+      address: fellowships.address,
+      city: fellowships.city,
+      postalCode: fellowships.postalCode,
+      latitude: fellowships.latitude,
+      longitude: fellowships.longitude,
+      country: fellowships.country,
       isActive: fellowships.isActive,
       createdAt: fellowships.createdAt,
       updatedAt: fellowships.updatedAt,
@@ -194,8 +202,11 @@ export async function createFellowship(
     meetingSchedule?: string;
     meetingDay?: string;
     meetingTime?: string;
-    latitude?: number;
-    longitude?: number;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     country?: string;
   },
 ) {
@@ -231,8 +242,11 @@ export async function createFellowship(
       meetingSchedule: data.meetingSchedule,
       meetingDay: data.meetingDay,
       meetingTime: data.meetingTime,
-      latitude: data.latitude,
-      longitude: data.longitude,
+      address: data.address ?? null,
+      city: data.city ?? null,
+      postalCode: data.postalCode ?? null,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
       country: data.country,
     })
     .returning();

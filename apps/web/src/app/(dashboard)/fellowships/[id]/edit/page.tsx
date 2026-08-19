@@ -13,7 +13,7 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
@@ -52,6 +52,11 @@ const schema = z.object({
   meetingFrequency: z.string().optional(),
   meetingDay: z.string().optional(),
   meetingTime: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -109,6 +114,11 @@ export default function EditFellowshipPage() {
       description: fellowship.description ?? '',
       leaderId: fellowship.leaderId ?? '',
       coLeaderId: fellowship.coLeaderId ?? '',
+      address: fellowship.address ?? '',
+      city: fellowship.city ?? '',
+      postalCode: fellowship.postalCode ?? '',
+      latitude: fellowship.latitude ?? null,
+      longitude: fellowship.longitude ?? null,
       ...parsed,
     });
   }, [fellowship, reset]);
@@ -130,6 +140,11 @@ export default function EditFellowshipPage() {
           leaderId: data.leaderId || undefined,
           coLeaderId: data.coLeaderId || undefined,
           meetingSchedule,
+          address: data.address || undefined,
+          city: data.city || undefined,
+          postalCode: data.postalCode || undefined,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
         },
       });
       router.push(`/fellowships/${id}`);
@@ -240,6 +255,32 @@ export default function EditFellowshipPage() {
                 )}
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label>Meeting location (optional)</Label>
+              <p className="text-xs text-muted-foreground">
+                Leave blank if the fellowship meets at the parent branch. Set
+                it for K-Groups or off-site fellowships so they land on the
+                map.
+              </p>
+              <AddressAutofillGroup
+                accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                value={{
+                  line1: watch('address') ?? '',
+                  city: watch('city') ?? '',
+                  postalCode: watch('postalCode') ?? '',
+                  latitude: watch('latitude') ?? undefined,
+                  longitude: watch('longitude') ?? undefined,
+                }}
+                onChange={(v) => {
+                  setValue('address', v.line1, { shouldDirty: true });
+                  setValue('city', v.city, { shouldDirty: true });
+                  setValue('postalCode', v.postalCode, { shouldDirty: true });
+                  if (typeof v.latitude === 'number') setValue('latitude', v.latitude, { shouldDirty: true });
+                  if (typeof v.longitude === 'number') setValue('longitude', v.longitude, { shouldDirty: true });
+                }}
+              />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>

@@ -18,8 +18,11 @@ export const createFellowshipSchema = z.object({
   meetingSchedule: z.string().max(200).optional(),
   meetingDay: z.string().max(20).optional(),
   meetingTime: z.string().max(10).optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  address: z.string().optional(),
+  city: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   country: z.string().max(100).optional(),
 });
 

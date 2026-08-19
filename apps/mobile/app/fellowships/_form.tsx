@@ -12,6 +12,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Check } from 'lucide-react-native';
 import {
+  AddressAutofillInput,
   Button,
   Card,
   Input,
@@ -26,6 +27,7 @@ import {
 import type { CreateFellowshipRequest, FellowshipType } from '@kairos/types';
 import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
 
 const DAY_OPTIONS = [
   'Sunday',
@@ -47,6 +49,11 @@ export interface FellowshipFormValues {
   meetingDay: string;
   meetingTime: string;
   meetingSchedule: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export const EMPTY_FELLOWSHIP_FORM: FellowshipFormValues = {
@@ -57,6 +64,11 @@ export const EMPTY_FELLOWSHIP_FORM: FellowshipFormValues = {
   meetingDay: '',
   meetingTime: '',
   meetingSchedule: '',
+  address: '',
+  city: '',
+  postalCode: '',
+  latitude: null,
+  longitude: null,
 };
 
 interface FellowshipFormProps {
@@ -96,6 +108,11 @@ export function FellowshipForm({
   const [meetingDay, setMeetingDay] = useState(initial?.meetingDay ?? '');
   const [meetingTime, setMeetingTime] = useState(initial?.meetingTime ?? '');
   const [meetingSchedule, setMeetingSchedule] = useState(initial?.meetingSchedule ?? '');
+  const [address, setAddress] = useState(initial?.address ?? '');
+  const [city, setCity] = useState(initial?.city ?? '');
+  const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
+  const [latitude, setLatitude] = useState<number | null>(initial?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(initial?.longitude ?? null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [openPicker, setOpenPicker] = useState<
@@ -140,6 +157,11 @@ export function FellowshipForm({
     if (meetingDay) payload.meetingDay = meetingDay;
     if (meetingTime.trim()) payload.meetingTime = meetingTime.trim();
     if (meetingSchedule) payload.meetingSchedule = meetingSchedule;
+    if (address.trim()) payload.address = address.trim();
+    if (city.trim()) payload.city = city.trim();
+    if (postalCode.trim()) payload.postalCode = postalCode.trim();
+    if (latitude != null) payload.latitude = latitude;
+    if (longitude != null) payload.longitude = longitude;
     void onSubmit(payload);
   }
 
@@ -214,6 +236,31 @@ export function FellowshipForm({
             value={meetingSchedule}
             placeholder="Choose a cadence"
             onPress={() => setOpenPicker('schedule')}
+          />
+        </Card>
+
+        <Card padding="md" style={{ gap: spacing.md }}>
+          <Text style={styles.sectionEyebrow}>MEETING LOCATION</Text>
+          <Text style={styles.hint}>
+            Optional — leave blank if the fellowship meets at the parent branch.
+            Set it for K-Groups or off-site fellowships so they land on the map.
+          </Text>
+          <AddressAutofillInput
+            accessToken={mapboxPublicToken}
+            value={{
+              line1: address,
+              city,
+              postalCode,
+              latitude: latitude ?? undefined,
+              longitude: longitude ?? undefined,
+            }}
+            onChange={(v) => {
+              setAddress(v.line1);
+              setCity(v.city);
+              setPostalCode(v.postalCode);
+              if (typeof v.latitude === 'number') setLatitude(v.latitude);
+              if (typeof v.longitude === 'number') setLongitude(v.longitude);
+            }}
           />
         </Card>
 
@@ -423,6 +470,11 @@ function makeStyles(c: ThemeColors) {
   errorLine: {
     ...typography.meta,
     color: c.danger,
+  },
+  hint: {
+    ...typography.meta,
+    color: c.inkFaded,
+    lineHeight: 16,
   },
   modalBackdrop: {
     flex: 1,
