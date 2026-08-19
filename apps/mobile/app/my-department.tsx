@@ -91,6 +91,7 @@ export default function MyDepartment() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0, flexShrink: 0 }}
             contentContainerStyle={styles.chipsRow}
           >
             {departments.map((d) => {

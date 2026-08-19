@@ -126,6 +126,7 @@ export default function MembersAdmin() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.tabsScroll}
         contentContainerStyle={styles.tabs}
       >
         {(Object.keys(TAB_LABELS) as Tab[]).map((t) => {
@@ -323,8 +324,10 @@ function makeStyles(c: ThemeColors) {
       paddingVertical: spacing.md,
     },
     headerTitle: { ...typography.cardTitle, color: c.ink },
+    tabsScroll: { flexGrow: 0, flexShrink: 0 },
     tabs: {
       flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: spacing.lg,
       gap: spacing.xs,
       paddingBottom: spacing.sm,
