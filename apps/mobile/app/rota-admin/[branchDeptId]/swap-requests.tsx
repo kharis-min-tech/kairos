@@ -95,6 +95,7 @@ export default function SwapRequestsAdmin() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.tabsScroll}
         contentContainerStyle={styles.tabs}
       >
         {(Object.keys(FILTER_LABELS) as Filter[]).map((f) => {
@@ -351,8 +352,10 @@ function makeStyles(c: ThemeColors) {
       paddingVertical: spacing.md,
     },
     headerTitle: { ...typography.cardTitle, color: c.ink, flex: 1, textAlign: 'center' },
+    tabsScroll: { flexGrow: 0, flexShrink: 0 },
     tabs: {
       flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: spacing.lg,
       gap: spacing.xs,
       paddingBottom: spacing.sm,
