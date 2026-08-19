@@ -252,3 +252,45 @@ No schema change was required — metadata is `jsonb`.
   - `oauth.callback.error` — anything unexpected (contains provider + error class, never contains tokens or codes)
 
 Nothing in the audit log, application log, or worker log contains OAuth codes, tokens, or Apple private key material — verified by the reviewer pass at the end of Phase 1.
+
+---
+
+## 9. Phase 1.5 — SSO onboarding gate
+
+Phase 1 landed a working handshake but left a gap: SSO signups reached the dashboard while still `approvalStatus='pending'` (password login gated on approved, `issueAuthenticatedSession` did not), and we never captured phone, T&C consent, or a user-confirmed home branch. Phase 1.5 closes both:
+
+- New column `members.must_complete_profile` (BOOLEAN, defaults FALSE). Set to TRUE when `createPendingMemberFromOAuth` mints a shell.
+- Dashboard guards (web `apps/web/src/app/(dashboard)/layout.tsx`, mobile root `apps/mobile/app/index.tsx` + `(tabs)/_layout.tsx`) redirect:
+  - `mustCompleteProfile === true` → `/profile?onboarding=1` (web) / `/(auth)/complete-profile` (mobile)
+  - `approvalStatus !== 'approved'` → `/pending-approval`
+- New endpoint `POST /api/auth/complete-oauth-profile` collects phone + homeBranchId + T&C, inserts consent records for the current published Terms + Privacy versions (idempotent — skips if already accepted), then clears the flag. Refuses to run on any account whose flag is already FALSE.
+- Scenario 3 — auto-linking a new provider onto an existing member — now fires a silent security notification (`security.oauth_provider_linked`) via the existing SES pipeline. No in-app toast; the user is signed in and routed to dashboard as before.
+
+### Migration apply (staging)
+
+```bash
+cd packages/database
+# 0045 is idempotent (ADD COLUMN IF NOT EXISTS + DEFAULT FALSE).
+psql "$STAGING_DATABASE_URL" < drizzle/0045_oauth_must_complete_profile.sql
+
+# Retroactively flag any pre-existing pending SSO signups on staging so
+# their next login walks through onboarding. The `password_hash = ''`
+# selector is a reliable SSO-only signal (password signups never persist
+# empty hashes).
+psql "$STAGING_DATABASE_URL" -c "
+  UPDATE members
+  SET must_complete_profile = TRUE
+  WHERE password_hash = '' AND approval_status = 'pending';
+"
+```
+
+### Migration apply (production)
+
+Same commands with the production connection string. On PlanetScale, run through the branch → merge deploy request flow rather than direct psql; the SQL is trivially additive so it's a fast merge.
+
+### Verifying the fix
+
+1. Sign in via Google/Microsoft/Apple on a brand-new email → land on `/profile?onboarding=1` (web) or `/(auth)/complete-profile` (mobile). Filling phone + branch + T&C should route to `/pending-approval`.
+2. Sign in via a provider whose email matches an existing approved member → dashboard (no change from Phase 1). The user's inbox should show a "New sign-in method added" security email.
+3. Sign in via a provider on an unverified-email collision → still the confirm-password page (no change).
+

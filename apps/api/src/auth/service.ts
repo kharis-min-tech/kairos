@@ -8,6 +8,7 @@ import {
   branchDepartments,
   departments,
   consentRecords,
+  branches,
 } from '@kairos/database';
 import { getCurrentConsentVersions } from '../consent/service';
 import type {
@@ -73,6 +74,7 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
       : null,
     emailVerified: row.emailVerified,
     mustChangePassword: row.mustChangePassword,
+    mustCompleteProfile: row.mustCompleteProfile,
   };
 }
 
@@ -642,4 +644,152 @@ export async function changePassword(
     outcome: AuditOutcome.Success,
     metadata: { via: 'change_password' },
   });
+}
+
+// ── SSO onboarding: complete-oauth-profile ────────────────
+
+export interface CompleteOAuthProfileInput {
+  phone: string;
+  homeBranchId: string;
+  acceptedPolicies?: boolean;
+}
+
+/**
+ * Phase 1.5 Better-Auth: finalize an SSO signup. The caller must currently
+ * be flagged `mustCompleteProfile === true` — any other state throws a
+ * validation error so a normal member can't accidentally overwrite their
+ * home branch by hitting this endpoint. On success:
+ *   - phone + homeBranchId are persisted
+ *   - Terms + Privacy consent records are inserted (only if the user hasn't
+ *     already accepted the current published version — checked live so this
+ *     path is idempotent if the client double-submits)
+ *   - `mustCompleteProfile` flips to FALSE
+ *
+ * `approvalStatus` is NOT touched here. Admin approval is a separate gate;
+ * the caller lands on /pending-approval afterwards and waits.
+ */
+export async function completeOauthProfile(
+  db: Database,
+  auth: AuthContext,
+  input: CompleteOAuthProfileInput,
+): Promise<MemberProfile> {
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  if (!member.mustCompleteProfile) {
+    throw new ValidationError(
+      'This account has already completed onboarding.',
+    );
+  }
+
+  // Verify the chosen home branch exists + is active. Reject on unknown
+  // branch — the dropdown on the client is server-populated so this is
+  // only reachable via a crafted request, but a clean 400 is friendlier
+  // than a FK-violation 500.
+  const [branch] = await db
+    .select({ id: branches.id })
+    .from(branches)
+    .where(and(eq(branches.id, input.homeBranchId), eq(branches.isActive, true)))
+    .limit(1);
+  if (!branch) {
+    throw new ValidationError('Please pick an active branch.');
+  }
+
+  // Phone-uniqueness guard mirrors signup() — refuse to steal an active
+  // member's number.
+  const phoneConflict = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(and(eq(members.phone, input.phone), eq(members.isActive, true)))
+    .limit(1);
+  const conflictingId = phoneConflict[0]?.id;
+  if (conflictingId && conflictingId !== auth.memberId) {
+    throw new ConflictError('A member with this phone number already exists');
+  }
+
+  // Insert Terms + Privacy consent only if the user hasn't already accepted
+  // the current published version. Guards against double-submit re-inserts
+  // and lets us keep the T&C checkbox conditional on the client.
+  const versions = getCurrentConsentVersions();
+  const [existingTerms, existingPrivacy] = await Promise.all([
+    db
+      .select({ id: consentRecords.id })
+      .from(consentRecords)
+      .where(
+        and(
+          eq(consentRecords.memberId, member.id),
+          eq(consentRecords.consentType, 'terms'),
+          eq(consentRecords.version, versions.terms),
+          eq(consentRecords.granted, true),
+          eq(consentRecords.isActive, true),
+        ),
+      )
+      .limit(1),
+    db
+      .select({ id: consentRecords.id })
+      .from(consentRecords)
+      .where(
+        and(
+          eq(consentRecords.memberId, member.id),
+          eq(consentRecords.consentType, 'privacy'),
+          eq(consentRecords.version, versions.privacy),
+          eq(consentRecords.granted, true),
+          eq(consentRecords.isActive, true),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  const needsConsent = !existingTerms[0] || !existingPrivacy[0];
+  if (needsConsent && !input.acceptedPolicies) {
+    throw new ValidationError(
+      'You must accept the Terms & Conditions and Privacy Notice to continue',
+    );
+  }
+
+  const now = new Date();
+  if (needsConsent && input.acceptedPolicies) {
+    const rows: Array<typeof consentRecords.$inferInsert> = [];
+    if (!existingTerms[0]) {
+      rows.push({
+        memberId: member.id,
+        consentType: 'terms',
+        version: versions.terms,
+        granted: true,
+        grantedAt: now,
+      });
+    }
+    if (!existingPrivacy[0]) {
+      rows.push({
+        memberId: member.id,
+        consentType: 'privacy',
+        version: versions.privacy,
+        granted: true,
+        grantedAt: now,
+      });
+    }
+    if (rows.length > 0) {
+      await db.insert(consentRecords).values(rows);
+    }
+  }
+
+  const [updated] = await db
+    .update(members)
+    .set({
+      phone: input.phone,
+      homeBranchId: input.homeBranchId,
+      mustCompleteProfile: false,
+      updatedAt: now,
+    })
+    .where(eq(members.id, member.id))
+    .returning();
+
+  if (!updated) throw new Error('Failed to update member during onboarding');
+
+  return toMemberProfile(updated);
 }

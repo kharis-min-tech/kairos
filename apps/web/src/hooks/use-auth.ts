@@ -3,7 +3,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { decodeScopeFromAccessToken, useAuthStore } from '@/lib/auth-store';
-import type { LoginResponse, MemberProfile, SignupRequest, SystemRole } from '@kairos/types';
+import type {
+  CompleteOAuthProfileRequest,
+  LoginResponse,
+  MemberProfile,
+  SignupRequest,
+  SystemRole,
+} from '@kairos/types';
 
 type LoginCredentials = { email: string; password: string };
 
@@ -68,6 +74,23 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: async (data: { token: string; newPassword: string }) => {
       await api.auth.resetPassword(data);
+    },
+  });
+}
+
+/**
+ * Phase 1.5 SSO onboarding — POST /api/auth/complete-oauth-profile.
+ * On success the returned member is pushed into the auth store so the
+ * dashboard guard (which watches `mustCompleteProfile`) releases the
+ * caller to /pending-approval on the next navigation.
+ */
+export function useCompleteOauthProfile() {
+  return useMutation({
+    mutationFn: async (data: CompleteOAuthProfileRequest) => {
+      const res = await api.auth.completeOauthProfile(data);
+      const member = res.data!.member;
+      useAuthStore.getState().setUser(member as never);
+      return member;
     },
   });
 }

@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
+import { useMyConsentStatuses } from '@/hooks/use-consent';
+import { useCompleteOauthProfile } from '@/hooks/use-auth';
 import { DateSelect } from '@/components/date-select';
 import { ImageUpload } from '@/components/image-upload';
 import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
@@ -27,15 +30,40 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, setUser, setTokens } = useAuthStore();
   const { data: member, isLoading } = useMyProfile();
   const updateMember = useUpdateMember();
   const switchBranch = useSwitchActiveBranch();
+  const completeOnboarding = useCompleteOauthProfile();
+  const { data: consentData } = useMyConsentStatuses();
 
-  const [isEditing, setIsEditing] = useState(false);
+  // Phase 1.5 SSO onboarding — the dashboard-layout guard drops the user
+  // here with ?onboarding=1 whenever `mustCompleteProfile === true`. We
+  // force-open the edit form, swap the CTA label, force a fresh branch
+  // pick, and enforce phone + T&C at submit.
+  const isOnboarding =
+    searchParams.get('onboarding') === '1' ||
+    (member as { mustCompleteProfile?: boolean } | undefined)?.mustCompleteProfile === true;
+
+  const [isEditing, setIsEditing] = useState(isOnboarding);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
+  const [onboardingBranchId, setOnboardingBranchId] = useState<string>('');
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+
+  useEffect(() => {
+    if (isOnboarding) setIsEditing(true);
+  }, [isOnboarding]);
+
+  // Only require the T&C checkbox when the caller doesn't already hold a
+  // valid consent record at the current published version. Mirrors the
+  // server's own idempotent check.
+  const needsPolicyAccept = (consentData?.statuses ?? []).some(
+    (s) => (s.consentType === 'terms' || s.consentType === 'privacy') && s.needsAccept,
+  );
 
   const profile = member ?? user;
 
@@ -143,6 +171,38 @@ export default function ProfilePage() {
     if (!memberId) return;
     setSaveError(null);
 
+    // Onboarding submit — route through the dedicated endpoint so the
+    // server can validate the mandatories, insert consent records, and
+    // clear mustCompleteProfile atomically.
+    if (isOnboarding) {
+      const phone = (data.phone ?? '').trim();
+      if (!phone) {
+        setSaveError('Phone is required to continue.');
+        return;
+      }
+      if (!onboardingBranchId) {
+        setSaveError('Please pick your home branch.');
+        return;
+      }
+      if (needsPolicyAccept && !acceptedPolicies) {
+        setSaveError('Please accept the Terms & Conditions and Privacy Notice to continue.');
+        return;
+      }
+      try {
+        await completeOnboarding.mutateAsync({
+          phone,
+          homeBranchId: onboardingBranchId,
+          acceptedPolicies: needsPolicyAccept ? true : undefined,
+        });
+        router.replace('/pending-approval');
+      } catch (err) {
+        setSaveError(
+          err instanceof Error ? err.message : 'Failed to save. Please try again.',
+        );
+      }
+      return;
+    }
+
     const cleaned: UpdateMemberRequest = {};
     for (const [k, v] of Object.entries(data)) {
       if (v !== '' && v !== null && v !== undefined) {
@@ -241,6 +301,48 @@ export default function ProfilePage() {
 
       {isEditing ? (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {isOnboarding && (
+            <div className="rounded-lg border-l-4 border-[#5D3FD3] bg-[#5D3FD3]/5 p-4">
+              <p className="text-sm font-semibold text-[#5D3FD3]">
+                Welcome! Let&apos;s finish setting up your account.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                We got some details from your provider — please review and fill
+                anything missing before you continue. Your phone number and
+                home branch are required.
+              </p>
+            </div>
+          )}
+
+          {isOnboarding && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Home branch <span className="text-destructive">*</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1.5">
+                  <Label htmlFor="homeBranchId">Which branch do you attend?</Label>
+                  <CustomSelect
+                    id="homeBranchId"
+                    value={onboardingBranchId}
+                    onValueChange={(v) => setOnboardingBranchId(v)}
+                    placeholder="Please pick…"
+                    options={(branchList ?? []).map((b) => ({
+                      value: b.id,
+                      label: b.branchName,
+                    }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your provider didn&apos;t tell us this — please choose the
+                    branch you attend.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Personal Information</CardTitle>
@@ -262,8 +364,16 @@ export default function ProfilePage() {
                   <Input id="middleName" {...register('middleName')} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" {...register('phone')} />
+                  <Label htmlFor="phone">
+                    Phone {isOnboarding && <span className="text-destructive">*</span>}
+                  </Label>
+                  <Input
+                    id="phone"
+                    {...register('phone', isOnboarding ? { required: 'Phone is required' } : {})}
+                  />
+                  {errors.phone && (
+                    <p className="text-xs text-destructive">{errors.phone.message}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label>Gender</Label>
@@ -359,18 +469,64 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
+          {isOnboarding && needsPolicyAccept && (
+            <Card>
+              <CardContent className="pt-6">
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPolicies}
+                    onChange={(e) => setAcceptedPolicies(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 accent-[#5D3FD3]"
+                  />
+                  <span>
+                    I accept the{' '}
+                    <Link
+                      href="/legal/terms"
+                      target="_blank"
+                      className="font-semibold text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
+                    >
+                      Terms &amp; Conditions
+                    </Link>{' '}
+                    and{' '}
+                    <Link
+                      href="/legal/privacy"
+                      target="_blank"
+                      className="font-semibold text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
+                    >
+                      Privacy Notice
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex gap-3">
             {saveError && (
               <p className="w-full text-sm text-destructive">{saveError}</p>
             )}
           </div>
           <div className="flex gap-3">
-            <Button type="submit" variant="success" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save Changes'}
+            <Button
+              type="submit"
+              variant="success"
+              disabled={isSubmitting || completeOnboarding.isPending}
+            >
+              {isOnboarding
+                ? completeOnboarding.isPending
+                  ? 'Saving…'
+                  : 'Save & continue'
+                : isSubmitting
+                  ? 'Saving…'
+                  : 'Save Changes'}
             </Button>
-            <Button type="button" variant="outline" onClick={cancelEdit}>
-              Cancel
-            </Button>
+            {!isOnboarding && (
+              <Button type="button" variant="outline" onClick={cancelEdit}>
+                Cancel
+              </Button>
+            )}
           </div>
         </form>
       ) : (

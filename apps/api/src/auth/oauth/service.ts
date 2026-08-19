@@ -277,6 +277,13 @@ export async function createPendingMemberFromOAuth(
       memberType: 'attendee',
       isActive: false,
       mustChangePassword: false,
+      // Phase 1.5: SSO signup captured firstName/lastName/email from the
+      // IdP but never asked the user for phone, T&C consent, or a chosen
+      // home branch (we used DEFAULT_HOME_BRANCH_ID or the oldest branch
+      // as a placeholder). The dashboard guard redirects here to
+      // /profile?onboarding=1 until POST /api/auth/complete-oauth-profile
+      // clears the flag.
+      mustCompleteProfile: true,
     })
     .returning();
 

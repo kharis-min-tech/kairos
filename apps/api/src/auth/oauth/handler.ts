@@ -370,6 +370,30 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
       });
     }
 
+    // Scenario 3 — Existing member linked a new provider silently (via the
+    // verified-email auto-link path). Fire a security notification so the
+    // user knows a new sign-in method is now on their account. Not fired
+    // for brand-new members (wasNewMember=true) — they haven't seen any
+    // prior sign-in method, so there's nothing to alert them about; the
+    // pending-approval + onboarding flow is their signal.
+    if (link.wasNewLink && !link.wasNewMember) {
+      const providerLabel =
+        providerId === 'google'
+          ? 'Google'
+          : providerId === 'microsoft'
+            ? 'Microsoft'
+            : 'Apple';
+      void dispatchNotification(db, {
+        eventType: NotificationEventType.SecurityOAuthProviderLinked,
+        recipientMemberIds: [member.id],
+        payload: {
+          providerLabel,
+          occurredAt: new Date(),
+          securityUrl: `${frontendUrl(c)}/profile/settings/security`,
+        },
+      });
+    }
+
     // Tokens go in the URL fragment — never in query/history/logs. The web
     // app's /oauth-callback page reads them from window.location.hash.
     const fragment = new URLSearchParams({

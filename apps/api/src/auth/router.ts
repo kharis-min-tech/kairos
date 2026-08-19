@@ -15,6 +15,7 @@ import {
   changePasswordSchema,
   requestEmailChangeSchema,
   tokenSchema,
+  completeOauthProfileSchema,
 } from './schemas';
 import {
   signup,
@@ -25,6 +26,7 @@ import {
   resetPassword,
   getMe,
   changePassword,
+  completeOauthProfile,
 } from './service';
 import {
   requestEmailChange,
@@ -162,6 +164,22 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   await changePassword(db, auth, currentPassword, newPassword);
   return c.json(successResponse(undefined, 'Password changed successfully'));
 });
+
+// Phase 1.5 Better-Auth: SSO onboarding submit. Requires an authenticated
+// session (the caller already came back through the OAuth callback + owns
+// a JWT) — the service refuses to run if the caller is not currently
+// flagged mustCompleteProfile.
+authRouter.post(
+  '/complete-oauth-profile',
+  authMiddleware,
+  zValidator('json', completeOauthProfileSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const body = c.req.valid('json');
+    const member = await completeOauthProfile(db, auth, body);
+    return c.json(successResponse({ member }, 'Profile completed'));
+  },
+);
 
 authRouter.post(
   '/email-change',

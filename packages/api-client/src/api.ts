@@ -12,6 +12,7 @@ import type {
   OAuthConnection,
   OAuthConfirmLinkRequest,
   OAuthProviderId,
+  CompleteOAuthProfileRequest,
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
@@ -224,6 +225,11 @@ export function createApiClient(
         client.post<ApiResponse<void>>('/api/auth/email-change/confirm', data),
       undoEmailChange: (data: { token: string }) =>
         client.post<ApiResponse<{ resetToken: string }>>('/api/auth/email-change/undo', data),
+      completeOauthProfile: (data: CompleteOAuthProfileRequest) =>
+        client.post<ApiResponse<{ member: MemberProfile }>>(
+          '/api/auth/complete-oauth-profile',
+          data,
+        ),
       oauth: {
         /**
          * Compose a top-level redirect URL to the provider handshake. NOT a

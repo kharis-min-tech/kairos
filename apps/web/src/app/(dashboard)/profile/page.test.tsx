@@ -74,6 +74,35 @@ vi.mock('@/hooks/use-departments', () => ({
   useMyDepartments: () => ({ data: myDepts }),
 }));
 
+// Phase 1.5 SSO onboarding hooks — mocked so the profile page renders in
+// both regular and onboarding modes without hitting the network.
+let consentStatuses: Array<{
+  consentType: string;
+  needsAccept: boolean;
+}> = [];
+let onboardingSearchParam: string | null = null;
+const completeOnboardingMutate = vi.fn(async () => ({}));
+
+vi.mock('@/hooks/use-consent', () => ({
+  useMyConsentStatuses: () => ({
+    data: { statuses: consentStatuses },
+  }),
+}));
+
+vi.mock('@/hooks/use-auth', () => ({
+  useCompleteOauthProfile: () => ({
+    mutateAsync: completeOnboardingMutate,
+    isPending: false,
+  }),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => ({
+    get: (key: string) => (key === 'onboarding' ? onboardingSearchParam : null),
+  }),
+}));
+
 import ProfilePage from './page';
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -99,6 +128,9 @@ beforeEach(() => {
   memberLoading = false;
   fellowships = [];
   myDepts = [];
+  consentStatuses = [];
+  onboardingSearchParam = null;
+  completeOnboardingMutate.mockClear();
 });
 
 describe('ProfilePage', () => {
@@ -208,5 +240,47 @@ describe('ProfilePage', () => {
     render(<ProfilePage />, { wrapper });
     expect(screen.getByText(/My leadership/i)).toBeDefined();
     expect(screen.getByText(/Lead — Choir department/i)).toBeDefined();
+  });
+
+  describe('SSO onboarding mode', () => {
+    it('renders the onboarding banner + "Save & continue" CTA when ?onboarding=1', () => {
+      onboardingSearchParam = '1';
+      consentStatuses = [
+        { consentType: 'terms', needsAccept: true },
+        { consentType: 'privacy', needsAccept: true },
+      ];
+      render(<ProfilePage />, { wrapper });
+      expect(
+        screen.getByText(/Welcome! Let.s finish setting up your account\./i),
+      ).toBeDefined();
+      // Home branch card renders + CTA label swaps
+      expect(screen.getByText(/Which branch do you attend\?/i)).toBeDefined();
+      expect(screen.getByRole('button', { name: /Save & continue/i })).toBeDefined();
+      // Cancel button is hidden in onboarding — the user MUST submit
+      expect(screen.queryByRole('button', { name: /^Cancel$/i })).toBeNull();
+    });
+
+    it('does not render the onboarding banner in the normal edit flow', () => {
+      onboardingSearchParam = null;
+      render(<ProfilePage />, { wrapper });
+      expect(
+        screen.queryByText(/Welcome! Let.s finish setting up/i),
+      ).toBeNull();
+    });
+
+    it('hides the T&C checkbox when the user has already accepted current versions', () => {
+      onboardingSearchParam = '1';
+      consentStatuses = [
+        { consentType: 'terms', needsAccept: false },
+        { consentType: 'privacy', needsAccept: false },
+      ];
+      render(<ProfilePage />, { wrapper });
+      // Banner still shows
+      expect(
+        screen.getByText(/Welcome! Let.s finish setting up your account\./i),
+      ).toBeDefined();
+      // But no T&C checkbox label
+      expect(screen.queryByText(/I accept the/i)).toBeNull();
+    });
   });
 });
