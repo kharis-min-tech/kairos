@@ -324,6 +324,7 @@ function makeStyles(c: ThemeColors) {
     },
     headerTitle: { ...typography.cardTitle, color: c.ink },
     tabs: {
+      flexDirection: 'row',
       paddingHorizontal: spacing.lg,
       gap: spacing.xs,
       paddingBottom: spacing.sm,
