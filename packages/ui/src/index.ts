@@ -2,6 +2,8 @@ export { cn } from './lib/utils';
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';
 export { Input } from './components/input';
+export { AddressAutofillGroup } from './components/address-autofill';
+export type { AddressAutofillValue, AddressAutofillGroupProps } from './components/address-autofill';
 export { Checkbox } from './components/checkbox';
 export type { CheckboxProps } from './components/checkbox';
 export { Label } from './components/label';

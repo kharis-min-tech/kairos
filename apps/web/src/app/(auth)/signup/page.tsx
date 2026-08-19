@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Checkbox, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Checkbox, Input, Label, Card, CardContent, CardHeader, CustomSelect } from '@kairos/ui';
 import { useSignup } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
@@ -260,21 +260,37 @@ export default function SignupPage() {
           {/* Step 2: Contact & Branch */}
           {step === 1 && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" className="h-11" {...register('address')} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" className="h-11" {...register('city')} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input id="postalCode" className="h-11" {...register('postalCode')} />
-                </div>
-              </div>
+              <Controller
+                name="address"
+                control={control}
+                render={({ field: addressField }) => (
+                  <Controller
+                    name="city"
+                    control={control}
+                    render={({ field: cityField }) => (
+                      <Controller
+                        name="postalCode"
+                        control={control}
+                        render={({ field: postalField }) => (
+                          <AddressAutofillGroup
+                            accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                            value={{
+                              line1: addressField.value ?? '',
+                              city: cityField.value ?? '',
+                              postalCode: postalField.value ?? '',
+                            }}
+                            onChange={(v) => {
+                              addressField.onChange(v.line1);
+                              cityField.onChange(v.city);
+                              postalField.onChange(v.postalCode);
+                            }}
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                )}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="homeBranchId">Home Branch *</Label>
@@ -322,20 +338,42 @@ export default function SignupPage() {
               {secondaryBranchId && (
                 <div className="space-y-3 rounded-lg bg-muted/40 p-4">
                   <p className="text-xs font-medium text-muted-foreground">Secondary Branch Address <span className="font-normal">(optional)</span></p>
-                  <div className="space-y-2">
-                    <Label htmlFor="secondaryAddress">Street Address</Label>
-                    <Input id="secondaryAddress" className="h-11" {...register('secondaryAddress')} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="secondaryCity">City</Label>
-                      <Input id="secondaryCity" className="h-11" {...register('secondaryCity')} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="secondaryPostalCode">Postal Code</Label>
-                      <Input id="secondaryPostalCode" className="h-11" {...register('secondaryPostalCode')} />
-                    </div>
-                  </div>
+                  <Controller
+                    name="secondaryAddress"
+                    control={control}
+                    render={({ field: addressField }) => (
+                      <Controller
+                        name="secondaryCity"
+                        control={control}
+                        render={({ field: cityField }) => (
+                          <Controller
+                            name="secondaryPostalCode"
+                            control={control}
+                            render={({ field: postalField }) => (
+                              <AddressAutofillGroup
+                                accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                                labels={{
+                                  line1: 'Street Address',
+                                  city: 'City',
+                                  postalCode: 'Postal Code',
+                                }}
+                                value={{
+                                  line1: addressField.value ?? '',
+                                  city: cityField.value ?? '',
+                                  postalCode: postalField.value ?? '',
+                                }}
+                                onChange={(v) => {
+                                  addressField.onChange(v.line1);
+                                  cityField.onChange(v.city);
+                                  postalField.onChange(v.postalCode);
+                                }}
+                              />
+                            )}
+                          />
+                        )}
+                      />
+                    )}
+                  />
                 </div>
               )}
 
