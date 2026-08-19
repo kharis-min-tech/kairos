@@ -93,6 +93,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
       },
     ],
+    // Brand-tints the Android app theme so the native datetime picker (and
+    // other Material widgets) render highlights + buttons in Modern Sanctuary
+    // purple instead of the default Material teal. iOS uses the accentColor
+    // prop on the picker component itself, wired inside DatePicker.tsx.
+    ['./plugins/with-android-brand-tint', { color: '#5D3FD3' }],
   ],
   experiments: {
     typedRoutes: true,
