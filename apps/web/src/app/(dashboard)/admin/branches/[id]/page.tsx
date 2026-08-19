@@ -16,7 +16,7 @@ import { useMembers, useMyProfile } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate } from '@kairos/core';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 
@@ -189,26 +189,23 @@ export default function BranchDetailPage() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" {...register('address')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" {...register('city')} />
-              </div>
-            </div>
+            <AddressAutofillGroup
+              accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+              value={{
+                line1: watch('address') ?? '',
+                city: watch('city') ?? '',
+                postalCode: watch('postalCode') ?? '',
+              }}
+              onChange={(v) => {
+                setValue('address', v.line1, { shouldDirty: true });
+                setValue('city', v.city, { shouldDirty: true });
+                setValue('postalCode', v.postalCode, { shouldDirty: true });
+              }}
+            />
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input id="postalCode" {...register('postalCode')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" {...register('phone')} />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input id="phone" type="tel" {...register('phone')} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

@@ -9,7 +9,7 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useCreateMember } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { CreateMemberRequest } from '@kairos/types';
 
 export default function AddMemberPage() {
@@ -206,20 +206,20 @@ export default function AddMemberPage() {
             <CardTitle>Address</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="address">Street Address</Label>
-              <Input id="address" className="mt-1" {...register('address')} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input id="city" className="mt-1" {...register('city')} />
-              </div>
-              <div>
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input id="postalCode" className="mt-1" {...register('postalCode')} />
-              </div>
-            </div>
+            <AddressAutofillGroup
+              accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+              labels={{ line1: 'Street Address' }}
+              value={{
+                line1: watch('address') ?? '',
+                city: watch('city') ?? '',
+                postalCode: watch('postalCode') ?? '',
+              }}
+              onChange={(v) => {
+                setValue('address', v.line1);
+                setValue('city', v.city);
+                setValue('postalCode', v.postalCode);
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -300,20 +300,24 @@ export default function AddMemberPage() {
               />
             </div>
             {secondaryBranchId && (
-              <div className="grid gap-4 sm:grid-cols-3 rounded-lg border border-dashed border-input/15 bg-muted/30 p-4">
-                <p className="col-span-full text-xs font-medium text-muted-foreground">Secondary Branch Address <span className="font-normal">(optional)</span></p>
-                <div className="sm:col-span-3">
-                  <Label htmlFor="secondaryAddress">Street Address</Label>
-                  <Input id="secondaryAddress" className="mt-1" {...register('secondaryAddress')} />
-                </div>
-                <div>
-                  <Label htmlFor="secondaryCity">City</Label>
-                  <Input id="secondaryCity" className="mt-1" {...register('secondaryCity')} />
-                </div>
-                <div>
-                  <Label htmlFor="secondaryPostalCode">Postal Code</Label>
-                  <Input id="secondaryPostalCode" className="mt-1" {...register('secondaryPostalCode')} />
-                </div>
+              <div className="rounded-lg border border-dashed border-input/15 bg-muted/30 p-4">
+                <p className="mb-3 text-xs font-medium text-muted-foreground">
+                  Secondary Branch Address <span className="font-normal">(optional)</span>
+                </p>
+                <AddressAutofillGroup
+                  accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                  labels={{ line1: 'Street Address' }}
+                  value={{
+                    line1: watch('secondaryAddress') ?? '',
+                    city: watch('secondaryCity') ?? '',
+                    postalCode: watch('secondaryPostalCode') ?? '',
+                  }}
+                  onChange={(v) => {
+                    setValue('secondaryAddress', v.line1);
+                    setValue('secondaryCity', v.city);
+                    setValue('secondaryPostalCode', v.postalCode);
+                  }}
+                />
               </div>
             )}
           </CardContent>

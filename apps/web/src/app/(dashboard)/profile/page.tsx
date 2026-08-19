@@ -8,7 +8,7 @@ import { useMyProfile, useUpdateMember, useSwitchActiveBranch } from '@/hooks/us
 import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
 import { ImageUpload } from '@/components/image-upload';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
 import {
   useFriendlyRoleLines,
@@ -290,20 +290,20 @@ export default function ProfilePage() {
               <CardTitle className="text-base">Address</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="address">Street Address</Label>
-                  <Input id="address" {...register('address')} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register('city')} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input id="postalCode" {...register('postalCode')} />
-                </div>
-              </div>
+              <AddressAutofillGroup
+                accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                labels={{ line1: 'Street Address' }}
+                value={{
+                  line1: watch('address') ?? '',
+                  city: watch('city') ?? '',
+                  postalCode: watch('postalCode') ?? '',
+                }}
+                onChange={(v) => {
+                  setValue('address', v.line1);
+                  setValue('city', v.city);
+                  setValue('postalCode', v.postalCode);
+                }}
+              />
             </CardContent>
           </Card>
 
@@ -313,20 +313,20 @@ export default function ProfilePage() {
                 <CardTitle className="text-base">Secondary Address</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="secondaryAddress">Street Address</Label>
-                    <Input id="secondaryAddress" {...register('secondaryAddress')} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="secondaryCity">City</Label>
-                    <Input id="secondaryCity" {...register('secondaryCity')} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="secondaryPostalCode">Postal Code</Label>
-                    <Input id="secondaryPostalCode" {...register('secondaryPostalCode')} />
-                  </div>
-                </div>
+                <AddressAutofillGroup
+                  accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                  labels={{ line1: 'Street Address' }}
+                  value={{
+                    line1: watch('secondaryAddress') ?? '',
+                    city: watch('secondaryCity') ?? '',
+                    postalCode: watch('secondaryPostalCode') ?? '',
+                  }}
+                  onChange={(v) => {
+                    setValue('secondaryAddress', v.line1);
+                    setValue('secondaryCity', v.city);
+                    setValue('secondaryPostalCode', v.postalCode);
+                  }}
+                />
               </CardContent>
             </Card>
           )}
