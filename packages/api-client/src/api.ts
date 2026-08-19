@@ -87,6 +87,7 @@ import type {
   ListDormantVisitorsParams,
   FormsCapabilities,
   // Me / Leadership
+  MeActivityItem,
   MeApprovalItem,
   MeFollowupItem,
   MeLeadershipResponse,
@@ -842,6 +843,8 @@ export function createApiClient(
         client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
       followups: () =>
         client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
+      activity: () =>
+        client.get<ApiResponse<MeActivityItem[]>>('/api/me/activity'),
       notificationPreferences: {
         list: () =>
           client.get<ApiResponse<ListNotificationPreferencesResponse>>(

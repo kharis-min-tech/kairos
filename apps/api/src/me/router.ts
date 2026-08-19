@@ -10,6 +10,7 @@ import {
   deleteMyAccount,
   exportMyData,
   hasPrivilegedRole,
+  listMyActivity,
   listMyApprovals,
   listMyFollowups,
 } from './service';
@@ -67,6 +68,12 @@ meRouter.get('/approvals', async (c) => {
 meRouter.get('/followups', async (c) => {
   const auth = getAuth(c);
   const items = await listMyFollowups(db, auth);
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/activity', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyActivity(db, auth);
   return c.json(successResponse(items));
 });
 
