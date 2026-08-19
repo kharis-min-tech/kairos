@@ -105,6 +105,7 @@ export function AddressAutofillInput({
   const c = useColors();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [justPicked, setJustPicked] = useState(false);
   const [sessionToken, setSessionToken] = useState(() => generateSessionToken());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -125,6 +126,7 @@ export function AddressAutofillInput({
 
   function handleLine1Change(text: string) {
     set('line1', text);
+    setJustPicked(false);
     if (!accessToken || !text.trim() || text.trim().length < 3) {
       setSuggestions([]);
       return;
@@ -198,6 +200,7 @@ export function AddressAutofillInput({
         latitude: typeof lat === 'number' ? lat : value.latitude,
         longitude: typeof lng === 'number' ? lng : value.longitude,
       });
+      setJustPicked(true);
     } finally {
       // Session token rotates after each successful retrieve to start the next
       // billing session.
@@ -221,6 +224,9 @@ export function AddressAutofillInput({
             loading ? <ActivityIndicator size="small" color={c.primary} /> : null
           }
         />
+        {justPicked && !value.line1?.trim() ? (
+          <Text style={styles.hintText}>Not detected — add if you know it.</Text>
+        ) : null}
         {suggestions.length > 0 ? (
           <View style={styles.suggestionsDropdown}>
             {suggestions.map((s) => (
@@ -253,25 +259,37 @@ export function AddressAutofillInput({
       ) : null}
 
       <View style={styles.pairRow}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, gap: 4 }}>
           <Input
             label={cityLabel}
             value={value.city}
-            onChangeText={(v) => set('city', v)}
+            onChangeText={(v) => {
+              set('city', v);
+              setJustPicked(false);
+            }}
             autoCapitalize="words"
             editable={!disabled}
             error={errors?.city}
           />
+          {justPicked && !value.city?.trim() ? (
+            <Text style={styles.hintText}>Not detected — add if you know it.</Text>
+          ) : null}
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, gap: 4 }}>
           <Input
             label={postalLabel}
             value={value.postalCode}
-            onChangeText={(v) => set('postalCode', v)}
+            onChangeText={(v) => {
+              set('postalCode', v);
+              setJustPicked(false);
+            }}
             autoCapitalize="characters"
             editable={!disabled}
             error={errors?.postalCode}
           />
+          {justPicked && !value.postalCode?.trim() ? (
+            <Text style={styles.hintText}>Not detected — add if you know it.</Text>
+          ) : null}
         </View>
       </View>
     </View>
@@ -308,5 +326,11 @@ function makeStyles(c: ThemeColors) {
     },
     suggestionName: { ...typography.body, color: c.ink, fontWeight: '600' },
     suggestionMeta: { ...typography.meta, color: c.inkMuted },
+    hintText: {
+      ...typography.meta,
+      color: c.inkFaded,
+      fontStyle: 'italic',
+      paddingLeft: spacing.xs,
+    },
   });
 }
