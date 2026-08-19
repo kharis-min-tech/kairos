@@ -15,6 +15,12 @@ interface OAuthButtonGroupProps {
    * caller wants to gate SSO behind a T&C accept step.
    */
   disabled?: boolean;
+  /**
+   * 'full' → three stacked labeled buttons ("Sign in with Google").
+   * 'icons' → three small circular icon-only buttons in a row. Use this
+   * when password is the primary path and SSO is the secondary option.
+   */
+  variant?: 'full' | 'icons';
 }
 
 const PROVIDERS: { id: OAuthProviderId; label: string; variant: 'light' | 'dark' }[] = [
@@ -24,8 +30,8 @@ const PROVIDERS: { id: OAuthProviderId; label: string; variant: 'light' | 'dark'
 ];
 
 /**
- * Three side-by-side SSO buttons. Each fires a top-level navigation to the
- * API's OAuth start route — the api-client's `startUrl` is a synchronous URL
+ * SSO button group. Each button fires a top-level navigation to the API's
+ * OAuth start route — the api-client's `startUrl` is a synchronous URL
  * builder, no fetch. Server does the IdP handshake and lands the browser on
  * `/oauth-callback#accessToken=…` (or `/oauth-confirm-link?token=…` on the
  * unverified-email collision path).
@@ -34,8 +40,32 @@ export function OAuthButtonGroup({
   returnTo,
   actionLabel = 'sign-in',
   disabled = false,
+  variant = 'full',
 }: OAuthButtonGroupProps) {
   const prefix = actionLabel === 'continue' ? 'Continue with' : 'Sign in with';
+
+  if (variant === 'icons') {
+    return (
+      <div className="flex justify-center gap-3">
+        {PROVIDERS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              window.location.assign(api.auth.oauth.startUrl(p.id, returnTo));
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-muted-foreground/15 bg-transparent transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={`${prefix} ${p.label}`}
+          >
+            <OAuthProviderIcon provider={p.id} className="h-5 w-5" />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2.5">
       {PROVIDERS.map((p) => (

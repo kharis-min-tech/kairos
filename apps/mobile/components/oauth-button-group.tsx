@@ -47,6 +47,12 @@ interface OAuthButtonGroupProps {
   onResult: (result: OAuthStartResult) => void | Promise<void>;
   /** Disable all three buttons (e.g. during another auth request). */
   disabled?: boolean;
+  /**
+   * 'full' → three stacked labeled buttons ("Sign in with Google").
+   * 'icons' → three small circular icon-only buttons in a row. Use this
+   * when password is the primary path and SSO is the secondary option.
+   */
+  variant?: 'full' | 'icons';
 }
 
 export function OAuthButtonGroup({
@@ -54,6 +60,7 @@ export function OAuthButtonGroup({
   returnTo,
   onResult,
   disabled = false,
+  variant = 'full',
 }: OAuthButtonGroupProps) {
   const styles = useThemedStyles(makeStyles);
   const [busy, setBusy] = useState<OAuthProviderId | null>(null);
@@ -73,6 +80,36 @@ export function OAuthButtonGroup({
     } finally {
       setBusy(null);
     }
+  }
+
+  if (variant === 'icons') {
+    return (
+      <View style={styles.iconRow}>
+        {PROVIDERS.map((p) => {
+          const isBusy = busy === p.id;
+          return (
+            <Pressable
+              key={p.id}
+              onPress={() => handlePress(p.id)}
+              disabled={disabled || busy !== null}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                (disabled || busy !== null) && styles.btnDisabled,
+                pressed && !isBusy && styles.btnPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`${prefix} ${OAUTH_PROVIDER_LABEL[p.id]}`}
+            >
+              {isBusy ? (
+                <ActivityIndicator />
+              ) : (
+                <OAuthProviderIcon provider={p.id} size={22} tint={styles.appleTint.color as string} />
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    );
   }
 
   return (
@@ -124,6 +161,24 @@ function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
     stack: {
       gap: spacing.sm,
+    },
+    iconRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.md,
+    },
+    iconBtn: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: 'transparent',
+    },
+    appleTint: {
+      color: c.ink,
     },
     btn: {
       flexDirection: 'row',

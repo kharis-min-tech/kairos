@@ -188,25 +188,6 @@ export default function SignupPage() {
           {/* Step 1: Personal Info */}
           {step === 0 && (
             <>
-              {/* Federated sign-up shortcut. Skips branch selection — the API
-                  routes new SSO accounts to DEFAULT_HOME_BRANCH_ID (or oldest
-                  branch as a fallback), then onboarding lets the user pick. */}
-              <div className="space-y-2">
-                <OAuthButtonGroup returnTo="/welcome" actionLabel="continue" />
-                <p className="text-center text-xs text-muted-foreground">
-                  You&apos;ll pick your branch during onboarding.
-                </p>
-              </div>
-
-              <div className="relative py-1">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-muted-foreground/10" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">or sign up with email</span>
-                </div>
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>
@@ -510,6 +491,28 @@ export default function SignupPage() {
               </button>
             )}
           </div>
+
+          {/* Federated sign-up shortcut on step 1 only. SSO skips branch
+              selection — the API routes new SSO accounts to
+              DEFAULT_HOME_BRANCH_ID (or the oldest branch as a fallback),
+              then onboarding lets the user pick. */}
+          {step === 0 && (
+            <>
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/10" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">or continue with</span>
+                </div>
+              </div>
+
+              <OAuthButtonGroup returnTo="/welcome" actionLabel="continue" variant="icons" />
+              <p className="text-center text-[11px] text-muted-foreground/60">
+                You&apos;ll pick your branch during onboarding.
+              </p>
+            </>
+          )}
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
