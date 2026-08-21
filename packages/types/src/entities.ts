@@ -261,6 +261,22 @@ export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
 
 // ── Fellowship Followup ────────────────────────────────────
 
+// 0046 visit-shape: split follow-ups into contact + visit types, each with
+// their own set of populated fields. Legacy contactMethod/contactStatus stay
+// populated for back-compat with old readers.
+export type FollowupType = 'contact' | 'visit';
+export type FollowupMethod =
+  | 'phone_call'
+  | 'text_message'
+  | 'whatsapp'
+  | 'email'
+  | 'in_person'
+  | 'virtual'
+  | 'other';
+export type InterestLevel = 'interested' | 'not_interested' | 'undecided';
+export type VisitKind = 'in_person' | 'virtual';
+export type VisitOutcome = 'present' | 'not_present' | 'rescheduled';
+
 export interface FellowshipFollowup extends BaseEntity {
   fellowshipId: string;
   memberId: string;
@@ -272,6 +288,19 @@ export interface FellowshipFollowup extends BaseEntity {
   durationMinutes: number | null;
   notes: string | null;
   nextFollowUpDate: string | null; // ISO date string
+  // Visit-shape (0046)
+  type: FollowupType;
+  methods: FollowupMethod[] | null;
+  contactReached: boolean | null;
+  interestLevel: InterestLevel | null;
+  visitKind: VisitKind | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null; // ISO timestamp
+  visitDepartureAt: string | null;
+  visitOutcome: VisitOutcome | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
 }
 
 export interface FellowshipFollowupWithDetails extends FellowshipFollowup {
@@ -610,6 +639,19 @@ export interface DepartmentFollowup extends BaseEntity {
   durationMinutes: number | null;
   notes: string | null;
   nextFollowUpDate: string | null; // ISO date string
+  // Visit-shape (0046). See FellowshipFollowup for the field-by-field rationale.
+  type: FollowupType;
+  methods: FollowupMethod[] | null;
+  contactReached: boolean | null;
+  interestLevel: InterestLevel | null;
+  visitKind: VisitKind | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null;
+  visitDepartureAt: string | null;
+  visitOutcome: VisitOutcome | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
 }
 
 export interface DepartmentFollowupWithDetails extends DepartmentFollowup {
