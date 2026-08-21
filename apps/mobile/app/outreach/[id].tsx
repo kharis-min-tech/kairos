@@ -36,6 +36,7 @@ import {
 import type { OutreachProgramWithDetails } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
@@ -67,6 +68,14 @@ export default function OutreachDetail() {
   const p = program.data;
   const qc = useQueryClient();
   const [workerPickerOpen, setWorkerPickerOpen] = useState(false);
+  // Register-worker is a program mutation — needs branch:write on the
+  // program's home branch (system admins bypass).
+  const caps = useCapabilities();
+  const canRegisterWorker =
+    !p
+      ? false
+      : caps.systemRole === 'admin' ||
+        caps.has('branch:write', { kind: 'branch', id: p.branchId });
   const registerWorker = useMutation({
     mutationFn: async (memberId: string) =>
       (await api.outreach.programs.registerWorker(id, { memberId })).data!,
@@ -197,16 +206,18 @@ export default function OutreachDetail() {
                   Coordinator: {p.coordinatorFirstName} {p.coordinatorLastName ?? ''}
                 </Text>
               ) : null}
-              <Pressable
-                onPress={() => setWorkerPickerOpen(true)}
-                style={styles.addWorkerBtn}
-                disabled={registerWorker.isPending}
-              >
-                <UserPlus color={c.primary} size={14} strokeWidth={2} />
-                <Text style={styles.addWorkerLabel}>
-                  {registerWorker.isPending ? 'Adding…' : 'Register a worker'}
-                </Text>
-              </Pressable>
+              {canRegisterWorker ? (
+                <Pressable
+                  onPress={() => setWorkerPickerOpen(true)}
+                  style={styles.addWorkerBtn}
+                  disabled={registerWorker.isPending}
+                >
+                  <UserPlus color={c.primary} size={14} strokeWidth={2} />
+                  <Text style={styles.addWorkerLabel}>
+                    {registerWorker.isPending ? 'Adding…' : 'Register a worker'}
+                  </Text>
+                </Pressable>
+              ) : null}
             </Card>
 
             <View style={styles.section}>

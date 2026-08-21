@@ -25,6 +25,7 @@ import { formatShortDate } from '@kairos/core';
 import type { NewBelieverSession } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
 
 const STAGE_LABELS: Record<string, string> = {
   'session-1': 'Session 1 · Foundations of Faith',
@@ -45,6 +46,12 @@ export default function NewBelieverSessionsIndex() {
   const c = useColors();
   const router = useRouter();
   const branchId = useAuthStore((s) => s.user?.homeBranchId);
+  const caps = useCapabilities();
+  // Only branch admins schedule new-believer sessions. Anyone can view the
+  // list — mentors etc need to see upcoming sessions.
+  const canCreateSession =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId }));
 
   const sessions = useQuery({
     queryKey: ['new-believers', 'sessions', branchId],
@@ -81,13 +88,17 @@ export default function NewBelieverSessionsIndex() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Sessions</Text>
-        <Pressable
-          onPress={() => router.push('/new-believers/sessions/new' as never)}
-          hitSlop={8}
-          accessibilityLabel="Create new session"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canCreateSession ? (
+          <Pressable
+            onPress={() => router.push('/new-believers/sessions/new' as never)}
+            hitSlop={8}
+            accessibilityLabel="Create new session"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView

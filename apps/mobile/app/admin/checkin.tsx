@@ -28,6 +28,8 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 import { QrScannerModal } from '@/components/qr-scanner-modal';
 
 /**
@@ -49,6 +51,13 @@ export default function AdminCheckin() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
+
+  const caps = useCapabilities();
+  const homeBranchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
+  useRequireCapability(canAccess);
 
   // Nearest upcoming service.
   const services = useQuery({

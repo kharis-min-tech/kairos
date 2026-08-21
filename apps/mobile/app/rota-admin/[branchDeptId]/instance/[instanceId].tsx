@@ -38,6 +38,7 @@ import type {
   RotaPoolMemberWithDetails,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 const STATUS_TONE: Record<string, 'primary' | 'success' | 'gold' | 'danger' | 'neutral'> = {
@@ -64,6 +65,25 @@ export default function RotaInstanceDetail() {
     queryFn: async () =>
       (await api.departments.rota.getInstance(branchDeptId!, instanceId!)).data!,
   });
+
+  const dept = useQuery({
+    queryKey: ['branch-dept', branchDeptId],
+    enabled: !!branchDeptId,
+    queryFn: async () => (await api.departments.get(branchDeptId!)).data!,
+  });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !dept.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('department:write', {
+          kind: 'department',
+          id: branchDeptId!,
+          branchId: dept.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: dept.data.branchId });
+  useRequireCapability(canAccess);
 
   const templateId = instance.data?.templateId;
   const pool = useQuery({

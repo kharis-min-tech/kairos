@@ -50,6 +50,8 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 function formatDate(iso: string | Date | null | undefined): string {
   if (!iso) return '—';
@@ -75,6 +77,30 @@ export default function MemberProfile() {
     enabled: !!id,
     queryFn: async () => (await api.members.get(id)).data ?? null,
   });
+
+  // Write authority on this member's row. Members can always edit themselves
+  // via the pencil; everyone else needs branch:write on the member's branch.
+  // Approvals + role-assign are separately-gated below.
+  const caps = useCapabilities();
+  const selfId = useAuthStore((s) => s.user?.id ?? null);
+  const isSelf = !!selfId && selfId === id;
+  const memberBranchId = member.data?.homeBranchId ?? null;
+  const canEditProfile =
+    isSelf ||
+    caps.systemRole === 'admin' ||
+    (!!memberBranchId && caps.has('branch:write', { kind: 'branch', id: memberBranchId }));
+  const canApprove =
+    caps.systemRole === 'admin' ||
+    caps.has('signup:approve') ||
+    (!!memberBranchId && caps.has('branch:write', { kind: 'branch', id: memberBranchId }));
+  const canManageRoles =
+    caps.systemRole === 'admin' ||
+    (!!memberBranchId && caps.has('branch:rbac', { kind: 'branch', id: memberBranchId }));
+  // Everything else in the Manage section (deactivate / reactivate / class
+  // completion / honorific) is branch-admin authority.
+  const canManageMember =
+    caps.systemRole === 'admin' ||
+    (!!memberBranchId && caps.has('branch:write', { kind: 'branch', id: memberBranchId }));
 
   const approve = useMutation({
     mutationFn: (approved: boolean) => api.members.approve(id, { approved }),
@@ -279,13 +305,17 @@ export default function MemberProfile() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {m.firstName} {m.lastName}
         </Text>
-        <Pressable
-          onPress={() => router.push(`/members/edit/${m.id}`)}
-          hitSlop={8}
-          accessibilityLabel="Edit member"
-        >
-          <Pencil color={c.primary} size={20} strokeWidth={1.5} />
-        </Pressable>
+        {canEditProfile ? (
+          <Pressable
+            onPress={() => router.push(`/members/edit/${m.id}`)}
+            hitSlop={8}
+            accessibilityLabel="Edit member"
+          >
+            <Pencil color={c.primary} size={20} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView
@@ -467,27 +497,33 @@ export default function MemberProfile() {
               <Sparkles color={c.primary} size={14} strokeWidth={1.5} />
             </View>
             <Text style={styles.sectionTitle}>Roles</Text>
-            <Pressable
-              onPress={() => setRolePickerOpen(true)}
-              style={styles.addRoleBtn}
-              hitSlop={6}
-              accessibilityLabel="Add role"
-            >
-              <Plus color={c.primary} size={16} strokeWidth={1.5} />
-            </Pressable>
+            {canManageRoles ? (
+              <Pressable
+                onPress={() => setRolePickerOpen(true)}
+                style={styles.addRoleBtn}
+                hitSlop={6}
+                accessibilityLabel="Add role"
+              >
+                <Plus color={c.primary} size={16} strokeWidth={1.5} />
+              </Pressable>
+            ) : null}
           </View>
           <Card padding="md" style={{ gap: spacing.xs }}>
             {roles.isLoading ? (
               <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.sm }} />
             ) : (roles.data ?? []).length === 0 ? (
-              <Text style={styles.emptyLine}>No roles assigned. Tap + to add one.</Text>
+              <Text style={styles.emptyLine}>
+                {canManageRoles ? 'No roles assigned. Tap + to add one.' : 'No roles assigned.'}
+              </Text>
             ) : (
               <>
                 {(roles.data ?? []).map((r) => (
                   <Pressable
                     key={r.id}
-                    onLongPress={() =>
-                      confirmRemoveRole(r.id, r.roleName, r.branchName ?? undefined)
+                    onLongPress={
+                      canManageRoles
+                        ? () => confirmRemoveRole(r.id, r.roleName, r.branchName ?? undefined)
+                        : undefined
                     }
                     delayLongPress={350}
                     style={styles.roleRow}
@@ -498,9 +534,11 @@ export default function MemberProfile() {
                     ) : null}
                   </Pressable>
                 ))}
-                <Text style={styles.longPressHint}>
-                  Long-press a role to revoke it.
-                </Text>
+                {canManageRoles ? (
+                  <Text style={styles.longPressHint}>
+                    Long-press a role to revoke it.
+                  </Text>
+                ) : null}
               </>
             )}
           </Card>
@@ -530,6 +568,7 @@ export default function MemberProfile() {
           </Card>
         ) : null}
 
+        {canApprove || canManageMember ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconTile}>
@@ -538,7 +577,7 @@ export default function MemberProfile() {
             <Text style={styles.sectionTitle}>Manage</Text>
           </View>
           <Card padding="md" style={{ gap: spacing.sm }}>
-            {m.approvalStatus === 'pending' ? (
+            {m.approvalStatus === 'pending' && canApprove ? (
               <>
                 <Text style={styles.manageBlurb}>
                   This member signup is waiting for review.
@@ -577,7 +616,7 @@ export default function MemberProfile() {
               </>
             ) : null}
 
-            {m.memberType === 'member' && !m.membershipClassCompletedAt ? (
+            {m.memberType === 'member' && !m.membershipClassCompletedAt && canManageMember ? (
               <Pressable
                 style={[styles.manageBtn, styles.manageBtnOutline]}
                 onPress={markClassComplete}
@@ -602,37 +641,39 @@ export default function MemberProfile() {
               </View>
             ) : null}
 
-            {m.isActive ? (
-              <Pressable
-                style={[styles.manageBtn, styles.manageBtnDanger]}
-                onPress={() => confirmDeactivate(`${m.firstName} ${m.lastName}`)}
-                disabled={deactivate.isPending}
-              >
-                <UserX color={c.danger} size={14} strokeWidth={1.5} />
-                <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
-                  {deactivate.isPending ? 'Deactivating…' : 'Deactivate member'}
-                </Text>
-              </Pressable>
-            ) : (
-              <Pressable
-                style={[styles.manageBtn, styles.manageBtnPrimary]}
-                onPress={() =>
-                  reactivate.mutate(undefined, {
-                    onError: (err) =>
-                      alert.info(
-                        'Reactivate failed',
-                        err instanceof Error ? err.message : 'Please try again.',
-                      ),
-                  })
-                }
-                disabled={reactivate.isPending}
-              >
-                <UserCheck color="#ffffff" size={14} strokeWidth={1.5} />
-                <Text style={styles.manageBtnLabelPrimary}>
-                  {reactivate.isPending ? 'Reactivating…' : 'Reactivate member'}
-                </Text>
-              </Pressable>
-            )}
+            {canManageMember ? (
+              m.isActive ? (
+                <Pressable
+                  style={[styles.manageBtn, styles.manageBtnDanger]}
+                  onPress={() => confirmDeactivate(`${m.firstName} ${m.lastName}`)}
+                  disabled={deactivate.isPending}
+                >
+                  <UserX color={c.danger} size={14} strokeWidth={1.5} />
+                  <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
+                    {deactivate.isPending ? 'Deactivating…' : 'Deactivate member'}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.manageBtn, styles.manageBtnPrimary]}
+                  onPress={() =>
+                    reactivate.mutate(undefined, {
+                      onError: (err) =>
+                        alert.info(
+                          'Reactivate failed',
+                          err instanceof Error ? err.message : 'Please try again.',
+                        ),
+                    })
+                  }
+                  disabled={reactivate.isPending}
+                >
+                  <UserCheck color="#ffffff" size={14} strokeWidth={1.5} />
+                  <Text style={styles.manageBtnLabelPrimary}>
+                    {reactivate.isPending ? 'Reactivating…' : 'Reactivate member'}
+                  </Text>
+                </Pressable>
+              )
+            ) : null}
 
             <Text style={styles.manageFootnote}>
               Actions require admin or branch-admin access. The API will refuse if you
@@ -640,6 +681,7 @@ export default function MemberProfile() {
             </Text>
           </Card>
         </View>
+        ) : null}
       </ScrollView>
 
       <RolePickerSheet

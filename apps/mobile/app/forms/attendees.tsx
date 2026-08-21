@@ -25,6 +25,8 @@ import {
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 import { alert } from '@/lib/alert';
 
 /**
@@ -37,6 +39,13 @@ export default function FormsAttendees() {
   const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
+
+  const caps = useCapabilities();
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId }));
+  useRequireCapability(canAccess);
 
   const rows = useQuery({
     queryKey: ['forms', 'attendees', 'dormant'],
