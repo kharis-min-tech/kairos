@@ -11,9 +11,8 @@ import {
   CardDescription,
   CustomSelect,
   Label,
-  Textarea,
   Badge,
-  NumberStepper,
+  TimeSelect,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -25,11 +24,13 @@ import {
   useDeleteDepartmentFollowup,
 } from '@/hooks/use-departments';
 import { ContactMethod, ContactStatus } from '@kairos/types';
-import type { DepartmentMemberWithDetails } from '@kairos/types';
+import type {
+  CreateFellowshipFollowupRequest,
+  DepartmentMemberWithDetails,
+  FollowupMethod,
+} from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
-
-const CONTACT_METHODS = Object.values(ContactMethod);
-const CONTACT_STATUSES = Object.values(ContactStatus);
+import { X } from 'lucide-react';
 
 function todayIso(): string {
   const today = new Date();
@@ -207,6 +208,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
       {showForm && canManage && (
         <FollowupForm
           branchDeptId={branchDeptId}
+          members={members}
           memberOptions={memberOptions}
           defaultMemberId={memberFilter}
           isPending={createFollowup.isPending}
@@ -344,21 +346,45 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
 
 interface FollowupFormProps {
   branchDeptId: string;
+  members: DepartmentMemberWithDetails[];
   memberOptions: { value: string; label: string }[];
   defaultMemberId?: string;
   isPending: boolean;
-  onSubmit: (
-    memberId: string,
-    data: {
-      contactedAt?: string;
-      contactMethod: string;
-      contactStatus: string;
-      durationMinutes?: number | null;
-      notes?: string | null;
-      nextFollowUpDate?: string | null;
-      assignedToId?: string | null;
-    },
-  ) => void;
+  onSubmit: (memberId: string, data: CreateFellowshipFollowupRequest) => void;
+}
+
+// Visit-shape (0046) mirror of the mobile CreateSheet. Top-level Type picker
+// (Contact | Visit) swaps the field set. Legacy contactMethod/contactStatus
+// stay populated so old readers keep working.
+type FollowupTypeChoice = 'contact' | 'visit';
+type InterestChoice = 'interested' | 'not_interested' | 'undecided';
+type VisitKindChoice = 'in_person' | 'virtual';
+type VisitOutcomeChoice = 'present' | 'not_present' | 'rescheduled';
+
+const CONTACT_METHOD_OPTIONS: { value: FollowupMethod; label: string }[] = [
+  { value: 'phone_call', label: 'Phone Call' },
+  { value: 'text_message', label: 'Text' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+];
+
+function methodToLegacyContactMethod(m: FollowupMethod): ContactMethod {
+  switch (m) {
+    case 'phone_call':
+      return ContactMethod.PhoneCall;
+    case 'text_message':
+      return ContactMethod.TextMessage;
+    case 'whatsapp':
+      return ContactMethod.WhatsApp;
+    case 'email':
+      return ContactMethod.Email;
+    case 'in_person':
+      return ContactMethod.InPersonVisit;
+    case 'virtual':
+    case 'other':
+    default:
+      return ContactMethod.Other;
+  }
 }
 
 function BucketFilter({
@@ -399,34 +425,140 @@ function BucketFilter({
 }
 
 function FollowupForm({
+  members,
   memberOptions,
   defaultMemberId,
   isPending,
   onSubmit,
 }: FollowupFormProps) {
   const [memberId, setMemberId] = useState(defaultMemberId ?? '');
-  const [contactMethod, setContactMethod] = useState<string>(ContactMethod.PhoneCall);
-  const [contactStatus, setContactStatus] = useState<string>(ContactStatus.Successful);
-  const [durationMinutes, setDurationMinutes] = useState('');
+  const [contactedAt, setContactedAt] = useState(todayIso());
+  const [type, setType] = useState<FollowupTypeChoice>('contact');
+
+  // Contact state
+  const [methods, setMethods] = useState<Set<FollowupMethod>>(new Set());
+  const [contactReached, setContactReached] = useState<boolean | null>(null);
+  const [interestLevel, setInterestLevel] = useState<InterestChoice | null>(null);
+
+  // Visit state
+  const [visitKind, setVisitKind] = useState<VisitKindChoice | null>(null);
+  const [visitAnnounced, setVisitAnnounced] = useState<boolean | null>(null);
+  const [arrivalTime, setArrivalTime] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [companions, setCompanions] = useState<string[]>([]);
+  const [companionDraft, setCompanionDraft] = useState('');
+  const [visitOutcome, setVisitOutcome] = useState<VisitOutcomeChoice | null>(null);
+  const [welfareConcern, setWelfareConcern] = useState(false);
+  const [safeguardingConcern, setSafeguardingConcern] = useState(false);
+
+  // Shared
   const [notes, setNotes] = useState('');
   const [nextFollowUpDate, setNextFollowUpDate] = useState('');
-  const [assignedToId, setAssignedToId] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const companionOptions = useMemo(() => {
+    const excluded = new Set<string>([memberId, ...companions]);
+    return members
+      .filter((m) => !excluded.has(m.memberId))
+      .map((m) => ({
+        value: m.memberId,
+        label: `${m.memberFirstName} ${m.memberLastName}`,
+      }));
+  }, [members, memberId, companions]);
+
+  const companionNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const m of members) {
+      map.set(m.memberId, `${m.memberFirstName} ${m.memberLastName}`);
+    }
+    return map;
+  }, [members]);
+
+  function toggleMethod(m: FollowupMethod) {
+    setMethods((prev) => {
+      const next = new Set(prev);
+      if (next.has(m)) next.delete(m);
+      else next.add(m);
+      return next;
+    });
+  }
+
+  function validate(): boolean {
+    const next: Record<string, string> = {};
+    if (!memberId) next['member'] = 'Pick a member.';
+    if (type === 'contact') {
+      if (methods.size === 0) next['methods'] = 'Pick at least one method.';
+      if (contactReached === null) next['reached'] = 'Did you reach them?';
+    } else {
+      if (!visitKind) next['visitKind'] = 'Pick a visit kind.';
+      if (visitAnnounced === null) next['announced'] = 'Announced or unannounced?';
+      if (!arrivalTime) next['arrival'] = 'Arrival time is required.';
+      if (!visitOutcome) next['outcome'] = 'Pick an outcome.';
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!memberId) {
-      toast.error('Pick a member.');
-      return;
+    if (!validate()) return;
+
+    const payload: CreateFellowshipFollowupRequest = {
+      contactedAt: new Date(`${contactedAt}T12:00:00`).toISOString(),
+      contactMethod: ContactMethod.Other,
+      contactStatus: ContactStatus.Successful,
+    };
+
+    if (type === 'contact') {
+      const methodList = Array.from(methods);
+      const primary = methodList[0]!;
+      payload.type = 'contact';
+      payload.methods = methodList;
+      payload.contactMethod = methodToLegacyContactMethod(primary);
+      payload.contactReached = contactReached === true;
+      if (contactReached === true && interestLevel) {
+        payload.interestLevel = interestLevel;
+      }
+      if (contactReached === true && interestLevel === 'interested') {
+        payload.contactStatus = ContactStatus.Interested;
+      } else if (interestLevel === 'not_interested') {
+        payload.contactStatus = ContactStatus.NotInterested;
+      } else if (contactReached === false) {
+        payload.contactStatus = ContactStatus.NoAnswer;
+      } else {
+        payload.contactStatus = ContactStatus.Successful;
+      }
+    } else {
+      payload.type = 'visit';
+      payload.methods = [visitKind === 'virtual' ? 'virtual' : 'in_person'];
+      payload.contactMethod = ContactMethod.InPersonVisit;
+      payload.visitKind = visitKind!;
+      payload.visitAnnounced = visitAnnounced === true;
+      payload.visitArrivalAt = new Date(
+        `${contactedAt}T${arrivalTime}:00`,
+      ).toISOString();
+      if (departureTime) {
+        payload.visitDepartureAt = new Date(
+          `${contactedAt}T${departureTime}:00`,
+        ).toISOString();
+      }
+      payload.visitOutcome = visitOutcome!;
+      if (companions.length > 0) payload.companionMemberIds = companions;
+      if (welfareConcern) payload.welfareConcern = true;
+      if (safeguardingConcern) payload.safeguardingConcern = true;
+      if (visitOutcome === 'present') {
+        payload.contactStatus = ContactStatus.Successful;
+      } else if (visitOutcome === 'not_present') {
+        payload.contactStatus = ContactStatus.NoAnswer;
+      } else {
+        payload.contactStatus = ContactStatus.CallBackLater;
+      }
     }
-    onSubmit(memberId, {
-      contactMethod,
-      contactStatus,
-      contactedAt: new Date().toISOString(),
-      durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
-      notes: notes.trim() || undefined,
-      nextFollowUpDate: nextFollowUpDate || undefined,
-      assignedToId: assignedToId || undefined,
-    });
+
+    if (notes.trim()) payload.notes = notes.trim();
+    if (nextFollowUpDate) payload.nextFollowUpDate = nextFollowUpDate;
+
+    onSubmit(memberId, payload);
   }
 
   return (
@@ -435,92 +567,407 @@ function FollowupForm({
         <CardTitle className="text-base">Log Followup</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="fu-member">Member *</Label>
+              <Label htmlFor="dept-fu-member">Member *</Label>
               <CustomSelect
-                id="fu-member"
+                id="dept-fu-member"
                 value={memberId}
                 onValueChange={setMemberId}
                 placeholder="Pick a member"
                 options={memberOptions}
               />
+              {errors['member'] && (
+                <p className="text-xs text-destructive">{errors['member']}</p>
+              )}
             </div>
-
             <div className="space-y-1">
-              <Label htmlFor="fu-method">Contact Method *</Label>
-              <CustomSelect
-                id="fu-method"
-                value={contactMethod}
-                onValueChange={setContactMethod}
-                options={CONTACT_METHODS.map((m) => ({ value: m, label: m }))}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="fu-status">Outcome *</Label>
-              <CustomSelect
-                id="fu-status"
-                value={contactStatus}
-                onValueChange={setContactStatus}
-                options={CONTACT_STATUSES.map((s) => ({ value: s, label: s }))}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="fu-duration">Duration (min)</Label>
-              <NumberStepper
-                value={Number(durationMinutes) || 0}
-                onValueChange={(v) => setDurationMinutes(v ? String(v) : '')}
-                min={0}
-                max={600}
-                step={5}
-                suffix="m"
-                ariaLabel="Duration in minutes"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="fu-next">Next Followup</Label>
+              <Label htmlFor="dept-fu-contacted">Contacted on *</Label>
               <DateSelect
-                id="fu-next"
-                value={nextFollowUpDate}
-                onChange={setNextFollowUpDate}
-                minDate={todayIso()}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="fu-assigned">Assign to (optional)</Label>
-              <CustomSelect
-                id="fu-assigned"
-                value={assignedToId}
-                onValueChange={setAssignedToId}
-                placeholder="Unassigned"
-                options={memberOptions}
+                id="dept-fu-contacted"
+                value={contactedAt}
+                onChange={setContactedAt}
               />
             </div>
           </div>
 
+          <FieldGroup label="Type">
+            <PillRow>
+              {(
+                [
+                  { value: 'contact', label: 'Contact' },
+                  { value: 'visit', label: 'Visit' },
+                ] as { value: FollowupTypeChoice; label: string }[]
+              ).map((opt) => (
+                <Pill
+                  key={opt.value}
+                  active={type === opt.value}
+                  onClick={() => {
+                    setType(opt.value);
+                    setErrors({});
+                  }}
+                >
+                  {opt.label}
+                </Pill>
+              ))}
+            </PillRow>
+          </FieldGroup>
+
+          {type === 'contact' ? (
+            <>
+              <FieldGroup
+                label="Methods (pick one or more) *"
+                error={errors['methods']}
+              >
+                <PillRow>
+                  {CONTACT_METHOD_OPTIONS.map(({ value, label }) => (
+                    <Pill
+                      key={value}
+                      active={methods.has(value)}
+                      onClick={() => toggleMethod(value)}
+                    >
+                      {label}
+                    </Pill>
+                  ))}
+                </PillRow>
+              </FieldGroup>
+
+              <FieldGroup label="Reached them? *" error={errors['reached']}>
+                <PillRow>
+                  {(
+                    [
+                      { value: true, label: 'Yes' },
+                      { value: false, label: 'No' },
+                    ] as { value: boolean; label: string }[]
+                  ).map((opt) => (
+                    <Pill
+                      key={opt.label}
+                      active={contactReached === opt.value}
+                      onClick={() => {
+                        setContactReached(opt.value);
+                        if (opt.value === false) setInterestLevel(null);
+                      }}
+                    >
+                      {opt.label}
+                    </Pill>
+                  ))}
+                </PillRow>
+              </FieldGroup>
+
+              {contactReached === true && (
+                <FieldGroup label="Interest">
+                  <PillRow>
+                    {(
+                      [
+                        { value: 'interested', label: 'Interested' },
+                        { value: 'not_interested', label: 'Not interested' },
+                        { value: 'undecided', label: 'Undecided' },
+                      ] as { value: InterestChoice; label: string }[]
+                    ).map((opt) => (
+                      <Pill
+                        key={opt.value}
+                        active={interestLevel === opt.value}
+                        onClick={() => setInterestLevel(opt.value)}
+                      >
+                        {opt.label}
+                      </Pill>
+                    ))}
+                  </PillRow>
+                </FieldGroup>
+              )}
+            </>
+          ) : (
+            <>
+              <FieldGroup label="Kind *" error={errors['visitKind']}>
+                <PillRow>
+                  {(
+                    [
+                      { value: 'in_person', label: 'In-person' },
+                      { value: 'virtual', label: 'Virtual' },
+                    ] as { value: VisitKindChoice; label: string }[]
+                  ).map((opt) => (
+                    <Pill
+                      key={opt.value}
+                      active={visitKind === opt.value}
+                      onClick={() => setVisitKind(opt.value)}
+                    >
+                      {opt.label}
+                    </Pill>
+                  ))}
+                </PillRow>
+              </FieldGroup>
+
+              <FieldGroup label="Announced? *" error={errors['announced']}>
+                <PillRow>
+                  {(
+                    [
+                      { value: true, label: 'Announced' },
+                      { value: false, label: 'Unannounced' },
+                    ] as { value: boolean; label: string }[]
+                  ).map((opt) => (
+                    <Pill
+                      key={opt.label}
+                      active={visitAnnounced === opt.value}
+                      onClick={() => setVisitAnnounced(opt.value)}
+                    >
+                      {opt.label}
+                    </Pill>
+                  ))}
+                </PillRow>
+              </FieldGroup>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="dept-fu-arrival">Arrival time *</Label>
+                  <TimeSelect
+                    value={arrivalTime}
+                    onValueChange={setArrivalTime}
+                  />
+                  {errors['arrival'] && (
+                    <p className="text-xs text-destructive">{errors['arrival']}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="dept-fu-departure">
+                    Departure time (optional)
+                  </Label>
+                  <TimeSelect
+                    value={departureTime}
+                    onValueChange={setDepartureTime}
+                  />
+                </div>
+              </div>
+
+              <FieldGroup label="Went with (optional)">
+                <div className="flex flex-wrap items-center gap-2">
+                  {companions.map((cid) => (
+                    <CompanionChip
+                      key={cid}
+                      label={companionNameById.get(cid) ?? cid.slice(0, 8)}
+                      onRemove={() =>
+                        setCompanions((prev) => prev.filter((x) => x !== cid))
+                      }
+                    />
+                  ))}
+                  <div className="flex items-end gap-2">
+                    <CustomSelect
+                      size="sm"
+                      value={companionDraft}
+                      onValueChange={(v) => setCompanionDraft(v)}
+                      placeholder="Pick a member"
+                      options={companionOptions}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!companionDraft}
+                      onClick={() => {
+                        if (!companionDraft) return;
+                        setCompanions((prev) =>
+                          prev.includes(companionDraft) ? prev : [...prev, companionDraft],
+                        );
+                        setCompanionDraft('');
+                      }}
+                    >
+                      + Add
+                    </Button>
+                  </div>
+                </div>
+              </FieldGroup>
+
+              <FieldGroup label="Outcome *" error={errors['outcome']}>
+                <PillRow>
+                  {(
+                    [
+                      { value: 'present', label: 'Present' },
+                      { value: 'not_present', label: 'Not present' },
+                      { value: 'rescheduled', label: 'Rescheduled' },
+                    ] as { value: VisitOutcomeChoice; label: string }[]
+                  ).map((opt) => (
+                    <Pill
+                      key={opt.value}
+                      active={visitOutcome === opt.value}
+                      onClick={() => setVisitOutcome(opt.value)}
+                    >
+                      {opt.label}
+                    </Pill>
+                  ))}
+                </PillRow>
+              </FieldGroup>
+            </>
+          )}
+
           <div className="space-y-1">
-            <Label htmlFor="fu-notes">Notes</Label>
-            <Textarea
-              id="fu-notes"
+            <Label htmlFor="dept-fu-notes">Notes</Label>
+            <AutoGrowTextarea
+              id="dept-fu-notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="What was discussed..."
-              rows={3}
+              onChange={setNotes}
+              placeholder="What was discussed?"
+            />
+          </div>
+
+          {type === 'visit' && (
+            <div className="space-y-2">
+              <CheckboxRow
+                id="dept-fu-welfare"
+                label="Welfare concern noted"
+                checked={welfareConcern}
+                onToggle={() => setWelfareConcern((v) => !v)}
+              />
+              <CheckboxRow
+                id="dept-fu-safeguarding"
+                label="Safeguarding matter"
+                checked={safeguardingConcern}
+                onToggle={() => setSafeguardingConcern((v) => !v)}
+              />
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <Label htmlFor="dept-fu-next">Next follow-up (optional)</Label>
+            <DateSelect
+              id="dept-fu-next"
+              value={nextFollowUpDate}
+              onChange={setNextFollowUpDate}
+              minDate={todayIso()}
             />
           </div>
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Saving...' : 'Log Followup'}
+              {isPending ? 'Saving…' : 'Save follow-up'}
             </Button>
           </div>
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+// ── Local presentational primitives ─────────────────────────
+
+function FieldGroup({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
+      {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function PillRow({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-wrap gap-2">{children}</div>;
+}
+
+function Pill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ' +
+        (active
+          ? 'border-[#5D3FD3] bg-[#5D3FD3]/10 text-[#5D3FD3]'
+          : 'border-border bg-transparent text-muted-foreground hover:border-[#5D3FD3]/40 hover:text-foreground')
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function CheckboxRow({
+  id,
+  label,
+  checked,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex cursor-pointer items-center gap-2.5 rounded-md border border-border/60 bg-transparent px-3 py-2 text-sm transition-colors hover:border-[#5D3FD3]/40"
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="h-4 w-4 accent-[#5D3FD3]"
+      />
+      <span className="font-medium">{label}</span>
+    </label>
+  );
+}
+
+function CompanionChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs font-medium">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-muted-foreground hover:text-destructive"
+        aria-label={`Remove ${label}`}
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
+function AutoGrowTextarea({
+  id,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <textarea
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={3}
+      style={{ fieldSizing: 'content' } as React.CSSProperties}
+      className="flex min-h-[76px] max-h-[280px] w-full resize-y overflow-y-auto rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#f8b537] disabled:cursor-not-allowed disabled:opacity-50"
+    />
   );
 }
