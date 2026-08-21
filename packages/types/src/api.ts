@@ -1482,6 +1482,47 @@ export type MeFollowupItem =
       lastContactedAt: string | null;
     };
 
+// ── Follow-up history (0046) ────────────────────────────────
+//
+// Unified per-member follow-up timeline surfaced on the member profile.
+// Unions fellowship_followups + department_followups. Visit-shape fields are
+// all optional so contact-only rows serialise cleanly with nulls.
+
+export interface MemberFollowupHistoryItem {
+  id: string;
+  source: 'fellowship' | 'department';
+  scopeId: string;
+  scopeName: string;
+  memberId: string;
+  recordedById: string;
+  recordedByFirstName: string;
+  recordedByLastName: string;
+  contactedAt: string;
+  notes: string | null;
+  contactMethod: string;
+  contactStatus: string;
+  type: 'contact' | 'visit';
+  methods: string[] | null;
+  contactReached: boolean | null;
+  interestLevel: 'interested' | 'not_interested' | 'undecided' | null;
+  visitKind: 'in_person' | 'virtual' | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null;
+  visitDepartureAt: string | null;
+  visitOutcome: 'present' | 'not_present' | 'rescheduled' | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
+  nextFollowUpDate: string | null;
+}
+
+// Welfare + safeguarding inbox item — same shape as the history item plus the
+// subject member's name so leaders can triage without an extra fetch.
+export interface ConcernInboxItem extends MemberFollowupHistoryItem {
+  memberFirstName: string;
+  memberLastName: string;
+}
+
 /**
  * The log side of the followups screen — every touchpoint the caller has
  * personally recorded, most-recent first. Complements MeFollowupItem which is
