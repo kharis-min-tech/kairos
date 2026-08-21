@@ -23,6 +23,7 @@ import {
   Map,
   FileText,
   Shield,
+  ShieldAlert,
   Lock,
   History,
   Download,
@@ -208,6 +209,13 @@ export default function More() {
               label="Follow-ups"
               onPress={() => router.push('/follow-ups')}
             />
+            {canSeeAdminSection ? (
+              <NavRow
+                icon={ShieldAlert}
+                label="Concerns"
+                onPress={() => router.push('/concerns' as never)}
+              />
+            ) : null}
             <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
             <NavRow
               icon={ClipboardList}
