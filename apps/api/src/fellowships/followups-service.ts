@@ -90,6 +90,19 @@ export interface CreateFellowshipFollowupInput {
   notes?: string | null;
   nextFollowUpDate?: string | null;
   assignedToId?: string | null;
+  // 0046 visit-shape fields
+  type?: 'contact' | 'visit';
+  methods?: string[];
+  contactReached?: boolean;
+  interestLevel?: 'interested' | 'not_interested' | 'undecided';
+  visitKind?: 'in_person' | 'virtual';
+  visitAnnounced?: boolean;
+  visitArrivalAt?: string;
+  visitDepartureAt?: string;
+  visitOutcome?: 'present' | 'not_present' | 'rescheduled';
+  companionMemberIds?: string[];
+  welfareConcern?: boolean;
+  safeguardingConcern?: boolean;
 }
 
 export async function createFellowshipFollowup(
@@ -120,6 +133,18 @@ export async function createFellowshipFollowup(
       durationMinutes: input.durationMinutes ?? null,
       notes: input.notes ?? null,
       nextFollowUpDate: input.nextFollowUpDate ?? null,
+      type: input.type ?? 'contact',
+      methods: input.methods ?? null,
+      contactReached: input.contactReached ?? null,
+      interestLevel: input.interestLevel ?? null,
+      visitKind: input.visitKind ?? null,
+      visitAnnounced: input.visitAnnounced ?? null,
+      visitArrivalAt: input.visitArrivalAt ? new Date(input.visitArrivalAt) : null,
+      visitDepartureAt: input.visitDepartureAt ? new Date(input.visitDepartureAt) : null,
+      visitOutcome: input.visitOutcome ?? null,
+      companionMemberIds: input.companionMemberIds ?? null,
+      welfareConcern: input.welfareConcern ?? false,
+      safeguardingConcern: input.safeguardingConcern ?? false,
     })
     .returning();
 
@@ -134,6 +159,18 @@ export interface UpdateFellowshipFollowupInput {
   notes?: string | null;
   nextFollowUpDate?: string | null;
   assignedToId?: string | null;
+  type?: 'contact' | 'visit';
+  methods?: string[] | null;
+  contactReached?: boolean | null;
+  interestLevel?: 'interested' | 'not_interested' | 'undecided' | null;
+  visitKind?: 'in_person' | 'virtual' | null;
+  visitAnnounced?: boolean | null;
+  visitArrivalAt?: string | null;
+  visitDepartureAt?: string | null;
+  visitOutcome?: 'present' | 'not_present' | 'rescheduled' | null;
+  companionMemberIds?: string[] | null;
+  welfareConcern?: boolean;
+  safeguardingConcern?: boolean;
 }
 
 export async function updateFellowshipFollowup(

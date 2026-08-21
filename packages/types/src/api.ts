@@ -486,6 +486,28 @@ export interface CreateFellowshipFollowupRequest {
   notes?: string | null;
   nextFollowUpDate?: string | null;
   assignedToId?: string | null;
+  // Visit-shape (0046). New rows should always set `type`; when omitted the
+  // server infers 'contact' to keep old clients working.
+  type?: 'contact' | 'visit';
+  methods?: (
+    | 'phone_call'
+    | 'text_message'
+    | 'whatsapp'
+    | 'email'
+    | 'in_person'
+    | 'virtual'
+    | 'other'
+  )[];
+  contactReached?: boolean;
+  interestLevel?: 'interested' | 'not_interested' | 'undecided';
+  visitKind?: 'in_person' | 'virtual';
+  visitAnnounced?: boolean;
+  visitArrivalAt?: string;
+  visitDepartureAt?: string;
+  visitOutcome?: 'present' | 'not_present' | 'rescheduled';
+  companionMemberIds?: string[];
+  welfareConcern?: boolean;
+  safeguardingConcern?: boolean;
 }
 
 export interface UpdateFellowshipFollowupRequest extends Partial<CreateFellowshipFollowupRequest> {}

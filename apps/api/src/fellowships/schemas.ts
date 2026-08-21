@@ -91,14 +91,42 @@ const contactStatusEnum = z.enum([
   'Interested',
 ]);
 
+// 0046 visit-shape validators. Kept as reusable enums so the department
+// schema mirrors them without drift.
+const followupTypeEnum = z.enum(['contact', 'visit']);
+const followupMethodEnum = z.enum([
+  'phone_call',
+  'text_message',
+  'whatsapp',
+  'email',
+  'in_person',
+  'virtual',
+  'other',
+]);
+const interestLevelEnum = z.enum(['interested', 'not_interested', 'undecided']);
+const visitKindEnum = z.enum(['in_person', 'virtual']);
+const visitOutcomeEnum = z.enum(['present', 'not_present', 'rescheduled']);
+
 export const createFellowshipFollowupSchema = z.object({
   contactMethod: contactMethodEnum,
   contactStatus: contactStatusEnum,
   contactedAt: z.string().datetime().optional(),
   durationMinutes: z.coerce.number().int().positive().nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(4000).nullable().optional(),
   nextFollowUpDate: z.string().nullable().optional(),
   assignedToId: z.string().uuid().nullable().optional(),
+  type: followupTypeEnum.optional(),
+  methods: z.array(followupMethodEnum).min(1).max(6).optional(),
+  contactReached: z.boolean().optional(),
+  interestLevel: interestLevelEnum.optional(),
+  visitKind: visitKindEnum.optional(),
+  visitAnnounced: z.boolean().optional(),
+  visitArrivalAt: z.string().datetime().optional(),
+  visitDepartureAt: z.string().datetime().optional(),
+  visitOutcome: visitOutcomeEnum.optional(),
+  companionMemberIds: z.array(z.string().uuid()).max(20).optional(),
+  welfareConcern: z.boolean().optional(),
+  safeguardingConcern: z.boolean().optional(),
 });
 
 export const updateFellowshipFollowupSchema = z.object({
@@ -106,9 +134,21 @@ export const updateFellowshipFollowupSchema = z.object({
   contactStatus: contactStatusEnum.optional(),
   contactedAt: z.string().datetime().optional(),
   durationMinutes: z.coerce.number().int().positive().nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(4000).nullable().optional(),
   nextFollowUpDate: z.string().nullable().optional(),
   assignedToId: z.string().uuid().nullable().optional(),
+  type: followupTypeEnum.optional(),
+  methods: z.array(followupMethodEnum).min(1).max(6).nullable().optional(),
+  contactReached: z.boolean().nullable().optional(),
+  interestLevel: interestLevelEnum.nullable().optional(),
+  visitKind: visitKindEnum.nullable().optional(),
+  visitAnnounced: z.boolean().nullable().optional(),
+  visitArrivalAt: z.string().datetime().nullable().optional(),
+  visitDepartureAt: z.string().datetime().nullable().optional(),
+  visitOutcome: visitOutcomeEnum.nullable().optional(),
+  companionMemberIds: z.array(z.string().uuid()).max(20).nullable().optional(),
+  welfareConcern: z.boolean().optional(),
+  safeguardingConcern: z.boolean().optional(),
 });
 
 export const listFellowshipFollowupsQuerySchema = z.object({
