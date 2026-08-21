@@ -49,6 +49,41 @@ export default function CompleteProfileScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Optional profile fields — surfaced so users can fill everything at
+  // first sign-in rather than being nagged to come back later.
+  const [firstName, setFirstName] = useState(user?.firstName ?? '');
+  const [lastName, setLastName] = useState(user?.lastName ?? '');
+  const [middleName, setMiddleName] = useState(
+    (user as { middleName?: string | null } | null)?.middleName ?? '',
+  );
+  const [gender, setGender] = useState<'' | 'Male' | 'Female'>(
+    ((user?.gender as 'Male' | 'Female' | null | undefined) ?? '') as '' | 'Male' | 'Female',
+  );
+  const [dateOfBirth, setDateOfBirth] = useState(
+    (user as { dateOfBirth?: string | null } | null)?.dateOfBirth ?? '',
+  );
+  const [address, setAddress] = useState(
+    (user as { address?: string | null } | null)?.address ?? '',
+  );
+  const [city, setCity] = useState(
+    (user as { city?: string | null } | null)?.city ?? '',
+  );
+  const [postalCode, setPostalCode] = useState(
+    (user as { postalCode?: string | null } | null)?.postalCode ?? '',
+  );
+  const [ecName, setEcName] = useState(
+    (user as { emergencyContactName?: string | null } | null)
+      ?.emergencyContactName ?? '',
+  );
+  const [ecPhone, setEcPhone] = useState(
+    (user as { emergencyContactPhone?: string | null } | null)
+      ?.emergencyContactPhone ?? '',
+  );
+  const [ecRel, setEcRel] = useState(
+    (user as { emergencyContactRelationship?: string | null } | null)
+      ?.emergencyContactRelationship ?? '',
+  );
+
   const branches = useQuery({
     queryKey: ['branches', 'public'],
     queryFn: async () => (await api.branches.listPublic()).data ?? [],
@@ -90,6 +125,17 @@ export default function CompleteProfileScreen() {
         phone: phone.trim(),
         homeBranchId,
         acceptedPolicies: needsPolicyAccept ? true : undefined,
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        middleName: middleName.trim() || undefined,
+        gender: gender || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+        address: address.trim() || undefined,
+        city: city.trim() || undefined,
+        postalCode: postalCode.trim() || undefined,
+        emergencyContactName: ecName.trim() || undefined,
+        emergencyContactPhone: ecPhone.trim() || undefined,
+        emergencyContactRelationship: ecRel.trim() || undefined,
       });
       if (!res.success) throw new Error(res.message ?? 'Could not save');
       return res.data!.member;
@@ -99,6 +145,17 @@ export default function CompleteProfileScreen() {
         phone: member.phone,
         homeBranchId: member.homeBranchId,
         mustCompleteProfile: member.mustCompleteProfile,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        middleName: (member as { middleName?: string | null }).middleName ?? null,
+        gender: member.gender,
+        dateOfBirth: (member as { dateOfBirth?: string | null }).dateOfBirth ?? null,
+        address: (member as { address?: string | null }).address ?? null,
+        city: (member as { city?: string | null }).city ?? null,
+        postalCode: (member as { postalCode?: string | null }).postalCode ?? null,
+        emergencyContactName: (member as { emergencyContactName?: string | null }).emergencyContactName ?? null,
+        emergencyContactPhone: (member as { emergencyContactPhone?: string | null }).emergencyContactPhone ?? null,
+        emergencyContactRelationship: (member as { emergencyContactRelationship?: string | null }).emergencyContactRelationship ?? null,
       });
       router.replace('/(auth)/pending-approval' as never);
     },
@@ -207,6 +264,138 @@ export default function CompleteProfileScreen() {
                 ) : null}
               </>
             ) : null}
+
+            {/* ── About you (optional) ────────────────── */}
+            <View style={styles.optionalSection}>
+              <View style={styles.optionalHeader}>
+                <Text style={styles.optionalTitle}>About you</Text>
+                <Text style={styles.optionalBadge}>Optional</Text>
+              </View>
+              <Input
+                label="First name"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                autoComplete="given-name"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="Last name"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+                autoComplete="family-name"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="Middle name"
+                value={middleName}
+                onChangeText={setMiddleName}
+                autoCapitalize="words"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+
+              <View style={{ marginTop: spacing.sm, gap: 4 }}>
+                <Text style={styles.fieldLabel}>Gender</Text>
+                <View style={styles.genderRow}>
+                  {(['Male', 'Female'] as const).map((g) => {
+                    const active = gender === g;
+                    return (
+                      <Pressable
+                        key={g}
+                        onPress={() => setGender(active ? '' : g)}
+                        style={[
+                          styles.genderChip,
+                          active && styles.genderChipActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.genderChipLabel,
+                            active && styles.genderChipLabelActive,
+                          ]}
+                        >
+                          {g}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <Input
+                label="Date of birth (YYYY-MM-DD)"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="1990-01-15"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+            </View>
+
+            {/* ── Address (optional) ────────────────── */}
+            <View style={styles.optionalSection}>
+              <View style={styles.optionalHeader}>
+                <Text style={styles.optionalTitle}>Address</Text>
+                <Text style={styles.optionalBadge}>Optional</Text>
+              </View>
+              <Input
+                label="Street"
+                value={address}
+                onChangeText={setAddress}
+                autoComplete="street-address"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="City"
+                value={city}
+                onChangeText={setCity}
+                autoCapitalize="words"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="Postal code"
+                value={postalCode}
+                onChangeText={setPostalCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoComplete="postal-code"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+            </View>
+
+            {/* ── Emergency contact (optional) ────────────────── */}
+            <View style={styles.optionalSection}>
+              <View style={styles.optionalHeader}>
+                <Text style={styles.optionalTitle}>Emergency contact</Text>
+                <Text style={styles.optionalBadge}>Optional</Text>
+              </View>
+              <Input
+                label="Name"
+                value={ecName}
+                onChangeText={setEcName}
+                autoCapitalize="words"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="Relationship"
+                value={ecRel}
+                onChangeText={setEcRel}
+                autoCapitalize="words"
+                placeholder="Spouse, parent, sibling…"
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+              <Input
+                label="Phone"
+                value={ecPhone}
+                onChangeText={setEcPhone}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                containerStyle={{ marginTop: spacing.sm }}
+              />
+            </View>
 
             <Button
               label="Save & continue"
@@ -328,6 +517,55 @@ function makeStyles(c: ThemeColors) {
       backgroundColor: 'rgba(239,68,68,0.10)',
     },
     errorText: { ...typography.meta, color: c.danger },
+    optionalSection: {
+      marginTop: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+      paddingTop: spacing.md,
+    },
+    optionalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    optionalTitle: {
+      ...typography.body,
+      color: c.ink,
+      fontWeight: '600',
+    },
+    optionalBadge: {
+      ...typography.meta,
+      color: c.inkFaded,
+      textTransform: 'uppercase',
+      fontSize: 10,
+      letterSpacing: 0.5,
+    },
+    genderRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    genderChip: {
+      flex: 1,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.divider,
+      borderRadius: radii.md,
+      backgroundColor: c.card,
+    },
+    genderChipActive: {
+      borderColor: c.primary,
+      backgroundColor: 'rgba(93,63,211,0.08)',
+    },
+    genderChipLabel: {
+      ...typography.body,
+      color: c.ink,
+    },
+    genderChipLabelActive: {
+      color: c.primary,
+      fontWeight: '600',
+    },
     consentRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',

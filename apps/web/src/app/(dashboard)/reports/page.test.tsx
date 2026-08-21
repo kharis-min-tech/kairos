@@ -123,6 +123,23 @@ vi.mock('@/hooks/use-departments', () => ({
 }));
 
 vi.mock('@/hooks/use-attendance', () => ({
+  useMyAttendance: () => ({
+    data: {
+      windowWeeks: 8,
+      servicesInWindow: 0,
+      attendedCount: 0,
+      rate: 0,
+      presentOnTimeCount: 0,
+      lateCount: 0,
+      virtualCount: 0,
+      missedCount: 0,
+      currentStreak: { kind: 'attended', length: 0 },
+      lastAttendedAt: null,
+      lastService: null,
+      history: [],
+    },
+    isLoading: false,
+  }),
   useDepartmentAttendance: () => ({
     data: {
       department: { id: 'd-1', name: 'Worship', branchName: 'Central' },
