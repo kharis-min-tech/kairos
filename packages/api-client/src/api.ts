@@ -143,7 +143,11 @@ import type {
   FirstTimeReturningParams,
 } from '@kairos/types';
 
-import type { FormType } from '@kairos/types';
+import type {
+  FormType,
+  MemberFollowupHistoryItem,
+  ConcernInboxItem,
+} from '@kairos/types';
 
 import type {
   Branch,
@@ -337,6 +341,10 @@ export function createApiClient(
         ),
       stats: (id: string) =>
         client.get<ApiResponse<MemberDashboardStats>>(`/api/members/${encodeURIComponent(id)}/stats`),
+      followupHistory: (id: string) =>
+        client.get<ApiResponse<MemberFollowupHistoryItem[]>>(
+          `/api/members/${encodeURIComponent(id)}/followups`,
+        ),
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
       switchActiveBranch: (id: string) =>
@@ -871,6 +879,12 @@ export function createApiClient(
         client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
       followups: () =>
         client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
+      welfareInbox: () =>
+        client.get<ApiResponse<ConcernInboxItem[]>>('/api/me/followups/welfare'),
+      safeguardingInbox: () =>
+        client.get<ApiResponse<ConcernInboxItem[]>>(
+          '/api/me/followups/safeguarding',
+        ),
       activity: () =>
         client.get<ApiResponse<MeActivityItem[]>>('/api/me/activity'),
       notificationPreferences: {

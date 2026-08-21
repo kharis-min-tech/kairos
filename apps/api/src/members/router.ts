@@ -39,6 +39,7 @@ import {
   setMembershipClassCompleted,
 } from './service';
 import { getMemberStats } from '../analytics/service';
+import { getMemberFollowupHistory } from './followups-history-service';
 
 export const membersRouter = new Hono();
 
@@ -167,6 +168,19 @@ membersRouter.get('/:id/stats', async (c) => {
   const memberId = c.req.param('id');
   const stats = await getMemberStats(db, { ...auth, memberId });
   return c.json(successResponse(stats));
+});
+
+// ── Follow-up history (0046) ───────────────────────────────
+//
+// Unified timeline of every follow-up recorded for this member across
+// fellowships + departments. Self-view always allowed; leader-view needs
+// branch:write on the member's home branch. Enforcement lives in the
+// service function.
+membersRouter.get('/:id/followups', async (c) => {
+  const auth = getAuth(c);
+  const memberId = c.req.param('id');
+  const history = await getMemberFollowupHistory(db, auth, memberId);
+  return c.json(successResponse(history));
 });
 
 // ── Approval ───────────────────────────────────────────────

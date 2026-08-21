@@ -22,6 +22,7 @@ import {
 import { updateNotificationPreferenceSchema, recordConsentSchema } from './schemas';
 import { listMyAuditLog } from '../audit/service';
 import { listConsentStatuses, recordConsent } from '../consent/service';
+import { listConcernFollowups } from '../members/followups-history-service';
 
 export const meRouter = new Hono();
 
@@ -68,6 +69,20 @@ meRouter.get('/approvals', async (c) => {
 meRouter.get('/followups', async (c) => {
   const auth = getAuth(c);
   const items = await listMyFollowups(db, auth);
+  return c.json(successResponse(items));
+});
+
+// 0046: welfare + safeguarding inboxes — surface flagged follow-ups to
+// leaders / safeguarding leads. Gating lives inside the service function.
+meRouter.get('/followups/welfare', async (c) => {
+  const auth = getAuth(c);
+  const items = await listConcernFollowups(db, auth, 'welfare');
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/followups/safeguarding', async (c) => {
+  const auth = getAuth(c);
+  const items = await listConcernFollowups(db, auth, 'safeguarding');
   return c.json(successResponse(items));
 });
 
