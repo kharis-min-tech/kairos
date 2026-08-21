@@ -31,6 +31,7 @@ import {
 } from '@kairos/ui-native';
 import type { CreateFellowshipMeetingRequest, FellowshipMeeting } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 
 function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -59,6 +60,21 @@ export default function RollcallFellowship() {
     enabled: !!fellowshipId,
     queryFn: async () => (await api.fellowships.get(fellowshipId)).data ?? null,
   });
+
+  // Fellowship attendance / rollcall is a leader tool — gate on fellowship
+  // lead/co-lead or branch admin once the fellowship has loaded.
+  const caps = useCapabilities();
+  const canAccess =
+    !fellowship.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('fellowship:write', {
+          kind: 'fellowship',
+          id: fellowshipId,
+          branchId: fellowship.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: fellowship.data.branchId });
+  useRequireCapability(canAccess);
 
   const meetings = useQuery({
     queryKey: ['fellowships', fellowshipId, 'meetings'],

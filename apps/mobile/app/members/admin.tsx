@@ -24,6 +24,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 type Tab = 'approval' | 'unguarded' | 'dormant';
@@ -40,6 +41,13 @@ export default function MembersAdmin() {
   const router = useRouter();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('approval');
+
+  const caps = useCapabilities();
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    caps.has('signup:approve') ||
+    caps.has('branch:write');
+  useRequireCapability(canAccess);
 
   const pending = useQuery({
     queryKey: ['members', 'pending'],

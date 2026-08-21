@@ -16,6 +16,8 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 /**
  * Rotating QR display for the check-in desk. Polls `getQrToken` on the
@@ -29,6 +31,13 @@ export default function AdminCheckinQr() {
   const router = useRouter();
   const { serviceId } = useLocalSearchParams<{ serviceId?: string }>();
   const validServiceId = typeof serviceId === 'string' && serviceId.length > 0 ? serviceId : null;
+
+  const caps = useCapabilities();
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId }));
+  useRequireCapability(canAccess);
 
   const token = useQuery({
     queryKey: ['attendance', 'qr-token', validServiceId],

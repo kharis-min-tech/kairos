@@ -36,6 +36,7 @@ import type {
 } from '@kairos/types';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 type Tab = 'overdue' | 'all';
@@ -60,6 +61,19 @@ export default function FellowshipFollowups() {
     enabled: !!fellowshipId,
     queryFn: async () => (await api.fellowships.get(fellowshipId)).data ?? null,
   });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !fellowship.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('fellowship:write', {
+          kind: 'fellowship',
+          id: fellowshipId,
+          branchId: fellowship.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: fellowship.data.branchId });
+  useRequireCapability(canAccess);
 
   const members = useQuery({
     queryKey: ['fellowships', fellowshipId, 'members'],

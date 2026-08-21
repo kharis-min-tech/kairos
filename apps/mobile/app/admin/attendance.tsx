@@ -26,6 +26,8 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 type Range = '6w' | '3m' | 'ytd';
 
@@ -46,6 +48,13 @@ export default function AttendanceComparison() {
   const router = useRouter();
   const [range, setRange] = useState<Range>('6w');
   const weeks = RANGE_WEEKS[range];
+
+  const caps = useCapabilities();
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:read', { kind: 'branch', id: branchId }));
+  useRequireCapability(canAccess);
 
   const trends = useQuery({
     queryKey: ['attendance', 'trends', weeks],

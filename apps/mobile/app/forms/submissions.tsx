@@ -25,6 +25,8 @@ import {
 import { formatShortDate } from '@kairos/core';
 import type { FormSubmission, FormType } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 const FORM_LABEL: Record<string, string> = {
   altar_call: 'Altar call',
@@ -66,6 +68,16 @@ export default function FormsSubmissions() {
   const router = useRouter();
   const [formType, setFormType] = useState<FormType | 'all'>('all');
   const [status, setStatus] = useState<'all' | 'new' | 'reviewed' | 'converted' | 'dismissed'>('all');
+
+  const caps = useCapabilities();
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  // Reviewing everyone's submissions is a leader tool — members hit
+  // /my-form-submissions for their own. Redirect them there instead of
+  // letting them stare at an empty branch-scoped list.
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId }));
+  useRequireCapability(canAccess, '/my-form-submissions');
 
   const rows = useQuery({
     queryKey: ['forms', 'submissions', { formType, status }],

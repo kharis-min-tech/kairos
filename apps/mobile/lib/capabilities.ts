@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useRouter } from 'expo-router';
 import {
   type Capability,
   type Grant,
@@ -81,4 +82,33 @@ export function useCapabilities() {
 
     return { has, grants, grantsOf, systemRole };
   }, [accessToken, userSystemRole]);
+}
+
+/**
+ * Redirect the caller away from an admin/leader-only page when the boolean
+ * gate resolves false. Fire this near the top of the component; the caller
+ * still needs `if (!allowed) return null;` right after so the page body
+ * doesn't flash into view before the router.replace lands.
+ *
+ * Usage:
+ *   const caps = useCapabilities();
+ *   const canAccess = caps.systemRole === 'admin'
+ *     || caps.has('branch:write', { kind: 'branch', id: branchId });
+ *   useRequireCapability(canAccess);
+ *   if (!canAccess) return null;
+ *
+ * The gate is a boolean, not a capability string, so callers can compose the
+ * predicate however they like (system-admin OR branch grant, or a chain of
+ * cap checks). Default fallback route = the tab home.
+ */
+export function useRequireCapability(
+  allowed: boolean,
+  redirectTo: string = '/(tabs)',
+): void {
+  const router = useRouter();
+  useEffect(() => {
+    if (!allowed) {
+      router.replace(redirectTo as never);
+    }
+  }, [allowed, router, redirectTo]);
 }

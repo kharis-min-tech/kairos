@@ -35,6 +35,8 @@ import {
 import type { OutreachProgramWithDetails } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 const PAGE_SIZE = 25;
 type CompletedFilter = 'active' | 'completed' | 'all';
@@ -52,6 +54,13 @@ export default function OutreachDirectory() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
+  const caps = useCapabilities();
+  const homeBranchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  // Creating an outreach program is a branch-write op. Everyone else can
+  // still browse the directory (the read API isn't gated).
+  const canCreateOutreach =
+    caps.systemRole === 'admin' ||
+    (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<CompletedFilter>('active');
   const debouncedSearch = useDebounced(searchInput.trim(), 250);
@@ -102,14 +111,18 @@ export default function OutreachDirectory() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Outreach</Text>
-        <Pressable
-          onPress={() => router.push('/outreach/new')}
-          hitSlop={8}
-          testID="new-outreach-btn"
-          accessibilityLabel="New outreach program"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canCreateOutreach ? (
+          <Pressable
+            onPress={() => router.push('/outreach/new')}
+            hitSlop={8}
+            testID="new-outreach-btn"
+            accessibilityLabel="New outreach program"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <View style={styles.controlsBlock}>

@@ -36,6 +36,7 @@ import type {
 } from '@kairos/types';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 type Tab = 'overdue' | 'all';
@@ -60,6 +61,19 @@ export default function DepartmentFollowups() {
     enabled: !!branchDeptId,
     queryFn: async () => (await api.departments.get(branchDeptId)).data ?? null,
   });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !dept.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('department:write', {
+          kind: 'department',
+          id: branchDeptId,
+          branchId: dept.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: dept.data.branchId });
+  useRequireCapability(canAccess);
 
   const members = useQuery({
     queryKey: ['departments', branchDeptId, 'members'],

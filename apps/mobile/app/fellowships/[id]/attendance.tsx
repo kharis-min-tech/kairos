@@ -24,6 +24,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 
 type Window = 4 | 8 | 12 | 26;
 
@@ -48,6 +49,25 @@ export default function FellowshipAttendance() {
     queryFn: async () =>
       (await api.attendance.fellowshipReport(fellowshipId, { weeks })).data ?? null,
   });
+
+  const fellowship = useQuery({
+    queryKey: ['fellowships', fellowshipId],
+    enabled: !!fellowshipId,
+    queryFn: async () => (await api.fellowships.get(fellowshipId)).data ?? null,
+  });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !fellowship.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('fellowship:write', {
+          kind: 'fellowship',
+          id: fellowshipId,
+          branchId: fellowship.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: fellowship.data.branchId });
+  useRequireCapability(canAccess);
 
   const membersSorted = useMemo(
     () =>

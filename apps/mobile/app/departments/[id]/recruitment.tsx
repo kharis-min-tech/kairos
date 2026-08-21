@@ -42,6 +42,7 @@ import {
 } from '@kairos/ui-native';
 import type { DepartmentJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 type Stage = 'open' | 'terminal' | 'all';
@@ -92,6 +93,19 @@ export default function DepartmentRecruitment() {
     enabled: !!branchDeptId,
     queryFn: async () => (await api.departments.get(branchDeptId)).data ?? null,
   });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !department.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('department:write', {
+          kind: 'department',
+          id: branchDeptId,
+          branchId: department.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: department.data.branchId });
+  useRequireCapability(canAccess);
 
   const requests = useQuery({
     queryKey: ['departments', branchDeptId, 'joinRequests', stage],

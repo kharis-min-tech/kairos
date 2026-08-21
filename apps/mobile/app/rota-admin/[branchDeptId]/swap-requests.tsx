@@ -30,6 +30,7 @@ import {
 } from '@kairos/ui-native';
 import type { RotaSwapRequestWithDetails } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 type Filter = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'all';
@@ -60,6 +61,19 @@ export default function SwapRequestsAdmin() {
     enabled: !!branchDeptId,
     queryFn: async () => (await api.departments.get(branchDeptId!)).data!,
   });
+
+  const caps = useCapabilities();
+  const canAccess =
+    !dept.data
+      ? true
+      : caps.systemRole === 'admin' ||
+        caps.has('department:write', {
+          kind: 'department',
+          id: branchDeptId!,
+          branchId: dept.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: dept.data.branchId });
+  useRequireCapability(canAccess);
 
   const requests = useQuery({
     queryKey: ['rota', 'swap-requests', branchDeptId, filter],

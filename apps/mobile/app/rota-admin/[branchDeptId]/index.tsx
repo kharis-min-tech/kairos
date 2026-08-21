@@ -42,6 +42,7 @@ import type {
   RotaInstanceWithSummary,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -65,6 +66,22 @@ export default function RotaAdmin() {
     enabled: !!branchDeptId,
     queryFn: async () => (await api.departments.get(branchDeptId!)).data!,
   });
+
+  // Rota admin requires department:write on this branch-dept OR branch:write
+  // on the parent branch (auto-passes for system admins). Gate once dept has
+  // loaded — the read itself is scoped by the API too, so a 403 is safe.
+  const caps = useCapabilities();
+  const canAccess =
+    !dept.data
+      ? true // still loading — don't redirect yet
+      : caps.systemRole === 'admin' ||
+        caps.has('department:write', {
+          kind: 'department',
+          id: branchDeptId!,
+          branchId: dept.data.branchId,
+        }) ||
+        caps.has('branch:write', { kind: 'branch', id: dept.data.branchId });
+  useRequireCapability(canAccess);
 
   const templates = useQuery({
     queryKey: ['rota', 'templates', branchDeptId],
