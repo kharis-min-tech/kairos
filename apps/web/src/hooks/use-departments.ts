@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import type { CreateFellowshipFollowupRequest } from '@kairos/types';
 
 // ── Global catalogue ───────────────────────────────────────
 
@@ -413,15 +414,10 @@ export function useMemberFollowups(branchDeptId: string, memberId: string) {
   });
 }
 
-interface CreateFollowupInput {
-  contactedAt?: string;
-  contactMethod: string;
-  contactStatus: string;
-  durationMinutes?: number | null;
-  notes?: string | null;
-  nextFollowUpDate?: string | null;
-  assignedToId?: string | null;
-}
+// Reuses the fellowship followup request shape; both routes hit the same
+// api-client contract (see api.departments.followups.create) and the
+// visit-shape fields land on both tables via migration 0046.
+type CreateDepartmentFollowupInput = CreateFellowshipFollowupRequest;
 
 export function useCreateDepartmentFollowup() {
   const qc = useQueryClient();
@@ -433,7 +429,7 @@ export function useCreateDepartmentFollowup() {
     }: {
       branchDeptId: string;
       memberId: string;
-      data: CreateFollowupInput;
+      data: CreateDepartmentFollowupInput;
     }) => {
       const res = await api.departments.followups.create(branchDeptId, memberId, data);
       return res.data!;
@@ -457,7 +453,7 @@ export function useUpdateDepartmentFollowup() {
     }: {
       branchDeptId: string;
       followupId: string;
-      data: Partial<CreateFollowupInput>;
+      data: Partial<CreateDepartmentFollowupInput>;
     }) => {
       const res = await api.departments.followups.update(branchDeptId, followupId, data);
       return res.data!;
