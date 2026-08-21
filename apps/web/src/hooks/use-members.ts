@@ -38,6 +38,23 @@ export function useMyProfile() {
   });
 }
 
+/**
+ * Unified follow-up timeline for a member — combines fellowship + department
+ * followups, most-recent first. API 403s if caller is neither self nor a
+ * branch:write leader for the member's home branch, so the caller must gate
+ * `enabled` on capability before firing.
+ */
+export function useMemberFollowupHistory(id: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['members', id, 'followups'],
+    queryFn: async () => {
+      const res = await api.members.followupHistory(id);
+      return res.data!;
+    },
+    enabled: enabled && !!id,
+  });
+}
+
 export function useUpdateMember() {
   const qc = useQueryClient();
   return useMutation({
