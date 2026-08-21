@@ -75,4 +75,20 @@ export const completeOauthProfileSchema = z.object({
     .max(20, 'Phone is too long'),
   homeBranchId: z.string().uuid('Please pick a branch'),
   acceptedPolicies: z.boolean().optional(),
+  // Optional — surfaced on the onboarding screen so users can fill them at
+  // first sign-in. Any absent field is left untouched on the member row.
+  firstName: z.string().min(1).max(100).optional(),
+  lastName: z.string().min(1).max(100).optional(),
+  middleName: z.string().max(100).optional(),
+  gender: z.enum(['Male', 'Female']).optional(),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
+  address: z.string().max(500).optional(),
+  city: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  emergencyContactName: z.string().max(150).optional(),
+  emergencyContactPhone: z.string().max(20).optional(),
+  emergencyContactRelationship: z.string().max(50).optional(),
 });

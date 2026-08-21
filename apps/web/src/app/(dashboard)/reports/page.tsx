@@ -9,7 +9,7 @@ import { useMemberGrowth, useAttendanceTrend, useOutreachOverview, useOutreachAn
 import { useMemberDashboard } from '@/hooks/use-dashboard';
 import { useFellowshipStats } from '@/hooks/use-fellowships';
 import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups, useDepartmentRotaStats } from '@/hooks/use-departments';
-import { useDepartmentAttendance } from '@/hooks/use-attendance';
+import { useDepartmentAttendance, useMyAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
@@ -465,6 +465,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   const { data: outreachOverview, isLoading: outreachLoading } = useOutreachOverview();
   const { data: outreachAnalytics } = useOutreachAnalytics();
   const { data: memberData } = useMemberDashboard();
+  // Plain-member personal attendance for the personal Attendance chart. Leader
+  // path doesn't need it but calling the hook unconditionally keeps hook order
+  // stable — the fetch is cheap and cached.
+  const { data: myAttendance } = useMyAttendance({ weeks: 8 });
 
   // ── Real data ──────────────────────────────────────────────
   const effectiveGrowth = growthData ?? [];
@@ -507,11 +511,51 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
     ? Object.entries(effectiveOutreachAnalytics.statusDistribution).map(([status, count]) => ({ status, count: count as number }))
     : [];
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'attendance', label: 'Attendance' },
-    { key: 'growth', label: 'Growth' },
-    { key: 'outreach', label: 'Outreach' },
-  ];
+  // Plain members don't see Growth — branch-wide signup counts aren't their
+  // data. Attendance + Outreach are both scoped personal below.
+  const tabs: { key: Tab; label: string }[] = isLeadership
+    ? [
+        { key: 'attendance', label: 'Attendance' },
+        { key: 'growth', label: 'Growth' },
+        { key: 'outreach', label: 'Outreach' },
+      ]
+    : [
+        { key: 'attendance', label: 'Attendance' },
+        { key: 'outreach', label: 'Outreach' },
+      ];
+
+  // Safety net — if a plain member somehow lands on the growth tab (bookmarked
+  // URL, or role changed mid-session), snap back to attendance.
+  useEffect(() => {
+    if (!isLeadership && activeTab === 'growth') setActiveTab('attendance');
+  }, [isLeadership, activeTab]);
+
+  // Personal weekly attendance rate for plain members — bucket the member's
+  // service-attendance history by week and compute a rate per week. Mirrors
+  // the leader chart's shape ({ week, rate }) so the same AreaChart renders it.
+  const myWeeklyAttendance = useMemo(() => {
+    const history = myAttendance?.history ?? [];
+    if (history.length === 0) return [];
+    const buckets = new Map<string, { total: number; attended: number }>();
+    for (const h of history) {
+      const d = new Date(h.serviceDate);
+      // Move to Monday of that week (UTC to match the leader chart's DATE_TRUNC('week')).
+      const day = d.getUTCDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setUTCDate(d.getUTCDate() + diff);
+      const key = d.toISOString().slice(0, 10);
+      const bucket = buckets.get(key) ?? { total: 0, attended: 0 };
+      bucket.total += 1;
+      if (h.status) bucket.attended += 1;
+      buckets.set(key, bucket);
+    }
+    return Array.from(buckets.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([week, b]) => ({
+        week,
+        rate: b.total > 0 ? Math.round((b.attended / b.total) * 100) : 0,
+      }));
+  }, [myAttendance]);
 
   // Branch-wide layout — API scopes data by role
   return (
@@ -589,7 +633,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
       )}
 
       {/* ── Attendance tab ── */}
-      {activeTab === 'attendance' && (
+      {activeTab === 'attendance' && isLeadership && (
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <Card>
             <CardHeader className="pb-2">
@@ -661,8 +705,90 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
         </div>
       )}
 
-      {/* ── Growth tab ── */}
-      {activeTab === 'growth' && (
+      {/* ── Attendance tab — plain member (personal) ── */}
+      {activeTab === 'attendance' && !isLeadership && (
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <Card>
+            <CardHeader className="pb-2">
+              <div>
+                <CardTitle className="text-base font-semibold">My Weekly Attendance</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your service attendance rate over the last 8 weeks
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {myWeeklyAttendance.length === 0 ? (
+                <div className="flex h-[280px] flex-col items-center justify-center gap-2 text-center">
+                  <p className="text-sm font-medium text-foreground">No attendance recorded yet</p>
+                  <p className="max-w-xs text-xs text-muted-foreground">
+                    Once you attend a service and get marked present (or check in
+                    yourself), your weekly rate will show up here.
+                  </p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={myWeeklyAttendance}>
+                    <defs>
+                      <linearGradient id="myAttendanceGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#5D3FD3" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#5D3FD3" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} unit="%" axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => [`${v}%`, 'Rate']} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                    <Area type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} fill="url(#myAttendanceGrad)" dot={{ fill: '#5D3FD3', r: 3 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="pt-5 pb-5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Attendance Summary
+                </p>
+                <p className="mt-2 text-2xl font-bold text-foreground">
+                  {myAttendance?.attendedCount ?? 0} of{' '}
+                  {myAttendance?.servicesInWindow ?? 0}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Services attended in the last{' '}
+                  {myAttendance?.windowWeeks ?? 8} weeks
+                </p>
+                {myAttendance && myAttendance.currentStreak.length > 0 ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Current streak:{' '}
+                    <span className="font-semibold text-foreground">
+                      {myAttendance.currentStreak.length}{' '}
+                      {myAttendance.currentStreak.kind === 'attended'
+                        ? 'attended'
+                        : 'missed'}
+                    </span>
+                  </p>
+                ) : null}
+                <Link
+                  href="/me/attendance"
+                  className="mt-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(93,63,211,0.2)] hover:opacity-90 transition-opacity"
+                >
+                  Full history
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Fellowship attendance bars — already personal via memberData */}
+            <MemberTopFellowships memberData={memberData} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Growth tab — leader-only ── */}
+      {activeTab === 'growth' && isLeadership && (
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <Card>
             <CardHeader className="pb-2">

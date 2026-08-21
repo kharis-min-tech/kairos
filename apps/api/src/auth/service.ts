@@ -652,6 +652,17 @@ export interface CompleteOAuthProfileInput {
   phone: string;
   homeBranchId: string;
   acceptedPolicies?: boolean;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 /**
@@ -778,14 +789,46 @@ export async function completeOauthProfile(
     }
   }
 
+  // Build a set patch that only writes columns the caller actually sent.
+  // Empty strings for optional fields are normalised to null so the DB stores
+  // "not provided" rather than a spurious empty string.
+  const setPatch: Partial<typeof members.$inferInsert> = {
+    phone: input.phone,
+    homeBranchId: input.homeBranchId,
+    mustCompleteProfile: false,
+    updatedAt: now,
+  };
+  const opt = <T extends string>(v: T | undefined): T | null | undefined =>
+    v === undefined ? undefined : v === '' ? null : v;
+  if (input.firstName !== undefined && input.firstName !== '') {
+    // firstName + lastName are NOT NULL — only overwrite with a non-empty value.
+    setPatch.firstName = input.firstName;
+  }
+  if (input.lastName !== undefined && input.lastName !== '') {
+    setPatch.lastName = input.lastName;
+  }
+  const middleName = opt(input.middleName);
+  if (middleName !== undefined) setPatch.middleName = middleName;
+  const gender = opt(input.gender);
+  if (gender !== undefined) setPatch.gender = gender;
+  const dob = opt(input.dateOfBirth);
+  if (dob !== undefined) setPatch.dateOfBirth = dob;
+  const address = opt(input.address);
+  if (address !== undefined) setPatch.address = address;
+  const city = opt(input.city);
+  if (city !== undefined) setPatch.city = city;
+  const postalCode = opt(input.postalCode);
+  if (postalCode !== undefined) setPatch.postalCode = postalCode;
+  const ecName = opt(input.emergencyContactName);
+  if (ecName !== undefined) setPatch.emergencyContactName = ecName;
+  const ecPhone = opt(input.emergencyContactPhone);
+  if (ecPhone !== undefined) setPatch.emergencyContactPhone = ecPhone;
+  const ecRel = opt(input.emergencyContactRelationship);
+  if (ecRel !== undefined) setPatch.emergencyContactRelationship = ecRel;
+
   const [updated] = await db
     .update(members)
-    .set({
-      phone: input.phone,
-      homeBranchId: input.homeBranchId,
-      mustCompleteProfile: false,
-      updatedAt: now,
-    })
+    .set(setPatch)
     .where(eq(members.id, member.id))
     .returning();
 

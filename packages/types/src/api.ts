@@ -114,15 +114,27 @@ export interface OAuthConfirmLinkRequest {
  * `mustCompleteProfile === true`) submits the missing profile fields so the
  * server can flip the flag and route them to /pending-approval.
  *
- * `acceptedPolicies` is only required if the user has not already accepted
- * the current published Terms + Privacy version. Server double-checks and
- * inserts consent records only when needed. Address / emergency contact are
- * optional here (they can be filled later from the regular profile edit).
+ * `phone` + `homeBranchId` are required; `acceptedPolicies` is required only
+ * if the user has not already accepted the current published Terms + Privacy
+ * version. Every other field is surfaced on the onboarding form as OPTIONAL —
+ * users are far more likely to fill them at first sign-in than to come back
+ * later from the profile edit page, so we take what they give us and save it.
  */
 export interface CompleteOAuthProfileRequest {
   phone: string;
   homeBranchId: string;
   acceptedPolicies?: boolean;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 // ── Auth Context (decoded JWT) ─────────────────────────────
