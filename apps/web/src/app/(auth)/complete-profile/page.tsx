@@ -7,9 +7,21 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMyConsentStatuses } from '@/hooks/use-consent';
 import { useCompleteOauthProfile } from '@/hooks/use-auth';
-import { Button, CustomSelect, Input, Label } from '@kairos/ui';
+import { AddressAutofillGroup, Button, CustomSelect, Input, Label } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { KharisCardHeader } from '../kharis-logo';
+
+const RELATIONSHIP_OPTIONS = [
+  'Spouse',
+  'Partner',
+  'Parent',
+  'Child',
+  'Sibling',
+  'Grandparent',
+  'Guardian',
+  'Friend',
+  'Other',
+] as const;
 
 /**
  * Phase 1.5 Better-Auth: SSO onboarding on web. Lives in the (auth) chrome
@@ -339,35 +351,15 @@ export default function CompleteProfilePage() {
               </span>
             </div>
 
-            <div className="grid gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="address">Street</Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  autoComplete="street-address"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  autoComplete="address-level2"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="postalCode">Postal code</Label>
-                <Input
-                  id="postalCode"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  autoComplete="postal-code"
-                />
-              </div>
-            </div>
+            <AddressAutofillGroup
+              accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+              value={{ line1: address, city, postalCode }}
+              onChange={(v) => {
+                setAddress(v.line1);
+                setCity(v.city);
+                setPostalCode(v.postalCode);
+              }}
+            />
           </section>
 
           {/* ── Emergency contact (optional) ────────────────── */}
@@ -392,11 +384,15 @@ export default function CompleteProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ecRel">Relationship</Label>
-                <Input
+                <CustomSelect
                   id="ecRel"
                   value={ecRel}
-                  onChange={(e) => setEcRel(e.target.value)}
-                  placeholder="Spouse, parent, sibling…"
+                  onValueChange={setEcRel}
+                  placeholder="Select relationship…"
+                  options={RELATIONSHIP_OPTIONS.map((r) => ({
+                    value: r,
+                    label: r,
+                  }))}
                 />
               </div>
               <div className="space-y-1.5">

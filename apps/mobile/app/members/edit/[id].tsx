@@ -19,6 +19,7 @@ import {
 } from '@kairos/ui-native';
 import type { UpdateMemberRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth';
 import { MemberForm } from '../_form';
 
 export default function EditMember() {
@@ -40,9 +41,37 @@ export default function EditMember() {
   const update = useMutation({
     mutationFn: async (data: UpdateMemberRequest) =>
       (await api.members.update(id, data)).data!,
-    onSuccess: () => {
+    onSuccess: async (updatedMember) => {
       qc.invalidateQueries({ queryKey: ['members'] });
       qc.invalidateQueries({ queryKey: ['members', id] });
+
+      // Sync auth-store when the caller edited themselves. /profile.tsx reads
+      // straight from the store rather than react-query, so without this the
+      // profile page keeps showing whatever was in the store at login (blank
+      // for anything the user only just filled in).
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId === id) {
+        await useAuthStore.getState().updateUser({
+          firstName: updatedMember.firstName,
+          lastName: updatedMember.lastName,
+          middleName: (updatedMember as { middleName?: string | null }).middleName ?? null,
+          phone: updatedMember.phone,
+          gender: updatedMember.gender,
+          dateOfBirth: (updatedMember as { dateOfBirth?: string | null }).dateOfBirth ?? null,
+          address: (updatedMember as { address?: string | null }).address ?? null,
+          city: (updatedMember as { city?: string | null }).city ?? null,
+          postalCode: (updatedMember as { postalCode?: string | null }).postalCode ?? null,
+          secondaryBranchId: (updatedMember as { secondaryBranchId?: string | null }).secondaryBranchId ?? null,
+          secondaryAddress: (updatedMember as { secondaryAddress?: string | null }).secondaryAddress ?? null,
+          secondaryCity: (updatedMember as { secondaryCity?: string | null }).secondaryCity ?? null,
+          secondaryPostalCode: (updatedMember as { secondaryPostalCode?: string | null }).secondaryPostalCode ?? null,
+          emergencyContactName: (updatedMember as { emergencyContactName?: string | null }).emergencyContactName ?? null,
+          emergencyContactPhone: (updatedMember as { emergencyContactPhone?: string | null }).emergencyContactPhone ?? null,
+          emergencyContactRelationship: (updatedMember as { emergencyContactRelationship?: string | null }).emergencyContactRelationship ?? null,
+          photoUrl: (updatedMember as { photoUrl?: string | null }).photoUrl ?? null,
+        });
+      }
+
       router.replace(`/members/${id}`);
     },
   });

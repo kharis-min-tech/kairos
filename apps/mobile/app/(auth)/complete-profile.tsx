@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react-native';
 import {
+  AddressAutofillInput,
   Button,
   Input,
   gradients,
@@ -26,7 +27,20 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
 import { useAuthStore } from '@/store/auth';
+
+const RELATIONSHIP_OPTIONS = [
+  'Spouse',
+  'Partner',
+  'Parent',
+  'Child',
+  'Sibling',
+  'Grandparent',
+  'Guardian',
+  'Friend',
+  'Other',
+] as const;
 
 /**
  * Phase 1.5 Better-Auth: SSO onboarding on mobile. The root guard drops the
@@ -45,7 +59,7 @@ export default function CompleteProfileScreen() {
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [homeBranchId, setHomeBranchId] = useState('');
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
-  const [picker, setPicker] = useState<'branch' | null>(null);
+  const [picker, setPicker] = useState<'branch' | 'relationship' | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -340,29 +354,17 @@ export default function CompleteProfileScreen() {
                 <Text style={styles.optionalTitle}>Address</Text>
                 <Text style={styles.optionalBadge}>Optional</Text>
               </View>
-              <Input
-                label="Street"
-                value={address}
-                onChangeText={setAddress}
-                autoComplete="street-address"
-                containerStyle={{ marginTop: spacing.sm }}
-              />
-              <Input
-                label="City"
-                value={city}
-                onChangeText={setCity}
-                autoCapitalize="words"
-                containerStyle={{ marginTop: spacing.sm }}
-              />
-              <Input
-                label="Postal code"
-                value={postalCode}
-                onChangeText={setPostalCode}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                autoComplete="postal-code"
-                containerStyle={{ marginTop: spacing.sm }}
-              />
+              <View style={{ marginTop: spacing.sm }}>
+                <AddressAutofillInput
+                  accessToken={mapboxPublicToken}
+                  value={{ line1: address, city, postalCode }}
+                  onChange={(v) => {
+                    setAddress(v.line1);
+                    setCity(v.city);
+                    setPostalCode(v.postalCode);
+                  }}
+                />
+              </View>
             </View>
 
             {/* ── Emergency contact (optional) ────────────────── */}
@@ -378,14 +380,20 @@ export default function CompleteProfileScreen() {
                 autoCapitalize="words"
                 containerStyle={{ marginTop: spacing.sm }}
               />
-              <Input
-                label="Relationship"
-                value={ecRel}
-                onChangeText={setEcRel}
-                autoCapitalize="words"
-                placeholder="Spouse, parent, sibling…"
-                containerStyle={{ marginTop: spacing.sm }}
-              />
+              <View style={{ marginTop: spacing.sm, gap: 4 }}>
+                <Text style={styles.fieldLabel}>Relationship</Text>
+                <Pressable
+                  onPress={() => setPicker('relationship')}
+                  style={styles.pickerField}
+                >
+                  <Text
+                    style={ecRel ? styles.pickerValue : styles.pickerPlaceholder}
+                  >
+                    {ecRel || 'Select relationship…'}
+                  </Text>
+                  <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
+                </Pressable>
+              </View>
               <Input
                 label="Phone"
                 value={ecPhone}
@@ -448,6 +456,49 @@ export default function CompleteProfileScreen() {
                       {b.regionName ? (
                         <Text style={styles.sheetRowMeta}>{b.regionName}</Text>
                       ) : null}
+                    </View>
+                    {active ? (
+                      <Check color={c.primary} size={16} strokeWidth={2} />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={picker === 'relationship'}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPicker(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Relationship</Text>
+            <ScrollView style={{ maxHeight: 400 }}>
+              {RELATIONSHIP_OPTIONS.map((r) => {
+                const active = r === ecRel;
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => {
+                      setEcRel(r);
+                      setPicker(null);
+                    }}
+                    style={[styles.sheetRow, active && styles.sheetRowActive]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.sheetRowLabel,
+                          active && styles.sheetRowLabelActive,
+                        ]}
+                      >
+                        {r}
+                      </Text>
                     </View>
                     {active ? (
                       <Check color={c.primary} size={16} strokeWidth={2} />
