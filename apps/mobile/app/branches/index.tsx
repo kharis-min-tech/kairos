@@ -32,6 +32,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 
 function useDebounced<T>(value: T, delay: number): T {
   const [v, setV] = useState(value);
@@ -46,6 +47,11 @@ export default function BranchesDirectory() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
+  const caps = useCapabilities();
+  // New branches are a cross-branch mutation — system admin only. Row edit
+  // pressability is gated per-row on branch:write for that branch (falls
+  // through for system admins).
+  const canCreateBranch = caps.systemRole === 'admin';
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounced(searchInput.trim().toLowerCase(), 250);
 
@@ -72,14 +78,18 @@ export default function BranchesDirectory() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Branches</Text>
-        <Pressable
-          onPress={() => router.push('/branches/new')}
-          hitSlop={8}
-          testID="new-branch-btn"
-          accessibilityLabel="New branch"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canCreateBranch ? (
+          <Pressable
+            onPress={() => router.push('/branches/new')}
+            hitSlop={8}
+            testID="new-branch-btn"
+            accessibilityLabel="New branch"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <View style={styles.controlsBlock}>
@@ -152,9 +162,11 @@ export default function BranchesDirectory() {
             </Card>
           ) : null
         }
-        renderItem={({ item: b }) => (
+        renderItem={({ item: b }) => {
+          const canEdit = caps.has('branch:write', { kind: 'branch', id: b.id });
+          return (
           <Pressable
-            onPress={() => router.push(`/branches/edit/${b.id}`)}
+            onPress={canEdit ? () => router.push(`/branches/edit/${b.id}`) : undefined}
             style={styles.rowWrap}
           >
             <Card padding="md" style={styles.rowCard}>
@@ -175,10 +187,13 @@ export default function BranchesDirectory() {
                   </Text>
                 </View>
               </View>
-              <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+              {canEdit ? (
+                <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+              ) : null}
             </Card>
           </Pressable>
-        )}
+          );
+        }}
       />
     </SafeAreaView>
   );

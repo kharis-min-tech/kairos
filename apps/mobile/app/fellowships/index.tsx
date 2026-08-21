@@ -37,6 +37,7 @@ import type { FellowshipType, FellowshipWithBranch } from '@kairos/types';
 import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
 
 const PAGE_SIZE = 25;
 
@@ -57,6 +58,12 @@ export default function FellowshipsDirectory() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const homeBranchId = user?.homeBranchId ?? undefined;
+  const caps = useCapabilities();
+  // Creating a new fellowship needs branch-write authority somewhere. System
+  // admins pass unconditionally; BranchAdmin grants surface the button when
+  // browsing their own branch.
+  const canCreateFellowship =
+    caps.systemRole === 'admin' || (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
 
   const [searchInput, setSearchInput] = useState('');
   const [branchScope, setBranchScope] = useState<BranchScope>('home');
@@ -120,14 +127,16 @@ export default function FellowshipsDirectory() {
           >
             <MapIcon color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
-          <Pressable
-            onPress={() => router.push('/fellowships/new')}
-            hitSlop={8}
-            testID="new-fellowship-btn"
-            accessibilityLabel="New fellowship"
-          >
-            <Plus color={c.primary} size={22} strokeWidth={1.5} />
-          </Pressable>
+          {canCreateFellowship ? (
+            <Pressable
+              onPress={() => router.push('/fellowships/new')}
+              hitSlop={8}
+              testID="new-fellowship-btn"
+              accessibilityLabel="New fellowship"
+            >
+              <Plus color={c.primary} size={22} strokeWidth={1.5} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 

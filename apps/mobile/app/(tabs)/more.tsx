@@ -43,6 +43,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
 
 const HELP_URL = 'https://docs.kairos.kharis.org';
 
@@ -52,6 +53,22 @@ export default function More() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const caps = useCapabilities();
+
+  // Section-level gates. Leader tools surface for any grant that reads a
+  // sub-scope; admin-only surface for system admins + branch admins; reports
+  // surface for anyone with branch:read (system admin, branch admins, pastors).
+  // Plain members with no grants get a shorter More screen — no clickable
+  // dead-ends where the API 403s.
+  const hasAnyLeadership =
+    caps.systemRole === 'admin' ||
+    caps.grants.length > 0;
+  const canSeeAdminSection =
+    caps.systemRole === 'admin' ||
+    (user?.homeBranchId ? caps.has('branch:write', { kind: 'branch', id: user.homeBranchId }) : false);
+  const canSeeReports =
+    caps.systemRole === 'admin' ||
+    (user?.homeBranchId ? caps.has('branch:read', { kind: 'branch', id: user.homeBranchId }) : false);
 
   const handleSignOut = async () => {
     const confirmed = await alert.confirm({
@@ -167,24 +184,26 @@ export default function More() {
           />
         </Section>
 
-        <Section label="Leader tools">
-          <NavRow
-            icon={CheckSquare}
-            label="Approvals"
-            onPress={() => router.push('/approvals')}
-          />
-          <NavRow
-            icon={Handshake}
-            label="Follow-ups"
-            onPress={() => router.push('/follow-ups')}
-          />
-          <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
-          <NavRow
-            icon={ClipboardList}
-            label="Fellowship attendance"
-            onPress={() => router.push('/rollcall')}
-          />
-        </Section>
+        {hasAnyLeadership ? (
+          <Section label="Leader tools">
+            <NavRow
+              icon={CheckSquare}
+              label="Approvals"
+              onPress={() => router.push('/approvals')}
+            />
+            <NavRow
+              icon={Handshake}
+              label="Follow-ups"
+              onPress={() => router.push('/follow-ups')}
+            />
+            <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
+            <NavRow
+              icon={ClipboardList}
+              label="Fellowship attendance"
+              onPress={() => router.push('/rollcall')}
+            />
+          </Section>
+        ) : null}
 
         <Section label="Forms">
           <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
@@ -200,28 +219,34 @@ export default function More() {
           />
         </Section>
 
-        <Section label="Reports & analytics">
-          <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
-          <NavRow
-            icon={BarChart3}
-            label="Services"
-            onPress={() => router.push('/attendance' as never)}
-          />
-        </Section>
+        {canSeeReports ? (
+          <Section label="Reports & analytics">
+            <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
+            <NavRow
+              icon={BarChart3}
+              label="Services"
+              onPress={() => router.push('/attendance' as never)}
+            />
+          </Section>
+        ) : null}
 
-        <Section label="Admin">
-          <NavRow
-            icon={ClipboardList}
-            label="Check-in desk"
-            onPress={() => router.push('/admin/checkin')}
-          />
-          <NavRow
-            icon={Building2}
-            label="Branch settings"
-            onPress={() => router.push('/branches')}
-          />
-          <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
-        </Section>
+        {canSeeAdminSection ? (
+          <Section label="Admin">
+            <NavRow
+              icon={ClipboardList}
+              label="Check-in desk"
+              onPress={() => router.push('/admin/checkin')}
+            />
+            <NavRow
+              icon={Building2}
+              label="Branch settings"
+              onPress={() => router.push('/branches')}
+            />
+            {caps.systemRole === 'admin' ? (
+              <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
+            ) : null}
+          </Section>
+        ) : null}
 
         <Section label="Settings">
           <NavRow

@@ -95,7 +95,7 @@ export default function MyBranch() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>My branch</Text>
-        {active ? (
+        {active && canManageBranch ? (
           <Pressable
             onPress={() => router.push(`/branches/edit/${active.id}`)}
             hitSlop={8}

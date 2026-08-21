@@ -47,6 +47,7 @@ import {
 } from '@kairos/ui-native';
 import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 function formatMeetingDate(iso: string | Date): string {
@@ -66,6 +67,7 @@ export default function FellowshipDetail() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id!;
 
+  const caps = useCapabilities();
   const fellowship = useQuery({
     queryKey: ['fellowships', id],
     enabled: !!id,
@@ -161,6 +163,14 @@ export default function FellowshipDetail() {
   };
 
   const f = fellowship.data;
+  // Write authority: fellowship lead/co-lead (`fellowship:write` on this
+  // fellowship) OR branch admin (`branch:write` on the branch this fellowship
+  // sits in). Everyone else sees the fellowship read-only — no edit pencil,
+  // no attendance/follow-up leader CTAs, no add-member, no log-meeting.
+  const canWrite = !!f && (
+    caps.has('fellowship:write', { kind: 'fellowship', id, branchId: f.branchId }) ||
+    caps.has('branch:write', { kind: 'branch', id: f.branchId })
+  );
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const upcoming = (meetings.data ?? [])
@@ -208,7 +218,7 @@ export default function FellowshipDetail() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {f?.fellowshipName ?? 'Fellowship'}
         </Text>
-        {f ? (
+        {f && canWrite ? (
           <Pressable
             onPress={() => router.push(`/fellowships/edit/${f.id}`)}
             hitSlop={8}
@@ -297,37 +307,41 @@ export default function FellowshipDetail() {
               </Card>
             ) : null}
 
-            <Pressable
-              onPress={() => router.push(`/fellowships/${id}/attendance` as never)}
-              style={styles.linkCard}
-            >
-              <View style={styles.linkIconTile}>
-                <BarChart3 color={c.primary} size={16} strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.linkTitle}>Attendance</Text>
-                <Text style={styles.linkMeta}>
-                  Services + meetings rates, per-member breakdown
-                </Text>
-              </View>
-              <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
-            </Pressable>
+            {canWrite ? (
+              <>
+                <Pressable
+                  onPress={() => router.push(`/fellowships/${id}/attendance` as never)}
+                  style={styles.linkCard}
+                >
+                  <View style={styles.linkIconTile}>
+                    <BarChart3 color={c.primary} size={16} strokeWidth={1.5} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.linkTitle}>Attendance</Text>
+                    <Text style={styles.linkMeta}>
+                      Services + meetings rates, per-member breakdown
+                    </Text>
+                  </View>
+                  <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+                </Pressable>
 
-            <Pressable
-              onPress={() => router.push(`/fellowships/${id}/followups` as never)}
-              style={styles.linkCard}
-            >
-              <View style={styles.linkIconTile}>
-                <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.linkTitle}>Follow-ups</Text>
-                <Text style={styles.linkMeta}>
-                  Overdue members, contact log, next-touch reminders
-                </Text>
-              </View>
-              <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
-            </Pressable>
+                <Pressable
+                  onPress={() => router.push(`/fellowships/${id}/followups` as never)}
+                  style={styles.linkCard}
+                >
+                  <View style={styles.linkIconTile}>
+                    <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.linkTitle}>Follow-ups</Text>
+                    <Text style={styles.linkMeta}>
+                      Overdue members, contact log, next-touch reminders
+                    </Text>
+                  </View>
+                  <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+                </Pressable>
+              </>
+            ) : null}
 
             {pendingRequests.length > 0 ? (
               <View style={styles.section}>
@@ -412,14 +426,16 @@ export default function FellowshipDetail() {
                   variant="neutral"
                   size="sm"
                 />
-                <Pressable
-                  onPress={() => setPickerOpen(true)}
-                  style={styles.addMemberBtn}
-                  hitSlop={6}
-                  accessibilityLabel="Add member"
-                >
-                  <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
-                </Pressable>
+                {canWrite ? (
+                  <Pressable
+                    onPress={() => setPickerOpen(true)}
+                    style={styles.addMemberBtn}
+                    hitSlop={6}
+                    accessibilityLabel="Add member"
+                  >
+                    <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
+                  </Pressable>
+                ) : null}
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
@@ -431,11 +447,14 @@ export default function FellowshipDetail() {
                     <Pressable
                       key={m.id}
                       onPress={() => router.push(`/members/${m.memberId}`)}
-                      onLongPress={() =>
-                        confirmRemoveMember(
-                          m.memberId,
-                          `${m.memberFirstName} ${m.memberLastName}`,
-                        )
+                      onLongPress={
+                        canWrite
+                          ? () =>
+                              confirmRemoveMember(
+                                m.memberId,
+                                `${m.memberFirstName} ${m.memberLastName}`,
+                              )
+                          : undefined
                       }
                       delayLongPress={350}
                       style={styles.memberRow}
@@ -456,9 +475,11 @@ export default function FellowshipDetail() {
                       ) : null}
                     </Pressable>
                   ))}
-                  <Text style={styles.longPressHint}>
-                    Long-press a row to remove them from the fellowship.
-                  </Text>
+                  {canWrite ? (
+                    <Text style={styles.longPressHint}>
+                      Long-press a row to remove them from the fellowship.
+                    </Text>
+                  ) : null}
                 </View>
               )}
             </View>
@@ -469,14 +490,16 @@ export default function FellowshipDetail() {
                   <Calendar color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
                 <Text style={styles.sectionTitle}>Meetings</Text>
-                <Pressable
-                  onPress={() => setLogMeetingOpen(true)}
-                  style={styles.addMemberBtn}
-                  hitSlop={6}
-                  accessibilityLabel="Log a meeting"
-                >
-                  <Plus color={c.primary} size={16} strokeWidth={1.5} />
-                </Pressable>
+                {canWrite ? (
+                  <Pressable
+                    onPress={() => setLogMeetingOpen(true)}
+                    style={styles.addMemberBtn}
+                    hitSlop={6}
+                    accessibilityLabel="Log a meeting"
+                  >
+                    <Plus color={c.primary} size={16} strokeWidth={1.5} />
+                  </Pressable>
+                ) : null}
               </View>
               {recentPast.length === 0 ? (
                 <Text style={styles.emptyLine}>

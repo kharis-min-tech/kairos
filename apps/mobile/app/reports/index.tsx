@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,7 @@ import type { AttendanceHeatmap, FrequencyBucketKey } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { formatShortDate } from '@kairos/core';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
 
 type WindowMonths = 3 | 6 | 12;
 type WindowChoice = { value: WindowMonths; label: string };
@@ -89,6 +90,21 @@ export default function Reports() {
   const [engagedWindowMonths, setEngagedWindowMonths] = useState<WindowMonths>(3);
   const [windowWeeks, setWindowWeeks] = useState<WindowWeeks>(8);
   const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const caps = useCapabilities();
+
+  // Mirrors the web /reports rescope: this whole surface is branch-level
+  // analytics, which is not personal data. Plain members (no `branch:read`
+  // grant on their branch) get bounced to /my-attendance where the data is
+  // scoped to them. Nav entry is also hidden for them — this handles the
+  // bookmark / direct-URL case.
+  const canSeeReports =
+    caps.systemRole === 'admin' ||
+    (!!branchId && caps.has('branch:read', { kind: 'branch', id: branchId }));
+  useEffect(() => {
+    if (!canSeeReports) {
+      router.replace('/my-attendance');
+    }
+  }, [canSeeReports, router]);
 
   // Scope filter — reports default to the whole branch. Picking a dept or
   // fellowship narrows every downstream report to that group's members.
