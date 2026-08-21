@@ -26,6 +26,8 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
+import { useEffect } from 'react';
 
 const SESSION_TITLES = [
   '1 · Foundations of Faith',
@@ -42,7 +44,24 @@ export default function NewBelievers() {
   const router = useRouter();
   const params = useLocalSearchParams<{ scope?: 'mine' | 'all' }>();
   const userId = useAuthStore((s) => s.user?.id);
+  const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
   const personalScope = params.scope === 'mine';
+
+  // Only the NB team (mentors, teachers, branch admins) sees the pipeline.
+  // Everyone else lands on the personal "my journey" view. This mirrors the
+  // web /new-believers surface and stops plain members seeing other people's
+  // enrollments.
+  const caps = useCapabilities();
+  const canSeeTeamView =
+    caps.systemRole === 'admin' ||
+    caps.has('newbelievers:mentor') ||
+    caps.has('newbelievers:teach') ||
+    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId }));
+  useEffect(() => {
+    if (!personalScope && !canSeeTeamView) {
+      router.replace('/new-believers?scope=mine' as never);
+    }
+  }, [personalScope, canSeeTeamView, router]);
 
   const enrollments = useQuery({
     queryKey: ['new-believers', 'enrollments', personalScope ? 'mine' : 'all'],
