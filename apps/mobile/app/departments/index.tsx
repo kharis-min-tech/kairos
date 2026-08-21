@@ -34,6 +34,7 @@ import {
 import type { BranchDepartmentWithDetails } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useCapabilities } from '@/lib/capabilities';
 
 const PAGE_SIZE = 25;
 
@@ -54,6 +55,11 @@ export default function DepartmentsDirectory() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const homeBranchId = user?.homeBranchId ?? undefined;
+  const caps = useCapabilities();
+  // Same gate as fellowships create — needs branch-write authority on the
+  // caller's home branch (system admins pass unconditionally).
+  const canCreateDepartment =
+    caps.systemRole === 'admin' || (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
 
   const [searchInput, setSearchInput] = useState('');
   const [branchScope, setBranchScope] = useState<BranchScope>('home');
@@ -114,14 +120,18 @@ export default function DepartmentsDirectory() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Departments</Text>
-        <Pressable
-          onPress={() => router.push('/departments/new')}
-          hitSlop={8}
-          testID="new-department-btn"
-          accessibilityLabel="New department"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canCreateDepartment ? (
+          <Pressable
+            onPress={() => router.push('/departments/new')}
+            hitSlop={8}
+            testID="new-department-btn"
+            accessibilityLabel="New department"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <View style={styles.controlsBlock}>

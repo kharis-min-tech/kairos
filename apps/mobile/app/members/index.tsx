@@ -117,14 +117,16 @@ export default function MembersDirectory() {
               <ShieldCheck color={c.primary} size={20} strokeWidth={1.5} />
             </Pressable>
           ) : null}
-          <Pressable
-            onPress={() => router.push('/members/new')}
-            hitSlop={8}
-            testID="new-member-btn"
-            accessibilityLabel="New member"
-          >
-            <Plus color={c.primary} size={22} strokeWidth={1.5} />
-          </Pressable>
+          {canAdmin ? (
+            <Pressable
+              onPress={() => router.push('/members/new')}
+              hitSlop={8}
+              testID="new-member-btn"
+              accessibilityLabel="New member"
+            >
+              <Plus color={c.primary} size={22} strokeWidth={1.5} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 

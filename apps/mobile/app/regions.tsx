@@ -32,6 +32,7 @@ import {
 import type { CreateRegionRequest, Region, UpdateRegionRequest } from '@kairos/types';
 import { COUNTRIES_BY_CONTINENT } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 
 const ALL_COUNTRIES: string[] = Object.values(COUNTRIES_BY_CONTINENT)
   .flat()
@@ -42,6 +43,9 @@ export default function Regions() {
   const c = useColors();
   const router = useRouter();
   const qc = useQueryClient();
+  // Regions are cross-branch — only system admins can create / edit / delete.
+  const caps = useCapabilities();
+  const canManageRegions = caps.systemRole === 'admin';
 
   const regions = useQuery({
     queryKey: ['regions', 'list'],
@@ -101,17 +105,21 @@ export default function Regions() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Regions</Text>
-        <Pressable
-          onPress={() => {
-            setEditing(null);
-            setOpenForm('new');
-          }}
-          hitSlop={8}
-          testID="new-region-btn"
-          accessibilityLabel="New region"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canManageRegions ? (
+          <Pressable
+            onPress={() => {
+              setEditing(null);
+              setOpenForm('new');
+            }}
+            hitSlop={8}
+            testID="new-region-btn"
+            accessibilityLabel="New region"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <FlatList
@@ -159,11 +167,15 @@ export default function Regions() {
           const canDelete = (r.branchCount ?? 0) === 0;
           return (
             <Pressable
-              onPress={() => {
-                setEditing(r);
-                setOpenForm('edit');
-              }}
-              onLongPress={() => confirmDelete(r)}
+              onPress={
+                canManageRegions
+                  ? () => {
+                      setEditing(r);
+                      setOpenForm('edit');
+                    }
+                  : undefined
+              }
+              onLongPress={canManageRegions ? () => confirmDelete(r) : undefined}
               delayLongPress={350}
               style={styles.rowWrap}
             >

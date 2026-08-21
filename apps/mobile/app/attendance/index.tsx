@@ -24,6 +24,8 @@ import {
 import { formatShortDate } from '@kairos/core';
 import type { ServiceSummary } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 
 function isFuture(iso: string): boolean {
   return new Date(iso).getTime() >= Date.now() - 6 * 60 * 60 * 1000;
@@ -33,6 +35,12 @@ export default function AttendanceServicesList() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
+  const caps = useCapabilities();
+  const homeBranchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  // Creating a service = writing to the branch schedule. Same gate as any
+  // branch-level admin action.
+  const canCreateService =
+    caps.systemRole === 'admin' || (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
 
   const services = useQuery({
     queryKey: ['attendance', 'services', 'browse'],
@@ -67,13 +75,17 @@ export default function AttendanceServicesList() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>Services</Text>
-        <Pressable
-          onPress={() => router.push('/attendance/new' as never)}
-          hitSlop={8}
-          accessibilityLabel="Create service"
-        >
-          <Plus color={c.primary} size={22} strokeWidth={1.5} />
-        </Pressable>
+        {canCreateService ? (
+          <Pressable
+            onPress={() => router.push('/attendance/new' as never)}
+            hitSlop={8}
+            accessibilityLabel="Create service"
+          >
+            <Plus color={c.primary} size={22} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView

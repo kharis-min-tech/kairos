@@ -121,7 +121,7 @@ export default function DepartmentDetail() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {d?.departmentName ?? 'Department'}
         </Text>
-        {d ? (
+        {d && caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
           <Pressable
             onPress={() => router.push(`/departments/edit/${d.id}`)}
             hitSlop={8}
@@ -295,14 +295,16 @@ export default function DepartmentDetail() {
                   variant="neutral"
                   size="sm"
                 />
-                <Pressable
-                  onPress={() => setPickerOpen(true)}
-                  style={styles.addMemberBtn}
-                  hitSlop={6}
-                  accessibilityLabel="Add member"
-                >
-                  <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
-                </Pressable>
+                {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
+                  <Pressable
+                    onPress={() => setPickerOpen(true)}
+                    style={styles.addMemberBtn}
+                    hitSlop={6}
+                    accessibilityLabel="Add member"
+                  >
+                    <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
+                  </Pressable>
+                ) : null}
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
@@ -314,11 +316,18 @@ export default function DepartmentDetail() {
                     <Pressable
                       key={m.id}
                       onPress={() => router.push(`/members/${m.memberId}`)}
-                      onLongPress={() =>
-                        confirmRemoveMember(
-                          m.memberId,
-                          `${m.memberFirstName} ${m.memberLastName}`,
-                        )
+                      onLongPress={
+                        caps.has('department:write', {
+                          kind: 'department',
+                          id,
+                          branchId: d.branchId,
+                        })
+                          ? () =>
+                              confirmRemoveMember(
+                                m.memberId,
+                                `${m.memberFirstName} ${m.memberLastName}`,
+                              )
+                          : undefined
                       }
                       delayLongPress={350}
                       style={styles.memberRow}
