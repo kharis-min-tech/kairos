@@ -30,36 +30,47 @@ import { ThemeToggle } from "@/components/theme-toggle";
 // Six shipped capabilities. Donations + Notifications deliberately left off
 // (donations descoped from MVP; notifications owned outside this surface).
 
+// Docs host — every feature card links out to its dedicated docs page so
+// prospects can dig in one click. Kept as a constant so the surface can be
+// pointed at a preview environment without hunting every href.
+const DOCS_BASE = "https://docs.kairos.kharis.org";
+
 const FEATURES = [
   {
     Icon: Users,
     title: "Member Directory",
     desc: "Full profiles, roles, branch assignments and contact details in one place.",
+    href: `${DOCS_BASE}/platform/members`,
   },
   {
     Icon: Building2,
     title: "Multi-Branch Management",
     desc: "Oversee every campus, cell, and satellite branch from a single dashboard.",
+    href: `${DOCS_BASE}/platform/branches`,
   },
   {
     Icon: ClipboardList,
     title: "Attendance Tracking",
     desc: "Record service, fellowship, and department meeting attendance — clean weekly reports.",
+    href: `${DOCS_BASE}/platform/attendance`,
   },
   {
     Icon: Heart,
     title: "Fellowships & Pipelines",
     desc: "K-Groups, new-believer discipleship, soul follow-ups — track every relationship.",
+    href: `${DOCS_BASE}/platform/fellowships`,
   },
   {
     Icon: BarChart2,
     title: "Reports & Insights",
     desc: "Attendance trends, fellowship growth, leader-scoped dashboards — no spreadsheet stitching.",
+    href: `${DOCS_BASE}/platform/reports`,
   },
   {
     Icon: ShieldCheck,
     title: "Roles & Permissions",
     desc: "Branch admins, fellowship leaders, safeguarding leads — each sees only what they should.",
+    href: `${DOCS_BASE}/administration/permissions`,
   },
 ];
 
@@ -273,18 +284,27 @@ export default function KairosLanding() {
           </h2>
           <div className="mt-16 grid md:grid-cols-3 gap-px bg-black/[0.06] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.06]">
             {FEATURES.map((f) => (
-              <div
+              <a
                 key={f.title}
-                className="bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group"
+                href={f.href}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"
               >
-                <f.Icon className="h-7 w-7 text-[#f8b537] group-hover:text-[#5D3FD3] transition-colors" />
+                <div className="flex items-start justify-between">
+                  <f.Icon className="h-7 w-7 text-[#f8b537] group-hover:text-[#5D3FD3] transition-colors" />
+                  <ArrowUpRight className="h-4 w-4 text-black/25 dark:text-white/20 group-hover:text-[#5D3FD3] transition-colors" />
+                </div>
                 <h3 className="mt-6 text-base font-black uppercase tracking-tight">
                   {f.title}
                 </h3>
                 <p className="mt-3 text-sm text-black/55 dark:text-white/50 leading-relaxed">
                   {f.desc}
                 </p>
-              </div>
+                <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-black/35 dark:text-white/35 group-hover:text-[#5D3FD3] transition-colors">
+                  Read the docs →
+                </span>
+              </a>
             ))}
           </div>
         </div>
