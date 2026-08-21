@@ -4,11 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Bell } from 'lucide-react-native';
 import {
   Avatar,
   Card,
-  Badge,
   spacing,
   typography,
   radii,
@@ -19,6 +17,13 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+
+const SERVICE_TYPE_LABEL: Record<string, string> = {
+  Sunday: 'Sunday Service',
+  Midweek: 'Midweek Service',
+  Prayer: 'Prayer Meeting',
+  Special: 'Special Service',
+};
 
 export default function Home() {
   const styles = useThemedStyles(makeStyles);
@@ -46,6 +51,41 @@ export default function Home() {
     enabled: !!user?.id,
   });
 
+  // Upcoming service in the caller's branch — nearest future service. The
+  // Home service card used to hardcode "Sunday Service · Rev Dr David
+  // Antwi"; now it's whatever's actually next in this branch.
+  const upcomingServices = useQuery({
+    queryKey: ['home', 'upcoming-services', user?.homeBranchId],
+    queryFn: async () => {
+      const res = await api.attendance.listServices({ limit: 5 });
+      return res.data?.data ?? [];
+    },
+    enabled: !!user,
+  });
+  const nextService = useMemo(() => {
+    const now = Date.now();
+    return (upcomingServices.data ?? [])
+      .filter((s) => new Date(s.serviceDate).getTime() >= now - 6 * 60 * 60 * 1000)
+      .sort((a, b) => new Date(a.serviceDate).getTime() - new Date(b.serviceDate).getTime())[0]
+      ?? null;
+  }, [upcomingServices.data]);
+
+  // Current branch leadership — surfaces the Main Pastor's name on the
+  // service card. Falls back gracefully if the branch hasn't recorded one.
+  const leadership = useQuery({
+    queryKey: ['home', 'branch-leadership', user?.homeBranchId],
+    queryFn: async () =>
+      (await api.leadership.list(user!.homeBranchId)).data ?? [],
+    enabled: !!user?.homeBranchId,
+  });
+  const mainPastor = useMemo(
+    () =>
+      (leadership.data ?? []).find(
+        (l) => l.role === 'Main Pastor' && l.isCurrent,
+      ) ?? null,
+    [leadership.data],
+  );
+
   const dateHeader = useMemo(() => {
     const d = new Date();
     return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -53,14 +93,31 @@ export default function Home() {
 
   const nextDuty = rota.data?.[0] ?? null;
 
+  const pastorInitials = mainPastor
+    ? `${mainPastor.memberFirstName?.[0] ?? ''}${mainPastor.memberLastName?.[0] ?? ''}`.toUpperCase() || '?'
+    : null;
+  const pastorFullName = mainPastor
+    ? `${mainPastor.memberFirstName} ${mainPastor.memberLastName}`.trim()
+    : null;
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={
           <RefreshControl
-            refreshing={rota.isFetching}
-            onRefresh={() => rota.refetch()}
+            refreshing={
+              rota.isFetching
+              || myFellowship.isFetching
+              || upcomingServices.isFetching
+              || leadership.isFetching
+            }
+            onRefresh={() => {
+              rota.refetch();
+              myFellowship.refetch();
+              upcomingServices.refetch();
+              leadership.refetch();
+            }}
             tintColor={c.primary}
           />
         }
@@ -87,7 +144,14 @@ export default function Home() {
           </Pressable>
         </View>
 
-        <View style={styles.serviceCard}>
+        <Pressable
+          onPress={() =>
+            nextService
+              ? router.push(`/attendance/${nextService.id}` as never)
+              : router.push('/attendance' as never)
+          }
+          style={styles.serviceCard}
+        >
           <LinearGradient
             colors={gradients.brandDeep}
             start={{ x: 0, y: 0 }}
@@ -95,25 +159,41 @@ export default function Home() {
             style={styles.serviceCardBg}
           />
           <View style={styles.serviceContent}>
-            <Text style={styles.serviceEyebrow}>Upcoming service</Text>
-            <Text style={styles.serviceTitle}>Sunday Service</Text>
-            <Text style={styles.serviceMeta}>
-              Kharis {user?.homeBranchId ? '· Home branch' : ''}
+            <Text style={styles.serviceEyebrow}>
+              {nextService ? 'Upcoming service' : 'No upcoming service'}
             </Text>
-            <View style={styles.serviceFooter}>
-              <View style={styles.pastorRow}>
-                <View style={styles.goldAvatar}>
-                  <Text style={styles.goldAvatarInitials}>DA</Text>
+            <Text style={styles.serviceTitle}>
+              {nextService
+                ? (nextService.serviceTitle
+                  ?? SERVICE_TYPE_LABEL[nextService.serviceType]
+                  ?? `${nextService.serviceType} Service`)
+                : 'Nothing scheduled'}
+            </Text>
+            <Text style={styles.serviceMeta}>
+              {nextService
+                ? `${nextService.branchName ?? 'Your branch'} · ${new Date(
+                    nextService.serviceDate,
+                  ).toLocaleDateString('en-GB', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  })}`
+                : 'Your branch team will publish the next service soon.'}
+            </Text>
+            {nextService && pastorFullName ? (
+              <View style={styles.serviceFooter}>
+                <View style={styles.pastorRow}>
+                  <View style={styles.goldAvatar}>
+                    <Text style={styles.goldAvatarInitials}>
+                      {pastorInitials}
+                    </Text>
+                  </View>
+                  <Text style={styles.pastorName}>{pastorFullName}</Text>
                 </View>
-                <Text style={styles.pastorName}>Rev Dr David Antwi</Text>
               </View>
-              <View style={styles.remindPill}>
-                <Bell color="#ffffff" size={12} strokeWidth={1.5} />
-                <Text style={styles.remindLabel}>Remind me</Text>
-              </View>
-            </View>
+            ) : null}
           </View>
-        </View>
+        </Pressable>
 
         <View style={styles.dutyRow}>
           <Card padding="md" style={styles.dutyCard}>
@@ -176,16 +256,6 @@ export default function Home() {
           <Text style={styles.verseRef}>— Psalm 46:10</Text>
         </View>
 
-        <Card padding="md" style={styles.announcementCard}>
-          <View style={styles.announcementHeader}>
-            <Text style={styles.announcementEyebrow}>Announcement</Text>
-            <Badge label="Pastoral" variant="gold" size="sm" />
-          </View>
-          <Text style={styles.announcementTitle}>Welcome to Kairos Mobile</Text>
-          <Text style={styles.announcementBody}>
-            More live announcements land once the announcements API is wired.
-          </Text>
-        </Card>
       </ScrollView>
     </SafeAreaView>
   );
