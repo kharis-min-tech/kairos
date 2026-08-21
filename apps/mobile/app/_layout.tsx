@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth';
 import { useOnboardingStore } from '@/store/onboarding';
 import { useThemeStore } from '@/store/theme';
 import { AlertHost } from '@/components/alert-host';
+import { PersistentTabBar } from '@/components/persistent-tab-bar';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Already prevented / not available — safe to ignore.
@@ -64,6 +65,13 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <ThemedChrome />
           {ready ? <Stack screenOptions={{ headerShown: false }} /> : null}
+          {/* Persistent bottom tab bar — visible on every authenticated
+              screen, hidden on auth/onboarding routes and when the caller
+              isn't approved. Lives here (not inside `(tabs)/_layout.tsx`)
+              so the bar survives navigation to routes outside the tab
+              group. The default expo-router Tabs bar is disabled in
+              `(tabs)/_layout.tsx` to avoid two bars stacked. */}
+          {ready ? <PersistentTabBar /> : null}
           <AlertHost />
         </SafeAreaProvider>
       </ThemeProvider>

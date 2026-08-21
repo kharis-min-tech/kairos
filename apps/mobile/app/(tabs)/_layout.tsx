@@ -1,10 +1,7 @@
 import { Tabs, Redirect } from 'expo-router';
-import { Platform } from 'react-native';
 import { Home, Users, Hand, Heart, Menu } from 'lucide-react-native';
 import { useColors } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
-
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 88 : 72;
 
 export default function TabsLayout() {
   const c = useColors();
@@ -25,25 +22,15 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        // Bottom nav is rendered by `<PersistentTabBar />` in the root
+        // layout so it stays visible on nested detail routes too. Hide
+        // expo-router's built-in bar entirely to avoid two bars stacked
+        // when the user is on a tab route. The Tabs component itself is
+        // still needed for the tab-group routing behavior (each tab
+        // maintains its own history stack).
+        tabBarStyle: { display: 'none', height: 0 },
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.inkFaded,
-        tabBarStyle: {
-          backgroundColor: c.card,
-          borderTopColor: c.divider,
-          borderTopWidth: 1,
-          height: TAB_BAR_HEIGHT,
-          paddingTop: 10,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          letterSpacing: 0.2,
-          marginTop: 2,
-        },
-        tabBarIconStyle: {
-          marginBottom: 2,
-        },
       }}
     >
       <Tabs.Screen
