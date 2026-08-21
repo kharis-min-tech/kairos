@@ -127,7 +127,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
   },
-  owner: 'danielbolarinwa',
+  owner: 'kharis-tech',
   updates: {
     url: 'https://u.expo.dev/8f936297-f8c8-4257-97f1-e079ae99921f',
   },
