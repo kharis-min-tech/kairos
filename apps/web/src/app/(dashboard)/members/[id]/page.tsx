@@ -6,18 +6,19 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles, useSetMembershipClass } from '@/hooks/use-members';
+import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles, useSetMembershipClass, useMemberFollowupHistory } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
-import { Button, CustomSelect } from '@kairos/ui';
+import { Button, CustomSelect, Badge } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { MemberAvatar } from '@/components/member-avatar';
-import { Lock, BadgeCheck } from 'lucide-react';
+import { Lock, BadgeCheck, Phone, MessageCircle, Home, History } from 'lucide-react';
 import { SafeguardingSection } from './_components/safeguarding-section';
 import { useConfirm } from '@/components/confirm-dialog';
+import type { MemberFollowupHistoryItem } from '@kairos/types';
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +54,16 @@ export default function MemberDetailPage() {
   const addToFellowship = useAddFellowshipMember();
   const currentFellowships = currentFellowshipsData?.data ?? [];
   const alreadyInFellowship = currentFellowships.length > 0;
+
+  // Follow-up history — API 403s unless self OR branch:write on the member's
+  // home branch. Compute once we've resolved the member so we can gate on
+  // homeBranchId; leave the query disabled otherwise to skip the error.
+  const canSeeFollowupHistory =
+    isSelf ||
+    (!!member?.homeBranchId &&
+      caps.has('branch:write', { kind: 'branch', id: member.homeBranchId }));
+  const { data: followupHistory, isLoading: followupHistoryLoading } =
+    useMemberFollowupHistory(id, canSeeFollowupHistory);
 
   if (isLoading) {
     return <MemberDetailSkeleton />;
@@ -503,7 +514,144 @@ export default function MemberDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {canSeeFollowupHistory && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.75} />
+              Follow-up history
+            </CardTitle>
+            <CardDescription>
+              {isSelf
+                ? 'Every fellowship and department follow-up recorded on you.'
+                : 'Combined fellowship and department follow-ups, most recent first.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {followupHistoryLoading ? (
+              <p className="text-sm text-muted-foreground">Loading follow-ups…</p>
+            ) : !followupHistory || followupHistory.length === 0 ? (
+              <p className="rounded-md bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+                {isSelf
+                  ? 'No follow-ups recorded on you yet.'
+                  : 'No follow-ups recorded for this member yet.'}
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {followupHistory.map((row) => (
+                  <FollowupHistoryRow key={row.id} row={row} />
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
+  );
+}
+
+// Row in the unified follow-up timeline. Method icon + label, outcome badge,
+// scope/date/recorder line, notes preview (2-line clamp), and welfare/
+// safeguarding chips when flagged. Mirrors the mobile FollowupHistoryRow.
+function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {
+  const isVisit = row.type === 'visit';
+  const Icon = isVisit
+    ? Home
+    : row.methods?.includes('phone_call')
+      ? Phone
+      : MessageCircle;
+
+  const dateLabel = new Date(row.contactedAt).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const outcomeLabel = isVisit
+    ? row.visitOutcome === 'present'
+      ? 'Present'
+      : row.visitOutcome === 'not_present'
+        ? 'Not present'
+        : row.visitOutcome === 'rescheduled'
+          ? 'Rescheduled'
+          : null
+    : row.contactReached === true
+      ? row.interestLevel === 'interested'
+        ? 'Interested'
+        : row.interestLevel === 'not_interested'
+          ? 'Not interested'
+          : 'Reached'
+      : row.contactReached === false
+        ? 'No answer'
+        : null;
+
+  const outcomeTone =
+    outcomeLabel === 'Present' || outcomeLabel === 'Interested'
+      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+      : outcomeLabel === 'Not present' ||
+          outcomeLabel === 'No answer' ||
+          outcomeLabel === 'Not interested'
+        ? 'bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]'
+        : 'bg-[#5D3FD3]/15 text-[#5D3FD3]';
+
+  const methodLabel = isVisit
+    ? row.visitKind === 'virtual'
+      ? 'Virtual visit'
+      : 'Home visit'
+    : (row.methods ?? [row.contactMethod])
+        .map((m) =>
+          m === 'phone_call'
+            ? 'Call'
+            : m === 'text_message'
+              ? 'Text'
+              : m === 'whatsapp'
+                ? 'WhatsApp'
+                : m === 'email'
+                  ? 'Email'
+                  : m,
+        )
+        .join(' · ');
+
+  return (
+    <li className="flex gap-3 rounded-md border border-border/60 bg-muted/30 p-3">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/10 text-[#5D3FD3]">
+        <Icon className="h-4 w-4" strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-sm font-semibold">{methodLabel}</p>
+          {outcomeLabel && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${outcomeTone}`}
+            >
+              {outcomeLabel}
+            </span>
+          )}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
+          {row.recordedByLastName}
+        </p>
+        {row.notes && (
+          <p className="line-clamp-2 whitespace-pre-wrap text-sm text-foreground/90">
+            {row.notes}
+          </p>
+        )}
+        {(row.welfareConcern || row.safeguardingConcern) && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {row.welfareConcern && (
+              <Badge variant="secondary" className="bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]">
+                Welfare
+              </Badge>
+            )}
+            {row.safeguardingConcern && (
+              <Badge variant="destructive">Safeguarding</Badge>
+            )}
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
 
