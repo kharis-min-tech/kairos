@@ -11,8 +11,9 @@ import {
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Clock, ScanLine, X as XIcon } from 'lucide-react-native';
+import { Check, Clock, ScanLine, X as XIcon, QrCode } from 'lucide-react-native';
 import {
   Avatar,
   Card,
@@ -61,6 +62,7 @@ function formatServiceLabel(c: SelfCheckInCandidate): string {
 export default function CheckIn() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -317,6 +319,22 @@ export default function CheckIn() {
             </Text>
           </Pressable>
         ) : null}
+
+        {/* Show my QR — the other half of the loop. Admin scans it from the
+            check-in desk to mark the caller present without any tap on the
+            member's part. Always available (not gated by window) so a member
+            can show it as they walk up even before the window officially
+            opens. */}
+        <Pressable
+          onPress={() => router.push('/my-qr' as never)}
+          style={({ pressed }) => [
+            styles.scanPill,
+            pressed && { opacity: 0.85 },
+          ]}
+        >
+          <QrCode color={c.primary} size={16} strokeWidth={2} />
+          <Text style={styles.scanLabel}>Show my QR to admin</Text>
+        </Pressable>
 
         <Card padding="md" style={styles.statCard}>
           <Text style={styles.statEyebrow}>Recent attendance</Text>
