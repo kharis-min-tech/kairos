@@ -103,19 +103,18 @@ export default function AdminCheckin() {
     },
   });
 
-  function handleScannedMemberQr(payload: string) {
-    setScannerOpen(false);
+  // Return contract matches QrScannerModal — true accepts + parent closes,
+  // false keeps the scanner open with an in-frame "not recognised" hint.
+  function handleScannedMemberQr(payload: string): boolean {
     const memberId = parseMemberQr(payload);
-    if (!memberId) {
-      alert.info('QR not recognised', "That isn't a Kairos member code.");
-      return;
-    }
+    if (!memberId) return false;
+    setScannerOpen(false);
     const match = (roster.data ?? []).find((r) => r.memberId === memberId);
     checkin.mutate({ memberId });
     if (match) {
-      // Slight delay isn't needed — the alert stacks over the invalidated list.
       alert.info('Checked in', `${match.firstName} ${match.lastName}`);
     }
+    return true;
   }
 
   const roasted = (roster.data ?? []).filter((r) =>

@@ -148,14 +148,15 @@ export default function CheckIn() {
       alert.info('Check-in failed', e.message ?? 'Please try again.'),
   });
 
-  function handleScannedCheckInQr(payload: string) {
-    setScannerOpen(false);
+  // Return contract matches QrScannerModal — true accepts + parent closes,
+  // false keeps the scanner open with an in-frame "not recognised" hint so
+  // pointing the camera at random QRs doesn't kick the user out.
+  function handleScannedCheckInQr(payload: string): boolean {
     const parsed = parseCheckInQr(payload);
-    if (!parsed) {
-      alert.info('QR not recognised', "That isn't a Kairos check-in code.");
-      return;
-    }
+    if (!parsed) return false;
+    setScannerOpen(false);
     checkInQr.mutate(parsed);
+    return true;
   }
 
   function handleCheckInPress() {
