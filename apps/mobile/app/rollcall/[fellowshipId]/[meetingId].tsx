@@ -506,7 +506,7 @@ export default function RollcallMeeting() {
                 onPress={handleSave}
               />
               <Text style={styles.footnote}>
-                Everyone defaults to Present. Tap the pill to cycle Absent → Late → Excused
+                Everyone defaults to Present. Tap the button to cycle Absent → Late → Excused
                 → Present. Hold to pick directly.
               </Text>
             </View>
