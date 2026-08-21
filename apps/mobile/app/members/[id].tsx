@@ -36,6 +36,10 @@ import {
   Settings,
   Plus,
   ChevronRight,
+  Clock,
+  MessageCircle,
+  Home,
+  History,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -242,11 +246,23 @@ export default function MemberProfile() {
     queryFn: async () => (await api.members.roles.list(id)).data ?? [],
   });
 
+  // Follow-up history (0046). Self-view always allowed; branch admins see any
+  // member on their branch. The API returns 403 for non-privileged non-self
+  // callers, which react-query surfaces as `.isError` — the section just
+  // shows a friendly empty state in that case rather than crashing.
+  const followupHistory = useQuery({
+    queryKey: ['members', id, 'followup-history'],
+    enabled: !!id && (isSelf || canManageMember),
+    queryFn: async () => (await api.members.followupHistory(id)).data ?? [],
+    retry: false,
+  });
+
   const refresh = () => {
     member.refetch();
     fellowships.refetch();
     departments.refetch();
     roles.refetch();
+    followupHistory.refetch();
   };
 
   if (member.isLoading) {
@@ -490,6 +506,26 @@ export default function MemberProfile() {
             ))
           )}
         </Section>
+
+        {(isSelf || canManageMember) ? (
+          <Section
+            title="Follow-up history"
+            icon={History}
+            loading={followupHistory.isLoading}
+          >
+            {(followupHistory.data ?? []).length === 0 ? (
+              <Text style={styles.emptyLine}>
+                {isSelf
+                  ? 'No follow-ups recorded on you yet.'
+                  : 'No follow-ups recorded for this member yet.'}
+              </Text>
+            ) : (
+              (followupHistory.data ?? []).map((h) => (
+                <FollowupHistoryRow key={h.id} row={h} />
+              ))
+            )}
+          </Section>
+        ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -896,6 +932,120 @@ function Section({
   );
 }
 
+// One row per follow-up in the history section. Shows method icon, scope,
+// outcome badge, date, note preview, and welfare/safeguarding chips when
+// flagged. Compact so 5-10 rows fit without dominating the profile.
+function FollowupHistoryRow({
+  row,
+}: {
+  row: {
+    id: string;
+    source: 'fellowship' | 'department';
+    scopeName: string;
+    contactedAt: string;
+    type: 'contact' | 'visit';
+    methods: string[] | null;
+    contactMethod: string;
+    contactReached: boolean | null;
+    interestLevel: string | null;
+    visitKind: 'in_person' | 'virtual' | null;
+    visitOutcome: 'present' | 'not_present' | 'rescheduled' | null;
+    notes: string | null;
+    welfareConcern: boolean;
+    safeguardingConcern: boolean;
+    recordedByFirstName: string;
+    recordedByLastName: string;
+  };
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const isVisit = row.type === 'visit';
+  const Icon = isVisit ? Home : row.methods?.includes('phone_call') ? Phone : MessageCircle;
+  const dateLabel = new Date(row.contactedAt).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const outcomeLabel = isVisit
+    ? row.visitOutcome === 'present'
+      ? 'Present'
+      : row.visitOutcome === 'not_present'
+        ? 'Not present'
+        : row.visitOutcome === 'rescheduled'
+          ? 'Rescheduled'
+          : null
+    : row.contactReached === true
+      ? row.interestLevel === 'interested'
+        ? 'Interested'
+        : row.interestLevel === 'not_interested'
+          ? 'Not interested'
+          : 'Reached'
+      : row.contactReached === false
+        ? 'No answer'
+        : null;
+  const outcomeVariant: 'primary' | 'neutral' | 'gold' | 'success' =
+    outcomeLabel === 'Present' || outcomeLabel === 'Interested'
+      ? 'success'
+      : outcomeLabel === 'Not present' || outcomeLabel === 'No answer'
+        ? 'gold'
+        : 'primary';
+
+  const methodLabel = isVisit
+    ? row.visitKind === 'virtual'
+      ? 'Virtual visit'
+      : 'Home visit'
+    : (row.methods ?? [row.contactMethod])
+        .map((m) =>
+          m === 'phone_call'
+            ? 'Call'
+            : m === 'text_message'
+              ? 'Text'
+              : m === 'whatsapp'
+                ? 'WhatsApp'
+                : m === 'email'
+                  ? 'Email'
+                  : m,
+        )
+        .join(' · ');
+
+  return (
+    <View style={styles.historyRow}>
+      <View style={styles.historyIconTile}>
+        <Icon color={c.primary} size={14} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 4 }}>
+        <View style={styles.historyTopRow}>
+          <Text style={styles.historyMethod} numberOfLines={1}>
+            {methodLabel}
+          </Text>
+          {outcomeLabel ? (
+            <Badge label={outcomeLabel} variant={outcomeVariant} size="sm" />
+          ) : null}
+        </View>
+        <Text style={styles.historyMeta} numberOfLines={1}>
+          {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
+          {row.recordedByLastName}
+        </Text>
+        {row.notes ? (
+          <Text style={styles.historyNotes} numberOfLines={2}>
+            {row.notes}
+          </Text>
+        ) : null}
+        {(row.welfareConcern || row.safeguardingConcern) ? (
+          <View style={styles.historyChipRow}>
+            {row.welfareConcern ? (
+              <Badge label="Welfare" variant="gold" size="sm" />
+            ) : null}
+            {row.safeguardingConcern ? (
+              <Badge label="Safeguarding" variant="danger" size="sm" />
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.page },
@@ -1071,6 +1221,49 @@ function makeStyles(c: ThemeColors) {
     ...typography.body,
     color: c.inkMuted,
     padding: spacing.sm,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: c.divider,
+  },
+  historyIconTile: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(93,63,211,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  historyTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  historyMethod: {
+    ...typography.body,
+    color: c.ink,
+    fontWeight: '600',
+    flex: 1,
+  },
+  historyMeta: {
+    ...typography.meta,
+    color: c.inkMuted,
+  },
+  historyNotes: {
+    ...typography.meta,
+    color: c.inkMuted,
+    lineHeight: 18,
+  },
+  historyChipRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 2,
   },
   emergencyName: {
     ...typography.body,
