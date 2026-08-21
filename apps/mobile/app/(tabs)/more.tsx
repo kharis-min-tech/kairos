@@ -69,6 +69,14 @@ export default function More() {
   const canSeeReports =
     caps.systemRole === 'admin' ||
     (user?.homeBranchId ? caps.has('branch:read', { kind: 'branch', id: user.homeBranchId }) : false);
+  // New Believers team = mentors, teachers, or branch admins. Plain members
+  // only see their own journey (already surfaced under "For you"), not the
+  // full pipeline or the sessions scheduling surface.
+  const canSeeNewBelieversTeam =
+    caps.systemRole === 'admin' ||
+    caps.has('newbelievers:mentor') ||
+    caps.has('newbelievers:teach') ||
+    (user?.homeBranchId ? caps.has('branch:write', { kind: 'branch', id: user.homeBranchId }) : false);
 
   const handleSignOut = async () => {
     const confirmed = await alert.confirm({
@@ -148,16 +156,20 @@ export default function More() {
             label="Members directory"
             onPress={() => router.push('/members')}
           />
-          <NavRow
-            icon={Sparkles}
-            label="New Believers pipeline"
-            onPress={() => router.push('/new-believers')}
-          />
-          <NavRow
-            icon={CalendarClock}
-            label="New Believers sessions"
-            onPress={() => router.push('/new-believers/sessions' as never)}
-          />
+          {canSeeNewBelieversTeam ? (
+            <>
+              <NavRow
+                icon={Sparkles}
+                label="New Believers pipeline"
+                onPress={() => router.push('/new-believers')}
+              />
+              <NavRow
+                icon={CalendarClock}
+                label="New Believers sessions"
+                onPress={() => router.push('/new-believers/sessions' as never)}
+              />
+            </>
+          ) : null}
           <NavRow
             icon={UserPlus}
             label="Outreach programs"

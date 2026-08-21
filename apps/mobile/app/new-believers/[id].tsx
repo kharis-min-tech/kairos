@@ -31,6 +31,8 @@ import {
 import { formatShortDate } from '@kairos/core';
 import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
@@ -74,6 +76,23 @@ export default function EnrollmentDetail() {
     queryFn: async () => (await api.newBelievers.enrollments.get(id!)).data!,
     enabled: !!id,
   });
+
+  // Only the NB team or the enrolled member themselves see this page. Plain
+  // members who somehow deep-link into another person's enrollment get
+  // bounced back to their own journey.
+  const caps = useCapabilities();
+  const selfId = useAuthStore((s) => s.user?.id ?? null);
+  const homeBranchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const isSelf = !!enrollment.data && !!selfId && enrollment.data.memberId === selfId;
+  const isTeam =
+    caps.systemRole === 'admin' ||
+    caps.has('newbelievers:mentor') ||
+    caps.has('newbelievers:teach') ||
+    (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
+  // Pass while the enrollment is still loading — otherwise we'd bounce before
+  // knowing whose row this is.
+  const canAccess = !enrollment.data ? true : isTeam || isSelf;
+  useRequireCapability(canAccess, '/new-believers?scope=mine');
 
   const update = useMutation({
     mutationFn: async (data: UpdateEnrollmentRequest) =>
@@ -335,30 +354,32 @@ export default function EnrollmentDetail() {
               </Pressable>
             ) : null}
 
-            <View style={styles.actionRow}>
-              {isSessionStage && !currentSessionDone ? (
-                <Button
-                  label="Mark session complete"
-                  variant="secondary"
-                  onPress={() => openMarkComplete(false)}
-                  disabled={update.isPending || !canMarkComplete}
-                />
-              ) : null}
-              {nextStage ? (
-                <Button
-                  label={`Advance to ${nextStage.label}`}
-                  onPress={advanceStage}
-                  disabled={update.isPending || missingAttendance}
-                />
-              ) : null}
-            </View>
+            {isTeam ? (
+              <View style={styles.actionRow}>
+                {isSessionStage && !currentSessionDone ? (
+                  <Button
+                    label="Mark session complete"
+                    variant="secondary"
+                    onPress={() => openMarkComplete(false)}
+                    disabled={update.isPending || !canMarkComplete}
+                  />
+                ) : null}
+                {nextStage ? (
+                  <Button
+                    label={`Advance to ${nextStage.label}`}
+                    onPress={advanceStage}
+                    disabled={update.isPending || missingAttendance}
+                  />
+                ) : null}
+              </View>
+            ) : null}
 
             <Card padding="md" style={{ gap: spacing.sm }}>
               <Text style={styles.sectionTitle}>Details</Text>
               <DetailRow
                 label="Stage"
                 value={stageDef?.label ?? data.stage}
-                onPress={() => setStageSheetOpen(true)}
+                onPress={isTeam ? () => setStageSheetOpen(true) : undefined}
               />
               <DetailRow
                 label="Teacher"
@@ -367,7 +388,7 @@ export default function EnrollmentDetail() {
                     ? `${data.teacherFirstName} ${data.teacherLastName ?? ''}`.trim()
                     : 'Not assigned'
                 }
-                onPress={() => setPickerOpen('teacher')}
+                onPress={isTeam ? () => setPickerOpen('teacher') : undefined}
               />
               <DetailRow
                 label="Mentor"
@@ -376,7 +397,7 @@ export default function EnrollmentDetail() {
                     ? `${data.mentorFirstName} ${data.mentorLastName ?? ''}`.trim()
                     : 'Not assigned'
                 }
-                onPress={() => setPickerOpen('mentor')}
+                onPress={isTeam ? () => setPickerOpen('mentor') : undefined}
               />
               <DetailRow
                 label="Completed"
@@ -450,48 +471,52 @@ export default function EnrollmentDetail() {
               })}
             </Card>
 
-            <Card padding="md" style={{ gap: spacing.sm }}>
-              <View style={styles.mentorHeader}>
-                <Handshake color={c.primary} size={14} strokeWidth={1.5} />
-                <Text style={styles.sectionTitle}>Mentor follow-ups</Text>
-                <Badge
-                  label={String(mentorFollowups.data?.length ?? 0)}
-                  variant="neutral"
-                  size="sm"
+            {isTeam ? (
+              <Card padding="md" style={{ gap: spacing.sm }}>
+                <View style={styles.mentorHeader}>
+                  <Handshake color={c.primary} size={14} strokeWidth={1.5} />
+                  <Text style={styles.sectionTitle}>Mentor follow-ups</Text>
+                  <Badge
+                    label={String(mentorFollowups.data?.length ?? 0)}
+                    variant="neutral"
+                    size="sm"
+                  />
+                </View>
+
+                <Button
+                  label="Record follow-up"
+                  variant="primary"
+                  iconLeft={<MessageSquarePlus color="#ffffff" size={14} strokeWidth={2} />}
+                  onPress={() => setMentorNoteOpen(true)}
                 />
-              </View>
 
-              <Button
-                label="Record follow-up"
-                variant="primary"
-                iconLeft={<MessageSquarePlus color="#ffffff" size={14} strokeWidth={2} />}
-                onPress={() => setMentorNoteOpen(true)}
-              />
+                {mentorFollowups.isLoading ? (
+                  <ActivityIndicator color={c.primary} />
+                ) : (mentorFollowups.data ?? []).length === 0 ? (
+                  <Text style={styles.mentorEmpty}>
+                    No follow-ups recorded yet — record the first one above.
+                  </Text>
+                ) : (
+                  (mentorFollowups.data ?? []).map((f) => (
+                    <View key={f.id} style={styles.mentorRow}>
+                      <Text style={styles.mentorRowMeta}>
+                        {new Date(f.contactedAt).toLocaleDateString()}
+                        {f.mentorFirstName
+                          ? ` · ${f.mentorFirstName} ${f.mentorLastName ?? ''}`.trim()
+                          : ''}
+                      </Text>
+                      <Text style={styles.mentorRowNote}>{f.note}</Text>
+                    </View>
+                  ))
+                )}
+              </Card>
+            ) : null}
 
-              {mentorFollowups.isLoading ? (
-                <ActivityIndicator color={c.primary} />
-              ) : (mentorFollowups.data ?? []).length === 0 ? (
-                <Text style={styles.mentorEmpty}>
-                  No follow-ups recorded yet — record the first one above.
-                </Text>
-              ) : (
-                (mentorFollowups.data ?? []).map((f) => (
-                  <View key={f.id} style={styles.mentorRow}>
-                    <Text style={styles.mentorRowMeta}>
-                      {new Date(f.contactedAt).toLocaleDateString()}
-                      {f.mentorFirstName
-                        ? ` · ${f.mentorFirstName} ${f.mentorLastName ?? ''}`.trim()
-                        : ''}
-                    </Text>
-                    <Text style={styles.mentorRowNote}>{f.note}</Text>
-                  </View>
-                ))
-              )}
-            </Card>
-
-            <Pressable style={styles.deactivateRow} onPress={deactivate}>
-              <Text style={styles.deactivateText}>Deactivate enrollment</Text>
-            </Pressable>
+            {isTeam ? (
+              <Pressable style={styles.deactivateRow} onPress={deactivate}>
+                <Text style={styles.deactivateText}>Deactivate enrollment</Text>
+              </Pressable>
+            ) : null}
           </>
         )}
       </ScrollView>
