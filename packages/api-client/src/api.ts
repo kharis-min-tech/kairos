@@ -636,15 +636,7 @@ export function createApiClient(
         create: (
           branchDeptId: string,
           memberId: string,
-          data: {
-            contactedAt?: string;
-            contactMethod: string;
-            contactStatus: string;
-            durationMinutes?: number | null;
-            notes?: string | null;
-            nextFollowUpDate?: string | null;
-            assignedToId?: string | null;
-          },
+          data: CreateFellowshipFollowupRequest,
         ) =>
           client.post<ApiResponse<DepartmentFollowup>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}/followups`, data),
         update: (

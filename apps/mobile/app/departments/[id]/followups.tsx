@@ -10,18 +10,26 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Check, Clock, Plus, ChevronRight } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Check,
+  Clock,
+  Plus,
+  ChevronRight,
+  X,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
   Button,
   Card,
   DatePicker,
-  Input,
+  TimePicker,
   radii,
   spacing,
   typography,
@@ -32,12 +40,14 @@ import {
 import type {
   DepartmentFollowupWithDetails,
   DepartmentMemberWithDetails,
+  FollowupMethod,
   OverdueFollowupRow,
 } from '@kairos/types';
 import { ContactMethod, ContactStatus } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 type Tab = 'overdue' | 'all';
 
@@ -193,9 +203,10 @@ export default function DepartmentFollowups() {
         )}
       </ScrollView>
 
-      {createFor ? (
+      {createFor && dept.data ? (
         <CreateSheet
           branchDeptId={branchDeptId}
+          branchId={dept.data.branchId}
           member={createFor}
           onClose={() => setCreateFor(null)}
           onDone={() => {
@@ -297,13 +308,51 @@ function FollowupCard({ row }: { row: DepartmentFollowupWithDetails }) {
   );
 }
 
+// ── CreateSheet — Type-driven follow-up form ─────────────────
+// Top-level Type picker (Contact | Visit). Rest of the form swaps to the
+// matching field set. Legacy contactMethod/contactStatus stay populated so old
+// readers keep working.
+
+type FollowupTypeChoice = 'contact' | 'visit';
+type InterestChoice = 'interested' | 'not_interested' | 'undecided';
+type VisitKindChoice = 'in_person' | 'virtual';
+type VisitOutcomeChoice = 'present' | 'not_present' | 'rescheduled';
+
+const CONTACT_METHOD_OPTIONS: { value: FollowupMethod; label: string }[] = [
+  { value: 'phone_call', label: 'Phone Call' },
+  { value: 'text_message', label: 'Text' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+];
+
+function methodToLegacyContactMethod(m: FollowupMethod): ContactMethod {
+  switch (m) {
+    case 'phone_call':
+      return ContactMethod.PhoneCall;
+    case 'text_message':
+      return ContactMethod.TextMessage;
+    case 'whatsapp':
+      return ContactMethod.WhatsApp;
+    case 'email':
+      return ContactMethod.Email;
+    case 'in_person':
+      return ContactMethod.InPersonVisit;
+    case 'virtual':
+    case 'other':
+    default:
+      return ContactMethod.Other;
+  }
+}
+
 function CreateSheet({
   branchDeptId,
+  branchId,
   member,
   onClose,
   onDone,
 }: {
   branchDeptId: string;
+  branchId: string;
   member: { memberId: string; memberName: string };
   onClose: () => void;
   onDone: () => void;
@@ -312,18 +361,101 @@ function CreateSheet({
   const [contactedAt, setContactedAt] = useState(
     new Date().toISOString().slice(0, 10),
   );
-  const [method, setMethod] = useState<ContactMethod>(ContactMethod.PhoneCall);
-  const [status, setStatus] = useState<ContactStatus>(ContactStatus.Successful);
+  const [type, setType] = useState<FollowupTypeChoice>('contact');
+
+  // Contact state
+  const [methods, setMethods] = useState<Set<FollowupMethod>>(new Set());
+  const [contactReached, setContactReached] = useState<boolean | null>(null);
+  const [interestLevel, setInterestLevel] = useState<InterestChoice | null>(null);
+
+  // Visit state
+  const [visitKind, setVisitKind] = useState<VisitKindChoice | null>(null);
+  const [visitAnnounced, setVisitAnnounced] = useState<boolean | null>(null);
+  const [arrivalTime, setArrivalTime] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [companions, setCompanions] = useState<string[]>([]);
+  const [companionPickerOpen, setCompanionPickerOpen] = useState(false);
+  const [visitOutcome, setVisitOutcome] = useState<VisitOutcomeChoice | null>(null);
+  const [welfareConcern, setWelfareConcern] = useState(false);
+  const [safeguardingConcern, setSafeguardingConcern] = useState(false);
+
+  // Shared
   const [notes, setNotes] = useState('');
   const [nextDate, setNextDate] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function validate(): boolean {
+    const next: Record<string, string> = {};
+    if (type === 'contact') {
+      if (methods.size === 0) next['methods'] = 'Pick at least one method.';
+      if (contactReached === null) next['reached'] = 'Did you reach them?';
+    } else {
+      if (!visitKind) next['visitKind'] = 'Pick a visit kind.';
+      if (visitAnnounced === null) next['announced'] = 'Announced or unannounced?';
+      if (!arrivalTime) next['arrival'] = 'Arrival time is required.';
+      if (!visitOutcome) next['outcome'] = 'Pick an outcome.';
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   const mutate = useMutation({
     mutationFn: async () => {
       const payload: Parameters<typeof api.departments.followups.create>[2] = {
         contactedAt: new Date(`${contactedAt}T12:00:00`).toISOString(),
-        contactMethod: method,
-        contactStatus: status,
+        // populated below per-type
+        contactMethod: ContactMethod.Other,
+        contactStatus: ContactStatus.Successful,
       };
+
+      if (type === 'contact') {
+        const methodList = Array.from(methods);
+        const primary = methodList[0]!;
+        payload.type = 'contact';
+        payload.methods = methodList;
+        payload.contactMethod = methodToLegacyContactMethod(primary);
+        payload.contactReached = contactReached === true;
+        if (contactReached === true && interestLevel) {
+          payload.interestLevel = interestLevel;
+        }
+        // Legacy status derivation
+        if (contactReached === true && interestLevel === 'interested') {
+          payload.contactStatus = ContactStatus.Interested;
+        } else if (interestLevel === 'not_interested') {
+          payload.contactStatus = ContactStatus.NotInterested;
+        } else if (contactReached === false) {
+          payload.contactStatus = ContactStatus.NoAnswer;
+        } else {
+          payload.contactStatus = ContactStatus.Successful;
+        }
+      } else {
+        payload.type = 'visit';
+        payload.methods = [visitKind === 'virtual' ? 'virtual' : 'in_person'];
+        payload.contactMethod = ContactMethod.InPersonVisit; // legacy label
+        payload.visitKind = visitKind!;
+        payload.visitAnnounced = visitAnnounced === true;
+        payload.visitArrivalAt = new Date(
+          `${contactedAt}T${arrivalTime}:00`,
+        ).toISOString();
+        if (departureTime) {
+          payload.visitDepartureAt = new Date(
+            `${contactedAt}T${departureTime}:00`,
+          ).toISOString();
+        }
+        payload.visitOutcome = visitOutcome!;
+        if (companions.length > 0) payload.companionMemberIds = companions;
+        if (welfareConcern) payload.welfareConcern = true;
+        if (safeguardingConcern) payload.safeguardingConcern = true;
+        // Legacy status derivation
+        if (visitOutcome === 'present') {
+          payload.contactStatus = ContactStatus.Successful;
+        } else if (visitOutcome === 'not_present') {
+          payload.contactStatus = ContactStatus.NoAnswer;
+        } else {
+          payload.contactStatus = ContactStatus.CallBackLater;
+        }
+      }
+
       if (notes.trim()) payload.notes = notes.trim();
       if (nextDate) payload.nextFollowUpDate = nextDate;
       return (
@@ -339,77 +471,401 @@ function CreateSheet({
       alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
   });
 
+  function handleSave() {
+    if (!validate()) return;
+    mutate.mutate();
+  }
+
+  function toggleMethod(m: FollowupMethod) {
+    setMethods((prev) => {
+      const next = new Set(prev);
+      if (next.has(m)) next.delete(m);
+      else next.add(m);
+      return next;
+    });
+  }
+
+  const excludeCompanions = useMemo(
+    () => new Set<string>([member.memberId, ...companions]),
+    [member.memberId, companions],
+  );
+
   return (
-    <SheetShell open title={`Follow-up · ${member.memberName}`} onClose={onClose}>
-      <DatePicker label="Contacted on" value={contactedAt} onChange={setContactedAt} />
-
-      <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Method</Text>
-        <View style={styles.chipRow}>
-          {Object.values(ContactMethod).map((m) => {
-            const active = m === method;
-            return (
-              <Pressable
-                key={m}
-                onPress={() => setMethod(m)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {m}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Outcome</Text>
-        <View style={styles.chipRow}>
-          {Object.values(ContactStatus).map((s) => {
-            const active = s === status;
-            return (
-              <Pressable
-                key={s}
-                onPress={() => setStatus(s)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {s}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Notes</Text>
-        <Input
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="What was discussed?"
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-          containerStyle={{ minHeight: 80 }}
+    <>
+      <SheetShell open title={`Follow-up · ${member.memberName}`} onClose={onClose}>
+        <DatePicker
+          label="Contacted on"
+          value={contactedAt}
+          onChange={setContactedAt}
         />
+
+        <View style={{ gap: 4 }}>
+          <Text style={styles.fieldLabel}>Type</Text>
+          <View style={styles.chipRow}>
+            {(['contact', 'visit'] as FollowupTypeChoice[]).map((t) => {
+              const active = t === type;
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => {
+                    setType(t);
+                    setErrors({});
+                  }}
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                    {t === 'contact' ? 'Contact' : 'Visit'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {type === 'contact' ? (
+          <>
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Methods (pick one or more)</Text>
+              <View style={styles.chipRow}>
+                {CONTACT_METHOD_OPTIONS.map(({ value, label }) => {
+                  const active = methods.has(value);
+                  return (
+                    <Pressable
+                      key={value}
+                      onPress={() => toggleMethod(value)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors['methods'] ? (
+                <Text style={styles.errorLine}>{errors['methods']}</Text>
+              ) : null}
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Reached them?</Text>
+              <View style={styles.chipRow}>
+                {(
+                  [
+                    { value: true, label: 'Yes' },
+                    { value: false, label: 'No' },
+                  ] as { value: boolean; label: string }[]
+                ).map(({ value, label }) => {
+                  const active = contactReached === value;
+                  return (
+                    <Pressable
+                      key={label}
+                      onPress={() => {
+                        setContactReached(value);
+                        if (value === false) setInterestLevel(null);
+                      }}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors['reached'] ? (
+                <Text style={styles.errorLine}>{errors['reached']}</Text>
+              ) : null}
+            </View>
+
+            {contactReached === true ? (
+              <View style={{ gap: 4 }}>
+                <Text style={styles.fieldLabel}>Interest</Text>
+                <View style={styles.chipRow}>
+                  {(
+                    [
+                      { value: 'interested', label: 'Interested' },
+                      { value: 'not_interested', label: 'Not interested' },
+                      { value: 'undecided', label: 'Undecided' },
+                    ] as { value: InterestChoice; label: string }[]
+                  ).map(({ value, label }) => {
+                    const active = interestLevel === value;
+                    return (
+                      <Pressable
+                        key={value}
+                        onPress={() => setInterestLevel(value)}
+                        style={[styles.chip, active && styles.chipActive]}
+                      >
+                        <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Kind</Text>
+              <View style={styles.chipRow}>
+                {(
+                  [
+                    { value: 'in_person', label: 'In-person' },
+                    { value: 'virtual', label: 'Virtual' },
+                  ] as { value: VisitKindChoice; label: string }[]
+                ).map(({ value, label }) => {
+                  const active = visitKind === value;
+                  return (
+                    <Pressable
+                      key={value}
+                      onPress={() => setVisitKind(value)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors['visitKind'] ? (
+                <Text style={styles.errorLine}>{errors['visitKind']}</Text>
+              ) : null}
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Announced?</Text>
+              <View style={styles.chipRow}>
+                {(
+                  [
+                    { value: true, label: 'Announced' },
+                    { value: false, label: 'Unannounced' },
+                  ] as { value: boolean; label: string }[]
+                ).map(({ value, label }) => {
+                  const active = visitAnnounced === value;
+                  return (
+                    <Pressable
+                      key={label}
+                      onPress={() => setVisitAnnounced(value)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors['announced'] ? (
+                <Text style={styles.errorLine}>{errors['announced']}</Text>
+              ) : null}
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <TimePicker
+                label="Arrival time"
+                value={arrivalTime}
+                onChange={setArrivalTime}
+                error={errors['arrival'] ?? null}
+              />
+            </View>
+
+            <TimePicker
+              label="Departure time (optional)"
+              value={departureTime}
+              onChange={setDepartureTime}
+            />
+
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Went with (optional)</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.companionRow}
+              >
+                {companions.map((cid) => (
+                  <CompanionChip
+                    key={cid}
+                    memberId={cid}
+                    onRemove={() =>
+                      setCompanions((prev) => prev.filter((x) => x !== cid))
+                    }
+                  />
+                ))}
+                <Pressable
+                  onPress={() => setCompanionPickerOpen(true)}
+                  style={styles.companionAddBtn}
+                >
+                  <Plus color="#ffffff" size={12} strokeWidth={2} />
+                  <Text style={styles.companionAddLabel}>Add companion</Text>
+                </Pressable>
+              </ScrollView>
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <Text style={styles.fieldLabel}>Outcome</Text>
+              <View style={styles.chipRow}>
+                {(
+                  [
+                    { value: 'present', label: 'Present' },
+                    { value: 'not_present', label: 'Not present' },
+                    { value: 'rescheduled', label: 'Rescheduled' },
+                  ] as { value: VisitOutcomeChoice; label: string }[]
+                ).map(({ value, label }) => {
+                  const active = visitOutcome === value;
+                  return (
+                    <Pressable
+                      key={value}
+                      onPress={() => setVisitOutcome(value)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors['outcome'] ? (
+                <Text style={styles.errorLine}>{errors['outcome']}</Text>
+              ) : null}
+            </View>
+          </>
+        )}
+
+        <View style={{ gap: 4 }}>
+          <Text style={styles.fieldLabel}>Notes</Text>
+          <AutoGrowTextarea
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="What was discussed?"
+          />
+        </View>
+
+        {type === 'visit' ? (
+          <>
+            <CheckboxRow
+              label="Welfare concern noted"
+              value={welfareConcern}
+              onToggle={() => setWelfareConcern((v) => !v)}
+            />
+            <CheckboxRow
+              label="Safeguarding matter"
+              value={safeguardingConcern}
+              onToggle={() => setSafeguardingConcern((v) => !v)}
+            />
+          </>
+        ) : null}
+
+        <DatePicker
+          label="Next follow-up (optional)"
+          value={nextDate}
+          onChange={setNextDate}
+        />
+
+        <Button
+          label={mutate.isPending ? 'Saving…' : 'Save follow-up'}
+          size="lg"
+          fullWidth
+          loading={mutate.isPending}
+          onPress={handleSave}
+        />
+      </SheetShell>
+
+      <MemberPickerSheet
+        open={companionPickerOpen}
+        onClose={() => setCompanionPickerOpen(false)}
+        branchId={branchId}
+        excludeMemberIds={excludeCompanions}
+        onPick={(memberId) => {
+          setCompanions((prev) => (prev.includes(memberId) ? prev : [...prev, memberId]));
+          setCompanionPickerOpen(false);
+        }}
+        title="Add companion"
+        subtitle="Who came along on the visit?"
+      />
+    </>
+  );
+}
+
+// ── Local helper components ─────────────────────────────────
+
+function AutoGrowTextarea({
+  value,
+  onChangeText,
+  placeholder,
+}: {
+  value: string;
+  onChangeText: (s: string) => void;
+  placeholder?: string;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const [height, setHeight] = useState(80);
+  return (
+    <TextInput
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      placeholderTextColor={c.inkFaded}
+      multiline
+      scrollEnabled
+      textAlignVertical="top"
+      onContentSizeChange={(e) => {
+        const h = Math.max(80, Math.min(280, e.nativeEvent.contentSize.height + 12));
+        setHeight(h);
+      }}
+      style={[styles.textarea, { height, maxHeight: 280 }]}
+    />
+  );
+}
+
+function CheckboxRow({
+  label,
+  value,
+  onToggle,
+}: {
+  label: string;
+  value: boolean;
+  onToggle: () => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <Pressable onPress={onToggle} style={styles.checkboxRow}>
+      <View style={[styles.checkboxBox, value && styles.checkboxBoxChecked]}>
+        {value ? <Check color="#ffffff" size={12} strokeWidth={2.5} /> : null}
       </View>
+      <Text style={styles.checkboxLabel}>{label}</Text>
+    </Pressable>
+  );
+}
 
-      <DatePicker
-        label="Next follow-up (optional)"
-        value={nextDate}
-        onChange={setNextDate}
-      />
-
-      <Button
-        label={mutate.isPending ? 'Saving…' : 'Save follow-up'}
-        size="lg"
-        fullWidth
-        loading={mutate.isPending}
-        onPress={() => mutate.mutate()}
-      />
-    </SheetShell>
+function CompanionChip({
+  memberId,
+  onRemove,
+}: {
+  memberId: string;
+  onRemove: () => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const q = useQuery({
+    queryKey: ['members', memberId],
+    queryFn: async () => (await api.members.get(memberId)).data ?? null,
+  });
+  const name = q.data
+    ? `${q.data.firstName} ${q.data.lastName}`
+    : '…';
+  return (
+    <View style={styles.companionChip}>
+      <Text style={styles.companionChipLabel}>{name}</Text>
+      <Pressable onPress={onRemove} hitSlop={6}>
+        <X color={c.inkMuted} size={12} strokeWidth={2} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -560,6 +1016,70 @@ function makeStyles(c: ThemeColors) {
     },
     chipLabel: { ...typography.meta, color: c.inkMuted, fontWeight: '600' },
     chipLabelActive: { color: c.primary, fontWeight: '700' },
+    errorLine: { ...typography.meta, color: c.danger, marginTop: 4 },
+    textarea: {
+      ...typography.body,
+      color: c.ink,
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      minHeight: 80,
+    },
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    checkboxBox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: c.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.card,
+    },
+    checkboxBoxChecked: {
+      backgroundColor: c.primary,
+      borderColor: c.primary,
+    },
+    checkboxLabel: {
+      ...typography.body,
+      color: c.ink,
+      flex: 1,
+    },
+    companionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 2,
+    },
+    companionChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radii.pill,
+      backgroundColor: c.subtle,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    companionChipLabel: { ...typography.meta, color: c.ink, fontWeight: '600' },
+    companionAddBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: c.primary,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radii.pill,
+    },
+    companionAddLabel: { ...typography.meta, color: '#ffffff', fontWeight: '700' },
     backdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.4)',
