@@ -288,6 +288,48 @@
       "when": 1797300000000,
       "tag": "0040_regions_composite_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1798300000000,
+      "tag": "0041_branch_self_checkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1799300000000,
+      "tag": "0042_branch_coordinates",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1800300000000,
+      "tag": "0043_fellowship_address",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1801300000000,
+      "tag": "0044_oauth_provider_linking",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1802300000000,
+      "tag": "0045_oauth_must_complete_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1803300000000,
+      "tag": "0046_followup_visit_shape",
+      "breakpoints": true
     }
   ]
 }
