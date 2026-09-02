@@ -12,23 +12,14 @@ import {
 import { useAuthStore } from '@/store/auth';
 
 /**
- * Persistent bottom tab bar. Shows on every authenticated screen — including
- * deep nested detail pages — so tapping "Home" always gets the user back to
- * the tab root in one tap. Matches the industry norm (Instagram, TikTok,
- * Slack, LinkedIn all keep their bottom nav visible at every depth).
+ * Height of the bar's own content, excluding the safe-area inset underneath
+ * it. Derived from the styles below: 8px top padding + the tallest tab
+ * (22px icon + 2px gap + ~14px label + 4px vertical padding each side).
  *
- * Hidden on:
- *   - Auth routes (`(auth)/*`) — login, signup, oauth callbacks, etc.
- *   - Onboarding routes (`(onboarding)/*`) — pre-signin splash.
- *   - When the user isn't signed in / isn't approved / needs onboarding.
- *
- * Sits over the safe-area bottom inset. Screen content scrolls behind it —
- * add `paddingBottom` to any long ScrollView that has actionable content
- * near the bottom edge.
- *
- * Note: the `(tabs)/_layout.tsx` file hides expo-router's default tab bar
- * via `tabBarStyle: { display: 'none' }` so we don't render two bars.
+ * Screens must not hardcode this. The root layout reserves the space for the
+ * whole app via {@link useTabBarReservedSpace}.
  */
+export const TAB_BAR_CONTENT_HEIGHT = 56;
 
 type TabKey = 'home' | 'community' | 'check-in' | 'give' | 'more';
 
@@ -40,19 +31,18 @@ const TABS: { key: TabKey; label: string; icon: typeof Home; href: string }[] = 
   { key: 'more', label: 'More', icon: Menu, href: '/(tabs)/more' },
 ];
 
-export function PersistentTabBar() {
-  const styles = useThemedStyles(makeStyles);
-  const c = useColors();
-  const router = useRouter();
+/**
+ * Whether the bar is currently on screen.
+ *
+ * The bar and every screen's bottom inset both read this, so the two can't
+ * disagree about whether space needs reserving. Do not inline this logic.
+ */
+export function useTabBarVisible(): boolean {
   const segments = useSegments();
-  const insets = useSafeAreaInsets();
-
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
 
-  // Visibility gate: user must be fully signed in AND on a route that isn't
-  // an auth/onboarding surface. Reading segments lets us do this without
-  // depending on brittle pathname string matches.
+  // Reading segments rather than the pathname avoids brittle string matches.
   const topGroup = segments[0];
   const isAuthRoute = topGroup === '(auth)';
   const isOnboardingRoute = topGroup === '(onboarding)';
@@ -60,14 +50,75 @@ export function PersistentTabBar() {
   const isReadyForTabs =
     isSignedIn && !user?.mustCompleteProfile && user?.approvalStatus === 'approved';
 
-  if (isAuthRoute || isOnboardingRoute || !isReadyForTabs) return null;
+  return !isAuthRoute && !isOnboardingRoute && isReadyForTabs;
+}
+
+/**
+ * Padding the root layout reserves below the router Stack so screen content
+ * ends exactly at the bar's top edge instead of scrolling underneath it.
+ *
+ * Note what this deliberately does NOT include. Screens wrap themselves in
+ * `SafeAreaView edges={['top', 'bottom']}`, so each one already applies
+ * `insets.bottom` of its own padding inside the Stack. Reserving the full bar
+ * height here as well would double-count that inset and leave a strip of dead
+ * space above the bar on any device with a home indicator. Subtracting it
+ * means the two paddings sum to exactly the bar's height:
+ *
+ *   reserved here          = HEIGHT + max(inset, 8) - inset
+ *   screen's own SafeArea  =                          inset
+ *   ------------------------------------------------------
+ *   total from screen edge = HEIGHT + max(inset, 8)  = bar height
+ *
+ * Returns 0 when the bar is hidden, so auth and onboarding keep their spacing.
+ */
+export function useTabBarReservedSpace(): number {
+  const insets = useSafeAreaInsets();
+  const visible = useTabBarVisible();
+  if (!visible) return 0;
+  return TAB_BAR_CONTENT_HEIGHT + Math.max(insets.bottom, 8) - insets.bottom;
+}
+
+/**
+ * Persistent bottom tab bar. Shows on every authenticated screen — including
+ * deep nested detail pages — so tapping "Home" always gets the user back to
+ * the tab root in one tap. Matches the industry norm (Instagram, TikTok,
+ * Slack, LinkedIn all keep their bottom nav visible at every depth).
+ *
+ * Hidden on:
+ *   - Auth routes (`(auth)/*`) — login, signup, oauth callbacks, etc.
+ *   - Onboarding routes (`(onboarding)/*`) — pre-signin splash.
+ *   - When the user isn't signed in / isn't approved / needs onboarding.
+ *
+ * Sits over the safe-area bottom inset. Because it is an absolute overlay it
+ * does not push content up on its own, so the root layout reserves the space
+ * for it once via `useTabBarReservedSpace()`. Individual screens need no
+ * bottom padding of their own and must never hardcode the bar's height.
+ *
+ * Note: the `(tabs)/_layout.tsx` file hides expo-router's default tab bar
+ * via `tabBarStyle: { display: 'none' }` so we don't render two bars.
+ */
+export function PersistentTabBar() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+  const segments = useSegments();
+  const insets = useSafeAreaInsets();
+  const visible = useTabBarVisible();
+
+  if (!visible) return null;
+
+  // `useSegments()` is typed as a union of per-route tuples, so comparing
+  // element 0 narrows the whole tuple to a length-1 variant and element 1
+  // stops type-checking. We only ever want the raw path segments here.
+  const segs = segments as readonly string[];
+  const topGroup = segs[0];
 
   // Active-tab derivation. When user is off the tab group entirely (e.g.
   // on /fellowships/[id]), we highlight nothing so they know they're in a
   // nested surface.
   let activeKey: TabKey | null = null;
   if (topGroup === '(tabs)') {
-    const leaf = segments[1] as string | undefined;
+    const leaf = segs[1];
     if (!leaf) activeKey = 'home';
     else if (leaf === 'community') activeKey = 'community';
     else if (leaf === 'check-in') activeKey = 'check-in';
