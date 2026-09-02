@@ -150,6 +150,29 @@ import type {
 } from '@kairos/types';
 
 import type {
+  MembershipCohort,
+  MembershipCohortSummary,
+  MembershipCohortTeacher,
+  MembershipSession,
+  MembershipEnrollment,
+  MembershipEnrollmentWithMember,
+  MembershipEnrollmentDetail,
+  MembershipGraduationReadiness,
+  CreateMembershipCohortRequest,
+  UpdateMembershipCohortRequest,
+  UpsertMembershipSessionRequest,
+  AssignMembershipTeacherRequest,
+  EnrolMembersRequest,
+  SaveMembershipSessionRecordsRequest,
+  RecordFinalTestRequest,
+  RecordInductionRequest,
+  GraduateMembersRequest,
+  WithdrawMembershipEnrollmentRequest,
+  MembershipCohortStatus,
+  MembershipEnrollmentStatus,
+} from '@kairos/types';
+
+import type {
   Branch,
   BranchWithRegion,
   Region,
@@ -1126,6 +1149,140 @@ export function createApiClient(
           client.get<ApiResponse<NewBelieverAttendanceWithMember[]>>(`/api/new-believers/sessions/${sessionId}/attendance`),
         recordAttendance: (sessionId: string, data: RecordNewBelieverAttendanceRequest) =>
           client.post<ApiResponse<{ recorded: number }>>(`/api/new-believers/sessions/${sessionId}/attendance`, data),
+      },
+    },
+
+    // Membership classes. Cohorts are church-wide, so nothing here takes a
+    // branchId — see packages/database/src/schema/membership.ts.
+    membership: {
+      /** The caller's own progress. Always allowed, never gated. */
+      me: () =>
+        client.get<
+          ApiResponse<{
+            enrollment: MembershipEnrollmentDetail | null;
+            readiness: MembershipGraduationReadiness | null;
+            confirmedAt: string | null;
+          }>
+        >('/api/membership/me'),
+
+      cohorts: {
+        list: (params?: {
+          status?: MembershipCohortStatus;
+          enrolmentOpen?: boolean;
+          includeInactive?: boolean;
+          page?: number;
+          limit?: number;
+        }) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.enrolmentOpen !== undefined)
+            qs.set('enrolmentOpen', String(params.enrolmentOpen));
+          if (params?.includeInactive) qs.set('includeInactive', 'true');
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          const q = qs.toString();
+          return client.get<
+            ApiResponse<{
+              cohorts: MembershipCohortSummary[];
+              pagination: { page: number; limit: number; total: number; totalPages: number };
+            }>
+          >(`/api/membership/cohorts${q ? `?${q}` : ''}`);
+        },
+        get: (id: string) =>
+          client.get<
+            ApiResponse<
+              MembershipCohort & {
+                teachers: MembershipCohortTeacher[];
+                sessions: MembershipSession[];
+              }
+            >
+          >(`/api/membership/cohorts/${id}`),
+        create: (data: CreateMembershipCohortRequest) =>
+          client.post<ApiResponse<MembershipCohort>>('/api/membership/cohorts', data),
+        update: (id: string, data: UpdateMembershipCohortRequest) =>
+          client.patch<ApiResponse<MembershipCohort>>(`/api/membership/cohorts/${id}`, data),
+        archive: (id: string) =>
+          client.delete<ApiResponse<MembershipCohort>>(`/api/membership/cohorts/${id}`),
+
+        assignTeacher: (id: string, data: AssignMembershipTeacherRequest) =>
+          client.post<ApiResponse<MembershipCohortTeacher>>(
+            `/api/membership/cohorts/${id}/teachers`,
+            data,
+          ),
+        removeTeacher: (id: string, memberId: string) =>
+          client.delete<ApiResponse<{ removed: boolean }>>(
+            `/api/membership/cohorts/${id}/teachers/${memberId}`,
+          ),
+
+        /** Upsert by session number: one session 3 per cohort, always. */
+        saveSession: (id: string, data: UpsertMembershipSessionRequest) =>
+          client.put<ApiResponse<MembershipSession>>(
+            `/api/membership/cohorts/${id}/sessions`,
+            data,
+          ),
+
+        /** Self-enrolment. No admin involved. */
+        enrolSelf: (id: string) =>
+          client.post<ApiResponse<MembershipEnrollment>>(
+            `/api/membership/cohorts/${id}/enrol`,
+            {},
+          ),
+        enrolMembers: (id: string, data: EnrolMembersRequest) =>
+          client.post<ApiResponse<MembershipEnrollment[]>>(
+            `/api/membership/cohorts/${id}/enrollments`,
+            data,
+          ),
+        enrollments: (
+          id: string,
+          params?: { status?: MembershipEnrollmentStatus; branchId?: string; search?: string },
+        ) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.search) qs.set('search', params.search);
+          const q = qs.toString();
+          return client.get<ApiResponse<MembershipEnrollmentWithMember[]>>(
+            `/api/membership/cohorts/${id}/enrollments${q ? `?${q}` : ''}`,
+          );
+        },
+
+        recordInduction: (id: string, data: RecordInductionRequest) =>
+          client.post<ApiResponse<{ updated: number; enrollments: MembershipEnrollment[] }>>(
+            `/api/membership/cohorts/${id}/induction`,
+            data,
+          ),
+        graduate: (id: string, data: GraduateMembersRequest) =>
+          client.post<
+            ApiResponse<{
+              graduated: number;
+              graduatedIds: string[];
+              blocked: { enrollmentId: string; outstanding: string[] }[];
+            }>
+          >(`/api/membership/cohorts/${id}/graduate`, data),
+      },
+
+      sessions: {
+        /** One write for the whole register: attendance plus homework and quiz. */
+        saveRecords: (sessionId: string, data: SaveMembershipSessionRecordsRequest) =>
+          client.put<ApiResponse<{ saved: number }>>(
+            `/api/membership/sessions/${sessionId}/records`,
+            data,
+          ),
+      },
+
+      recordFinalTest: (data: RecordFinalTestRequest) =>
+        client.post<ApiResponse<MembershipEnrollment>>('/api/membership/final-test', data),
+
+      enrollments: {
+        get: (enrollmentId: string) =>
+          client.get<ApiResponse<MembershipEnrollmentDetail>>(
+            `/api/membership/enrollments/${enrollmentId}`,
+          ),
+        withdraw: (enrollmentId: string, data: WithdrawMembershipEnrollmentRequest) =>
+          client.post<ApiResponse<MembershipEnrollment>>(
+            `/api/membership/enrollments/${enrollmentId}/withdraw`,
+            data,
+          ),
       },
     },
 
