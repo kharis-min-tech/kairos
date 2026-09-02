@@ -34,6 +34,7 @@ vi.mock('@/hooks/use-members', () => ({
   useSetMembershipClass: () => ({ mutate: vi.fn(), isPending: false }),
   useMemberHealthRecord: () => ({ data: healthData, isLoading: false, error: null }),
   useUpsertMemberHealthRecord: () => ({ mutate: vi.fn(), isPending: false, error: null }),
+  useMemberFollowupHistory: () => ({ data: [], isLoading: false, error: null }),
 }));
 
 vi.mock('@/hooks/use-fellowships', () => ({
