@@ -330,6 +330,13 @@
       "when": 1803300000000,
       "tag": "0046_followup_visit_shape",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1804300000000,
+      "tag": "0047_membership_classes",
+      "breakpoints": true
     }
   ]
 }
