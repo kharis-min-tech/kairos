@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,7 +11,10 @@ import { useAuthStore } from '@/store/auth';
 import { useOnboardingStore } from '@/store/onboarding';
 import { useThemeStore } from '@/store/theme';
 import { AlertHost } from '@/components/alert-host';
-import { PersistentTabBar } from '@/components/persistent-tab-bar';
+import {
+  PersistentTabBar,
+  useTabBarReservedSpace,
+} from '@/components/persistent-tab-bar';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Already prevented / not available — safe to ignore.
@@ -64,7 +68,7 @@ export default function RootLayout() {
       <ThemeProvider mode={themeMode} setMode={(m) => void setThemeMode(m)}>
         <SafeAreaProvider>
           <ThemedChrome />
-          {ready ? <Stack screenOptions={{ headerShown: false }} /> : null}
+          {ready ? <RouterHost /> : null}
           {/* Persistent bottom tab bar — visible on every authenticated
               screen, hidden on auth/onboarding routes and when the caller
               isn't approved. Lives here (not inside `(tabs)/_layout.tsx`)
@@ -76,6 +80,28 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+/**
+ * Hosts the router Stack and reserves the strip of screen the persistent tab
+ * bar sits over.
+ *
+ * The bar is an absolute overlay, so without this every screen would scroll
+ * its last rows, its list ends and its sticky footers underneath the bar.
+ * Reserving the space once here means no individual screen needs a bottom
+ * inset of its own — see `useTabBarReservedSpace` for why the device's bottom
+ * inset is subtracted rather than added.
+ *
+ * Must sit inside SafeAreaProvider (it reads insets) and inside the router
+ * context (it reads segments).
+ */
+function RouterHost() {
+  const reserved = useTabBarReservedSpace();
+  return (
+    <View style={{ flex: 1, paddingBottom: reserved }}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
   );
 }
 
