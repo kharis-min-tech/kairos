@@ -1,14 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
+  ADDRESS_QUERY_DEBOUNCE_MS,
+  ADDRESS_QUERY_MIN_LENGTH,
+  generateAddressSessionToken,
+  resolveAddressSuggestions,
+  resolveOsmSuggestion,
+  retrieveMapboxSuggestion,
+  type AddressSuggestion,
+} from '@kairos/core';
 import { Input } from './Input';
 import { radii, spacing, typography } from './tokens';
 import { useThemedStyles, useColors, type ThemeColors } from './theme';
+
+/** Identifies the app to Nominatim, whose usage policy asks callers to. */
+const NOMINATIM_USER_AGENT = 'Kairos/1.0 (kairos.kharis.org)';
 
 export interface AddressAutofillValue {
   line1: string;
@@ -17,9 +23,8 @@ export interface AddressAutofillValue {
   postalCode: string;
   country?: string;
   /**
-   * Populated from the Mapbox retrieve response when the user picks a
-   * suggestion. Consumers persist these where applicable (branches) so the
-   * fellowships map can render pins organically.
+   * Populated when the user picks a suggestion. Consumers persist these where
+   * applicable (branches) so the fellowships map can render pins organically.
    */
   latitude?: number | null;
   longitude?: number | null;
@@ -27,8 +32,8 @@ export interface AddressAutofillValue {
 
 export interface AddressAutofillInputProps {
   /**
-   * Mapbox public access token. Pass `process.env.MAPBOX_PUBLIC_TOKEN` in
-   * app code. When empty the input degrades to plain fields with no autofill.
+   * Mapbox public access token. Pass `process.env.MAPBOX_PUBLIC_TOKEN` in app
+   * code. Without a token the input still autocompletes via OpenStreetMap.
    */
   accessToken?: string;
   value: AddressAutofillValue;
@@ -55,81 +60,12 @@ export interface AddressAutofillInputProps {
 }
 
 /**
- * A unified suggestion — either a Mapbox Search Box result (needs a follow-up
- * /retrieve call to resolve to full address + coords) or a Nominatim (OSM)
- * result (comes back fully resolved on the first call). Nominatim gives us a
- * fallback for regions where Mapbox coverage is thin (Ghana, Sierra Leone,
- * Nigeria — community-driven OSM data is often stronger there).
- */
-type Suggestion =
-  | {
-      source: 'mapbox';
-      id: string; // stable dedupe key + React key
-      mapbox_id: string;
-      name: string;
-      place_formatted: string;
-    }
-  | {
-      source: 'osm';
-      id: string;
-      name: string;
-      place_formatted: string;
-      lat: number;
-      lng: number;
-      addressLine1: string;
-      city: string;
-      postcode: string;
-      countryCode?: string;
-    };
-
-interface NominatimResult {
-  place_id: number;
-  lat: string;
-  lon: string;
-  display_name: string;
-  address?: {
-    house_number?: string;
-    road?: string;
-    pedestrian?: string;
-    suburb?: string;
-    neighbourhood?: string;
-    city?: string;
-    town?: string;
-    village?: string;
-    postcode?: string;
-    country_code?: string;
-  };
-}
-
-interface RetrieveFeature {
-  properties: {
-    address_line1?: string;
-    address_line2?: string;
-    address_level1?: string;
-    address_level2?: string;
-    postcode?: string;
-    country_code?: string;
-    name?: string;
-    feature_type?: string;
-    place_formatted?: string;
-  };
-  geometry?: {
-    type: 'Point';
-    coordinates: [number, number]; // [lng, lat]
-  };
-}
-
-/**
- * Address entry group with Mapbox Search Box autofill.
+ * Address entry with autocomplete over Mapbox Search Box plus OpenStreetMap,
+ * merged into a single suggestion list.
  *
- * Web has an official `<AddressAutofill>` component; RN doesn't, so this calls
- * the Search Box REST API directly (`/suggest` while typing, `/retrieve` on
- * pick) and renders results in a themed bottom-sheet picker matching the
- * app's existing sheet pattern.
- *
- * Session tokens keep billing sane — Mapbox counts one full session (many
- * suggests + one retrieve) as one billable request, so we generate a fresh
- * session token on mount and after each retrieve.
+ * The fetch, merge and dedupe live in `@kairos/core` so this and the web
+ * `AddressAutofillGroup` behave identically. This component owns only the
+ * rendering and the pick interaction.
  */
 export function AddressAutofillInput({
   accessToken,
@@ -143,11 +79,16 @@ export function AddressAutofillInput({
 }: AddressAutofillInputProps) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [justPicked, setJustPicked] = useState(false);
-  const [sessionToken, setSessionToken] = useState(() => generateSessionToken());
+  const [sessionToken, setSessionToken] = useState(generateAddressSessionToken);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guards against a slow in-flight request resolving after a newer one and
+  // overwriting fresher suggestions with stale ones.
+  const requestSeqRef = useRef(0);
 
   const set = <K extends keyof AddressAutofillValue>(k: K, v: AddressAutofillValue[K]) =>
     onChange({ ...value, [k]: v });
@@ -156,6 +97,8 @@ export function AddressAutofillInput({
   const line2Label = labels?.line2 ?? 'Apartment, suite, etc. (optional)';
   const cityLabel = labels?.city ?? 'City';
   const postalLabel = labels?.postalCode ?? 'Postal code';
+
+  const hint = 'Not detected. Add it if you know it.';
 
   useEffect(
     () => () => {
@@ -167,113 +110,70 @@ export function AddressAutofillInput({
   function handleLine1Change(text: string) {
     set('line1', text);
     setJustPicked(false);
-    if (!accessToken || !text.trim() || text.trim().length < 3) {
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (text.trim().length < ADDRESS_QUERY_MIN_LENGTH) {
       setSuggestions([]);
       return;
     }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    // 400ms matches the industry norm (Google Places ~300, Booking ~500) — a
-    // hair longer than 250 avoids the "the picker keeps popping while I'm
-    // still typing" annoyance.
+
     debounceRef.current = setTimeout(() => {
-      fetchSuggestions(text);
-    }, 400);
+      void runQuery(text);
+    }, ADDRESS_QUERY_DEBOUNCE_MS);
   }
 
-  async function fetchSuggestions(query: string) {
+  async function runQuery(query: string) {
+    const seq = ++requestSeqRef.current;
     setLoading(true);
     try {
-      // Fire Mapbox + Nominatim in parallel. Mapbox first (better UX,
-      // richer data), Nominatim fills gaps in West Africa where Mapbox
-      // coverage is thin. Nominatim's terms of service ask for a real
-      // User-Agent — sent below.
-      const [mapboxRaw, osmRaw] = await Promise.allSettled([
-        accessToken ? fetchMapboxSuggestions(query, accessToken, sessionToken, country) : Promise.resolve<Suggestion[]>([]),
-        fetchOsmSuggestions(query, country),
-      ]);
-      const mapboxHits =
-        mapboxRaw.status === 'fulfilled' ? mapboxRaw.value : [];
-      const osmHits = osmRaw.status === 'fulfilled' ? osmRaw.value : [];
-
-      // Merge: Mapbox first, then any OSM result that doesn't look like a
-      // near-duplicate. Dedupe is a rough label match — good enough for a
-      // suggestion list of 6 rows.
-      const merged: Suggestion[] = [...mapboxHits];
-      const seen = new Set(
-        mapboxHits.map((m) => normaliseLabel(m.place_formatted)),
-      );
-      for (const o of osmHits) {
-        const key = normaliseLabel(o.place_formatted);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        merged.push(o);
-        if (merged.length >= 6) break;
-      }
-
-      setSuggestions(merged);
+      const hits = await resolveAddressSuggestions(query, {
+        accessToken,
+        sessionToken,
+        country,
+        userAgent: NOMINATIM_USER_AGENT,
+      });
+      if (seq !== requestSeqRef.current) return; // superseded
+      setSuggestions(hits);
     } catch {
+      if (seq !== requestSeqRef.current) return;
       setSuggestions([]);
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) setLoading(false);
     }
   }
 
-  async function pick(s: Suggestion) {
+  async function pick(s: AddressSuggestion) {
     setSuggestions([]);
-    if (s.source === 'osm') {
-      // Nominatim gives everything on the first call — no /retrieve step.
-      onChange({
-        line1: s.addressLine1 || value.line1,
-        line2: value.line2,
-        city: s.city || value.city,
-        postalCode: s.postcode || value.postalCode,
-        country: s.countryCode?.toUpperCase() ?? value.country,
-        latitude: s.lat,
-        longitude: s.lng,
-      });
-      setJustPicked(true);
-      return;
-    }
-    if (!accessToken) return;
+    requestSeqRef.current++; // cancel anything still in flight
+
     try {
-      const url = new URL(
-        `https://api.mapbox.com/search/searchbox/v1/retrieve/${encodeURIComponent(s.mapbox_id)}`,
-      );
-      url.searchParams.set('access_token', accessToken);
-      url.searchParams.set('session_token', sessionToken);
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`Retrieve failed (${res.status})`);
-      const json = (await res.json()) as { features?: RetrieveFeature[] };
-      const feat = json.features?.[0];
-      if (!feat) return;
-      const p = feat.properties;
-      const coords = feat.geometry?.coordinates;
-      const lng = Array.isArray(coords) ? coords[0] : undefined;
-      const lat = Array.isArray(coords) ? coords[1] : undefined;
-      // When the user picks a postcode-only or place-only suggestion, `name`
-      // is the postcode / place name itself — not a street address — and
-      // dumping it into line1 leaves the address field looking like a
-      // postcode. Only fall back to `name` for address/street/POI features
-      // where it genuinely reads as a street label.
-      const canUseNameForLine1 =
-        p.feature_type === 'address' ||
-        p.feature_type === 'street' ||
-        p.feature_type === 'poi';
-      const nextLine1 = p.address_line1 ?? (canUseNameForLine1 ? p.name : '') ?? '';
+      const resolved =
+        s.source === 'osm'
+          ? resolveOsmSuggestion(s)
+          : accessToken
+            ? await retrieveMapboxSuggestion(s.mapboxId, accessToken, sessionToken)
+            : null;
+      if (!resolved) return;
+
       onChange({
-        line1: nextLine1 || value.line1,
+        // Fall back to what the user already typed rather than blanking a
+        // field the provider had no answer for.
+        line1: resolved.line1 || value.line1,
         line2: value.line2,
-        city: p.address_level2 ?? value.city,
-        postalCode: p.postcode ?? value.postalCode,
-        country: p.country_code?.toUpperCase() ?? value.country,
-        latitude: typeof lat === 'number' ? lat : value.latitude,
-        longitude: typeof lng === 'number' ? lng : value.longitude,
+        city: resolved.city || value.city,
+        postalCode: resolved.postalCode || value.postalCode,
+        country: resolved.country ?? value.country,
+        latitude: resolved.latitude ?? value.latitude,
+        longitude: resolved.longitude ?? value.longitude,
       });
       setJustPicked(true);
+    } catch {
+      // Leave the typed text as-is; the user can complete the fields manually.
     } finally {
-      // Session token rotates after each successful retrieve to start the next
-      // billing session.
-      setSessionToken(generateSessionToken());
+      // Mapbox bills one session as many suggests plus one retrieve, so the
+      // token rotates once a retrieve has consumed it.
+      if (s.source === 'mapbox') setSessionToken(generateAddressSessionToken());
     }
   }
 
@@ -289,26 +189,18 @@ export function AddressAutofillInput({
           editable={!disabled}
           error={errors?.line1}
           placeholder="Start typing your address…"
-          trailingSlot={
-            loading ? <ActivityIndicator size="small" color={c.primary} /> : null
-          }
+          trailingSlot={loading ? <ActivityIndicator size="small" color={c.primary} /> : null}
         />
-        {justPicked && !value.line1?.trim() ? (
-          <Text style={styles.hintText}>Not detected — add if you know it.</Text>
-        ) : null}
+        {justPicked && !value.line1?.trim() ? <Text style={styles.hintText}>{hint}</Text> : null}
         {suggestions.length > 0 ? (
           <View style={styles.suggestionsDropdown}>
             {suggestions.map((s) => (
-              <Pressable
-                key={s.id}
-                style={styles.suggestionRow}
-                onPress={() => pick(s)}
-              >
+              <Pressable key={s.id} style={styles.suggestionRow} onPress={() => void pick(s)}>
                 <Text style={styles.suggestionName} numberOfLines={1}>
                   {s.name}
                 </Text>
                 <Text style={styles.suggestionMeta} numberOfLines={1}>
-                  {s.place_formatted}
+                  {s.placeFormatted}
                 </Text>
               </Pressable>
             ))}
@@ -340,9 +232,7 @@ export function AddressAutofillInput({
             editable={!disabled}
             error={errors?.city}
           />
-          {justPicked && !value.city?.trim() ? (
-            <Text style={styles.hintText}>Not detected — add if you know it.</Text>
-          ) : null}
+          {justPicked && !value.city?.trim() ? <Text style={styles.hintText}>{hint}</Text> : null}
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Input
@@ -357,111 +247,12 @@ export function AddressAutofillInput({
             error={errors?.postalCode}
           />
           {justPicked && !value.postalCode?.trim() ? (
-            <Text style={styles.hintText}>Not detected — add if you know it.</Text>
+            <Text style={styles.hintText}>{hint}</Text>
           ) : null}
         </View>
       </View>
     </View>
   );
-}
-
-async function fetchMapboxSuggestions(
-  query: string,
-  accessToken: string,
-  sessionToken: string,
-  country: string | undefined,
-): Promise<Suggestion[]> {
-  const url = new URL('https://api.mapbox.com/search/searchbox/v1/suggest');
-  url.searchParams.set('q', query);
-  url.searchParams.set('access_token', accessToken);
-  url.searchParams.set('session_token', sessionToken);
-  url.searchParams.set('language', 'en');
-  if (country) url.searchParams.set('country', country);
-  url.searchParams.set('types', 'address,street,place,postcode');
-  url.searchParams.set('limit', '6');
-  const res = await fetch(url.toString());
-  if (!res.ok) return [];
-  const json = (await res.json()) as {
-    suggestions?: {
-      mapbox_id: string;
-      name: string;
-      place_formatted: string;
-    }[];
-  };
-  return (json.suggestions ?? []).map<Suggestion>((s) => ({
-    source: 'mapbox',
-    id: `mapbox:${s.mapbox_id}`,
-    mapbox_id: s.mapbox_id,
-    name: s.name,
-    place_formatted: s.place_formatted,
-  }));
-}
-
-async function fetchOsmSuggestions(
-  query: string,
-  country: string | undefined,
-): Promise<Suggestion[]> {
-  // Nominatim is OpenStreetMap's free geocoder. Community-mapped data,
-  // which is often stronger than commercial in West Africa. Their terms of
-  // use require a real User-Agent identifying the app.
-  const url = new URL('https://nominatim.openstreetmap.org/search');
-  url.searchParams.set('q', query);
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('addressdetails', '1');
-  url.searchParams.set('limit', '4');
-  if (country) url.searchParams.set('countrycodes', country);
-  try {
-    const res = await fetch(url.toString(), {
-      headers: {
-        'Accept-Language': 'en',
-        'User-Agent': 'Kairos/1.0 (kairos.kharis.org)',
-      },
-    });
-    if (!res.ok) return [];
-    const rows = (await res.json()) as NominatimResult[];
-    return rows.map<Suggestion>((r) => {
-      const a = r.address ?? {};
-      const streetLabel = [a.house_number, a.road ?? a.pedestrian]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      const shortLabel =
-        streetLabel ||
-        a.suburb ||
-        a.neighbourhood ||
-        (r.display_name.split(',')[0] ?? '').trim();
-      return {
-        source: 'osm',
-        id: `osm:${r.place_id}`,
-        name: shortLabel,
-        place_formatted: r.display_name,
-        lat: parseFloat(r.lat),
-        lng: parseFloat(r.lon),
-        addressLine1: streetLabel,
-        city: a.city ?? a.town ?? a.village ?? '',
-        postcode: a.postcode ?? '',
-        countryCode: a.country_code,
-      };
-    });
-  } catch {
-    return [];
-  }
-}
-
-// Cheap normaliser for dedupe: lowercase + collapse whitespace + strip commas.
-// Same address returned by both Mapbox and OSM will hash to the same key.
-function normaliseLabel(label: string): string {
-  return label.toLowerCase().replace(/\s+/g, ' ').replace(/,/g, '').trim();
-}
-
-function generateSessionToken(): string {
-  // Simple RFC-4122-ish v4 UUID. Doesn't need to be crypto-strong; Mapbox
-  // just needs a stable-per-session opaque string.
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
-    const r = (Math.random() * 16) | 0;
-    const v = ch === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }
 
 function makeStyles(c: ThemeColors) {

@@ -18,6 +18,9 @@
     "dev": "tsc --watch",
     "test": "jest --passWithNoTests"
   },
+  "dependencies": {
+    "@kairos/core": "*"
+  },
   "peerDependencies": {
     "expo-linear-gradient": "*",
     "react": "*",

@@ -1,22 +1,18 @@
 'use client';
 
 import * as React from 'react';
-import dynamic from 'next/dynamic';
-import type { AddressAutofill as AddressAutofillType } from '@mapbox/search-js-react';
+import {
+  ADDRESS_QUERY_DEBOUNCE_MS,
+  ADDRESS_QUERY_MIN_LENGTH,
+  generateAddressSessionToken,
+  resolveAddressSuggestions,
+  resolveOsmSuggestion,
+  retrieveMapboxSuggestion,
+  type AddressSuggestion,
+} from '@kairos/core';
 import { Input } from './input';
 import { Label } from './label';
 import { cn } from '../lib/utils';
-
-/**
- * The Mapbox search-js-react package touches `document` at module load, which
- * breaks Next's static generation for any page that transitively imports from
- * `@kairos/ui`. Load it dynamically with `ssr: false` so it only ships in the
- * client bundle.
- */
-const AddressAutofill = dynamic(
-  () => import('@mapbox/search-js-react').then((m) => m.AddressAutofill),
-  { ssr: false },
-) as unknown as typeof AddressAutofillType;
 
 export interface AddressAutofillValue {
   line1: string;
@@ -25,10 +21,10 @@ export interface AddressAutofillValue {
   postalCode: string;
   country?: string;
   /**
-   * Populated from the Mapbox retrieve response when the user picks a
-   * suggestion. Consumers that persist coordinates (branches, fellowships)
-   * should forward these to the API; consumers that don't care about coords
-   * (member address for postal correspondence only) can ignore them.
+   * Populated when the user picks a suggestion. Consumers that persist
+   * coordinates (branches, fellowships) should forward these to the API;
+   * consumers that don't care about coords (member address, for postal
+   * correspondence only) can ignore them.
    */
   latitude?: number | null;
   longitude?: number | null;
@@ -37,8 +33,8 @@ export interface AddressAutofillValue {
 export interface AddressAutofillGroupProps {
   /**
    * Mapbox public access token. Pass `process.env.NEXT_PUBLIC_MAPBOX_TOKEN` in
-   * app code. When the token is missing the group renders as plain inputs with
-   * no autofill (useful for local dev without the token wired).
+   * app code. Without a token the group still autocompletes via OpenStreetMap,
+   * so local dev works with no Mapbox setup at all.
    */
   accessToken?: string;
   value: AddressAutofillValue;
@@ -67,12 +63,17 @@ export interface AddressAutofillGroupProps {
 }
 
 /**
- * Address entry group with Mapbox Search Box autofill baked in.
+ * Address entry group with autocomplete over Mapbox Search Box plus
+ * OpenStreetMap, merged into a single suggestion list.
  *
- * Uses the browser's standard autocomplete tokens so `<AddressAutofill>` from
- * `@mapbox/search-js-react` can populate sibling inputs on selection. When
- * `accessToken` is empty the group degrades to a plain uncontrolled address
- * form so the app still renders during local dev without the token.
+ * Suggestions are fetched by {@link resolveAddressSuggestions} in
+ * `@kairos/core`, shared with the native picker so the two platforms behave
+ * identically.
+ *
+ * The list is driven by the typing handler, NOT by a `useEffect` watching
+ * `value.line1`. That distinction matters: picking a suggestion writes back to
+ * `line1`, so a value-watching effect re-fires on the write and re-opens the
+ * dropdown the user just dismissed.
  */
 export function AddressAutofillGroup({
   accessToken,
@@ -85,48 +86,144 @@ export function AddressAutofillGroup({
   errors,
   labels,
 }: AddressAutofillGroupProps) {
+  const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const [justPicked, setJustPicked] = React.useState(false);
-  // OSM fallback state: fires in parallel with Mapbox's AddressAutofill when
-  // the user types in line1. Renders a supplementary dropdown so users in
-  // regions where Mapbox coverage is thin (Ghana, Sierra Leone, Nigeria) can
-  // still find their address via community-mapped OSM data.
-  const [osmHits, setOsmHits] = React.useState<OsmSuggestion[]>([]);
-  const osmTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeIndex, setActiveIndex] = React.useState(-1);
+  const [sessionToken, setSessionToken] = React.useState(generateAddressSessionToken);
+
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Guards against a slow in-flight request resolving after a newer one and
+  // overwriting fresher suggestions with stale ones.
+  const requestSeqRef = React.useRef(0);
+
+  const listboxId = React.useId();
+  const line1Id = React.useId();
+
+  React.useEffect(
+    () => () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    },
+    [],
+  );
+
+  // Dismiss on outside click, matching every other combobox on the platform.
+  React.useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: MouseEvent | TouchEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) closeList();
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+    };
+  }, [open]);
+
+  function closeList() {
+    setOpen(false);
+    setActiveIndex(-1);
+  }
 
   const set = <K extends keyof AddressAutofillValue>(k: K, v: AddressAutofillValue[K]) => {
-    // The user just typed — the pick hint is stale, clear it.
+    // The user typed, so the "we just filled this in for you" hint is stale.
     setJustPicked(false);
     onChange({ ...value, [k]: v });
   };
 
-  // Debounced OSM fetch driven off line1 changes.
-  React.useEffect(() => {
-    const q = value.line1?.trim() ?? '';
-    if (q.length < 3) {
-      setOsmHits([]);
+  function handleLine1Change(next: string) {
+    set('line1', next);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (next.trim().length < ADDRESS_QUERY_MIN_LENGTH) {
+      setSuggestions([]);
+      closeList();
       return;
     }
-    if (osmTimerRef.current) clearTimeout(osmTimerRef.current);
-    osmTimerRef.current = setTimeout(() => {
-      void fetchOsmSuggestions(q, country).then(setOsmHits);
-    }, 500);
-    return () => {
-      if (osmTimerRef.current) clearTimeout(osmTimerRef.current);
-    };
-  }, [value.line1, country]);
 
-  function pickOsm(s: OsmSuggestion) {
-    setOsmHits([]);
-    onChange({
-      line1: s.addressLine1 || value.line1,
-      line2: value.line2,
-      city: s.city || value.city,
-      postalCode: s.postcode || value.postalCode,
-      country: s.countryCode?.toUpperCase() ?? value.country,
-      latitude: s.lat,
-      longitude: s.lng,
-    });
-    setJustPicked(true);
+    debounceRef.current = setTimeout(() => {
+      void runQuery(next);
+    }, ADDRESS_QUERY_DEBOUNCE_MS);
+  }
+
+  async function runQuery(query: string) {
+    const seq = ++requestSeqRef.current;
+    setLoading(true);
+    try {
+      const hits = await resolveAddressSuggestions(query, {
+        accessToken,
+        sessionToken,
+        country,
+      });
+      if (seq !== requestSeqRef.current) return; // superseded
+      setSuggestions(hits);
+      setOpen(hits.length > 0);
+      setActiveIndex(-1);
+    } catch {
+      if (seq !== requestSeqRef.current) return;
+      setSuggestions([]);
+      closeList();
+    } finally {
+      if (seq === requestSeqRef.current) setLoading(false);
+    }
+  }
+
+  async function pick(s: AddressSuggestion) {
+    // Close first. Any state the resolve writes must not reopen the list.
+    closeList();
+    setSuggestions([]);
+    requestSeqRef.current++; // cancel anything still in flight
+
+    try {
+      const resolved =
+        s.source === 'osm'
+          ? resolveOsmSuggestion(s)
+          : accessToken
+            ? await retrieveMapboxSuggestion(s.mapboxId, accessToken, sessionToken)
+            : null;
+      if (!resolved) return;
+
+      onChange({
+        // Fall back to what the user already typed rather than blanking a
+        // field the provider had no answer for.
+        line1: resolved.line1 || value.line1,
+        line2: value.line2,
+        city: resolved.city || value.city,
+        postalCode: resolved.postalCode || value.postalCode,
+        country: resolved.country ?? value.country,
+        latitude: resolved.latitude ?? value.latitude,
+        longitude: resolved.longitude ?? value.longitude,
+      });
+      setJustPicked(true);
+    } catch {
+      // Leave the typed text as-is; the user can complete the fields manually.
+    } finally {
+      if (s.source === 'mapbox') setSessionToken(generateAddressSessionToken());
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      // `noUncheckedIndexedAccess` is on, so this can be undefined in the type
+      // system even though activeIndex is bounded by the arrow-key handlers.
+      const active = suggestions[activeIndex];
+      if (active) void pick(active);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeList();
+    }
   }
 
   const line1Label = labels?.line1 ?? 'Address';
@@ -134,40 +231,76 @@ export function AddressAutofillGroup({
   const cityLabel = labels?.city ?? 'City';
   const postalLabel = labels?.postalCode ?? 'Postal code';
 
-  const hint = 'Not detected — add if you know it.';
+  const hint = 'Not detected. Add it if you know it.';
 
-  const fields = (
-    <div className={cn('grid gap-3', className)}>
-      <FieldRow label={line1Label} error={errors?.line1}>
-        <Input
-          value={value.line1}
-          onChange={(e) => set('line1', e.target.value)}
-          autoComplete="address-line1"
-          disabled={disabled}
-          placeholder="Start typing your address…"
-        />
+  return (
+    <div className={cn('grid gap-3', className)} ref={containerRef}>
+      <FieldRow label={line1Label} error={errors?.line1} controlId={line1Id}>
+        <div className="relative">
+          <Input
+            id={line1Id}
+            value={value.line1}
+            onChange={(e) => handleLine1Change(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (suggestions.length > 0) setOpen(true);
+            }}
+            autoComplete="off"
+            disabled={disabled}
+            placeholder="Start typing your address…"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+            }
+          />
+          {loading ? (
+            <span
+              className="absolute right-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-[#5D3FD3]"
+              aria-hidden="true"
+            />
+          ) : null}
+
+          {open && suggestions.length > 0 ? (
+            <ul
+              id={listboxId}
+              role="listbox"
+              className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+            >
+              {suggestions.map((s, i) => (
+                <li key={s.id} role="none">
+                  <button
+                    id={`${listboxId}-opt-${i}`}
+                    role="option"
+                    aria-selected={i === activeIndex}
+                    type="button"
+                    // `onMouseDown` rather than `onClick`: the input's blur
+                    // would otherwise tear the list down before the click
+                    // lands.
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      void pick(s);
+                    }}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className={cn(
+                      'block w-full border-t border-border/50 px-3 py-2 text-left text-sm first:border-t-0',
+                      i === activeIndex ? 'bg-muted/70' : 'hover:bg-muted/60',
+                    )}
+                  >
+                    <div className="font-medium">{s.name}</div>
+                    <div className="line-clamp-1 text-xs text-muted-foreground">
+                      {s.placeFormatted}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
         {justPicked && !value.line1?.trim() ? (
           <p className="mt-1 text-xs italic text-muted-foreground">{hint}</p>
-        ) : null}
-        {osmHits.length > 0 ? (
-          <div className="mt-1 overflow-hidden rounded-lg border border-border bg-background shadow-md">
-            <div className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Also found via OpenStreetMap
-            </div>
-            {osmHits.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => pickOsm(s)}
-                className="block w-full border-t border-border/50 px-3 py-2 text-left text-sm hover:bg-muted/60"
-              >
-                <div className="font-medium">{s.name}</div>
-                <div className="text-xs text-muted-foreground line-clamp-1">
-                  {s.place_formatted}
-                </div>
-              </button>
-            ))}
-          </div>
         ) : null}
       </FieldRow>
 
@@ -208,139 +341,32 @@ export function AddressAutofillGroup({
       </div>
     </div>
   );
-
-  if (!accessToken) return fields;
-
-  return (
-    <AddressAutofill
-      accessToken={accessToken}
-      options={country ? { country, language: 'en' } : { language: 'en' }}
-      onRetrieve={(res) => {
-        const feat = res.features?.[0];
-        if (!feat) return;
-        const p = feat.properties;
-        // Mapbox GeoJSON convention: geometry.coordinates is [lng, lat].
-        const coords = feat.geometry?.coordinates;
-        const lng = Array.isArray(coords) ? coords[0] : undefined;
-        const lat = Array.isArray(coords) ? coords[1] : undefined;
-        // When the user picks a postcode-only or place suggestion, `feature_name`
-        // is the postcode / place — dumping it into line1 leaves the address
-        // field showing a postcode. Only trust the name when the feature is a
-        // real street-level result.
-        const canUseNameForLine1 =
-          (p as { feature_type?: string }).feature_type === 'address' ||
-          (p as { feature_type?: string }).feature_type === 'street' ||
-          (p as { feature_type?: string }).feature_type === 'poi';
-        const nextLine1 =
-          p.address_line1 ?? (canUseNameForLine1 ? p.feature_name : '') ?? '';
-        onChange({
-          line1: nextLine1 || value.line1,
-          line2: value.line2,
-          city: p.address_level2 ?? value.city,
-          postalCode: p.postcode ?? value.postalCode,
-          country: p.country_code?.toUpperCase() ?? value.country,
-          latitude: typeof lat === 'number' ? lat : value.latitude,
-          longitude: typeof lng === 'number' ? lng : value.longitude,
-        });
-        setJustPicked(true);
-      }}
-    >
-      {fields}
-    </AddressAutofill>
-  );
-}
-
-interface OsmSuggestion {
-  id: string;
-  name: string;
-  place_formatted: string;
-  lat: number;
-  lng: number;
-  addressLine1: string;
-  city: string;
-  postcode: string;
-  countryCode?: string;
-}
-
-interface NominatimResult {
-  place_id: number;
-  lat: string;
-  lon: string;
-  display_name: string;
-  address?: {
-    house_number?: string;
-    road?: string;
-    pedestrian?: string;
-    suburb?: string;
-    neighbourhood?: string;
-    city?: string;
-    town?: string;
-    village?: string;
-    postcode?: string;
-    country_code?: string;
-  };
-}
-
-async function fetchOsmSuggestions(
-  query: string,
-  country: string | undefined,
-): Promise<OsmSuggestion[]> {
-  const url = new URL('https://nominatim.openstreetmap.org/search');
-  url.searchParams.set('q', query);
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('addressdetails', '1');
-  url.searchParams.set('limit', '4');
-  if (country) url.searchParams.set('countrycodes', country);
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { 'Accept-Language': 'en' },
-    });
-    if (!res.ok) return [];
-    const rows = (await res.json()) as NominatimResult[];
-    return rows.map((r) => {
-      const a = r.address ?? {};
-      const streetLabel = [a.house_number, a.road ?? a.pedestrian]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      const shortLabel =
-        streetLabel ||
-        a.suburb ||
-        a.neighbourhood ||
-        (r.display_name.split(',')[0] ?? '').trim();
-      return {
-        id: `osm:${r.place_id}`,
-        name: shortLabel,
-        place_formatted: r.display_name,
-        lat: parseFloat(r.lat),
-        lng: parseFloat(r.lon),
-        addressLine1: streetLabel,
-        city: a.city ?? a.town ?? a.village ?? '',
-        postcode: a.postcode ?? '',
-        countryCode: a.country_code,
-      };
-    });
-  } catch {
-    return [];
-  }
 }
 
 function FieldRow({
   label,
   error,
+  controlId,
   children,
 }: {
   label: string;
   error?: string;
+  /**
+   * Id of the control the label points at. Pass this when the row's children
+   * are a wrapper rather than the input itself — cloning an `id` onto a
+   * wrapping `<div>` would leave the label pointing at a non-focusable node.
+   */
+  controlId?: string;
   children: React.ReactNode;
 }) {
-  const id = React.useId();
+  const generatedId = React.useId();
+  const id = controlId ?? generatedId;
   return (
     <div className="grid gap-1">
       <Label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </Label>
-      {React.isValidElement(children)
+      {!controlId && React.isValidElement(children)
         ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id })
         : children}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
