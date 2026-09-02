@@ -19,7 +19,7 @@ export interface RotaAssignmentConfirmedPayload {
 
 export function renderRotaAssignmentConfirmed(p: RotaAssignmentConfirmedPayload) {
   return {
-    subject: `Rota confirmed — ${p.templateName} on ${p.serviceDate}`,
+    subject: `Rota confirmed: ${p.templateName} on ${p.serviceDate}`,
     html: renderLayout({
       heading: 'Rota assignment confirmed',
       greeting: p.memberName,
@@ -44,7 +44,7 @@ export interface RotaSwapRequestedPayload {
 
 export function renderRotaSwapRequested(p: RotaSwapRequestedPayload) {
   return {
-    subject: `Rota swap requested — ${p.templateName} on ${p.serviceDate}`,
+    subject: `Rota swap requested: ${p.templateName} on ${p.serviceDate}`,
     html: renderLayout({
       heading: 'Rota swap requested',
       greeting: p.memberName,
@@ -69,7 +69,7 @@ export interface UniformScheduleSetPayload {
 
 export function renderUniformScheduleSet(p: UniformScheduleSetPayload) {
   return {
-    subject: `Uniform set — ${p.departmentName} on ${p.serviceDate}`,
+    subject: `Uniform set: ${p.departmentName} on ${p.serviceDate}`,
     html: renderLayout({
       heading: 'Uniform set for upcoming service',
       greeting: p.memberName,
@@ -86,7 +86,7 @@ export function renderUniformScheduleSet(p: UniformScheduleSetPayload) {
 // ── Digest lines ──
 
 export function digestRotaAssignmentConfirmed(p: RotaAssignmentConfirmedPayload): string {
-  return `Rota: ${p.templateName} — ${p.slotRoleName} on ${p.serviceDate}`;
+  return `Rota: ${p.templateName}, ${p.slotRoleName} on ${p.serviceDate}`;
 }
 
 export function digestRotaSwapRequested(p: RotaSwapRequestedPayload): string {
@@ -94,5 +94,5 @@ export function digestRotaSwapRequested(p: RotaSwapRequestedPayload): string {
 }
 
 export function digestUniformScheduleSet(p: UniformScheduleSetPayload): string {
-  return `Uniform: ${p.departmentName} on ${p.serviceDate} — ${p.outfitName}`;
+  return `Uniform: ${p.departmentName} on ${p.serviceDate}, ${p.outfitName}`;
 }

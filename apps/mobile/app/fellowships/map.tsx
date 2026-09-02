@@ -144,7 +144,7 @@ export default function FellowshipsMap() {
   }
 
   async function onLocatePostcode(query: string): Promise<string | null> {
-    if (!query.trim() || pins.length === 0) return 'Nothing to locate against — no fellowships mapped yet.';
+    if (!query.trim() || pins.length === 0) return 'Nothing to locate against. No fellowships are mapped yet.';
     if (!mapboxPublicToken) return 'Search is unavailable.';
     try {
       // Mapbox forward-geocode via the Search Box API. Same vendor as the
@@ -200,7 +200,7 @@ export default function FellowshipsMap() {
         <View style={styles.centered}>
           <Card padding="md">
             <Text style={styles.errorText}>
-              Map is unavailable — Mapbox token isn&apos;t configured. Ask an
+              Map is unavailable. The Mapbox token isn&apos;t configured. Ask an
               admin to set the Mapbox public token.
             </Text>
           </Card>

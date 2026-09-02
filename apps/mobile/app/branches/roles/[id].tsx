@@ -217,7 +217,7 @@ export default function BranchRoles() {
 
         <Text style={styles.footnote}>
           Only existing Branch System Admins (and platform admins) can assign or revoke
-          this role. The API enforces a last-active-admin lockout guard — the final BSA
+          this role. The API enforces a last-active-admin lockout guard: the final BSA
           for a branch can&apos;t be revoked until another is promoted.
         </Text>
       </ScrollView>

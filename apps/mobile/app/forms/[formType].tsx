@@ -199,7 +199,7 @@ function BespokePlaceholder({ formType, onBack }: { formType: FormType; onBack: 
           <Text style={[styles.emptyTitle, { textAlign: 'center' }]}>{title}</Text>
           <Text style={[styles.emptyMessage, { textAlign: 'center' }]}>
             This form uses custom fields that aren&apos;t on mobile yet. Open it on the web to
-            fill it out — you&apos;ll see it here soon.
+            fill it out. You&apos;ll see it here soon.
           </Text>
           <Button
             label="Open in web"

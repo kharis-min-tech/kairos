@@ -150,7 +150,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
           Who came to one selection of services but is missing from another?
           Pick services in each column, then Run comparison. Use ANY/ALL to
           choose whether &ldquo;present in&rdquo; means at least one service
-          in the set (ANY) or every service (ALL) — same for &ldquo;absent
+          in the set (ANY) or every service (ALL). Same for &ldquo;absent
           from&rdquo;.
         </CardDescription>
       </CardHeader>
@@ -180,7 +180,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         {!branchId ? (
           <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
             Pick a specific branch in the filter above to compare cohorts. Comparison only runs
-            within one branch at a time — a member can only attend one branch&rsquo;s services on
+            within one branch at a time: a member can only attend one branch&rsquo;s services on
             a given day.
           </div>
         ) : (

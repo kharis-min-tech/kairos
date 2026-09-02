@@ -107,7 +107,7 @@ export default function RegionsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Regions</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage geographic regions{regions ? ` — ${regions.length} total` : ''}
+            Manage geographic regions{regions ? `, ${regions.length} total` : ''}
           </p>
         </div>
         <Button
@@ -193,7 +193,7 @@ export default function RegionsPage() {
             const branchCount = region.branchCount ?? 0;
             const locked = branchCount > 0;
             const lockedTitle = locked
-              ? `${branchCount} branch${branchCount === 1 ? '' : 'es'} attached — move them first`
+              ? `${branchCount} branch${branchCount === 1 ? '' : 'es'} attached, so move them first`
               : undefined;
             return (
               <Card key={region.id} className="transition-all hover:shadow-md hover:-translate-y-0.5">

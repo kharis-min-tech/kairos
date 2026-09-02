@@ -124,7 +124,7 @@ export function AltarCallForm() {
           value={subjectMemberId}
           onSelect={selectExisting}
           onClear={clearExisting}
-          linkedNote="Linked to an existing person — submitting will enrol them."
+          linkedNote="Linked to an existing person, so submitting will enrol them."
         />
 
         <div className="space-y-2">

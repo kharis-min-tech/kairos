@@ -122,7 +122,7 @@ function FellowshipsContent() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Fellowships</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
+            Fellowship groups{pagination ? `, ${pagination.total} total` : ''}
           </p>
         </div>
         {(caps.has('branch:write')) && (

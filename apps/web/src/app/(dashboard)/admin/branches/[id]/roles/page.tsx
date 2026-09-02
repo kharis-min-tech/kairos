@@ -258,7 +258,7 @@ export default function BranchRolesPage() {
                 }
                 options={assignableMembers.map((m) => ({
                   value: m.id,
-                  label: `${m.firstName} ${m.lastName}${m.email ? ` — ${m.email}` : ''}`,
+                  label: `${m.firstName} ${m.lastName}${m.email ? `, ${m.email}` : ''}`,
                 }))}
               />
               {!membersLoading && assignableMembers.length === 0 && (

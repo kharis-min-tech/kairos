@@ -56,7 +56,7 @@ function ConfirmLinkContent() {
       const result = await confirmMutation.mutateAsync(data.password);
       const { member, tokens } = result;
       if (!member || !tokens) {
-        throw new Error('Unexpected response — missing tokens.');
+        throw new Error('Unexpected response: missing tokens.');
       }
       persistAuthSuccess({ tokens, member, activeRole: member.systemRole });
       try {

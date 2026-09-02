@@ -202,7 +202,7 @@ export default function CompleteProfileScreen() {
             <Text style={styles.title}>Finish setting up</Text>
             <Text style={styles.body}>
               Welcome, {user?.firstName ?? 'friend'}! We got some details from
-              your provider — please fill in a couple of missing pieces before
+              your provider. Please fill in a couple of missing pieces before
               we send you on to an admin for approval.
             </Text>
 

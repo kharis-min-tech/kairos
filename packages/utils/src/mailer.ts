@@ -144,7 +144,7 @@ export async function sendEmailChangeConfirmEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    'Confirm your new email — Kharis Church',
+    'Confirm your new email | Kharis Church',
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Confirm your new email</h2>
@@ -216,7 +216,7 @@ export async function sendAccountVerificationEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    'Verify your email — Kharis Church',
+    'Verify your email | Kharis Church',
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Confirm your email address</h2>
@@ -249,7 +249,7 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    'Reset Your Password — Kharis Church',
+    'Reset Your Password | Kharis Church',
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Reset Your Password</h2>
@@ -285,7 +285,7 @@ export async function sendAccountApprovedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Account Approved!</h2>
         <p>Hi ${memberName},</p>
-        <p>Great news — your Kharis Church account has been reviewed and approved by an administrator.</p>
+        <p>Great news: your Kharis Church account has been reviewed and approved by an administrator.</p>
         <p>You can now log in to access your full member portal, view fellowships, meetings, and more.</p>
         <p style="text-align: center; margin: 32px 0;">
           <a href="${getFrontendUrl()}/login"
@@ -330,13 +330,13 @@ export async function sendJoinRequestReceivedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `Join Request Received — ${fellowshipName}`,
+    `Join Request Received: ${fellowshipName}`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Request Received</h2>
         <p>Hi ${memberName},</p>
         <p>We've received your request to join <strong>${fellowshipName}</strong>.</p>
-        <p>Our team reviews requests as soon as possible — while we aim to respond within 14 days,
+        <p>Our team reviews requests as soon as possible. While we aim to respond within 14 days,
            this is an estimate and not a guarantee; responses may take longer during busy periods.</p>
         <p>We'll be in touch once your request has been reviewed.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
@@ -358,7 +358,7 @@ export async function sendJoinRequestApprovedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Welcome to ${fellowshipName}!</h2>
         <p>Hi ${memberName},</p>
-        <p>Great news — your request to join <strong>${fellowshipName}</strong> has been approved.
+        <p>Great news: your request to join <strong>${fellowshipName}</strong> has been approved.
            You are now an active member of the fellowship.</p>
         <p>Log in to the Kharis Church portal to view fellowship details, meetings, and more.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
@@ -399,7 +399,7 @@ export async function sendMentorAssignedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `You've been assigned as a mentor — Kharis Church`,
+    `You've been assigned as a mentor | Kharis Church`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Mentor Assignment</h2>
@@ -427,7 +427,7 @@ export async function sendInterviewScheduledEmail(
 
   await sendEmail(
     to,
-    `Interview scheduled — ${departmentName}`,
+    `Interview scheduled: ${departmentName}`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Interview Scheduled</h2>
@@ -483,10 +483,10 @@ export async function sendProbationStartedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `Welcome to ${departmentName} — probation started`,
+    `Welcome to ${departmentName}: probation started`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #059669;">Welcome — probation started</h2>
+        <h2 style="color: #059669;">Welcome, probation started</h2>
         <p>Hi ${memberName},</p>
         <p>You're now part of <strong>${departmentName}</strong> on a
            <strong>${details.probationDays}-day probation</strong>.</p>
@@ -510,7 +510,7 @@ export async function sendProbationPassedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Probation passed</h2>
         <p>Hi ${memberName},</p>
-        <p>Congratulations — you've completed probation and are now a full member of
+        <p>Congratulations, you've completed probation and are now a full member of
            <strong>${departmentName}</strong>.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>

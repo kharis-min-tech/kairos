@@ -267,7 +267,7 @@ function SwapRequestSheet({
               multiline
               value={reason}
               onChangeText={onReasonChange}
-              placeholder="Optional — why you can't make it"
+              placeholder="Optional: why you can't make it"
               placeholderTextColor={c.inkFaded}
               style={styles.sheetInput}
               editable={!submitting}

@@ -18,7 +18,7 @@ function getTone(rate: number, missedCount: number, servicesInWindow: number) {
   if (rate >= 0.8) {
     return {
       kind: 'positive' as const,
-      label: 'Great consistency — keep it up!',
+      label: 'Great consistency. Keep it up!',
       tone: 'text-emerald-700 dark:text-emerald-400',
     };
   }
@@ -31,7 +31,7 @@ function getTone(rate: number, missedCount: number, servicesInWindow: number) {
   }
   return {
     kind: 'warning' as const,
-    label: `${missedCount} missed in this window — let’s rebuild the habit.`,
+    label: `${missedCount} missed in this window. Let’s rebuild the habit.`,
     tone: 'text-destructive',
   };
 }

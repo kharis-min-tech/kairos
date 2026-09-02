@@ -46,7 +46,7 @@ export function NotesTab({ session, canEdit }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Class-level notes for this session — visible to other leaders.
+        Class-level notes for this session, visible to other leaders.
       </p>
       <Textarea
         rows={5}

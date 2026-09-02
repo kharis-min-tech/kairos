@@ -205,7 +205,7 @@ export default function RotaAdmin() {
           ) : rows.length === 0 ? (
             <Card padding="md">
               <Text style={styles.emptyText}>
-                No templates yet. Tap New to set up your first one — pick a
+                No templates yet. Tap New to set up your first one. Pick a
                 weekday, add roles, and add pool members.
               </Text>
             </Card>
@@ -439,7 +439,7 @@ function GenerateSheet({
             <Text style={styles.sheetHint}>
               Auto-assigns members from the pool by rotation for each service
               date in the range. Existing instances in range keep their
-              assignments — no double-booking.
+              assignments, with no double-booking.
             </Text>
 
             <DatePicker

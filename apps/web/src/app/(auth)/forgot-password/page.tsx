@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
           </p>
           {devToken && (
             <div className="rounded-lg bg-[#f8b537]/10 p-4 space-y-2">
-              <p className="text-xs font-semibold text-[#9a6b04] dark:text-[#f8b537]">Dev mode — reset token:</p>
+              <p className="text-xs font-semibold text-[#9a6b04] dark:text-[#f8b537]">Dev mode, reset token:</p>
               <p className="break-all font-mono text-xs text-[#7a5403] dark:text-[#fbc966]">{devToken}</p>
               <a
                 href={`/reset-password?token=${devToken}`}

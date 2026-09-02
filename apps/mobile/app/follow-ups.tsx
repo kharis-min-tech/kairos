@@ -190,7 +190,7 @@ export default function FollowUps() {
                   <Text style={styles.emptyTitle}>All caught up</Text>
                   <Text style={styles.emptyMeta}>
                     {filter === 'all'
-                      ? 'Nothing pending right now — enjoy the quiet.'
+                      ? 'Nothing pending right now. Enjoy the quiet.'
                       : 'Nothing in this filter.'}
                   </Text>
                 </View>
@@ -221,8 +221,8 @@ export default function FollowUps() {
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>Nothing here yet</Text>
                 <Text style={styles.emptyMeta}>
-                  Follow-ups you record — fellowship, department, mentor, and
-                  souls captured — will show up here.
+                  Follow-ups you record (fellowship, department, mentor, and
+                  souls captured) will show up here.
                 </Text>
               </View>
             )
@@ -304,7 +304,7 @@ function ActivityRow({
         </Text>
         <Text style={styles.rowMetaFaded}>
           {formatShortDate(timestamp)}
-          {noteLine ? ` — ${noteLine}` : ''}
+          {noteLine ? `, ${noteLine}` : ''}
         </Text>
       </View>
       <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />

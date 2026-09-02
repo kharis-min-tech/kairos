@@ -92,7 +92,7 @@ async function resolveDefaultHomeBranchId(db: Database, envDefault?: string): Pr
     .where(eq(branches.isActive, true))
     .orderBy(asc(branches.createdAt))
     .limit(1);
-  if (!row) throw new NotFoundError('No active branches configured — cannot create OAuth signup');
+  if (!row) throw new NotFoundError('No active branches configured, so cannot create OAuth signup');
   return row.id;
 }
 

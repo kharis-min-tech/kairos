@@ -290,7 +290,7 @@ export default function AddMemberPage() {
             {/* Secondary branch */}
             <div>
               <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
-              <p className="mb-1 text-xs text-muted-foreground">Optional — e.g. a branch near their university or workplace</p>
+              <p className="mb-1 text-xs text-muted-foreground">Optional. For example, a branch near their university or workplace</p>
               <CustomSelect
                 id="secondaryBranchId"
                 value={watch('secondaryBranchId') ?? ''}

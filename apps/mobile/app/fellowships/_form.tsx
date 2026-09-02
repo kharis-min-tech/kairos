@@ -242,7 +242,7 @@ export function FellowshipForm({
         <Card padding="md" style={{ gap: spacing.md }}>
           <Text style={styles.sectionEyebrow}>MEETING LOCATION</Text>
           <Text style={styles.hint}>
-            Optional — leave blank if the fellowship meets at the parent branch.
+            Optional. Leave blank if the fellowship meets at the parent branch.
             Set it for K-Groups or off-site fellowships so they land on the map.
           </Text>
           <AddressAutofillInput

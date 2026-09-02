@@ -103,7 +103,7 @@ export default function MyFormSubmissions() {
         <View style={styles.introBlock}>
           <Text style={styles.introTitle}>Your form history</Text>
           <Text style={styles.introMeta}>
-            Every form you&apos;ve filed — most recent first.
+            Every form you&apos;ve filed, most recent first.
           </Text>
         </View>
 

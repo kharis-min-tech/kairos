@@ -40,7 +40,7 @@ export function MyOffersBanner({ offers }: Props) {
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'accepted' } },
       {
-        onSuccess: () => toast.success('Offer accepted — welcome to the team!'),
+        onSuccess: () => toast.success('Offer accepted. Welcome to the team!'),
         onError: (err) =>
           toast.error(err instanceof Error ? err.message : 'Failed to accept offer.'),
       },

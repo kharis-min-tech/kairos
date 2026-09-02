@@ -494,7 +494,7 @@ export default function EnrollmentDetail() {
                   <ActivityIndicator color={c.primary} />
                 ) : (mentorFollowups.data ?? []).length === 0 ? (
                   <Text style={styles.mentorEmpty}>
-                    No follow-ups recorded yet — record the first one above.
+                    No follow-ups recorded yet. Record the first one above.
                   </Text>
                 ) : (
                   (mentorFollowups.data ?? []).map((f) => (

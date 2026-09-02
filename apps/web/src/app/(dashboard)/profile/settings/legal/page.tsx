@@ -109,7 +109,7 @@ export default function LegalSettingsPage() {
                   </p>
                   {status.needsAccept && status.required && (
                     <p className="mt-1 text-xs text-destructive">
-                      Action needed — version {status.currentVersion} is now current.
+                      Action needed: version {status.currentVersion} is now current.
                     </p>
                   )}
                 </div>

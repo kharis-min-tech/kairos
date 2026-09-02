@@ -166,7 +166,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
 
                   {remaining > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      + {remaining} more — view all in this department
+                      + {remaining} more, view all in this department
                     </p>
                   )}
                 </div>

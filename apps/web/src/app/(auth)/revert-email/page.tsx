@@ -50,7 +50,7 @@ function RevertEmailContent() {
         {state === 'success' && (
           <>
             <p className="text-emerald-700 dark:text-emerald-400">
-              Email reverted. Your account has been locked for safety — set a new
+              Email reverted. Your account has been locked for safety. Set a new
               password to continue.
             </p>
             <p className="text-xs text-muted-foreground">

@@ -169,38 +169,38 @@ describe('DashboardPage — role-label fork', () => {
     render(<DashboardPage />, { wrapper });
     expect(screen.getByText('Administrator')).toBeInTheDocument();
   });
-  it('shows "Branch System Admin — {branch}" when caller is BSA at home branch', () => {
+  it('shows "Branch System Admin, {branch}" when caller is BSA at home branch', () => {
     authState.activeRole = 'leader';
     leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-1'] };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Branch System Admin — London')).toBeInTheDocument();
+    expect(screen.getByText('Branch System Admin, London')).toBeInTheDocument();
   });
 
   it('shows "Branch Data Admin" when BDA only (no BSA)', () => {
     authState.activeRole = 'leader';
     leadershipData = { ...emptyLeadership, branchDataAdminBranchIds: ['b-1'] };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Branch Data Admin — London')).toBeInTheDocument();
+    expect(screen.getByText('Branch Data Admin, London')).toBeInTheDocument();
   });
 
-  it('shows "Fellowship Leader — {name}" for a fellowship-only leader', () => {
+  it('shows "Fellowship Leader, {name}" for a fellowship-only leader', () => {
     authState.activeRole = 'leader';
     leadershipData = {
       ...emptyLeadership,
       leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Fellowship Leader — Youth')).toBeInTheDocument();
+    expect(screen.getByText('Fellowship Leader, Youth')).toBeInTheDocument();
   });
 
-  it('shows "Department Lead — {name}" for a department-only leader', () => {
+  it('shows "Department Lead, {name}" for a department-only leader', () => {
     authState.activeRole = 'leader';
     leadershipData = {
       ...emptyLeadership,
       leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Department Lead — Worship')).toBeInTheDocument();
+    expect(screen.getByText('Department Lead, Worship')).toBeInTheDocument();
   });
 
   it('shows "Fellowship & Department Lead" for the dual case', () => {
@@ -356,7 +356,7 @@ describe('DashboardPage — scope-aware fork', () => {
     // No DualLeaderTabs.
     expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
     // Role label reflects the scope choice.
-    expect(screen.getByText('Fellowship Leader — K-Groups Central')).toBeInTheDocument();
+    expect(screen.getByText('Fellowship Leader, K-Groups Central')).toBeInTheDocument();
   });
 
   it('department-scoped login: renders DepartmentStats with ONLY the scoped department', () => {
@@ -371,7 +371,7 @@ describe('DashboardPage — scope-aware fork', () => {
     expect(screen.getByText('My Departments')).toBeInTheDocument();
     expect(screen.getAllByText('Worship').length).toBeGreaterThan(0);
     expect(screen.queryByRole('tab', { name: 'My Fellowship' })).not.toBeInTheDocument();
-    expect(screen.getByText('Department Lead — Worship')).toBeInTheDocument();
+    expect(screen.getByText('Department Lead, Worship')).toBeInTheDocument();
   });
 
   it('branch-scoped BSA login (activeRole=admin): renders BSA chip + branch-suffixed role label', () => {
@@ -387,6 +387,6 @@ describe('DashboardPage — scope-aware fork', () => {
     // BranchAdminStats wins over AdminStats because isBranchAdmin is true.
     expect(screen.getByText('Branch Admin')).toBeInTheDocument();
     expect(screen.getAllByText(/Branch Congregation|Branch Members/i).length).toBeGreaterThan(0);
-    expect(screen.getByText('Branch System Admin — Accra')).toBeInTheDocument();
+    expect(screen.getByText('Branch System Admin, Accra')).toBeInTheDocument();
   });
 });

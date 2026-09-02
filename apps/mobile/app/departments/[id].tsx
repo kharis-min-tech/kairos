@@ -222,7 +222,7 @@ export default function DepartmentDetail() {
                   <Text style={styles.rotaTitle}>Recruitment</Text>
                   <Text style={styles.rotaMeta}>
                     {d.pendingJoinRequestCount
-                      ? `${d.pendingJoinRequestCount} awaiting review — interview → offer`
+                      ? `${d.pendingJoinRequestCount} awaiting review: interview → offer`
                       : 'Intake, interviews, offers, probation'}
                   </Text>
                 </View>

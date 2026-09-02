@@ -51,25 +51,25 @@ const FEATURES = [
   {
     Icon: ClipboardList,
     title: "Attendance Tracking",
-    desc: "Record service, fellowship, and department meeting attendance — clean weekly reports.",
+    desc: "Record service, fellowship, and department meeting attendance, with clean weekly reports.",
     href: `${DOCS_BASE}/platform/attendance`,
   },
   {
     Icon: Heart,
     title: "Fellowships & Pipelines",
-    desc: "K-Groups, new-believer discipleship, soul follow-ups — track every relationship.",
+    desc: "K-Groups, new-believer discipleship, soul follow-ups: track every relationship.",
     href: `${DOCS_BASE}/platform/fellowships`,
   },
   {
     Icon: BarChart2,
     title: "Reports & Insights",
-    desc: "Attendance trends, fellowship growth, leader-scoped dashboards — no spreadsheet stitching.",
+    desc: "Attendance trends, fellowship growth, leader-scoped dashboards, with no spreadsheet stitching.",
     href: `${DOCS_BASE}/platform/reports`,
   },
   {
     Icon: ShieldCheck,
     title: "Roles & Permissions",
-    desc: "Branch admins, fellowship leaders, safeguarding leads — each sees only what they should.",
+    desc: "Branch admins, fellowship leaders, safeguarding leads: each sees only what they should.",
     href: `${DOCS_BASE}/administration/permissions`,
   },
 ];
@@ -170,7 +170,7 @@ export default function KairosLanding() {
         Only the bottom-fade tint switches: in light mode it fades to white
         (matching the page below); in dark mode to #0d0d0d.
       */}
-      <section className="relative min-h-screen overflow-hidden" aria-label="Kairos — church administration platform">
+      <section className="relative min-h-screen overflow-hidden" aria-label="Kairos church administration platform">
         {/* Layer 1: gradient fallback (always rendered, hidden by photo when present) */}
         <div
           aria-hidden
@@ -888,7 +888,7 @@ export default function KairosLanding() {
             One platform. Every branch. Every member.
           </span>
           <span className="text-black/35 dark:text-white/25">
-            © {new Date().getFullYear()} Kairos — Church Administration Platform
+            © {new Date().getFullYear()} Kairos, Church Administration Platform
           </span>
         </div>
         <div className="flex items-center gap-6 self-start md:self-auto">

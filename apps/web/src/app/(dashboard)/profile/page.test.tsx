@@ -172,7 +172,7 @@ describe('ProfilePage', () => {
     expect(screen.queryByText(/^member$/i)).toBeNull();
     expect(screen.queryByText(/System Role/i)).toBeNull();
     // Friendly line appears (member + home branch)
-    expect(screen.getByText(/Member of Kharis Church — Brixton branch/i)).toBeDefined();
+    expect(screen.getByText(/Member of Kharis Church, Brixton branch/i)).toBeDefined();
   });
 
   it('renders "Pastor of Brixton branch" for a pastor', () => {
@@ -239,7 +239,7 @@ describe('ProfilePage', () => {
     ];
     render(<ProfilePage />, { wrapper });
     expect(screen.getByText(/My leadership/i)).toBeDefined();
-    expect(screen.getByText(/Lead — Choir department/i)).toBeDefined();
+    expect(screen.getByText(/Lead, Choir department/i)).toBeDefined();
   });
 
   describe('SSO onboarding mode', () => {

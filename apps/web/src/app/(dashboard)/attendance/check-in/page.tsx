@@ -114,7 +114,7 @@ export default function SelfCheckInPage() {
             {result.alreadyCheckedIn
               ? "You're already checked in"
               : result.status === 'Late'
-                ? "You're checked in — marked Late"
+                ? "You're checked in, marked Late"
                 : "You're in"}
           </p>
           <p className="mt-1 text-sm text-white/80">

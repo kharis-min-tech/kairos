@@ -181,7 +181,7 @@ export function BabyForm({ mode }: { mode: 'baby_naming' | 'baby_dedication' }) 
           onClear={clearParent}
           label="Find the parent/guardian"
           helpText="Search by name or phone to link an existing member. Leave blank otherwise."
-          linkedNote="Linked to an existing member — they’ll be recorded as the parent/guardian."
+          linkedNote="Linked to an existing member. They’ll be recorded as the parent/guardian."
         />
 
         <div className="space-y-2">

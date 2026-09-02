@@ -64,7 +64,7 @@ function LoginContent() {
       const member = result.member;
       const tokens = result.tokens;
       if (!member || !tokens) {
-        throw new Error('Unexpected login response — missing tokens.');
+        throw new Error('Unexpected login response: missing tokens.');
       }
       persistAuthSuccess({ tokens, member, activeRole: member.systemRole });
 

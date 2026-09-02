@@ -76,7 +76,7 @@ export default function MyQr() {
               <Text style={styles.email}>{user.email}</Text>
             ) : null}
             <Text style={styles.qrSubHint}>
-              This code identifies you — no one else can check in as you.
+              This code identifies you, so no one else can check in as you.
             </Text>
           </View>
         ) : (

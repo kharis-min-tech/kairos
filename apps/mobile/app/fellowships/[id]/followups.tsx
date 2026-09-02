@@ -175,7 +175,7 @@ export default function FellowshipFollowups() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
           ) : (overdue.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>Nothing overdue — nicely kept up.</Text>
+              <Text style={styles.emptyLine}>Nothing overdue. Nicely kept up.</Text>
             </Card>
           ) : (
             (overdue.data ?? []).map((row) => (

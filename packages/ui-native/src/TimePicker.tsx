@@ -76,7 +76,7 @@ export function TimePicker({
       <Pressable
         onPress={() => (disabled ? undefined : setOpen(true))}
         accessibilityRole="button"
-        accessibilityLabel={label ? `${label} — ${displayLabel}` : displayLabel}
+        accessibilityLabel={label ? `${label}, ${displayLabel}` : displayLabel}
         style={[
           styles.field,
           disabled && styles.fieldDisabled,

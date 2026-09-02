@@ -320,7 +320,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
-                <p className="text-xs text-muted-foreground">Optional — e.g. if you also attend a branch near your university or workplace</p>
+                <p className="text-xs text-muted-foreground">Optional. For example, if you also attend a branch near your university or workplace</p>
                 <Controller
                   name="secondaryBranchId"
                   control={control}
@@ -493,7 +493,7 @@ export default function SignupPage() {
           </div>
 
           {/* Federated sign-up shortcut on step 1 only. SSO skips branch
-              selection — the API routes new SSO accounts to
+              selection. The API routes new SSO accounts to
               DEFAULT_HOME_BRANCH_ID (or the oldest branch as a fallback),
               then onboarding lets the user pick. */}
           {step === 0 && (

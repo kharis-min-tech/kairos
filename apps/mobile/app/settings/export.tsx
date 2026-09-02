@@ -74,7 +74,7 @@ export default function ExportSettings() {
             This produces a JSON file with your profile, attendance history,
             follow-ups, department + fellowship memberships, form submissions
             you&apos;ve made, and consent records. Give us a moment to prepare
-            it &mdash; on a slow connection it can take up to 20 seconds.
+            it. On a slow connection it can take up to 20 seconds.
           </Text>
           <Button
             label={busy ? 'Preparing…' : 'Prepare export'}

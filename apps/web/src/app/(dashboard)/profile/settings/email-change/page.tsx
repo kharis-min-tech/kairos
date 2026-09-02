@@ -69,7 +69,7 @@ export default function EmailChangePage() {
               <p className="text-muted-foreground">
                 Check the new email for a verification link. Your current email is
                 still active until you click it. We&apos;ve also notified your old
-                email — if you didn&apos;t request this, click <strong>This wasn&apos;t me</strong> in that message.
+                email. If you didn&apos;t request this, click <strong>This wasn&apos;t me</strong> in that message.
               </p>
             </div>
           ) : (

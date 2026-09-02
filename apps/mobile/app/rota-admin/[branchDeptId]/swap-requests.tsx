@@ -242,7 +242,7 @@ function SwapCard({
         </View>
       ) : (
         <Text style={styles.metaFaded}>
-          Open swap — no specific member proposed. Anyone from the pool can cover.
+          Open swap, with no specific member proposed. Anyone from the pool can cover.
         </Text>
       )}
 

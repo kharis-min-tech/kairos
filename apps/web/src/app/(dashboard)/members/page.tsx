@@ -141,7 +141,7 @@ export default function MembersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Members</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Church member directory{pagination ? ` — ${pagination.total} total` : ''}
+            Church member directory{pagination ? `, ${pagination.total} total` : ''}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -293,14 +293,14 @@ export default function MembersPage() {
                           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                             {member.memberType === 'attendee' ? (
                               <span
-                                title="Approved attendee — has not completed the 4-week membership class yet"
+                                title="Approved attendee, has not completed the 4-week membership class yet"
                                 className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
                               >
                                 Attendee
                               </span>
                             ) : member.memberType === 'member' ? (
                               <span
-                                title="Confirmed Member — has completed the 4-week membership class"
+                                title="Confirmed Member, has completed the 4-week membership class"
                                 className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
                               >
                                 Member

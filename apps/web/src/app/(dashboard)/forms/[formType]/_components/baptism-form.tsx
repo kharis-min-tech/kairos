@@ -107,7 +107,7 @@ export function BaptismForm() {
           onClear={clearExisting}
           label="Find the baptism candidate"
           helpText="Search by name or phone. Leave blank to create a new contact."
-          linkedNote="Linked to an existing person — their record will be used."
+          linkedNote="Linked to an existing person. Their record will be used."
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

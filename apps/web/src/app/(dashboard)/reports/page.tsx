@@ -1027,7 +1027,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
                     <span className="font-semibold">{effectiveOutreachAnalytics.overview.converted} souls</span> converted out of{' '}
-                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.totalSouls} total</span> — a{' '}
+                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.totalSouls} total</span>, a{' '}
                     <span className="font-semibold text-emerald-600">{effectiveOutreachAnalytics.overview.conversionRate}% conversion rate</span>.
                     Average time to conversion is <span className="font-semibold">{effectiveOutreachAnalytics.overview.avgDaysToConversion} days</span>.
                   </p>
@@ -1138,7 +1138,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base font-semibold">Meetings per week</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Last 90 days — {fellowshipName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Last 90 days, {fellowshipName}</p>
             </div>
             <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
               Scoped: fellowship
@@ -1497,7 +1497,7 @@ export default function ReportsPage() {
       <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
       <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
       <p className="mt-0.5 text-sm text-muted-foreground">
-        Track church growth, attendance trends, and outreach — all in one calm view.
+        Track church growth, attendance trends, and outreach, all in one calm view.
       </p>
     </div>
   );
