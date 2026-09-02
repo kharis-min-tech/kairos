@@ -14,7 +14,7 @@ App Settings let you manage your account security, display preferences, notifica
 
 </div>
 
-Access settings from your **Profile** page — click **Settings** in the top-right corner, or use the gear icon at the bottom of the sidebar.
+Access settings from your **Profile** page. Click **Settings** in the top-right corner, or use the gear icon at the bottom of the sidebar.
 
 ## Account & Security
 

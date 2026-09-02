@@ -15,7 +15,7 @@ Admins, Pastors, and Leaders with branch permissions can record service attendan
 1. Go to **Attendance**
 2. Click **+ Record a service**
 3. Fill in branch, service type, date, and optional details (theme, preacher, topic)
-4. Save — the service appears in the list
+4. Save. The service appears in the list
 
 ### Checking members in
 

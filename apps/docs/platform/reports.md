@@ -1,6 +1,6 @@
 # Reports & Analytics
 
-The Reports page gives you a clear picture of your church's health — attendance trends, membership growth, outreach outcomes, and engagement scores. All data is scoped to your role.
+The Reports page gives you a clear picture of your church's health: attendance trends, membership growth, outreach outcomes, and engagement scores. All data is scoped to your role.
 
 <div class="screenshot-window screenshot-light">
 
@@ -29,9 +29,9 @@ Four headline numbers appear at the top:
 
 Switch between three report types using the tabs in the top-right:
 
-- **Attendance** — service attendance over time
-- **Growth** — membership numbers and new joiners
-- **Outreach** — souls captured, follow-up rates, and conversions
+- **Attendance**: service attendance over time
+- **Growth**: membership numbers and new joiners
+- **Outreach**: souls captured, follow-up rates, and conversions
 
 ## Weekly Attendance Rate chart
 
@@ -41,7 +41,7 @@ If the trend is downward, the chart header shows a **Trending down** warning in 
 
 ## Monthly Highlight panel
 
-A contextual insight box on the right-hand side that surfaces what needs attention. For example: *"Attendance needs attention — Average rate is 80% over the last 8 weeks"* with a **View breakdown** button.
+A contextual insight box on the right-hand side that surfaces what needs attention. For example: *"Attendance needs attention. Average rate is 80% over the last 8 weeks"* with a **View breakdown** button.
 
 ## Top Fellowships Attended
 
@@ -54,8 +54,8 @@ A bar chart showing which fellowships have the highest meeting attendance. Click
 | Admin | Church-wide data across all branches |
 | Pastor | Their branch only |
 | Leader | Their department or fellowship only |
-| Member | Their own attendance only — via **My Attendance** in the sidebar |
+| Member | Their own attendance only, via **My Attendance** in the sidebar |
 
 ::: tip Members and Reports
-Members do not access the main Reports page. Their personal attendance history is available separately via **My Attendance** in the sidebar — showing their 12-week rate, punctuality breakdown, streak, and service history. Only they, their pastor, and admins can see this.
+Members do not access the main Reports page. Their personal attendance history is available separately via **My Attendance** in the sidebar, showing their 12-week rate, punctuality breakdown, streak, and service history. Only they, their pastor, and admins can see this.
 :::

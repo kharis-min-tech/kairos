@@ -33,7 +33,7 @@ Street address, city, and postal code. This is used for safeguarding and member 
 
 ### Where I belong
 
-Shows your **home branch** — the branch you are registered under.
+Shows your **home branch**, the branch you are registered under.
 
 ### My community
 
@@ -41,7 +41,7 @@ Lists the fellowship(s) you are currently a member of, with the fellowship type 
 
 ### My leadership
 
-Shows any functional roles you hold — for example "Church administrator", "Fellowship Leader — Kharis Express London", or "Department Lead — Choir".
+Shows any functional roles you hold, for example "Church administrator", "Fellowship Leader, Kharis Express London", or "Department Lead, Choir".
 
 ### Emergency Contact
 

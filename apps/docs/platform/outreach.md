@@ -1,6 +1,6 @@
 # Outreach Programs
 
-The Outreach Programs page is where evangelism events are created and managed. Programs are branch-scoped — members can only register for programs within their own branch.
+The Outreach Programs page is where evangelism events are created and managed. Programs are branch-scoped, so members can only register for programs within their own branch.
 
 <div class="screenshot-window screenshot-light">
 
@@ -39,12 +39,12 @@ Click **+ Create Program** (Leader, Pastor, and Admin):
 | Field | Notes |
 |-------|-------|
 | Program name | Required |
-| Branch | Required — determines who can register |
+| Branch | Required; determines who can register |
 | Date | Required |
 | Location | Required |
 | Address / City | Optional |
 | Description | Optional |
-| Coordinator | Link to a member — the person responsible |
+| Coordinator | Link to a member; the person responsible |
 
 ## Registering as a worker
 

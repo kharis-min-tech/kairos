@@ -1,6 +1,6 @@
 # New Believers
 
-The New Believers page tracks the discipleship journey of recently converted members — from their first altar call or outreach conversion through four teaching sessions until they join a department as a full church member.
+The New Believers page tracks the discipleship journey of recently converted members, from their first altar call or outreach conversion through four teaching sessions until they join a department as a full church member.
 
 <div class="screenshot-window screenshot-light">
 
@@ -21,7 +21,7 @@ Three summary numbers appear at the top:
 | Stat | Meaning |
 |------|---------|
 | Active | Members currently in the pipeline |
-| No progress in 7+ days | Enrollments that have stalled — need attention |
+| No progress in 7+ days | Enrollments that have stalled; need attention |
 | Joined a Department | Completed the full pipeline |
 
 ## Kanban board
@@ -54,7 +54,7 @@ Click **+ Enrol Member** to start someone on the pipeline. When a soul is marked
 
 ## Sessions
 
-Click the **Sessions** button to manage scheduled class sessions — dates, topics, locations, and which teacher is leading each session.
+Click the **Sessions** button to manage scheduled class sessions: dates, topics, locations, and which teacher is leading each session.
 
 ## Who can access New Believers
 

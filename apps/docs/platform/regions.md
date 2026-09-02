@@ -16,12 +16,12 @@ Regions are geographic groupings that organise your branches. Every branch must 
 
 ## What regions do
 
-Regions let you group branches by geography — for example, all UK branches in one region and all Ghana branches in another. This helps with filtering when you have branches across multiple countries.
+Regions let you group branches by geography: for example, all UK branches in one region and all Ghana branches in another. This helps with filtering when you have branches across multiple countries.
 
 Kairos uses three regions for Kharis Church:
-- **Greater Accra** — Ghana
-- **United Kingdom** — United Kingdom
-- **Western Area** — Sierra Leone
+- **Greater Accra**: Ghana
+- **United Kingdom**: United Kingdom
+- **Western Area**: Sierra Leone
 
 ## Adding a region
 

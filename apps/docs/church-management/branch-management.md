@@ -9,7 +9,7 @@ Go to **Branches → + New Branch** and fill in:
 | Field | Required | Notes |
 |-------|----------|-------|
 | Branch name | Yes | Unique within the region |
-| Region | Yes | Must exist — create the region first |
+| Region | Yes | Must exist; create the region first |
 | Branch type | Yes | Main, Satellite, Cell, Campus, or Online |
 | City | No | |
 | Address | No | |
@@ -27,7 +27,7 @@ After creating a branch, assign its Main Pastor:
 4. Each branch can have **one current Main Pastor** at a time
 5. Elders can be added in addition to the Main Pastor
 
-Leadership assignments include a start date and optional end date — this creates a complete leadership history for the branch.
+Leadership assignments include a start date and optional end date, which creates a complete leadership history for the branch.
 
 ## Editing branch details
 
@@ -35,7 +35,7 @@ Click into a branch from the Branches page to edit its name, type, contact detai
 
 ## Deactivating a branch
 
-Use the **Deactivate** button on the branch card. This is a soft delete — all member records, attendance history, and data for that branch are preserved. The branch is hidden from active views but remains in reports.
+Use the **Deactivate** button on the branch card. This is a soft delete: all member records, attendance history, and data for that branch are preserved. The branch is hidden from active views but remains in reports.
 
 ## Managing multiple branches
 
@@ -45,4 +45,4 @@ The **All Regions** filter on the Branches page lets you narrow down branches by
 
 Data is strictly isolated by branch. A pastor at Kharis London Central cannot see members, departments, fellowships, or reports from Kharis Accra. Only Admins have cross-branch visibility.
 
-This isolation is enforced at the API level — it is not just a UI filter.
+This isolation is enforced at the API level, not just a UI filter.

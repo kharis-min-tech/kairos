@@ -1,6 +1,6 @@
 # Quick Demo
 
-The fastest way to see Kairos running. You only need **Docker** — no Node.js or database setup required.
+The fastest way to see Kairos running. You only need **Docker**. No Node.js or database setup required.
 
 ## Run it
 

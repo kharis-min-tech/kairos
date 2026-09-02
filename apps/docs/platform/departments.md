@@ -71,8 +71,8 @@ Click **+ New Department** (Pastor and Admin only):
 |-------|-------|
 | Ministry type | Select from the list above |
 | Branch | Required |
-| Lead member | Required — must be an existing member in the branch |
-| Deputy member | Optional — must be different from the lead |
+| Lead member | Required; must be an existing member in the branch |
+| Deputy member | Optional; must be different from the lead |
 | Start date | Defaults to today |
 | Description | Optional |
 
@@ -80,7 +80,7 @@ Each branch can have one active instance of each department type.
 
 ## Joining a department
 
-Members can request to join a department from their profile or department page. Requests go to the department leader for approval. Members can be in a maximum of **two departments** at the same time. The system warns leaders if a member already holds two active memberships — an admin can override this limit.
+Members can request to join a department from their profile or department page. Requests go to the department leader for approval. Members can be in a maximum of **two departments** at the same time. The system warns leaders if a member already holds two active memberships, though an admin can override this limit.
 
 ## Pending join requests
 

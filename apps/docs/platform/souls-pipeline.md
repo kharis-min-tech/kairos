@@ -20,12 +20,12 @@ Souls move through four stages:
 
 | Stage | Meaning |
 |-------|---------|
-| New | Just captured — no follow-up logged yet |
+| New | Just captured; no follow-up logged yet |
 | Following Up | Active contact has been made |
 | Interested | Showing genuine interest in the faith |
-| Converted | Made a decision — ready for New Believers enrolment |
+| Converted | Made a decision; ready for New Believers enrolment |
 
-A fifth outcome — **Not Interested** — exits the active pipeline but is retained in records.
+A fifth outcome, **Not Interested**, exits the active pipeline but is retained in records.
 
 ## Soul cards
 
@@ -77,9 +77,9 @@ Sort by **Date Added**, **Name**, or **Last Contact**.
 
 ## Follow-up health indicators
 
-- **Critical** — no contact in 7+ days
-- **Monitor** — contact made but no progress
-- **On Track** — recent, productive follow-up
+- **Critical**: no contact in 7+ days
+- **Monitor**: contact made but no progress
+- **On Track**: recent, productive follow-up
 
 ## Moving to New Believers
 

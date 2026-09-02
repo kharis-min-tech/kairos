@@ -18,8 +18,8 @@ Kairos is a Turborepo monorepo with a clear separation between the API, frontend
 
 ```
 apps/
-  api/          Hono REST API — module routers, services, schemas, tests
-  web/          Next.js frontend — App Router, components, hooks, pages
+  api/          Hono REST API: module routers, services, schemas, tests
+  web/          Next.js frontend: App Router, components, hooks, pages
 
 packages/
   types/        Shared entity, enum, and API contract types

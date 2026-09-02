@@ -6,13 +6,13 @@
 
 Anyone can register via the login page. After registering, accounts start as **Pending** and require approval from a Pastor or Admin before full access is granted.
 
-**I registered but can't see anything — what's wrong?**
+**I registered but can't see anything. What's wrong?**
 
 Your account is likely pending approval. Contact your branch pastor or church admin and ask them to approve your registration. Until then, you can only view your own profile.
 
 **Can I change my home branch?**
 
-Not directly — contact your church admin. Branch assignments are managed by Admins and Pastors since they affect which members, departments, and fellowships you can access.
+Not directly. Contact your church admin. Branch assignments are managed by Admins and Pastors since they affect which members, departments, and fellowships you can access.
 
 ---
 
@@ -32,21 +32,21 @@ Request to join from the Departments page. The department leader approves reques
 
 **Can I see my attendance history?**
 
-Yes — go to **My Attendance** in the sidebar. It shows your last 12 weeks of service attendance, your punctuality breakdown, and your current streak.
+Yes. Go to **My Attendance** in the sidebar. It shows your last 12 weeks of service attendance, your punctuality breakdown, and your current streak.
 
 ---
 
 ## Leaders
 
-**I'm a department leader — why can't I see members outside my department?**
+**I'm a department leader. Why can't I see members outside my department?**
 
-Leader access is strictly scoped to the groups you lead. You can only see and manage members who are in your department or fellowship. This is by design — it protects member privacy.
+Leader access is strictly scoped to the groups you lead. You can only see and manage members who are in your department or fellowship. This is by design: it protects member privacy.
 
 **Can I approve members into the church?**
 
 No. Only Pastors and Admins can approve new member registrations. As a leader, you can approve join requests for your own department or fellowship, but not system-level approvals.
 
-**I'm a leader in the Admin department — do I see form submissions?**
+**I'm a leader in the Admin department. Do I see form submissions?**
 
 Yes. Admin department leaders can review front-desk form submissions including First-Time Visitor, Altar Call, and Baptism forms.
 
@@ -88,7 +88,7 @@ By design, financial data access requires explicit privileges even for Admins. T
 
 **Is my data ever deleted?**
 
-Kairos uses soft deletes — deactivating a member or group preserves all historical records. Permanent deletion can be requested by contacting your church admin. An **Export my data** feature (GDPR right to portability) is coming soon.
+Kairos uses soft deletes, so deactivating a member or group preserves all historical records. Permanent deletion can be requested by contacting your church admin. An **Export my data** feature (GDPR right to portability) is coming soon.
 
 **Who can see my attendance?**
 

@@ -1,6 +1,6 @@
 # Growth Reports
 
-Growth reports track how the church is expanding — new members joining, members returning after inactivity, and the overall trajectory of the congregation over time.
+Growth reports track how the church is expanding: new members joining, members returning after inactivity, and the overall trajectory of the congregation over time.
 
 ## Accessing growth data
 
@@ -11,7 +11,7 @@ Go to **Reports** and click the **Growth** tab in the top-right.
 | Stat | Description |
 |------|-------------|
 | New Members | Members added in the selected period |
-| Month-on-month change | e.g. "+24 last mo" — how this period compares to the previous one |
+| Month-on-month change | e.g. "+24 last mo"; how this period compares to the previous one |
 | Growth Months | Consecutive months of positive member growth |
 
 ## Membership growth chart
@@ -22,7 +22,7 @@ Use the Reports page Growth tab for a more detailed view with date range control
 
 ## What counts as growth
 
-A member is counted as new when their account is **approved** — not when they register. This prevents pending accounts from inflating growth numbers.
+A member is counted as new when their account is **approved**, not when they register. This prevents pending accounts from inflating growth numbers.
 
 Returners (members who were inactive and re-engaged) are tracked separately from new members so you can distinguish genuine growth from reactivation.
 
@@ -46,6 +46,6 @@ The Dashboard shows the total congregation broken down into:
 
 ## Using growth reports effectively
 
-- A flat or declining member count with high attendance means visitors aren't converting — check the [Souls Pipeline](/platform/souls-pipeline) and [New Believers](/platform/new-believers) pipeline
-- A growing member count with declining attendance means new members aren't being retained — check fellowship membership and follow-up rates
+- A flat or declining member count with high attendance means visitors aren't converting, so check the [Souls Pipeline](/platform/souls-pipeline) and [New Believers](/platform/new-believers) pipeline
+- A growing member count with declining attendance means new members aren't being retained, so check fellowship membership and follow-up rates
 - Cross-reference growth with the [Engagement](/analytics/engagement) metrics to get a complete picture

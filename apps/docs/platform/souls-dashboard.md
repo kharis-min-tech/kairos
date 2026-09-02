@@ -1,6 +1,6 @@
 # Souls Dashboard
 
-The Souls Dashboard provides a dedicated analytics view for the souls pipeline — showing how people captured through outreach are progressing through follow-up, and how many are converting.
+The Souls Dashboard provides a dedicated analytics view for the souls pipeline, showing how people captured through outreach are progressing through follow-up, and how many are converting.
 
 <div class="screenshot-window screenshot-light">
 
@@ -21,7 +21,7 @@ Four headline numbers at the top of the page:
 | Stat | Meaning |
 |------|---------|
 | Total Souls | All souls captured in the selected period |
-| Critical | Souls with no follow-up in 7+ days — need urgent attention |
+| Critical | Souls with no follow-up in 7+ days; need urgent attention |
 | Monitor | Souls flagged for regular check-ins |
 | On Track | Souls with recent follow-up activity |
 
@@ -41,7 +41,7 @@ A bar chart showing how many souls are in each pipeline stage: New, Following Up
 
 ## Follow-up Status
 
-A chart showing the health of follow-up activity — how many souls have been contacted recently vs. those that are overdue.
+A chart showing the health of follow-up activity: how many souls have been contacted recently vs. those that are overdue.
 
 ## Conversion Funnel
 
@@ -49,7 +49,7 @@ A horizontal bar chart showing the full funnel from New → Following Up → Int
 
 ## Stage Assimilation Rates
 
-Shows how well souls are progressing through each stage — the percentage moving forward vs. staying stuck.
+Shows how well souls are progressing through each stage: the percentage moving forward vs. staying stuck.
 
 ## Who can see the Souls Dashboard
 

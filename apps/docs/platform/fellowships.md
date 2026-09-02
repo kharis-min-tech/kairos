@@ -97,7 +97,7 @@ Click **+ New Fellowship** (Pastor and Admin only):
 | Fellowship name | Required, unique within a branch |
 | Branch | Required |
 | Fellowship type | K-Groups, Kharis Express, New Breeds, KOC, KOC Colleges |
-| Leader | Required — must be an existing member |
+| Leader | Required; must be an existing member |
 | Co-leader | Optional |
 | Meeting schedule | e.g. "Every Friday, 6:30 PM" |
 | Description | Optional |
