@@ -90,7 +90,7 @@ describe('BaptismForm', () => {
 
     // Linked-state note + pre-filled fields.
     expect(
-      screen.getByText(/Linked to an existing person — their record will be used\./),
+      screen.getByText(/Linked to an existing person. Their record will be used\./),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
     expect(screen.getByLabelText(/Last name/)).toHaveValue('Lovelace');

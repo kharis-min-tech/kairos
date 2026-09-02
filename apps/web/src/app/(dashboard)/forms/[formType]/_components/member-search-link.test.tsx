@@ -118,7 +118,7 @@ describe('MemberSearchLink', () => {
     render(<MemberSearchLink onSelect={vi.fn()} onClear={vi.fn()} />, { wrapper });
     await user.type(screen.getByLabelText(/Find an existing person/), 'zz');
     expect(
-      await screen.findByText(/No matches — a new contact will be created\./),
+      await screen.findByText(/No matches. A new contact will be created\./),
     ).toBeInTheDocument();
   });
 

@@ -54,7 +54,7 @@ export async function mintUploadUrl(
       status: res.status,
       errors: body.errors,
     });
-    throw new AppError(502, 'Failed to mint upload URL — try again shortly.', 'MEDIA_UPLOAD_URL_FAILED');
+    throw new AppError(502, 'Failed to mint upload URL. Try again shortly.', 'MEDIA_UPLOAD_URL_FAILED');
   }
 
   return {

@@ -186,7 +186,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium">Language</p>
               <p className="text-xs text-muted-foreground">
-                Currently English only — more languages coming.
+                Currently English only. More languages coming.
               </p>
             </div>
             <div className="w-40">

@@ -350,7 +350,7 @@ export const ALTAR_CALL_FORM: FormDefinition = {
   formType: 'altar_call',
   title: 'New Believers Class',
   description:
-    'Enrol someone into the New Believers programme — we’ll follow up to arrange the four-week class.',
+    'Enrol someone into the New Believers programme. We’ll follow up to arrange the four-week class.',
   blocks: [
     {
       kind: 'section',

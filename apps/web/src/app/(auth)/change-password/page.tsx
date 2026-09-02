@@ -75,7 +75,7 @@ export default function ChangePasswordPage() {
       {/* Heading — outside card */}
       <KharisCardHeader
         heading="Change your password"
-        subtitle={<>Hi {user?.firstName ?? 'there'} — your account has a temporary password. Set a new one to continue.</>}
+        subtitle={<>Hi {user?.firstName ?? 'there'}, your account has a temporary password. Set a new one to continue.</>}
       />
 
       <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">

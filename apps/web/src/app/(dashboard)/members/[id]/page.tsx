@@ -117,7 +117,7 @@ export default function MemberDetailPage() {
                 {member.isMinor && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3]">
                     <Lock className="h-3 w-3" strokeWidth={2} />
-                    Minor — protected
+                    Minor, protected
                   </span>
                 )}
                 <span className="text-sm capitalize text-muted-foreground">{member.systemRole}</span>
@@ -244,7 +244,7 @@ export default function MemberDetailPage() {
           </CardTitle>
           <CardDescription>
             Membership in this church is conferred by completing the 4-week class. This is the
-            formal status &mdash; separate from joining a fellowship or department.
+            formal status, separate from joining a fellowship or department.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -686,7 +686,7 @@ function InfoRow({ label, value, redacted }: { label: string; value: string | nu
       {redacted ? (
         <span className="inline-flex items-center gap-1 text-muted-foreground">
           <Lock className="h-3.5 w-3.5 text-[#5D3FD3]" strokeWidth={1.5} />
-          {'Hidden \u2014 safeguarding protected'}
+          {'Hidden, safeguarding protected'}
         </span>
       ) : (
         <span>{value ?? '\u2014'}</span>

@@ -604,7 +604,7 @@ export async function addDepartmentMember(
   const activeCount = await countActiveDepartmentsForMember(db, data.memberId);
   if (activeCount >= MAX_DEPARTMENTS_PER_MEMBER) {
     throw new ConflictError(
-      `Member is already in ${MAX_DEPARTMENTS_PER_MEMBER} departments — remove from another first`,
+      `Member is already in ${MAX_DEPARTMENTS_PER_MEMBER} departments. Remove from another first`,
     );
   }
 
@@ -654,7 +654,7 @@ export async function removeDepartmentMember(
   enforceLeaderOrAbove(auth, bd);
 
   if (memberId === bd.leadMemberId) {
-    throw new ValidationError('Cannot remove the department lead — reassign leadership first');
+    throw new ValidationError('Cannot remove the department lead. Reassign leadership first');
   }
 
   const [record] = await db
@@ -734,7 +734,7 @@ export async function createJoinRequest(
   const activeCount = await countActiveDepartmentsForMember(db, auth.memberId);
   if (activeCount >= MAX_DEPARTMENTS_PER_MEMBER) {
     throw new ConflictError(
-      `You are already in ${MAX_DEPARTMENTS_PER_MEMBER} departments — leave one before requesting to join another`,
+      `You are already in ${MAX_DEPARTMENTS_PER_MEMBER} departments. Leave one before requesting to join another`,
     );
   }
 
@@ -1103,7 +1103,7 @@ export async function respondToJoinRequestOffer(
   const activeCount = await countActiveDepartmentsForMember(db, auth.memberId);
   if (activeCount >= MAX_DEPARTMENTS_PER_MEMBER) {
     throw new ConflictError(
-      `You are already in ${MAX_DEPARTMENTS_PER_MEMBER} departments — leave one before accepting`,
+      `You are already in ${MAX_DEPARTMENTS_PER_MEMBER} departments. Leave one before accepting`,
     );
   }
 

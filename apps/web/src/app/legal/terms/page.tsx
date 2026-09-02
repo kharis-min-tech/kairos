@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms & Conditions — Kharis Church',
+  title: 'Terms & Conditions | Kharis Church',
   description: 'Terms of use for Kairos, the Kharis Church administration platform.',
 };
 
@@ -221,7 +221,7 @@ export default function TermsPage() {
 
       <Section title="11. Contact">
         <p>
-          Kharis Church &mdash;{' '}
+          Kharis Church:{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"

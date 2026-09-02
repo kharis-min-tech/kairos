@@ -840,7 +840,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                   className="w-full"
                   onClick={() => setShowConfirmation(true)}
                 >
-                  This is near me — I want to join
+                  This is near me, I want to join
                 </Button>
               )}
 

@@ -173,7 +173,7 @@ export default function PrivacyConsent() {
                   </View>
                   {status.needsAccept && status.required ? (
                     <Text style={styles.needsAcceptLine}>
-                      Action needed — version {status.currentVersion} is now current.
+                      Action needed: version {status.currentVersion} is now current.
                     </Text>
                   ) : null}
                 </View>

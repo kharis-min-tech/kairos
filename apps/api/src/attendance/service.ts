@@ -811,7 +811,7 @@ async function performSelfCheckIn(
   if (now < opensAt) {
     const minsUntil = Math.ceil((opensAt.getTime() - now.getTime()) / 60_000);
     throw new ForbiddenError(
-      `Self check-in isn't open yet — opens in ${minsUntil} minute${minsUntil === 1 ? '' : 's'}.`,
+      `Self check-in isn't open yet. It opens in ${minsUntil} minute${minsUntil === 1 ? '' : 's'}.`,
     );
   }
   if (now > closesAt) {
@@ -1265,7 +1265,7 @@ export async function getCohortDiff(
   // that the /attendance/reports page hit when the outer filter defaulted
   // to "All branches". Fail loudly instead of falling back.
   if (authHasCapability(auth, 'branch:read') && !query.branchId) {
-    throw new ValidationError('branchId is required — pick a branch to compare cohorts within');
+    throw new ValidationError('branchId is required. Pick a branch to compare cohorts within');
   }
   const branchId = resolveBranchId(auth, query.branchId);
 

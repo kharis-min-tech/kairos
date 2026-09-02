@@ -81,7 +81,7 @@ export default function MembersImportPage() {
       {/* Template download */}
       <Card>
         <CardHeader>
-          <CardTitle>Step 1 — Download Template</CardTitle>
+          <CardTitle>Step 1: Download Template</CardTitle>
           <CardDescription>Use the provided CSV template for correct formatting</CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,7 +103,7 @@ export default function MembersImportPage() {
       {/* Upload */}
       <Card>
         <CardHeader>
-          <CardTitle>Step 2 — Upload CSV File</CardTitle>
+          <CardTitle>Step 2: Upload CSV File</CardTitle>
           <CardDescription>Select your filled-in CSV file</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

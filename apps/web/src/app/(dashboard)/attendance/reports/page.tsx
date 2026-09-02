@@ -218,7 +218,7 @@ export default function AttendanceReportsPage() {
             <CardTitle className="text-base">Members not seen recently</CardTitle>
             <CardDescription>
               Active members who missed the most recent service. Sorted by
-              consecutive services missed — the top of the list are the
+              consecutive services missed. The top of the list are the
               members most likely to need a check-in.
             </CardDescription>
           </CardHeader>

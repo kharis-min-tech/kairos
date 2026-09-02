@@ -271,7 +271,7 @@ export default function DepartmentDetailPage() {
                       data: { offerResponse: 'accepted' },
                     },
                     {
-                      onSuccess: () => toast.success('Offer accepted — probation started.'),
+                      onSuccess: () => toast.success('Offer accepted. Probation started.'),
                       onError: (e: unknown) =>
                         toast.error(
                           e instanceof Error ? e.message : 'Failed to accept offer.',

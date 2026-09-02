@@ -130,7 +130,7 @@ export function MemberSearchLink({
               </ul>
             ) : (
               <p className="px-3 py-2 text-sm text-muted-foreground">
-                No matches — a new contact will be created.
+                No matches. A new contact will be created.
               </p>
             )}
           </div>

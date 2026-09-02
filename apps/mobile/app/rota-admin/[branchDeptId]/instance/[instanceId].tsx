@@ -351,7 +351,7 @@ function AssignmentRow({
             </View>
           </View>
         ) : (
-          <Text style={styles.openLabel}>Open — tap to assign</Text>
+          <Text style={styles.openLabel}>Open, tap to assign</Text>
         )}
       </View>
       <View style={styles.rowActions}>

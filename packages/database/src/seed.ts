@@ -593,7 +593,7 @@ async function seed() {
     { departmentName: "Children's Ministry", description: 'Sunday school and kids ministry', iconKey: 'baby' },
     { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
     { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
-    { departmentName: 'Admin', description: 'Branch operations — operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
+    { departmentName: 'Admin', description: 'Branch operations: operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
   ]).returning();
   console.log(`✓ 14 global departments`);
 
@@ -616,14 +616,14 @@ async function seed() {
       branchId: london!.id,
       departmentId: hospitalityDept!.id,
       leadMemberId: leaderSarah!.id,
-      description: 'London hospitality team — currently recruiting.',
+      description: 'London hospitality team, currently recruiting.',
     },
     {
       // Used to demo the member-side "Accept / Decline Offer" flow (see seed below).
       branchId: london!.id,
       departmentId: hostDept!.id,
       leadMemberId: leaderSarah!.id,
-      description: 'London first-time guest host team — interviewing applicants.',
+      description: 'London first-time guest host team, interviewing applicants.',
     },
     {
       // London admin desk — members here can record service attendance.

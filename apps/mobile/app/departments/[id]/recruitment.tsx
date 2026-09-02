@@ -390,7 +390,7 @@ function ApplicantCard({
           <Text style={{ fontWeight: '700' }}>
             {row.interviewOutcome === 'pass' ? 'Passed' : 'Did not pass'}
           </Text>
-          {row.interviewNotes ? ` — ${row.interviewNotes}` : ''}
+          {row.interviewNotes ? `, ${row.interviewNotes}` : ''}
         </Text>
       ) : null}
 

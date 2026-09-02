@@ -641,7 +641,7 @@ function InstanceDetail({
                   {
                     onSuccess: (res) =>
                       toast.success(
-                        `Regenerated — ${res.assignmentCount} assigned, ${res.openSlotCount} open`,
+                        `Regenerated, ${res.assignmentCount} assigned, ${res.openSlotCount} open`,
                       ),
                     onError: (e: unknown) =>
                       toast.error(e instanceof Error ? e.message : 'Failed to regenerate'),
@@ -771,7 +771,7 @@ function TemplatesSection({
         <div className="space-y-1">
           <h3 className="text-base font-semibold">Service templates</h3>
           <p className="text-xs text-muted-foreground">
-            Templates are the recurring blueprint of a service — the day, default time, and the roles you need filled.
+            Templates are the recurring blueprint of a service: the day, default time, and the roles you need filled.
           </p>
         </div>
         {canManage && (

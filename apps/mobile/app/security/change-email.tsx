@@ -135,7 +135,7 @@ export default function ChangeEmail() {
             </View>
             <Text style={styles.introText}>
               We&apos;ll send a confirmation link to the new address. Both the old and
-              new addresses get notified — the old one carries an undo link valid for
+              new addresses get notified, and the old one carries an undo link valid for
               24 hours in case someone else initiated this.
             </Text>
           </View>

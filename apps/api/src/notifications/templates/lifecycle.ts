@@ -19,7 +19,7 @@ export interface LifecycleVisitorPromotedPayload {
 
 export function renderVisitorPromoted(p: LifecycleVisitorPromotedPayload) {
   return {
-    subject: `Visitor promoted to attendee — ${p.visitorName}`,
+    subject: `Visitor promoted to attendee: ${p.visitorName}`,
     html: renderLayout({
       heading: 'Visitor promoted to attendee',
       greeting: p.memberName,
@@ -42,7 +42,7 @@ export interface LifecycleChildAgedOutPayload {
 
 export function renderChildAgedOut(p: LifecycleChildAgedOutPayload) {
   return {
-    subject: `Child aged out — ${p.childName}`,
+    subject: `Child aged out: ${p.childName}`,
     html: renderLayout({
       heading: 'Child aged out (16+)',
       greeting: p.memberName,
@@ -67,7 +67,7 @@ export interface LifecycleMemberConfirmedPayload {
 
 export function renderMemberConfirmed(p: LifecycleMemberConfirmedPayload) {
   return {
-    subject: `New confirmed Member — ${p.confirmedName}`,
+    subject: `New confirmed Member: ${p.confirmedName}`,
     html: renderLayout({
       heading: 'New confirmed Member',
       greeting: p.memberName,
@@ -88,7 +88,7 @@ export function digestVisitorPromoted(p: LifecycleVisitorPromotedPayload): strin
 }
 
 export function digestChildAgedOut(p: LifecycleChildAgedOutPayload): string {
-  return `${p.childName} aged out — now an attendee (${p.branchName})`;
+  return `${p.childName} aged out and is now an attendee (${p.branchName})`;
 }
 
 export function digestMemberConfirmed(p: LifecycleMemberConfirmedPayload): string {

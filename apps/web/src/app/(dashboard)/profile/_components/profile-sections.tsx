@@ -58,7 +58,7 @@ export function useFriendlyRoleLines(opts: {
   if (lines.length === 0) {
     lines.push(
       homeBranchName
-        ? `Member of Kharis Church — ${homeBranchName} branch`
+        ? `Member of Kharis Church, ${homeBranchName} branch`
         : 'Member of Kharis Church',
     );
   }
@@ -239,16 +239,16 @@ export function MyLeadershipCard({
 
   const fellowshipRoles = fellowships.flatMap((f) => {
     if (!memberId) return [];
-    if (f.leaderId === memberId) return [{ key: f.id, label: `Lead — ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
-    if (f.coLeaderId === memberId) return [{ key: f.id, label: `Co-lead — ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
+    if (f.leaderId === memberId) return [{ key: f.id, label: `Lead, ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
+    if (f.coLeaderId === memberId) return [{ key: f.id, label: `Co-lead, ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
     return [];
   });
 
   const deptRoles = depts.flatMap((d) => {
     if (!memberId) return [];
     const name = d.departmentName ?? 'Department';
-    if (d.leadMemberId === memberId) return [{ key: d.id, label: `Lead — ${name} department`, href: `/departments/${d.id}` }];
-    if (d.deputyMemberId === memberId) return [{ key: d.id, label: `Deputy — ${name} department`, href: `/departments/${d.id}` }];
+    if (d.leadMemberId === memberId) return [{ key: d.id, label: `Lead, ${name} department`, href: `/departments/${d.id}` }];
+    if (d.deputyMemberId === memberId) return [{ key: d.id, label: `Deputy, ${name} department`, href: `/departments/${d.id}` }];
     return [];
   });
 
@@ -257,7 +257,7 @@ export function MyLeadershipCard({
   if (showPastorRole) {
     churchRoles.push({
       key: 'pastor',
-      label: homeBranchName ? `Pastor — ${homeBranchName} branch` : 'Pastor',
+      label: homeBranchName ? `Pastor, ${homeBranchName} branch` : 'Pastor',
     });
   }
 

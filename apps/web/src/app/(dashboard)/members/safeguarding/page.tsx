@@ -37,10 +37,10 @@ export default function SafeguardingReviewPage() {
 
       <section className="space-y-3">
         <header className="space-y-0.5">
-          <h2 className="text-sm font-semibold text-foreground">Dormant child shells — review</h2>
+          <h2 className="text-sm font-semibold text-foreground">Dormant child shells to review</h2>
           <p className="text-xs text-muted-foreground">
             Child records created 60+ days ago with no recent review. Mark each as still active
-            or approve archiving — every decision is logged.
+            or approve archiving. Every decision is logged.
           </p>
         </header>
         <DormantSection

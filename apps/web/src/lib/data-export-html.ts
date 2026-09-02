@@ -99,9 +99,9 @@ function renderProfile(member: Record<string, unknown> | null | undefined): stri
         ${row('Secondary branch', esc(member['secondaryBranchName']))}
         ${row('At secondary branch?', yesNo(member['isAtSecondaryBranch']))}
         ${row('Membership date', longDate(member['membershipDate']))}
-        ${row('Emergency contact — name', esc(member['emergencyContactName']))}
-        ${row('Emergency contact — phone', esc(member['emergencyContactPhone']))}
-        ${row('Emergency contact — relationship', esc(member['emergencyContactRelationship']))}
+        ${row('Emergency contact: name', esc(member['emergencyContactName']))}
+        ${row('Emergency contact: phone', esc(member['emergencyContactPhone']))}
+        ${row('Emergency contact: relationship', esc(member['emergencyContactRelationship']))}
         ${row('Account active?', yesNo(member['isActive']))}
         ${row('Email verified?', yesNo(member['emailVerified']))}
         ${row('Approval status', esc(member['approvalStatus']))}
@@ -377,7 +377,7 @@ export function buildDataExportHtml(payload: ExportPayload): string {
     ? payload.exportedAt
     : new Intl.DateTimeFormat(UK_DATE_LOCALE, LONG_DATE_TIME).format(exportedAt);
 
-  const title = `Your Kharis data — ${displayName}`;
+  const title = `Your Kharis data, ${displayName}`;
 
   const body = `
     <header class="cover">
@@ -440,11 +440,11 @@ export function buildDataExportHtml(payload: ExportPayload): string {
     <footer>
       <p>
         This export covers Kharis Church's records about you. Additional
-        material held about you — such as safeguarding notes or leader
-        follow-ups — is available on request to
+        material held about you, such as safeguarding notes or leader
+        follow-ups, is available on request to
         <a href="mailto:privacy@kharis.org">privacy@kharis.org</a>.
       </p>
-      <p class="tiny">Kharis Church — data exported ${esc(exportedAtDisplay)}</p>
+      <p class="tiny">Kharis Church, data exported ${esc(exportedAtDisplay)}</p>
     </footer>
   `;
 

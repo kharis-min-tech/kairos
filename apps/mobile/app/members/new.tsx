@@ -165,7 +165,7 @@ export default function NewMember() {
         footer={
           <Text style={styles.footnote}>
             The system generates a temporary password shown on the next screen. Share it
-            with the new member — they&apos;ll be prompted to change it on first login.
+            with the new member. They&apos;ll be prompted to change it on first login.
             Requires admin or branch-admin access.
           </Text>
         }

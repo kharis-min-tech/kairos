@@ -311,7 +311,7 @@ export function MemberForm({
           />
           {mode === 'edit' ? (
             <Text style={styles.helpText}>
-              Home branch changes are handled by an admin — talk to your branch team.
+              Home branch changes are handled by an admin, so talk to your branch team.
             </Text>
           ) : null}
 

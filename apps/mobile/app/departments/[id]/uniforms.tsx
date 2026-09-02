@@ -199,7 +199,7 @@ export default function DepartmentUniforms() {
         ) : activeOutfits.length === 0 ? (
           <Card padding="md">
             <Text style={styles.emptyLine}>
-              No outfits yet. Tap + to add one — you&apos;ll need a hosted image URL.
+              No outfits yet. Tap + to add one. You&apos;ll need a hosted image URL.
             </Text>
           </Card>
         ) : (

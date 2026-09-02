@@ -623,7 +623,7 @@ export function UnifiedDashboard({
                   Formula: souls reaching stage B / souls reaching stage A &times; 100
                 </p>
                 <p className="text-xs mt-2 text-success">
-                  Higher is better &mdash; more souls moving forward.
+                  Higher is better: more souls moving forward.
                 </p>
                 <p className="text-xs mt-2 text-muted-foreground">
                   Thresholds: &ge;{ASSIMILATION_THRESHOLDS.green}% green &middot; &ge;{ASSIMILATION_THRESHOLDS.amber}% amber &middot; below = red.

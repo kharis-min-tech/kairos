@@ -497,7 +497,7 @@ export default function EnrollmentDetailPage() {
                           ?.departmentName ?? enrollment.joinedDepartmentId
                       ) : (
                         <span className="italic text-muted-foreground">
-                          Integrated — department not recorded
+                          Integrated, department not recorded
                         </span>
                       )}
                     </dd>
@@ -701,7 +701,7 @@ export default function EnrollmentDetailPage() {
                   value: d.id,
                   label: d.departmentName,
                 }))}
-                placeholder="Skip — not specified"
+                placeholder="Skip, not specified"
               />
             )}
           </div>

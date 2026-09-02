@@ -102,13 +102,13 @@ describe('MemberDetailPage — minor protection', () => {
     memberData = { ...baseMember, isMinor: true, redacted: false };
     healthData = fullRecord;
     render(<MemberDetailPage />, { wrapper });
-    expect(screen.getByText(/minor — protected/i)).toBeInTheDocument();
+    expect(screen.getByText(/minor, protected/i)).toBeInTheDocument();
   });
 
   it('does not show a minor badge or health section for a non-minor', () => {
     memberData = { ...baseMember, dateOfBirth: '1990-01-01', isMinor: false, redacted: false };
     render(<MemberDetailPage />, { wrapper });
-    expect(screen.queryByText(/minor — protected/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minor, protected/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/safeguarding & health/i)).not.toBeInTheDocument();
     // normal field values are shown
     expect(screen.getByText('tim@example.com')).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe('MemberDetailPage — minor protection', () => {
     // Each of the 9 redacted fields (email, phone, DOB, address, city, postal
     // code, emergency name/relationship/phone) renders the locked notice with a
     // real em-dash — a literal "—" would not match this regex.
-    expect(screen.getAllByText(/hidden — safeguarding protected/i).length).toBeGreaterThanOrEqual(9);
+    expect(screen.getAllByText(/hidden, safeguarding protected/i).length).toBeGreaterThanOrEqual(9);
     expect(screen.getByText(/need safeguarding access/i)).toBeInTheDocument();
     // health values are NOT rendered
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument();

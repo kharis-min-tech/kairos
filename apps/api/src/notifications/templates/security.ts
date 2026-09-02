@@ -19,7 +19,7 @@ export interface SecurityPasswordResetRequestedPayload {
 
 export function renderPasswordResetRequested(p: SecurityPasswordResetRequestedPayload) {
   return {
-    subject: 'Reset Your Password — Kharis Church',
+    subject: 'Reset Your Password | Kharis Church',
     html: renderLayout({
       heading: 'Password reset requested',
       greeting: p.memberName,
@@ -73,7 +73,7 @@ export interface SecurityRoleGrantedPayload {
 export function renderRoleGranted(p: SecurityRoleGrantedPayload) {
   const actor = p.grantedByName ? ` by ${escapeHtml(p.grantedByName)}` : '';
   return {
-    subject: `Role assigned — ${p.roleName}`,
+    subject: `Role assigned: ${p.roleName}`,
     html: renderLayout({
       heading: 'New role assigned',
       greeting: p.memberName,
@@ -162,7 +162,7 @@ export interface SecurityRoleRevokedPayload {
 export function renderRoleRevoked(p: SecurityRoleRevokedPayload) {
   const actor = p.revokedByName ? ` by ${escapeHtml(p.revokedByName)}` : '';
   return {
-    subject: `Role removed — ${p.roleName}`,
+    subject: `Role removed: ${p.roleName}`,
     html: renderLayout({
       heading: 'Role removed',
       greeting: p.memberName,
@@ -237,5 +237,5 @@ export function digestSigninNewDevice(p: SecuritySigninNewDevicePayload): string
 
 export function digestProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayload): string {
   const who = p.updatedByName ?? 'an administrator';
-  return `Profile updated by ${who} — ${p.changedFieldLabels.join(', ')}`;
+  return `Profile updated by ${who}: ${p.changedFieldLabels.join(', ')}`;
 }

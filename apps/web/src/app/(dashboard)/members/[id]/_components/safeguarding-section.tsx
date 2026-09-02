@@ -66,7 +66,7 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
           <div className="flex items-start gap-3 rounded bg-[#f3f3f3] p-4">
             <Lock className="mt-0.5 h-5 w-5 shrink-0 text-[#5D3FD3]" strokeWidth={1.5} />
             <div className="text-sm">
-              <p className="font-medium text-foreground">Hidden — safeguarding protected</p>
+              <p className="font-medium text-foreground">Hidden, safeguarding protected</p>
               <p className="mt-1 text-muted-foreground">
                 This member is under 16. You need safeguarding access (admin, pastor, the
                 member&apos;s guardian, or a Safeguarding Lead) to view their health record.

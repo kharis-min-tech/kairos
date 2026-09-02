@@ -138,7 +138,7 @@ function DepartmentsContent() {
           <p className="mt-0.5 text-sm text-muted-foreground">
             {isMemberView
               ? 'Your active department memberships and upcoming duties.'
-              : `Ministry teams${pagination ? ` — ${pagination.total} total` : ''}`}
+              : `Ministry teams${pagination ? `, ${pagination.total} total` : ''}`}
           </p>
         </div>
         {(caps.has('branch:write')) && (

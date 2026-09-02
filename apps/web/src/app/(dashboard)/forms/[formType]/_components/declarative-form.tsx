@@ -544,7 +544,7 @@ export function DeclarativeForm({
 
             {subjectMemberId ? (
               <p className="text-xs font-medium text-[#16A34A]">
-                Linked to an existing person — submitting will update their record.
+                Linked to an existing person, so submitting will update their record.
               </p>
             ) : null}
 
@@ -573,7 +573,7 @@ export function DeclarativeForm({
                   </ul>
                 ) : (
                   <p className="px-3 py-2 text-sm text-muted-foreground">
-                    No matches — a new contact will be created.
+                    No matches. A new contact will be created.
                   </p>
                 )}
               </div>

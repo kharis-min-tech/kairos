@@ -187,7 +187,7 @@ export default function CompleteProfilePage() {
         heading="Finish setting up"
         subtitle={`Welcome${
           user?.firstName ? `, ${user.firstName}` : ''
-        }! Please fill in the required fields — the rest are optional but useful for admins to know who you are.`}
+        }! Please fill in the required fields. The rest are optional but useful for admins to know who you are.`}
       />
 
       <div className="rounded-2xl bg-card p-6 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
@@ -254,7 +254,7 @@ export default function CompleteProfilePage() {
                 <p className="text-xs text-destructive">{branchError}</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Your provider didn&apos;t tell us this — please choose the
+                  Your provider didn&apos;t tell us this, so please choose the
                   branch you attend.
                 </p>
               )}

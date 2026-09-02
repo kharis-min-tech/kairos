@@ -307,7 +307,7 @@ export default function ProfilePage() {
                 Welcome! Let&apos;s finish setting up your account.
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                We got some details from your provider — please review and fill
+                We got some details from your provider. Please review and fill
                 anything missing before you continue. Your phone number and
                 home branch are required.
               </p>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
                     }))}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Your provider didn&apos;t tell us this — please choose the
+                    Your provider didn&apos;t tell us this, so please choose the
                     branch you attend.
                   </p>
                 </div>

@@ -78,7 +78,7 @@ export default function DataPrivacy() {
       } else {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'text/html',
-          dialogTitle: `Kharis — my data (${stamp})`,
+          dialogTitle: `Kharis: my data (${stamp})`,
           UTI: 'public.html',
         });
       }
@@ -112,7 +112,7 @@ export default function DataPrivacy() {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Kharis — my data (${esc(stamp)})</title>
+<title>Kharis: my data (${esc(stamp)})</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1a1c1c; }
   header { border-bottom: 1px solid rgba(26,28,28,0.1); padding-bottom: 16px; margin-bottom: 24px; }
@@ -124,7 +124,7 @@ export default function DataPrivacy() {
 </head>
 <body>
 <header>
-  <h1>Kharis — my data</h1>
+  <h1>Kharis: my data</h1>
   <p class="meta">Exported ${esc(stamp)}</p>
 </header>
 ${sections}
@@ -185,7 +185,7 @@ ${sections}
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.actionTitle}>Export my data</Text>
               <Text style={styles.actionMeta}>
-                Get a JSON copy of your personal data via the share sheet — save to Files,
+                Get a JSON copy of your personal data via the share sheet, then save to Files,
                 email to yourself, or open in another app.
               </Text>
             </View>

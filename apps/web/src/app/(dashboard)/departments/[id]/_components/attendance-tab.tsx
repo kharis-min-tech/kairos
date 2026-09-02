@@ -76,7 +76,7 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Per-member breakdown</CardTitle>
-          <CardDescription>Lowest rate first — focus where it matters.</CardDescription>
+          <CardDescription>Lowest rate first, so focus where it matters.</CardDescription>
         </CardHeader>
         <CardContent>
           {report.members.length === 0 ? (

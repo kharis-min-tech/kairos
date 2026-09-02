@@ -310,7 +310,7 @@ function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {
         <Link
           href="/new-believers?filter=stale"
           className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f8b537]"
-          aria-label={`${count} stale enrollments — view list`}
+          aria-label={`${count} stale enrollments, view list`}
         >
           <p className={`text-xs font-medium uppercase tracking-wide ${accent}`}>Stale</p>
           <div className="mt-1 flex items-baseline gap-2">

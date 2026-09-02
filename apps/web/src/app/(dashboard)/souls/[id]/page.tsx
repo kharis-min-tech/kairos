@@ -206,7 +206,7 @@ export default function SoulDetailPage() {
 
     const ok = await confirm({
       title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to an attendee?`,
-      description: 'A profile is created and linked to this soul record. They start as an attendee — once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
+      description: 'A profile is created and linked to this soul record. They start as an attendee. Once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
       confirmLabel: 'Convert',
     });
     if (!ok) return;

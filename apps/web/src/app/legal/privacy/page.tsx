@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Notice — Kharis Church',
+  title: 'Privacy Notice | Kharis Church',
   description: 'How Kharis Church handles your personal data in Kairos.',
 };
 
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             Error reports automatically generated if part of Kairos fails while
-            you are using it &mdash; these may incidentally include personal
+            you are using it. These may incidentally include personal
             data such as the URL you were viewing at the time
           </li>
         </ul>
@@ -200,7 +200,7 @@ export default function PrivacyPage() {
       <Section title="4. Who we share your data with">
         <p>
           Your data is visible inside Kharis Church to leaders whose role
-          requires it &mdash; for example, your fellowship leader can see your
+          requires it. For example, your fellowship leader can see your
           attendance in that fellowship, and branch administrators can see
           member information for the branch they administer. Access is scoped
           so that leaders only see the data for the people and areas they are
@@ -209,22 +209,22 @@ export default function PrivacyPage() {
         <p>We share data with the following third parties who help us run Kairos:</p>
         <ul className="list-disc space-y-2 pl-6">
           <li>
-            <strong>Cloudflare, Inc.</strong> &mdash; hosts the Kairos website,
+            <strong>Cloudflare, Inc.</strong> hosts the Kairos website,
             application server, database gateway and image storage.
           </li>
           <li>
-            <strong>PlanetScale, Inc.</strong> &mdash; runs the Postgres
+            <strong>PlanetScale, Inc.</strong> runs the Postgres
             database that stores your member record. Data is stored in the
             United Kingdom / European Economic Area (EEA).
           </li>
           <li>
-            <strong>Amazon Web Services, Inc.</strong> &mdash; sends the
+            <strong>Amazon Web Services, Inc.</strong> sends the
             transactional emails Kairos generates (for example account
             verification, password reset, notification digests). Region: EU
             (London / Frankfurt).
           </li>
           <li>
-            <strong>Sentry, Inc.</strong> &mdash; receives error reports when
+            <strong>Sentry, Inc.</strong> receives error reports when
             Kairos fails, so we can diagnose and fix issues.
           </li>
         </ul>
@@ -237,8 +237,8 @@ export default function PrivacyPage() {
           protected to an equivalent standard.
         </p>
         <p>
-          We may also disclose data where we are legally required to do so
-          &mdash; for example in response to a safeguarding investigation, a
+          We may also disclose data where we are legally required to do so,
+          for example in response to a safeguarding investigation, a
           court order, or a request from a UK regulator.
         </p>
       </Section>
@@ -246,31 +246,31 @@ export default function PrivacyPage() {
       <Section title="5. How long we keep your data">
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            <strong>Active member records</strong> &mdash; for as long as you
+            <strong>Active member records</strong> are kept for as long as you
             remain a member of Kharis Church.
           </li>
           <li>
-            <strong>Archived member records</strong> &mdash; for up to 6 years
+            <strong>Archived member records</strong> are kept for up to 6 years
             after you leave, so that we can respond to safeguarding queries
             and demonstrate compliance with this notice. After that period we
             anonymise or delete the record.
           </li>
           <li>
-            <strong>Records about children under 16</strong> &mdash; kept in
+            <strong>Records about children under 16</strong> are kept in
             line with our safeguarding policy. When a child turns 18, their
             record transitions to the standard adult retention above.
           </li>
           <li>
-            <strong>Attendance records</strong> &mdash; kept for 3 years on a
+            <strong>Attendance records</strong> are kept for 3 years on a
             rolling basis for reporting.
           </li>
           <li>
-            <strong>Consent records</strong> &mdash; kept for the lifetime of
+            <strong>Consent records</strong> are kept for the lifetime of
             your account plus 6 years, because they are our evidence that we
             processed data lawfully.
           </li>
           <li>
-            <strong>Sign-in logs and error reports</strong> &mdash; kept for
+            <strong>Sign-in logs and error reports</strong> are kept for
             up to 90 days, then automatically deleted.
           </li>
         </ul>
@@ -284,8 +284,8 @@ export default function PrivacyPage() {
             access request&rdquo;)
           </li>
           <li>
-            <strong>Correct</strong> data that is inaccurate or incomplete
-            &mdash; you can do most of this yourself from your profile screen
+            <strong>Correct</strong> data that is inaccurate or incomplete.
+            You can do most of this yourself from your profile screen
           </li>
           <li>
             <strong>Erase</strong> your data (&ldquo;the right to be
@@ -297,7 +297,7 @@ export default function PrivacyPage() {
             is being resolved
           </li>
           <li>
-            <strong>Portability</strong> &mdash; receive a machine-readable
+            <strong>Portability</strong>: receive a machine-readable
             export of the data you gave us
           </li>
           <li>
@@ -306,7 +306,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Withdraw consent</strong> at any time, where we relied on
-            consent &mdash; for example, unsubscribing from optional
+            consent. For example, unsubscribing from optional
             newsletters on{' '}
             <Link
               href="/profile/settings/legal"
@@ -383,7 +383,7 @@ export default function PrivacyPage() {
 
       <Section title="11. Contact us">
         <p>
-          Kharis Church &mdash;{' '}
+          Kharis Church:{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"

@@ -297,7 +297,7 @@ export default function RollcallMeeting() {
           setPendingLocally(true);
           alert.info(
             'Saved locally',
-            "We couldn't reach the server, but your attendance is safe on this device — we'll sync it as soon as you're back online.",
+            "We couldn't reach the server, but your attendance is safe on this device, and we'll sync it as soon as you're back online.",
           );
         } catch {
           alert.info(
@@ -322,7 +322,7 @@ export default function RollcallMeeting() {
     } else if (result === 'kept') {
       alert.info(
         'Still offline',
-        "Couldn't reach the server. Your attendance is safe locally — we'll keep trying.",
+        "Couldn't reach the server. Your attendance is safe locally and we'll keep trying.",
       );
     }
   }
@@ -484,7 +484,7 @@ export default function RollcallMeeting() {
                   { backgroundColor: tone.barBg, borderColor: tone.border },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.memberFirstName} ${item.memberLastName} — ${STATUS_LABEL[status]}. Tap to change. Long-press to open picker.`}
+                accessibilityLabel={`${item.memberFirstName} ${item.memberLastName}, ${STATUS_LABEL[status]}. Tap to change. Long-press to open picker.`}
                 hitSlop={{ top: 6, bottom: 6, left: 0, right: 0 }}
               >
                 <Text style={[styles.statusPillLabel, { color: tone.barText }]}>

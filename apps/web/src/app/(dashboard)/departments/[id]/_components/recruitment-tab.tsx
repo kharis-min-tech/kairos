@@ -1084,7 +1084,7 @@ function ScheduleInterviewDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Schedule interview — {request.memberFirstName} {request.memberLastName}
+            Schedule interview: {request.memberFirstName} {request.memberLastName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1181,7 +1181,7 @@ function RecordInterviewDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Record interview — {request.memberFirstName} {request.memberLastName}
+            Record interview: {request.memberFirstName} {request.memberLastName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1257,7 +1257,7 @@ function ExtendOfferDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Extend offer — {request.memberFirstName} {request.memberLastName}
+            Extend offer: {request.memberFirstName} {request.memberLastName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1322,7 +1322,7 @@ function RejectDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Reject — {request.memberFirstName} {request.memberLastName}
+            Reject: {request.memberFirstName} {request.memberLastName}
           </DialogTitle>
         </DialogHeader>
         <div>
@@ -1378,7 +1378,7 @@ function EvaluateProbationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Evaluate probation — {request.memberFirstName} {request.memberLastName}
+            Evaluate probation: {request.memberFirstName} {request.memberLastName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1388,8 +1388,8 @@ function EvaluateProbationDialog({
               value={outcome}
               onValueChange={(v) => setOutcome(v as 'passed' | 'failed')}
               options={[
-                { value: 'passed', label: 'Passed — promote to full member' },
-                { value: 'failed', label: 'Failed — remove from team' },
+                { value: 'passed', label: 'Passed, promote to full member' },
+                { value: 'failed', label: 'Failed, remove from team' },
               ]}
             />
           </div>

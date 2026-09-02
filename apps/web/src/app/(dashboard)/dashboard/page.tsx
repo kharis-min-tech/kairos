@@ -162,10 +162,10 @@ function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' |
   const pendingMembers = pendingData?.data ?? [];
 
   const titles: Record<string, string> = {
-    branches: 'Total Branches — Evidence',
-    members: 'Total Members — Evidence',
-    fellowships: 'Total Fellowships — Evidence',
-    pending: 'Pending Approvals — Evidence',
+    branches: 'Total Branches: Evidence',
+    members: 'Total Members: Evidence',
+    fellowships: 'Total Fellowships: Evidence',
+    pending: 'Pending Approvals: Evidence',
   };
 
   return (
@@ -323,10 +323,10 @@ function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowship
   const pendingMembers = pendingData?.data ?? [];
 
   const titles: Record<string, string> = {
-    members: 'Branch Members — Evidence',
-    fellowships: 'Branch Fellowships — Evidence',
-    meetings: 'Recent Meetings (30 days) — Evidence',
-    pending: 'Pending Approvals — Evidence',
+    members: 'Branch Members: Evidence',
+    fellowships: 'Branch Fellowships: Evidence',
+    meetings: 'Recent Meetings (30 days): Evidence',
+    pending: 'Pending Approvals: Evidence',
   };
 
   return (
@@ -663,9 +663,9 @@ function MyServiceAttendanceCard() {
 
 function MemberEvidenceDialog({ type, onClose, data }: { type: 'fellowships' | 'attendance' | 'meetings' | null; onClose: () => void; data: { fellowshipsJoined: number; fellowships: { fellowshipId: string; fellowshipName: string; fellowshipType: string }[]; recentAttendance: { total: number; present: number; late: number; absent: number; rate: number } } }) {
   const titles: Record<string, string> = {
-    fellowships: 'My Fellowships — Evidence',
-    attendance: 'Attendance Rate — Evidence',
-    meetings: 'Meetings Attended — Evidence',
+    fellowships: 'My Fellowships: Evidence',
+    attendance: 'Attendance Rate: Evidence',
+    meetings: 'Meetings Attended: Evidence',
   };
 
   return (
@@ -828,7 +828,7 @@ function RecentActivity({ branchId, role }: { branchId?: string; role?: string }
     }));
   }
   fellowships.slice(0, 2).forEach(f => items.push({
-    text: <><span className="font-semibold text-foreground">{f.fellowshipName}</span><span className="text-muted-foreground"> — {f.meetingSchedule ?? 'schedule TBC'}.</span></>,
+    text: <><span className="font-semibold text-foreground">{f.fellowshipName}</span><span className="text-muted-foreground">, {f.meetingSchedule ?? 'schedule TBC'}.</span></>,
     sub: 'Upcoming', href: `/fellowships/${f.id}`,
   }));
   return (
@@ -1268,11 +1268,11 @@ function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, 
     : allMembers;
 
   const titles: Record<string, string> = {
-    growth: 'Membership Growth — Evidence',
-    attendance: 'Service Attendance — Evidence',
-    engagement: 'Member Engagement — Evidence',
-    branch: 'Membership by Branch — Evidence',
-    newBelievers: 'New Believers Pipeline — Evidence',
+    growth: 'Membership Growth: Evidence',
+    attendance: 'Service Attendance: Evidence',
+    engagement: 'Member Engagement: Evidence',
+    branch: 'Membership by Branch: Evidence',
+    newBelievers: 'New Believers Pipeline: Evidence',
   };
 
   return (
@@ -1518,7 +1518,7 @@ function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: N
         <div>
           <p className="text-xs text-rose-400 font-medium mb-2">People who haven&apos;t progressed in {nbHealth?.stale.thresholdDays ?? 7}+ days</p>
           {staleList.length === 0 ? (
-            <p className="text-sm text-muted-foreground/70">No stale enrollments — everyone is progressing.</p>
+            <p className="text-sm text-muted-foreground/70">No stale enrollments. Everyone is progressing.</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -2177,7 +2177,7 @@ export default function DashboardPage() {
   if (scope?.kind === 'branch') {
     // The scoped branch is the load-bearing identifier — pair it with the
     // most-specific tier of authority the user holds on it.
-    const suffix = scopeBranchName ? ` — ${scopeBranchName}` : '';
+    const suffix = scopeBranchName ? `, ${scopeBranchName}` : '';
     if (activeRole === 'admin') {
       roleLabel = isBranchSystemAdmin
         ? `Branch System Admin${suffix}`
@@ -2191,21 +2191,21 @@ export default function DashboardPage() {
     }
   } else if (scope?.kind === 'fellowship') {
     const name = allLeadFellowships[0]?.fellowshipName;
-    roleLabel = name ? `Fellowship Leader — ${name}` : 'Fellowship Leader';
+    roleLabel = name ? `Fellowship Leader, ${name}` : 'Fellowship Leader';
   } else if (scope?.kind === 'department') {
     const name = allLeadDepartments[0]?.departmentName;
-    roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
+    roleLabel = name ? `Department Lead, ${name}` : 'Department Lead';
   } else if (activeRole === 'admin') {
     roleLabel = 'Administrator';
   } else if (isBranchSystemAdmin) {
     roleLabel =
       homeBranchInBsa && homeBranchName
-        ? `Branch System Admin — ${homeBranchName}`
+        ? `Branch System Admin, ${homeBranchName}`
         : 'Branch System Admin';
   } else if (isBranchDataAdmin) {
     roleLabel =
       homeBranchInBda && homeBranchName
-        ? `Branch Data Admin — ${homeBranchName}`
+        ? `Branch Data Admin, ${homeBranchName}`
         : 'Branch Data Admin';
   } else if (caps.has('branch:write')) {
     roleLabel = 'Pastor';
@@ -2213,10 +2213,10 @@ export default function DashboardPage() {
     roleLabel = 'Fellowship & Department Lead';
   } else if (hasFellowshipLead) {
     const name = allLeadFellowships[0]?.fellowshipName;
-    roleLabel = name ? `Fellowship Leader — ${name}` : 'Fellowship Leader';
+    roleLabel = name ? `Fellowship Leader, ${name}` : 'Fellowship Leader';
   } else if (hasDepartmentLead) {
     const name = allLeadDepartments[0]?.departmentName;
-    roleLabel = name ? `Department Lead — ${name}` : 'Department Lead';
+    roleLabel = name ? `Department Lead, ${name}` : 'Department Lead';
   } else if ((caps.has('fellowship:write') || caps.has('department:write'))) {
     roleLabel = 'Leader';
   } else {

@@ -40,7 +40,7 @@ export function QrScannerModal({
   onScan,
   title,
   hint,
-  rejectionMessage = 'Not a Kairos code — keep scanning',
+  rejectionMessage = 'Not a Kairos code. Keep scanning',
 }: {
   visible: boolean;
   onClose: () => void;

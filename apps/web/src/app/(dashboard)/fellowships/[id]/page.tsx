@@ -196,11 +196,11 @@ export default function FellowshipDetailPage() {
                 onError: (error) => {
                   const msg = (error as Error).message;
                   if (msg.includes('pending join request')) {
-                    toast.info('Your request has already been sent — an admin will get back to you!');
+                    toast.info('Your request has already been sent. An admin will get back to you!');
                   } else if (msg.includes('previously been removed')) {
                     toast.error('You cannot request to join at this time. Please contact an admin.');
                   } else {
-                    toast.error('Something went wrong — please try again or contact your admin.');
+                    toast.error('Something went wrong. Please try again or contact your admin.');
                   }
                 },
               },
@@ -831,7 +831,7 @@ export default function FellowshipDetailPage() {
                               { fellowshipId: id, requestId: req.id, data: { status: 'approved' } },
                               {
                                 onSuccess: () => {
-                                  toast.success('Request approved — member added.');
+                                  toast.success('Request approved. Member added.');
                                   setSelectedRequestIds((prev) => { const n = new Set(prev); n.delete(req.id); return n; });
                                 },
                                 onError: () => toast.error('Failed to approve request. Please try again.'),

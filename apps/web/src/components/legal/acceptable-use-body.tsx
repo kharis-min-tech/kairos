@@ -46,7 +46,7 @@ export function AcceptableUseBody() {
 
       <Section title="1. Who this policy applies to">
         <p>
-          This policy applies to every person who signs into Kairos &mdash;
+          This policy applies to every person who signs into Kairos:
           members of Kharis Church, fellowship and department leaders, branch
           administrators, and any volunteer or member of staff who has been
           granted access. By signing in you confirm you have read and will
@@ -90,7 +90,7 @@ export function AcceptableUseBody() {
 
       <Section title="3. Handling other people's data">
         <p>
-          Kairos may show you personal information about other members &mdash;
+          Kairos may show you personal information about other members,
           for example the phone number of someone in your fellowship, a
           new-believer&rsquo;s discipleship notes, or a child&rsquo;s emergency
           contact. That information is entrusted to you for one purpose only:
@@ -110,9 +110,9 @@ export function AcceptableUseBody() {
             and you delete the copy when you are done.
           </li>
           <li>
-            Share member data with anyone outside Kharis Church &mdash;
+            Share member data with anyone outside Kharis Church,
             including family, friends, other churches, or external services
-            &mdash; without written approval from a Branch Administrator or the
+            without written approval from a Branch Administrator or the
             Data Protection contact.
           </li>
           <li>
@@ -137,9 +137,9 @@ export function AcceptableUseBody() {
       <Section title="4. Behaviour inside the platform">
         <p>
           Kairos exists to build up the church family. When you interact with
-          other members through Kairos &mdash; for example messaging a
+          other members through Kairos (for example messaging a
           fellowship, updating notes about a follow-up, or posting an
-          announcement &mdash; you must not:
+          announcement) you must not:
         </p>
         <ul className="list-disc space-y-1 pl-6">
           <li>Harass, bully, insult or discriminate against anyone.</li>
@@ -209,10 +209,10 @@ export function AcceptableUseBody() {
 
       <Section title="7. Reporting concerns">
         <p>
-          If you notice something that looks like misuse of Kairos &mdash; for
+          If you notice something that looks like misuse of Kairos (for
           example another user sharing member information inappropriately, a
           screen you can see that you don&rsquo;t think you should, or an
-          apparent security weakness &mdash; please report it promptly to your
+          apparent security weakness) please report it promptly to your
           fellowship or department leader, to a Branch Administrator, or
           directly to us at{' '}
           <a
@@ -247,8 +247,8 @@ export function AcceptableUseBody() {
           </li>
         </ul>
         <p>
-          Some breaches &mdash; particularly ones that involve the personal
-          data of others &mdash; may also amount to offences under the UK Data
+          Some breaches, particularly ones that involve the personal
+          data of others, may also amount to offences under the UK Data
           Protection Act 2018 or the Computer Misuse Act 1990, for which you
           could be personally liable.
         </p>
@@ -265,7 +265,7 @@ export function AcceptableUseBody() {
             >
               Privacy Notice
             </Link>{' '}
-            &mdash; how the church handles your personal data;
+            sets out how the church handles your personal data;
           </li>
           <li>
             our{' '}
@@ -275,7 +275,7 @@ export function AcceptableUseBody() {
             >
               Terms &amp; Conditions
             </Link>{' '}
-            &mdash; the agreement that governs your use of Kairos; and
+            is the agreement that governs your use of Kairos; and
           </li>
           <li>
             if you hold or are granted an administrative or leadership role,
@@ -301,7 +301,7 @@ export function AcceptableUseBody() {
 
       <Section title="11. Contact">
         <p>
-          Kharis Church &mdash;{' '}
+          Kharis Church:{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"

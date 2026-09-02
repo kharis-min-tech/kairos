@@ -159,7 +159,7 @@ export default function MemberProfile() {
   async function confirmReject(name: string) {
     const ok = await alert.confirm({
       title: 'Reject signup?',
-      message: `Reject ${name}'s signup. Their account stays but is marked rejected — a branch admin can undo this later.`,
+      message: `Reject ${name}'s signup. Their account stays but is marked rejected, and a branch admin can undo this later.`,
       confirmLabel: 'Reject',
       destructive: true,
     });

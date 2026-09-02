@@ -321,7 +321,7 @@ function NewBelieversContent() {
           if (reversed) {
             toast.success('Move undone');
           } else {
-            toast.error('Could not undo — please refresh the page');
+            toast.error('Could not undo. Please refresh the page');
             void queryClient.invalidateQueries();
           }
         },

@@ -89,7 +89,7 @@ describe('BabyForm (naming)', () => {
     await user.click(await screen.findByRole('button', { name: /Mary Doe/ }));
     expect(
       screen.getByText(
-        /Linked to an existing member — they’ll be recorded as the parent\/guardian\./,
+        /Linked to an existing member. They’ll be recorded as the parent\/guardian\./,
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/Parent contact phone/)).toHaveValue('0700111');

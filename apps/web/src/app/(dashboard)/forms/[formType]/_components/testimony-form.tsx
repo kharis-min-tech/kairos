@@ -185,7 +185,7 @@ export function TestimonyForm() {
           onClear={clearExisting}
           label="Find the person giving the testimony"
           helpText="Search by name or phone. Leave blank to create a new contact."
-          linkedNote="Linked to an existing person — this testimony will be tied to their record."
+          linkedNote="Linked to an existing person, so this testimony will be tied to their record."
           disabled={isAnonymous}
           disabledHint="An anonymous testimony won’t be linked to a person’s record."
         />

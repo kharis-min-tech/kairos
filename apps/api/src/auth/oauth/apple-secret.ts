@@ -32,7 +32,7 @@ function assertEnv(env: OAuthEnv): asserts env is OAuthEnv & Required<Pick<OAuth
     // Do NOT include the p8 payload in the error message — it's fine that
     // the missing field NAME shows up, but we never surface the key itself
     // and this branch guards the "one of these is missing" case only.
-    throw new Error(`Apple OAuth is misconfigured — missing: ${missing.join(', ')}`);
+    throw new Error(`Apple OAuth is misconfigured. Missing: ${missing.join(', ')}`);
   }
 }
 

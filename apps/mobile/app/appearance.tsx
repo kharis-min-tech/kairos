@@ -25,7 +25,7 @@ const OPTIONS: Option[] = [
   {
     key: 'system',
     label: 'System',
-    meta: 'Follow your device — flips when your OS does.',
+    meta: 'Follows your device and flips when your OS does.',
     icon: Monitor,
   },
   { key: 'light', label: 'Light', meta: 'Always light, regardless of the device.', icon: Sun },

@@ -247,7 +247,7 @@ attendanceRouter.post('/services/:id/self-check-in', async (c) => {
     successResponse(
       result,
       result.alreadyCheckedIn
-        ? `Already checked in — status: ${result.status}`
+        ? `Already checked in. Status: ${result.status}`
         : `Checked in as ${result.status}`,
     ),
     result.alreadyCheckedIn ? 200 : 201,
@@ -286,7 +286,7 @@ attendanceRouter.post(
       successResponse(
         result,
         result.alreadyCheckedIn
-          ? `Already checked in — status: ${result.status}`
+          ? `Already checked in. Status: ${result.status}`
           : `Checked in as ${result.status}`,
       ),
       result.alreadyCheckedIn ? 200 : 201,

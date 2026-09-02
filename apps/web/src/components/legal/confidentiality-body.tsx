@@ -46,19 +46,19 @@ export function ConfidentialityBody() {
         <p>You must accept this undertaking if you hold any of the following:</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            <strong>Branch Administrator</strong> (BranchAdmin) &mdash; full
+            <strong>Branch Administrator</strong> (BranchAdmin) has full
             administrative view of a branch.
           </li>
           <li>
-            <strong>Branch Data Administrator</strong> (BranchDataAdmin) &mdash;
+            <strong>Branch Data Administrator</strong> (BranchDataAdmin) has
             read/write access to member records for a branch.
           </li>
           <li>
-            <strong>Fellowship Leader</strong> or Co-Leader &mdash; access to
+            <strong>Fellowship Leader</strong> or Co-Leader has access to
             personal details of the members of your fellowship.
           </li>
           <li>
-            <strong>Department Leader</strong> or Deputy &mdash; access to
+            <strong>Department Leader</strong> or Deputy has access to
             personal details of the members of your department, including
             uniform sizes and rota assignments.
           </li>
@@ -125,7 +125,7 @@ export function ConfidentialityBody() {
           <li>any financial information the church may in future hold about members;</li>
           <li>
             operational information about the church that has not been
-            publicly announced &mdash; for example internal decisions, plans,
+            publicly announced: for example internal decisions, plans,
             or ongoing safeguarding investigations.
           </li>
         </ul>
@@ -152,9 +152,9 @@ export function ConfidentialityBody() {
             fundraising purposes outside those purposes.
           </li>
           <li>
-            Not disclose confidential information to anyone &mdash; including
+            Not disclose confidential information to anyone (including
             your spouse, family, other church members, other churches, or
-            external services &mdash; unless (a) the recipient also holds a
+            external services) unless (a) the recipient also holds a
             church role that lawfully requires them to see it, or (b) a Branch
             Administrator or an appointed Data Protection contact has given
             written approval.
@@ -188,7 +188,7 @@ export function ConfidentialityBody() {
             >
               privacy@kharis.org
             </a>
-            . Early reporting is protective &mdash; delayed reporting is not.
+            . Early reporting is protective; delayed reporting is not.
           </li>
           <li>
             Comply promptly with any request from the church to correct,
@@ -197,8 +197,8 @@ export function ConfidentialityBody() {
             regulator.
           </li>
           <li>
-            When your role ends &mdash; because you step down, are reassigned,
-            or leave the church &mdash; return or securely delete any copies of
+            When your role ends, because you step down, are reassigned,
+            or leave the church, return or securely delete any copies of
             confidential information in your possession and confirm you have
             done so.
           </li>
@@ -219,9 +219,9 @@ export function ConfidentialityBody() {
 
       <Section title="6. Monitoring and audit">
         <p>
-          The church logs administrator and leader actions in Kairos &mdash;
+          The church logs administrator and leader actions in Kairos (
           sign-ins, permission changes, exports, and access to sensitive
-          screens &mdash; and may review those logs where there is reasonable
+          screens) and may review those logs where there is reasonable
           suspicion of a breach of this undertaking. Monitoring is carried out
           in line with our{' '}
           <Link

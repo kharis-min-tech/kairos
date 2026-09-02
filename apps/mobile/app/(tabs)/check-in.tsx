@@ -106,7 +106,7 @@ export default function CheckIn() {
     const title = data.alreadyCheckedIn
       ? "You're already checked in"
       : data.status === 'Late'
-        ? "You're checked in — marked Late"
+        ? "You're checked in, marked Late"
         : "You're in";
     const body = data.alreadyCheckedIn
       ? `Recorded as ${data.status}.`
@@ -289,7 +289,7 @@ export default function CheckIn() {
         <Text style={styles.caption}>
           {canCheckIn
             ? openRows.length > 1
-              ? 'You have two services open — you\'ll be asked which one.'
+              ? 'You have two services open, so you\'ll be asked which one.'
               : 'Tap once to mark yourself present.'
             : nextOpening
               ? `Opens in ${nextOpening.minutesUntilOpen} minute${nextOpening.minutesUntilOpen === 1 ? '' : 's'}.`

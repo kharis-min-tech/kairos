@@ -29,7 +29,7 @@ export interface JoinRequestReceivedPayload {
 export function renderJoinRequestReceived(p: JoinRequestReceivedPayload) {
   const targetLabel = p.targetKind === 'fellowship' ? 'fellowship' : 'department';
   return {
-    subject: `New ${targetLabel} join request — ${p.targetName}`,
+    subject: `New ${targetLabel} join request: ${p.targetName}`,
     html: renderLayout({
       heading: `New ${targetLabel} join request`,
       greeting: p.memberName,
@@ -62,7 +62,7 @@ export function renderJoinRequestDecided(p: JoinRequestDecidedPayload) {
       heading: approved ? 'Request approved' : 'Request reviewed',
       greeting: p.memberName,
       bodyHtml: approved
-        ? `<p>Welcome — your request to join <strong>${escapeHtml(p.targetName)}</strong>
+        ? `<p>Welcome. Your request to join <strong>${escapeHtml(p.targetName)}</strong>
              has been approved.</p>`
         : `<p>Thank you for your interest in <strong>${escapeHtml(p.targetName)}</strong>.
              After review, we weren't able to approve your request at this time.
@@ -82,7 +82,7 @@ export interface SoulAssignedPayload {
 export function renderSoulAssigned(p: SoulAssignedPayload) {
   const actor = p.assignedByName ? ` by ${escapeHtml(p.assignedByName)}` : '';
   return {
-    subject: `Soul assigned to you — ${p.soulName}`,
+    subject: `Soul assigned to you: ${p.soulName}`,
     html: renderLayout({
       heading: 'Soul assigned to you',
       greeting: p.memberName,
@@ -107,7 +107,7 @@ export interface SoulStatusChangedPayload {
 export function renderSoulStatusChanged(p: SoulStatusChangedPayload) {
   const actor = p.changedByName ? ` by ${escapeHtml(p.changedByName)}` : '';
   return {
-    subject: `Soul status updated — ${p.soulName}`,
+    subject: `Soul status updated: ${p.soulName}`,
     html: renderLayout({
       heading: 'Soul status updated',
       greeting: p.memberName,
@@ -133,7 +133,7 @@ export interface NewBelieverStageMovedPayload {
 export function renderNewBelieverStageMoved(p: NewBelieverStageMovedPayload) {
   const actor = p.changedByName ? ` by ${escapeHtml(p.changedByName)}` : '';
   return {
-    subject: `New believer stage updated — ${p.studentName}`,
+    subject: `New believer stage updated: ${p.studentName}`,
     html: renderLayout({
       heading: 'New believer stage updated',
       greeting: p.memberName,
@@ -171,13 +171,13 @@ export function renderNewBelieverRemoved(p: NewBelieverRemovedPayload) {
     ? `<p><em>${escapeHtml(p.notes)}</em></p>`
     : '';
   return {
-    subject: `New believer removed from pipeline — ${p.studentName}`,
+    subject: `New believer removed from pipeline: ${p.studentName}`,
     html: renderLayout({
       heading: 'New believer removed from pipeline',
       greeting: p.memberName,
       bodyHtml: `
         <p><strong>${escapeHtml(p.studentName)}</strong> was removed from the
-           New Believers pipeline${actor} — reason: <strong>${escapeHtml(reasonLabel)}</strong>.</p>
+           New Believers pipeline${actor}. Reason: <strong>${escapeHtml(reasonLabel)}</strong>.</p>
         ${notesBlock}
       `,
       cta: { label: 'Open profile', url: p.portalUrl },
