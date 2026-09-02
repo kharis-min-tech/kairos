@@ -28,9 +28,9 @@ Each member card shows:
 
 Use the search bar to find members by name or email. Filter using the dropdowns:
 
-- **All Fellowships** — narrow to members of a specific fellowship
-- **Branch** — filter by branch (Admin only)
-- **All Statuses** — filter by Approved, Pending, or Inactive
+- **All Fellowships**: narrow to members of a specific fellowship
+- **Branch**: filter by branch (Admin only)
+- **All Statuses**: filter by Approved, Pending, or Inactive
 
 ## Adding a member
 
@@ -41,7 +41,7 @@ Click **+ Add Member** to create a member manually. Required fields:
 | First name, Last name | Required |
 | Email | Must be unique |
 | Phone | Recommended |
-| Home branch | Required — sets their branch scope |
+| Home branch | Required; sets their branch scope |
 | Gender | Male or Female |
 | Date of birth | Optional |
 | Address | Optional |

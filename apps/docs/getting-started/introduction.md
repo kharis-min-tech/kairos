@@ -1,15 +1,15 @@
 # Introduction
 
-Welcome to the Kairos documentation. This guide covers everything you need to know about using the Kairos church administration system — whether you're a church member, a department leader, a pastor, or a system administrator.
+Welcome to the Kairos documentation. This guide covers everything you need to know about using the Kairos church administration system, whether you're a church member, a department leader, a pastor, or a system administrator.
 
 ## Who is this for?
 
 Kairos has four types of users, each with a different experience:
 
-- **Members** — View your own profile, attendance, fellowships, and submit forms.
-- **Leaders** — Manage your specific department or fellowship, log follow-ups, and record attendance.
-- **Pastors** — Full visibility and control over everything within your assigned branch.
-- **Admins** — Complete access across all branches, regions, and system settings.
+- **Members**: View your own profile, attendance, fellowships, and submit forms.
+- **Leaders**: Manage your specific department or fellowship, log follow-ups, and record attendance.
+- **Pastors**: Full visibility and control over everything within your assigned branch.
+- **Admins**: Complete access across all branches, regions, and system settings.
 
 ## How to use this documentation
 
@@ -24,7 +24,7 @@ Kairos has four types of users, each with a different experience:
 |--------|-------------|
 | Branches & Regions | Manage church locations and geographic groupings |
 | Members | Full member directory, profiles, approvals, CSV import/export |
-| Fellowships | K-Groups, Kharis Express, New Breeds, and more — with map view |
+| Fellowships | K-Groups, Kharis Express, New Breeds, and more, with map view |
 | Departments | Ministry teams with rosters, rotas, and recruitment pipelines |
 | Attendance | Service check-ins and fellowship meeting rolls |
 | Outreach | Evangelism programs, soul capture, and follow-up tracking |

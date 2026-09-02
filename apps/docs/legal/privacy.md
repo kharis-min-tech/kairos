@@ -72,14 +72,14 @@ Your data is visible inside Kharis Church to leaders whose role requires it. Acc
 
 We share data with the following third parties who help us run Kairos:
 
-- **Cloudflare, Inc.** — hosts the Kairos website, application server, database gateway and image storage
-- **PlanetScale, Inc.** — runs the Postgres database that stores your member record. Data is stored in the UK / EEA
-- **Amazon Web Services, Inc.** — sends transactional emails. Region: EU (London / Frankfurt)
-- **Sentry, Inc.** — receives error reports when Kairos fails, so we can diagnose and fix issues
+- **Cloudflare, Inc.**: hosts the Kairos website, application server, database gateway and image storage
+- **PlanetScale, Inc.**: runs the Postgres database that stores your member record. Data is stored in the UK / EEA
+- **Amazon Web Services, Inc.**: sends transactional emails. Region: EU (London / Frankfurt)
+- **Sentry, Inc.**: receives error reports when Kairos fails, so we can diagnose and fix issues
 
 These providers act as data processors: they process your data only under our instructions and are bound by contract to protect it.
 
-We may also disclose data where we are legally required to do so — for example in response to a safeguarding investigation, a court order, or a request from a UK regulator.
+We may also disclose data where we are legally required to do so, for example in response to a safeguarding investigation, a court order, or a request from a UK regulator.
 
 ## 5. How long we keep your data
 
@@ -100,7 +100,7 @@ Under UK GDPR you have the right to:
 - **Correct** data that is inaccurate or incomplete
 - **Erase** your data ("the right to be forgotten"), except where we are required to keep it for safeguarding or legal reasons
 - **Restrict** how we process your data while a query is being resolved
-- **Portability** — receive a machine-readable export of the data you gave us
+- **Portability**: receive a machine-readable export of the data you gave us
 - **Object** to processing carried out on the basis of our legitimate interests
 - **Withdraw consent** at any time, where we relied on consent
 
@@ -126,7 +126,7 @@ When we make a material change to this notice we will bump its version and ask y
 
 ## 11. Contact us
 
-Kharis Church — [privacy@kharis.org](mailto:privacy@kharis.org)
+Kharis Church: [privacy@kharis.org](mailto:privacy@kharis.org)
 
 ---
 

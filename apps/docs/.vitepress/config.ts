@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 export default defineConfig({
   lang: 'en-US',
   title: 'Kairos',
-  description: 'Church Administration System — documentation for Kharis Church.',
+  description: 'Church Administration System: documentation for Kharis Church.',
   base: '/',
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
@@ -165,7 +165,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Kairos — Church Administration System by Kharis Church',
+      message: 'Kairos: Church Administration System by Kharis Church',
     },
 
     outline: {

@@ -76,7 +76,7 @@ When we make a material change to these terms we will bump their version and ask
 
 ## 11. Contact
 
-Kharis Church — [privacy@kharis.org](mailto:privacy@kharis.org)
+Kharis Church: [privacy@kharis.org](mailto:privacy@kharis.org)
 
 ---
 

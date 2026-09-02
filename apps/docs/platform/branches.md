@@ -33,7 +33,7 @@ Click **+ New Branch** (Admin only) and fill in:
 | Field | Required | Notes |
 |-------|----------|-------|
 | Branch name | Yes | Must be unique within a region |
-| Region | Yes | Must exist — create the region first |
+| Region | Yes | Must exist; create the region first |
 | Branch type | Yes | Main, Satellite, Cell, Campus, or Online |
 | City | No | Shown on the branch card |
 | Address | No | Full street address |
@@ -43,7 +43,7 @@ Click **+ New Branch** (Admin only) and fill in:
 
 ## Deactivating a branch
 
-Deactivating a branch uses a soft delete — all member records, attendance data, and history are preserved. The branch is removed from active views but remains in the database.
+Deactivating a branch uses a soft delete: all member records, attendance data, and history are preserved. The branch is removed from active views but remains in the database.
 
 Only Admins can deactivate branches.
 

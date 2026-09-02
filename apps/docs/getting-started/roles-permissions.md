@@ -1,6 +1,6 @@
 # Roles & Permissions
 
-Kairos has four user roles. Your role determines what you can see and what you can do. There is no role switcher — your permissions are set when your account is configured and are reflected immediately when you log in.
+Kairos has four user roles. Your role determines what you can see and what you can do. There is no role switcher. Your permissions are set when your account is configured and are reflected immediately when you log in.
 
 ## Role Overview
 
@@ -58,7 +58,7 @@ Leaders are department leads, deputies, fellowship leaders, and co-leaders. Thei
 - Full visibility across the discipleship pipeline in their branch
 
 **Reports:**
-- Data scoped to members of their group only — not the whole branch
+- Data scoped to members of their group only, not the whole branch
 
 **Cannot do:**
 - Access data outside their assigned group

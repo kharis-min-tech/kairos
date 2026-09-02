@@ -2,7 +2,7 @@
 
 ## How authentication works
 
-Login issues a JWT access token and a refresh token. The access token contains a `grants[]` claim that drives all UI and API behaviour. There is no role switcher and no "select your role after login" step — one token carries everything.
+Login issues a JWT access token and a refresh token. The access token contains a `grants[]` claim that drives all UI and API behaviour. There is no role switcher and no "select your role after login" step. One token carries everything.
 
 Tokens are verified by `authMiddleware` in `apps/api/src/middleware/auth.ts`.
 
@@ -12,8 +12,8 @@ Tokens are verified by `authMiddleware` in `apps/api/src/middleware/auth.ts`.
 
 | Value | Meaning |
 |-------|---------|
-| `admin` | Global admin — full access across all branches |
-| `member` | Everyone else — access via functional grants only |
+| `admin` | Global admin with full access across all branches |
+| `member` | Everyone else; access via functional grants only |
 
 ## Functional grants
 
@@ -68,7 +68,7 @@ if (has('branch:write', branchId)) {
 
 ## Honorifics vs permissions
 
-`pastor` is a display-only honorific on `members.honorific`. It grants nothing. A member with the honorific "Pastor" who only holds a `FellowshipLeader` grant sees exactly what a fellowship leader sees — no more.
+`pastor` is a display-only honorific on `members.honorific`. It grants nothing. A member with the honorific "Pastor" who only holds a `FellowshipLeader` grant sees exactly what a fellowship leader sees, no more.
 
 ## Approval workflow
 

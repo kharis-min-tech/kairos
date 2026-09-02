@@ -8,7 +8,7 @@ When someone self-registers via the login page, they are not immediately given f
 
 ## Accessing the queue
 
-Go to **Members** — the **Approval Queue** button appears in the page header. The count of pending requests is shown on the button.
+Go to **Members**. The **Approval Queue** button appears in the page header. The count of pending requests is shown on the button.
 
 The Admin dashboard also shows pending approvals in the top-right summary card. A count of **0** means no action is needed.
 
@@ -25,7 +25,7 @@ You can **Approve** or **Reject** each request individually.
 
 ## Approving a member
 
-Click **Approve**. The member's status changes to **Approved** immediately. They can now log in with full member access — their navigation expands and they can view their profile, fellowships, and submit forms.
+Click **Approve**. The member's status changes to **Approved** immediately. They can now log in with full member access: their navigation expands and they can view their profile, fellowships, and submit forms.
 
 ## Rejecting a request
 

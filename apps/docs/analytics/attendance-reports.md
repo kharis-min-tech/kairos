@@ -1,6 +1,6 @@
 # Attendance Reports
 
-Attendance reports give you a clear view of service and fellowship participation trends over time — helping you spot drops early and respond before they become patterns.
+Attendance reports give you a clear view of service and fellowship participation trends over time, helping you spot drops early and respond before they become patterns.
 
 ## Accessing attendance data
 
@@ -19,14 +19,14 @@ A line chart showing the average attendance rate (percentage of active members p
 ### Trend indicator
 
 The chart header shows a trend direction badge:
-- **Trending up** — attendance improving
-- **Trending down** — attendance declining (shown in red as a warning)
+- **Trending up**: attendance improving
+- **Trending down**: attendance declining (shown in red as a warning)
 
 ### Monthly Highlight
 
 A plain-language summary on the right side of the chart. For example:
 
-> "Attendance needs attention — Average rate is 80% over the last 8 weeks"
+> "Attendance needs attention. Average rate is 80% over the last 8 weeks"
 
 Click **View breakdown** to drill into the detail.
 
@@ -47,7 +47,7 @@ Every member has a personal attendance report on their **My Attendance** page:
 - Current attendance streak (consecutive services attended)
 - Full service history for the window, oldest first
 
-This is private — only the member, their pastor, and admins can see it.
+This is private: only the member, their pastor, and admins can see it.
 
 ## Service types in reports
 

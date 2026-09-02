@@ -4,13 +4,13 @@ The Church Health view gives Admins and Pastors a single engagement score for th
 
 ## The engagement score
 
-The overall engagement score appears at the bottom of the Dashboard's Mission Summary section. It reads **High**, **Medium**, or **Low** — calculated from a combination of attendance rate, member follow-up activity, fellowship participation, and new believer progression.
+The overall engagement score appears at the bottom of the Dashboard's Mission Summary section. It reads **High**, **Medium**, or **Low**, calculated from a combination of attendance rate, member follow-up activity, fellowship participation, and new believer progression.
 
 | Score | Meaning |
 |-------|---------|
 | High | Attendance strong, follow-ups current, pipeline active |
 | Medium | Some areas need attention |
-| Low | Multiple indicators below threshold — action needed |
+| Low | Multiple indicators below threshold; action needed |
 
 ## What feeds the score
 
@@ -34,9 +34,9 @@ Whether the discipleship pipeline has active enrolments progressing vs. stalling
 
 The six mini-reports on the Dashboard give you an at-a-glance summary of each contributor to church health:
 
-- **Membership Growth** — member count trend over 6 months
-- **Service Attendance** — check-ins over the last 30 days
-- **Attendance Rate** — percentage of active members
-- **Member Engagement** — High/Medium/Low with active vs. inactive count
-- **Attendance by Branch** — comparative bar chart (Admin only)
-- **New Believers** — pipeline summary with avg attendance, stale, and completed counts
+- **Membership Growth**: member count trend over 6 months
+- **Service Attendance**: check-ins over the last 30 days
+- **Attendance Rate**: percentage of active members
+- **Member Engagement**: High/Medium/Low with active vs. inactive count
+- **Attendance by Branch**: comparative bar chart (Admin only)
+- **New Believers**: pipeline summary with avg attendance, stale, and completed counts

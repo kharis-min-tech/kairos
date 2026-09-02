@@ -1,6 +1,6 @@
 # Department Administration
 
-This guide covers running a department in Kairos — from setup through roster management, follow-ups, and the recruitment pipeline.
+This guide covers running a department in Kairos, from setup through roster management, follow-ups, and the recruitment pipeline.
 
 ## Setting up a department
 
@@ -33,7 +33,7 @@ Leaders can log pastoral notes on department members. Each note captures:
 - Contact method
 - Notes
 
-Notes are visible to the deputy as well — enabling team collaboration on pastoral care. The system generates alerts for members who haven't been followed up within 7 days (configurable by Admins).
+Notes are visible to the deputy as well, enabling team collaboration on pastoral care. The system generates alerts for members who haven't been followed up within 7 days (configurable by Admins).
 
 ## Recruitment pipeline
 
@@ -51,13 +51,13 @@ Drag cards between stages. Some transitions have rule-based guards (e.g. an offe
 
 ## Rota
 
-Departments can define rota templates — recurring duty slots with role, day, time, and frequency. Rota instances are generated from templates and assigned to pool members.
+Departments can define rota templates: recurring duty slots with role, day, time, and frequency. Rota instances are generated from templates and assigned to pool members.
 
 Members who opt into the rota pool can see their upcoming duties from their profile. Swap requests are handled within the rota: a member proposes a swap, the other member accepts or declines, and the leader confirms.
 
 ## Uniform schedule
 
-Departments can maintain a uniform catalogue — outfit names, descriptions, and images. Leaders schedule which outfit is worn on which service date (e.g. "White cassock — Easter Sunday"). Members can see the upcoming uniform schedule from their department view.
+Departments can maintain a uniform catalogue: outfit names, descriptions, and images. Leaders schedule which outfit is worn on which service date (e.g. "White cassock for Easter Sunday"). Members can see the upcoming uniform schedule from their department view.
 
 ## Deactivating a department
 

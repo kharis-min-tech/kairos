@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Kairos
   text: Church Admin, Finally Sorted.
-  tagline: One platform for every branch. Manage members, fellowships, departments, outreach, and more — no spreadsheets, no guesswork.
+  tagline: One platform for every branch. Manage members, fellowships, departments, outreach, and more. No spreadsheets, no guesswork.
   actions:
     - theme: brand
       text: Get Started
@@ -17,13 +17,13 @@ features:
   - icon:
       src: /icons/branches.svg
     title: Multi-Branch Management
-    details: Manage every church location from one place. Each branch has its own members, fellowships, departments, and reports — fully isolated.
+    details: Manage every church location from one place. Each branch has its own members, fellowships, departments, and reports, fully isolated.
     link: /platform/branches
     linkText: View Branches
   - icon:
       src: /icons/members.svg
     title: Member Lifecycle
-    details: From registration and approval through to departments, fellowships, and attendance — every step of a member's journey is tracked.
+    details: From registration and approval through to departments, fellowships, and attendance, every step of a member's journey is tracked.
     link: /church-management/member-lifecycle
     linkText: Member Lifecycle
   - icon:
@@ -47,7 +47,7 @@ features:
   - icon:
       src: /icons/analytics.svg
     title: Reports & Analytics
-    details: Attendance trends, membership growth, soul conversion funnels, and engagement scores — scoped to your role.
+    details: Attendance trends, membership growth, soul conversion funnels, and engagement scores, all scoped to your role.
     link: /analytics/church-health
     linkText: View Analytics
 ---

@@ -1,6 +1,6 @@
 # Member Lifecycle
 
-This guide covers the full journey of a member in Kairos — from first registration through approval, active membership, and eventual deactivation.
+This guide covers the full journey of a member in Kairos, from first registration through approval, active membership, and eventual deactivation.
 
 ## 1. Registration
 
@@ -25,8 +25,8 @@ Pending registrations appear in the **Approval Queue** accessible from the Membe
 Approving a member:
 1. Go to **Members → Approval Queue**
 2. Review the member's submitted details
-3. Click **Approve** — they immediately gain full member access
-4. Or click **Reject** — their account is removed
+3. Click **Approve**. They immediately gain full member access
+4. Or click **Reject**. Their account is removed
 
 Once approved, the member sees the full navigation for their role and can:
 - View and edit their profile
@@ -46,7 +46,7 @@ An active, approved member can:
 
 ## 4. Role assignment
 
-Functional roles are assigned by Admins. A member's navigation and capabilities update immediately when a role grant is added or removed — no re-login required.
+Functional roles are assigned by Admins. A member's navigation and capabilities update immediately when a role grant is added or removed, with no re-login required.
 
 Examples of role grants:
 - `FellowshipLeader` scoped to a specific fellowship → unlocks fellowship management
@@ -55,7 +55,7 @@ Examples of role grants:
 
 ## 5. Deactivation
 
-Deactivating a member is a soft delete. All their data — attendance records, follow-up notes, department history, donation history — is preserved. They lose login access but nothing is removed from reports or historical records.
+Deactivating a member is a soft delete. All their data (attendance records, follow-up notes, department history, donation history) is preserved. They lose login access but nothing is removed from reports or historical records.
 
 Only Pastors and Admins can deactivate members.
 
@@ -67,7 +67,7 @@ To reactivate: find the member using the **Inactive** status filter and click **
 
 For bulk operations:
 
-- **Import CSV** — upload a spreadsheet of members to create multiple accounts at once. The system validates each row and shows a preview before importing.
-- **Export CSV** — download the current filtered member list. Useful for reporting, external mail merges, or migrating data.
+- **Import CSV**: upload a spreadsheet of members to create multiple accounts at once. The system validates each row and shows a preview before importing.
+- **Export CSV**: download the current filtered member list. Useful for reporting, external mail merges, or migrating data.
 
 Both are available to Pastors and Admins from the Members page header.

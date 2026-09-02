@@ -61,7 +61,7 @@ Click **Export CSV** to download all filtered submissions as a spreadsheet. Usef
 
 ## Dormant Attendees
 
-Click **Dormant attendees** to bulk-archive stale form-created contact shells — people who came through a visitor or altar call form but have had no further engagement. This keeps the member directory clean without permanently deleting any records.
+Click **Dormant attendees** to bulk-archive stale form-created contact shells: people who came through a visitor or altar call form but have had no further engagement. This keeps the member directory clean without permanently deleting any records.
 
 ## How form submissions connect to other modules
 

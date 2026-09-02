@@ -1,6 +1,6 @@
 # Attendance
 
-The Attendance page covers service attendance — Sunday services, midweek services, and special services. Fellowship meeting attendance is managed separately from within each fellowship.
+The Attendance page covers service attendance: Sunday services, midweek services, and special services. Fellowship meeting attendance is managed separately from within each fellowship.
 
 <div class="screenshot-window screenshot-light">
 
@@ -25,8 +25,8 @@ Each row in the attendance list shows:
 ## Filtering
 
 Filter the service list by:
-- **Type** — All types, Sunday Service, Midweek Service, Special Service
-- **From / To** — Date range
+- **Type**: All types, Sunday Service, Midweek Service, Special Service
+- **From / To**: Date range
 
 ## Recording a service
 
@@ -38,7 +38,7 @@ Click **+ Record a service** (Pastor and Admin only) to create a new service ent
 | Service type | Sunday, Midweek, Special, Prayer Meeting, Other |
 | Date | Required |
 | Service title / theme | Optional |
-| Preacher | Optional — link to a member |
+| Preacher | Optional; link to a member |
 | Sermon topic | Optional |
 | Expected attendance | Optional |
 
@@ -55,7 +55,7 @@ Attendance can be recorded by Admins, Pastors, and Leaders with the appropriate 
 
 ## My Attendance
 
-Every member has a personal **My Attendance** page in the sidebar. This is private — only the member, their pastor, and the admin team can see it.
+Every member has a personal **My Attendance** page in the sidebar. This is private: only the member, their pastor, and the admin team can see it.
 
 <div class="screenshot-window screenshot-light">
 
@@ -71,9 +71,9 @@ Every member has a personal **My Attendance** page in the sidebar. This is priva
 
 ### What it shows
 
-- **Attendance Rate** — percentage over the last 12 weeks with a motivational note
-- **Attended vs Total** — e.g. "2 attended of 3 services"
-- **Last seen** — date and service of last attendance
+- **Attendance Rate**: percentage over the last 12 weeks with a motivational note
+- **Attended vs Total**: e.g. "2 attended of 3 services"
+- **Last seen**: date and service of last attendance
 
 ### Punctuality breakdown
 
