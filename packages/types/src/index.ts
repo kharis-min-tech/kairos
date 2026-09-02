@@ -7,4 +7,5 @@ export * from './rbac';
 export * from './notifications';
 export * from './audit';
 export * from './consent';
+export * from './membership';
 export * from './media';

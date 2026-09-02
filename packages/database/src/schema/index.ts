@@ -16,6 +16,24 @@ export { followUps, followUpsRelations } from './follow-ups';
 export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
 export { newBelieverEnrollments, newBelieverSessions, newBelieverAttendance } from './new-believers';
 export {
+  membershipCohorts,
+  membershipCohortsRelations,
+  membershipCohortTeachers,
+  membershipCohortTeachersRelations,
+  membershipSessions,
+  membershipSessionsRelations,
+  membershipEnrollments,
+  membershipEnrollmentsRelations,
+  membershipSessionRecords,
+  membershipSessionRecordsRelations,
+  type MembershipCohort,
+  type NewMembershipCohort,
+  type MembershipCohortTeacher,
+  type MembershipSession,
+  type MembershipEnrollment,
+  type MembershipSessionRecord,
+} from './membership';
+export {
   mentorFollowups,
   mentorFollowupsRelations,
   type MentorFollowup,
