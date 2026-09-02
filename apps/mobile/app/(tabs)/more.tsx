@@ -13,6 +13,7 @@ import {
   UsersRound,
   Building2,
   Sparkles,
+  GraduationCap,
   CalendarClock,
   UserPlus,
   Handshake,
@@ -124,6 +125,14 @@ export default function More() {
             icon={BookOpen}
             label="My New Believer journey"
             onPress={() => router.push('/new-believers?scope=mine')}
+          />
+          {/* Membership classes are church-wide, so this is open to every
+              member: they browse cohorts, self-enrol and track their own
+              progress towards becoming a confirmed Member. */}
+          <NavRow
+            icon={GraduationCap}
+            label="Membership classes"
+            onPress={() => router.push('/membership' as never)}
           />
           <NavRow
             icon={Calendar}
