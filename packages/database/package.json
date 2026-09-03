@@ -18,6 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:bootstrap": "tsx src/bootstrap.ts",
+    "db:diagnose": "tsx src/diagnose.ts",
     "db:drop": "tsx src/reset.ts",
     "db:fresh": "npm run db:drop && drizzle-kit migrate && tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
