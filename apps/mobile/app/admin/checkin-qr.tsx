@@ -60,7 +60,7 @@ export default function AdminCheckinQr() {
   }, [token.data, validServiceId]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.gradientHeader}>
         <LinearGradient
           colors={gradients.brandDeep}

@@ -38,7 +38,7 @@ export default function MyQr() {
   }, [user?.id]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.gradientHeader}>
         <LinearGradient
           colors={gradients.brandDeep}

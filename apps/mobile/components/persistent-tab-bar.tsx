@@ -57,17 +57,20 @@ export function useTabBarVisible(): boolean {
  * Padding the root layout reserves below the router Stack so screen content
  * ends exactly at the bar's top edge instead of scrolling underneath it.
  *
- * Note what this deliberately does NOT include. Screens wrap themselves in
- * `SafeAreaView edges={['top', 'bottom']}`, so each one already applies
- * `insets.bottom` of its own padding inside the Stack. Reserving the full bar
- * height here as well would double-count that inset and leave a strip of dead
- * space above the bar on any device with a home indicator. Subtracting it
- * means the two paddings sum to exactly the bar's height:
+ * This is the bar's FULL on-screen height, safe-area inset included:
  *
- *   reserved here          = HEIGHT + max(inset, 8) - inset
- *   screen's own SafeArea  =                          inset
- *   ------------------------------------------------------
- *   total from screen edge = HEIGHT + max(inset, 8)  = bar height
+ *   bar height     = HEIGHT + max(inset, 8)   (see the container style)
+ *   reserved here  = HEIGHT + max(inset, 8)
+ *
+ * The rule that makes that arithmetic hold: no authenticated screen applies a
+ * bottom inset of its own. They all use `SafeAreaView edges={['top']}` and let
+ * the root own the bottom edge. Adding `'bottom'` to a screen's edges
+ * double-counts the inset and leaves a dead strip above the bar.
+ *
+ * An earlier version subtracted `insets.bottom` here, on the belief that
+ * screens re-added it themselves. Only two authenticated screens ever did, so
+ * on any device with a home indicator or gesture bar every other screen still
+ * ran its last rows under the bar by exactly the inset.
  *
  * Returns 0 when the bar is hidden, so auth and onboarding keep their spacing.
  */
@@ -75,7 +78,7 @@ export function useTabBarReservedSpace(): number {
   const insets = useSafeAreaInsets();
   const visible = useTabBarVisible();
   if (!visible) return 0;
-  return TAB_BAR_CONTENT_HEIGHT + Math.max(insets.bottom, 8) - insets.bottom;
+  return TAB_BAR_CONTENT_HEIGHT + Math.max(insets.bottom, 8);
 }
 
 /**

@@ -90,8 +90,9 @@ export default function RootLayout() {
  * The bar is an absolute overlay, so without this every screen would scroll
  * its last rows, its list ends and its sticky footers underneath the bar.
  * Reserving the space once here means no individual screen needs a bottom
- * inset of its own — see `useTabBarReservedSpace` for why the device's bottom
- * inset is subtracted rather than added.
+ * inset of its own, and no screen should add one: authenticated screens use
+ * `SafeAreaView edges={['top']}` and leave the bottom edge to this padding.
+ * See `useTabBarReservedSpace` for the arithmetic.
  *
  * Must sit inside SafeAreaProvider (it reads insets) and inside the router
  * context (it reads segments).
