@@ -10,10 +10,23 @@
  * broken. See `src/reset.ts` for the historical write-up.
  *
  * This script sidesteps the journal: it reads every `.sql` file in `drizzle/`
- * in order and executes it against the target DB. All Kairos migration files
- * use `IF NOT EXISTS` guards on ADD COLUMN / CREATE TABLE / ADD CONSTRAINT
- * (via DO blocks) so replaying them is a no-op when the change is already
- * present, and repairs the missing bits when it's not.
+ * in order and executes it against the target DB.
+ *
+ * !! NOT SAFE ON A DB THAT ALREADY HAS THE SCHEMA !!
+ * Replaying is only a no-op for the hand-written migrations (0007+), which do
+ * guard with IF NOT EXISTS / DO blocks. The drizzle-kit-GENERATED files do not:
+ * 0000-0006 carry 28 bare `CREATE TABLE` and 15 bare `ALTER TABLE … ADD COLUMN`
+ * statements. Against a DB that already has those tables this fails on the very
+ * first file with "relation already exists". Nothing is corrupted (postgres.js
+ * sends each file as one implicit transaction, so it rolls back) but nothing
+ * progresses either.
+ *
+ * Use this ONLY when the journal is out of sync AND the schema is genuinely
+ * incomplete. To tell those apart, run `db:diagnose` first — it is read-only,
+ * and it answers the question the dry-run below cannot: an empty journal and a
+ * missing schema both print `would-apply` for every file. If the schema is
+ * intact and only the newest migration is missing, apply that one file directly
+ * rather than replaying all of them.
  *
  * Usage:
  *   DATABASE_URL='postgresql://…' npm run db:bootstrap --workspace=@kairos/database
