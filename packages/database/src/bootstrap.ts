@@ -48,6 +48,14 @@ const DRY_RUN = process.argv.includes('--dry-run');
  * changed (drift). Safe because our migrations use IF NOT EXISTS guards.
  */
 const FORCE = process.argv.includes('--force');
+/**
+ * `--only=<prefix>` narrows the run to migration files whose name starts with
+ * the prefix, e.g. `--only=0047`. This is the safe way to catch up a DB whose
+ * schema is current except for the newest migration: replaying the whole
+ * directory would fail on 0000 (see the warning above), so target the one file
+ * that is actually missing. The journal is still stamped for what it applies.
+ */
+const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length) ?? null;
 
 async function main() {
   const url = process.env['DATABASE_URL'];
@@ -57,16 +65,26 @@ async function main() {
   }
 
   const migrationsDir = join(import.meta.dirname, '..', 'drizzle');
-  const sqlFiles = readdirSync(migrationsDir)
+  const allSqlFiles = readdirSync(migrationsDir)
     .filter((f) => f.endsWith('.sql'))
     .sort();
-  if (sqlFiles.length === 0) {
+  if (allSqlFiles.length === 0) {
     console.error(`No migration SQL files in ${migrationsDir}`);
     process.exit(1);
   }
 
+  const sqlFiles = ONLY ? allSqlFiles.filter((f) => f.startsWith(ONLY)) : allSqlFiles;
+  if (sqlFiles.length === 0) {
+    console.error(`--only=${ONLY} matched none of the ${allSqlFiles.length} migration files.`);
+    process.exit(1);
+  }
+
   console.log(`Bootstrap target: ${redact(url)}`);
-  console.log(`Migration files:  ${sqlFiles.length}`);
+  console.log(
+    `Migration files:  ${sqlFiles.length}` +
+      (ONLY ? `  (--only=${ONLY}, from ${allSqlFiles.length} on disk)` : ''),
+  );
+  if (ONLY) for (const f of sqlFiles) console.log(`                  ${f}`);
   if (DRY_RUN) console.log(`Mode:             DRY RUN (no changes)`);
 
   const sql = postgres(url, { max: 1, prepare: false });
