@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -30,6 +29,7 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import * as biometric from '@/lib/biometric';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 
 export default function LoginScreen() {
@@ -37,9 +37,46 @@ export default function LoginScreen() {
   const c = useColors();
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
+  const signInWithBiometric = useAuthStore((s) => s.signInWithBiometric);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Whether to offer the biometric button at all, and what to call it. Both
+  // come from the device: the old placeholder said "Face ID" beside a
+  // fingerprint icon, which was wrong on most Android hardware.
+  const [bio, setBio] = useState<{ label: string; armed: boolean } | null>(null);
+  const [bioBusy, setBioBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [cap, enabled] = await Promise.all([
+        biometric.getCapability(),
+        biometric.isEnabled(),
+      ]);
+      if (cancelled) return;
+      setBio({ label: cap.label, armed: cap.available && enabled });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleBiometricSignIn() {
+    if (!bio?.armed || bioBusy) return;
+    setBioBusy(true);
+    setError(null);
+    const ok = await signInWithBiometric(bio.label);
+    setBioBusy(false);
+    if (ok) {
+      router.replace('/(tabs)');
+      return;
+    }
+    // Deliberately not distinguishing cancelled / no-match / expired: they all
+    // mean "use your password", and guessing wrong reads as an accusation.
+    setError(`Could not sign in with ${bio.label}. Use your email and password.`);
+  }
 
   const login = useMutation({
     mutationFn: async () => {
@@ -51,6 +88,10 @@ export default function LoginScreen() {
     },
     onSuccess: async ({ tokens, member }) => {
       await setSession(tokens, member);
+      // A password sign-in re-arms an already-enabled seal, refreshing its
+      // 7-day window. It never turns biometrics ON by itself — that is an
+      // explicit choice made in Settings.
+      await biometric.rearmAfterPasswordLogin(tokens.refreshToken);
       router.replace('/(tabs)');
     },
     onError: (e: Error) => {
@@ -188,18 +229,23 @@ export default function LoginScreen() {
               variant="icons"
             />
 
-            <Pressable
-              onPress={() =>
-                alert.info(
-                  'Face ID',
-                  'Biometric sign-in becomes available after you sign in once with your email and password.',
-                )
-              }
-              style={styles.biometricButton}
-            >
-              <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
-              <Text style={styles.biometricLabel}>Sign in with Face ID</Text>
-            </Pressable>
+            {/* Only shown once biometrics are actually armed. Offering it
+                otherwise was the old placeholder's sin: a button that could
+                never do anything. */}
+            {bio?.armed ? (
+              <Pressable
+                onPress={() => void handleBiometricSignIn()}
+                style={styles.biometricButton}
+                disabled={bioBusy}
+                accessibilityRole="button"
+                accessibilityLabel={`Sign in with ${bio.label}`}
+              >
+                <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
+                <Text style={styles.biometricLabel}>
+                  {bioBusy ? 'Authenticating…' : `Sign in with ${bio.label}`}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           <Pressable

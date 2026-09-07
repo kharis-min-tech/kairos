@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -8,6 +9,7 @@ import {
   Mail,
   History,
   Link2,
+  Fingerprint,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import {
@@ -19,6 +21,9 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import { alert } from '@/lib/alert';
+import { useAuthStore } from '@/store/auth';
+import * as biometric from '@/lib/biometric';
 
 export default function SecurityHub() {
   const styles = useThemedStyles(makeStyles);
@@ -69,9 +74,103 @@ export default function SecurityHub() {
             meta="Sign-ins, password changes, and role updates on your account."
             onPress={() => router.push('/recent-activity')}
           />
+
+          <BiometricToggle />
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Opt in to biometric sign-in.
+ *
+ * Enabling seals a copy of the refresh token behind the OS keychain's own
+ * authentication requirement, so the token is unreadable without a successful
+ * biometric check — the prompt is raised by that read, not by us in front of a
+ * value we already hold. See lib/biometric.ts.
+ *
+ * Hidden entirely on a device with no hardware, and shown disabled with an
+ * explanation when hardware exists but nothing is enrolled. A toggle that
+ * silently does nothing is what this feature is replacing.
+ */
+function BiometricToggle() {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+
+  const [cap, setCap] = useState<biometric.BiometricCapability | null>(null);
+  const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [capability, on] = await Promise.all([
+        biometric.getCapability(),
+        biometric.isEnabled(),
+      ]);
+      if (cancelled) return;
+      setCap(capability);
+      setEnabled(on);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!cap || !cap.hasHardware) return null;
+
+  async function toggle(next: boolean) {
+    if (busy || !cap) return;
+    setBusy(true);
+    try {
+      if (!next) {
+        await biometric.disable();
+        setEnabled(false);
+        return;
+      }
+      if (!refreshToken) {
+        alert.info(
+          'Sign in again first',
+          'Your session needs refreshing before biometric sign-in can be armed.',
+        );
+        return;
+      }
+      const ok = await biometric.enable(refreshToken);
+      setEnabled(ok);
+      if (!ok) {
+        alert.info(
+          `Could not enable ${cap.label}`,
+          'The device declined. Check that a fingerprint or face is still enrolled, then try again.',
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card padding="md" style={styles.linkCard}>
+      <View style={styles.iconTile}>
+        <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={styles.linkTitle}>Sign in with {cap.label}</Text>
+        <Text style={styles.linkMeta}>
+          {!cap.isEnrolled
+            ? `Set up ${cap.label} in your device settings first.`
+            : enabled
+              ? 'Armed. Lasts up to 7 days, then asks for your password again.'
+              : 'Unlock the app without typing your password.'}
+        </Text>
+      </View>
+      <Switch
+        value={enabled}
+        onValueChange={(v) => void toggle(v)}
+        disabled={busy || !cap.isEnrolled}
+      />
+    </Card>
   );
 }
 

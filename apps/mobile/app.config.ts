@@ -88,6 +88,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     'expo-font',
+    // Biometric sign-in. This plugin is what puts NSFaceIDUsageDescription in
+    // the iOS Info.plist and USE_BIOMETRIC in the Android manifest, so adding
+    // it REQUIRES a new native build — an OTA update cannot ship it.
+    [
+      'expo-local-authentication',
+      {
+        faceIDPermission: 'Kairos uses Face ID to unlock your saved sign-in.',
+      },
+    ],
     [
       'expo-splash-screen',
       {
