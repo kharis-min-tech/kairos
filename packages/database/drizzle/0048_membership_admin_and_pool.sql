@@ -42,12 +42,17 @@
 -- MEMBERSHIP ADMIN ROLE
 -- The first and only church-scoped role.
 -- ---------------------------------------------------------------------------
-INSERT INTO roles (role_name, description) VALUES
-  (
-    'Membership Admin',
-    'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.'
-  )
-ON CONFLICT (role_name) DO NOTHING;
+-- Idempotent via NOT EXISTS rather than ON CONFLICT. `ON CONFLICT (role_name)`
+-- requires a unique constraint on that column, and staging's public schema was
+-- provisioned out-of-band (see the db:diagnose docstring), so its constraint
+-- set cannot be assumed to match what the Drizzle schema declares. A missing
+-- constraint would fail the whole migration with "no unique or exclusion
+-- constraint matching the ON CONFLICT specification". This form needs none.
+INSERT INTO roles (role_name, description)
+SELECT
+  'Membership Admin',
+  'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE role_name = 'Membership Admin');
 
 -- ---------------------------------------------------------------------------
 -- MEMBERSHIP_INTEREST
