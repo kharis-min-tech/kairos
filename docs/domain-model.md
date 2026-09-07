@@ -24,18 +24,17 @@ You can be a fully active participant in church life and still not be a
 "Member" in the formal sense, because that title is gated by one specific
 act: completing the class and receiving the certificate.
 
-**The current `memberType='member'` field is MISNAMED for this domain.** It
-actually means "row was originated through self-signup / admin-add" — a
-provenance tag, not a membership status. The true Membership signal is
-**absent from the schema today** and will be introduced in [Task #33] as
-`membershipClassCompletedAt timestamp`. Until that lands, the system has no
-way to distinguish a confirmed Member from a regular attender.
+**The `memberType='member'` field is MISNAMED for this domain.** It actually
+means "row was originated through self-signup / admin-add" — a provenance tag,
+not a membership status. The true Membership signal is
+`members.membershipClassCompletedAt`, stamped by graduating a membership
+cohort (migration 0047, reworked in 0048) or by the manual admin override.
 
 Implications:
 - The `Member` entity in this doc is the row in `members` — i.e. "any person
   attached to the church," regardless of formal membership status.
-- "Confirmed Member" / "Class-completed Member" refers to someone whose
-  `membershipClassCompletedAt` will be populated after Task #33.
+- "Confirmed Member" / "Class-completed Member" refers to someone with a
+  populated `membershipClassCompletedAt`.
 - Visitors STAY visible everywhere (directory, attendance rollups) — they're
   in the church, they need to be counted. They're just clearly labelled as
   Visitor / Prospect / Member so the difference is obvious.
@@ -144,18 +143,29 @@ joins a fellowship, serves in a department, AND completes the new-believers
 program stays tagged as `memberType='visitor'`. Stats counters (which filter
 `memberType='member'`) silently exclude them.
 
-### Proposed lifecycle — corrected for class-based membership (Task #33)
+### The lifecycle, as built
 
 The **only** trigger that turns someone into a confirmed Member is completing
 the 4-week membership class. Department/fellowship joining and NB completion
 do NOT promote — those are independent participation tracks.
 
+Enrolment is not self-service. Getting into a class is two stages: you express
+interest, which puts you in a church-wide pool belonging to no cohort, and a
+Membership Admin later admits you into a specific intake. The gap is
+deliberate — somebody who signed up and then stopped attending for a season
+must not roll silently into the next intake, so pool entries carry an expiry
+and lapse on their own (see migration 0048).
+
 ```mermaid
 flowchart TD
   P[Person in DB<br/>memberType: visitor/prospect/child/member<br/>membershipClassCompletedAt: NULL]
 
-  P -->|attends class week 1-4| C[Class in progress]
-  C -->|admin marks class complete<br/>POST /members/:id/mark-as-member| M[Confirmed Member<br/>membershipClassCompletedAt: NOW]
+  P -->|expresses interest| W[Waiting in the pool<br/>membership_interest: waiting]
+  W -->|admin admits into a cohort| C[Enrolled<br/>membership_enrollments]
+  W -.->|180 days pass| L[Lapsed<br/>must express interest again]
+  L -.->|re-expresses interest| W
+  P -->|admin admits directly<br/>paper signup| C
+  C -->|4 sessions + coursework + final test + induction| M[Confirmed Member<br/>membershipClassCompletedAt: NOW]
 
   P -.->|joins fellowship| P
   P -.->|joins department| P
@@ -166,7 +176,7 @@ flowchart TD
 
   classDef pre fill:#f8b537,stroke:#9a6b04,color:#1a1a1a
   classDef post fill:#5D3FD3,stroke:#451ebb,color:#fff
-  class P,C pre
+  class P,W,L,C pre
   class M post
 ```
 
@@ -174,9 +184,17 @@ Dashed self-loops emphasise: **none of these activities promote you to
 Confirmed Member**. They're parallel participation tracks. Only the
 membership class does.
 
-Today the class doesn't exist as a module — Task #33 introduces the column +
-admin "Mark as Member" button so the signal can exist before the full module
-is built. The class module itself is a future ticket.
+Graduating a cohort is what stamps `membershipClassCompletedAt`. The admin
+override on `POST /members/:id/mark-as-member` remains as the manual escape
+hatch, for people who did the class before the module existed.
+
+**Who runs it.** `MembershipAdmin`, the one CHURCH-scoped role. Cohorts are
+church-wide, so no branch, fellowship or department grant can describe
+authority over one — which is why `RoleScope` has a fourth kind, `church`,
+used by nothing else. Marking is an admin action; teaching is recorded per
+session (`membership_sessions.teacher_id`, different people teach different
+sessions of one cohort) and confers no permissions.
+
 
 ---
 

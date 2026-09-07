@@ -127,8 +127,10 @@ export default function More() {
             onPress={() => router.push('/new-believers?scope=mine')}
           />
           {/* Membership classes are church-wide, so this is open to every
-              member: they browse cohorts, self-enrol and track their own
-              progress towards becoming a confirmed Member. */}
+              member: they browse cohorts, join the interest pool and track
+              their own progress. Enrolment is not self-service — an admin
+              admits from the pool — and membership admins get the pool and
+              register surfaces on the same screen. */}
           <NavRow
             icon={GraduationCap}
             label="Membership classes"

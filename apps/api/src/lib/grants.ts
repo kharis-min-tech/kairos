@@ -9,7 +9,7 @@ import {
   type SystemRole,
   CHURCH_SCOPE,
   FunctionalRole,
-  RoleCapabilities,
+  matchesCapability,
 } from '@kairos/types';
 
 // ── DB role-name → FunctionalRole mapping ──────────────────
@@ -94,26 +94,17 @@ export async function resolveGrants(
 
 // ── hasCapability ──────────────────────────────────────────
 //
-// Pure capability lookup over a grant list. Single transitional shim:
-//
-//   - `systemRole === 'admin'` → always true. The break-glass platform owner
-//     bypasses everything; matches today's escape-hatch semantics and
-//     survives the rebuild.
+// The API's name for `matchesCapability` from @kairos/types, which is where
+// the matcher itself lives — beside the role/capability catalog it reads, so
+// that this server and both clients gate on ONE implementation and a surface
+// a client offers is exactly a surface this server will allow. The rules are
+// documented there; this stays as the API-side name because it is called
+// everywhere and the indirection is free.
 //
 // RBAC Phase 4c: the `'pastor'` shim is gone. Pastor is now a display-only
 // honorific (members.honorific column), not a permission. A "Pastor" who
 // holds no grants gets no admin access — see Phase 4a's migration for the
 // systemRole collapse that drove this.
-//
-// Scope matching:
-//   - No `scope` arg → any grant of `cap` suffices.
-//   - Exact match → grant.scope.{kind,id} === scope.{kind,id}.
-//   - Hierarchical match → a `branch`-scoped grant covers fellowship/
-//     department targets in the same branch, provided the caller passes
-//     the target's parent `branchId` on the scope object.
-//   - `church` targets take NO hierarchical match. The church contains every
-//     branch, not the other way round, so a branch grant must never satisfy a
-//     church-scoped check. Only a church grant (or systemRole admin) does.
 
 export function hasCapability(
   grants: readonly Grant[],
@@ -121,29 +112,7 @@ export function hasCapability(
   cap: Capability,
   scope?: RoleScope & { branchId?: string },
 ): boolean {
-  if (systemRole === 'admin') return true;
-
-  // A church target is never reachable by climbing the branch hierarchy, so
-  // it contributes no parent branch even if a caller passes one.
-  const targetBranchId =
-    scope?.kind === 'church' ? undefined : scope?.kind === 'branch' ? scope.id : scope?.branchId;
-
-  for (const grant of grants) {
-    const caps = RoleCapabilities[grant.role];
-    if (!caps.includes(cap)) continue;
-    if (!scope) return true;
-    if (grant.scope.kind === scope.kind && grant.scope.id === scope.id) {
-      return true;
-    }
-    if (
-      grant.scope.kind === 'branch' &&
-      targetBranchId &&
-      grant.scope.id === targetBranchId
-    ) {
-      return true;
-    }
-  }
-  return false;
+  return matchesCapability(grants, systemRole, cap, scope);
 }
 
 // RBAC Phase 3f: thin wrapper that reads `auth.grants` and delegates to

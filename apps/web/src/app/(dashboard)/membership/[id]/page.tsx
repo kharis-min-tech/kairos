@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { formatShortDate } from '@kairos/core';
+import { CHURCH_SCOPE } from '@kairos/types';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import {
   useMembershipCohort,
@@ -41,15 +42,19 @@ type Tab = 'roster' | 'sessions' | 'graduation';
  *                homework and quiz marks, saved in one write).
  *   Graduation — the six-requirement gate, and who is clear to graduate.
  *
- * Marking is open to cohort teachers; cohort administration and graduation are
- * platform-admin only, because a church-wide cohort has no branch-scoped grant
- * that could describe authority over it.
+ * Everything administrative here — marking included — is gated on
+ * `membership:admin` at CHURCH scope. A church-wide cohort has no branch,
+ * fellowship or department that could contain it, so no branch-scoped grant
+ * could describe authority over one; the church scope exists for exactly this.
+ *
+ * Teaching is per SESSION and confers nothing: different people teach
+ * different sessions of one cohort, and admins do the marking.
  */
 export default function CohortDetailPage() {
   const params = useParams<{ id: string }>();
   const cohortId = params.id;
   const caps = useCapabilities();
-  const isAdmin = caps.systemRole === 'admin';
+  const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
 
   const [tab, setTab] = useState<Tab>('roster');
 
@@ -96,14 +101,6 @@ export default function CohortDetailPage() {
           ) : null}
           <span className="capitalize">{cohort.status}</span>
         </div>
-        {cohort.teachers.length > 0 ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Taught by{' '}
-            {cohort.teachers
-              .map((t) => `${t.memberFirstName} ${t.memberLastName}`)
-              .join(', ')}
-          </p>
-        ) : null}
       </div>
 
       <div className="flex gap-1 border-b border-border">
@@ -174,9 +171,11 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
                   >
                     {e.memberFirstName} {e.memberLastName}
                   </Link>
-                  {e.selfEnrolled ? (
-                    <span className="ml-2 text-[10px] text-muted-foreground">self-enrolled</span>
-                  ) : null}
+                  {/* Provenance: through the interest pool, or added directly by
+                      an admin (the paper-signup case). */}
+                  {e.fromPool ? null : (
+                    <span className="ml-2 text-[10px] text-muted-foreground">added directly</span>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-muted-foreground">{e.branchName ?? '—'}</td>
                 <td className="px-4 py-2 capitalize text-muted-foreground">{e.status}</td>

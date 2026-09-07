@@ -11,15 +11,19 @@ import { ArrowLeft, GraduationCap } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useCreateCohort } from '@/hooks/use-membership';
+import { CHURCH_SCOPE } from '@kairos/types';
 
 /**
- * Create a membership cohort. Platform-admin only: a cohort is church-wide,
- * so no branch-scoped grant can authorise creating one.
+ * Create a membership cohort.
+ *
+ * Gated on `membership:admin` at CHURCH scope, not on `systemRole === 'admin'`:
+ * a cohort is church-wide, so no branch-scoped grant can authorise creating
+ * one, but the people who actually run the class hold no platform authority.
  */
 export default function NewCohortPage() {
   const router = useRouter();
   const caps = useCapabilities();
-  const isAdmin = caps.systemRole === 'admin';
+  const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
   const createCohort = useCreateCohort();
 
   const [name, setName] = useState('');
@@ -82,7 +86,8 @@ export default function NewCohortPage() {
           New membership cohort
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cohorts run church-wide. Members enrol themselves once enrolment is open.
+          Cohorts run church-wide. People join the interest pool, and you admit them
+          into a cohort from there.
         </p>
       </div>
 
