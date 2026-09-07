@@ -6,8 +6,8 @@ import type {
   CreateMembershipCohortRequest,
   UpdateMembershipCohortRequest,
   UpsertMembershipSessionRequest,
-  AssignMembershipTeacherRequest,
-  EnrolMembersRequest,
+  AdmitMembersRequest,
+  ListMembershipInterestQuery,
   SaveMembershipSessionRecordsRequest,
   RecordFinalTestRequest,
   RecordInductionRequest,
@@ -75,6 +75,25 @@ export function useMembershipEnrollment(enrollmentId: string) {
   });
 }
 
+/**
+ * The interest pool. Membership-admin only — the API 403s everyone else, so
+ * gate the surface on `caps.has('membership:admin', CHURCH_SCOPE)` rather
+ * than calling this and hoping.
+ *
+ * Defaults to those still waiting. Rows carry `waitingDays` and
+ * `recentAttendanceCount` because admission is a judgement call: the admin
+ * needs both who has waited longest and who has actually been around.
+ */
+export function useMembershipInterest(params?: ListMembershipInterestQuery) {
+  return useQuery({
+    queryKey: [KEY, 'interest', params],
+    queryFn: async () => {
+      const res = await api.membership.interest.list(params);
+      return res.data!;
+    },
+  });
+}
+
 /** The caller's own progress. Never gated, so it is always safe to call. */
 export function useMyMembership() {
   return useQuery({
@@ -119,24 +138,6 @@ export function useArchiveCohort() {
   });
 }
 
-export function useAssignTeacher(cohortId: string) {
-  const invalidate = useInvalidate();
-  return useMutation({
-    mutationFn: async (data: AssignMembershipTeacherRequest) =>
-      (await api.membership.cohorts.assignTeacher(cohortId, data)).data!,
-    onSuccess: invalidate,
-  });
-}
-
-export function useRemoveTeacher(cohortId: string) {
-  const invalidate = useInvalidate();
-  return useMutation({
-    mutationFn: async (memberId: string) =>
-      (await api.membership.cohorts.removeTeacher(cohortId, memberId)).data!,
-    onSuccess: invalidate,
-  });
-}
-
 export function useSaveSession(cohortId: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -146,20 +147,35 @@ export function useSaveSession(cohortId: string) {
   });
 }
 
-export function useEnrolSelf() {
+/**
+ * Express interest. The caller's own action, gated on nothing.
+ *
+ * Enrolment is NOT self-service: this only joins the pool. An admin admits
+ * from the pool into a cohort.
+ */
+export function useExpressInterest() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: async (cohortId: string) =>
-      (await api.membership.cohorts.enrolSelf(cohortId)).data!,
+    mutationFn: async () => (await api.membership.interest.express()).data!,
     onSuccess: invalidate,
   });
 }
 
-export function useEnrolMembers(cohortId: string) {
+/** Leave the pool. Terminal — re-joining later starts a fresh wait. */
+export function useWithdrawInterest() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: async (data: EnrolMembersRequest) =>
-      (await api.membership.cohorts.enrolMembers(cohortId, data)).data!,
+    mutationFn: async () => (await api.membership.interest.withdraw()).data!,
+    onSuccess: invalidate,
+  });
+}
+
+/** Admit people from the pool into a cohort. The only way in. */
+export function useAdmitMembers(cohortId: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (data: AdmitMembersRequest) =>
+      (await api.membership.cohorts.admit(cohortId, data)).data!,
     onSuccess: invalidate,
   });
 }

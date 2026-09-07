@@ -7,6 +7,7 @@
 // functional role or capability; the rest of the codebase reads from here.
 
 import type { RoleScope } from './api';
+import type { SystemRole } from './enums';
 
 export const FunctionalRole = {
   BranchAdmin: 'BranchAdmin',
@@ -87,4 +88,54 @@ export interface Grant {
   role: FunctionalRole;
   scope: RoleScope;
   branchId: string;
+}
+
+/**
+ * The capability matcher. THE one implementation.
+ *
+ * The API enforces with it and both clients gate UI affordances with it, so
+ * that a surface a client offers is exactly a surface the server will allow.
+ * It lived in three hand-copied places until the church scope arrived and
+ * added a rule that all three would have had to learn separately; the copies
+ * are gone. Keep it pure, and keep it here beside the catalog it reads.
+ *
+ * Rules:
+ *   - `systemRole === 'admin'` → always true. The break-glass platform owner
+ *     bypasses everything.
+ *   - No `scope` argument → any grant carrying `cap` suffices.
+ *   - Exact match → grant.scope.{kind,id} equals scope.{kind,id}.
+ *   - Hierarchical match → a `branch` grant covers fellowship and department
+ *     targets in the same branch, provided the caller passes the target's
+ *     parent `branchId` on the scope object.
+ *   - `church` targets take NO hierarchical match. The church contains every
+ *     branch, not the other way round, so a branch grant must never satisfy a
+ *     church-scoped check — only a church grant, or a platform admin, does.
+ */
+export function matchesCapability(
+  grants: readonly Grant[],
+  systemRole: SystemRole,
+  cap: Capability,
+  scope?: RoleScope & { branchId?: string },
+): boolean {
+  if (systemRole === 'admin') return true;
+
+  // A church target is never reachable by climbing the branch hierarchy, so
+  // it contributes no parent branch even if a caller passes one.
+  const targetBranchId =
+    scope?.kind === 'church'
+      ? undefined
+      : scope?.kind === 'branch'
+        ? scope.id
+        : scope?.branchId;
+
+  for (const grant of grants) {
+    const caps: readonly Capability[] = RoleCapabilities[grant.role] ?? [];
+    if (!caps.includes(cap)) continue;
+    if (!scope) return true;
+    if (grant.scope.kind === scope.kind && grant.scope.id === scope.id) return true;
+    if (grant.scope.kind === 'branch' && targetBranchId && grant.scope.id === targetBranchId) {
+      return true;
+    }
+  }
+  return false;
 }
