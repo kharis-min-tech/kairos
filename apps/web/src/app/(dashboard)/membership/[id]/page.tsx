@@ -5,7 +5,18 @@ export const runtime = 'edge';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Card, CardContent, Badge, Button, Input, cn } from '@kairos/ui';
+import {
+  Card,
+  CardContent,
+  Badge,
+  Button,
+  Input,
+  Label,
+  Textarea,
+  CustomSelect,
+  DateSelect,
+  cn,
+} from '@kairos/ui';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -15,6 +26,9 @@ import {
   ClipboardCheck,
   CheckCircle2,
   AlertCircle,
+  CalendarPlus,
+  Pencil,
+  UserMinus,
 } from 'lucide-react';
 import { formatShortDate } from '@kairos/core';
 import { CHURCH_SCOPE } from '@kairos/types';
@@ -23,14 +37,19 @@ import {
   useMembershipCohort,
   useMembershipEnrollments,
   useSaveSessionRecords,
+  useSaveSession,
   useRecordFinalTest,
+  useWithdrawEnrollment,
   useRecordInduction,
   useGraduateMembers,
 } from '@/hooks/use-membership';
+import { MEMBERSHIP_SESSION_NUMBERS } from '@kairos/types';
 import type {
   MembershipEnrollmentWithMember,
   MembershipSession,
+  MembershipSessionNumber,
 } from '@kairos/types';
+import { useMembers } from '@/hooks/use-members';
 
 type Tab = 'roster' | 'sessions' | 'graduation';
 
@@ -123,7 +142,7 @@ export default function CohortDetailPage() {
 
       {tab === 'roster' ? <RosterTab roster={roster} /> : null}
       {tab === 'sessions' ? (
-        <SessionsTab sessions={cohort.sessions} roster={roster} />
+        <SessionsTab cohortId={cohortId} sessions={cohort.sessions} roster={roster} />
       ) : null}
       {tab === 'graduation' ? (
         <GraduationTab cohortId={cohortId} roster={roster} isAdmin={isAdmin} />
@@ -136,6 +155,7 @@ export default function CohortDetailPage() {
 
 function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
   const recordFinalTest = useRecordFinalTest();
+  const withdraw = useWithdrawEnrollment();
   const [scores, setScores] = useState<Record<string, string>>({});
 
   if (roster.length === 0) {
@@ -159,6 +179,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Final test</th>
               <th className="px-4 py-2 font-medium">Induction</th>
+              <th className="px-4 py-2 font-medium sr-only">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -226,6 +247,42 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
                     <span className="text-xs text-muted-foreground">Not yet</span>
                   )}
                 </td>
+                <td className="px-4 py-2 text-right">
+                  {/* Only an open enrolment can be withdrawn. A graduated one
+                      is settled, and the API refuses it. */}
+                  {e.status === 'enrolled' ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                      disabled={withdraw.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Withdraw ${e.memberFirstName} ${e.memberLastName} from this cohort? Their marks are kept and they can be admitted to a later intake.`,
+                          )
+                        ) {
+                          return;
+                        }
+                        withdraw.mutate(
+                          { enrollmentId: e.id, data: { reason: 'withdrew' } },
+                          {
+                            onSuccess: () => toast.success('Enrolment withdrawn.'),
+                            onError: (err: unknown) =>
+                              toast.error(
+                                err instanceof Error ? err.message : 'Could not withdraw.',
+                              ),
+                          },
+                        );
+                      }}
+                    >
+                      <UserMinus className="size-4" />
+                      <span className="sr-only">
+                        Withdraw {e.memberFirstName} {e.memberLastName}
+                      </span>
+                    </Button>
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -238,27 +295,55 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
 // ── Sessions ──────────────────────────────────────────────────────────────
 
 function SessionsTab({
+  cohortId,
   sessions,
   roster,
 }: {
+  cohortId: string;
   sessions: MembershipSession[];
   roster: MembershipEnrollmentWithMember[];
 }) {
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
+  const [editingNumber, setEditingNumber] = useState<MembershipSessionNumber | null>(null);
 
-  if (sessions.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          No sessions scheduled yet. A cohort needs all four before anyone can graduate.
-        </CardContent>
-      </Card>
-    );
-  }
+  // Every number 1-4 always shows, scheduled or not. Sessions are addressed by
+  // NUMBER (there is exactly one session 3 per cohort, so saving it twice
+  // moves it rather than duplicating it), and an unscheduled slot blocks the
+  // whole cohort from graduating — so it has to be visible, not absent.
+  const slots = MEMBERSHIP_SESSION_NUMBERS.map((n) => ({
+    number: n,
+    session: sessions.find((s) => s.sessionNumber === n) ?? null,
+  }));
 
   return (
     <div className="space-y-3">
-      {sessions.map((s) => (
+      {slots.map(({ number, session: s }) =>
+        s === null ? (
+          <Card key={number} className="border-dashed">
+            <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Session {number}</p>
+                <p className="text-xs text-muted-foreground">
+                  Not scheduled yet. All four are required before anyone can graduate.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setEditingNumber(number)}>
+                <CalendarPlus className="mr-1 size-4" />
+                Schedule
+              </Button>
+            </CardContent>
+            {editingNumber === number ? (
+              <CardContent className="pt-0">
+                <SessionEditor
+                  cohortId={cohortId}
+                  sessionNumber={number}
+                  existing={null}
+                  onDone={() => setEditingNumber(null)}
+                />
+              </CardContent>
+            ) : null}
+          </Card>
+        ) : (
         <Card key={s.id}>
           <CardContent className="space-y-3 py-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -269,23 +354,169 @@ function SessionsTab({
                 <p className="text-xs text-muted-foreground">
                   {s.sessionDate ? formatShortDate(s.sessionDate) : 'Date to be confirmed'}
                   {s.location ? ` · ${s.location}` : ''}
+                  {s.teacherFirstName
+                    ? ` · taught by ${s.teacherFirstName} ${s.teacherLastName}`
+                    : ''}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setOpenSessionId(openSessionId === s.id ? null : s.id)}
-              >
-                <ClipboardCheck className="mr-1 size-4" />
-                {openSessionId === s.id ? 'Close register' : 'Open register'}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setEditingNumber(
+                      editingNumber === s.sessionNumber ? null : s.sessionNumber,
+                    )
+                  }
+                >
+                  <Pencil className="mr-1 size-4" />
+                  {editingNumber === s.sessionNumber ? 'Cancel' : 'Edit'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setOpenSessionId(openSessionId === s.id ? null : s.id)}
+                >
+                  <ClipboardCheck className="mr-1 size-4" />
+                  {openSessionId === s.id ? 'Close register' : 'Open register'}
+                </Button>
+              </div>
             </div>
+            {editingNumber === s.sessionNumber ? (
+              <SessionEditor
+                cohortId={cohortId}
+                sessionNumber={s.sessionNumber}
+                existing={s}
+                onDone={() => setEditingNumber(null)}
+              />
+            ) : null}
             {openSessionId === s.id ? (
               <SessionRegister sessionId={s.id} roster={roster} />
             ) : null}
           </CardContent>
         </Card>
-      ))}
+        ),
+      )}
+    </div>
+  );
+}
+
+/**
+ * Schedule or move one session.
+ *
+ * Upserts by session NUMBER, so saving session 3 twice moves it rather than
+ * creating a second one. `teacherId` records whoever teaches that single
+ * session — different people teach different sessions of the same cohort —
+ * and confers no permissions whatsoever.
+ */
+function SessionEditor({
+  cohortId,
+  sessionNumber,
+  existing,
+  onDone,
+}: {
+  cohortId: string;
+  sessionNumber: MembershipSessionNumber;
+  existing: MembershipSession | null;
+  onDone: () => void;
+}) {
+  const save = useSaveSession(cohortId);
+  const { data: memberPage } = useMembers({ page: 1, limit: 200 });
+
+  const [title, setTitle] = useState(existing?.title ?? '');
+  // The API takes a full ISO datetime; DateSelect speaks YYYY-MM-DD.
+  const [date, setDate] = useState(existing?.sessionDate?.slice(0, 10) ?? '');
+  const [location, setLocation] = useState(existing?.location ?? '');
+  const [teacherId, setTeacherId] = useState(existing?.teacherId ?? '');
+  const [error, setError] = useState<string | null>(null);
+
+  const teacherOptions = [
+    { value: '', label: 'No teacher assigned' },
+    ...(memberPage?.data ?? []).map((m) => ({
+      value: m.id,
+      label: `${m.firstName} ${m.lastName}`,
+    })),
+  ];
+
+  function submit() {
+    if (title.trim().length < 2) {
+      setError('Give the session a title.');
+      return;
+    }
+    setError(null);
+    save.mutate(
+      {
+        sessionNumber,
+        title: title.trim(),
+        // Midday rather than midnight, so a timezone shift cannot roll the
+        // date onto the day before for anyone reading it back.
+        sessionDate: date ? new Date(`${date}T12:00:00.000Z`).toISOString() : null,
+        location: location.trim() || null,
+        teacherId: teacherId || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Session ${sessionNumber} saved.`);
+          onDone();
+        },
+        onError: (e: unknown) =>
+          toast.error(e instanceof Error ? e.message : 'Could not save the session.'),
+      },
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label htmlFor={`title-${sessionNumber}`}>Title</Label>
+          <Input
+            id={`title-${sessionNumber}`}
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setError(null);
+            }}
+            placeholder="e.g. Who we are as a church"
+          />
+          {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        </div>
+        <div className="space-y-1">
+          <Label>Date</Label>
+          <DateSelect value={date} onChange={setDate} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`location-${sessionNumber}`}>Location</Label>
+          <Input
+            id={`location-${sessionNumber}`}
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. Main hall"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>Teacher</Label>
+          <CustomSelect
+            value={teacherId}
+            onChange={setTeacherId}
+            options={teacherOptions}
+            placeholder="No teacher assigned"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          className="bg-[#5D3FD3] hover:bg-[#451ebb]"
+          disabled={save.isPending}
+          onClick={submit}
+        >
+          {save.isPending ? 'Saving…' : 'Save session'}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 }
@@ -441,8 +672,20 @@ function GraduationTab({
   const graduate = useGraduateMembers(cohortId);
   const induction = useRecordInduction(cohortId);
   const [selected, setSelected] = useState<string[]>([]);
+  const [blocked, setBlocked] = useState<
+    { enrollmentId: string; outstanding: string[] }[]
+  >([]);
+  const [overrideFor, setOverrideFor] = useState<string | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
 
   const active = useMemo(() => roster.filter((r) => r.status === 'enrolled'), [roster]);
+
+  const nameFor = useMemo(() => {
+    const map = new Map(
+      roster.map((r) => [r.id, `${r.memberFirstName} ${r.memberLastName}`]),
+    );
+    return (id: string) => map.get(id) ?? 'This member';
+  }, [roster]);
 
   function toggle(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -527,13 +770,10 @@ function GraduationTab({
                           if (r.graduated > 0) {
                             toast.success(`Graduated ${r.graduated} member(s).`);
                           }
-                          if (r.blocked.length > 0) {
-                            toast.error(
-                              `${r.blocked.length} member(s) are not eligible yet: ${
-                                r.blocked[0]?.outstanding[0] ?? 'requirements outstanding'
-                              }`,
-                            );
-                          }
+                          // Keep the blocked list on screen rather than in a
+                          // toast: "3 not eligible" is useless without the
+                          // reasons, and the admin needs them to act.
+                          setBlocked(r.blocked);
                           setSelected([]);
                         },
                         onError: (e: unknown) =>
@@ -552,6 +792,94 @@ function GraduationTab({
           </CardContent>
         </Card>
       )}
+
+      {blocked.map((b) => (
+        <Card key={b.enrollmentId} className="border-destructive/40 bg-destructive/5">
+          <CardContent className="space-y-2 py-4">
+            <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <AlertCircle className="size-4 text-destructive" />
+              {nameFor(b.enrollmentId)} did not meet the gate
+            </p>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {b.outstanding.map((o) => (
+                <li key={o}>• {o}</li>
+              ))}
+            </ul>
+
+            {overrideFor === b.enrollmentId ? (
+              <div className="space-y-2 pt-1">
+                <Label htmlFor={`reason-${b.enrollmentId}`}>Why are you overriding?</Label>
+                <Textarea
+                  id={`reason-${b.enrollmentId}`}
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  rows={2}
+                  placeholder="e.g. Attended the induction at another branch"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Appended to the enrolment notes and kept permanently. Be specific enough
+                  that someone reading it in a year understands the decision.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-[#5D3FD3] hover:bg-[#451ebb]"
+                    // The API rejects an override with no reason, so don't let
+                    // the request leave without one.
+                    disabled={!overrideReason.trim() || graduate.isPending}
+                    onClick={() =>
+                      graduate.mutate(
+                        {
+                          enrollmentIds: [b.enrollmentId],
+                          override: true,
+                          overrideReason: overrideReason.trim(),
+                        },
+                        {
+                          onSuccess: () => {
+                            toast.success('Graduated with an override.');
+                            setBlocked((prev) =>
+                              prev.filter((x) => x.enrollmentId !== b.enrollmentId),
+                            );
+                            setOverrideFor(null);
+                            setOverrideReason('');
+                          },
+                          onError: (e: unknown) =>
+                            toast.error(
+                              e instanceof Error ? e.message : 'Could not graduate.',
+                            ),
+                        },
+                      )
+                    }
+                  >
+                    Graduate anyway
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setOverrideFor(null);
+                      setOverrideReason('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : isAdmin ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setOverrideFor(b.enrollmentId);
+                  setOverrideReason('');
+                }}
+              >
+                Override and graduate
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

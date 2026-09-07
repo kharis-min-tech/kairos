@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Clock,
   ListChecks,
+  Plus,
 } from 'lucide-react-native';
 import {
   Card,
@@ -46,8 +47,9 @@ import { useCapabilities } from '@/lib/capabilities';
  *     the interest list. Enrolment is NOT self-service — joining the list is
  *     as far as anyone can take themselves; a membership admin admits from
  *     the pool into a cohort.
- *   - Membership admins: a link into the pool, and into each cohort's roster
- *     and register.
+ *   - Membership admins: the interest pool, cohort creation, and every
+ *     cohort's roster, register, scheduling and graduation. The programme
+ *     runs end to end from a phone; nothing here needs a desk.
  *
  * The admin gate is `membership:admin` at CHURCH scope, not
  * `systemRole === 'admin'`: the people who run this class hold no platform
@@ -127,17 +129,30 @@ export default function MembershipScreen() {
         />
 
         {isAdmin ? (
-          <Pressable
-            style={styles.adminRow}
-            onPress={() => router.push('/membership/interest' as never)}
-          >
-            <ListChecks color={c.primary} size={18} strokeWidth={1.5} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.adminRowLabel}>Interest pool</Text>
-              <Text style={styles.metaText}>Admit people into a cohort</Text>
-            </View>
-            <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
-          </Pressable>
+          <>
+            <Pressable
+              style={styles.adminRow}
+              onPress={() => router.push('/membership/interest' as never)}
+            >
+              <ListChecks color={c.primary} size={18} strokeWidth={1.5} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.adminRowLabel}>Interest pool</Text>
+                <Text style={styles.metaText}>Admit people into a cohort</Text>
+              </View>
+              <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
+            </Pressable>
+            <Pressable
+              style={styles.adminRow}
+              onPress={() => router.push('/membership/new' as never)}
+            >
+              <Plus color={c.primary} size={18} strokeWidth={1.5} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.adminRowLabel}>New cohort</Text>
+                <Text style={styles.metaText}>Start the next membership class</Text>
+              </View>
+              <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
+            </Pressable>
+          </>
         ) : null}
 
         {cohorts.isLoading ? (
