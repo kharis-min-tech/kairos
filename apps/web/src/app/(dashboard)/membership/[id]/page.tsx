@@ -14,7 +14,6 @@ import {
   Label,
   Textarea,
   CustomSelect,
-  DateSelect,
   cn,
 } from '@kairos/ui';
 import { toast } from 'sonner';
@@ -50,6 +49,9 @@ import type {
   MembershipSessionNumber,
 } from '@kairos/types';
 import { useMembers } from '@/hooks/use-members';
+// DateSelect is an app-level component, not a design-system primitive.
+// packages/ui does not export one — see apps/web/CLAUDE.md.
+import { DateSelect } from '@/components/date-select';
 
 type Tab = 'roster' | 'sessions' | 'graduation';
 
@@ -498,7 +500,7 @@ function SessionEditor({
           <Label>Teacher</Label>
           <CustomSelect
             value={teacherId}
-            onChange={setTeacherId}
+            onValueChange={setTeacherId}
             options={teacherOptions}
             placeholder="No teacher assigned"
           />
