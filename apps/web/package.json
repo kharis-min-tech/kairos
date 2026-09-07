@@ -8,6 +8,7 @@
     "build": "next build",
     "pages:build": "next build && npx @cloudflare/next-on-pages",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"
