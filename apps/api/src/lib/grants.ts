@@ -7,6 +7,7 @@ import {
   type Grant,
   type RoleScope,
   type SystemRole,
+  CHURCH_SCOPE,
   FunctionalRole,
   RoleCapabilities,
 } from '@kairos/types';
@@ -26,6 +27,7 @@ const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'Department Deputy': FunctionalRole.DepartmentDeputy,
   'New Believers Mentor': FunctionalRole.NewBelieversMentor,
   'New Believers Teacher': FunctionalRole.NewBelieversTeacher,
+  'Membership Admin': FunctionalRole.MembershipAdmin,
 };
 
 // ── resolveGrants ──────────────────────────────────────────
@@ -66,12 +68,24 @@ export async function resolveGrants(
     const fnRole = DB_ROLE_NAME_TO_FUNCTIONAL[row.roleName];
     if (!fnRole) continue;
     const scopeKind = row.scopeKind as RoleScope['kind'];
-    if (scopeKind !== 'branch' && scopeKind !== 'fellowship' && scopeKind !== 'department') {
+    if (
+      scopeKind !== 'branch' &&
+      scopeKind !== 'fellowship' &&
+      scopeKind !== 'department' &&
+      scopeKind !== 'church'
+    ) {
       continue;
     }
+    // A church grant's stored scope_id is the nil-UUID sentinel and its
+    // branch_id is only the grantee's home branch (a query handle, not the
+    // grant's reach). Normalising to CHURCH_SCOPE_ID here means a row that
+    // somehow carries a real uuid still resolves to the one church scope
+    // rather than a grant that matches nothing.
+    const scope: RoleScope =
+      scopeKind === 'church' ? CHURCH_SCOPE : { kind: scopeKind, id: row.scopeId };
     out.push({
       role: fnRole,
-      scope: { kind: scopeKind, id: row.scopeId },
+      scope,
       branchId: row.branchId,
     });
   }
@@ -97,6 +111,9 @@ export async function resolveGrants(
 //   - Hierarchical match → a `branch`-scoped grant covers fellowship/
 //     department targets in the same branch, provided the caller passes
 //     the target's parent `branchId` on the scope object.
+//   - `church` targets take NO hierarchical match. The church contains every
+//     branch, not the other way round, so a branch grant must never satisfy a
+//     church-scoped check. Only a church grant (or systemRole admin) does.
 
 export function hasCapability(
   grants: readonly Grant[],
@@ -106,8 +123,10 @@ export function hasCapability(
 ): boolean {
   if (systemRole === 'admin') return true;
 
+  // A church target is never reachable by climbing the branch hierarchy, so
+  // it contributes no parent branch even if a caller passes one.
   const targetBranchId =
-    scope?.kind === 'branch' ? scope.id : scope?.branchId;
+    scope?.kind === 'church' ? undefined : scope?.kind === 'branch' ? scope.id : scope?.branchId;
 
   for (const grant of grants) {
     const caps = RoleCapabilities[grant.role];

@@ -1,20 +1,25 @@
-import { eq, and, or, asc, desc, ilike, inArray, sql, count } from 'drizzle-orm';
+import { eq, and, or, asc, desc, ilike, inArray, sql, count, lte } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   membershipCohorts,
-  membershipCohortTeachers,
+  membershipInterest,
   membershipSessions,
   membershipEnrollments,
   membershipSessionRecords,
   members,
   branches,
+  serviceAttendance,
 } from '@kairos/database';
 import type {
   AuthContext,
   MembershipGraduationReadiness,
   MembershipSessionNumber,
 } from '@kairos/types';
-import { evaluateGraduationReadiness } from '@kairos/types';
+import {
+  CHURCH_SCOPE,
+  MEMBERSHIP_INTEREST_WINDOW_DAYS,
+  evaluateGraduationReadiness,
+} from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
 import { setMembershipClassCompleted } from '../members/service';
@@ -24,8 +29,8 @@ import type {
   updateCohortSchema,
   listCohortsQuerySchema,
   upsertSessionSchema,
-  assignTeacherSchema,
-  enrolMembersSchema,
+  admitMembersSchema,
+  listInterestQuerySchema,
   saveSessionRecordsSchema,
   recordFinalTestSchema,
   recordInductionSchema,
@@ -36,52 +41,35 @@ import type {
 
 // ── Authority ─────────────────────────────────────────────────────────────
 //
-// Membership cohorts are CHURCH-WIDE, so the branch-scoped RBAC grants used
-// everywhere else in the API cannot express authority over them. Two rules
-// replace them:
+// Membership cohorts are CHURCH-WIDE, so the branch, fellowship and department
+// scopes used everywhere else in the API cannot express authority over them.
+// Migration 0048 added a fourth scope kind for exactly this — `church` — and
+// one role that uses it, `MembershipAdmin`, carrying `membership:admin`.
 //
-//   1. Cohort administration (create, edit, schedule, enrol others, graduate)
-//      is platform-admin only — `systemRole === 'admin'` is the only
-//      church-wide authority the model has.
-//   2. Marking (attendance, homework, quiz, final test, induction) is allowed
-//      for a platform admin OR anyone holding a `membership_cohort_teachers`
-//      row for that cohort. Teachership is the table, not a grant.
+// EVERY administrative action on this module is that one capability: creating
+// and editing cohorts, scheduling sessions, running the interest pool,
+// admitting people, marking, graduating. There is no read/write split,
+// because the surfaces a plain member needs (browse cohorts, express
+// interest, see their own progress) are gated on nothing at all.
 //
-// Do not "fix" this by inventing a branch-scoped MembershipTeacher grant: a
-// branch scope cannot describe a church-wide cohort.
+// Marking used to be delegated to a `membership_cohort_teachers` row. It is
+// not any more: admins mark. Teaching is per SESSION, not per cohort, because
+// different people teach different sessions of the same cohort — see
+// `membershipSessions.teacherId`. A session teacher gets no permissions from
+// being named there; it records who taught, nothing else.
+//
+// Do not reintroduce a branch-scoped membership role. A branch scope cannot
+// describe a church-wide cohort, which is the whole reason `church` exists.
 
-function enforceCohortAdmin(auth: AuthContext): void {
-  if (auth.systemRole !== 'admin') {
-    throw new ForbiddenError('Only platform admins can administer membership cohorts');
+function enforceMembershipAdmin(auth: AuthContext): void {
+  if (!authHasCapability(auth, 'membership:admin', CHURCH_SCOPE)) {
+    throw new ForbiddenError('Only membership admins can administer the membership class');
   }
 }
 
-async function isCohortTeacher(
-  db: Database,
-  cohortId: string,
-  memberId: string,
-): Promise<boolean> {
-  const [row] = await db
-    .select({ memberId: membershipCohortTeachers.memberId })
-    .from(membershipCohortTeachers)
-    .where(
-      and(
-        eq(membershipCohortTeachers.cohortId, cohortId),
-        eq(membershipCohortTeachers.memberId, memberId),
-      ),
-    )
-    .limit(1);
-  return !!row;
-}
-
-async function enforceCanMark(
-  db: Database,
-  auth: AuthContext,
-  cohortId: string,
-): Promise<void> {
-  if (auth.systemRole === 'admin') return;
-  if (await isCohortTeacher(db, cohortId, auth.memberId)) return;
-  throw new ForbiddenError('Only a teacher on this cohort can record marks');
+/** Whether the caller may see a whole roster / the pool, without throwing. */
+function isMembershipAdmin(auth: AuthContext): boolean {
+  return authHasCapability(auth, 'membership:admin', CHURCH_SCOPE);
 }
 
 // ── Cohorts ───────────────────────────────────────────────────────────────
@@ -115,10 +103,6 @@ export async function listCohorts(
         WHERE ${membershipEnrollments.cohortId} = ${membershipCohorts.id}
           AND ${membershipEnrollments.status} = 'graduated'
       )`,
-      teacherCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${membershipCohortTeachers}
-        WHERE ${membershipCohortTeachers.cohortId} = ${membershipCohorts.id}
-      )`,
       sessionCount: sql<number>`(
         SELECT COUNT(*)::int FROM ${membershipSessions}
         WHERE ${membershipSessions.cohortId} = ${membershipCohorts.id}
@@ -137,7 +121,6 @@ export async function listCohorts(
       ...r.cohort,
       enrolledCount: r.enrolledCount,
       graduatedCount: r.graduatedCount,
-      teacherCount: r.teacherCount,
       sessionCount: r.sessionCount,
     })),
     pagination: {
@@ -157,24 +140,11 @@ export async function getCohort(db: Database, _auth: AuthContext, cohortId: stri
     .limit(1);
   if (!cohort) throw new NotFoundError('Cohort not found');
 
-  const teachers = await db
-    .select({
-      cohortId: membershipCohortTeachers.cohortId,
-      memberId: membershipCohortTeachers.memberId,
-      role: membershipCohortTeachers.role,
-      assignedAt: membershipCohortTeachers.assignedAt,
-      memberFirstName: members.firstName,
-      memberLastName: members.lastName,
-      memberEmail: members.email,
-    })
-    .from(membershipCohortTeachers)
-    .innerJoin(members, eq(membershipCohortTeachers.memberId, members.id))
-    .where(eq(membershipCohortTeachers.cohortId, cohortId))
-    .orderBy(asc(membershipCohortTeachers.role), asc(members.lastName));
-
+  // Teachers come back on the sessions, not on the cohort: each session names
+  // whoever is teaching it, and that varies within a single cohort.
   const sessions = await listSessions(db, cohortId);
 
-  return { ...cohort, teachers, sessions };
+  return { ...cohort, sessions };
 }
 
 export async function createCohort(
@@ -182,7 +152,7 @@ export async function createCohort(
   auth: AuthContext,
   input: z.infer<typeof createCohortSchema>,
 ) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
   await assertNameFree(db, input.name, null);
 
   const [created] = await db
@@ -212,7 +182,7 @@ export async function updateCohort(
   cohortId: string,
   input: z.infer<typeof updateCohortSchema>,
 ) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
   const cohort = await requireCohort(db, cohortId);
   if (input.name && input.name.trim().toLowerCase() !== cohort.name.toLowerCase()) {
     await assertNameFree(db, input.name, cohortId);
@@ -248,7 +218,7 @@ export async function updateCohort(
 
 /** Soft delete, matching the rest of the codebase. History is never removed. */
 export async function archiveCohort(db: Database, auth: AuthContext, cohortId: string) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
   await requireCohort(db, cohortId);
 
   const [{ value: openCount } = { value: 0 }] = await db
@@ -274,58 +244,198 @@ export async function archiveCohort(db: Database, auth: AuthContext, cohortId: s
   return updated;
 }
 
-// ── Teachers ──────────────────────────────────────────────────────────────
+// ── The interest pool ─────────────────────────────────────────────────────
+//
+// Enrolment is not self-service. A member expresses interest, which puts them
+// in a church-wide pool belonging to no cohort, and an admin later admits
+// them into a specific intake. See `membershipInterest` in the schema.
 
-export async function assignTeacher(
-  db: Database,
-  auth: AuthContext,
-  cohortId: string,
-  input: z.infer<typeof assignTeacherSchema>,
-) {
-  enforceCohortAdmin(auth);
-  await requireCohort(db, cohortId);
+/**
+ * Settle the pool before anybody looks at it.
+ *
+ * Lapsing is materialised rather than computed at read time, which means it
+ * has to be driven by something. That something is this function, called at
+ * the top of every pool read and write. No cron: a scheduled sweep can fail
+ * to run and leave the table lying, whereas nothing can observe the pool here
+ * without first settling it.
+ *
+ * Idempotent, and cheap — `idx_membership_interest_expiry` is partial on
+ * `status = 'waiting'`, so settled rows are not even in the index.
+ */
+async function lapseExpiredInterest(db: Database): Promise<void> {
+  await db
+    .update(membershipInterest)
+    .set({ status: 'lapsed', updatedAt: sql`NOW()` })
+    .where(
+      and(
+        eq(membershipInterest.status, 'waiting'),
+        lte(membershipInterest.expiresAt, sql`NOW()`),
+      ),
+    );
+}
 
-  const [member] = await db
-    .select({ id: members.id })
-    .from(members)
-    .where(and(eq(members.id, input.memberId), eq(members.isActive, true)))
-    .limit(1);
-  if (!member) throw new NotFoundError('Member not found');
+/**
+ * Express interest in the membership class. The caller's own action; needs no
+ * capability, only an approved account.
+ *
+ * Re-expressing after a lapse or a withdrawal is a NEW row, not a revival of
+ * the old one. That is the point of the whole design: the wait restarts, so
+ * somebody who drifted away for a season does not silently keep their place
+ * in the queue ahead of people who have been turning up.
+ */
+export async function expressInterest(db: Database, auth: AuthContext) {
+  await lapseExpiredInterest(db);
 
-  const [row] = await db
-    .insert(membershipCohortTeachers)
-    .values({
-      cohortId,
-      memberId: input.memberId,
-      role: input.role ?? 'teacher',
-      assignedBy: auth.memberId,
+  const [me] = await db
+    .select({
+      homeBranchId: members.homeBranchId,
+      completedAt: members.membershipClassCompletedAt,
     })
-    .onConflictDoUpdate({
-      target: [membershipCohortTeachers.cohortId, membershipCohortTeachers.memberId],
-      set: { role: input.role ?? 'teacher' },
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
+  if (!me) throw new NotFoundError('Member not found');
+  if (me.completedAt) {
+    throw new ConflictError('You have already completed the membership class');
+  }
+
+  const [openEnrolment] = await db
+    .select({ id: membershipEnrollments.id })
+    .from(membershipEnrollments)
+    .where(
+      and(
+        eq(membershipEnrollments.memberId, auth.memberId),
+        eq(membershipEnrollments.status, 'enrolled'),
+      ),
+    )
+    .limit(1);
+  if (openEnrolment) {
+    throw new ConflictError('You are already enrolled in a membership cohort');
+  }
+
+  const [existing] = await db
+    .select({ id: membershipInterest.id })
+    .from(membershipInterest)
+    .where(
+      and(
+        eq(membershipInterest.memberId, auth.memberId),
+        eq(membershipInterest.status, 'waiting'),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    throw new ConflictError('You are already on the membership class list');
+  }
+
+  const [created] = await db
+    .insert(membershipInterest)
+    .values({
+      memberId: auth.memberId,
+      branchId: me.homeBranchId,
+      status: 'waiting',
+      expiresAt: sql`NOW() + ${`${MEMBERSHIP_INTEREST_WINDOW_DAYS} days`}::interval`,
     })
     .returning();
 
-  return row;
+  return created;
 }
 
-export async function removeTeacher(
-  db: Database,
-  auth: AuthContext,
-  cohortId: string,
-  memberId: string,
-) {
-  enforceCohortAdmin(auth);
-  await requireCohort(db, cohortId);
-  await db
-    .delete(membershipCohortTeachers)
+/** Take yourself back out of the pool. Terminal: re-joining makes a new row. */
+export async function withdrawInterest(db: Database, auth: AuthContext) {
+  await lapseExpiredInterest(db);
+
+  const [updated] = await db
+    .update(membershipInterest)
+    .set({ status: 'withdrawn', updatedAt: sql`NOW()` })
     .where(
       and(
-        eq(membershipCohortTeachers.cohortId, cohortId),
-        eq(membershipCohortTeachers.memberId, memberId),
+        eq(membershipInterest.memberId, auth.memberId),
+        eq(membershipInterest.status, 'waiting'),
       ),
+    )
+    .returning();
+  if (!updated) throw new NotFoundError('You are not on the membership class list');
+  return updated;
+}
+
+/**
+ * The admin's view of the pool.
+ *
+ * Carries `waitingDays` and `recentAttendanceCount` alongside each name
+ * because admission is a judgement call, not a queue: the admin needs to see
+ * both who has waited longest and who has actually been around lately.
+ * Ordered oldest-first so the longest wait leads.
+ */
+export async function listInterest(
+  db: Database,
+  auth: AuthContext,
+  query: z.infer<typeof listInterestQuerySchema>,
+) {
+  enforceMembershipAdmin(auth);
+  await lapseExpiredInterest(db);
+
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 25;
+
+  const conditions = [eq(membershipInterest.status, query.status ?? 'waiting')];
+  if (query.branchId) conditions.push(eq(membershipInterest.branchId, query.branchId));
+  if (query.search) {
+    const term = `%${query.search}%`;
+    conditions.push(
+      or(ilike(members.firstName, term), ilike(members.lastName, term)) ?? sql`TRUE`,
     );
-  return { removed: true };
+  }
+  const where = and(...conditions);
+
+  const rows = await db
+    .select({
+      interest: membershipInterest,
+      memberFirstName: members.firstName,
+      memberLastName: members.lastName,
+      memberEmail: members.email,
+      memberPhone: members.phone,
+      branchName: branches.branchName,
+      waitingDays: sql<number>`
+        EXTRACT(DAY FROM NOW() - ${membershipInterest.expressedAt})::int
+      `,
+      recentAttendanceCount: sql<number>`(
+        SELECT COUNT(*)::int FROM ${serviceAttendance}
+        WHERE ${serviceAttendance.memberId} = ${membershipInterest.memberId}
+          AND ${serviceAttendance.recordedAt} >= NOW() - INTERVAL '90 days'
+      )`,
+    })
+    .from(membershipInterest)
+    .innerJoin(members, eq(membershipInterest.memberId, members.id))
+    .leftJoin(branches, eq(membershipInterest.branchId, branches.id))
+    .where(where)
+    .orderBy(asc(membershipInterest.expressedAt))
+    .limit(limit)
+    .offset((page - 1) * limit);
+
+  const [total] = await db
+    .select({ value: count() })
+    .from(membershipInterest)
+    .innerJoin(members, eq(membershipInterest.memberId, members.id))
+    .where(where);
+
+  return {
+    interest: rows.map((r) => ({
+      ...r.interest,
+      memberFirstName: r.memberFirstName,
+      memberLastName: r.memberLastName,
+      memberEmail: r.memberEmail,
+      memberPhone: r.memberPhone,
+      branchName: r.branchName,
+      waitingDays: r.waitingDays,
+      recentAttendanceCount: r.recentAttendanceCount,
+    })),
+    pagination: {
+      page,
+      limit,
+      total: total?.value ?? 0,
+      totalPages: Math.ceil((total?.value ?? 0) / limit),
+    },
+  };
 }
 
 // ── Sessions ──────────────────────────────────────────────────────────────
@@ -361,7 +471,7 @@ export async function upsertSession(
   cohortId: string,
   input: z.infer<typeof upsertSessionSchema>,
 ) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
   await requireCohort(db, cohortId);
 
   const [row] = await db
@@ -391,44 +501,34 @@ export async function upsertSession(
   return row;
 }
 
-// ── Enrolment ─────────────────────────────────────────────────────────────
+// ── Admission ─────────────────────────────────────────────────────────────
 
 /**
- * Self-enrolment. Cohorts are church-wide and people sign up whenever they
- * want, so this is a first-class flow rather than an admin-only action.
+ * Admit people from the pool into a cohort. The ONLY way into a cohort.
+ *
+ * Members named here who hold a waiting pool entry have it closed as
+ * `admitted` in the same breath, so nobody sits in the pool and a cohort at
+ * once. Members with no pool entry are still admitted — that is the
+ * paper-signup case, where somebody put their name down in person — and their
+ * enrolment records `fromPool: false` to say so.
  */
-export async function enrolSelf(db: Database, auth: AuthContext, cohortId: string) {
-  const cohort = await requireCohort(db, cohortId);
-  if (!cohort.enrolmentOpen) {
-    throw new ConflictError('This cohort is not accepting enrolments');
-  }
-  if (cohort.status === 'completed' || cohort.status === 'cancelled') {
-    throw new ConflictError(`This cohort is ${cohort.status}`);
-  }
-  const [created] = await enrolMemberIds(db, cohortId, [auth.memberId], true);
-  return created;
-}
-
-export async function enrolMembers(
+export async function admitMembers(
   db: Database,
   auth: AuthContext,
   cohortId: string,
-  input: z.infer<typeof enrolMembersSchema>,
+  input: z.infer<typeof admitMembersSchema>,
 ) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
+  await lapseExpiredInterest(db);
+
   const cohort = await requireCohort(db, cohortId);
   if (cohort.status === 'completed' || cohort.status === 'cancelled') {
     throw new ConflictError(`This cohort is ${cohort.status}`);
   }
-  return enrolMemberIds(db, cohortId, input.memberIds, false);
-}
+  if (!cohort.enrolmentOpen) {
+    throw new ConflictError('This cohort is not accepting admissions');
+  }
 
-async function enrolMemberIds(
-  db: Database,
-  cohortId: string,
-  memberIds: string[],
-  selfEnrolled: boolean,
-) {
   const rows = await db
     .select({
       id: members.id,
@@ -436,21 +536,17 @@ async function enrolMemberIds(
       completedAt: members.membershipClassCompletedAt,
     })
     .from(members)
-    .where(and(inArray(members.id, memberIds), eq(members.isActive, true)));
+    .where(and(inArray(members.id, input.memberIds), eq(members.isActive, true)));
 
   if (rows.length === 0) throw new NotFoundError('No matching active members');
 
-  // Already a confirmed Member — enrolling them again would be a no-op at best
+  // Already a confirmed Member — admitting them again would be a no-op at best
   // and a duplicate certification at worst.
-  const alreadyConfirmed = rows.filter((r) => r.completedAt);
-  if (alreadyConfirmed.length > 0 && selfEnrolled) {
-    throw new ConflictError('You have already completed the membership class');
-  }
-
-  const enrollable = rows.filter((r) => !r.completedAt);
-  if (enrollable.length === 0) {
+  const admissible = rows.filter((r) => !r.completedAt);
+  if (admissible.length === 0) {
     throw new ConflictError('Every selected member has already completed the class');
   }
+  const admissibleIds = admissible.map((r) => r.id);
 
   // The partial unique index allows only one open enrolment per member, so a
   // member sitting in another cohort surfaces here rather than as a 500.
@@ -459,37 +555,65 @@ async function enrolMemberIds(
     .from(membershipEnrollments)
     .where(
       and(
-        inArray(
-          membershipEnrollments.memberId,
-          enrollable.map((r) => r.id),
-        ),
+        inArray(membershipEnrollments.memberId, admissibleIds),
         eq(membershipEnrollments.status, 'enrolled'),
         sql`${membershipEnrollments.cohortId} <> ${cohortId}`,
       ),
     );
   if (openElsewhere.length > 0) {
     throw new ConflictError(
-      selfEnrolled
-        ? 'You are already enrolled in another membership cohort'
-        : `${openElsewhere.length} selected member(s) are already enrolled in another cohort`,
+      `${openElsewhere.length} selected member(s) are already enrolled in another cohort`,
     );
   }
+
+  // Which of them came through the pool. Read before the update so the
+  // enrolment rows can record their provenance.
+  const waiting = await db
+    .select({ memberId: membershipInterest.memberId })
+    .from(membershipInterest)
+    .where(
+      and(
+        inArray(membershipInterest.memberId, admissibleIds),
+        eq(membershipInterest.status, 'waiting'),
+      ),
+    );
+  const fromPool = new Set(waiting.map((r) => r.memberId));
 
   const created = await db
     .insert(membershipEnrollments)
     .values(
-      enrollable.map((r) => ({
+      admissible.map((r) => ({
         cohortId,
         memberId: r.id,
         branchId: r.homeBranchId,
-        selfEnrolled,
+        fromPool: fromPool.has(r.id),
       })),
     )
-    // Re-enrolling into the same cohort is idempotent rather than an error.
+    // Re-admitting into the same cohort is idempotent rather than an error.
     .onConflictDoNothing({
       target: [membershipEnrollments.cohortId, membershipEnrollments.memberId],
     })
     .returning();
+
+  // Close the pool entries last: if the insert above threw, nobody has been
+  // taken out of the pool for an admission that never happened.
+  if (fromPool.size > 0) {
+    await db
+      .update(membershipInterest)
+      .set({
+        status: 'admitted',
+        admittedCohortId: cohortId,
+        admittedAt: sql`NOW()`,
+        admittedBy: auth.memberId,
+        updatedAt: sql`NOW()`,
+      })
+      .where(
+        and(
+          inArray(membershipInterest.memberId, [...fromPool]),
+          eq(membershipInterest.status, 'waiting'),
+        ),
+      );
+  }
 
   return created;
 }
@@ -513,11 +637,10 @@ export async function listEnrollments(
     );
   }
 
-  // A cohort is church-wide, but a non-admin leader should only see the people
-  // whose home branch they have authority over. Admins and cohort teachers see
-  // the whole roster, since teaching it requires seeing it.
-  const teaches = auth.systemRole === 'admin' || (await isCohortTeacher(db, cohortId, auth.memberId));
-  if (!teaches) {
+  // A cohort is church-wide, so only a membership admin sees the whole roster.
+  // A branch leader may see their own people on it and nobody else's, which is
+  // what the branch filter below narrows them to.
+  if (!isMembershipAdmin(auth)) {
     if (!authHasCapability(auth, 'branch:write')) {
       throw new ForbiddenError('You do not have access to this cohort roster');
     }
@@ -555,7 +678,7 @@ export async function withdrawEnrollment(
 ) {
   const enrollment = await requireEnrollment(db, enrollmentId);
   // A member may withdraw themselves; otherwise it is an admin action.
-  if (enrollment.memberId !== auth.memberId) enforceCohortAdmin(auth);
+  if (enrollment.memberId !== auth.memberId) enforceMembershipAdmin(auth);
   if (enrollment.status === 'graduated') {
     throw new ConflictError('A graduated enrolment cannot be withdrawn');
   }
@@ -588,7 +711,7 @@ export async function saveSessionRecords(
   input: z.infer<typeof saveSessionRecordsSchema>,
 ) {
   const session = await requireSession(db, sessionId);
-  await enforceCanMark(db, auth, session.cohortId);
+  enforceMembershipAdmin(auth);
   const cohort = await requireCohort(db, session.cohortId);
 
   const enrollmentIds = input.records.map((r) => r.enrollmentId);
@@ -671,7 +794,7 @@ export async function recordFinalTest(
   input: z.infer<typeof recordFinalTestSchema>,
 ) {
   const enrollment = await requireEnrollment(db, input.enrollmentId);
-  await enforceCanMark(db, auth, enrollment.cohortId);
+  enforceMembershipAdmin(auth);
   const cohort = await requireCohort(db, enrollment.cohortId);
 
   const takenAt = input.takenAt ? new Date(input.takenAt) : new Date();
@@ -696,7 +819,7 @@ export async function recordInduction(
   cohortId: string,
   input: z.infer<typeof recordInductionSchema>,
 ) {
-  await enforceCanMark(db, auth, cohortId);
+  enforceMembershipAdmin(auth);
   await requireCohort(db, cohortId);
 
   const updated = await db
@@ -780,17 +903,12 @@ export async function getEnrollmentDetail(
 ) {
   const enrollment = await requireEnrollment(db, enrollmentId);
 
-  // A member may always see their own progress. Everyone else needs to be an
-  // admin, a teacher on the cohort, or a leader over that member's branch.
-  if (enrollment.memberId !== auth.memberId) {
-    const teaches =
-      auth.systemRole === 'admin' ||
-      (await isCohortTeacher(db, enrollment.cohortId, auth.memberId));
-    if (!teaches) {
-      const sameBranch = !!enrollment.branchId && enrollment.branchId === auth.branchId;
-      if (!sameBranch || !authHasCapability(auth, 'branch:write')) {
-        throw new ForbiddenError('You do not have access to this enrolment');
-      }
+  // A member may always see their own progress. Everyone else needs to be a
+  // membership admin, or a leader over that member's home branch.
+  if (enrollment.memberId !== auth.memberId && !isMembershipAdmin(auth)) {
+    const sameBranch = !!enrollment.branchId && enrollment.branchId === auth.branchId;
+    if (!sameBranch || !authHasCapability(auth, 'branch:write')) {
+      throw new ForbiddenError('You do not have access to this enrolment');
     }
   }
 
@@ -830,7 +948,7 @@ export async function graduateMembers(
   cohortId: string,
   input: z.infer<typeof graduateSchema>,
 ) {
-  enforceCohortAdmin(auth);
+  enforceMembershipAdmin(auth);
   const cohort = await requireCohort(db, cohortId);
 
   const completedAt = input.completedAt
@@ -878,12 +996,30 @@ export async function graduateMembers(
 }
 
 /** A member's own view of where they are. Never gated. */
+/**
+ * Everything the caller's own membership screen needs in one call: their
+ * enrolment if they have one, their pool entry if they are waiting, and
+ * whether they are already a confirmed Member.
+ *
+ * `interest` is the most recent entry of any status, not just a waiting one,
+ * so the screen can say "your place lapsed in March" rather than silently
+ * showing the sign-up button again as though nothing had happened.
+ */
 export async function getMyMembership(db: Database, auth: AuthContext) {
+  await lapseExpiredInterest(db);
+
   const [enrollment] = await db
     .select()
     .from(membershipEnrollments)
     .where(eq(membershipEnrollments.memberId, auth.memberId))
     .orderBy(desc(membershipEnrollments.enrolledAt))
+    .limit(1);
+
+  const [interest] = await db
+    .select()
+    .from(membershipInterest)
+    .where(eq(membershipInterest.memberId, auth.memberId))
+    .orderBy(desc(membershipInterest.expressedAt))
     .limit(1);
 
   const [member] = await db
@@ -892,15 +1028,18 @@ export async function getMyMembership(db: Database, auth: AuthContext) {
     .where(eq(members.id, auth.memberId))
     .limit(1);
 
+  const confirmedAt = member?.completedAt ?? null;
+
   if (!enrollment) {
-    return { enrollment: null, readiness: null, confirmedAt: member?.completedAt ?? null };
+    return { enrollment: null, readiness: null, interest: interest ?? null, confirmedAt };
   }
 
   const detail = await getEnrollmentDetail(db, auth, enrollment.id);
   return {
     enrollment: detail,
     readiness: detail.readiness,
-    confirmedAt: member?.completedAt ?? null,
+    interest: interest ?? null,
+    confirmedAt,
   };
 }
 

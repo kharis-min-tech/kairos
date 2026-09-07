@@ -25,8 +25,8 @@ import { branches } from './branches';
 //
 // BRANCH ISOLATION EXCEPTION — READ BEFORE "FIXING" THIS.
 // `membershipCohorts` has NO branchId on purpose. Membership classes run
-// church-wide rather than per branch, so a cohort is a global row any approved
-// member may enrol in. This is a deliberate product decision, not an
+// church-wide rather than per branch, so a cohort is a global row rather than
+// one belonging to a branch. This is a deliberate product decision, not an
 // oversight. Branch reporting survives because the member's home branch is
 // denormalised onto `membershipEnrollments.branchId` at enrolment.
 //
@@ -54,8 +54,9 @@ export const membershipCohorts = pgTable(
     finalTestDeadline: date('final_test_deadline'),
     status: varchar('status', { length: 20 }).notNull().default('planned'),
     /**
-     * Whether members can self-enrol right now. Separate from `status` so an
-     * already-running cohort can be closed to late joiners.
+     * Whether admissions into this cohort are open. Separate from `status` so
+     * an already-running cohort can be closed to late joiners. Enrolment is
+     * never self-service: see `membershipInterest` for how people get in.
      */
     enrolmentOpen: boolean('enrolment_open').notNull().default(true),
     /**
@@ -84,30 +85,62 @@ export const membershipCohorts = pgTable(
 );
 
 // ============================================================================
-// MEMBERSHIP_COHORT_TEACHERS
-// Many teachers per cohort; no mentors (that is the new believers shape).
+// MEMBERSHIP_INTEREST
+// The pool. Migration 0048.
 //
-// This table is the authority model for teaching. Cohorts are church-wide, so
-// no branch-scoped RBAC grant can express "teaches this cohort" — marking
-// permission is a membership test against these rows instead.
+// Enrolment is NOT self-service. Expressing interest puts a member in this
+// pool, which belongs to no cohort — you join it before there is an intake to
+// join. A Membership Admin later admits people from the pool into a specific
+// cohort, which is what creates the `membershipEnrollments` row.
+//
+// The gap between the two stages is the whole point. Someone who expressed
+// interest and then stopped attending for a season must not roll silently
+// into the next intake, so entries carry an expiry and lapse on their own.
 // ============================================================================
-export const membershipCohortTeachers = pgTable(
-  'membership_cohort_teachers',
+export const membershipInterest = pgTable(
+  'membership_interest',
   {
-    cohortId: uuid('cohort_id')
-      .notNull()
-      .references(() => membershipCohorts.id, { onDelete: 'cascade' }),
+    id: uuid('id').defaultRandom().primaryKey(),
     memberId: uuid('member_id')
       .notNull()
       .references(() => members.id, { onDelete: 'cascade' }),
-    role: varchar('role', { length: 20 }).notNull().default('teacher'),
-    assignedAt: timestamp('assigned_at').defaultNow().notNull(),
-    assignedBy: uuid('assigned_by').references(() => members.id, { onDelete: 'set null' }),
+    /**
+     * Denormalised from `members.homeBranchId` when interest is expressed,
+     * for the same reason `membershipEnrollments` carries it: the pool is
+     * church-wide, so this is a branch leader's only handle on it.
+     */
+    branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'set null' }),
+    status: varchar('status', { length: 20 }).notNull().default('waiting'),
+    expressedAt: timestamp('expressed_at').defaultNow().notNull(),
+    /**
+     * When this entry stops counting as waiting. Stored per row rather than
+     * derived from a constant, so changing the window later cannot
+     * retroactively lapse or revive anybody.
+     *
+     * The lapse is MATERIALISED, not computed at read time: the service runs
+     * `lapseExpiredInterest` before any pool read or write. That keeps the
+     * partial unique index below honest (an expired 'waiting' row would
+     * otherwise block the member from re-expressing interest) and needs no
+     * cron that could silently stop running.
+     */
+    expiresAt: timestamp('expires_at').notNull(),
+    admittedCohortId: uuid('admitted_cohort_id').references(() => membershipCohorts.id, {
+      onDelete: 'set null',
+    }),
+    admittedAt: timestamp('admitted_at'),
+    admittedBy: uuid('admitted_by').references(() => members.id, { onDelete: 'set null' }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.cohortId, table.memberId] }),
-    index('idx_membership_cohort_teachers_member_id').on(table.memberId),
-    sql`CHECK (role IN ('lead', 'teacher'))`,
+    index('idx_membership_interest_member_id').on(table.memberId),
+    index('idx_membership_interest_branch_id').on(table.branchId),
+    index('idx_membership_interest_status').on(table.status),
+    // The expiry index and the one-live-entry-per-member partial unique index
+    // both live in migration 0048 (Drizzle can't express their WHERE clauses).
+    sql`CHECK (status IN ('waiting', 'admitted', 'lapsed', 'withdrawn'))`,
+    sql`CHECK (expires_at > expressed_at)`,
   ],
 );
 
@@ -159,8 +192,12 @@ export const membershipEnrollments = pgTable(
     branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'set null' }),
     status: varchar('status', { length: 20 }).notNull().default('enrolled'),
     enrolledAt: timestamp('enrolled_at').defaultNow().notNull(),
-    /** TRUE when the member enrolled themselves rather than an admin doing it. */
-    selfEnrolled: boolean('self_enrolled').notNull().default(false),
+    /**
+     * TRUE when the member reached this cohort through the interest pool,
+     * FALSE when an admin added them directly (the paper-signup case).
+     * Renamed from `self_enrolled` in 0048; self-enrolment no longer exists.
+     */
+    fromPool: boolean('from_pool').notNull().default(false),
     /**
      * Final test. `passed` is derived against the cohort's pass mark at write
      * time and stored, so historical results survive a later change to the mark.
@@ -228,25 +265,31 @@ export const membershipCohortsRelations = relations(membershipCohorts, ({ one, m
     fields: [membershipCohorts.createdBy],
     references: [members.id],
   }),
-  teachers: many(membershipCohortTeachers),
   sessions: many(membershipSessions),
   enrollments: many(membershipEnrollments),
+  admittedFrom: many(membershipInterest),
 }));
 
-export const membershipCohortTeachersRelations = relations(
-  membershipCohortTeachers,
-  ({ one }) => ({
-    cohort: one(membershipCohorts, {
-      fields: [membershipCohortTeachers.cohortId],
-      references: [membershipCohorts.id],
-    }),
-    member: one(members, {
-      fields: [membershipCohortTeachers.memberId],
-      references: [members.id],
-      relationName: 'membershipTeacher',
-    }),
+export const membershipInterestRelations = relations(membershipInterest, ({ one }) => ({
+  member: one(members, {
+    fields: [membershipInterest.memberId],
+    references: [members.id],
+    relationName: 'membershipInterested',
   }),
-);
+  branch: one(branches, {
+    fields: [membershipInterest.branchId],
+    references: [branches.id],
+  }),
+  admittedCohort: one(membershipCohorts, {
+    fields: [membershipInterest.admittedCohortId],
+    references: [membershipCohorts.id],
+  }),
+  admittedByMember: one(members, {
+    fields: [membershipInterest.admittedBy],
+    references: [members.id],
+    relationName: 'membershipAdmitter',
+  }),
+}));
 
 export const membershipSessionsRelations = relations(membershipSessions, ({ one, many }) => ({
   cohort: one(membershipCohorts, {
@@ -300,7 +343,8 @@ export const membershipSessionRecordsRelations = relations(
 
 export type MembershipCohort = typeof membershipCohorts.$inferSelect;
 export type NewMembershipCohort = typeof membershipCohorts.$inferInsert;
-export type MembershipCohortTeacher = typeof membershipCohortTeachers.$inferSelect;
+export type MembershipInterestRow = typeof membershipInterest.$inferSelect;
+export type NewMembershipInterestRow = typeof membershipInterest.$inferInsert;
 export type MembershipSession = typeof membershipSessions.$inferSelect;
 export type MembershipEnrollment = typeof membershipEnrollments.$inferSelect;
 export type MembershipSessionRecord = typeof membershipSessionRecords.$inferSelect;

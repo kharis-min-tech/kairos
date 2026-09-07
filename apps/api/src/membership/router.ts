@@ -8,8 +8,8 @@ import {
   updateCohortSchema,
   listCohortsQuerySchema,
   upsertSessionSchema,
-  assignTeacherSchema,
-  enrolMembersSchema,
+  admitMembersSchema,
+  listInterestQuerySchema,
   saveSessionRecordsSchema,
   recordFinalTestSchema,
   recordInductionSchema,
@@ -23,11 +23,11 @@ import {
   createCohort,
   updateCohort,
   archiveCohort,
-  assignTeacher,
-  removeTeacher,
   upsertSession,
-  enrolSelf,
-  enrolMembers,
+  expressInterest,
+  withdrawInterest,
+  listInterest,
+  admitMembers,
   listEnrollments,
   withdrawEnrollment,
   saveSessionRecords,
@@ -42,13 +42,46 @@ export const membershipRouter = new Hono();
 
 membershipRouter.use('*', authMiddleware);
 
-// ── Caller's own progress ─────────────────────────────────────────────────
+// Authority is enforced in the service rather than by `requireCapability`
+// here. The gate is `membership:admin` at CHURCH_SCOPE for every admin
+// action, and several routes mix an admin path with a self-service one on the
+// same handler (withdrawing your own enrolment, reading your own progress) —
+// which a route-level middleware cannot express. See service.ts's authority
+// block.
+
+// ── Caller's own membership ───────────────────────────────────────────────
 // Static paths must sit ABOVE any `/:id` route (apps/api/CLAUDE.md).
 
 membershipRouter.get('/me', async (c) => {
   const auth = getAuth(c);
   return c.json(successResponse(await getMyMembership(db, auth)));
 });
+
+// ── The interest pool ─────────────────────────────────────────────────────
+// Enrolment is not self-service. Expressing interest puts a member in a
+// church-wide pool; an admin later admits them into a cohort.
+
+/** Join the pool. The caller's own action, open to any approved member. */
+membershipRouter.post('/interest', async (c) => {
+  const auth = getAuth(c);
+  return c.json(successResponse(await expressInterest(db, auth)), 201);
+});
+
+/** Leave the pool. Terminal — re-joining later starts a fresh wait. */
+membershipRouter.delete('/interest', async (c) => {
+  const auth = getAuth(c);
+  return c.json(successResponse(await withdrawInterest(db, auth)));
+});
+
+/** The admin's view of who is waiting. */
+membershipRouter.get(
+  '/interest',
+  zValidator('query', listInterestQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    return c.json(successResponse(await listInterest(db, auth, c.req.valid('query'))));
+  },
+);
 
 // ── Cohorts ───────────────────────────────────────────────────────────────
 
@@ -87,32 +120,11 @@ membershipRouter.delete('/cohorts/:id', async (c) => {
   return c.json(successResponse(await archiveCohort(db, auth, c.req.param('id'))));
 });
 
-// ── Teachers ──────────────────────────────────────────────────────────────
-
-membershipRouter.post(
-  '/cohorts/:id/teachers',
-  zValidator('json', assignTeacherSchema),
-  async (c) => {
-    const auth = getAuth(c);
-    return c.json(
-      successResponse(await assignTeacher(db, auth, c.req.param('id'), c.req.valid('json'))),
-      201,
-    );
-  },
-);
-
-membershipRouter.delete('/cohorts/:id/teachers/:memberId', async (c) => {
-  const auth = getAuth(c);
-  return c.json(
-    successResponse(
-      await removeTeacher(db, auth, c.req.param('id'), c.req.param('memberId')),
-    ),
-  );
-});
-
 // ── Sessions ──────────────────────────────────────────────────────────────
 // Upsert by session number: there is exactly one session 3 per cohort, so
-// scheduling it twice moves it rather than duplicating it.
+// scheduling it twice moves it rather than duplicating it. `teacherId` names
+// whoever is teaching that one session, which varies within a cohort and
+// confers no permissions.
 
 membershipRouter.put(
   '/cohorts/:id/sessions',
@@ -125,21 +137,15 @@ membershipRouter.put(
   },
 );
 
-// ── Enrolment ─────────────────────────────────────────────────────────────
-
-/** Self-enrolment. People sign up whenever they want; no admin needed. */
-membershipRouter.post('/cohorts/:id/enrol', async (c) => {
-  const auth = getAuth(c);
-  return c.json(successResponse(await enrolSelf(db, auth, c.req.param('id'))), 201);
-});
+// ── Admission ─────────────────────────────────────────────────────────────
 
 membershipRouter.post(
-  '/cohorts/:id/enrollments',
-  zValidator('json', enrolMembersSchema),
+  '/cohorts/:id/admit',
+  zValidator('json', admitMembersSchema),
   async (c) => {
     const auth = getAuth(c);
     return c.json(
-      successResponse(await enrolMembers(db, auth, c.req.param('id'), c.req.valid('json'))),
+      successResponse(await admitMembers(db, auth, c.req.param('id'), c.req.valid('json'))),
       201,
     );
   },
@@ -160,7 +166,7 @@ membershipRouter.get(
 
 // ── Marking ───────────────────────────────────────────────────────────────
 // One bulk write per session: attendance plus homework and quiz marks for the
-// whole roster, matching how a teacher works through a register.
+// whole roster, matching how an admin works through a register.
 
 membershipRouter.put(
   '/sessions/:sessionId/records',

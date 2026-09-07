@@ -15,13 +15,17 @@ import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import postgres from 'postgres';
 
-/** Tables migration 0047 introduces. All five must exist for membership to work. */
+/**
+ * Tables the membership module needs. 0047 introduced the first four (plus
+ * `membership_cohort_teachers`, which 0048 drops again once marking became an
+ * admin action); 0048 adds `membership_interest`, the pre-cohort pool.
+ */
 const MEMBERSHIP_TABLES = [
   'membership_cohorts',
-  'membership_cohort_teachers',
   'membership_sessions',
   'membership_enrollments',
   'membership_session_records',
+  'membership_interest',
 ];
 
 async function main() {

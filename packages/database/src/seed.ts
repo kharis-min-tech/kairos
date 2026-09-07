@@ -526,6 +526,7 @@ async function seed() {
     departmentDeputyRole,
     /* newBelieversMentorRole */,
     /* newBelieversTeacherRole */,
+    membershipAdminRole,
   ] = await db
     .insert(roles)
     .values([
@@ -565,9 +566,16 @@ async function seed() {
         roleName: 'New Believers Teacher',
         description: 'Teaches new-believer sessions in a branch. Authority is branch-scoped.',
       },
+      // The only CHURCH-scoped role. Membership cohorts run church-wide, so no
+      // branch grant can describe authority over one — see migration 0048.
+      {
+        roleName: 'Membership Admin',
+        description:
+          'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.',
+      },
     ])
     .returning();
-  console.log(`✓ 12 roles`);
+  console.log(`✓ 13 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -939,6 +947,28 @@ async function seed() {
     { memberId: pastorKumasi!.id, roleId: branchSystemAdminRole!.id, branchId: kumasi!.id, scopeKind: 'branch', scopeId: kumasi!.id },
   ]);
   console.log(`✓ 5 branch system admin assignments`);
+
+  // ── 5a-ii. Membership Admin (church-scoped) ─────────────────
+  // The demo case the church scope exists for: someone who runs the
+  // membership class across the whole church WITHOUT being a platform admin
+  // or holding branch authority. Sarah is a branch leader in London, so we
+  // use a plain member instead to prove the grant stands on its own.
+  //
+  // Church grants store the nil UUID in scope_id (the column is NOT NULL and
+  // a church scope has no entity to point at) and the grantee's home branch
+  // in branch_id, which is only a query handle. See migration 0048.
+  await db.insert(memberRoles).values([
+    {
+      memberId: regularMembers[0]!.id,
+      roleId: membershipAdminRole!.id,
+      branchId: london!.id,
+      scopeKind: 'church',
+      // The nil UUID. Mirrors CHURCH_SCOPE_ID in @kairos/types, inlined
+      // because this package sits below @kairos/types and must not import it.
+      scopeId: '00000000-0000-0000-0000-000000000000',
+    },
+  ]);
+  console.log(`✓ 1 membership admin assignment (church-scoped)`);
 
   // ── 5b. Minor health record ─────────────────────────────────
   // Health/safeguarding record for Lily (the seeded child). Visible only to

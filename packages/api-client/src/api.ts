@@ -152,7 +152,8 @@ import type {
 import type {
   MembershipCohort,
   MembershipCohortSummary,
-  MembershipCohortTeacher,
+  MembershipInterest,
+  MembershipInterestWithMember,
   MembershipSession,
   MembershipEnrollment,
   MembershipEnrollmentWithMember,
@@ -161,8 +162,8 @@ import type {
   CreateMembershipCohortRequest,
   UpdateMembershipCohortRequest,
   UpsertMembershipSessionRequest,
-  AssignMembershipTeacherRequest,
-  EnrolMembersRequest,
+  AdmitMembersRequest,
+  ListMembershipInterestQuery,
   SaveMembershipSessionRecordsRequest,
   RecordFinalTestRequest,
   RecordInductionRequest,
@@ -1155,15 +1156,51 @@ export function createApiClient(
     // Membership classes. Cohorts are church-wide, so nothing here takes a
     // branchId — see packages/database/src/schema/membership.ts.
     membership: {
-      /** The caller's own progress. Always allowed, never gated. */
+      /**
+       * The caller's own membership. Always allowed, never gated.
+       *
+       * `interest` is their most recent pool entry of ANY status, so the
+       * screen can say "your place lapsed" rather than silently offering the
+       * sign-up button again as though nothing had happened.
+       */
       me: () =>
         client.get<
           ApiResponse<{
             enrollment: MembershipEnrollmentDetail | null;
             readiness: MembershipGraduationReadiness | null;
+            interest: MembershipInterest | null;
             confirmedAt: string | null;
           }>
         >('/api/membership/me'),
+
+      /**
+       * The interest pool. Enrolment is not self-service: a member expresses
+       * interest here and an admin later admits them into a cohort.
+       */
+      interest: {
+        /** Join the pool. The caller's own action; needs no capability. */
+        express: () =>
+          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', {}),
+        /** Leave the pool. Terminal — re-joining later starts a fresh wait. */
+        withdraw: () =>
+          client.delete<ApiResponse<MembershipInterest>>('/api/membership/interest'),
+        /** The admin's view of who is waiting. Defaults to status=waiting. */
+        list: (params?: ListMembershipInterestQuery) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.search) qs.set('search', params.search);
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          const q = qs.toString();
+          return client.get<
+            ApiResponse<{
+              interest: MembershipInterestWithMember[];
+              pagination: { page: number; limit: number; total: number; totalPages: number };
+            }>
+          >(`/api/membership/interest${q ? `?${q}` : ''}`);
+        },
+      },
 
       cohorts: {
         list: (params?: {
@@ -1188,15 +1225,12 @@ export function createApiClient(
             }>
           >(`/api/membership/cohorts${q ? `?${q}` : ''}`);
         },
+        // Teachers come back on the sessions, not the cohort: each session
+        // names whoever taught it, and that varies within one cohort.
         get: (id: string) =>
-          client.get<
-            ApiResponse<
-              MembershipCohort & {
-                teachers: MembershipCohortTeacher[];
-                sessions: MembershipSession[];
-              }
-            >
-          >(`/api/membership/cohorts/${id}`),
+          client.get<ApiResponse<MembershipCohort & { sessions: MembershipSession[] }>>(
+            `/api/membership/cohorts/${id}`,
+          ),
         create: (data: CreateMembershipCohortRequest) =>
           client.post<ApiResponse<MembershipCohort>>('/api/membership/cohorts', data),
         update: (id: string, data: UpdateMembershipCohortRequest) =>
@@ -1204,32 +1238,24 @@ export function createApiClient(
         archive: (id: string) =>
           client.delete<ApiResponse<MembershipCohort>>(`/api/membership/cohorts/${id}`),
 
-        assignTeacher: (id: string, data: AssignMembershipTeacherRequest) =>
-          client.post<ApiResponse<MembershipCohortTeacher>>(
-            `/api/membership/cohorts/${id}/teachers`,
-            data,
-          ),
-        removeTeacher: (id: string, memberId: string) =>
-          client.delete<ApiResponse<{ removed: boolean }>>(
-            `/api/membership/cohorts/${id}/teachers/${memberId}`,
-          ),
-
-        /** Upsert by session number: one session 3 per cohort, always. */
+        /**
+         * Upsert by session number: one session 3 per cohort, always.
+         * `teacherId` names whoever is teaching that single session and
+         * confers no permissions.
+         */
         saveSession: (id: string, data: UpsertMembershipSessionRequest) =>
           client.put<ApiResponse<MembershipSession>>(
             `/api/membership/cohorts/${id}/sessions`,
             data,
           ),
 
-        /** Self-enrolment. No admin involved. */
-        enrolSelf: (id: string) =>
-          client.post<ApiResponse<MembershipEnrollment>>(
-            `/api/membership/cohorts/${id}/enrol`,
-            {},
-          ),
-        enrolMembers: (id: string, data: EnrolMembersRequest) =>
+        /**
+         * Admit people into this cohort. The only way in. Named members who
+         * hold a waiting pool entry have it closed in the same call.
+         */
+        admit: (id: string, data: AdmitMembersRequest) =>
           client.post<ApiResponse<MembershipEnrollment[]>>(
-            `/api/membership/cohorts/${id}/enrollments`,
+            `/api/membership/cohorts/${id}/admit`,
             data,
           ),
         enrollments: (

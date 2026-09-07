@@ -60,8 +60,14 @@ export function useCapabilities() {
       // Admin shim — matches the server's hasCapability.
       if (systemRole === 'admin') return true;
 
+      // A church target takes no hierarchical match: the church contains every
+      // branch, not the reverse, so a branch grant must never satisfy it.
       const targetBranchId =
-        scope?.kind === 'branch' ? scope.id : scope?.branchId;
+        scope?.kind === 'church'
+          ? undefined
+          : scope?.kind === 'branch'
+            ? scope.id
+            : scope?.branchId;
 
       for (const grant of grants) {
         if (!RoleCapabilities[grant.role].includes(cap)) continue;

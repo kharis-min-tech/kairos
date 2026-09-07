@@ -64,10 +64,29 @@ export type MyDataExport = Record<string, unknown> & { exportedAt: string };
 
 // RoleScope narrows authority to a specific entity. Stamped into the JWT
 // alongside each grant; the client decodes it for UI affordances.
+//
+// `church` is the one scope that names no entity, because there is only one
+// church. It exists for authority over church-wide surfaces that no branch,
+// fellowship or department contains — membership cohorts being the first.
+// It still carries an `id` so the union stays uniform and every consumer can
+// read `scope.id` without narrowing, but that id is always CHURCH_SCOPE_ID.
 export type RoleScope =
   | { kind: 'branch'; id: string }
   | { kind: 'fellowship'; id: string }
-  | { kind: 'department'; id: string };
+  | { kind: 'department'; id: string }
+  | { kind: 'church'; id: string };
+
+/**
+ * The sentinel `scope_id` every church-scoped grant carries.
+ *
+ * `member_roles.scope_id` is a NOT NULL uuid and a church scope has nothing to
+ * point at, so church grants store the nil UUID. Never dereference it: it is a
+ * placeholder, not a foreign key, and no row anywhere carries this id.
+ */
+export const CHURCH_SCOPE_ID = '00000000-0000-0000-0000-000000000000';
+
+/** The only well-formed church scope. */
+export const CHURCH_SCOPE: RoleScope = { kind: 'church', id: CHURCH_SCOPE_ID };
 
 export interface LoginResponse {
   tokens: AuthTokens;
