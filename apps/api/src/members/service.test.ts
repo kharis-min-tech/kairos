@@ -356,6 +356,91 @@ describe('assignRole', () => {
       .rejects.toThrow('Member already has this role in this branch');
   });
 
+  // ── Scope shape is derived from the role, not assumed ────
+  //
+  // This used to hardcode `scopeKind: 'branch'`, which was true of every role
+  // until the church scope arrived. Granting a church-scoped role then wrote a
+  // branch-scoped row that `resolveGrants` turns into a grant matching
+  // NOTHING: the UI reported success and the grantee stayed locked out, with
+  // no error anywhere to explain it. Silent, so it needs a test.
+
+  it('writes a CHURCH scope for Membership Admin, not a branch one', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Membership Admin' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('church');
+    // The nil UUID: a church scope names no entity.
+    expect(written['scopeId']).toBe('00000000-0000-0000-0000-000000000000');
+    // branchId stays the supplied branch — a query handle, not the reach.
+    expect(written['branchId']).toBe(branchId);
+  });
+
+  it('still writes a branch scope for a branch-scoped role', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Branch System Admin' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('branch');
+    expect(written['scopeId']).toBe(branchId);
+  });
+
+  it('treats an unmapped operational role as branch-scoped', async () => {
+    // "Worship Lead" and friends carry no authority and are not in the
+    // FunctionalRole catalog. They keep the shape they have always had.
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Worship Lead' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('branch');
+  });
+
+  it('refuses a fellowship-scoped role here, since it has no fellowship to scope to', async () => {
+    setupSelectSequence([{ id: memberId }], [{ id: roleId, roleName: 'Fellowship Leader' }]);
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId }, adminAuth),
+    ).rejects.toThrow(/scoped to a fellowship/);
+  });
+
+  it('reports a duplicate church grant in church terms', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Membership Admin' }],
+      [{ id: branchId }],
+      [{ id: 'existing-id' }],
+    );
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId }, adminAuth),
+    ).rejects.toThrow('Member already has this church-wide role');
+  });
+
   it('refuses cross-branch assignment from a branch-scoped admin', async () => {
     const otherBranchId = '550e8400-0000-0000-0000-0000000000ff';
     const scopedAuth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };

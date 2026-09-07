@@ -4,11 +4,11 @@ import type { Database } from '@kairos/database';
 import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
-import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
+import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
-import { authHasCapability } from '../lib/grants';
+import { authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
@@ -560,10 +560,37 @@ export async function assignRole(
 
   // Verify role exists
   const [role] = await db
-    .select({ id: roles.id })
+    .select({ id: roles.id, roleName: roles.roleName })
     .from(roles)
     .where(and(eq(roles.id, input.roleId), eq(roles.isActive, true)));
   if (!role) throw new ValidationError('Role not found or inactive');
+
+  // What scope shape does this role actually take?
+  //
+  // This used to be hardcoded to 'branch', which was true of every role until
+  // the church scope arrived. Granting a church-scoped role through this
+  // endpoint then wrote a branch-scoped row, which `resolveGrants` resolves
+  // into a grant that matches NOTHING — the UI would report success and the
+  // grantee would still be locked out, with no error anywhere to explain it.
+  //
+  // Derive it from the catalog instead, so a future church-scoped role works
+  // here the day it is added. Unmapped role names (operational roles like
+  // "Worship Lead", which carry no authority) keep the branch shape they have
+  // always had.
+  const functionalRole = DB_ROLE_NAME_TO_FUNCTIONAL[role.roleName];
+  const scopeKind = functionalRole ? RoleScopeKind[functionalRole] : 'branch';
+  if (scopeKind === 'fellowship' || scopeKind === 'department') {
+    // Those grants are written through by the fellowship/department services
+    // when a leader is set, not assigned by hand here — this endpoint has no
+    // fellowship or department id to scope them to.
+    throw new ValidationError(
+      `${role.roleName} is scoped to a ${scopeKind} and is assigned from that ${scopeKind}, not here`,
+    );
+  }
+  // A church scope names no entity, so it stores the nil-UUID sentinel.
+  // `branchId` stays the caller-supplied branch: on a church grant it is only
+  // a query handle ("whose grants are in branch B"), never the grant's reach.
+  const scopeId = scopeKind === 'church' ? CHURCH_SCOPE_ID : input.branchId;
 
   // Verify branch exists
   const [branch] = await db
@@ -572,7 +599,10 @@ export async function assignRole(
     .where(and(eq(branches.id, input.branchId), eq(branches.isActive, true)));
   if (!branch) throw new ValidationError('Branch not found or inactive');
 
-  // Check for active duplicate
+  // Check for active duplicate. Keyed on the SCOPE, not on branchId: two
+  // church grants for the same member are duplicates even when their
+  // (incidental) branch ids differ, and `uq_member_roles_active_assignment`
+  // would reject the second insert as a 500 rather than a clean conflict.
   const [existing] = await db
     .select({ id: memberRoles.id })
     .from(memberRoles)
@@ -580,11 +610,18 @@ export async function assignRole(
       and(
         eq(memberRoles.memberId, memberId),
         eq(memberRoles.roleId, input.roleId),
-        eq(memberRoles.branchId, input.branchId),
+        eq(memberRoles.scopeKind, scopeKind),
+        eq(memberRoles.scopeId, scopeId),
         eq(memberRoles.isActive, true),
       ),
     );
-  if (existing) throw new ConflictError('Member already has this role in this branch');
+  if (existing) {
+    throw new ConflictError(
+      scopeKind === 'church'
+        ? 'Member already has this church-wide role'
+        : 'Member already has this role in this branch',
+    );
+  }
 
   const [assignment] = await db
     .insert(memberRoles)
@@ -592,8 +629,8 @@ export async function assignRole(
       memberId,
       roleId: input.roleId,
       branchId: input.branchId,
-      scopeKind: 'branch',
-      scopeId: input.branchId,
+      scopeKind,
+      scopeId,
       notes: input.notes ?? null,
     })
     .returning();
