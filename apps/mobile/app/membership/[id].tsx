@@ -416,7 +416,7 @@ function Graduation({
         'Graduation',
         blocked === 0
           ? `${res.graduated} graduated.`
-          : `${res.graduated} graduated. ${blocked} not yet eligible — open the web dashboard to see why.`,
+          : `${res.graduated} graduated. ${blocked} not yet eligible. Open the web dashboard to see why.`,
       );
     },
     onError: (e: unknown) =>
