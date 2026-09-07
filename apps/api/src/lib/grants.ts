@@ -18,7 +18,11 @@ import {
 // Operational/volunteer roles in the same table (e.g. "Worship Lead",
 // "Media Team") aren't authority bundles — they're skipped here.
 
-const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
+/**
+ * Exported so role ASSIGNMENT can ask what scope shape a role takes, rather
+ * than assuming 'branch' — see assignRole in members/service.ts.
+ */
+export const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'Branch System Admin': FunctionalRole.BranchAdmin,
   'Branch Data Admin': FunctionalRole.BranchDataAdmin,
   'Safeguarding Lead': FunctionalRole.SafeguardingLead,
