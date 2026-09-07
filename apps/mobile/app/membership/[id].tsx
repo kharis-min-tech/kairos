@@ -17,6 +17,10 @@ import {
   CheckCircle2,
   ClipboardCheck,
   GraduationCap,
+  TriangleAlert,
+  UserMinus,
+  Pencil,
+  CalendarPlus,
 } from 'lucide-react-native';
 import {
   Card,
@@ -31,7 +35,11 @@ import {
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { CHURCH_SCOPE } from '@kairos/types';
-import type { MembershipEnrollmentWithMember, MembershipSession } from '@kairos/types';
+import type {
+  MembershipEnrollmentWithMember,
+  MembershipSession,
+  MembershipWithdrawnReason,
+} from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
@@ -41,10 +49,14 @@ type Tab = 'roster' | 'sessions' | 'graduation';
 /**
  * Cohort detail on a phone. Membership-admin only.
  *
- * The register is why this screen exists on mobile at all: marking attendance
- * and coursework happens in the room, with a phone in hand, not afterwards at
- * a desk. Cohort creation and editing stay on the web dashboard, where a form
- * that long belongs.
+ * A membership admin can run the whole programme from here — nothing needs a
+ * desk. This screen holds the roster (final-test marks, withdrawal), the
+ * sessions and their registers, and graduation including the override. Cohort
+ * details and session scheduling are one tap away in `edit/[id]` and
+ * `[id]/sessions`.
+ *
+ * The register is why it matters that this is on mobile: marking attendance
+ * and coursework happens in the room, with a phone in hand.
  *
  * Gated on `membership:admin` at CHURCH scope. Teaching a session confers no
  * permissions — different people teach different sessions of one cohort, and
@@ -88,7 +100,24 @@ export default function CohortDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {cohort.data?.name ?? 'Cohort'}
         </Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => router.push(`/membership/${cohortId}/sessions` as never)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Schedule sessions"
+          >
+            <CalendarPlus color={c.ink} size={20} strokeWidth={1.5} />
+          </Pressable>
+          <Pressable
+            onPress={() => router.push(`/membership/edit/${cohortId}` as never)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Edit cohort"
+          >
+            <Pencil color={c.ink} size={20} strokeWidth={1.5} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.tabRow}>
@@ -164,6 +193,46 @@ function Roster({
   styles: ReturnType<typeof makeStyles>;
   c: ThemeColors;
 }) {
+  const qc = useQueryClient();
+  const [scores, setScores] = useState<Record<string, string>>({});
+
+  const recordFinalTest = useMutation({
+    mutationFn: async (args: { enrollmentId: string; score: number }) =>
+      (await api.membership.recordFinalTest(args)).data!,
+    onSuccess: (_res, args) => {
+      setScores((s) => ({ ...s, [args.enrollmentId]: '' }));
+      void qc.invalidateQueries({ queryKey: ['membership'] });
+      alert.info('Recorded', 'The final test mark is saved.');
+    },
+    onError: (e: unknown) =>
+      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+  });
+
+  const withdraw = useMutation({
+    mutationFn: async (args: { enrollmentId: string; reason: MembershipWithdrawnReason }) =>
+      (
+        await api.membership.enrollments.withdraw(args.enrollmentId, { reason: args.reason })
+      ).data!,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['membership'] });
+      alert.info('Updated', 'The enrolment has been closed.');
+    },
+    onError: (e: unknown) =>
+      alert.info('Could not withdraw', e instanceof Error ? e.message : 'Please try again.'),
+  });
+
+  async function confirmWithdraw(r: MembershipEnrollmentWithMember) {
+    const ok = await alert.confirm({
+      title: `Withdraw ${r.memberFirstName}?`,
+      message:
+        'They come off this cohort and can be admitted to a later one. Their marks are kept. Use "deferred to next" if they intend to return.',
+      confirmLabel: 'Withdraw',
+      destructive: true,
+    });
+    if (!ok) return;
+    withdraw.mutate({ enrollmentId: r.id, reason: 'withdrew' });
+  }
+
   if (rows.length === 0) {
     return (
       <View style={styles.empty}>
@@ -175,41 +244,76 @@ function Roster({
 
   return (
     <>
-      {rows.map((r) => (
-        <Card key={r.id} style={styles.card}>
-          <View style={styles.cardHead}>
-            <Text style={styles.cardTitle}>
-              {r.memberFirstName} {r.memberLastName}
+      {rows.map((r) => {
+        const score = scores[r.id] ?? '';
+        const scoreValid = score !== '' && Number(score) >= 0 && Number(score) <= 100;
+        return (
+          <Card key={r.id} style={styles.card}>
+            <View style={styles.cardHead}>
+              <Text style={styles.cardTitle}>
+                {r.memberFirstName} {r.memberLastName}
+              </Text>
+              <Badge
+                label={r.status}
+                variant={r.status === 'graduated' ? 'success' : 'neutral'}
+                size="sm"
+              />
+            </View>
+            <Text style={styles.metaText}>
+              {r.branchName ?? 'No home branch'}
+              {/* Provenance: through the pool, or added directly by an admin
+                  (the paper-signup case). */}
+              {r.fromPool ? '' : ' · added directly'}
             </Text>
-            <Badge
-              label={r.status}
-              variant={r.status === 'graduated' ? 'success' : 'neutral'}
-              size="sm"
-            />
-          </View>
-          <Text style={styles.metaText}>
-            {r.branchName ?? 'No home branch'}
-            {/* Provenance: through the pool, or added directly by an admin
-                (the paper-signup case). */}
-            {r.fromPool ? '' : ' · added directly'}
-          </Text>
-          <View style={styles.badgeRow}>
-            {r.finalTestPassed === true ? (
-              <Badge label="Test passed" variant="success" size="sm" />
-            ) : r.finalTestPassed === false ? (
-              <Badge label="Test failed" variant="danger" size="sm" />
-            ) : (
-              <Text style={styles.metaText}>Final test not sat</Text>
-            )}
-            {r.inductionAttended ? (
-              <View style={styles.metaRow}>
-                <CheckCircle2 color={c.success} size={14} strokeWidth={1.6} />
-                <Text style={styles.metaText}>Inducted</Text>
+            <View style={styles.badgeRow}>
+              {r.finalTestPassed === true ? (
+                <Badge label={`Test passed (${r.finalTestScore})`} variant="success" size="sm" />
+              ) : r.finalTestPassed === false ? (
+                <Badge label={`Test failed (${r.finalTestScore})`} variant="danger" size="sm" />
+              ) : (
+                <Text style={styles.metaText}>Final test not sat</Text>
+              )}
+              {r.inductionAttended ? (
+                <View style={styles.metaRow}>
+                  <CheckCircle2 color={c.success} size={14} strokeWidth={1.6} />
+                  <Text style={styles.metaText}>Inducted</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Only an open enrolment can be marked or withdrawn. A graduated
+                one is settled, and the API refuses both. */}
+            {r.status === 'enrolled' ? (
+              <View style={styles.rosterActions}>
+                <Input
+                  value={score}
+                  onChangeText={(v) => setScores((s) => ({ ...s, [r.id]: v }))}
+                  placeholder="Final test %"
+                  keyboardType="number-pad"
+                  accessibilityLabel={`${r.memberFirstName} ${r.memberLastName} final test score`}
+                  containerStyle={{ flex: 1 }}
+                />
+                <Button
+                  label="Save"
+                  variant="secondary"
+                  disabled={!scoreValid || recordFinalTest.isPending}
+                  onPress={() =>
+                    recordFinalTest.mutate({ enrollmentId: r.id, score: Number(score) })
+                  }
+                />
+                <Pressable
+                  onPress={() => void confirmWithdraw(r)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Withdraw ${r.memberFirstName} ${r.memberLastName}`}
+                >
+                  <UserMinus color={c.danger} size={18} strokeWidth={1.6} />
+                </Pressable>
               </View>
             ) : null}
-          </View>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </>
   );
 }
@@ -404,19 +508,38 @@ function Graduation({
   const qc = useQueryClient();
   const active = useMemo(() => rows.filter((r) => r.status === 'enrolled'), [rows]);
 
+  // Who the gate turned away last time, and why. Kept in state rather than
+  // shown in a one-shot toast: "3 not eligible" is useless without the
+  // reasons, and the admin needs them in front of them to act.
+  const [blocked, setBlocked] = useState<{ enrollmentId: string; outstanding: string[] }[]>(
+    [],
+  );
+  const [overrideFor, setOverrideFor] = useState<string | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
+
+  const nameFor = useMemo(() => {
+    const map = new Map(rows.map((r) => [r.id, `${r.memberFirstName} ${r.memberLastName}`]));
+    return (id: string) => map.get(id) ?? 'This member';
+  }, [rows]);
+
   const graduate = useMutation({
-    mutationFn: async (enrollmentIds: string[]) =>
-      (await api.membership.cohorts.graduate(cohortId, { enrollmentIds })).data!,
+    mutationFn: async (args: {
+      enrollmentIds: string[];
+      override?: boolean;
+      overrideReason?: string;
+    }) => (await api.membership.cohorts.graduate(cohortId, args)).data!,
     onSuccess: (res) => {
       void qc.invalidateQueries({ queryKey: ['membership'] });
       // The gate is evaluated server-side and returns exactly who was blocked
-      // and why, so report that rather than a bare success count.
-      const blocked = res.blocked.length;
+      // and why, so surface that rather than a bare count.
+      setBlocked(res.blocked);
+      setOverrideFor(null);
+      setOverrideReason('');
       alert.info(
         'Graduation',
-        blocked === 0
+        res.blocked.length === 0
           ? `${res.graduated} graduated.`
-          : `${res.graduated} graduated. ${blocked} not yet eligible. Open the web dashboard to see why.`,
+          : `${res.graduated} graduated. ${res.blocked.length} did not meet the gate, listed below.`,
       );
     },
     onError: (e: unknown) =>
@@ -458,8 +581,8 @@ function Graduation({
         </View>
         <Text style={styles.metaText}>
           Graduating checks all six requirements per person and skips anyone who has not
-          met them. Overriding the gate is a web-dashboard action, because it needs a
-          written reason for the audit trail.
+          met them. Whoever is skipped is listed below with the reasons, and can be
+          graduated anyway with a written reason for the audit trail.
         </Text>
       </Card>
 
@@ -478,9 +601,72 @@ function Graduation({
 
       <Button
         label={graduate.isPending ? 'Graduating…' : `Graduate ${active.length} eligible`}
-        onPress={() => graduate.mutate(active.map((r) => r.id))}
+        onPress={() => graduate.mutate({ enrollmentIds: active.map((r) => r.id) })}
         disabled={graduate.isPending}
       />
+
+      {blocked.map((b) => (
+        <Card key={b.enrollmentId} style={styles.blockedCard}>
+          <View style={styles.metaRow}>
+            <TriangleAlert color={c.danger} size={16} strokeWidth={1.6} />
+            <Text style={styles.cardTitle}>{nameFor(b.enrollmentId)}</Text>
+          </View>
+          {b.outstanding.map((o) => (
+            <Text key={o} style={styles.outstanding}>
+              • {o}
+            </Text>
+          ))}
+
+          {overrideFor === b.enrollmentId ? (
+            <>
+              <Input
+                value={overrideReason}
+                onChangeText={setOverrideReason}
+                placeholder="Why are you overriding the gate?"
+                multiline
+                numberOfLines={2}
+                accessibilityLabel="Override reason"
+              />
+              <Text style={styles.hint}>
+                This is appended to the enrolment notes and kept permanently. Be specific
+                enough that someone reading it in a year understands the decision.
+              </Text>
+              <View style={styles.overrideActions}>
+                <Button
+                  label="Cancel"
+                  variant="secondary"
+                  onPress={() => {
+                    setOverrideFor(null);
+                    setOverrideReason('');
+                  }}
+                />
+                <Button
+                  label={graduate.isPending ? 'Graduating…' : 'Graduate anyway'}
+                  // The API rejects an override with no reason, so do not let
+                  // the request leave without one.
+                  disabled={!overrideReason.trim() || graduate.isPending}
+                  onPress={() =>
+                    graduate.mutate({
+                      enrollmentIds: [b.enrollmentId],
+                      override: true,
+                      overrideReason: overrideReason.trim(),
+                    })
+                  }
+                />
+              </View>
+            </>
+          ) : (
+            <Button
+              label="Override and graduate"
+              variant="secondary"
+              onPress={() => {
+                setOverrideFor(b.enrollmentId);
+                setOverrideReason('');
+              }}
+            />
+          )}
+        </Card>
+      ))}
     </>
   );
 }
@@ -497,6 +683,22 @@ function makeStyles(c: ThemeColors) {
       gap: spacing.sm,
     },
     headerTitle: { ...typography.screenTitle, color: c.ink, flex: 1, textAlign: 'center' },
+    headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    rosterActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginTop: spacing.xs,
+    },
+    blockedCard: {
+      gap: spacing.xs,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.danger,
+    },
+    outstanding: { ...typography.meta, color: c.inkFaded },
+    hint: { ...typography.meta, color: c.inkFaded, lineHeight: 15 },
+    overrideActions: { flexDirection: 'row', gap: spacing.xs },
     tabRow: {
       flexDirection: 'row',
       paddingHorizontal: spacing.md,
