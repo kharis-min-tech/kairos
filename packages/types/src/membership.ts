@@ -10,7 +10,35 @@
 
 export type MembershipCohortStatus = 'planned' | 'active' | 'completed' | 'cancelled';
 export type MembershipEnrollmentStatus = 'enrolled' | 'graduated' | 'withdrawn' | 'deferred';
-export type MembershipTeacherRole = 'lead' | 'teacher';
+
+/**
+ * Pool lifecycle.
+ *
+ *   waiting   — in the pool, awaiting admission by a Membership Admin
+ *   admitted  — placed into a cohort; `admittedCohortId` says which
+ *   lapsed    — the entry expired before anyone admitted them
+ *   withdrawn — they took themselves back out
+ *
+ * Only `waiting` is live. The other three are terminal: re-expressing
+ * interest creates a NEW entry rather than reviving an old one, so the wait
+ * restarts and nobody accrues seniority during a season away.
+ */
+export type MembershipInterestStatus = 'waiting' | 'admitted' | 'lapsed' | 'withdrawn';
+
+/**
+ * How long an unadmitted pool entry stays live, in days.
+ *
+ * Enrolment is not self-service: you express interest, wait in the pool, and
+ * an admin admits you into an intake. Somebody who expressed interest and
+ * then stopped attending for a season should not roll silently into the next
+ * intake, because they most likely will not be there. So entries expire.
+ *
+ * Written onto each row as an absolute `expiresAt` when interest is
+ * expressed, so changing this constant never retroactively lapses or revives
+ * anyone already in the pool.
+ */
+export const MEMBERSHIP_INTEREST_WINDOW_DAYS = 180;
+
 export type MembershipWithdrawnReason =
   | 'stopped_attending'
   | 'withdrew'
@@ -44,18 +72,48 @@ export interface MembershipCohort {
 export interface MembershipCohortSummary extends MembershipCohort {
   enrolledCount: number;
   graduatedCount: number;
-  teacherCount: number;
   sessionCount: number;
 }
 
-export interface MembershipCohortTeacher {
-  cohortId: string;
+/**
+ * One entry in the pre-cohort pool.
+ *
+ * Belongs to no cohort until an admin admits it: people express interest
+ * before an intake exists to join. See {@link MembershipInterestStatus}.
+ */
+export interface MembershipInterest {
+  id: string;
   memberId: string;
-  role: MembershipTeacherRole;
-  assignedAt: string;
+  branchId?: string | null;
+  status: MembershipInterestStatus;
+  expressedAt: string;
+  expiresAt: string;
+  admittedCohortId?: string | null;
+  admittedAt?: string | null;
+  admittedBy?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * A pool entry as the admission screen shows it.
+ *
+ * `waitingDays` and `recentAttendanceCount` exist because admission is a
+ * judgement call: the admin needs to see who has been waiting longest AND who
+ * has actually been around lately, so a name that lapses is a decision rather
+ * than a surprise.
+ */
+export interface MembershipInterestWithMember extends MembershipInterest {
   memberFirstName: string;
   memberLastName: string;
   memberEmail?: string | null;
+  memberPhone?: string | null;
+  branchName?: string | null;
+  /** Whole days between `expressedAt` and now. */
+  waitingDays: number;
+  /** Services attended in the last 90 days. Null when attendance isn't tracked. */
+  recentAttendanceCount: number | null;
 }
 
 export interface MembershipSession {
@@ -93,7 +151,12 @@ export interface MembershipEnrollment {
   branchId?: string | null;
   status: MembershipEnrollmentStatus;
   enrolledAt: string;
-  selfEnrolled: boolean;
+  /**
+   * TRUE when the member reached this cohort through the interest pool,
+   * FALSE when an admin added them directly (the paper-signup case).
+   * Renamed from `selfEnrolled` in 0048; self-enrolment no longer exists.
+   */
+  fromPool: boolean;
   finalTestScore?: number | null;
   finalTestPassed?: boolean | null;
   finalTestTakenAt?: string | null;
@@ -253,17 +316,29 @@ export interface UpsertMembershipSessionRequest {
   notes?: string | null;
 }
 
-export interface AssignMembershipTeacherRequest {
-  memberId: string;
-  role?: MembershipTeacherRole;
-}
-
-export interface EnrolMembersRequest {
+/**
+ * Admission: an admin moves people from the pool into a cohort.
+ *
+ * This is the ONLY way into a cohort. A member with no pool entry can still
+ * be named here — someone who signed up on paper, say — and is admitted
+ * directly; everyone else has their waiting entry closed as `admitted` in the
+ * same transaction so they cannot sit in the pool and a cohort at once.
+ */
+export interface AdmitMembersRequest {
   memberIds: string[];
 }
 
+/** Filters for the admin's view of the pool. */
+export interface ListMembershipInterestQuery {
+  status?: MembershipInterestStatus;
+  branchId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 /**
- * One row of a teacher's roster save. Scores are mandatory whenever the
+ * One row of a register save. Scores are mandatory whenever the
  * corresponding assessment is being recorded at all: send both `homeworkScore`
  * and nothing else to clear a mark, or omit the field to leave it untouched.
  */

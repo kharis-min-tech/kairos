@@ -17,6 +17,11 @@ export const FunctionalRole = {
   SafeguardingLead: 'SafeguardingLead',
   NewBelieversMentor: 'NewBelieversMentor',
   NewBelieversTeacher: 'NewBelieversTeacher',
+  // The only church-scoped role. Runs the membership class programme end to
+  // end: cohorts, sessions, the interest pool, admission, marking, graduation.
+  // Deliberately NOT branch-scoped — cohorts are church-wide, so a branch
+  // grant could not describe authority over one.
+  MembershipAdmin: 'MembershipAdmin',
 } as const;
 export type FunctionalRole = (typeof FunctionalRole)[keyof typeof FunctionalRole];
 
@@ -33,6 +38,11 @@ export const Capability = {
   SignupApprove: 'signup:approve',
   NewBelieversMentor: 'newbelievers:mentor',
   NewBelieversTeach: 'newbelievers:teach',
+  // Everything on the membership class programme is one capability. There is
+  // no read/write split: the member-facing surfaces (browse cohorts, express
+  // interest, see your own progress) need no capability at all, so anything
+  // this gates is administration.
+  MembershipAdmin: 'membership:admin',
 } as const;
 export type Capability = (typeof Capability)[keyof typeof Capability];
 
@@ -51,6 +61,7 @@ export const RoleCapabilities: Record<FunctionalRole, readonly Capability[]> = {
   SafeguardingLead: ['safeguarding:read', 'safeguarding:write'],
   NewBelieversMentor: ['newbelievers:mentor'],
   NewBelieversTeacher: ['newbelievers:teach'],
+  MembershipAdmin: ['membership:admin'],
 };
 
 // Which scope kind each role's `scope.kind` field must be. Used by
@@ -65,6 +76,7 @@ export const RoleScopeKind: Record<FunctionalRole, RoleScope['kind']> = {
   SafeguardingLead: 'branch',
   NewBelieversMentor: 'branch',
   NewBelieversTeacher: 'branch',
+  MembershipAdmin: 'church',
 };
 
 // A single role assignment with its scope. For fellowship/department grants,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const cohortStatuses = ['planned', 'active', 'completed', 'cancelled'] as const;
-const teacherRoles = ['lead', 'teacher'] as const;
+const interestStatuses = ['waiting', 'admitted', 'lapsed', 'withdrawn'] as const;
 const withdrawnReasons = [
   'stopped_attending',
   'withdrew',
@@ -34,7 +34,7 @@ export const updateCohortSchema = createCohortSchema.partial();
 
 export const listCohortsQuerySchema = z.object({
   status: z.enum(cohortStatuses).optional(),
-  /** Only cohorts currently accepting self-enrolment. */
+  /** Only cohorts currently accepting admissions. */
   enrolmentOpen: z.coerce.boolean().optional(),
   includeInactive: z.coerce.boolean().optional(),
   page: z.coerce.number().int().min(1).optional(),
@@ -50,13 +50,22 @@ export const upsertSessionSchema = z.object({
   notes: z.string().max(2000).nullable().optional(),
 });
 
-export const assignTeacherSchema = z.object({
-  memberId: z.string().uuid(),
-  role: z.enum(teacherRoles).optional(),
+/**
+ * Admission: the only way into a cohort. Members named here who hold a
+ * waiting pool entry have it closed in the same call; members with none are
+ * admitted directly (the paper-signup case).
+ */
+export const admitMembersSchema = z.object({
+  memberIds: z.array(z.string().uuid()).min(1).max(200),
 });
 
-export const enrolMembersSchema = z.object({
-  memberIds: z.array(z.string().uuid()).min(1).max(200),
+/** The admin's view of the interest pool. Defaults to those still waiting. */
+export const listInterestQuerySchema = z.object({
+  status: z.enum(interestStatuses).optional(),
+  branchId: z.string().uuid().optional(),
+  search: z.string().max(120).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 /**
