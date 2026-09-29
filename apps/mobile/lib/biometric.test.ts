@@ -53,12 +53,14 @@ describe('getCapability', () => {
     expect((await biometric.getCapability()).label).toBe('Iris');
   });
 
-  it('prefers face when a device reports several', async () => {
+  it('says "Biometrics" when a device reports several methods', async () => {
+    // Naming only one on a device that has both is misleading: a user with
+    // fingerprint set up would see "Face ID" beside a fingerprint icon.
     mockTypes(
       LocalAuthentication.AuthenticationType.FINGERPRINT,
       LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION,
     );
-    expect((await biometric.getCapability()).label).toBe('Face ID');
+    expect((await biometric.getCapability()).label).toBe('Biometrics');
   });
 
   it('is unavailable when hardware exists but nothing is enrolled', async () => {
@@ -84,8 +86,8 @@ describe('getCapability', () => {
 
 describe('enable', () => {
   it('seals the token with requireAuthentication — the whole point', async () => {
-    const ok = await biometric.enable('refresh-abc');
-    expect(ok).toBe(true);
+    const result = await biometric.enable('refresh-abc');
+    expect(result).toEqual({ ok: true });
 
     const opts = secure.setItemAsync.mock.calls.find((c) => c[0] === SEALED_KEY)?.[2];
     // Without this flag the keychain hands the token over to anything that
@@ -94,9 +96,15 @@ describe('enable', () => {
     expect(await biometric.isEnabled()).toBe(true);
   });
 
+  it('reports the reason when hardware is absent', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(false);
+    expect(await biometric.enable('refresh-abc')).toEqual({ ok: false, reason: 'no_hardware' });
+  });
+
   it('refuses on a device with no enrolment, rather than half-arming', async () => {
     (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(false);
-    expect(await biometric.enable('refresh-abc')).toBe(false);
+    const result = await biometric.enable('refresh-abc');
+    expect(result).toMatchObject({ ok: false, reason: 'not_enrolled' });
     expect(await biometric.isEnabled()).toBe(false);
     expect(secure.__has(SEALED_KEY)).toBe(false);
   });
@@ -104,10 +112,12 @@ describe('enable', () => {
   it('leaves nothing half-configured when the keychain write is refused', async () => {
     // Enrolment can disappear between the capability check and the write.
     secure.__denyAuth(true);
-    expect(await biometric.enable('refresh-abc')).toBe(false);
+    const result = await biometric.enable('refresh-abc');
+    expect(result).toMatchObject({ ok: false, reason: 'keychain_denied' });
     expect(await biometric.isEnabled()).toBe(false);
   });
 });
+
 
 describe('unlockRefreshToken', () => {
   it('returns the token when the keychain unseals it', async () => {
