@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from './auth';
 import * as apiClient from '@/lib/api-client';
+import * as biometric from '@/lib/biometric';
 
 jest.mock('@/lib/api-client', () => ({
   setSessionTokens: jest.fn(),
@@ -82,7 +83,7 @@ describe('useAuthStore', () => {
     expect(setTokens).toHaveBeenCalledWith({ accessToken: 'a2', refreshToken: 'r2' });
   });
 
-  it('clearSession wipes memory + persistence + api-client cache', async () => {
+  it('clearSession wipes memory + persistence + api-client cache when biometric is off', async () => {
     await useAuthStore.getState().setSession(fakeTokens, fakeUser);
     setTokens.mockClear();
     await useAuthStore.getState().clearSession();
@@ -93,5 +94,25 @@ describe('useAuthStore', () => {
     expect(await SecureStore.getItemAsync('kairos.access_token')).toBeNull();
     expect(await AsyncStorage.getItem('kairos.user')).toBeNull();
     expect(setTokens).toHaveBeenCalledWith(null);
+  });
+
+  it('clearSession preserves the sealed token, biometric flag and cached profile when biometric is armed', async () => {
+    // Otherwise "sign out, sign back in" breaks the biometric loop: the flag
+    // gets cleared on sign-out, so rearmAfterPasswordLogin no-ops and the
+    // login screen never shows the button again. See project_biometric_ux memory.
+    await useAuthStore.getState().setSession(fakeTokens, fakeUser);
+    await biometric.enable(fakeTokens.refreshToken);
+    expect(await biometric.isEnabled()).toBe(true);
+
+    await useAuthStore.getState().clearSession();
+
+    // Live tokens gone
+    expect(await SecureStore.getItemAsync('kairos.access_token')).toBeNull();
+    expect(await SecureStore.getItemAsync('kairos.refresh_token')).toBeNull();
+    // Biometric arming preserved
+    expect(await biometric.isEnabled()).toBe(true);
+    expect(await biometric.unlockRefreshToken('Fingerprint')).toBe(fakeTokens.refreshToken);
+    // Cached profile preserved so signInWithBiometric can restore it
+    expect(await AsyncStorage.getItem('kairos.user')).not.toBeNull();
   });
 });
