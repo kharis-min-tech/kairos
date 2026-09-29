@@ -63,6 +63,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
     });
     setSessionTokens(tokens);
+    // Reconcile biometric state with WHO just signed in — reseals for the same
+    // account, disarms when a different account signs in. Covers both the
+    // password and OAuth entry points because both funnel through here.
+    await biometric.handlePostLogin(tokens.refreshToken, user.id);
   },
 
   updateTokens: async (tokens) => {

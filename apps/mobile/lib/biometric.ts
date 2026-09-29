@@ -35,6 +35,13 @@ const KEY_BIOMETRIC_REFRESH = 'kairos.biometric_refresh_token';
  * the button before it can ask for a fingerprint.
  */
 const KEY_BIOMETRIC_ENABLED = 'kairos.biometric_enabled';
+/**
+ * Which member the sealed refresh token belongs to. Written alongside the
+ * seal, read on subsequent password/OAuth logins so that signing in as a
+ * DIFFERENT account disarms biometric — otherwise a second account would
+ * silently inherit the first account's opt-in.
+ */
+const KEY_BIOMETRIC_MEMBER_ID = 'kairos.biometric_member_id';
 
 export interface BiometricCapability {
   /** The device has the hardware at all. */
@@ -115,11 +122,15 @@ export type EnableResult =
  * Turn biometric sign-in on by sealing the refresh token behind the keychain's
  * own authentication requirement.
  *
+ * `memberId` binds the sealed token to a specific account so subsequent
+ * password/OAuth logins for a DIFFERENT account correctly disarm biometric
+ * rather than silently inheriting the opt-in.
+ *
  * Never throws — every failure resolves to a reason string the UI can render.
  * On Android the SecureStore write raises a biometric prompt itself; a
  * cancelled prompt therefore reaches this catch as `keychain_denied`.
  */
-export async function enable(refreshToken: string): Promise<EnableResult> {
+export async function enable(refreshToken: string, memberId: string): Promise<EnableResult> {
   const cap = await getCapability();
   if (!cap.hasHardware) return { ok: false, reason: 'no_hardware' };
   if (!cap.isEnrolled) return { ok: false, reason: 'not_enrolled' };
@@ -133,7 +144,10 @@ export async function enable(refreshToken: string): Promise<EnableResult> {
       keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
       authenticationPrompt: 'Confirm to enable biometric sign-in',
     });
-    await AsyncStorage.setItem(KEY_BIOMETRIC_ENABLED, 'true');
+    await Promise.all([
+      AsyncStorage.setItem(KEY_BIOMETRIC_ENABLED, 'true'),
+      AsyncStorage.setItem(KEY_BIOMETRIC_MEMBER_ID, memberId),
+    ]);
     return { ok: true };
   } catch (err) {
     // Common shapes reaching here on Android:
@@ -162,9 +176,21 @@ export async function disable(): Promise<void> {
     // off, so swallow and continue.
   }
   try {
-    await AsyncStorage.removeItem(KEY_BIOMETRIC_ENABLED);
+    await Promise.all([
+      AsyncStorage.removeItem(KEY_BIOMETRIC_ENABLED),
+      AsyncStorage.removeItem(KEY_BIOMETRIC_MEMBER_ID),
+    ]);
   } catch {
     // Nothing useful to do; the next read defaults to disabled.
+  }
+}
+
+/** Which member the sealed token belongs to. null if biometric is off. */
+export async function getSealedMemberId(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(KEY_BIOMETRIC_MEMBER_ID);
+  } catch {
+    return null;
   }
 }
 
@@ -190,22 +216,38 @@ export async function unlockRefreshToken(promptLabel: string): Promise<string | 
 }
 
 /**
- * Refresh the sealed token during an explicit password sign-in.
+ * Called after any successful sign-in — password OR OAuth — to keep the seal
+ * consistent with who is actually signed in.
  *
- * WHY THERE IS NO RESEAL ON TOKEN REFRESH. `/api/auth/refresh` mints a new
- * refresh token, but the tokens are stateless JWTs with no server-side
+ * Three cases:
+ *  1. Biometric is off → nothing to do.
+ *  2. Biometric is armed for THIS member → reseal with the new refresh token
+ *     to refresh its 7-day window.
+ *  3. Biometric is armed for a DIFFERENT member → disarm entirely. Otherwise
+ *     the second account would silently inherit the first account's opt-in,
+ *     and on next launch the login screen would offer a "sign in with
+ *     Biometrics" button that logs in as the FIRST account.
+ *
+ * WHY THERE IS NO RESEAL ON SILENT TOKEN REFRESH. `/api/auth/refresh` mints a
+ * new refresh token, but tokens are stateless JWTs with no server-side
  * rotation tracking, so the previously sealed one stays valid until its own
- * 7-day expiry. Resealing on every silent refresh would therefore buy nothing
- * and cost a biometric prompt each time — on Android a keychain WRITE under
- * `requireAuthentication` prompts, so it would fire mid-session, repeatedly,
- * for no reason. That is a far worse bug than the one it would prevent.
- *
- * The consequence, stated plainly: biometric sign-in lasts up to 7 days from
- * the moment it was armed, then falls back to the password screen, which
- * re-arms it via this function. A periodic full re-authentication is a
- * reasonable posture rather than a limitation to engineer around.
+ * 7-day expiry. Resealing on every silent refresh would buy nothing and cost
+ * a biometric prompt each time — on Android a keychain WRITE under
+ * `requireAuthentication` prompts, so it would fire mid-session, repeatedly.
+ * Biometric sign-in therefore lasts up to 7 days, then falls back to the
+ * password screen which re-arms it via this function.
  */
-export async function rearmAfterPasswordLogin(refreshToken: string): Promise<void> {
+export async function handlePostLogin(
+  refreshToken: string,
+  memberId: string,
+): Promise<void> {
   if (!(await isEnabled())) return;
-  await enable(refreshToken);
+  const sealedFor = await getSealedMemberId();
+  if (sealedFor && sealedFor !== memberId) {
+    // A different account is signing in. Wipe biometric so this account has
+    // to opt in explicitly via Security.
+    await disable();
+    return;
+  }
+  await enable(refreshToken, memberId);
 }

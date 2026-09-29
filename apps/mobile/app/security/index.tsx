@@ -98,6 +98,7 @@ function BiometricToggle() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const refreshToken = useAuthStore((s) => s.refreshToken);
+  const userId = useAuthStore((s) => s.user?.id);
 
   const [cap, setCap] = useState<biometric.BiometricCapability | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -130,14 +131,14 @@ function BiometricToggle() {
         setEnabled(false);
         return;
       }
-      if (!refreshToken) {
+      if (!refreshToken || !userId) {
         alert.info(
           'Sign in again first',
           'Your session needs refreshing before biometric sign-in can be armed.',
         );
         return;
       }
-      const result = await biometric.enable(refreshToken);
+      const result = await biometric.enable(refreshToken, userId);
       setEnabled(result.ok);
       if (!result.ok) {
         const title = `Could not enable ${cap.label}`;
