@@ -65,13 +65,20 @@ export async function getCapability(): Promise<BiometricCapability> {
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
 
+    // Devices commonly report BOTH face + fingerprint. Naming only one there
+    // is misleading — a user with fingerprint set up would see "Face ID"
+    // beside a fingerprint icon and wonder what happened. Fall back to a
+    // neutral term when the device advertises more than one method.
+    const hasFace = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
+    const hasFinger = types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
+    const hasIris = types.includes(LocalAuthentication.AuthenticationType.IRIS);
+    const distinctCount = (hasFace ? 1 : 0) + (hasFinger ? 1 : 0) + (hasIris ? 1 : 0);
+
     let label = 'Biometrics';
-    if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-      label = 'Face ID';
-    } else if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-      label = 'Iris';
-    } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-      label = 'Fingerprint';
+    if (distinctCount === 1) {
+      if (hasFace) label = 'Face ID';
+      else if (hasIris) label = 'Iris';
+      else if (hasFinger) label = 'Fingerprint';
     }
 
     return {
@@ -81,7 +88,6 @@ export async function getCapability(): Promise<BiometricCapability> {
       available: hasHardware && isEnrolled,
     };
   } catch {
-    // A device or simulator that cannot answer is a device that cannot do it.
     return { hasHardware: false, isEnrolled: false, label: 'Biometrics', available: false };
   }
 }
@@ -96,15 +102,27 @@ export async function isEnabled(): Promise<boolean> {
 }
 
 /**
+ * Discriminated result from {@link enable}. The `reason` on failure exists so
+ * the caller can tell the user WHY the OS refused — an empty catch swallowed
+ * that during earlier testing and made a real "device declined the write"
+ * indistinguishable from a "user cancelled the prompt".
+ */
+export type EnableResult =
+  | { ok: true }
+  | { ok: false; reason: 'no_hardware' | 'not_enrolled' | 'keychain_denied'; message?: string };
+
+/**
  * Turn biometric sign-in on by sealing the refresh token behind the keychain's
  * own authentication requirement.
  *
- * Returns false rather than throwing when the device cannot do it, so callers
- * can tell the user plainly instead of showing a crash.
+ * Never throws — every failure resolves to a reason string the UI can render.
+ * On Android the SecureStore write raises a biometric prompt itself; a
+ * cancelled prompt therefore reaches this catch as `keychain_denied`.
  */
-export async function enable(refreshToken: string): Promise<boolean> {
+export async function enable(refreshToken: string): Promise<EnableResult> {
   const cap = await getCapability();
-  if (!cap.available) return false;
+  if (!cap.hasHardware) return { ok: false, reason: 'no_hardware' };
+  if (!cap.isEnrolled) return { ok: false, reason: 'not_enrolled' };
 
   try {
     await SecureStore.setItemAsync(KEY_BIOMETRIC_REFRESH, refreshToken, {
@@ -116,23 +134,31 @@ export async function enable(refreshToken: string): Promise<boolean> {
       authenticationPrompt: 'Confirm to enable biometric sign-in',
     });
     await AsyncStorage.setItem(KEY_BIOMETRIC_ENABLED, 'true');
-    return true;
-  } catch {
-    // Enrolment can vanish between the capability check and the write. Leave
-    // nothing half-configured.
+    return { ok: true };
+  } catch (err) {
+    // Common shapes reaching here on Android:
+    //   - User cancelled the biometric prompt
+    //   - Device biometric is Class 2 (Weak) and cannot back a Keystore key
+    //   - No device lock screen configured
+    //   - Enrolment vanished between the capability check and the write
+    // The message is not always user-friendly, but it is diagnostic enough
+    // to distinguish these when a user reports "it doesn't work".
+    const message = err instanceof Error ? err.message : String(err);
+    if (__DEV__) console.warn('[biometric.enable] refused:', message);
     await disable();
-    return false;
+    return { ok: false, reason: 'keychain_denied', message };
   }
 }
 
 /** Turn it off and remove the sealed token. Safe to call when already off. */
 export async function disable(): Promise<void> {
   try {
-    await SecureStore.deleteItemAsync(KEY_BIOMETRIC_REFRESH, {
-      requireAuthentication: true,
-    });
+    // No requireAuthentication on delete: expo-secure-store does not need it
+    // to remove an item, and passing it here has been observed to raise a
+    // second biometric prompt on some Android SDK versions.
+    await SecureStore.deleteItemAsync(KEY_BIOMETRIC_REFRESH);
   } catch {
-    // Deleting an item the OS will not unseal still needs to leave the flag
+    // Deleting an item the OS will not surface still needs to leave the flag
     // off, so swallow and continue.
   }
   try {

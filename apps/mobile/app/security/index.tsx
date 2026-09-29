@@ -137,13 +137,17 @@ function BiometricToggle() {
         );
         return;
       }
-      const ok = await biometric.enable(refreshToken);
-      setEnabled(ok);
-      if (!ok) {
-        alert.info(
-          `Could not enable ${cap.label}`,
-          'The device declined. Check that a fingerprint or face is still enrolled, then try again.',
-        );
+      const result = await biometric.enable(refreshToken);
+      setEnabled(result.ok);
+      if (!result.ok) {
+        const title = `Could not enable ${cap.label}`;
+        const body =
+          result.reason === 'no_hardware'
+            ? 'This device has no biometric hardware.'
+            : result.reason === 'not_enrolled'
+              ? `Set up ${cap.label} in your device settings first, then try again.`
+              : `The device declined. Make sure your screen lock is set up and a biometric is enrolled, then try again.${result.message ? `\n\nDevice said: ${result.message}` : ''}`;
+        alert.info(title, body);
       }
     } finally {
       setBusy(false);
