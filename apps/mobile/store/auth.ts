@@ -86,15 +86,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearSession: async () => {
+    // Live tokens go, always.
     await Promise.all([
       SecureStore.deleteItemAsync(KEY_ACCESS),
       SecureStore.deleteItemAsync(KEY_REFRESH),
-      AsyncStorage.removeItem(KEY_USER),
     ]);
-    // Signing out must also drop the sealed copy. Leaving it behind would mean
-    // a signed-out device still had a redeemable refresh token sitting in the
-    // keychain, which is the opposite of what signing out means.
-    await biometric.disable();
+    // Biometric-armed sign-out is a soft sign-out: keep the sealed refresh
+    // token and the cached profile so the user can biometric-sign-in on next
+    // launch without re-typing. The sealed token cannot be redeemed without
+    // the owner's biometric, so leaving it in the OS keychain gives up no
+    // security — this matches how banking apps and WhatsApp behave. To fully
+    // wipe, the user turns biometric OFF in Security first (which calls
+    // biometric.disable() explicitly) and then signs out.
+    if (!(await biometric.isEnabled())) {
+      await Promise.all([
+        AsyncStorage.removeItem(KEY_USER),
+        biometric.disable(),
+      ]);
+    }
     set({
       accessToken: null,
       refreshToken: null,
