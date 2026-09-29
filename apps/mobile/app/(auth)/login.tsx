@@ -87,11 +87,10 @@ export default function LoginScreen() {
       return res.data;
     },
     onSuccess: async ({ tokens, member }) => {
+      // setSession itself reconciles biometric state — reseals when the same
+      // account signs in and disarms when a different one does. Never turns
+      // biometric ON by itself; that stays an explicit Security opt-in.
       await setSession(tokens, member);
-      // A password sign-in re-arms an already-enabled seal, refreshing its
-      // 7-day window. It never turns biometrics ON by itself — that is an
-      // explicit choice made in Settings.
-      await biometric.rearmAfterPasswordLogin(tokens.refreshToken);
       router.replace('/(tabs)');
     },
     onError: (e: Error) => {

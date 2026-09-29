@@ -98,10 +98,10 @@ describe('useAuthStore', () => {
 
   it('clearSession preserves the sealed token, biometric flag and cached profile when biometric is armed', async () => {
     // Otherwise "sign out, sign back in" breaks the biometric loop: the flag
-    // gets cleared on sign-out, so rearmAfterPasswordLogin no-ops and the
-    // login screen never shows the button again. See project_biometric_ux memory.
+    // gets cleared on sign-out, so handlePostLogin no-ops and the login screen
+    // never shows the button again.
     await useAuthStore.getState().setSession(fakeTokens, fakeUser);
-    await biometric.enable(fakeTokens.refreshToken);
+    await biometric.enable(fakeTokens.refreshToken, fakeUser.id);
     expect(await biometric.isEnabled()).toBe(true);
 
     await useAuthStore.getState().clearSession();
@@ -114,5 +114,26 @@ describe('useAuthStore', () => {
     expect(await biometric.unlockRefreshToken('Fingerprint')).toBe(fakeTokens.refreshToken);
     // Cached profile preserved so signInWithBiometric can restore it
     expect(await AsyncStorage.getItem('kairos.user')).not.toBeNull();
+  });
+
+  it('setSession disarms biometric when a DIFFERENT account signs in', async () => {
+    // First account opts in.
+    await useAuthStore.getState().setSession(fakeTokens, fakeUser);
+    await biometric.enable(fakeTokens.refreshToken, fakeUser.id);
+    expect(await biometric.getSealedMemberId()).toBe(fakeUser.id);
+
+    // Soft sign-out preserves biometric.
+    await useAuthStore.getState().clearSession();
+    expect(await biometric.isEnabled()).toBe(true);
+
+    // Second account signs in. Biometric must NOT carry over — if it did, the
+    // login screen would offer a "Sign in with Biometrics" button that logs
+    // in as the FIRST account.
+    const otherUser = { ...fakeUser, id: 'm2', email: 'c@d.co' };
+    const otherTokens = { accessToken: 'a3', refreshToken: 'r3' };
+    await useAuthStore.getState().setSession(otherTokens, otherUser);
+
+    expect(await biometric.isEnabled()).toBe(false);
+    expect(await biometric.getSealedMemberId()).toBeNull();
   });
 });
