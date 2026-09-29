@@ -123,9 +123,9 @@ export const useAuthStore = create<AuthState>((set) => ({
    * without authentication — not by us gating a value we already hold. See
    * lib/biometric.ts for why that distinction is the whole feature.
    *
-   * The unsealed token is then exchanged for a live pair, because a 7-day
-   * refresh token is not an access token and the API will not accept it as
-   * one. Returns false on every failure path (cancelled, no match, enrolment
+   * The unsealed token is then exchanged for a live pair, because a refresh
+   * token is not an access token and the API will not accept it as one.
+   * Returns false on every failure path (cancelled, no match, enrolment
    * changed, token expired); the caller falls back to the password form.
    */
   signInWithBiometric: async (promptLabel: string) => {
@@ -155,8 +155,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       setSessionTokens(tokens);
       return true;
     } catch {
-      // The sealed token has expired (7 days) or the account is gone. Both
-      // mean the same thing to the user: sign in with your password.
+      // The sealed token has expired (90 days from arming) or the account is
+      // gone. Both mean the same thing to the user: sign in with your password.
       return false;
     }
   },

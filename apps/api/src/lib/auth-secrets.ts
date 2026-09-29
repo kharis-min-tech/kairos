@@ -8,7 +8,13 @@ export interface AuthSecrets {
 }
 
 const DEFAULT_ACCESS_EXPIRY = '15m';
-const DEFAULT_REFRESH_EXPIRY = '7d';
+// 90 days matches banking-app norms for keychain-stored session tokens
+// (Monzo, Revolut, Chase all sit in this range) and dovetails with biometric
+// sign-in: the sealed refresh token stays valid across this window, so a
+// biometric-only user password-signs-in about once a quarter. Any password
+// sign-in inside the window rearms via handlePostLogin, so periodic users
+// effectively never see the password screen. Override with JWT_REFRESH_EXPIRY.
+const DEFAULT_REFRESH_EXPIRY = '90d';
 
 function readEnv(c: Context | undefined, key: string): string | undefined {
   if (c) {
