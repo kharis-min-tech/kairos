@@ -166,7 +166,7 @@ function BiometricToggle() {
           {!cap.isEnrolled
             ? `Set up ${cap.label} in your device settings first.`
             : enabled
-              ? 'Armed. Lasts up to 7 days, then asks for your password again.'
+              ? 'Armed. Any password sign-in extends it, so most people never see the password screen again.'
               : 'Unlock the app without typing your password.'}
         </Text>
       </View>

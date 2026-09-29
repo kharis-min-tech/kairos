@@ -222,7 +222,7 @@ export async function unlockRefreshToken(promptLabel: string): Promise<string | 
  * Three cases:
  *  1. Biometric is off → nothing to do.
  *  2. Biometric is armed for THIS member → reseal with the new refresh token
- *     to refresh its 7-day window.
+ *     to refresh its window (currently 90d, see apps/api DEFAULT_REFRESH_EXPIRY).
  *  3. Biometric is armed for a DIFFERENT member → disarm entirely. Otherwise
  *     the second account would silently inherit the first account's opt-in,
  *     and on next launch the login screen would offer a "sign in with
@@ -231,11 +231,13 @@ export async function unlockRefreshToken(promptLabel: string): Promise<string | 
  * WHY THERE IS NO RESEAL ON SILENT TOKEN REFRESH. `/api/auth/refresh` mints a
  * new refresh token, but tokens are stateless JWTs with no server-side
  * rotation tracking, so the previously sealed one stays valid until its own
- * 7-day expiry. Resealing on every silent refresh would buy nothing and cost
- * a biometric prompt each time — on Android a keychain WRITE under
+ * expiry. Resealing on every silent refresh would buy nothing and cost a
+ * biometric prompt each time — on Android a keychain WRITE under
  * `requireAuthentication` prompts, so it would fire mid-session, repeatedly.
- * Biometric sign-in therefore lasts up to 7 days, then falls back to the
- * password screen which re-arms it via this function.
+ * Biometric sign-in therefore lasts the length of the refresh window from the
+ * last password login, then falls back to the password screen which re-arms
+ * it via this function. Any password login inside the window rearms too, so
+ * regular users effectively never see the password screen.
  */
 export async function handlePostLogin(
   refreshToken: string,
