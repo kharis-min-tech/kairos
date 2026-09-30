@@ -256,37 +256,23 @@ export async function unlockRefreshToken(
   }
 }
 
-// ── Post-login reconcile ──────────────────────────────────────────────────
-
-/**
- * Called after any successful sign-in — password OR OAuth — to keep the seal
- * consistent with who just signed in.
- *
- * Only this user's arming is touched. If they are already armed, reseal with
- * their new refresh token to refresh its 90-day window (see the API's
- * DEFAULT_REFRESH_EXPIRY). If they are not, do nothing — the enrolment prompt
- * lives on the login side and never fires from here. Other users' armings are
- * never touched.
- *
- * WHY THERE IS NO RESEAL ON SILENT TOKEN REFRESH. `/api/auth/refresh` mints a
- * new refresh token, but tokens are stateless JWTs with no server-side
- * rotation tracking, so the previously sealed one stays valid until its own
- * expiry. Resealing on every silent refresh would buy nothing and cost a
- * biometric prompt each time — on Android a keychain WRITE under
- * `requireAuthentication` prompts, so it would fire mid-session, repeatedly.
- */
-export async function handlePostLogin(
-  refreshToken: string,
-  member: { id: string; displayName: string; email?: string },
-): Promise<void> {
-  if (!(await isArmedFor(member.id))) return;
-  await enable(refreshToken, {
-    id: member.id,
-    displayName: member.displayName,
-    email: member.email,
-    addedAt: new Date(0).toISOString(),
-  });
-}
+// ── Design note: no automatic reseal ─────────────────────────────────────
+//
+// Earlier iterations resealed the sealed token after every login so the
+// 90-day window auto-extended. On iOS this was silent; on Android a
+// SecureStore write under `requireAuthentication` raises a biometric prompt,
+// so every sign-in was greeted with a "Confirm to enable biometric sign-in"
+// prompt right after the user had just proved their identity. Password
+// sign-ins got one such prompt, biometric sign-ins got TWO (the unlock and
+// the reseal), and it read as broken.
+//
+// The seal is now touched only when the user explicitly asks for it: the
+// enrolment modal on the login screen for first-time opt-in, and the toggle
+// on the Security screen for on/off. That means the sealed refresh token
+// keeps its original 90-day TTL from arming, no matter how often the user
+// signs in in between. When it expires biometric fails once, the user
+// password-signs-in, and can re-arm from Security if they want another
+// window.
 
 // ── Clean up the legacy single-user keys on first read ───────────────────
 //

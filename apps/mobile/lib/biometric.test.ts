@@ -194,40 +194,6 @@ describe('disable', () => {
   });
 });
 
-describe('handlePostLogin', () => {
-  it('reseals THIS user when they are already opted in', async () => {
-    await biometric.enable('refresh-old', alice);
-    await biometric.handlePostLogin('refresh-new', alice);
-    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-new');
-  });
-
-  it('is a no-op when this user has not opted in', async () => {
-    // Enrolment is offered on the login screen, not silently here.
-    await biometric.handlePostLogin('refresh-a', alice);
-    expect(await biometric.isArmedFor(alice.id)).toBe(false);
-    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(false);
-  });
-
-  it('signing in as user B does NOT touch user A\'s arming', async () => {
-    await biometric.enable('refresh-a', alice);
-    await biometric.handlePostLogin('refresh-b', bob);
-    expect(await biometric.isArmedFor(alice.id)).toBe(true);
-    expect(await biometric.isArmedFor(bob.id)).toBe(false);
-    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a');
-  });
-
-  it('signing in as user A after previously signing in as B preserves A\'s arming', async () => {
-    // Reported bug: user A → sign out → sign in with biometric → sign out →
-    // sign in as B → sign out → sign in as A again used to lose A's arming.
-    await biometric.enable('refresh-a', alice);
-    await biometric.handlePostLogin('refresh-b1', bob); // B signs in
-    await biometric.handlePostLogin('refresh-a2', alice); // A signs back in
-    expect(await biometric.isArmedFor(alice.id)).toBe(true);
-    // A's sealed token was refreshed
-    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a2');
-  });
-});
-
 describe('hasDeclined / markDeclined', () => {
   it('remembers who has said "Not now"', async () => {
     expect(await biometric.hasDeclined(alice.id)).toBe(false);

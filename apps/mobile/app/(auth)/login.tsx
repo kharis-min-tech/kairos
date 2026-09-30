@@ -80,12 +80,14 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
       return;
     }
-    // A stale sealed token or a revoked account both surface here. Drop the
-    // user from the picker so a broken button doesn't linger, and re-read
-    // the list in case anything else changed.
-    await biometric.disable(user.id);
-    setArmedUsers(await biometric.listArmedUsers());
-    setError(`Could not sign in as ${user.displayName}. Use your email and password.`);
+    // Deliberately NOT disabling on a single failure. Every reason a biometric
+    // login can fail — cancelled prompt, phone locked mid-authentication,
+    // wrong finger, transient OS glitch — is retriable. The one path that
+    // genuinely warrants disarming is a server-rejected refresh token (the
+    // sealed value is no longer redeemable), but the user can figure that
+    // out from repeated failures and turn it off themselves in Security.
+    // Auto-wiping their opt-in for a phone-lock timeout was overreach.
+    setError(`Could not sign in as ${user.displayName}. Try again or use your email and password.`);
   }
 
   /**
