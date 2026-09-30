@@ -160,12 +160,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       // prompt to unlock; on Android a SecureStore write under
       // requireAuthentication raises a SECOND prompt, and a two-prompt
       // sign-in every time was the loudest UX complaint after the initial
-      // multi-account rework. The sealed token stays valid until its own
-      // 90-day expiry from the last password sign-in. Users who mix in a
-      // password login within that window (via the login screen or an
-      // explicit re-arm from Security) get the fresh window; users who only
-      // ever biometric-sign-in fall back to the password screen once every
-      // 90 days, which re-arms them.
+      // multi-account rework. The sealed token stays valid for its full TTL
+      // from arming (currently 1 year, see DEFAULT_REFRESH_EXPIRY on the API),
+      // regardless of how often it is used to sign in. When it eventually
+      // expires biometric fails once, the user password-signs-in, and can
+      // re-arm from Security if they want another window.
       return true;
     } catch {
       // Sealed token expired, account revoked, or /me failed. All resolve to

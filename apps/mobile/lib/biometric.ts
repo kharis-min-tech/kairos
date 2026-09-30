@@ -259,20 +259,24 @@ export async function unlockRefreshToken(
 // ── Design note: no automatic reseal ─────────────────────────────────────
 //
 // Earlier iterations resealed the sealed token after every login so the
-// 90-day window auto-extended. On iOS this was silent; on Android a
-// SecureStore write under `requireAuthentication` raises a biometric prompt,
-// so every sign-in was greeted with a "Confirm to enable biometric sign-in"
-// prompt right after the user had just proved their identity. Password
-// sign-ins got one such prompt, biometric sign-ins got TWO (the unlock and
-// the reseal), and it read as broken.
+// window auto-extended. On iOS this was silent; on Android a SecureStore
+// write under `requireAuthentication` raises a biometric prompt, so every
+// sign-in was greeted with a "Confirm to enable biometric sign-in" prompt
+// right after the user had just proved their identity. Password sign-ins
+// got one such prompt, biometric sign-ins got TWO (the unlock and the
+// reseal), and it read as broken.
 //
 // The seal is now touched only when the user explicitly asks for it: the
 // enrolment modal on the login screen for first-time opt-in, and the toggle
 // on the Security screen for on/off. That means the sealed refresh token
-// keeps its original 90-day TTL from arming, no matter how often the user
-// signs in in between. When it expires biometric fails once, the user
-// password-signs-in, and can re-arm from Security if they want another
-// window.
+// keeps its original TTL from arming — currently 1 year, matching
+// consumer-app norms (see apps/api DEFAULT_REFRESH_EXPIRY). When it
+// eventually expires biometric fails once, the user password-signs-in, and
+// can re-arm from Security if they want another window.
+//
+// The proper long-term fix is a WebAuthn-style device keypair that
+// decouples biometric arming from the session token, so biometric never
+// expires on the device — filed as a backlog.
 
 // ── Clean up the legacy single-user keys on first read ───────────────────
 //
