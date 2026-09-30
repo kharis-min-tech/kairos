@@ -358,6 +358,13 @@
       "when": 1807300000000,
       "tag": "0050_membership_interest_isactive",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1808300000000,
+      "tag": "0051_membership_champion_role",
+      "breakpoints": true
     }
   ]
 }

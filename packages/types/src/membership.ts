@@ -383,3 +383,36 @@ export interface WithdrawMembershipEnrollmentRequest {
   reason: MembershipWithdrawnReason;
   notes?: string;
 }
+
+/**
+ * Champion's / admin's read-only slice: their branch's waitlist entries plus
+ * members currently admitted into a cohort. Empty arrays are legitimate; a
+ * lack of grant is a 403 rather than an empty payload.
+ */
+export interface MembershipBranchViewWaitlistRow {
+  id: string;
+  memberId: string;
+  memberFirstName: string;
+  memberLastName: string;
+  branchId: string | null;
+  branchName: string | null;
+  expressedAt: string;
+  expiresAt: string;
+  waitingDays: number;
+}
+export interface MembershipBranchViewEnrolledRow {
+  enrollmentId: string;
+  memberId: string;
+  memberFirstName: string;
+  memberLastName: string;
+  branchId: string | null;
+  branchName: string | null;
+  cohortId: string;
+  cohortName: string;
+  cohortStatus: MembershipCohortStatus;
+  enrolledAt: string;
+}
+export interface MembershipBranchViewResponse {
+  waitlist: MembershipBranchViewWaitlistRow[];
+  enrolled: MembershipBranchViewEnrolledRow[];
+}

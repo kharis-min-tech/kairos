@@ -103,6 +103,9 @@ export const NotificationEventType = {
   WorkflowNewBelieverStageMoved: 'workflow.new_believer_stage_moved',
   WorkflowNewBelieverRemoved: 'workflow.new_believer_removed',
   WorkflowMembershipInterestExpressed: 'workflow.membership_interest_expressed',
+  WorkflowMembershipCohortAdmitted: 'workflow.membership_cohort_admitted',
+  WorkflowMembershipCohortGraduated: 'workflow.membership_cohort_graduated',
+  WorkflowMembershipInterestEnded: 'workflow.membership_interest_ended',
   // ── Lifecycle ──
   LifecycleVisitorPromoted: 'lifecycle.visitor_promoted',
   LifecycleChildAgedOut: 'lifecycle.child_aged_out',

@@ -21,10 +21,15 @@ import {
   useMyMembership,
   useExpressInterest,
   useWithdrawInterest,
+  useMembershipBranchView,
 } from '@/hooks/use-membership';
 import { toast } from 'sonner';
 import { CHURCH_SCOPE } from '@kairos/types';
-import type { MembershipCohortStatus, MembershipCohortSummary } from '@kairos/types';
+import type {
+  MembershipCohortStatus,
+  MembershipCohortSummary,
+  MembershipBranchViewResponse,
+} from '@kairos/types';
 
 /**
  * Membership classes.
@@ -42,6 +47,10 @@ import type { MembershipCohortStatus, MembershipCohortSummary } from '@kairos/ty
 export default function MembershipPage() {
   const caps = useCapabilities();
   const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
+  // A Champion holds `membership:branch:read` on at least one branch. We
+  // don't need to name which branch here — the branch-view endpoint returns
+  // the union of everything they cover, and admins see everything.
+  const isChampion = caps.has('membership:branch:read');
 
   const [statusFilter, setStatusFilter] = useState<MembershipCohortStatus | 'all'>('all');
 
@@ -50,6 +59,7 @@ export default function MembershipPage() {
     isAdmin,
   );
   const { data: mine } = useMyMembership();
+  const { data: branchView } = useMembershipBranchView(isChampion || isAdmin);
 
   const cohorts = data?.cohorts ?? [];
 
@@ -87,6 +97,13 @@ export default function MembershipPage() {
       </header>
 
       <MyMembershipCard mine={mine} />
+
+      {/* Champion + admin liaison view of the branch: waitlist plus
+          currently-admitted members from their branch. Read-only. Not shown
+          to plain members. */}
+      {(isChampion || isAdmin) && branchView ? (
+        <ChampionBranchView view={branchView} />
+      ) : null}
 
       {/* Cohort list is admin-only. Waitlist members shouldn't be sizing up
           intakes they can't join themselves — the admission call is made by
@@ -259,6 +276,77 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
         >
           {express.isPending ? 'Joining…' : ended ? 'Join again' : 'Join the list'}
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Champion's slice: their branch's waitlist + admitted members from their
+ * branch, side by side. Empty lists are legitimate — a branch with nobody
+ * waiting and nobody in cohorts renders as two empty panels. Read-only:
+ * expressing interest, admitting, marking, and graduating all belong to
+ * either the candidate themselves (interest) or the membership admin team.
+ */
+function ChampionBranchView({ view }: { view: MembershipBranchViewResponse }) {
+  const { waitlist, enrolled } = view;
+  return (
+    <Card>
+      <CardContent className="space-y-5 py-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <Users className="size-4 text-[#5D3FD3]" />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Branch waitlist ({waitlist.length})
+            </h2>
+          </div>
+          {waitlist.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground/70">
+              Nobody from your branch is currently waiting.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {waitlist.map((row) => (
+                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                  <span className="font-medium text-foreground">
+                    {row.memberFirstName} {row.memberLastName}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Waiting {row.waitingDays} day{row.waitingDays === 1 ? '' : 's'} · added{' '}
+                    {formatShortDate(row.expressedAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2">
+            <GraduationCap className="size-4 text-[#5D3FD3]" />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Admitted from your branch ({enrolled.length})
+            </h2>
+          </div>
+          {enrolled.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground/70">
+              No one from your branch is currently enrolled in a cohort.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {enrolled.map((row) => (
+                <li key={row.enrollmentId} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                  <span className="font-medium text-foreground">
+                    {row.memberFirstName} {row.memberLastName}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {row.cohortName} · admitted {formatShortDate(row.enrolledAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

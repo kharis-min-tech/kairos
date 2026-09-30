@@ -109,6 +109,22 @@ export function useMyMembership() {
   });
 }
 
+/**
+ * Champion's / admin's branch view — waitlist + enrolled members for the
+ * branches they cover. Gated in the API (403 for non-champions), so opt in
+ * with `enabled` on the caller's side rather than firing for everyone.
+ */
+export function useMembershipBranchView(enabled: boolean = true) {
+  return useQuery({
+    queryKey: [KEY, 'branch-view'],
+    queryFn: async () => {
+      const res = await api.membership.branchView();
+      return res.data!;
+    },
+    enabled,
+  });
+}
+
 // ── Mutations ─────────────────────────────────────────────────────────────
 
 function useInvalidate() {
