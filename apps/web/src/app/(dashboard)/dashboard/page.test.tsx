@@ -62,6 +62,15 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 vi.mock('@/lib/auth-store', () => ({
   useAuthStore: <T,>(selector?: (s: typeof authState) => T) =>
     selector ? selector(authState) : (authState as unknown as T),
@@ -287,27 +296,26 @@ describe('DashboardPage — stats fork', () => {
   });
 });
 
-describe('DashboardPage — PendingApprovalsPanel visibility', () => {
+describe('DashboardPage — Pending Approvals visibility', () => {
   beforeEach(resetState);
 
-  // Note: AdminStats / PastorStats / BranchAdminStats each contain their own
-  // "Pending Approvals" StatCard. The right-rail PendingApprovalsPanel ALSO
-  // uses that heading. So the assertion here is "at least one extra
-  // occurrence" — the panel — vs. the card alone for non-leadership roles.
+  // Only the StatCard now — the right-rail duplicate panel was removed in
+  // 2026-09-30. AdminStats / PastorStats / BranchAdminStats each render their
+  // own StatCard that routes to /members/approval on click.
 
-  it('shows for system admin (panel + card)', () => {
+  it('shows the StatCard for system admin', () => {
     authState.activeRole = 'admin';
     render(<DashboardPage />, { wrapper });
-    // AdminStats card + right-rail panel = 2 occurrences
-    expect(screen.getAllByText('Pending Approvals').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Pending Approvals').length).toBe(1);
   });
 
-  it('shows for branch admin (panel + card)', () => {
+  it('shows the StatCard for branch admin', () => {
     authState.activeRole = 'leader';
     leadershipData = { ...emptyLeadership, branchDataAdminBranchIds: ['b-1'] };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getAllByText('Pending Approvals').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Pending Approvals').length).toBe(1);
   });
+
   it('hides for a fellowship-only leader (no branch authority)', () => {
     authState.activeRole = 'leader';
     leadershipData = {
@@ -315,8 +323,6 @@ describe('DashboardPage — PendingApprovalsPanel visibility', () => {
       leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
     };
     render(<DashboardPage />, { wrapper });
-    // Only the FellowshipStats card has no Pending Approvals title, so the
-    // panel being hidden means zero matches.
     expect(screen.queryByText('Pending Approvals')).not.toBeInTheDocument();
   });
 

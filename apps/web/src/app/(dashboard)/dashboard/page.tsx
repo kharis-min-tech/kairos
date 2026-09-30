@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
@@ -121,8 +122,9 @@ function StatsSkeleton({ cols = 4 }: { cols?: number }) {
 // ── Role stat rows ─────────────────────────────────────────
 
 function AdminStats() {
+  const router = useRouter();
   const { data, isLoading } = useAdminDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'branches' | 'members' | 'fellowships' | 'pending' | null>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState<'branches' | 'members' | 'fellowships' | null>(null);
 
   if (isLoading || !data) return <StatsSkeleton />;
   // Prefer the dedicated pendingApprovals count (matches the /members?pending
@@ -141,7 +143,10 @@ function AdminStats() {
           breakdown={data.memberBreakdown}
         />
         <StatCard title="Total Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
-        <StatCard title="Pending Approvals" value={pending} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
+        {/* Pending Approvals routes straight to the approval queue rather than
+            opening a read-only evidence drawer — clicking a metric that names
+            actionable work should take the caller to the action. */}
+        <StatCard title="Pending Approvals" value={pending} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
       </div>
 
       {/* Evidence Dialogs */}
@@ -150,22 +155,19 @@ function AdminStats() {
   );
 }
 
-function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' | 'fellowships' | 'pending' | null; onClose: () => void }) {
+function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' | 'fellowships' | null; onClose: () => void }) {
   const { data: branchesData } = useBranches();
   const { data: membersData } = useMembers({ limit: 100 });
   const { data: fellowshipsData } = useFellowships({ page: 1, limit: 100 });
-  const { data: pendingData } = useMembers({ approvalStatus: 'pending', limit: 100 });
 
   const allMembers = membersData?.data ?? [];
   const allBranches = branchesData ?? [];
   const allFellowships = fellowshipsData?.data ?? [];
-  const pendingMembers = pendingData?.data ?? [];
 
   const titles: Record<string, string> = {
     branches: 'Total Branches: Evidence',
     members: 'Total Members: Evidence',
     fellowships: 'Total Fellowships: Evidence',
-    pending: 'Pending Approvals: Evidence',
   };
 
   return (
@@ -263,31 +265,6 @@ function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' |
             </div>
           )}
 
-          {type === 'pending' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {pendingMembers.length} pending approval requests</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Email</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Requested</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingMembers.map((m, i) => (
-                    <tr key={m.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{m.firstName} {m.lastName}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.email ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -295,8 +272,9 @@ function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' |
 }
 
 function PastorStats() {
+  const router = useRouter();
   const { data, isLoading } = useBranchDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | 'pending' | null>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | null>(null);
 
   if (isLoading || !data) return <StatsSkeleton />;
   return (
@@ -305,28 +283,25 @@ function PastorStats() {
         <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
-        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
+        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
       </div>
       <PastorEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
     </>
   );
 }
 
-function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowships' | 'meetings' | 'pending' | null; onClose: () => void }) {
+function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowships' | 'meetings' | null; onClose: () => void }) {
   const branchId = useAuthStore((s) => s.user?.homeBranchId);
   const { data: membersData } = useMembers({ branchId, limit: 100 });
   const { data: fellowshipsData } = useFellowships({ page: 1, limit: 100, branchId });
-  const { data: pendingData } = useMembers({ approvalStatus: 'pending', branchId, limit: 100 });
 
   const allMembers = membersData?.data ?? [];
   const allFellowships = fellowshipsData?.data ?? [];
-  const pendingMembers = pendingData?.data ?? [];
 
   const titles: Record<string, string> = {
     members: 'Branch Members: Evidence',
     fellowships: 'Branch Fellowships: Evidence',
     meetings: 'Recent Meetings (30 days): Evidence',
-    pending: 'Pending Approvals: Evidence',
   };
 
   return (
@@ -420,31 +395,6 @@ function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowship
             </div>
           )}
 
-          {type === 'pending' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {pendingMembers.length} pending approval requests</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Email</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Requested</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingMembers.map((m, i) => (
-                    <tr key={m.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{m.firstName} {m.lastName}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.email ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -458,8 +408,9 @@ function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowship
 // endpoint (scoped to the caller's home branch by the API).
 
 function BranchAdminStats() {
+  const router = useRouter();
   const { data, isLoading } = useBranchDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | 'pending' | null>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | null>(null);
 
   if (isLoading || !data) return <StatsSkeleton />;
   return (
@@ -473,7 +424,7 @@ function BranchAdminStats() {
         <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
         <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
         <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
-        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => setEvidenceOpen('pending')} />
+        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
       </div>
       <PastorEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
     </>
@@ -855,37 +806,6 @@ function RecentActivity({ branchId, role }: { branchId?: string; role?: string }
             );
           })}
         </div>
-      )}
-    </div>
-  );
-}
-
-// ── Pending approvals panel ────────────────────────────────
-
-function PendingApprovalsPanel({ branchId }: { branchId?: string }) {
-  const { data: result } = useMembers({ approvalStatus: 'pending', branchId, limit: 5 });
-  const pending = result?.data ?? [];
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pending Approvals</p>
-      {pending.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground/70">No pending requests.</p>
-      ) : (
-        <>
-          <p className="mt-1 text-xs text-muted-foreground">{pending.length} request{pending.length !== 1 ? 's' : ''} await{pending.length === 1 ? 's' : ''} your blessing.</p>
-          <div className="mt-3 space-y-2">
-            {pending.slice(0, 3).map(m => (
-              <div key={m.id} className="flex items-center justify-between rounded-md bg-foreground/6 px-3 py-2.5 border border-border">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{m.firstName} {m.lastName}</p>
-                  <p className="text-[11px] text-muted-foreground">New member request</p>
-                </div>
-                <Link href={`/members/${m.id}`} className="rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors">Review</Link>
-              </div>
-            ))}
-          </div>
-          <Link href="/members?approvalStatus=pending" className="mt-3 block text-center text-xs font-medium text-[#a78bfa] hover:underline">View all</Link>
-        </>
       )}
     </div>
   );
@@ -2300,12 +2220,11 @@ export default function DashboardPage() {
         </div>
         
         <div className="space-y-4">
-          {/* Pending approvals — admin sees all; branch admin/pastor see branch-
-              scoped. Fellowship/department leaders without branch authority
-              don't see this panel (Phase 6 may add a scoped variant). */}
-          {(isSystemAdmin || isBranchAdmin || caps.has('branch:write')) && (
-            <PendingApprovalsPanel branchId={isSystemAdmin ? undefined : branchId} />
-          )}
+          {/* Pending approvals live on the Pending Approvals StatCard above —
+              clicking it routes straight to /members/approval where Approve
+              and Reject buttons live. This sidebar used to render a second
+              read-only "Pending Approvals" card whose Review link 404'd on
+              members who could not yet be viewed by role. */}
           <QuickActions role={activeRole ?? 'member'} />
           
           {/* Daily verse */}

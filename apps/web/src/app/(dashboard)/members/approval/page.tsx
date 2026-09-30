@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMembers, useApproveMember } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useConfirm } from '@/components/confirm-dialog';
 import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
@@ -13,17 +14,21 @@ import Link from 'next/link';
 export default function MemberApprovalPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.systemRole === 'admin';
+  const caps = useCapabilities();
+  // Branch admins and branch data admins also carry `signup:approve`, so
+  // gating on systemRole=admin alone would bounce them off a page they can
+  // legitimately action. Mirror the API's own capability check.
+  const canApprove = user?.systemRole === 'admin' || caps.has('signup:approve');
 
   useEffect(() => {
-    if (user !== null && !isAdmin) router.replace('/members');
-  }, [user, isAdmin, router]);
+    if (user !== null && !canApprove) router.replace('/members');
+  }, [user, canApprove, router]);
 
-  const { data: result, isLoading, error } = useMembers({ approvalStatus: 'pending' }, isAdmin);
+  const { data: result, isLoading, error } = useMembers({ approvalStatus: 'pending' }, canApprove);
   const approveMember = useApproveMember();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
-  if (user !== null && !isAdmin) return null;
+  if (user !== null && !canApprove) return null;
 
   const members = result?.data ?? [];
 
