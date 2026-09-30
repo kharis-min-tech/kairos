@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Biometric sign-in.
+ * Biometric sign-in — per-account.
  *
  * THE POINT OF THIS FILE, in one paragraph. A biometric prompt on its own is
  * theatre: `authenticateAsync()` returns a boolean, and anything that reads
@@ -13,35 +13,44 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * successful biometric check. The prompt the user sees is raised BY that read,
  * not by us in front of it.
  *
+ * MULTI-ACCOUNT MODEL. Each user who opts in has their own sealed entry in
+ * the keychain and their own record in an armed-users list. Signing out or
+ * signing in as a different account does NOT touch other users' entries —
+ * matches how 1Password, Bitwarden, and native passkeys handle multi-account.
+ *
  * Consequences worth knowing before changing any of this:
  *
  *   - The access token is NOT persisted while biometric is on. It is
  *     short-lived but still a bearer credential, and a copy on disk that the
- *     keychain will hand over freely would undo the whole arrangement. On
- *     launch we read the refresh token (one prompt) and exchange it.
+ *     keychain will hand over freely would undo the whole arrangement.
  *   - Changing or removing the device's enrolled biometrics can permanently
- *     invalidate the stored item. That is the OS protecting the user, not a
+ *     invalidate the stored items. That is the OS protecting the user, not a
  *     bug. Every read here therefore treats failure as "fall back to password
  *     sign-in", never as an error state that traps someone out of the app.
  *   - `requireAuthentication: true` throws at WRITE time on a device with no
- *     biometric enrolled, so `setEnabled` checks enrolment first and reports
+ *     biometric enrolled, so `enable` checks enrolment first and reports
  *     honestly rather than half-enabling.
  */
 
-const KEY_BIOMETRIC_REFRESH = 'kairos.biometric_refresh_token';
-/**
- * The opt-in flag lives in AsyncStorage, NOT SecureStore. It has to be
- * readable without a prompt: the login screen needs to know whether to offer
- * the button before it can ask for a fingerprint.
- */
-const KEY_BIOMETRIC_ENABLED = 'kairos.biometric_enabled';
-/**
- * Which member the sealed refresh token belongs to. Written alongside the
- * seal, read on subsequent password/OAuth logins so that signing in as a
- * DIFFERENT account disarms biometric — otherwise a second account would
- * silently inherit the first account's opt-in.
- */
-const KEY_BIOMETRIC_MEMBER_ID = 'kairos.biometric_member_id';
+/** JSON array of `ArmedUser` — who has opted in on this device. */
+const KEY_ARMED_USERS = 'kairos.biometric_armed_users';
+/** SecureStore key prefix for sealed refresh tokens, one per opted-in user. */
+const KEY_REFRESH_PREFIX = 'kairos.biometric_refresh_';
+/** AsyncStorage key prefix for "user said Not now on the enrolment prompt". */
+const KEY_DECLINED_PREFIX = 'kairos.biometric_declined_';
+
+// Legacy single-user keys, kept only long enough to migrate.
+const LEGACY_KEY_REFRESH = 'kairos.biometric_refresh_token';
+const LEGACY_KEY_ENABLED = 'kairos.biometric_enabled';
+const LEGACY_KEY_MEMBER_ID = 'kairos.biometric_member_id';
+
+export interface ArmedUser {
+  id: string;
+  displayName: string;
+  email?: string;
+  /** ISO timestamp — sorted most-recent-first when picking a default. */
+  addedAt: string;
+}
 
 export interface BiometricCapability {
   /** The device has the hardware at all. */
@@ -60,9 +69,8 @@ export interface BiometricCapability {
 /**
  * What this device can actually do, and what to call it.
  *
- * Never hardcode "Face ID": ask the OS. A device can report several types, so
- * prefer face over iris over fingerprint for the label, matching what a user
- * would call it.
+ * Never hardcode "Face ID": ask the OS. A device commonly reports several
+ * types — face + fingerprint on Android — and naming only one is misleading.
  */
 export async function getCapability(): Promise<BiometricCapability> {
   try {
@@ -72,10 +80,6 @@ export async function getCapability(): Promise<BiometricCapability> {
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
 
-    // Devices commonly report BOTH face + fingerprint. Naming only one there
-    // is misleading — a user with fingerprint set up would see "Face ID"
-    // beside a fingerprint icon and wonder what happened. Fall back to a
-    // neutral term when the device advertises more than one method.
     const hasFace = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
     const hasFinger = types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
     const hasIris = types.includes(LocalAuthentication.AuthenticationType.IRIS);
@@ -99,113 +103,150 @@ export async function getCapability(): Promise<BiometricCapability> {
   }
 }
 
-/** Whether the user has turned biometric sign-in on. Never prompts. */
-export async function isEnabled(): Promise<boolean> {
+// ── Armed users list ──────────────────────────────────────────────────────
+
+function refreshKeyFor(memberId: string): string {
+  return `${KEY_REFRESH_PREFIX}${memberId}`;
+}
+
+function declinedKeyFor(memberId: string): string {
+  return `${KEY_DECLINED_PREFIX}${memberId}`;
+}
+
+/**
+ * Everyone who has opted in on this device. Most recent first. Cheap read —
+ * safe to call on every login-screen render.
+ */
+export async function listArmedUsers(): Promise<ArmedUser[]> {
+  await migrateLegacyIfNeeded();
   try {
-    return (await AsyncStorage.getItem(KEY_BIOMETRIC_ENABLED)) === 'true';
+    const raw = await AsyncStorage.getItem(KEY_ARMED_USERS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((u): u is ArmedUser => !!u && typeof u.id === 'string' && typeof u.displayName === 'string')
+      .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''));
+  } catch {
+    return [];
+  }
+}
+
+/** Convenience — is this specific member opted in? */
+export async function isArmedFor(memberId: string): Promise<boolean> {
+  const users = await listArmedUsers();
+  return users.some((u) => u.id === memberId);
+}
+
+async function writeArmedUsers(users: ArmedUser[]): Promise<void> {
+  await AsyncStorage.setItem(KEY_ARMED_USERS, JSON.stringify(users));
+}
+
+// ── Enrolment-prompt "not now" flag ───────────────────────────────────────
+
+/**
+ * True when the user tapped "Not now" on the one-time enrolment prompt for
+ * this account. Persistent — we never ask that user again. They can still
+ * opt in via Security.
+ */
+export async function hasDeclined(memberId: string): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(declinedKeyFor(memberId))) === 'true';
   } catch {
     return false;
   }
 }
 
-/**
- * Discriminated result from {@link enable}. The `reason` on failure exists so
- * the caller can tell the user WHY the OS refused — an empty catch swallowed
- * that during earlier testing and made a real "device declined the write"
- * indistinguishable from a "user cancelled the prompt".
- */
+export async function markDeclined(memberId: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(declinedKeyFor(memberId), 'true');
+  } catch {
+    // Best effort — worst case we ask again on next login, which is not fatal.
+  }
+}
+
+// ── Enable / disable ──────────────────────────────────────────────────────
+
 export type EnableResult =
   | { ok: true }
   | { ok: false; reason: 'no_hardware' | 'not_enrolled' | 'keychain_denied'; message?: string };
 
 /**
- * Turn biometric sign-in on by sealing the refresh token behind the keychain's
- * own authentication requirement.
- *
- * `memberId` binds the sealed token to a specific account so subsequent
- * password/OAuth logins for a DIFFERENT account correctly disarm biometric
- * rather than silently inheriting the opt-in.
+ * Turn biometric sign-in on FOR THIS SPECIFIC USER by sealing their refresh
+ * token behind the keychain's own authentication requirement, and adding them
+ * to the armed-users list.
  *
  * Never throws — every failure resolves to a reason string the UI can render.
  * On Android the SecureStore write raises a biometric prompt itself; a
  * cancelled prompt therefore reaches this catch as `keychain_denied`.
  */
-export async function enable(refreshToken: string, memberId: string): Promise<EnableResult> {
+export async function enable(refreshToken: string, user: ArmedUser): Promise<EnableResult> {
   const cap = await getCapability();
   if (!cap.hasHardware) return { ok: false, reason: 'no_hardware' };
   if (!cap.isEnrolled) return { ok: false, reason: 'not_enrolled' };
 
   try {
-    await SecureStore.setItemAsync(KEY_BIOMETRIC_REFRESH, refreshToken, {
+    await SecureStore.setItemAsync(refreshKeyFor(user.id), refreshToken, {
       requireAuthentication: true,
-      // iOS only, and deliberately the strictest sensible option: the item is
-      // unreadable while the device is locked and never leaves this device in
-      // a backup.
+      // iOS only, and deliberately the strictest sensible option: unreadable
+      // while the device is locked and never leaves this device in a backup.
       keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
       authenticationPrompt: 'Confirm to enable biometric sign-in',
     });
-    await Promise.all([
-      AsyncStorage.setItem(KEY_BIOMETRIC_ENABLED, 'true'),
-      AsyncStorage.setItem(KEY_BIOMETRIC_MEMBER_ID, memberId),
-    ]);
+    const current = await listArmedUsers();
+    const next = [
+      { ...user, addedAt: user.addedAt || new Date(0).toISOString() },
+      ...current.filter((u) => u.id !== user.id),
+    ];
+    await writeArmedUsers(next);
     return { ok: true };
   } catch (err) {
-    // Common shapes reaching here on Android:
-    //   - User cancelled the biometric prompt
-    //   - Device biometric is Class 2 (Weak) and cannot back a Keystore key
-    //   - No device lock screen configured
-    //   - Enrolment vanished between the capability check and the write
-    // The message is not always user-friendly, but it is diagnostic enough
-    // to distinguish these when a user reports "it doesn't work".
     const message = err instanceof Error ? err.message : String(err);
     if (__DEV__) console.warn('[biometric.enable] refused:', message);
-    await disable();
+    // Leave nothing half-configured for this user.
+    await disable(user.id);
     return { ok: false, reason: 'keychain_denied', message };
   }
 }
 
-/** Turn it off and remove the sealed token. Safe to call when already off. */
-export async function disable(): Promise<void> {
+/**
+ * Turn biometric off for ONE user. Safe to call when already off. Does not
+ * touch other users' entries.
+ */
+export async function disable(memberId: string): Promise<void> {
   try {
-    // No requireAuthentication on delete: expo-secure-store does not need it
-    // to remove an item, and passing it here has been observed to raise a
-    // second biometric prompt on some Android SDK versions.
-    await SecureStore.deleteItemAsync(KEY_BIOMETRIC_REFRESH);
+    await SecureStore.deleteItemAsync(refreshKeyFor(memberId));
   } catch {
-    // Deleting an item the OS will not surface still needs to leave the flag
-    // off, so swallow and continue.
+    // Even when the OS refuses to surface the item, the list entry must still
+    // go so the login screen doesn't offer a button that cannot work.
   }
   try {
-    await Promise.all([
-      AsyncStorage.removeItem(KEY_BIOMETRIC_ENABLED),
-      AsyncStorage.removeItem(KEY_BIOMETRIC_MEMBER_ID),
-    ]);
+    const current = await listArmedUsers();
+    const next = current.filter((u) => u.id !== memberId);
+    if (next.length === current.length) return;
+    await writeArmedUsers(next);
   } catch {
-    // Nothing useful to do; the next read defaults to disabled.
+    // Nothing useful to do; the next read defaults to no armed users.
   }
 }
 
-/** Which member the sealed token belongs to. null if biometric is off. */
-export async function getSealedMemberId(): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(KEY_BIOMETRIC_MEMBER_ID);
-  } catch {
-    return null;
-  }
-}
+// ── Unlock ────────────────────────────────────────────────────────────────
 
 /**
- * Read the sealed refresh token. THIS is what raises the biometric prompt, and
- * the OS decides, not us.
+ * Read the sealed refresh token for a specific user. THIS is what raises the
+ * biometric prompt, and the OS decides, not us.
  *
  * Returns null on any failure: cancelled, no match, enrolment changed since it
  * was sealed, item missing. Every one of those means the same thing to the
  * caller — sign in with a password instead — so they are deliberately not
  * distinguished.
  */
-export async function unlockRefreshToken(promptLabel: string): Promise<string | null> {
+export async function unlockRefreshToken(
+  memberId: string,
+  promptLabel: string,
+): Promise<string | null> {
   try {
-    const token = await SecureStore.getItemAsync(KEY_BIOMETRIC_REFRESH, {
+    const token = await SecureStore.getItemAsync(refreshKeyFor(memberId), {
       requireAuthentication: true,
       authenticationPrompt: `Sign in with ${promptLabel}`,
     });
@@ -215,18 +256,17 @@ export async function unlockRefreshToken(promptLabel: string): Promise<string | 
   }
 }
 
+// ── Post-login reconcile ──────────────────────────────────────────────────
+
 /**
  * Called after any successful sign-in — password OR OAuth — to keep the seal
- * consistent with who is actually signed in.
+ * consistent with who just signed in.
  *
- * Three cases:
- *  1. Biometric is off → nothing to do.
- *  2. Biometric is armed for THIS member → reseal with the new refresh token
- *     to refresh its window (currently 90d, see apps/api DEFAULT_REFRESH_EXPIRY).
- *  3. Biometric is armed for a DIFFERENT member → disarm entirely. Otherwise
- *     the second account would silently inherit the first account's opt-in,
- *     and on next launch the login screen would offer a "sign in with
- *     Biometrics" button that logs in as the FIRST account.
+ * Only this user's arming is touched. If they are already armed, reseal with
+ * their new refresh token to refresh its 90-day window (see the API's
+ * DEFAULT_REFRESH_EXPIRY). If they are not, do nothing — the enrolment prompt
+ * lives on the login side and never fires from here. Other users' armings are
+ * never touched.
  *
  * WHY THERE IS NO RESEAL ON SILENT TOKEN REFRESH. `/api/auth/refresh` mints a
  * new refresh token, but tokens are stateless JWTs with no server-side
@@ -234,22 +274,48 @@ export async function unlockRefreshToken(promptLabel: string): Promise<string | 
  * expiry. Resealing on every silent refresh would buy nothing and cost a
  * biometric prompt each time — on Android a keychain WRITE under
  * `requireAuthentication` prompts, so it would fire mid-session, repeatedly.
- * Biometric sign-in therefore lasts the length of the refresh window from the
- * last password login, then falls back to the password screen which re-arms
- * it via this function. Any password login inside the window rearms too, so
- * regular users effectively never see the password screen.
  */
 export async function handlePostLogin(
   refreshToken: string,
-  memberId: string,
+  member: { id: string; displayName: string; email?: string },
 ): Promise<void> {
-  if (!(await isEnabled())) return;
-  const sealedFor = await getSealedMemberId();
-  if (sealedFor && sealedFor !== memberId) {
-    // A different account is signing in. Wipe biometric so this account has
-    // to opt in explicitly via Security.
-    await disable();
-    return;
+  if (!(await isArmedFor(member.id))) return;
+  await enable(refreshToken, {
+    id: member.id,
+    displayName: member.displayName,
+    email: member.email,
+    addedAt: new Date(0).toISOString(),
+  });
+}
+
+// ── Clean up the legacy single-user keys on first read ───────────────────
+//
+// The pre-2026-09-30 build stored ONE flag + ONE sealed token + ONE member id.
+// We deliberately do NOT carry that arming forward into the multi-account
+// schema: the sealed value cannot be moved out of SecureStore without raising
+// a biometric prompt, and the enrolment prompt now fires on the very next
+// login for anyone not opted in, so re-opt-in is one tap. The alternative
+// (keeping a legacy-fallback branch inside unlockRefreshToken) is a
+// permanent maintenance tax for a one-time drop-in cost.
+
+let cleanupDone = false;
+
+async function migrateLegacyIfNeeded(): Promise<void> {
+  if (cleanupDone) return;
+  cleanupDone = true;
+  try {
+    await Promise.all([
+      AsyncStorage.removeItem(LEGACY_KEY_ENABLED),
+      AsyncStorage.removeItem(LEGACY_KEY_MEMBER_ID),
+      SecureStore.deleteItemAsync(LEGACY_KEY_REFRESH),
+    ]);
+  } catch {
+    // Failure here means we may try to clean up again on the next read — no
+    // harm done, the delete is idempotent.
   }
-  await enable(refreshToken, memberId);
+}
+
+// Test-only reset for the cleanup guard.
+export function __resetMigrationForTests(): void {
+  cleanupDone = false;
 }

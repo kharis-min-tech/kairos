@@ -7,6 +7,10 @@ import * as biometric from '@/lib/biometric';
 jest.mock('@/lib/api-client', () => ({
   setSessionTokens: jest.fn(),
   registerAuthCallbacks: jest.fn(),
+  api: {
+    auth: { refresh: jest.fn() },
+    members: { me: jest.fn() },
+  },
 }));
 
 const setTokens = apiClient.setSessionTokens as jest.Mock;
@@ -25,9 +29,12 @@ const resetPersistence = async () => {
   await AsyncStorage.clear();
 };
 
-const fakeUser = { id: 'm1', email: 'a@b.co' } as unknown as Parameters<
-  ReturnType<typeof useAuthStore.getState>['setSession']
->[1];
+const fakeUser = {
+  id: 'm1',
+  email: 'a@b.co',
+  firstName: 'Alice',
+  lastName: 'Test',
+} as unknown as Parameters<ReturnType<typeof useAuthStore.getState>['setSession']>[1];
 
 const fakeTokens = { accessToken: 'a', refreshToken: 'r' };
 
@@ -35,6 +42,7 @@ beforeEach(async () => {
   setTokens.mockClear();
   resetStore();
   await resetPersistence();
+  biometric.__resetMigrationForTests();
 });
 
 describe('useAuthStore', () => {
@@ -83,7 +91,7 @@ describe('useAuthStore', () => {
     expect(setTokens).toHaveBeenCalledWith({ accessToken: 'a2', refreshToken: 'r2' });
   });
 
-  it('clearSession wipes memory + persistence + api-client cache when biometric is off', async () => {
+  it('clearSession drops live tokens + cached user, unconditionally', async () => {
     await useAuthStore.getState().setSession(fakeTokens, fakeUser);
     setTokens.mockClear();
     await useAuthStore.getState().clearSession();
@@ -96,44 +104,71 @@ describe('useAuthStore', () => {
     expect(setTokens).toHaveBeenCalledWith(null);
   });
 
-  it('clearSession preserves the sealed token, biometric flag and cached profile when biometric is armed', async () => {
-    // Otherwise "sign out, sign back in" breaks the biometric loop: the flag
-    // gets cleared on sign-out, so handlePostLogin no-ops and the login screen
-    // never shows the button again.
-    await useAuthStore.getState().setSession(fakeTokens, fakeUser);
-    await biometric.enable(fakeTokens.refreshToken, fakeUser.id);
-    expect(await biometric.isEnabled()).toBe(true);
+  it('clearSession never touches any user\'s biometric arming', async () => {
+    // Two users have opted in on this device.
+    const armedAlice = {
+      id: fakeUser.id,
+      displayName: 'Alice Test',
+      email: fakeUser.email,
+      addedAt: '2026-09-30T00:00:00.000Z',
+    };
+    const armedBob = {
+      id: 'm2',
+      displayName: 'Bob',
+      email: 'b@c.co',
+      addedAt: '2026-09-30T01:00:00.000Z',
+    };
+    await biometric.enable('r-alice', armedAlice);
+    await biometric.enable('r-bob', armedBob);
+    expect(await biometric.isArmedFor(armedAlice.id)).toBe(true);
+    expect(await biometric.isArmedFor(armedBob.id)).toBe(true);
 
+    // Alice signs in then out. Bob's arming must not care.
+    await useAuthStore.getState().setSession(fakeTokens, fakeUser);
     await useAuthStore.getState().clearSession();
 
-    // Live tokens gone
-    expect(await SecureStore.getItemAsync('kairos.access_token')).toBeNull();
-    expect(await SecureStore.getItemAsync('kairos.refresh_token')).toBeNull();
-    // Biometric arming preserved
-    expect(await biometric.isEnabled()).toBe(true);
-    expect(await biometric.unlockRefreshToken('Fingerprint')).toBe(fakeTokens.refreshToken);
-    // Cached profile preserved so signInWithBiometric can restore it
-    expect(await AsyncStorage.getItem('kairos.user')).not.toBeNull();
+    expect(await biometric.isArmedFor(armedAlice.id)).toBe(true);
+    expect(await biometric.isArmedFor(armedBob.id)).toBe(true);
+    // Cached "who was last signed in" DOES go — nothing about biometric depends on it.
+    expect(await AsyncStorage.getItem('kairos.user')).toBeNull();
   });
 
-  it('setSession disarms biometric when a DIFFERENT account signs in', async () => {
-    // First account opts in.
-    await useAuthStore.getState().setSession(fakeTokens, fakeUser);
-    await biometric.enable(fakeTokens.refreshToken, fakeUser.id);
-    expect(await biometric.getSealedMemberId()).toBe(fakeUser.id);
+  it('setSession as user B does not touch user A\'s biometric arming', async () => {
+    const armedAlice = {
+      id: fakeUser.id,
+      displayName: 'Alice Test',
+      email: fakeUser.email,
+      addedAt: '2026-09-30T00:00:00.000Z',
+    };
+    await biometric.enable('r-alice', armedAlice);
 
-    // Soft sign-out preserves biometric.
-    await useAuthStore.getState().clearSession();
-    expect(await biometric.isEnabled()).toBe(true);
+    // User B signs in with password. Alice's arming is left alone entirely.
+    const userB = {
+      id: 'm2',
+      email: 'c@d.co',
+      firstName: 'Bob',
+      lastName: 'Test',
+    } as unknown as typeof fakeUser;
+    await useAuthStore.getState().setSession({ accessToken: 'a3', refreshToken: 'r3' }, userB);
 
-    // Second account signs in. Biometric must NOT carry over — if it did, the
-    // login screen would offer a "Sign in with Biometrics" button that logs
-    // in as the FIRST account.
-    const otherUser = { ...fakeUser, id: 'm2', email: 'c@d.co' };
-    const otherTokens = { accessToken: 'a3', refreshToken: 'r3' };
-    await useAuthStore.getState().setSession(otherTokens, otherUser);
+    expect(await biometric.isArmedFor(armedAlice.id)).toBe(true);
+    expect(await biometric.unlockRefreshToken(armedAlice.id, 'Fingerprint')).toBe('r-alice');
+    expect(await biometric.isArmedFor('m2')).toBe(false);
+  });
 
-    expect(await biometric.isEnabled()).toBe(false);
-    expect(await biometric.getSealedMemberId()).toBeNull();
+  it('setSession reseals biometric for the same user', async () => {
+    const armed = {
+      id: fakeUser.id,
+      displayName: 'Alice Test',
+      email: fakeUser.email,
+      addedAt: '2026-09-30T00:00:00.000Z',
+    };
+    await biometric.enable('r-original', armed);
+
+    // Same user password-signs-in again with a freshly minted refresh token.
+    await useAuthStore.getState().setSession({ accessToken: 'a2', refreshToken: 'r-new' }, fakeUser);
+
+    // 90-day window refreshed against the new token.
+    expect(await biometric.unlockRefreshToken(fakeUser.id, 'Fingerprint')).toBe('r-new');
   });
 });
