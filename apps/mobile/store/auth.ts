@@ -67,15 +67,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
     });
     setSessionTokens(tokens);
-    // Reseal this specific user's biometric window if they are already opted
-    // in. Other armed users' entries are never touched — one account signing
-    // in must not disturb another's arming. Enrolment prompting lives on the
-    // login screen and never fires from here.
-    await biometric.handlePostLogin(tokens.refreshToken, {
-      id: user.id,
-      displayName: displayNameFor(user),
-      email: user.email,
-    });
+    // Deliberately does NOT touch biometric. Every path that ARMS or RESEALS
+    // is now user-initiated — the enrolment modal on the login screen for
+    // first-time opt-in, and the Security toggle for switching it on/off.
+    // Automatic post-login resealing raised a keychain-write biometric
+    // prompt on Android after every sign-in, which read as broken.
   },
 
   updateTokens: async (tokens) => {
@@ -160,12 +156,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         refreshToken: tokens.refreshToken,
         user,
       });
-      // Reseal to refresh the 90-day window with the freshly minted token.
-      await biometric.handlePostLogin(tokens.refreshToken, {
-        id: user.id,
-        displayName: displayNameFor(user),
-        email: user.email,
-      });
+      // Deliberately NOT resealing here. The user already did one biometric
+      // prompt to unlock; on Android a SecureStore write under
+      // requireAuthentication raises a SECOND prompt, and a two-prompt
+      // sign-in every time was the loudest UX complaint after the initial
+      // multi-account rework. The sealed token stays valid until its own
+      // 90-day expiry from the last password sign-in. Users who mix in a
+      // password login within that window (via the login screen or an
+      // explicit re-arm from Security) get the fresh window; users who only
+      // ever biometric-sign-in fall back to the password screen once every
+      // 90 days, which re-arms them.
       return true;
     } catch {
       // Sealed token expired, account revoked, or /me failed. All resolve to
@@ -175,9 +175,3 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }));
 
-function displayNameFor(user: MemberProfile): string {
-  const first = user.firstName?.trim();
-  const last = user.lastName?.trim();
-  const full = [first, last].filter(Boolean).join(' ');
-  return full || user.email || 'Your account';
-}

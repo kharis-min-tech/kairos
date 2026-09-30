@@ -156,7 +156,11 @@ describe('useAuthStore', () => {
     expect(await biometric.isArmedFor('m2')).toBe(false);
   });
 
-  it('setSession reseals biometric for the same user', async () => {
+  it('setSession never reseals biometric — arming is user-initiated only', async () => {
+    // Automatic reseal on every login used to raise a keychain-write biometric
+    // prompt on Android, so users got a second prompt right after logging in.
+    // The seal is now touched only via the enrolment modal or the Security
+    // toggle. The sealed token keeps its original 90-day TTL until either.
     const armed = {
       id: fakeUser.id,
       displayName: 'Alice Test',
@@ -165,10 +169,10 @@ describe('useAuthStore', () => {
     };
     await biometric.enable('r-original', armed);
 
-    // Same user password-signs-in again with a freshly minted refresh token.
     await useAuthStore.getState().setSession({ accessToken: 'a2', refreshToken: 'r-new' }, fakeUser);
 
-    // 90-day window refreshed against the new token.
-    expect(await biometric.unlockRefreshToken(fakeUser.id, 'Fingerprint')).toBe('r-new');
+    // Sealed token is UNCHANGED — no prompt was raised, and the pre-existing
+    // sealed value is what a biometric login would still unlock.
+    expect(await biometric.unlockRefreshToken(fakeUser.id, 'Fingerprint')).toBe('r-original');
   });
 });
