@@ -1,15 +1,11 @@
 /**
- * Guards biometric sign-in.
+ * Guards multi-account biometric sign-in.
  *
- * The thing under test is NOT "does a prompt appear". It is that the refresh
- * token is sealed with `requireAuthentication`, so the OS keychain refuses to
- * return it without a successful check — and that every way that can fail
- * degrades to "sign in with your password" rather than trapping someone out of
- * the app or, worse, silently leaving the token readable.
- *
- * This module shipped for months as a placeholder whose only behaviour was an
- * alert, while `expo-local-authentication` sat installed and jest-mocked. The
- * mock made it look covered. These tests exist so that cannot recur.
+ * The thing under test is NOT "does a prompt appear". It is that each opted-in
+ * user's refresh token is sealed with `requireAuthentication` under a distinct
+ * per-user key, that signing in / out one account never touches another's
+ * arming, and that every failure degrades to "sign in with your password"
+ * rather than trapping someone out of the app or leaving a token readable.
  */
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
@@ -24,7 +20,7 @@ const secure = SecureStore as unknown as {
   getItemAsync: jest.Mock;
 };
 
-const SEALED_KEY = 'kairos.biometric_refresh_token';
+const REFRESH_KEY = (id: string) => `kairos.biometric_refresh_${id}`;
 
 function mockTypes(...types: number[]) {
   (LocalAuthentication.supportedAuthenticationTypesAsync as jest.Mock).mockResolvedValue(
@@ -32,10 +28,25 @@ function mockTypes(...types: number[]) {
   );
 }
 
+const alice = {
+  id: 'user-alice',
+  displayName: 'Alice Test',
+  email: 'alice@example.com',
+  addedAt: '2026-09-30T00:00:00.000Z',
+};
+
+const bob = {
+  id: 'user-bob',
+  displayName: 'Bob Test',
+  email: 'bob@example.com',
+  addedAt: '2026-09-30T01:00:00.000Z',
+};
+
 beforeEach(async () => {
   jest.clearAllMocks();
   secure.__reset();
   await AsyncStorage.clear();
+  biometric.__resetMigrationForTests();
   (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true);
   (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(true);
   mockTypes(LocalAuthentication.AuthenticationType.FINGERPRINT);
@@ -54,8 +65,6 @@ describe('getCapability', () => {
   });
 
   it('says "Biometrics" when a device reports several methods', async () => {
-    // Naming only one on a device that has both is misleading: a user with
-    // fingerprint set up would see "Face ID" beside a fingerprint icon.
     mockTypes(
       LocalAuthentication.AuthenticationType.FINGERPRINT,
       LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION,
@@ -85,111 +94,163 @@ describe('getCapability', () => {
 });
 
 describe('enable', () => {
-  it('seals the token with requireAuthentication — the whole point', async () => {
-    const result = await biometric.enable('refresh-abc', 'member-a');
+  it('seals THIS user\'s token with requireAuthentication and adds them to the armed list', async () => {
+    const result = await biometric.enable('refresh-a', alice);
     expect(result).toEqual({ ok: true });
 
-    const opts = secure.setItemAsync.mock.calls.find((c) => c[0] === SEALED_KEY)?.[2];
-    // Without this flag the keychain hands the token over to anything that
-    // asks, and the prompt becomes decoration.
+    const opts = secure.setItemAsync.mock.calls.find((c) => c[0] === REFRESH_KEY(alice.id))?.[2];
     expect(opts).toMatchObject({ requireAuthentication: true });
-    expect(await biometric.isEnabled()).toBe(true);
+    expect(await biometric.isArmedFor(alice.id)).toBe(true);
+    expect(await biometric.listArmedUsers()).toEqual([
+      expect.objectContaining({ id: alice.id, displayName: alice.displayName }),
+    ]);
   });
 
   it('reports the reason when hardware is absent', async () => {
     (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(false);
-    expect(await biometric.enable('refresh-abc', 'member-a')).toEqual({ ok: false, reason: 'no_hardware' });
+    expect(await biometric.enable('refresh-a', alice)).toEqual({
+      ok: false,
+      reason: 'no_hardware',
+    });
   });
 
   it('refuses on a device with no enrolment, rather than half-arming', async () => {
     (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(false);
-    const result = await biometric.enable('refresh-abc', 'member-a');
+    const result = await biometric.enable('refresh-a', alice);
     expect(result).toMatchObject({ ok: false, reason: 'not_enrolled' });
-    expect(await biometric.isEnabled()).toBe(false);
-    expect(secure.__has(SEALED_KEY)).toBe(false);
+    expect(await biometric.isArmedFor(alice.id)).toBe(false);
+    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(false);
   });
 
   it('leaves nothing half-configured when the keychain write is refused', async () => {
-    // Enrolment can disappear between the capability check and the write.
     secure.__denyAuth(true);
-    const result = await biometric.enable('refresh-abc', 'member-a');
+    const result = await biometric.enable('refresh-a', alice);
     expect(result).toMatchObject({ ok: false, reason: 'keychain_denied' });
-    expect(await biometric.isEnabled()).toBe(false);
+    expect(await biometric.isArmedFor(alice.id)).toBe(false);
+  });
+
+  it('two users on the same device stay independent', async () => {
+    await biometric.enable('refresh-a', alice);
+    await biometric.enable('refresh-b', bob);
+    expect(await biometric.isArmedFor(alice.id)).toBe(true);
+    expect(await biometric.isArmedFor(bob.id)).toBe(true);
+    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(true);
+    expect(secure.__has(REFRESH_KEY(bob.id))).toBe(true);
   });
 });
 
-
 describe('unlockRefreshToken', () => {
   it('returns the token when the keychain unseals it', async () => {
-    await biometric.enable('refresh-abc', 'member-a');
-    expect(await biometric.unlockRefreshToken('Fingerprint')).toBe('refresh-abc');
+    await biometric.enable('refresh-a', alice);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a');
   });
 
   it('reads it back under requireAuthentication, not as a plain read', async () => {
-    await biometric.enable('refresh-abc', 'member-a');
+    await biometric.enable('refresh-a', alice);
     secure.getItemAsync.mockClear();
-    await biometric.unlockRefreshToken('Fingerprint');
-    const opts = secure.getItemAsync.mock.calls.find((c) => c[0] === SEALED_KEY)?.[1];
+    await biometric.unlockRefreshToken(alice.id, 'Fingerprint');
+    const opts = secure.getItemAsync.mock.calls.find((c) => c[0] === REFRESH_KEY(alice.id))?.[1];
     expect(opts).toMatchObject({ requireAuthentication: true });
   });
 
   it('returns null when the prompt is cancelled or the finger does not match', async () => {
-    await biometric.enable('refresh-abc', 'member-a');
+    await biometric.enable('refresh-a', alice);
     secure.__denyAuth(true);
-    expect(await biometric.unlockRefreshToken('Fingerprint')).toBeNull();
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBeNull();
   });
 
-  it('returns null when nothing was ever sealed', async () => {
-    expect(await biometric.unlockRefreshToken('Fingerprint')).toBeNull();
+  it('returns null when nothing was ever sealed for this user', async () => {
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBeNull();
+  });
+
+  it('does NOT unlock user B\'s token when asked for user A', async () => {
+    await biometric.enable('refresh-a', alice);
+    await biometric.enable('refresh-b', bob);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a');
+    expect(await biometric.unlockRefreshToken(bob.id, 'Fingerprint')).toBe('refresh-b');
   });
 });
 
 describe('disable', () => {
-  it('drops the sealed token and the flag', async () => {
-    await biometric.enable('refresh-abc', 'member-a');
-    await biometric.disable();
-    expect(await biometric.isEnabled()).toBe(false);
-    expect(secure.__has(SEALED_KEY)).toBe(false);
+  it('drops only the target user\'s sealed token and list entry', async () => {
+    await biometric.enable('refresh-a', alice);
+    await biometric.enable('refresh-b', bob);
+    await biometric.disable(alice.id);
+    expect(await biometric.isArmedFor(alice.id)).toBe(false);
+    expect(await biometric.isArmedFor(bob.id)).toBe(true);
+    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(false);
+    expect(secure.__has(REFRESH_KEY(bob.id))).toBe(true);
   });
 
-  it('still turns the flag off when the OS will not unseal for deletion', async () => {
-    // Otherwise a device whose enrolment changed would be stuck reporting
-    // biometrics as enabled while nothing could ever unlock.
-    await biometric.enable('refresh-abc', 'member-a');
+  it('still removes the list entry when the OS refuses to delete the sealed item', async () => {
+    await biometric.enable('refresh-a', alice);
     secure.__denyAuth(true);
-    await biometric.disable();
-    expect(await biometric.isEnabled()).toBe(false);
+    await biometric.disable(alice.id);
+    expect(await biometric.isArmedFor(alice.id)).toBe(false);
   });
 
-  it('is safe to call when it was never enabled', async () => {
-    await expect(biometric.disable()).resolves.toBeUndefined();
+  it('is safe to call for a user who was never armed', async () => {
+    await expect(biometric.disable(alice.id)).resolves.toBeUndefined();
   });
 });
 
 describe('handlePostLogin', () => {
-  it('refreshes the seal when the SAME member signs in again', async () => {
-    await biometric.enable('refresh-old', 'member-a');
-    await biometric.handlePostLogin('refresh-new', 'member-a');
-    expect(await biometric.unlockRefreshToken('Fingerprint')).toBe('refresh-new');
-    expect(await biometric.getSealedMemberId()).toBe('member-a');
+  it('reseals THIS user when they are already opted in', async () => {
+    await biometric.enable('refresh-old', alice);
+    await biometric.handlePostLogin('refresh-new', alice);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-new');
   });
 
-  it('does NOT arm biometrics for someone who never opted in', async () => {
-    // Enabling it silently on password login would be a security decision made
-    // on the user's behalf.
-    await biometric.handlePostLogin('refresh-new', 'member-a');
-    expect(await biometric.isEnabled()).toBe(false);
-    expect(secure.__has(SEALED_KEY)).toBe(false);
+  it('is a no-op when this user has not opted in', async () => {
+    // Enrolment is offered on the login screen, not silently here.
+    await biometric.handlePostLogin('refresh-a', alice);
+    expect(await biometric.isArmedFor(alice.id)).toBe(false);
+    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(false);
   });
 
-  it('disarms biometric when a DIFFERENT member signs in', async () => {
-    // Otherwise the second account silently inherits the first account's
-    // opt-in, and the login screen offers a "Sign in with Biometrics" button
-    // that logs in as the FIRST account.
-    await biometric.enable('refresh-a', 'member-a');
-    await biometric.handlePostLogin('refresh-b', 'member-b');
-    expect(await biometric.isEnabled()).toBe(false);
-    expect(secure.__has(SEALED_KEY)).toBe(false);
-    expect(await biometric.getSealedMemberId()).toBeNull();
+  it('signing in as user B does NOT touch user A\'s arming', async () => {
+    await biometric.enable('refresh-a', alice);
+    await biometric.handlePostLogin('refresh-b', bob);
+    expect(await biometric.isArmedFor(alice.id)).toBe(true);
+    expect(await biometric.isArmedFor(bob.id)).toBe(false);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a');
+  });
+
+  it('signing in as user A after previously signing in as B preserves A\'s arming', async () => {
+    // Reported bug: user A → sign out → sign in with biometric → sign out →
+    // sign in as B → sign out → sign in as A again used to lose A's arming.
+    await biometric.enable('refresh-a', alice);
+    await biometric.handlePostLogin('refresh-b1', bob); // B signs in
+    await biometric.handlePostLogin('refresh-a2', alice); // A signs back in
+    expect(await biometric.isArmedFor(alice.id)).toBe(true);
+    // A's sealed token was refreshed
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe('refresh-a2');
+  });
+});
+
+describe('hasDeclined / markDeclined', () => {
+  it('remembers who has said "Not now"', async () => {
+    expect(await biometric.hasDeclined(alice.id)).toBe(false);
+    await biometric.markDeclined(alice.id);
+    expect(await biometric.hasDeclined(alice.id)).toBe(true);
+    expect(await biometric.hasDeclined(bob.id)).toBe(false);
+  });
+});
+
+describe('legacy cleanup', () => {
+  it('removes the pre-2026-09-30 single-user keys on first read', async () => {
+    await AsyncStorage.setItem('kairos.biometric_enabled', 'true');
+    await AsyncStorage.setItem('kairos.biometric_member_id', 'legacy-user');
+    await SecureStore.setItemAsync('kairos.biometric_refresh_token', 'legacy-refresh');
+
+    // First call migrates.
+    await biometric.listArmedUsers();
+
+    expect(await AsyncStorage.getItem('kairos.biometric_enabled')).toBeNull();
+    expect(await AsyncStorage.getItem('kairos.biometric_member_id')).toBeNull();
+    expect(secure.__has('kairos.biometric_refresh_token')).toBe(false);
+    // No armed users carried forward — the user re-opts in via the enrolment
+    // prompt on their next login.
+    expect(await biometric.listArmedUsers()).toEqual([]);
   });
 });

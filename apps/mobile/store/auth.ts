@@ -20,8 +20,12 @@ interface AuthState {
   updateTokens: (tokens: AuthTokens) => Promise<void>;
   updateUser: (patch: Partial<MemberProfile>) => Promise<void>;
   clearSession: () => Promise<void>;
-  /** Returns false on any failure; the caller falls back to the password form. */
-  signInWithBiometric: (promptLabel: string) => Promise<boolean>;
+  /**
+   * Unlock the sealed refresh token for a specific armed user, exchange it for
+   * a live pair, fetch that user's profile fresh, and set the session. Returns
+   * false on any failure; the caller falls back to the password form.
+   */
+  signInWithBiometric: (memberId: string, promptLabel: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -63,10 +67,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
     });
     setSessionTokens(tokens);
-    // Reconcile biometric state with WHO just signed in — reseals for the same
-    // account, disarms when a different account signs in. Covers both the
-    // password and OAuth entry points because both funnel through here.
-    await biometric.handlePostLogin(tokens.refreshToken, user.id);
+    // Reseal this specific user's biometric window if they are already opted
+    // in. Other armed users' entries are never touched — one account signing
+    // in must not disturb another's arming. Enrolment prompting lives on the
+    // login screen and never fires from here.
+    await biometric.handlePostLogin(tokens.refreshToken, {
+      id: user.id,
+      displayName: displayNameFor(user),
+      email: user.email,
+    });
   },
 
   updateTokens: async (tokens) => {
@@ -90,24 +99,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearSession: async () => {
-    // Live tokens go, always.
+    // Live tokens + cached "who was signed in last" go, always.
     await Promise.all([
       SecureStore.deleteItemAsync(KEY_ACCESS),
       SecureStore.deleteItemAsync(KEY_REFRESH),
+      AsyncStorage.removeItem(KEY_USER),
     ]);
-    // Biometric-armed sign-out is a soft sign-out: keep the sealed refresh
-    // token and the cached profile so the user can biometric-sign-in on next
-    // launch without re-typing. The sealed token cannot be redeemed without
-    // the owner's biometric, so leaving it in the OS keychain gives up no
-    // security — this matches how banking apps and WhatsApp behave. To fully
-    // wipe, the user turns biometric OFF in Security first (which calls
-    // biometric.disable() explicitly) and then signs out.
-    if (!(await biometric.isEnabled())) {
-      await Promise.all([
-        AsyncStorage.removeItem(KEY_USER),
-        biometric.disable(),
-      ]);
-    }
+    // Biometric arming is intentionally NOT touched here. It lives per-user
+    // in its own list; signing out one account has no effect on any armed
+    // user's sealed refresh token. To fully wipe biometric, the user toggles
+    // it OFF in Security first (which calls biometric.disable(memberId)) and
+    // then signs out.
     set({
       accessToken: null,
       refreshToken: null,
@@ -117,47 +119,65 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   /**
-   * Sign in with biometrics.
+   * Sign in with biometrics for a specific armed user (chosen from the login
+   * picker). Unlocks THAT user's sealed refresh token, exchanges it for a
+   * live pair, fetches a fresh profile from the server (so we never restore
+   * stale cached data across account switches), and sets the session.
    *
-   * The prompt is raised by the KEYCHAIN refusing to unseal the refresh token
-   * without authentication — not by us gating a value we already hold. See
-   * lib/biometric.ts for why that distinction is the whole feature.
+   * The biometric prompt is raised by the KEYCHAIN refusing to unseal the
+   * refresh token without authentication — not by us gating a value we
+   * already hold. See lib/biometric.ts for why that distinction is the whole
+   * feature.
    *
-   * The unsealed token is then exchanged for a live pair, because a refresh
-   * token is not an access token and the API will not accept it as one.
-   * Returns false on every failure path (cancelled, no match, enrolment
-   * changed, token expired); the caller falls back to the password form.
+   * Returns false on every failure path (cancelled, no match, sealed token
+   * expired, account revoked); the caller falls back to the password form.
    */
-  signInWithBiometric: async (promptLabel: string) => {
-    const sealed = await biometric.unlockRefreshToken(promptLabel);
+  signInWithBiometric: async (memberId: string, promptLabel: string) => {
+    const sealed = await biometric.unlockRefreshToken(memberId, promptLabel);
     if (!sealed) return false;
 
     try {
-      const res = await api.auth.refresh({ refreshToken: sealed });
-      const tokens = res.data;
+      const refreshRes = await api.auth.refresh({ refreshToken: sealed });
+      const tokens = refreshRes.data;
       if (!tokens) return false;
 
-      const userJson = await AsyncStorage.getItem(KEY_USER);
-      const user = userJson ? (JSON.parse(userJson) as MemberProfile) : null;
-      // The profile is cached alongside the tokens. Without it there is no
-      // session to restore, only credentials, so send them to the full form.
+      // Fetch profile with the new access token before setSession so the
+      // shape lives entirely on the server. We never restore a cached
+      // profile keyed on the last-used member — that's how the wrong avatar
+      // used to flash across account switches.
+      setSessionTokens(tokens);
+      const meRes = await api.members.me();
+      const user = meRes.data;
       if (!user) return false;
 
       await Promise.all([
         SecureStore.setItemAsync(KEY_ACCESS, tokens.accessToken),
         SecureStore.setItemAsync(KEY_REFRESH, tokens.refreshToken),
+        AsyncStorage.setItem(KEY_USER, JSON.stringify(user)),
       ]);
       set({
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user,
       });
-      setSessionTokens(tokens);
+      // Reseal to refresh the 90-day window with the freshly minted token.
+      await biometric.handlePostLogin(tokens.refreshToken, {
+        id: user.id,
+        displayName: displayNameFor(user),
+        email: user.email,
+      });
       return true;
     } catch {
-      // The sealed token has expired (90 days from arming) or the account is
-      // gone. Both mean the same thing to the user: sign in with your password.
+      // Sealed token expired, account revoked, or /me failed. All resolve to
+      // the same user-facing outcome: sign in with your password.
       return false;
     }
   },
 }));
+
+function displayNameFor(user: MemberProfile): string {
+  const first = user.firstName?.trim();
+  const last = user.lastName?.trim();
+  const full = [first, last].filter(Boolean).join(' ');
+  return full || user.email || 'Your account';
+}

@@ -30,6 +30,8 @@ import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
 import * as biometric from '@/lib/biometric';
+import type { ArmedUser } from '@/lib/biometric';
+import { alert } from '@/lib/alert';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 
 export default function LoginScreen() {
@@ -42,40 +44,87 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Whether to offer the biometric button at all, and what to call it. Both
-  // come from the device: the old placeholder said "Face ID" beside a
-  // fingerprint icon, which was wrong on most Android hardware.
-  const [bio, setBio] = useState<{ label: string; armed: boolean } | null>(null);
-  const [bioBusy, setBioBusy] = useState(false);
+  // What the device can do (Face ID / Fingerprint / …) and which accounts
+  // are already opted in on this device. The picker at the top of the card
+  // shows one row per armed user; the email/password form below is the
+  // universal fallback.
+  const [cap, setCap] = useState<biometric.BiometricCapability | null>(null);
+  const [armedUsers, setArmedUsers] = useState<ArmedUser[]>([]);
+  const [bioBusy, setBioBusy] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [cap, enabled] = await Promise.all([
+      const [capability, users] = await Promise.all([
         biometric.getCapability(),
-        biometric.isEnabled(),
+        biometric.listArmedUsers(),
       ]);
       if (cancelled) return;
-      setBio({ label: cap.label, armed: cap.available && enabled });
+      setCap(capability);
+      setArmedUsers(users);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  async function handleBiometricSignIn() {
-    if (!bio?.armed || bioBusy) return;
-    setBioBusy(true);
+  const canOfferBiometric = !!cap?.available && armedUsers.length > 0;
+
+  async function handleBiometricSignIn(user: ArmedUser) {
+    if (!cap?.available || bioBusy) return;
+    setBioBusy(user.id);
     setError(null);
-    const ok = await signInWithBiometric(bio.label);
-    setBioBusy(false);
+    const ok = await signInWithBiometric(user.id, cap.label);
+    setBioBusy(null);
     if (ok) {
       router.replace('/(tabs)');
       return;
     }
-    // Deliberately not distinguishing cancelled / no-match / expired: they all
-    // mean "use your password", and guessing wrong reads as an accusation.
-    setError(`Could not sign in with ${bio.label}. Use your email and password.`);
+    // A stale sealed token or a revoked account both surface here. Drop the
+    // user from the picker so a broken button doesn't linger, and re-read
+    // the list in case anything else changed.
+    await biometric.disable(user.id);
+    setArmedUsers(await biometric.listArmedUsers());
+    setError(`Could not sign in as ${user.displayName}. Use your email and password.`);
+  }
+
+  /**
+   * After a successful password/OAuth login, offer biometric enrolment to
+   * users who haven't opted in and haven't already said "Not now" once.
+   * Resolves after the user answers so we don't route away mid-modal.
+   */
+  async function maybeOfferBiometricEnrolment(user: {
+    id: string;
+    displayName: string;
+    email?: string;
+    refreshToken: string;
+  }) {
+    if (!cap?.available) return;
+    if (await biometric.isArmedFor(user.id)) return;
+    if (await biometric.hasDeclined(user.id)) return;
+
+    const accepted = await alert.confirm({
+      title: `Sign in with ${cap.label} next time?`,
+      message: 'One tap to unlock the app — no password to type.',
+      confirmLabel: 'Enable',
+      cancelLabel: 'Not now',
+    });
+    if (!accepted) {
+      await biometric.markDeclined(user.id);
+      return;
+    }
+    const result = await biometric.enable(user.refreshToken, {
+      id: user.id,
+      displayName: user.displayName,
+      email: user.email,
+      addedAt: new Date().toISOString(),
+    });
+    if (!result.ok && result.reason === 'keychain_denied') {
+      // User cancelled the OS biometric prompt during the write, or the
+      // device declined. Don't nag them again — silent no-op is the right
+      // outcome; they can retry from Security if they change their mind.
+      await biometric.markDeclined(user.id);
+    }
   }
 
   const login = useMutation({
@@ -87,10 +136,16 @@ export default function LoginScreen() {
       return res.data;
     },
     onSuccess: async ({ tokens, member }) => {
-      // setSession itself reconciles biometric state — reseals when the same
-      // account signs in and disarms when a different one does. Never turns
-      // biometric ON by itself; that stays an explicit Security opt-in.
+      // setSession reseals biometric for users already opted in. It never
+      // turns biometric ON for a new user — enrolment lives here so the
+      // login screen owns the one-time prompt.
       await setSession(tokens, member);
+      await maybeOfferBiometricEnrolment({
+        id: member.id,
+        displayName: `${member.firstName ?? ''} ${member.lastName ?? ''}`.trim() || member.email,
+        email: member.email,
+        refreshToken: tokens.refreshToken,
+      });
       router.replace('/(tabs)');
     },
     onError: (e: Error) => {
@@ -125,6 +180,12 @@ export default function LoginScreen() {
     try {
       const member = await fetchMemberProfile(result.tokens.accessToken);
       await setSession(result.tokens, member);
+      await maybeOfferBiometricEnrolment({
+        id: member.id,
+        displayName: `${member.firstName ?? ''} ${member.lastName ?? ''}`.trim() || member.email,
+        email: member.email,
+        refreshToken: result.tokens.refreshToken,
+      });
       router.replace('/(tabs)');
     } catch (err) {
       setError(
@@ -228,22 +289,30 @@ export default function LoginScreen() {
               variant="icons"
             />
 
-            {/* Only shown once biometrics are actually armed. Offering it
-                otherwise was the old placeholder's sin: a button that could
-                never do anything. */}
-            {bio?.armed ? (
-              <Pressable
-                onPress={() => void handleBiometricSignIn()}
-                style={styles.biometricButton}
-                disabled={bioBusy}
-                accessibilityRole="button"
-                accessibilityLabel={`Sign in with ${bio.label}`}
-              >
-                <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
-                <Text style={styles.biometricLabel}>
-                  {bioBusy ? 'Authenticating…' : `Sign in with ${bio.label}`}
-                </Text>
-              </Pressable>
+            {/* One row per opted-in account on this device. Empty when no
+                one has enrolled — the email/password form above is the
+                fallback. */}
+            {canOfferBiometric ? (
+              <View style={styles.biometricGroup}>
+                {armedUsers.map((user) => {
+                  const busy = bioBusy === user.id;
+                  return (
+                    <Pressable
+                      key={user.id}
+                      onPress={() => void handleBiometricSignIn(user)}
+                      style={styles.biometricButton}
+                      disabled={!!bioBusy}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Sign in as ${user.displayName} with ${cap!.label}`}
+                    >
+                      <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
+                      <Text style={styles.biometricLabel} numberOfLines={1}>
+                        {busy ? 'Authenticating…' : `Continue as ${user.displayName}`}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             ) : null}
           </View>
 
@@ -376,6 +445,9 @@ function makeStyles(c: ThemeColors) {
     ...typography.meta,
     color: c.inkFaded,
   },
+  biometricGroup: {
+    gap: spacing.sm,
+  },
   biometricButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -387,6 +459,7 @@ function makeStyles(c: ThemeColors) {
     borderRadius: radii.lg,
     backgroundColor: 'rgba(93,63,211,0.06)',
     height: 46,
+    paddingHorizontal: spacing.md,
   },
   biometricLabel: {
     ...typography.button,

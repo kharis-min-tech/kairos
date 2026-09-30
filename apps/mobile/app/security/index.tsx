@@ -98,7 +98,7 @@ function BiometricToggle() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const refreshToken = useAuthStore((s) => s.refreshToken);
-  const userId = useAuthStore((s) => s.user?.id);
+  const user = useAuthStore((s) => s.user);
 
   const [cap, setCap] = useState<biometric.BiometricCapability | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -109,7 +109,7 @@ function BiometricToggle() {
     void (async () => {
       const [capability, on] = await Promise.all([
         biometric.getCapability(),
-        biometric.isEnabled(),
+        user ? biometric.isArmedFor(user.id) : Promise.resolve(false),
       ]);
       if (cancelled) return;
       setCap(capability);
@@ -118,27 +118,34 @@ function BiometricToggle() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   if (!cap || !cap.hasHardware) return null;
 
   async function toggle(next: boolean) {
-    if (busy || !cap) return;
+    if (busy || !cap || !user) return;
     setBusy(true);
     try {
       if (!next) {
-        await biometric.disable();
+        await biometric.disable(user.id);
         setEnabled(false);
         return;
       }
-      if (!refreshToken || !userId) {
+      if (!refreshToken) {
         alert.info(
           'Sign in again first',
           'Your session needs refreshing before biometric sign-in can be armed.',
         );
         return;
       }
-      const result = await biometric.enable(refreshToken, userId);
+      const result = await biometric.enable(refreshToken, {
+        id: user.id,
+        displayName:
+          [user.firstName, user.lastName].filter(Boolean).join(' ').trim() ||
+          user.email,
+        email: user.email,
+        addedAt: new Date().toISOString(),
+      });
       setEnabled(result.ok);
       if (!result.ok) {
         const title = `Could not enable ${cap.label}`;
@@ -162,13 +169,11 @@ function BiometricToggle() {
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={styles.linkTitle}>Sign in with {cap.label}</Text>
-        <Text style={styles.linkMeta}>
-          {!cap.isEnrolled
-            ? `Set up ${cap.label} in your device settings first.`
-            : enabled
-              ? 'Armed. Any password sign-in extends it, so most people never see the password screen again.'
-              : 'Unlock the app without typing your password.'}
-        </Text>
+        {!cap.isEnrolled ? (
+          <Text style={styles.linkMeta}>Set it up in your device settings first.</Text>
+        ) : !enabled ? (
+          <Text style={styles.linkMeta}>Skip your password.</Text>
+        ) : null}
       </View>
       <Switch
         value={enabled}
