@@ -131,12 +131,14 @@ export const membershipInterest = pgTable(
     admittedBy: uuid('admitted_by').references(() => members.id, { onDelete: 'set null' }),
     notes: text('notes'),
     /**
-     * When the row was archived — kept for audit but hidden from every active
-     * pool surface. Set by the sweep in the service ~30 days after status
-     * flipped to 'lapsed', so admins have a grace window before the entry
-     * disappears from lists. Migration 0049.
+     * Soft-archive gate, matching the schema-wide convention. The sweep in
+     * the service flips this to FALSE ~30 days after `status` flipped to
+     * 'lapsed', so admins have a grace window before the entry disappears
+     * from the pool page. When was it archived? Read `updated_at`, or for a
+     * guaranteed-immutable timestamp emit into `audit_log`. Migration 0050
+     * (0049's `archived_at` timestamp was reconciled to this shape).
      */
-    archivedAt: timestamp('archived_at'),
+    isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
