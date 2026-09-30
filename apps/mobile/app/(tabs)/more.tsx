@@ -48,6 +48,7 @@ import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
 
 const HELP_URL = 'https://docs.kairos.kharis.org';
+const ABOUT_URL = 'https://docs.kairos.kharis.org/getting-started/what-is-kairos';
 
 export default function More() {
   const styles = useThemedStyles(makeStyles);
@@ -317,7 +318,7 @@ export default function More() {
           <NavRow
             icon={Info}
             label="About Kairos"
-            onPress={() => Linking.openURL(HELP_URL)}
+            onPress={() => Linking.openURL(ABOUT_URL)}
           />
         </Section>
 

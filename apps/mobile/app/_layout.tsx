@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -76,6 +76,7 @@ export default function RootLayout() {
               group. The default expo-router Tabs bar is disabled in
               `(tabs)/_layout.tsx` to avoid two bars stacked. */}
           {ready ? <PersistentTabBar /> : null}
+          {ready ? <AuthGuard /> : null}
           <AlertHost />
         </SafeAreaProvider>
       </ThemeProvider>
@@ -115,4 +116,38 @@ function RouterHost() {
 function ThemedChrome() {
   const { scheme } = useTheme();
   return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
+}
+
+/**
+ * Watches the auth store and forces a redirect to login the moment the access
+ * token becomes null on any non-auth route.
+ *
+ * Two paths land here:
+ *
+ *  1. **Cold start with expired refresh token.** hydrate reads a persisted
+ *     access token, the caller is routed to a tab, an in-session API call
+ *     fires, refresh fails, api-client calls onAuthFailure → clearSession
+ *     clears the tokens. Before this component existed the user was left
+ *     staring at a signed-in-looking screen with a "?" for their profile
+ *     until they closed and reopened the app.
+ *  2. **Sign-out.** Same path — clearSession sets accessToken to null, and
+ *     any route the user was on gets redirected. The sign-out button also
+ *     navigates manually; this is the backstop.
+ *
+ * The auth and onboarding groups are excluded so we don't ping-pong a user
+ * who is already on the login/signup screen.
+ */
+function AuthGuard() {
+  const router = useRouter();
+  const segments = useSegments();
+  const accessToken = useAuthStore((s) => s.accessToken);
+
+  useEffect(() => {
+    if (accessToken) return;
+    const top = (segments as readonly string[])[0];
+    if (top === '(auth)' || top === '(onboarding)') return;
+    router.replace('/(auth)/login');
+  }, [accessToken, segments, router]);
+
+  return null;
 }
