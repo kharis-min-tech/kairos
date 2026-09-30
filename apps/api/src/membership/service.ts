@@ -9,6 +9,8 @@ import {
   members,
   branches,
   branchLeadership,
+  memberRoles,
+  roles,
   serviceAttendance,
 } from '@kairos/database';
 import type {
@@ -74,6 +76,22 @@ function enforceMembershipAdmin(auth: AuthContext): void {
 /** Whether the caller may see a whole roster / the pool, without throwing. */
 function isMembershipAdmin(auth: AuthContext): boolean {
   return authHasCapability(auth, 'membership:admin', CHURCH_SCOPE);
+}
+
+/**
+ * Which branch ids the caller can see membership state for as a Champion.
+ * Sourced from RBAC grants: any active `membership:branch:read` capability
+ * they hold contributes its branch. Empty when they aren't a Champion.
+ */
+function championBranchIds(auth: AuthContext): string[] {
+  const grants = auth.grants ?? [];
+  const ids = new Set<string>();
+  for (const g of grants) {
+    if (g.role !== 'MembershipChampion') continue;
+    if (g.scope?.kind !== 'branch') continue;
+    if (typeof g.scope.id === 'string') ids.add(g.scope.id);
+  }
+  return Array.from(ids);
 }
 
 // ── Cohorts ───────────────────────────────────────────────────────────────
@@ -267,7 +285,7 @@ export async function archiveCohort(db: Database, auth: AuthContext, cohortId: s
  * `status = 'waiting'`, so settled rows are not even in the index.
  */
 async function lapseExpiredInterest(db: Database): Promise<void> {
-  await db
+  const newlyLapsed = await db
     .update(membershipInterest)
     .set({ status: 'lapsed', updatedAt: sql`NOW()` })
     .where(
@@ -275,7 +293,11 @@ async function lapseExpiredInterest(db: Database): Promise<void> {
         eq(membershipInterest.status, 'waiting'),
         lte(membershipInterest.expiresAt, sql`NOW()`),
       ),
-    );
+    )
+    .returning({
+      memberId: membershipInterest.memberId,
+      branchId: membershipInterest.branchId,
+    });
 
   // Second pass — archive rows that have been in status 'lapsed' for a grace
   // window. 30 days lets an admin catch a fresh lapse (or the ex-waiter
@@ -293,6 +315,18 @@ async function lapseExpiredInterest(db: Database): Promise<void> {
         lte(membershipInterest.expiresAt, sql`NOW() - INTERVAL '30 days'`),
       ),
     );
+
+  // Notify branch pastor + Champions of each fresh lapse. The 30-day
+  // grace-to-archive is intentionally silent — archival is bookkeeping;
+  // lapsing is the pastoral event.
+  for (const row of newlyLapsed) {
+    void notifyMembershipInterestEnded(db, row.memberId, row.branchId, 'lapsed').catch(
+      (err) => logger.error('membership: lapse notification failed', {
+        memberId: row.memberId,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
 }
 
 /**
@@ -373,15 +407,51 @@ export async function expressInterest(db: Database, auth: AuthContext) {
 }
 
 /**
- * Recipients when someone joins the membership waiting list:
- *   - The main pastor of the candidate's home branch (branch_leadership,
- *     role='Main Pastor', is_current=TRUE)
- *   - (later) The branch Membership Champion — pending the role decision.
- *     Filed at [[trello:...]]; will slot into this same fanout when ready.
+ * Everyone who receives the membership lifecycle notifications for a member
+ * of `branchId`:
+ *   - The Main Pastor of that branch (identity, via branch_leadership)
+ *   - Every active Membership Champion of that branch (RBAC grant)
  *
- * Membership admins are deliberately NOT notified: the pool page is their
- * home surface and pushing an email per expression would be noise.
+ * Membership admins are deliberately NOT included: the pool page + cohort
+ * detail are their home surfaces and pushing an email per lifecycle event
+ * would be noise. Set-uniqued in case a Champion is also the Main Pastor.
  */
+async function branchMembershipNotifyRecipients(
+  db: Database,
+  branchId: string,
+): Promise<string[]> {
+  const [pastors, champions] = await Promise.all([
+    db
+      .select({ memberId: branchLeadership.memberId })
+      .from(branchLeadership)
+      .where(
+        and(
+          eq(branchLeadership.branchId, branchId),
+          eq(branchLeadership.role, 'Main Pastor'),
+          eq(branchLeadership.isCurrent, true),
+        ),
+      ),
+    db
+      .select({ memberId: memberRoles.memberId })
+      .from(memberRoles)
+      .innerJoin(roles, eq(memberRoles.roleId, roles.id))
+      .where(
+        and(
+          eq(roles.roleName, 'Membership Champion'),
+          eq(memberRoles.branchId, branchId),
+          eq(memberRoles.scopeKind, 'branch'),
+          eq(memberRoles.scopeId, branchId),
+          eq(memberRoles.isActive, true),
+        ),
+      ),
+  ]);
+
+  const ids = new Set<string>();
+  for (const p of pastors) if (p.memberId) ids.add(p.memberId);
+  for (const c of champions) if (c.memberId) ids.add(c.memberId);
+  return Array.from(ids);
+}
+
 async function notifyMembershipInterestExpressed(
   db: Database,
   memberId: string,
@@ -403,18 +473,7 @@ async function notifyMembershipInterestExpressed(
     .limit(1);
   if (!branch) return;
 
-  const pastors = await db
-    .select({ memberId: branchLeadership.memberId })
-    .from(branchLeadership)
-    .where(
-      and(
-        eq(branchLeadership.branchId, branchId),
-        eq(branchLeadership.role, 'Main Pastor'),
-        eq(branchLeadership.isCurrent, true),
-      ),
-    );
-
-  const recipientMemberIds = pastors.map((p) => p.memberId).filter((id): id is string => !!id);
+  const recipientMemberIds = await branchMembershipNotifyRecipients(db, branchId);
   if (recipientMemberIds.length === 0) return;
 
   await dispatchNotification(db, {
@@ -431,11 +490,128 @@ async function notifyMembershipInterestExpressed(
   });
 }
 
+async function notifyMembershipCohortAdmitted(
+  db: Database,
+  memberId: string,
+  cohortId: string,
+): Promise<void> {
+  const [row] = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      branchId: members.homeBranchId,
+      branchName: branches.branchName,
+      cohortName: membershipCohorts.name,
+    })
+    .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
+    .innerJoin(membershipCohorts, eq(membershipCohorts.id, cohortId))
+    .where(eq(members.id, memberId))
+    .limit(1);
+  if (!row?.branchId) return;
+
+  const recipientMemberIds = await branchMembershipNotifyRecipients(db, row.branchId);
+  if (recipientMemberIds.length === 0) return;
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowMembershipCohortAdmitted,
+    recipientMemberIds,
+    branchId: row.branchId,
+    subjectType: 'membership_enrollment',
+    subjectId: memberId,
+    payload: {
+      candidateName: `${row.firstName} ${row.lastName}`.trim() || 'A member',
+      cohortName: row.cohortName,
+      branchName: row.branchName,
+      portalUrl: buildCohortUrl(cohortId),
+    },
+  });
+}
+
+async function notifyMembershipCohortGraduated(
+  db: Database,
+  memberId: string,
+  cohortId: string,
+): Promise<void> {
+  const [row] = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      branchId: members.homeBranchId,
+      branchName: branches.branchName,
+      cohortName: membershipCohorts.name,
+    })
+    .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
+    .innerJoin(membershipCohorts, eq(membershipCohorts.id, cohortId))
+    .where(eq(members.id, memberId))
+    .limit(1);
+  if (!row?.branchId) return;
+
+  const recipientMemberIds = await branchMembershipNotifyRecipients(db, row.branchId);
+  if (recipientMemberIds.length === 0) return;
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowMembershipCohortGraduated,
+    recipientMemberIds,
+    branchId: row.branchId,
+    subjectType: 'membership_enrollment',
+    subjectId: memberId,
+    payload: {
+      candidateName: `${row.firstName} ${row.lastName}`.trim() || 'A member',
+      cohortName: row.cohortName,
+      branchName: row.branchName,
+      portalUrl: buildCohortUrl(cohortId),
+    },
+  });
+}
+
+async function notifyMembershipInterestEnded(
+  db: Database,
+  memberId: string,
+  branchId: string | null,
+  reason: 'withdrawn' | 'lapsed',
+): Promise<void> {
+  if (!branchId) return;
+
+  const [row] = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      branchName: branches.branchName,
+    })
+    .from(members)
+    .innerJoin(branches, eq(members.homeBranchId, branches.id))
+    .where(eq(members.id, memberId))
+    .limit(1);
+  if (!row) return;
+
+  const recipientMemberIds = await branchMembershipNotifyRecipients(db, branchId);
+  if (recipientMemberIds.length === 0) return;
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowMembershipInterestEnded,
+    recipientMemberIds,
+    branchId,
+    subjectType: 'membership_interest',
+    subjectId: memberId,
+    payload: {
+      candidateName: `${row.firstName} ${row.lastName}`.trim() || 'A member',
+      branchName: row.branchName,
+      reason,
+      portalUrl: buildPoolUrl(),
+    },
+  });
+}
+
 function buildPoolUrl(): string {
-  // Falls back to the docs-linked path when the env isn't wired. Consumers
-  // of the email just need a working link back to /membership/interest.
   const base = (typeof process !== 'undefined' && process.env?.PORTAL_URL) || 'https://kairos.kharis.org';
   return `${base.replace(/\/$/, '')}/membership/interest`;
+}
+
+function buildCohortUrl(cohortId: string): string {
+  const base = (typeof process !== 'undefined' && process.env?.PORTAL_URL) || 'https://kairos.kharis.org';
+  return `${base.replace(/\/$/, '')}/membership/${cohortId}`;
 }
 
 /** Take yourself back out of the pool. Terminal: re-joining makes a new row. */
@@ -453,6 +629,14 @@ export async function withdrawInterest(db: Database, auth: AuthContext) {
     )
     .returning();
   if (!updated) throw new NotFoundError('You are not on the membership class list');
+
+  void notifyMembershipInterestEnded(db, auth.memberId, updated.branchId, 'withdrawn').catch(
+    (err) => logger.error('membership: withdraw notification failed', {
+      memberId: auth.memberId,
+      error: err instanceof Error ? err.message : String(err),
+    }),
+  );
+
   return updated;
 }
 
@@ -716,6 +900,18 @@ export async function admitMembers(
           eq(membershipInterest.status, 'waiting'),
         ),
       );
+  }
+
+  // One notification per newly-admitted member so the branch pastor and any
+  // Champions on that branch can start liaising on class attendance +
+  // graduation prep.
+  for (const row of created) {
+    void notifyMembershipCohortAdmitted(db, row.memberId, cohortId).catch(
+      (err) => logger.error('membership: admission notification failed', {
+        memberId: row.memberId,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
   }
 
   return created;
@@ -1093,6 +1289,13 @@ export async function graduateMembers(
     // The single certification path, shared with the manual admin override.
     await setMembershipClassCompleted(db, enrollment.memberId, completedAt, auth);
     graduated.push(enrollmentId);
+
+    void notifyMembershipCohortGraduated(db, enrollment.memberId, cohortId).catch(
+      (err) => logger.error('membership: graduation notification failed', {
+        memberId: enrollment.memberId,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
   }
 
   return { graduated: graduated.length, graduatedIds: graduated, blocked };
@@ -1152,6 +1355,89 @@ export async function getMyMembership(db: Database, auth: AuthContext) {
     interest: interest ?? null,
     confirmedAt,
   };
+}
+
+// ── Champion's branch view ────────────────────────────────────────────────
+
+/**
+ * Read-only view for a Membership Champion (or admin). Their branch's
+ * waitlist entries + members currently admitted into a cohort.
+ *
+ * A Champion holding grants for multiple branches sees the union across
+ * every branch they cover. Not paginated: a branch's live pool + cohort
+ * enrolments never exceed a few dozen rows.
+ */
+export async function getBranchMembershipView(db: Database, auth: AuthContext) {
+  await lapseExpiredInterest(db);
+
+  const admin = isMembershipAdmin(auth);
+  const branchIds = admin ? [] : championBranchIds(auth);
+
+  if (!admin && branchIds.length === 0) {
+    throw new ForbiddenError('You are not a Membership Champion of any branch');
+  }
+
+  // Admins see every branch — pass no branch filter. Champions see only their
+  // own branches.
+  const waitlistWhere = admin
+    ? and(
+        eq(membershipInterest.status, 'waiting'),
+        eq(membershipInterest.isActive, true),
+      )
+    : and(
+        eq(membershipInterest.status, 'waiting'),
+        eq(membershipInterest.isActive, true),
+        inArray(membershipInterest.branchId, branchIds),
+      );
+
+  const waitlist = await db
+    .select({
+      id: membershipInterest.id,
+      memberId: membershipInterest.memberId,
+      memberFirstName: members.firstName,
+      memberLastName: members.lastName,
+      branchId: membershipInterest.branchId,
+      branchName: branches.branchName,
+      expressedAt: membershipInterest.expressedAt,
+      expiresAt: membershipInterest.expiresAt,
+      waitingDays: sql<number>`
+        EXTRACT(DAY FROM NOW() - ${membershipInterest.expressedAt})::int
+      `,
+    })
+    .from(membershipInterest)
+    .innerJoin(members, eq(membershipInterest.memberId, members.id))
+    .leftJoin(branches, eq(membershipInterest.branchId, branches.id))
+    .where(waitlistWhere)
+    .orderBy(asc(membershipInterest.expressedAt));
+
+  const enrolledWhere = admin
+    ? eq(membershipEnrollments.status, 'enrolled')
+    : and(
+        eq(membershipEnrollments.status, 'enrolled'),
+        inArray(membershipEnrollments.branchId, branchIds),
+      );
+
+  const enrolled = await db
+    .select({
+      enrollmentId: membershipEnrollments.id,
+      memberId: membershipEnrollments.memberId,
+      memberFirstName: members.firstName,
+      memberLastName: members.lastName,
+      branchId: membershipEnrollments.branchId,
+      branchName: branches.branchName,
+      cohortId: membershipEnrollments.cohortId,
+      cohortName: membershipCohorts.name,
+      cohortStatus: membershipCohorts.status,
+      enrolledAt: membershipEnrollments.enrolledAt,
+    })
+    .from(membershipEnrollments)
+    .innerJoin(members, eq(membershipEnrollments.memberId, members.id))
+    .leftJoin(branches, eq(membershipEnrollments.branchId, branches.id))
+    .innerJoin(membershipCohorts, eq(membershipEnrollments.cohortId, membershipCohorts.id))
+    .where(enrolledWhere)
+    .orderBy(desc(membershipEnrollments.enrolledAt));
+
+  return { waitlist, enrolled };
 }
 
 // ── Small helpers ─────────────────────────────────────────────────────────

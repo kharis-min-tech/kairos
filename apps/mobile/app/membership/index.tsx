@@ -64,6 +64,9 @@ export default function MembershipScreen() {
   const qc = useQueryClient();
   const caps = useCapabilities();
   const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
+  // Champion holds `membership:branch:read` on some branch. The branch-view
+  // endpoint returns the union across every branch they cover.
+  const isChampion = caps.has('membership:branch:read');
 
   const cohorts = useQuery({
     queryKey: ['membership', 'cohorts'],
@@ -75,6 +78,12 @@ export default function MembershipScreen() {
   const mine = useQuery({
     queryKey: ['membership', 'me'],
     queryFn: async () => (await api.membership.me()).data ?? null,
+  });
+
+  const branchView = useQuery({
+    queryKey: ['membership', 'branch-view'],
+    queryFn: async () => (await api.membership.branchView()).data ?? null,
+    enabled: isChampion || isAdmin,
   });
 
   const express = useMutation({
@@ -129,6 +138,10 @@ export default function MembershipScreen() {
           joining={express.isPending}
           leaving={withdrawInterest.isPending}
         />
+
+        {(isChampion || isAdmin) && branchView.data ? (
+          <ChampionBranchView view={branchView.data} styles={styles} c={c} />
+        ) : null}
 
         {isAdmin ? (
           <>
@@ -327,6 +340,63 @@ function MyMembership({
   );
 }
 
+/**
+ * Champion / admin liaison view: their branch's waitlist and admitted
+ * members side by side. Read-only.
+ */
+function ChampionBranchView({
+  view,
+  styles,
+  c,
+}: {
+  view: NonNullable<Awaited<ReturnType<typeof api.membership.branchView>>['data']>;
+  styles: ReturnType<typeof makeStyles>;
+  c: ReturnType<typeof useColors>;
+}) {
+  const { waitlist, enrolled } = view;
+  return (
+    <Card style={styles.card}>
+      <View style={styles.cardHead}>
+        <Users color={c.primary} size={16} strokeWidth={1.8} />
+        <Text style={styles.cardTitle}>Branch waitlist ({waitlist.length})</Text>
+      </View>
+      {waitlist.length === 0 ? (
+        <Text style={styles.metaText}>Nobody from your branch is currently waiting.</Text>
+      ) : (
+        waitlist.map((row) => (
+          <View key={row.id} style={styles.branchRow}>
+            <Text style={styles.branchRowName}>
+              {row.memberFirstName} {row.memberLastName}
+            </Text>
+            <Text style={styles.metaText}>
+              Waiting {row.waitingDays}d · added {formatShortDate(row.expressedAt)}
+            </Text>
+          </View>
+        ))
+      )}
+
+      <View style={[styles.cardHead, { marginTop: spacing.md }]}>
+        <GraduationCap color={c.primary} size={16} strokeWidth={1.8} />
+        <Text style={styles.cardTitle}>Admitted from your branch ({enrolled.length})</Text>
+      </View>
+      {enrolled.length === 0 ? (
+        <Text style={styles.metaText}>No one from your branch is currently enrolled.</Text>
+      ) : (
+        enrolled.map((row) => (
+          <View key={row.enrollmentId} style={styles.branchRow}>
+            <Text style={styles.branchRowName}>
+              {row.memberFirstName} {row.memberLastName}
+            </Text>
+            <Text style={styles.metaText}>
+              {row.cohortName} · admitted {formatShortDate(row.enrolledAt)}
+            </Text>
+          </View>
+        ))
+      )}
+    </Card>
+  );
+}
+
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.page },
@@ -354,6 +424,13 @@ function makeStyles(c: ThemeColors) {
       gap: spacing.sm,
     },
     cardTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
+    branchRow: {
+      paddingVertical: spacing.xs,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+      gap: 2,
+    },
+    branchRowName: { ...typography.body, color: c.ink, fontWeight: '500' },
     adminRow: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -242,3 +242,99 @@ export function renderMembershipInterestExpressed(p: MembershipInterestExpressed
 export function digestMembershipInterestExpressed(p: MembershipInterestExpressedPayload): string {
   return `${p.candidateName} joined the membership waiting list (${p.branchName})`;
 }
+
+export interface MembershipCohortAdmittedPayload {
+  memberName: string;
+  candidateName: string;
+  cohortName: string;
+  branchName: string;
+  portalUrl: string;
+}
+
+export function renderMembershipCohortAdmitted(p: MembershipCohortAdmittedPayload) {
+  return {
+    subject: `Admitted into ${p.cohortName}: ${p.candidateName}`,
+    html: renderLayout({
+      heading: 'A member of your branch has been admitted into a cohort',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p><strong>${escapeHtml(p.candidateName)}</strong> from
+           <strong>${escapeHtml(p.branchName)}</strong> has been admitted into
+           <strong>${escapeHtml(p.cohortName)}</strong>.</p>
+        <p>Class attendance and graduation prep are the champion's beat from here.</p>
+      `,
+      cta: { label: 'Open cohort', url: p.portalUrl },
+    }),
+  };
+}
+
+export function digestMembershipCohortAdmitted(p: MembershipCohortAdmittedPayload): string {
+  return `${p.candidateName} admitted into ${p.cohortName} (${p.branchName})`;
+}
+
+export interface MembershipCohortGraduatedPayload {
+  memberName: string;
+  candidateName: string;
+  cohortName: string;
+  branchName: string;
+  portalUrl: string;
+}
+
+export function renderMembershipCohortGraduated(p: MembershipCohortGraduatedPayload) {
+  return {
+    subject: `Graduated ${p.cohortName}: ${p.candidateName}`,
+    html: renderLayout({
+      heading: 'A member of your branch has graduated a cohort',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p><strong>${escapeHtml(p.candidateName)}</strong> from
+           <strong>${escapeHtml(p.branchName)}</strong> has graduated
+           <strong>${escapeHtml(p.cohortName)}</strong> and is now a confirmed
+           Member.</p>
+        <p>Certificate presentation and induction ceremony fall to the branch
+           champion. This is the moment to make sure both are prepared.</p>
+      `,
+      cta: { label: 'Open cohort', url: p.portalUrl },
+    }),
+  };
+}
+
+export function digestMembershipCohortGraduated(p: MembershipCohortGraduatedPayload): string {
+  return `${p.candidateName} graduated ${p.cohortName} (${p.branchName})`;
+}
+
+export interface MembershipInterestEndedPayload {
+  memberName: string;
+  candidateName: string;
+  branchName: string;
+  reason: 'withdrawn' | 'lapsed';
+  portalUrl: string;
+}
+
+const INTEREST_ENDED_REASON: Record<MembershipInterestEndedPayload['reason'], string> = {
+  withdrawn: 'has taken themselves off the membership waiting list',
+  lapsed: "'s membership waiting-list entry has lapsed",
+};
+
+export function renderMembershipInterestEnded(p: MembershipInterestEndedPayload) {
+  const verb = INTEREST_ENDED_REASON[p.reason];
+  const subjectVerb = p.reason === 'withdrawn' ? 'withdrew' : 'lapsed';
+  return {
+    subject: `Waiting-list ${subjectVerb}: ${p.candidateName}`,
+    html: renderLayout({
+      heading: 'A member of your branch is no longer on the waiting list',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p><strong>${escapeHtml(p.candidateName)}</strong> from
+           <strong>${escapeHtml(p.branchName)}</strong> ${verb}.</p>
+        <p>If pastoral follow-up is warranted, now is the moment.</p>
+      `,
+      cta: { label: 'View pool', url: p.portalUrl },
+    }),
+  };
+}
+
+export function digestMembershipInterestEnded(p: MembershipInterestEndedPayload): string {
+  const label = p.reason === 'withdrawn' ? 'withdrew from' : 'lapsed off';
+  return `${p.candidateName} ${label} the membership waiting list (${p.branchName})`;
+}

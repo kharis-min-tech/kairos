@@ -36,6 +36,7 @@ import {
   getEnrollmentDetail,
   graduateMembers,
   getMyMembership,
+  getBranchMembershipView,
 } from './service';
 
 export const membershipRouter = new Hono();
@@ -55,6 +56,16 @@ membershipRouter.use('*', authMiddleware);
 membershipRouter.get('/me', async (c) => {
   const auth = getAuth(c);
   return c.json(successResponse(await getMyMembership(db, auth)));
+});
+
+// ── Champion's branch view ───────────────────────────────────────────────
+// Read-only slice showing the caller's branch waitlist + admitted members.
+// Gate is enforced in the service: MembershipAdmin at church scope OR any
+// active MembershipChampion grant on some branch.
+
+membershipRouter.get('/branch-view', async (c) => {
+  const auth = getAuth(c);
+  return c.json(successResponse(await getBranchMembershipView(db, auth)));
 });
 
 // ── The interest pool ─────────────────────────────────────────────────────

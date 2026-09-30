@@ -159,6 +159,7 @@ import type {
   MembershipEnrollmentWithMember,
   MembershipEnrollmentDetail,
   MembershipGraduationReadiness,
+  MembershipBranchViewResponse,
   CreateMembershipCohortRequest,
   UpdateMembershipCohortRequest,
   UpsertMembershipSessionRequest,
@@ -1172,6 +1173,15 @@ export function createApiClient(
             confirmedAt: string | null;
           }>
         >('/api/membership/me'),
+
+      /**
+       * Champion's / admin's read-only view of their branch's waitlist +
+       * admitted members. Multi-branch Champions see the union.
+       */
+      branchView: () =>
+        client.get<ApiResponse<MembershipBranchViewResponse>>(
+          '/api/membership/branch-view',
+        ),
 
       /**
        * The interest pool. Enrolment is not self-service: a member expresses
