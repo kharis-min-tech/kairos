@@ -254,6 +254,10 @@ export async function listMembers(
         approvalStatus: members.approvalStatus,
         systemRole: members.systemRole,
         memberType: members.memberType,
+        // The REAL confirmed-Member signal per docs/domain-model.md §0 —
+        // exposed on the list so the directory badge can trust class
+        // completion directly instead of memberType, which can drift.
+        membershipClassCompletedAt: members.membershipClassCompletedAt,
         guardianMemberId: members.guardianMemberId,
         isActive: members.isActive,
         createdAt: members.createdAt,

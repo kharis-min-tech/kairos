@@ -23,19 +23,23 @@ const KEY = 'membership';
 
 // ── Queries ───────────────────────────────────────────────────────────────
 
-export function useMembershipCohorts(params?: {
-  status?: MembershipCohortStatus;
-  enrolmentOpen?: boolean;
-  includeInactive?: boolean;
-  page?: number;
-  limit?: number;
-}) {
+export function useMembershipCohorts(
+  params?: {
+    status?: MembershipCohortStatus;
+    enrolmentOpen?: boolean;
+    includeInactive?: boolean;
+    page?: number;
+    limit?: number;
+  },
+  enabled: boolean = true,
+) {
   return useQuery({
     queryKey: [KEY, 'cohorts', params],
     queryFn: async () => {
       const res = await api.membership.cohorts.list(params);
       return res.data!;
     },
+    enabled,
   });
 }
 

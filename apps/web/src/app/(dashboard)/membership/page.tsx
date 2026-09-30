@@ -47,6 +47,7 @@ export default function MembershipPage() {
 
   const { data, isLoading } = useMembershipCohorts(
     statusFilter === 'all' ? undefined : { status: statusFilter },
+    isAdmin,
   );
   const { data: mine } = useMyMembership();
 
@@ -87,40 +88,48 @@ export default function MembershipPage() {
 
       <MyMembershipCard mine={mine} />
 
-      <div className="flex flex-wrap gap-2">
-        {(['all', 'planned', 'active', 'completed'] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setStatusFilter(s)}
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium capitalize transition',
-              statusFilter === s
-                ? 'border-[#5D3FD3] bg-[#5D3FD3] text-white'
-                : 'border-border text-muted-foreground hover:bg-muted/60',
-            )}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      {/* Cohort list is admin-only. Waitlist members shouldn't be sizing up
+          intakes they can't join themselves — the admission call is made by
+          the church membership admin team, not by the candidate. Members
+          currently enrolled in a cohort reach it via the link inside their
+          MyMembershipCard. */}
+      {isAdmin ? (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'planned', 'active', 'completed'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-medium capitalize transition',
+                  statusFilter === s
+                    ? 'border-[#5D3FD3] bg-[#5D3FD3] text-white'
+                    : 'border-border text-muted-foreground hover:bg-muted/60',
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading cohorts…</p>
-      ) : cohorts.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No cohorts yet.
-            {isAdmin ? ' Create one to start admitting people.' : ' Check back soon.'}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {cohorts.map((c) => (
-            <CohortCard key={c.id} cohort={c} />
-          ))}
-        </div>
-      )}
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading cohorts…</p>
+          ) : cohorts.length === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                No cohorts yet. Create one to start admitting people.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {cohorts.map((c) => (
+                <CohortCard key={c.id} cohort={c} />
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
     </div>
   );
 }
