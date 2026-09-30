@@ -8,13 +8,20 @@ export interface AuthSecrets {
 }
 
 const DEFAULT_ACCESS_EXPIRY = '15m';
-// 90 days matches banking-app norms for keychain-stored session tokens
-// (Monzo, Revolut, Chase all sit in this range) and dovetails with biometric
-// sign-in: the sealed refresh token stays valid across this window, so a
-// biometric-only user password-signs-in about once a quarter. Any password
-// sign-in inside the window rearms via handlePostLogin, so periodic users
-// effectively never see the password screen. Override with JWT_REFRESH_EXPIRY.
-const DEFAULT_REFRESH_EXPIRY = '90d';
+// 1 year matches consumer-app norms (Google/Microsoft account persistence,
+// WhatsApp, 1Password) for keychain-stored session tokens on mobile. Since
+// the mobile app seals the refresh token behind the OS keychain's
+// biometric requirement, an attacker still needs both the phone AND the
+// enrolled biometric to redeem it — the extra window doesn't degrade the
+// effective posture. Biometric-armed users can go a full year between
+// password sign-ins.
+//
+// The proper long-term fix is a WebAuthn-style device keypair that
+// decouples biometric arming from the session token entirely — filed as
+// a backlog. Until then this bump is the pragmatic middle ground.
+//
+// Override with JWT_REFRESH_EXPIRY.
+const DEFAULT_REFRESH_EXPIRY = '365d';
 
 function readEnv(c: Context | undefined, key: string): string | undefined {
   if (c) {
