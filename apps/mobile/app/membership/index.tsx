@@ -68,6 +68,8 @@ export default function MembershipScreen() {
   const cohorts = useQuery({
     queryKey: ['membership', 'cohorts'],
     queryFn: async () => (await api.membership.cohorts.list()).data?.cohorts ?? [],
+    // Non-admins don't see the cohort list — skip the fetch.
+    enabled: isAdmin,
   });
 
   const mine = useQuery({
@@ -155,13 +157,17 @@ export default function MembershipScreen() {
           </>
         ) : null}
 
-        {cohorts.isLoading ? (
+        {/* Cohort list is admin-only. Waitlist members shouldn't be sizing
+            up intakes they can't join themselves — the admission call is
+            made by the church membership admin team. Members currently
+            enrolled in a cohort reach it via the link inside MyMembership. */}
+        {!isAdmin ? null : cohorts.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (cohorts.data ?? []).length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>No cohorts yet</Text>
             <Text style={styles.emptyMeta}>
-              When the next membership class is scheduled it will show up here.
+              Create one from Interest pool to start admitting people.
             </Text>
           </View>
         ) : (

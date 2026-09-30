@@ -337,6 +337,20 @@
       "when": 1804300000000,
       "tag": "0047_membership_classes",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1805300000000,
+      "tag": "0048_membership_admin_and_pool",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1806300000000,
+      "tag": "0049_membership_interest_archive",
+      "breakpoints": true
     }
   ]
 }

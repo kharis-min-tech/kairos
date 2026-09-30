@@ -130,6 +130,13 @@ export const membershipInterest = pgTable(
     admittedAt: timestamp('admitted_at'),
     admittedBy: uuid('admitted_by').references(() => members.id, { onDelete: 'set null' }),
     notes: text('notes'),
+    /**
+     * When the row was archived — kept for audit but hidden from every active
+     * pool surface. Set by the sweep in the service ~30 days after status
+     * flipped to 'lapsed', so admins have a grace window before the entry
+     * disappears from lists. Migration 0049.
+     */
+    archivedAt: timestamp('archived_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

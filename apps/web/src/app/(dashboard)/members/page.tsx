@@ -291,19 +291,24 @@ export default function MembersPage() {
                           <p className="truncate">{member.email}</p>
                           {member.phone && <p>{member.phone}</p>}
                           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                            {member.memberType === 'attendee' ? (
-                              <span
-                                title="Approved attendee, has not completed the 4-week membership class yet"
-                                className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
-                              >
-                                Attendee
-                              </span>
-                            ) : member.memberType === 'member' ? (
+                            {/* Membership badge derives from the class-completion
+                                timestamp — the real signal per docs/domain-model.md
+                                §0. memberType can drift (a member_type='member' row
+                                without a completed-at is not a confirmed Member) so
+                                we don't trust it for display. */}
+                            {member.membershipClassCompletedAt ? (
                               <span
                                 title="Confirmed Member, has completed the 4-week membership class"
                                 className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
                               >
                                 Member
+                              </span>
+                            ) : member.memberType === 'attendee' ? (
+                              <span
+                                title="Approved attendee, has not completed the 4-week membership class yet"
+                                className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
+                              >
+                                Attendee
                               </span>
                             ) : null}
                             {member.systemRole === 'admin' && (

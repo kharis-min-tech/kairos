@@ -211,3 +211,34 @@ export function digestNewBelieverRemoved(p: NewBelieverRemovedPayload): string {
   const reasonLabel = REMOVAL_REASON_LABELS[p.reason] ?? p.reason;
   return `${p.studentName} removed from pipeline (${reasonLabel})`;
 }
+
+// ── Membership interest ──
+
+export interface MembershipInterestExpressedPayload {
+  memberName: string;
+  candidateName: string;
+  branchName: string;
+  poolUrl: string;
+}
+
+export function renderMembershipInterestExpressed(p: MembershipInterestExpressedPayload) {
+  return {
+    subject: `New membership interest: ${p.candidateName}`,
+    html: renderLayout({
+      heading: 'New membership interest',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p><strong>${escapeHtml(p.candidateName)}</strong> has joined the
+           membership waiting list from <strong>${escapeHtml(p.branchName)}</strong>.</p>
+        <p>They'll be considered for the next intake. If there's context
+           the membership admin team should know before they're admitted,
+           this is the moment to flag it.</p>
+      `,
+      cta: { label: 'View pool', url: p.poolUrl },
+    }),
+  };
+}
+
+export function digestMembershipInterestExpressed(p: MembershipInterestExpressedPayload): string {
+  return `${p.candidateName} joined the membership waiting list (${p.branchName})`;
+}

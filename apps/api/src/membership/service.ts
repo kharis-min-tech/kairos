@@ -1,4 +1,4 @@
-import { eq, and, or, asc, desc, ilike, inArray, sql, count, lte } from 'drizzle-orm';
+import { eq, and, or, asc, desc, ilike, inArray, sql, count, lte, isNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   membershipCohorts,
@@ -8,6 +8,7 @@ import {
   membershipSessionRecords,
   members,
   branches,
+  branchLeadership,
   serviceAttendance,
 } from '@kairos/database';
 import type {
@@ -18,11 +19,14 @@ import type {
 import {
   CHURCH_SCOPE,
   MEMBERSHIP_INTEREST_WINDOW_DAYS,
+  NotificationEventType,
   evaluateGraduationReadiness,
 } from '@kairos/types';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
+import { logger } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
 import { setMembershipClassCompleted } from '../members/service';
+import { dispatchNotification } from '../notifications/service';
 import type { z } from 'zod';
 import type {
   createCohortSchema,
@@ -272,6 +276,21 @@ async function lapseExpiredInterest(db: Database): Promise<void> {
         lte(membershipInterest.expiresAt, sql`NOW()`),
       ),
     );
+
+  // Second pass — archive rows that have been in status 'lapsed' for a grace
+  // window. 30 days lets an admin catch a fresh lapse (or the ex-waiter
+  // re-express interest without the old row lingering) before the entry
+  // disappears from every active pool surface. Migration 0049.
+  await db
+    .update(membershipInterest)
+    .set({ archivedAt: sql`NOW()`, updatedAt: sql`NOW()` })
+    .where(
+      and(
+        eq(membershipInterest.status, 'lapsed'),
+        isNull(membershipInterest.archivedAt),
+        lte(membershipInterest.expiresAt, sql`NOW() - INTERVAL '30 days'`),
+      ),
+    );
 }
 
 /**
@@ -337,7 +356,84 @@ export async function expressInterest(db: Database, auth: AuthContext) {
     })
     .returning();
 
+  // Notify the branch pastor so they have a window to raise any concerns
+  // before the membership admin team admits this person from the pool.
+  // Fire-and-forget: the sign-up flow itself must not fail on a notification
+  // problem, and every failure is logged inside dispatchNotification.
+  void notifyMembershipInterestExpressed(db, auth.memberId, me.homeBranchId).catch(
+    (err) => logger.error('membership: interest-expressed notification failed', {
+      memberId: auth.memberId,
+      error: err instanceof Error ? err.message : String(err),
+    }),
+  );
+
   return created;
+}
+
+/**
+ * Recipients when someone joins the membership waiting list:
+ *   - The main pastor of the candidate's home branch (branch_leadership,
+ *     role='Main Pastor', is_current=TRUE)
+ *   - (later) The branch Membership Champion — pending the role decision.
+ *     Filed at [[trello:...]]; will slot into this same fanout when ready.
+ *
+ * Membership admins are deliberately NOT notified: the pool page is their
+ * home surface and pushing an email per expression would be noise.
+ */
+async function notifyMembershipInterestExpressed(
+  db: Database,
+  memberId: string,
+  branchId: string | null,
+): Promise<void> {
+  if (!branchId) return;
+
+  const [candidate] = await db
+    .select({ firstName: members.firstName, lastName: members.lastName })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+  if (!candidate) return;
+
+  const [branch] = await db
+    .select({ branchName: branches.branchName })
+    .from(branches)
+    .where(eq(branches.id, branchId))
+    .limit(1);
+  if (!branch) return;
+
+  const pastors = await db
+    .select({ memberId: branchLeadership.memberId })
+    .from(branchLeadership)
+    .where(
+      and(
+        eq(branchLeadership.branchId, branchId),
+        eq(branchLeadership.role, 'Main Pastor'),
+        eq(branchLeadership.isCurrent, true),
+      ),
+    );
+
+  const recipientMemberIds = pastors.map((p) => p.memberId).filter((id): id is string => !!id);
+  if (recipientMemberIds.length === 0) return;
+
+  await dispatchNotification(db, {
+    eventType: NotificationEventType.WorkflowMembershipInterestExpressed,
+    recipientMemberIds,
+    branchId,
+    subjectType: 'membership_interest',
+    subjectId: memberId,
+    payload: {
+      candidateName: `${candidate.firstName} ${candidate.lastName}`.trim() || 'A member',
+      branchName: branch.branchName,
+      poolUrl: buildPoolUrl(),
+    },
+  });
+}
+
+function buildPoolUrl(): string {
+  // Falls back to the docs-linked path when the env isn't wired. Consumers
+  // of the email just need a working link back to /membership/interest.
+  const base = (typeof process !== 'undefined' && process.env?.PORTAL_URL) || 'https://kairos.kharis.org';
+  return `${base.replace(/\/$/, '')}/membership/interest`;
 }
 
 /** Take yourself back out of the pool. Terminal: re-joining makes a new row. */
@@ -377,7 +473,12 @@ export async function listInterest(
   const page = query.page ?? 1;
   const limit = query.limit ?? 25;
 
-  const conditions = [eq(membershipInterest.status, query.status ?? 'waiting')];
+  const conditions = [
+    eq(membershipInterest.status, query.status ?? 'waiting'),
+    // Archived rows disappear from the pool page. They still exist for audit
+    // — see migration 0049 and the sweep in lapseExpiredInterest.
+    isNull(membershipInterest.archivedAt),
+  ];
   if (query.branchId) conditions.push(eq(membershipInterest.branchId, query.branchId));
   if (query.search) {
     const term = `%${query.search}%`;
@@ -1018,7 +1119,15 @@ export async function getMyMembership(db: Database, auth: AuthContext) {
   const [interest] = await db
     .select()
     .from(membershipInterest)
-    .where(eq(membershipInterest.memberId, auth.memberId))
+    // Archived rows are treated as "never happened" from the caller's own
+    // view — otherwise a stale lapsed entry from months ago would keep
+    // showing the "your place lapsed on …" message forever. If the row is
+    // archived, the user re-joins as if fresh. Row still exists in the DB
+    // for audit — see migration 0049.
+    .where(and(
+      eq(membershipInterest.memberId, auth.memberId),
+      isNull(membershipInterest.archivedAt),
+    ))
     .orderBy(desc(membershipInterest.expressedAt))
     .limit(1);
 
