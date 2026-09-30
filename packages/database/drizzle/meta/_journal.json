@@ -351,6 +351,13 @@
       "when": 1806300000000,
       "tag": "0049_membership_interest_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1807300000000,
+      "tag": "0050_membership_interest_isactive",
+      "breakpoints": true
     }
   ]
 }

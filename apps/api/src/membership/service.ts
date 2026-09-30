@@ -1,4 +1,4 @@
-import { eq, and, or, asc, desc, ilike, inArray, sql, count, lte, isNull } from 'drizzle-orm';
+import { eq, and, or, asc, desc, ilike, inArray, sql, count, lte } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   membershipCohorts,
@@ -280,14 +280,16 @@ async function lapseExpiredInterest(db: Database): Promise<void> {
   // Second pass — archive rows that have been in status 'lapsed' for a grace
   // window. 30 days lets an admin catch a fresh lapse (or the ex-waiter
   // re-express interest without the old row lingering) before the entry
-  // disappears from every active pool surface. Migration 0049.
+  // disappears from every active pool surface. Follows the schema-wide
+  // `isActive: false` soft-delete convention (migration 0050 reconciled
+  // 0049's earlier `archived_at` shape).
   await db
     .update(membershipInterest)
-    .set({ archivedAt: sql`NOW()`, updatedAt: sql`NOW()` })
+    .set({ isActive: false, updatedAt: sql`NOW()` })
     .where(
       and(
         eq(membershipInterest.status, 'lapsed'),
-        isNull(membershipInterest.archivedAt),
+        eq(membershipInterest.isActive, true),
         lte(membershipInterest.expiresAt, sql`NOW() - INTERVAL '30 days'`),
       ),
     );
@@ -476,8 +478,8 @@ export async function listInterest(
   const conditions = [
     eq(membershipInterest.status, query.status ?? 'waiting'),
     // Archived rows disappear from the pool page. They still exist for audit
-    // — see migration 0049 and the sweep in lapseExpiredInterest.
-    isNull(membershipInterest.archivedAt),
+    // — see the sweep in lapseExpiredInterest and migration 0050.
+    eq(membershipInterest.isActive, true),
   ];
   if (query.branchId) conditions.push(eq(membershipInterest.branchId, query.branchId));
   if (query.search) {
@@ -1123,10 +1125,10 @@ export async function getMyMembership(db: Database, auth: AuthContext) {
     // view — otherwise a stale lapsed entry from months ago would keep
     // showing the "your place lapsed on …" message forever. If the row is
     // archived, the user re-joins as if fresh. Row still exists in the DB
-    // for audit — see migration 0049.
+    // for audit — see migration 0050.
     .where(and(
       eq(membershipInterest.memberId, auth.memberId),
-      isNull(membershipInterest.archivedAt),
+      eq(membershipInterest.isActive, true),
     ))
     .orderBy(desc(membershipInterest.expressedAt))
     .limit(1);
