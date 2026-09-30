@@ -61,10 +61,17 @@ beforeEach(() => {
 });
 
 describe('MembershipPage', () => {
-  it('lists cohorts with their enrolment counts', () => {
+  it('lists cohorts with their enrolment counts for a membership admin', () => {
+    hasMembershipAdmin = true;
     render(<MembershipPage />);
     expect(screen.getByText('Autumn 2026')).toBeInTheDocument();
     expect(screen.getByText(/12 enrolled/)).toBeInTheDocument();
+  });
+
+  it('does NOT surface the cohort list to a non-admin (waitlist card only)', () => {
+    render(<MembershipPage />);
+    // Non-admins see MyMembershipCard and nothing about cohorts by name.
+    expect(screen.queryByText('Autumn 2026')).not.toBeInTheDocument();
   });
 
   it('shows the admin CTAs only to a membership admin', () => {
@@ -161,7 +168,8 @@ describe('MembershipPage', () => {
     expect(screen.queryByRole('button', { name: /join the list/i })).not.toBeInTheDocument();
   });
 
-  it('renders an empty state when there are no cohorts', () => {
+  it('renders an empty state to a membership admin when there are no cohorts', () => {
+    hasMembershipAdmin = true;
     cohorts = [];
     render(<MembershipPage />);
     expect(screen.getByText(/No cohorts yet/)).toBeInTheDocument();

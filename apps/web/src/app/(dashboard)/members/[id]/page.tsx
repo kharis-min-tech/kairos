@@ -120,7 +120,16 @@ export default function MemberDetailPage() {
                     Minor, protected
                   </span>
                 )}
-                <span className="text-sm capitalize text-muted-foreground">{member.systemRole}</span>
+                {/* systemRole is 'admin' or 'member' — the latter just means
+                    "not a platform admin", not a membership signal. Rendering
+                    the raw value read as a Membership indicator, so only
+                    surface the Admin case as a chip. The confirmed-Member
+                    status has its own dedicated card below. */}
+                {member.systemRole === 'admin' && (
+                  <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
+                    Admin
+                  </span>
+                )}
               </div>
             </div>
           </div>
