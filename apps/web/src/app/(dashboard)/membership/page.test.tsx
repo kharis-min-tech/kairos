@@ -30,6 +30,10 @@ vi.mock('@/hooks/use-membership', () => ({
   useMyMembership: () => ({ data: mine }),
   useExpressInterest: () => ({ mutate: expressMutate, isPending: false }),
   useWithdrawInterest: () => ({ mutate: withdrawMutate, isPending: false }),
+  // Champion branch-view hook — tests here are focused on the member-facing
+  // and admin flows, not the Champion panel; return undefined and let the
+  // page's conditional render skip it.
+  useMembershipBranchView: () => ({ data: undefined, isLoading: false }),
 }));
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
