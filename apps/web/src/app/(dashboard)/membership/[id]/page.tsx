@@ -97,31 +97,42 @@ export default function CohortDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link
-          href="/membership"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          All cohorts
-        </Link>
-        <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
-          <GraduationCap className="size-5 text-[#5D3FD3]" />
-          {cohort.name}
-        </h1>
-        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <CalendarDays className="size-3.5" />
-            Starts {formatShortDate(cohort.startDate)}
-          </span>
-          {cohort.graduationDate ? (
-            <span>Induction {formatShortDate(cohort.graduationDate)}</span>
-          ) : null}
-          {cohort.finalTestDeadline ? (
-            <span>Final test by {formatShortDate(cohort.finalTestDeadline)}</span>
-          ) : null}
-          <span className="capitalize">{cohort.status}</span>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Link
+            href="/membership"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            All cohorts
+          </Link>
+          <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
+            <GraduationCap className="size-5 text-[#5D3FD3]" />
+            {cohort.name}
+          </h1>
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="size-3.5" />
+              Starts {formatShortDate(cohort.startDate)}
+            </span>
+            {cohort.graduationDate ? (
+              <span>Induction {formatShortDate(cohort.graduationDate)}</span>
+            ) : null}
+            {cohort.finalTestDeadline ? (
+              <span>Final test by {formatShortDate(cohort.finalTestDeadline)}</span>
+            ) : null}
+            <span className="capitalize">{cohort.status}</span>
+          </div>
         </div>
+        {isAdmin ? (
+          <Link
+            href={`/membership/edit/${cohortId}`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/60"
+          >
+            <Pencil className="size-4" />
+            Edit cohort
+          </Link>
+        ) : null}
       </div>
 
       <div className="flex gap-1 border-b border-border">
