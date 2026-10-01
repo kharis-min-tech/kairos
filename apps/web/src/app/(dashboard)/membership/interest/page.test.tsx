@@ -108,7 +108,9 @@ describe('MembershipInterestPage', () => {
   it('admits the selected people into the chosen cohort', () => {
     render(<MembershipInterestPage />);
     fireEvent.click(screen.getByRole('checkbox', { name: /select ada bell/i }));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'c1' } });
+    // CustomSelect: open the picker, then pick the cohort option.
+    fireEvent.click(screen.getByRole('button', { name: /admit into/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Autumn 2026' }));
     fireEvent.click(screen.getByRole('button', { name: /^admit$/i }));
 
     expect(admitMutate).toHaveBeenCalledWith(
@@ -129,8 +131,9 @@ describe('MembershipInterestPage', () => {
     cohorts = [openCohort, { id: 'c2', name: 'Spring 2025', status: 'completed' as const }];
     render(<MembershipInterestPage />);
     fireEvent.click(screen.getByRole('checkbox', { name: /select ada bell/i }));
-    expect(screen.getByRole('option', { name: 'Autumn 2026' })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Spring 2025' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /admit into/i }));
+    expect(screen.getByRole('button', { name: 'Autumn 2026' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Spring 2025' })).not.toBeInTheDocument();
   });
 
   it('offers no checkboxes on a settled tab — only waiting entries are admissible', () => {

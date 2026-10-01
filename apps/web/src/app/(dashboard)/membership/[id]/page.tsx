@@ -14,7 +14,11 @@ import {
   Label,
   Textarea,
   CustomSelect,
-  cn,
+  Checkbox,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@kairos/ui';
 import { toast } from 'sonner';
 import {
@@ -135,31 +139,22 @@ export default function CohortDetailPage() {
         ) : null}
       </div>
 
-      <div className="flex gap-1 border-b border-border">
-        {(['roster', 'sessions', 'graduation'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              '-mb-px border-b-2 px-3 py-2 text-sm font-medium capitalize transition',
-              tab === t
-                ? 'border-[#5D3FD3] text-[#5D3FD3]'
-                : 'border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'roster' ? <RosterTab roster={roster} /> : null}
-      {tab === 'sessions' ? (
-        <SessionsTab cohortId={cohortId} sessions={cohort.sessions} roster={roster} />
-      ) : null}
-      {tab === 'graduation' ? (
-        <GraduationTab cohortId={cohortId} roster={roster} isAdmin={isAdmin} />
-      ) : null}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <TabsList aria-label="Cohort view">
+          <TabsTrigger value="roster">Roster</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="graduation">Graduation</TabsTrigger>
+        </TabsList>
+        <TabsContent value="roster">
+          <RosterTab roster={roster} />
+        </TabsContent>
+        <TabsContent value="sessions">
+          <SessionsTab cohortId={cohortId} sessions={cohort.sessions} roster={roster} />
+        </TabsContent>
+        <TabsContent value="graduation">
+          <GraduationTab cohortId={cohortId} roster={roster} isAdmin={isAdmin} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -600,9 +595,7 @@ function SessionRegister({
                 {r.memberFirstName} {r.memberLastName}
               </td>
               <td className="py-1.5">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-[#5D3FD3]"
+                <Checkbox
                   checked={draft[r.id]?.attended ?? false}
                   onChange={(e) =>
                     setDraft((d) => ({
@@ -727,9 +720,7 @@ function GraduationTab({
             <ul className="space-y-2">
               {active.map((e) => (
                 <li key={e.id} className="flex items-center gap-3 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-4 accent-[#5D3FD3]"
+                  <Checkbox
                     checked={selected.includes(e.id)}
                     onChange={() => toggle(e.id)}
                     aria-label={`Select ${e.memberFirstName} ${e.memberLastName}`}

@@ -5,7 +5,16 @@ export const runtime = 'edge';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, Button, Input, Badge, cn } from '@kairos/ui';
+import {
+  Card,
+  CardContent,
+  Button,
+  Input,
+  Badge,
+  Checkbox,
+  CustomSelect,
+  cn,
+} from '@kairos/ui';
 import { toast } from 'sonner';
 import { ArrowLeft, ListChecks, Clock, TriangleAlert } from 'lucide-react';
 import { formatShortDate } from '@kairos/core';
@@ -154,18 +163,14 @@ export default function MembershipInterestPage() {
             <p className="text-sm font-medium text-foreground">
               {selected.size} selected
             </p>
-            <select
-              value={cohortId}
-              onChange={(e) => setCohortId(e.target.value)}
-              className="h-9 rounded-md border border-border bg-background px-3 text-sm"
-            >
-              <option value="">Admit into…</option>
-              {openCohorts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="min-w-48">
+              <CustomSelect
+                value={cohortId}
+                onValueChange={setCohortId}
+                placeholder="Admit into…"
+                options={openCohorts.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            </div>
             <Button size="sm" disabled={admit.isPending || !cohortId} onClick={admitSelected}>
               {admit.isPending ? 'Admitting…' : 'Admit'}
             </Button>
@@ -237,12 +242,10 @@ function InterestRow({
     <Card className={cn('transition', selected && 'border-[#5D3FD3] bg-[#5D3FD3]/5')}>
       <CardContent className="flex flex-wrap items-center gap-3 py-3">
         {selectable ? (
-          <input
-            type="checkbox"
+          <Checkbox
             checked={selected}
             onChange={onToggle}
             aria-label={`Select ${row.memberFirstName} ${row.memberLastName}`}
-            className="size-4 accent-[#5D3FD3]"
           />
         ) : null}
 

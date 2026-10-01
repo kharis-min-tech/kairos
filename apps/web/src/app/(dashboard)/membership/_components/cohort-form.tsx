@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { Card, CardContent, Button, Input, Label, Textarea, CustomSelect } from '@kairos/ui';
+import {
+  Card,
+  CardContent,
+  Button,
+  Input,
+  Label,
+  Textarea,
+  CustomSelect,
+  Checkbox,
+} from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import type {
   CreateMembershipCohortRequest,
@@ -238,24 +247,19 @@ export function CohortForm({
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
             Admission
           </h2>
-          <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-muted/30 px-4 py-3">
-            <div>
+          <label className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-4 py-3 cursor-pointer">
+            <Checkbox
+              id="cohort-enrolment-open"
+              checked={enrolmentOpen}
+              onChange={(e) => setEnrolmentOpen(e.target.checked)}
+            />
+            <div className="flex-1">
               <p className="text-sm font-medium text-foreground">Enrolment open</p>
               <p className="text-xs text-muted-foreground">
                 When off, admin cannot admit members from the pool into this cohort.
               </p>
             </div>
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={enrolmentOpen}
-                onChange={(e) => setEnrolmentOpen(e.target.checked)}
-              />
-              <span className="h-5 w-9 rounded-full bg-input peer-checked:bg-[#5D3FD3] transition-colors" />
-              <span className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background transition-transform peer-checked:translate-x-4" />
-            </label>
-          </div>
+          </label>
 
           {showStatus ? (
             <div className="grid gap-1.5">
