@@ -782,7 +782,10 @@ export async function listMyFollowups(
       memberId: newBelieverEnrollments.memberId,
       firstName: members.firstName,
       lastName: members.lastName,
-      lastContactedAt: sql<Date | null>`max(${mentorFollowups.contactedAt})`,
+      // NOT `sql<Date | null>` — drizzle applies column type mappers only to
+      // real columns, so a raw aggregate comes back as whatever the driver
+      // hands over, which for Postgres `max(timestamptz)` is a string.
+      lastContactedAt: sql<Date | string | null>`max(${mentorFollowups.contactedAt})`,
     })
     .from(newBelieverEnrollments)
     .innerJoin(members, eq(newBelieverEnrollments.memberId, members.id))
@@ -814,7 +817,14 @@ export async function listMyFollowups(
       id: r.id,
       memberId: r.memberId,
       subjectName: `${r.firstName} ${r.lastName}`,
-      lastContactedAt: r.lastContactedAt ? r.lastContactedAt.toISOString() : null,
+      // Coerce through `new Date` because the aggregate above is a string at
+      // runtime. Calling .toISOString() on it directly threw a TypeError that
+      // 500'd this route — and GET /api/me/home with it — for any caller with
+      // mentor enrolments in scope. Same guard as fellowships/service.ts and
+      // attendance/service.ts.
+      lastContactedAt: r.lastContactedAt
+        ? new Date(r.lastContactedAt).toISOString()
+        : null,
     });
   }
 
