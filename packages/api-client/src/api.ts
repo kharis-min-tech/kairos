@@ -94,6 +94,8 @@ import type {
   MeActivityItem,
   MeApprovalItem,
   MeFollowupItem,
+  FollowupQueueRow,
+  DueFollowupRow,
   MeHomeResponse,
   MeLeadershipResponse,
   ListNotificationPreferencesResponse,
@@ -869,6 +871,41 @@ export function createApiClient(
             `/api/departments/${encodeURIComponent(branchDeptId)}/rota-swap-requests/${encodeURIComponent(requestId)}`,
             data,
           ),
+      },
+    },
+
+    /**
+     * Cross-cutting follow-ups. Fellowship- and department-context writes live
+     * on their own module routes, where the route itself declares the context;
+     * these are the branch context and the queues of people who need a
+     * follow-up but belong to no group.
+     */
+    followups: {
+      createBranchFollowup: (data: Record<string, unknown>) =>
+        client.post<ApiResponse<Record<string, unknown>>>('/api/followups', data),
+      firstTimerQueue: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<FollowupQueueRow[]>>(
+          `/api/followups/queues/first-timers${query ? `?${query}` : ''}`,
+        );
+      },
+      noGroupQueue: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<FollowupQueueRow[]>>(
+          `/api/followups/queues/no-group${query ? `?${query}` : ''}`,
+        );
+      },
+      due: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<DueFollowupRow[]>>(
+          `/api/followups/due${query ? `?${query}` : ''}`,
+        );
       },
     },
 

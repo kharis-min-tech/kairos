@@ -2,9 +2,8 @@ import { and, desc, eq } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import {
-  fellowshipFollowups,
   fellowships,
-  departmentFollowups,
+  memberFollowups,
   branchDepartments,
   departments,
   members,
@@ -27,9 +26,15 @@ import { authHasCapability } from '../lib/grants';
  */
 export interface MemberFollowupHistoryItem {
   id: string;
-  source: 'fellowship' | 'department';
-  scopeId: string;
-  scopeName: string; // fellowship name OR department name
+  /**
+   * The follow-up's declared context. 'branch' is a pastoral follow-up made
+   * outside any group — the only context available for someone in no
+   * fellowship and no department, and a deliberate choice for a pastor
+   * following up a member who is in one. It carries no scope id or name.
+   */
+  source: 'fellowship' | 'department' | 'branch';
+  scopeId: string | null;
+  scopeName: string | null; // fellowship name OR department name; null for branch
   memberId: string;
   recordedById: string;
   recordedByFirstName: string;
@@ -76,97 +81,76 @@ export async function getMemberFollowupHistory(
 
   const recorder = alias(members, 'recorder');
 
-  const [fellowshipRows, deptRows] = await Promise.all([
-    db
-      .select({
-        id: fellowshipFollowups.id,
-        scopeId: fellowshipFollowups.fellowshipId,
-        scopeName: fellowships.fellowshipName,
-        memberId: fellowshipFollowups.memberId,
-        recordedById: fellowshipFollowups.recordedById,
-        recordedByFirstName: recorder.firstName,
-        recordedByLastName: recorder.lastName,
-        contactedAt: fellowshipFollowups.contactedAt,
-        notes: fellowshipFollowups.notes,
-        contactMethod: fellowshipFollowups.contactMethod,
-        contactStatus: fellowshipFollowups.contactStatus,
-        type: fellowshipFollowups.type,
-        methods: fellowshipFollowups.methods,
-        contactReached: fellowshipFollowups.contactReached,
-        interestLevel: fellowshipFollowups.interestLevel,
-        visitKind: fellowshipFollowups.visitKind,
-        visitAnnounced: fellowshipFollowups.visitAnnounced,
-        visitArrivalAt: fellowshipFollowups.visitArrivalAt,
-        visitDepartureAt: fellowshipFollowups.visitDepartureAt,
-        visitOutcome: fellowshipFollowups.visitOutcome,
-        companionMemberIds: fellowshipFollowups.companionMemberIds,
-        welfareConcern: fellowshipFollowups.welfareConcern,
-        safeguardingConcern: fellowshipFollowups.safeguardingConcern,
-        nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
-      })
-      .from(fellowshipFollowups)
-      .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
-      .innerJoin(recorder, eq(fellowshipFollowups.recordedById, recorder.id))
-      .where(eq(fellowshipFollowups.memberId, memberId))
-      .orderBy(desc(fellowshipFollowups.contactedAt)),
-    db
-      .select({
-        id: departmentFollowups.id,
-        scopeId: departmentFollowups.branchDepartmentId,
-        scopeName: departments.departmentName,
-        memberId: departmentFollowups.memberId,
-        recordedById: departmentFollowups.recordedById,
-        recordedByFirstName: recorder.firstName,
-        recordedByLastName: recorder.lastName,
-        contactedAt: departmentFollowups.contactedAt,
-        notes: departmentFollowups.notes,
-        contactMethod: departmentFollowups.contactMethod,
-        contactStatus: departmentFollowups.contactStatus,
-        type: departmentFollowups.type,
-        methods: departmentFollowups.methods,
-        contactReached: departmentFollowups.contactReached,
-        interestLevel: departmentFollowups.interestLevel,
-        visitKind: departmentFollowups.visitKind,
-        visitAnnounced: departmentFollowups.visitAnnounced,
-        visitArrivalAt: departmentFollowups.visitArrivalAt,
-        visitDepartureAt: departmentFollowups.visitDepartureAt,
-        visitOutcome: departmentFollowups.visitOutcome,
-        companionMemberIds: departmentFollowups.companionMemberIds,
-        welfareConcern: departmentFollowups.welfareConcern,
-        safeguardingConcern: departmentFollowups.safeguardingConcern,
-        nextFollowUpDate: departmentFollowups.nextFollowUpDate,
-      })
-      .from(departmentFollowups)
-      .innerJoin(
-        branchDepartments,
-        eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
-      )
-      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
-      .innerJoin(recorder, eq(departmentFollowups.recordedById, recorder.id))
-      .where(eq(departmentFollowups.memberId, memberId))
-      .orderBy(desc(departmentFollowups.contactedAt)),
-  ]);
+  // One query over one table. It used to be two, inner-joined to fellowships
+  // and to branch_departments — which silently dropped every branch-context
+  // row, since those have both ids NULL. That is the gap 0052 closes, so the
+  // joins are LEFT and the context comes from the row itself.
+  const rows = await db
+    .select({
+      id: memberFollowups.id,
+      contextKind: memberFollowups.contextKind,
+      fellowshipId: memberFollowups.fellowshipId,
+      fellowshipName: fellowships.fellowshipName,
+      departmentId: memberFollowups.departmentId,
+      departmentName: departments.departmentName,
+      memberId: memberFollowups.memberId,
+      recordedById: memberFollowups.recordedById,
+      recordedByFirstName: recorder.firstName,
+      recordedByLastName: recorder.lastName,
+      contactedAt: memberFollowups.contactedAt,
+      notes: memberFollowups.notes,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      type: memberFollowups.type,
+      methods: memberFollowups.methods,
+      contactReached: memberFollowups.contactReached,
+      interestLevel: memberFollowups.interestLevel,
+      visitKind: memberFollowups.visitKind,
+      visitAnnounced: memberFollowups.visitAnnounced,
+      visitArrivalAt: memberFollowups.visitArrivalAt,
+      visitDepartureAt: memberFollowups.visitDepartureAt,
+      visitOutcome: memberFollowups.visitOutcome,
+      companionMemberIds: memberFollowups.companionMemberIds,
+      welfareConcern: memberFollowups.welfareConcern,
+      safeguardingConcern: memberFollowups.safeguardingConcern,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+    })
+    .from(memberFollowups)
+    .leftJoin(fellowships, eq(memberFollowups.fellowshipId, fellowships.id))
+    .leftJoin(branchDepartments, eq(memberFollowups.departmentId, branchDepartments.id))
+    .leftJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .innerJoin(recorder, eq(memberFollowups.recordedById, recorder.id))
+    .where(eq(memberFollowups.memberId, memberId))
+    .orderBy(desc(memberFollowups.contactedAt))
+    .limit(200);
 
-  const merged: MemberFollowupHistoryItem[] = [
-    ...fellowshipRows.map((r) => ({
-      ...r,
-      source: 'fellowship' as const,
-      contactedAt: r.contactedAt.toISOString(),
-      visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
-      visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
-      methods: (r.methods as string[] | null) ?? null,
-      companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
-    })),
-    ...deptRows.map((r) => ({
-      ...r,
-      source: 'department' as const,
-      contactedAt: r.contactedAt.toISOString(),
-      visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
-      visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
-      methods: (r.methods as string[] | null) ?? null,
-      companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
-    })),
-  ];
+  const merged: MemberFollowupHistoryItem[] = rows.map((r) => ({
+    id: r.id,
+    source: r.contextKind as MemberFollowupHistoryItem['source'],
+    scopeId: r.fellowshipId ?? r.departmentId ?? null,
+    scopeName: r.fellowshipName ?? r.departmentName ?? null,
+    memberId: r.memberId,
+    recordedById: r.recordedById,
+    recordedByFirstName: r.recordedByFirstName,
+    recordedByLastName: r.recordedByLastName,
+    contactedAt: r.contactedAt.toISOString(),
+    notes: r.notes,
+    contactMethod: r.contactMethod,
+    contactStatus: r.contactStatus,
+    type: r.type,
+    methods: (r.methods as string[] | null) ?? null,
+    contactReached: r.contactReached,
+    interestLevel: r.interestLevel,
+    visitKind: r.visitKind,
+    visitAnnounced: r.visitAnnounced,
+    visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
+    visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
+    visitOutcome: r.visitOutcome,
+    companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
+    welfareConcern: r.welfareConcern,
+    safeguardingConcern: r.safeguardingConcern,
+    nextFollowUpDate: r.nextFollowUpDate,
+  }));
 
   merged.sort((a, b) => b.contactedAt.localeCompare(a.contactedAt));
   return merged;
@@ -208,128 +192,91 @@ export async function listConcernFollowups(
     throw new ForbiddenError('You cannot see the safeguarding inbox');
   }
 
-  const flagCol = (t: typeof fellowshipFollowups | typeof departmentFollowups) =>
+  const flagCol = (t: typeof memberFollowups | typeof memberFollowups) =>
     kind === 'welfare' ? t.welfareConcern : t.safeguardingConcern;
 
   const recorder = alias(members, 'recorder');
   const subject = alias(members, 'subject');
 
-  // Scope narrowing: non-admins see rows in their own branch only. System
-  // admins see everything.
-  const fellowshipBranchScope = isAdmin
-    ? undefined
-    : eq(fellowships.branchId, branchId);
-  const deptBranchScope = isAdmin
-    ? undefined
-    : eq(branchDepartments.branchId, branchId);
 
-  const [fellowshipRows, deptRows] = await Promise.all([
-    db
-      .select({
-        id: fellowshipFollowups.id,
-        scopeId: fellowshipFollowups.fellowshipId,
-        scopeName: fellowships.fellowshipName,
-        memberId: fellowshipFollowups.memberId,
-        memberFirstName: subject.firstName,
-        memberLastName: subject.lastName,
-        recordedById: fellowshipFollowups.recordedById,
-        recordedByFirstName: recorder.firstName,
-        recordedByLastName: recorder.lastName,
-        contactedAt: fellowshipFollowups.contactedAt,
-        notes: fellowshipFollowups.notes,
-        contactMethod: fellowshipFollowups.contactMethod,
-        contactStatus: fellowshipFollowups.contactStatus,
-        type: fellowshipFollowups.type,
-        methods: fellowshipFollowups.methods,
-        contactReached: fellowshipFollowups.contactReached,
-        interestLevel: fellowshipFollowups.interestLevel,
-        visitKind: fellowshipFollowups.visitKind,
-        visitAnnounced: fellowshipFollowups.visitAnnounced,
-        visitArrivalAt: fellowshipFollowups.visitArrivalAt,
-        visitDepartureAt: fellowshipFollowups.visitDepartureAt,
-        visitOutcome: fellowshipFollowups.visitOutcome,
-        companionMemberIds: fellowshipFollowups.companionMemberIds,
-        welfareConcern: fellowshipFollowups.welfareConcern,
-        safeguardingConcern: fellowshipFollowups.safeguardingConcern,
-        nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
-      })
-      .from(fellowshipFollowups)
-      .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
-      .innerJoin(recorder, eq(fellowshipFollowups.recordedById, recorder.id))
-      .innerJoin(subject, eq(fellowshipFollowups.memberId, subject.id))
-      .where(
-        fellowshipBranchScope
-          ? and(eq(flagCol(fellowshipFollowups), true), fellowshipBranchScope)
-          : eq(flagCol(fellowshipFollowups), true),
-      )
-      .orderBy(desc(fellowshipFollowups.contactedAt))
-      .limit(200),
-    db
-      .select({
-        id: departmentFollowups.id,
-        scopeId: departmentFollowups.branchDepartmentId,
-        scopeName: departments.departmentName,
-        memberId: departmentFollowups.memberId,
-        memberFirstName: subject.firstName,
-        memberLastName: subject.lastName,
-        recordedById: departmentFollowups.recordedById,
-        recordedByFirstName: recorder.firstName,
-        recordedByLastName: recorder.lastName,
-        contactedAt: departmentFollowups.contactedAt,
-        notes: departmentFollowups.notes,
-        contactMethod: departmentFollowups.contactMethod,
-        contactStatus: departmentFollowups.contactStatus,
-        type: departmentFollowups.type,
-        methods: departmentFollowups.methods,
-        contactReached: departmentFollowups.contactReached,
-        interestLevel: departmentFollowups.interestLevel,
-        visitKind: departmentFollowups.visitKind,
-        visitAnnounced: departmentFollowups.visitAnnounced,
-        visitArrivalAt: departmentFollowups.visitArrivalAt,
-        visitDepartureAt: departmentFollowups.visitDepartureAt,
-        visitOutcome: departmentFollowups.visitOutcome,
-        companionMemberIds: departmentFollowups.companionMemberIds,
-        welfareConcern: departmentFollowups.welfareConcern,
-        safeguardingConcern: departmentFollowups.safeguardingConcern,
-        nextFollowUpDate: departmentFollowups.nextFollowUpDate,
-      })
-      .from(departmentFollowups)
-      .innerJoin(
-        branchDepartments,
-        eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
-      )
-      .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
-      .innerJoin(recorder, eq(departmentFollowups.recordedById, recorder.id))
-      .innerJoin(subject, eq(departmentFollowups.memberId, subject.id))
-      .where(
-        deptBranchScope
-          ? and(eq(flagCol(departmentFollowups), true), deptBranchScope)
-          : eq(flagCol(departmentFollowups), true),
-      )
-      .orderBy(desc(departmentFollowups.contactedAt))
-      .limit(200),
-  ]);
+  // Scoping reads member_followups.branch_id directly rather than hopping
+  // through a container join, so it is correct for all three contexts — a
+  // welfare concern about a member in no group reaches this inbox.
+  const rows = await db
+    .select({
+      id: memberFollowups.id,
+      contextKind: memberFollowups.contextKind,
+      fellowshipId: memberFollowups.fellowshipId,
+      fellowshipName: fellowships.fellowshipName,
+      departmentId: memberFollowups.departmentId,
+      departmentName: departments.departmentName,
+      memberId: memberFollowups.memberId,
+      recordedById: memberFollowups.recordedById,
+      recordedByFirstName: recorder.firstName,
+      recordedByLastName: recorder.lastName,
+      contactedAt: memberFollowups.contactedAt,
+      notes: memberFollowups.notes,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      type: memberFollowups.type,
+      methods: memberFollowups.methods,
+      contactReached: memberFollowups.contactReached,
+      interestLevel: memberFollowups.interestLevel,
+      visitKind: memberFollowups.visitKind,
+      visitAnnounced: memberFollowups.visitAnnounced,
+      visitArrivalAt: memberFollowups.visitArrivalAt,
+      visitDepartureAt: memberFollowups.visitDepartureAt,
+      visitOutcome: memberFollowups.visitOutcome,
+      companionMemberIds: memberFollowups.companionMemberIds,
+      welfareConcern: memberFollowups.welfareConcern,
+      safeguardingConcern: memberFollowups.safeguardingConcern,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+      memberFirstName: subject.firstName,
+      memberLastName: subject.lastName,
+    })
+    .from(memberFollowups)
+    .leftJoin(fellowships, eq(memberFollowups.fellowshipId, fellowships.id))
+    .leftJoin(branchDepartments, eq(memberFollowups.departmentId, branchDepartments.id))
+    .leftJoin(departments, eq(branchDepartments.departmentId, departments.id))
+    .innerJoin(recorder, eq(memberFollowups.recordedById, recorder.id))
+    .innerJoin(subject, eq(memberFollowups.memberId, subject.id))
+    .where(
+      isAdmin
+        ? eq(flagCol(memberFollowups), true)
+        : and(eq(flagCol(memberFollowups), true), eq(memberFollowups.branchId, branchId)),
+    )
+    .orderBy(desc(memberFollowups.contactedAt))
+    .limit(200);
 
-  const merged: ConcernInboxItem[] = [
-    ...fellowshipRows.map((r) => ({
-      ...r,
-      source: 'fellowship' as const,
-      contactedAt: r.contactedAt.toISOString(),
-      visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
-      visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
-      methods: (r.methods as string[] | null) ?? null,
-      companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
-    })),
-    ...deptRows.map((r) => ({
-      ...r,
-      source: 'department' as const,
-      contactedAt: r.contactedAt.toISOString(),
-      visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
-      visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
-      methods: (r.methods as string[] | null) ?? null,
-      companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
-    })),
-  ];
+  const merged: ConcernInboxItem[] = rows.map((r) => ({
+    id: r.id,
+    source: r.contextKind as MemberFollowupHistoryItem['source'],
+    scopeId: r.fellowshipId ?? r.departmentId ?? null,
+    scopeName: r.fellowshipName ?? r.departmentName ?? null,
+    memberId: r.memberId,
+    recordedById: r.recordedById,
+    recordedByFirstName: r.recordedByFirstName,
+    recordedByLastName: r.recordedByLastName,
+    contactedAt: r.contactedAt.toISOString(),
+    notes: r.notes,
+    contactMethod: r.contactMethod,
+    contactStatus: r.contactStatus,
+    type: r.type,
+    methods: (r.methods as string[] | null) ?? null,
+    contactReached: r.contactReached,
+    interestLevel: r.interestLevel,
+    visitKind: r.visitKind,
+    visitAnnounced: r.visitAnnounced,
+    visitArrivalAt: r.visitArrivalAt ? new Date(r.visitArrivalAt).toISOString() : null,
+    visitDepartureAt: r.visitDepartureAt ? new Date(r.visitDepartureAt).toISOString() : null,
+    visitOutcome: r.visitOutcome,
+    companionMemberIds: (r.companionMemberIds as string[] | null) ?? null,
+    welfareConcern: r.welfareConcern,
+    safeguardingConcern: r.safeguardingConcern,
+    nextFollowUpDate: r.nextFollowUpDate,
+    memberFirstName: r.memberFirstName,
+    memberLastName: r.memberLastName,
+  }));
 
   merged.sort((a, b) => b.contactedAt.localeCompare(a.contactedAt));
   return merged;

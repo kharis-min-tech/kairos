@@ -15,6 +15,7 @@ import { membershipRouter } from './membership/router';
 import outreachRouter from './outreach/router';
 import soulsRouter from './outreach/souls-router';
 import { meRouter } from './me/router';
+import { followupsRouter } from './followups/router';
 import { formsRouter } from './forms/router';
 import { attendanceRouter } from './attendance/router';
 import { mediaRouter } from './media/router';
@@ -72,6 +73,7 @@ export function createApp() {
   app.route('/api/outreach', outreachRouter);
   app.route('/api/souls', soulsRouter);
   app.route('/api/me', meRouter);
+  app.route('/api/followups', followupsRouter);
   app.route('/api/forms', formsRouter);
   app.route('/api/attendance', attendanceRouter);
   app.route('/api/media', mediaRouter);

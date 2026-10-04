@@ -940,8 +940,10 @@ function FollowupHistoryRow({
 }: {
   row: {
     id: string;
-    source: 'fellowship' | 'department';
-    scopeName: string;
+    // 'branch' = a pastoral follow-up made outside any group, so it carries
+    // no scope name — see member_followups in @kairos/database.
+    source: 'fellowship' | 'department' | 'branch';
+    scopeName: string | null;
     contactedAt: string;
     type: 'contact' | 'visit';
     methods: string[] | null;
@@ -1023,7 +1025,7 @@ function FollowupHistoryRow({
           ) : null}
         </View>
         <Text style={styles.historyMeta} numberOfLines={1}>
-          {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
+          {dateLabel} · {row.scopeName ?? 'Branch'} · by {row.recordedByFirstName}{' '}
           {row.recordedByLastName}
         </Text>
         {row.notes ? (
