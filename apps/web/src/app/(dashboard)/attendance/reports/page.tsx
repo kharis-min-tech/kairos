@@ -31,13 +31,15 @@ import { AttendanceHeatmapCard } from '../_components/attendance-heatmap-card';
 import { FrequencyBucketsCard } from '../_components/frequency-buckets-card';
 import { FirstTimeReturningCard } from '../_components/first-time-returning-card';
 
-const REPORT_READER_ROLES = ['admin', 'pastor', 'leader'];
-
 export default function AttendanceReportsPage() {
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const caps = useCapabilities();
   const isAdminOrPastor = caps.has('branch:write');
+  // Mirrors enforceReportReader in apps/api/src/attendance/service.ts, so a
+  // surface this page offers is exactly one the server will allow.
+  const canReadReports =
+    caps.has('branch:read') || caps.has('fellowship:read') || caps.has('department:read');
   const [branchId, setBranchId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [fellowshipId, setFellowshipId] = useState('');
@@ -47,13 +49,19 @@ export default function AttendanceReportsPage() {
   const [engagedWindowMonths, setEngagedWindowMonths] = useState('3');
   const engagedWindow = Number(engagedWindowMonths);
 
-  // Second-level guard: only admin/pastor/leader may view attendance reports.
-  // Members would otherwise hit a wall of 403s on each chart query.
+  // Second-level guard: report readers only — a plain member would otherwise
+  // hit a wall of 403s on every chart query.
+  //
+  // This used to test activeRole against ['admin', 'pastor', 'leader'], but
+  // SystemRole has only been 'admin' | 'member' since the RBAC rebuild, so
+  // every branch pastor and group leader — whose systemRole is 'member' and
+  // whose authority lives in grants — was bounced straight back to
+  // /attendance. Authority is read from capabilities, never from a role name.
   useEffect(() => {
-    if (activeRole && !REPORT_READER_ROLES.includes(activeRole)) {
+    if (activeRole && !canReadReports) {
       router.replace('/attendance');
     }
-  }, [activeRole, router]);
+  }, [activeRole, canReadReports, router]);
 
   const { data: branches } = useBranches();
   const branchParam = branchId || undefined;
