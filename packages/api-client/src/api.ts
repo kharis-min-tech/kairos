@@ -94,6 +94,7 @@ import type {
   MeActivityItem,
   MeApprovalItem,
   MeFollowupItem,
+  MeHomeResponse,
   MeLeadershipResponse,
   ListNotificationPreferencesResponse,
   NotificationPreferencePayload,
@@ -890,6 +891,8 @@ export function createApiClient(
           instanceStatus: string;
         }>>>(`/api/me/rota${query ? `?${query}` : ''}`);
       },
+      /** The control-centre payload — one request per home-screen render. */
+      home: () => client.get<ApiResponse<MeHomeResponse>>('/api/me/home'),
       leadership: () =>
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
       approvals: () =>

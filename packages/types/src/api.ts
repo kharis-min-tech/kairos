@@ -1606,3 +1606,137 @@ export interface BranchRoleAssignment {
 export interface AssignBranchRoleRequest {
   memberId: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Home / control centre (GET /api/me/home)
+//
+// One payload serving both the mobile home screen and the web control
+// centre. The four blocks are the same on both platforms; `altitude`
+// decides which appear and in what order. Mobile expresses priority by
+// vertical order, web by position and size — same blocks, same contents.
+//
+// Items carry IDS, never routes. The two clients have different route trees
+// (mobile `/rollcall/[fellowshipId]/[meetingId]`, web reaches the same
+// register from the fellowship detail page), so each client maps `kind` +
+// `refs` onto its own navigation.
+//
+// `altitude` is derived from capabilities only, never from systemRole as a
+// permission carrier. See resolveHomeAltitude in apps/api/src/lib/leader-scope.ts.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Which lens the home surface renders at. `church` inverts section order. */
+export type HomeAltitude = 'church' | 'branch' | 'group' | 'personal';
+
+/** Entity ids a client needs to build its own route for an item. */
+export interface HomeRefs {
+  serviceId?: string;
+  fellowshipId?: string;
+  meetingId?: string;
+  departmentId?: string;
+  branchId?: string;
+  memberId?: string;
+  cohortId?: string;
+  rotaInstanceId?: string;
+}
+
+/**
+ * Something happening on a timeline. Informational — a tap navigates, but
+ * the item itself is not a task the caller owes anyone.
+ */
+export interface HomeAgendaItem {
+  kind: 'service' | 'rota' | 'fellowship_meeting' | 'membership_session';
+  id: string;
+  title: string;
+  subtitle: string | null;
+  /** ISO timestamp. */
+  at: string;
+  refs: HomeRefs;
+}
+
+/**
+ * Something waiting on the caller. Always actionable. `count` is 1 for a
+ * single item and >1 when the row collapses a group ("3 member approvals").
+ */
+export interface HomeTaskItem {
+  kind:
+    | 'member_approval'
+    | 'fellowship_join'
+    | 'department_join'
+    | 'followup_due'
+    | 'register_missing'
+    | 'welfare_concern'
+    | 'safeguarding_concern'
+    | 'membership_interest'
+    | 'rota_swap';
+  id: string;
+  title: string;
+  subtitle: string | null;
+  count: number;
+  /** `high` sorts first and renders with the warning treatment. */
+  urgency: 'normal' | 'high';
+  refs: HomeRefs;
+}
+
+export interface HomePulseMetric {
+  key: string;
+  label: string;
+  value: number;
+  /** Pre-formatted comparison, e.g. "−4% vs 4wk". Null when not computed. */
+  delta: string | null;
+}
+
+export type HomeWarningKind =
+  | 'attendance_unrecorded'
+  | 'members_drifting'
+  | 'branches_behind'
+  | 'branch_without_pastor';
+
+export interface HomePulseWarning {
+  kind: HomeWarningKind;
+  text: string;
+  refs: HomeRefs;
+}
+
+/**
+ * Live numbers. Present from `branch` altitude upward, null below it — a
+ * group leader gets the same information group-shaped in `groups`, which
+ * carries `lastPresent` / `lastTotal` per fellowship or department.
+ */
+export interface HomePulse {
+  scope: 'church' | 'branch';
+  scopeLabel: string;
+  metrics: HomePulseMetric[];
+  warnings: HomePulseWarning[];
+}
+
+/**
+ * The tail block. A fellowship or department for a leader, a branch for a
+ * system admin — `headcount` is members or congregation accordingly, and
+ * `lastPresent`/`lastTotal` the most recent register or service turnout.
+ */
+export interface HomeGroupSummary {
+  kind: 'fellowship' | 'department' | 'branch';
+  id: string;
+  name: string;
+  headcount: number;
+  lastPresent: number | null;
+  lastTotal: number | null;
+}
+
+/** Shown only when a member has no group, no class and a thin profile. */
+export interface HomeGettingStartedItem {
+  key: 'join_fellowship' | 'membership_interest' | 'complete_profile';
+  title: string;
+}
+
+export interface MeHomeResponse {
+  altitude: HomeAltitude;
+  today: HomeAgendaItem[];
+  thisWeek: HomeAgendaItem[];
+  needsYou: HomeTaskItem[];
+  pulse: HomePulse | null;
+  groups: HomeGroupSummary[];
+  gettingStarted: HomeGettingStartedItem[];
+  /** Consecutive weeks present at a service. Null above group altitude. */
+  streakWeeks: number | null;
+}
