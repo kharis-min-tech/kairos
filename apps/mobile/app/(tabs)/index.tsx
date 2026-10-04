@@ -25,6 +25,8 @@ import {
   AgendaBlock,
   GettingStartedBlock,
   GroupsBlock,
+  HomeError,
+  HomeSkeleton,
   NeedsYouBlock,
   PulseBlock,
   StreakBlock,
@@ -210,7 +212,18 @@ export default function Home() {
           </Pressable>
         </View>
 
-        {altitude === 'church' ? (
+        {home.isLoading ? (
+          <HomeSkeleton />
+        ) : home.isError || !data ? (
+          <HomeError
+            message={
+              home.error instanceof Error
+                ? home.error.message
+                : 'Please check your connection and try again.'
+            }
+            onRetry={() => home.refetch()}
+          />
+        ) : altitude === 'church' ? (
           // A system admin has no personal duties, so the numbers lead and the
           // agenda — usually one line, often none — goes last.
           <>
