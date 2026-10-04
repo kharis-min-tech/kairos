@@ -22,6 +22,12 @@ export const FormFieldType = {
   Radio: 'radio',
   Checkbox: 'checkbox',
   Textarea: 'textarea',
+  /**
+   * A reference to an existing member, picked by search. The submitted value
+   * is that member's id, not their typed name — so the person can actually be
+   * routed to, which free text never allowed.
+   */
+  Member: 'member',
 } as const;
 export type FormFieldType = (typeof FormFieldType)[keyof typeof FormFieldType];
 
@@ -334,10 +340,15 @@ export const FIRST_TIME_VISITOR_FORM: FormDefinition = {
           placeholder: 'e.g. A friend, social media, walked past',
         },
         {
-          id: 'invitedBy',
-          type: 'text',
+          // A real reference rather than a typed name: an invited first-timer
+          // is owned by the Follow-Up Team, and knowing WHO brought them is
+          // only actionable if that person can be reached. Legacy submissions
+          // keep their free-text `invitedBy`; the queue reads whichever is
+          // present.
+          id: 'invitedByMemberId',
+          type: 'member',
           label: 'Who invited you?',
-          placeholder: 'Name of the person who invited you',
+          placeholder: 'Search for the person who invited you',
         },
       ],
     },

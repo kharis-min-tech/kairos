@@ -44,6 +44,8 @@ import {
   type SubmitFormRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth';
+import { MemberPickerSheet } from '@/components/member-picker-sheet';
 import { apiBaseUrl } from '@/lib/config';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
@@ -663,6 +665,12 @@ function FieldRenderer({
     );
   }
 
+  if (field.type === 'member') {
+    // Stores a member id, not a typed name — the point is that the picked
+    // person can be routed to afterwards.
+    return <MemberField field={field} value={value} onChange={onChange} />;
+  }
+
   if (field.type === 'textarea') {
     return (
       <View style={{ gap: spacing.xs }}>
@@ -744,6 +752,57 @@ function CheckboxRow({
         <Text style={styles.checkboxLabel}>{label}</Text>
       </Pressable>
       {error ? <Text style={styles.errorLine}>{error}</Text> : null}
+    </View>
+  );
+}
+
+/**
+ * A member reference picked by search. Shows who is linked and lets it be
+ * cleared; the stored value is the member id.
+ */
+function MemberField({
+  field,
+  value,
+  onChange,
+}: {
+  field: FormFieldDef;
+  value: FieldValue;
+  onChange: (v: FieldValue) => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const user = useAuthStore((s) => s.user);
+  const [open, setOpen] = useState(false);
+  const selectedId = typeof value === 'string' && value ? value : null;
+
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <FieldLabel label={field.label} required={field.required} />
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button">
+        <Card padding="md" style={styles.memberFieldCard}>
+          <Text style={selectedId ? styles.memberFieldValue : styles.memberFieldPlaceholder}>
+            {selectedId ? 'Linked — tap to change' : (field.placeholder ?? 'Search for a person')}
+          </Text>
+          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+        </Card>
+      </Pressable>
+      {selectedId ? (
+        <Pressable onPress={() => onChange('')} accessibilityRole="button">
+          <Text style={styles.memberFieldClear}>Clear</Text>
+        </Pressable>
+      ) : null}
+      <MemberPickerSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        branchId={user?.homeBranchId ?? ''}
+        selectedMemberId={selectedId ?? undefined}
+        title={field.label}
+        subtitle="Search members in this branch."
+        onPick={(memberId) => {
+          onChange(memberId);
+          setOpen(false);
+        }}
+      />
     </View>
   );
 }
@@ -1092,6 +1151,10 @@ function makeStyles(c: ThemeColors) {
     ...typography.button,
     color: c.primary,
   },
+  memberFieldCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  memberFieldValue: { ...typography.body, color: c.ink, flex: 1 },
+  memberFieldPlaceholder: { ...typography.body, color: c.inkFaded, flex: 1 },
+  memberFieldClear: { ...typography.meta, color: c.primary },
 });
 }
 

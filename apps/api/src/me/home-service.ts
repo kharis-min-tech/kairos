@@ -29,6 +29,7 @@ import {
   countBranchesWithoutPastor,
   getBranchMainPastorName,
   listRecentActivity,
+  countFirstTimersNeedingFollowup,
   BRANCH_BEHIND_DAYS,
   DRIFTING_SERVICES_WINDOW,
 } from './home-queries';
@@ -92,6 +93,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     approvals,
     followups,
     registersMissing,
+    firstTimersNeedingFollowup,
     welfare,
     safeguarding,
     groups,
@@ -107,6 +109,11 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     hasQueue ? listMyApprovals(db, auth) : Promise.resolve([]),
     hasQueue ? listMyFollowups(db, auth) : Promise.resolve([]),
     hasQueue ? listRegistersMissing(db, auth) : Promise.resolve([]),
+    // Only branch altitude and up owns this queue — a group leader has no
+    // reach over first-timers, who belong to no group by definition.
+    altitude === 'branch' || altitude === 'church'
+      ? countFirstTimersNeedingFollowup(db, auth.branchId)
+      : Promise.resolve(0),
     canSeeConcerns(auth, 'welfare')
       ? listConcernFollowups(db, auth, 'welfare')
       : Promise.resolve([]),
@@ -187,6 +194,22 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
       count: 1,
       urgency: 'high',
       refs: { fellowshipId: r.fellowshipId, meetingId: r.meetingId },
+    });
+  }
+
+  if (firstTimersNeedingFollowup > 0) {
+    needsYou.push({
+      kind: 'first_timer_followup',
+      id: 'first_timer_followup',
+      title: pluralise(
+        firstTimersNeedingFollowup,
+        'first-timer needs a first visit',
+        'first-timers need a first visit',
+      ),
+      subtitle: null,
+      count: firstTimersNeedingFollowup,
+      urgency: 'high',
+      refs: {},
     });
   }
 

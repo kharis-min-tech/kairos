@@ -13,6 +13,8 @@ import {
 } from '@kairos/ui';
 import { Search, X, Plus, Trash2 } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
+import { MemberSearchLink } from './member-search-link';
+import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
 import {
@@ -344,6 +346,19 @@ export function DeclarativeForm({
 
     const control = (() => {
       switch (field.type) {
+        case 'member':
+          // The stored value is a member id, so the picked person can actually
+          // be routed to — a typed name never could be.
+          return (
+            <MemberSearchLink
+              value={typeof value === 'string' ? value : undefined}
+              onSelect={(m: FormMemberSearchResult) => onChange(m.id)}
+              onClear={() => onChange('')}
+              label={field.label}
+              helpText={field.placeholder ?? 'Search by name or phone.'}
+              linkedNote="Linked."
+            />
+          );
         case 'date':
           return (
             <DateSelect

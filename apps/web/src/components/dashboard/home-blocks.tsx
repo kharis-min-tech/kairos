@@ -79,6 +79,8 @@ export function hrefForTask(item: HomeTaskItem): string {
       return '/membership/interest';
     case 'rota_swap':
       return '/departments';
+    case 'first_timer_followup':
+      return '/follow-ups?queue=first-timers';
   }
 }
 

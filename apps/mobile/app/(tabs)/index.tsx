@@ -102,6 +102,9 @@ export default function Home() {
       case 'followup_due':
         router.push('/follow-ups');
         return;
+      case 'first_timer_followup':
+        router.push('/follow-ups?queue=first-timers' as never);
+        return;
       case 'membership_interest':
         router.push('/membership/interest' as never);
         return;
