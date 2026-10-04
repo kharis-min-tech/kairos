@@ -371,7 +371,9 @@ export async function listOverdueFellowshipFollowups(
   const lastFollowups = await db
     .select({
       memberId: fellowshipFollowups.memberId,
-      lastContactedAt: sql<Date | null>`MAX(${fellowshipFollowups.contactedAt})`,
+      // String at runtime, not a Date — see me/service.ts. Safe here only
+      // because the consumer below coerces through `new Date`.
+      lastContactedAt: sql<Date | string | null>`MAX(${fellowshipFollowups.contactedAt})`,
     })
     .from(fellowshipFollowups)
     .where(
@@ -382,7 +384,8 @@ export async function listOverdueFellowshipFollowups(
     )
     .groupBy(fellowshipFollowups.memberId);
 
-  const lastByMember = new Map<string, Date | null>();
+  // Date | string because the aggregate is a string at runtime (see above).
+  const lastByMember = new Map<string, Date | string | null>();
   for (const r of lastFollowups) {
     lastByMember.set(r.memberId, r.lastContactedAt);
   }

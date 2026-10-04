@@ -666,4 +666,49 @@ describe('GET /api/me/followups', () => {
     const body = (await res.json()) as { data: unknown[] };
     expect(body.data).toEqual([]);
   });
+
+  // Regression, 2026-10-04: `max(contacted_at)` rides a raw sql<> fragment, so
+  // drizzle hands it back as a STRING, not a Date. Calling .toISOString() on it
+  // threw `r.lastContactedAt.toISOString is not a function`, which 500'd this
+  // route and GET /api/me/home with it for any caller holding mentor
+  // enrolments in scope — i.e. every admin.
+  it('normalises a string lastContactedAt from the SQL aggregate', async () => {
+    mockDb.select.mockReturnValue(
+      chainTo([
+        {
+          id: 'e1e1e1e1-0000-0000-0000-000000000001',
+          memberId: TEST_IDS.memberId,
+          firstName: 'Ada',
+          lastName: 'Okoro',
+          status: 'Following Up',
+          // The shared chain mock feeds this one row to every query in
+          // listMyFollowups, so it carries the fields each branch reads.
+          // `createdAt` / `contactedAt` are real columns (drizzle hands back
+          // Dates); `lastContactedAt` is the raw aggregate under test and is
+          // deliberately a string, as Postgres actually returns it.
+          createdAt: new Date('2026-09-20T09:00:00.000Z'),
+          contactedAt: new Date('2026-09-25T09:00:00.000Z'),
+          nextFollowUpDate: '2026-09-30',
+          lastContactedAt: '2026-09-28 19:00:00+00',
+        },
+      ]),
+    );
+    const token = await signTestToken({
+      systemRole: 'admin',
+      memberId: TEST_IDS.memberId,
+      branchId: branchA,
+    });
+    const res = await app.request('/api/me/followups', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: Array<{ kind: string; lastContactedAt?: string | null }>;
+    };
+    const dated = body.data.filter((i) => i.lastContactedAt);
+    expect(dated.length).toBeGreaterThan(0);
+    for (const item of dated) {
+      expect(item.lastContactedAt).toBe('2026-09-28T19:00:00.000Z');
+    }
+  });
 });
