@@ -7,7 +7,6 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMeHome, useMyLeadership } from '@/hooks/use-me';
 import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
-import { useFellowships } from '@/hooks/use-fellowships';
 import { CustomSelect } from '@kairos/ui';
 import {
   AgendaBlock,
@@ -115,14 +114,16 @@ function deriveRoleLabel(i: RoleLabelInputs): string {
 // ── Recent activity ────────────────────────────────────────
 
 /**
- * What has happened, as opposed to the agenda's what's next. Kept through the
- * 2026-10-04 rebuild because it has no equivalent anywhere else in the app.
+ * What has happened, as opposed to the agenda's what's next.
+ *
+ * It used to also list fellowships with their meeting schedules under a
+ * "Recently" heading, which was doubly wrong: a schedule is not activity, and
+ * upcoming fellowship meetings are already agenda items. Only things that have
+ * actually happened belong here.
  */
 function RecentActivity({ branchId, isMember }: { branchId?: string; isMember: boolean }) {
   const { data: result } = useMembers({ approvalStatus: 'pending', branchId, limit: 4 });
   const pending = result?.data ?? [];
-  const { data: fr } = useFellowships({ page: 1, limit: 3, branchId });
-  const fellowships = fr?.data ?? [];
 
   const items: { text: React.ReactNode; sub: string; href?: string }[] = [];
   // Membership requests are a leadership concern — a plain member seeing
@@ -143,25 +144,10 @@ function RecentActivity({ branchId, isMember }: { branchId?: string; isMember: b
       }),
     );
   }
-  fellowships.slice(0, 2).forEach((f) =>
-    items.push({
-      text: (
-        <>
-          <span className="font-semibold text-foreground">{f.fellowshipName}</span>
-          <span className="text-muted-foreground">
-            , {f.meetingSchedule ?? 'schedule TBC'}.
-          </span>
-        </>
-      ),
-      sub: 'Upcoming',
-      href: `/fellowships/${f.id}`,
-    }),
-  );
-
   return (
     <section>
       <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        Recent community activity
+        Recent activity
       </p>
       <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
         {items.length === 0 ? (
@@ -357,6 +343,11 @@ export default function DashboardPage() {
     );
   }
 
+  // The agenda column is the one that can be empty — the queue column always
+  // has Recent Activity, which renders its own empty state.
+  const hasAgenda =
+    data.today.length > 0 || data.thisWeek.length > 0 || data.gettingStarted.length > 0;
+
   const pulse = data.pulse ? <PulseBlock pulse={data.pulse} /> : null;
   const agenda = (
     <>
@@ -386,13 +377,22 @@ export default function DashboardPage() {
       {/* Pulse spans the top where it exists; the agenda leads the left
           column and the queue the right. At church altitude the numbers are
           the whole story — a system admin has no personal duties — so the
-          agenda drops below the fold rather than leading an empty section. */}
+          agenda drops below the fold rather than leading an empty section.
+
+          When a column has nothing in it the grid collapses to one column
+          rather than reserving dead space, so the remaining blocks line up
+          with the full-width pulse row above them. A system admin with no
+          personal agenda is the common case, not an edge one. */}
       {pulse}
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-6">{altitude === 'church' ? sidebar : agenda}</div>
-        <div className="space-y-6">{altitude === 'church' ? agenda : sidebar}</div>
-      </div>
+      {hasAgenda ? (
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <div className="space-y-6">{altitude === 'church' ? sidebar : agenda}</div>
+          <div className="space-y-6">{altitude === 'church' ? agenda : sidebar}</div>
+        </div>
+      ) : (
+        <div className="space-y-6">{sidebar}</div>
+      )}
 
       <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-ambient">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
