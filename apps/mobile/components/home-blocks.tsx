@@ -167,35 +167,37 @@ export function PulseBlock({
   return (
     <View style={styles.block}>
       <SectionHeader label={pulse.scope === 'church' ? 'Church pulse' : 'Branch pulse'} />
-      <Card padding="md">
-        <View style={styles.metricRow}>
-          {pulse.metrics.map((metric) => (
-            <View key={metric.key} style={styles.metric}>
-              <Text style={styles.metricValue}>{metric.value.toLocaleString()}</Text>
-              <Text style={styles.metricLabel} numberOfLines={2}>
-                {metric.label}
-              </Text>
-              {metric.delta ? <Text style={styles.metricDelta}>{metric.delta}</Text> : null}
-            </View>
+      {/* One card per metric, two per row — the same partitioned treatment as
+          web. Four numbers sharing a single card read as one run-on bar at
+          phone width. */}
+      <View style={styles.metricGrid}>
+        {pulse.metrics.map((metric) => (
+          <Card key={metric.key} padding="md" style={styles.metricCard}>
+            <Text style={styles.metricValue}>{metric.value.toLocaleString()}</Text>
+            <Text style={styles.metricLabel} numberOfLines={2}>
+              {metric.label}
+            </Text>
+            {metric.delta ? <Text style={styles.metricDelta}>{metric.delta}</Text> : null}
+          </Card>
+        ))}
+      </View>
+      {pulse.warnings.length > 0 ? (
+        <Card padding="none" style={styles.warningCard}>
+          {pulse.warnings.map((warning, index) => (
+            <Pressable
+              key={warning.kind}
+              onPress={() => onWarningPress(warning)}
+              accessibilityRole="button"
+              accessibilityLabel={warning.text}
+              style={[styles.warningRow, index > 0 && styles.taskRowDivided]}
+            >
+              <TriangleAlert color={c.gold} size={16} strokeWidth={1.5} />
+              <Text style={styles.warningText}>{warning.text}</Text>
+              <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
+            </Pressable>
           ))}
-        </View>
-        {pulse.warnings.length > 0 ? (
-          <View style={styles.warningList}>
-            {pulse.warnings.map((warning) => (
-              <Pressable
-                key={warning.kind}
-                onPress={() => onWarningPress(warning)}
-                accessibilityRole="button"
-                style={styles.warningRow}
-              >
-                <TriangleAlert color={c.gold} size={16} strokeWidth={1.5} />
-                <Text style={styles.warningText}>{warning.text}</Text>
-                <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-      </Card>
+        </Card>
+      ) : null}
     </View>
   );
 }
@@ -443,12 +445,15 @@ function makeStyles(c: ThemeColors) {
       color: c.ink,
       fontWeight: '500',
     },
-    metricRow: {
+    metricGrid: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.md,
     },
-    metric: {
-      flex: 1,
+    metricCard: {
+      // Two per row, accounting for the gap between them.
+      flexGrow: 1,
+      flexBasis: '47%',
     },
     metricValue: {
       ...typography.hero,
@@ -464,16 +469,17 @@ function makeStyles(c: ThemeColors) {
       color: c.inkMuted,
       marginTop: 2,
     },
-    warningList: {
-      marginTop: spacing.lg,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.divider,
+    warningCard: {
+      marginTop: spacing.md,
+      borderWidth: 1,
+      borderColor: c.gold,
     },
     warningRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingTop: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
     },
     warningText: {
       ...typography.meta,
