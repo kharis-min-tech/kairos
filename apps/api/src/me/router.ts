@@ -15,6 +15,7 @@ import {
   listMyFollowups,
 } from './service';
 import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
+import { getMyHome } from './home-service';
 import {
   listEffectivePreferences,
   upsertPreference,
@@ -27,6 +28,14 @@ import { listConcernFollowups } from '../members/followups-history-service';
 export const meRouter = new Hono();
 
 meRouter.use('*', authMiddleware);
+
+// The control-centre payload for both clients. Composition only — see
+// home-service.ts. Static path, so it sits above anything parameterised.
+meRouter.get('/home', async (c) => {
+  const auth = getAuth(c);
+  const home = await getMyHome(db, auth);
+  return c.json(successResponse(home));
+});
 
 meRouter.get('/rota', zValidator('query', listMyRotaQuerySchema), async (c) => {
   const auth = getAuth(c);
