@@ -47,6 +47,10 @@ const mockListBranchSummaries = vi.fn();
 const mockListMyGroupSummaries = vi.fn();
 const mockGetAttendanceStreak = vi.fn();
 const mockGetProfileCompleteness = vi.fn();
+const mockFindUnrecordedService = vi.fn();
+const mockCountBranchesBehind = vi.fn();
+const mockCountBranchesWithoutPastor = vi.fn();
+const mockGetBranchMainPastorName = vi.fn();
 
 vi.mock('./home-queries', () => ({
   listUpcomingServices: (...a: unknown[]) => mockListUpcomingServices(...a),
@@ -56,6 +60,18 @@ vi.mock('./home-queries', () => ({
   listMyGroupSummaries: (...a: unknown[]) => mockListMyGroupSummaries(...a),
   getAttendanceStreak: (...a: unknown[]) => mockGetAttendanceStreak(...a),
   getProfileCompleteness: (...a: unknown[]) => mockGetProfileCompleteness(...a),
+  findUnrecordedService: (...a: unknown[]) => mockFindUnrecordedService(...a),
+  countBranchesBehind: (...a: unknown[]) => mockCountBranchesBehind(...a),
+  countBranchesWithoutPastor: (...a: unknown[]) => mockCountBranchesWithoutPastor(...a),
+  getBranchMainPastorName: (...a: unknown[]) => mockGetBranchMainPastorName(...a),
+  BRANCH_BEHIND_DAYS: 14,
+  DRIFTING_SERVICES_WINDOW: 3,
+}));
+
+const mockGetMissingMembers = vi.fn();
+
+vi.mock('../attendance/service', () => ({
+  getMissingMembers: (...a: unknown[]) => mockGetMissingMembers(...a),
 }));
 
 const { getMyHome } = await import('./home-service');
@@ -91,6 +107,11 @@ beforeEach(() => {
   mockListBranchSummaries.mockResolvedValue([]);
   mockListMyGroupSummaries.mockResolvedValue([]);
   mockGetAttendanceStreak.mockResolvedValue(0);
+  mockFindUnrecordedService.mockResolvedValue(null);
+  mockCountBranchesBehind.mockResolvedValue(0);
+  mockCountBranchesWithoutPastor.mockResolvedValue(0);
+  mockGetBranchMainPastorName.mockResolvedValue(null);
+  mockGetMissingMembers.mockResolvedValue([]);
   mockGetProfileCompleteness.mockResolvedValue({ complete: true, hasFellowship: true, hasMembershipInterest: true });
   mockGetBranchStats.mockResolvedValue({
     totalRoll: 1204,
@@ -358,5 +379,91 @@ describe('getMyHome — groups and streak', () => {
 
     const admin = await getMyHome(db, auth({ systemRole: 'admin' }));
     expect(admin.streakWeeks).toBeNull();
+  });
+});
+
+describe('getMyHome — pulse warnings', () => {
+  const branchAdmin = () =>
+    auth({ grants: [grant(FunctionalRole.BranchAdmin, 'branch', TEST_IDS.branchId)] });
+
+  it('has no warnings when nothing is outstanding', async () => {
+    const home = await getMyHome(db, branchAdmin());
+    expect(home.pulse?.warnings).toEqual([]);
+  });
+
+  it('flags a service whose attendance was never recorded', async () => {
+    mockFindUnrecordedService.mockResolvedValue({
+      serviceId: 'svc-1',
+      serviceDate: '2026-09-27T10:00:00.000Z',
+    });
+    const home = await getMyHome(db, branchAdmin());
+    const warning = home.pulse!.warnings.find((w) => w.kind === 'attendance_unrecorded');
+    expect(warning).toBeDefined();
+    expect(warning!.text).toContain('Attendance not recorded for');
+    expect(warning!.refs.serviceId).toBe('svc-1');
+  });
+
+  it('counts drifting members over the same window the linked screen defaults to', async () => {
+    mockGetMissingMembers.mockResolvedValue([{ memberId: 'a' }, { memberId: 'b' }]);
+    const home = await getMyHome(db, branchAdmin());
+    const warning = home.pulse!.warnings.find((w) => w.kind === 'members_drifting');
+    expect(warning!.text).toBe('2 members have missed the last 3 services');
+    expect(mockGetMissingMembers).toHaveBeenCalledWith(
+      db,
+      expect.anything(),
+      expect.objectContaining({ services: 3 }),
+    );
+  });
+
+  it('uses the singular for one drifting member', async () => {
+    mockGetMissingMembers.mockResolvedValue([{ memberId: 'a' }]);
+    const home = await getMyHome(db, branchAdmin());
+    expect(home.pulse!.warnings.find((w) => w.kind === 'members_drifting')!.text).toBe(
+      '1 member has missed the last 3 services',
+    );
+  });
+
+  it('flags branches behind on attendance and without a pastor at church altitude', async () => {
+    mockCountBranchesBehind.mockResolvedValue(3);
+    mockCountBranchesWithoutPastor.mockResolvedValue(1);
+    const home = await getMyHome(db, auth({ systemRole: 'admin' }));
+    const kinds = home.pulse!.warnings.map((w) => w.kind);
+    expect(kinds).toEqual(['branches_behind', 'branch_without_pastor']);
+    expect(home.pulse!.warnings[0]!.text).toBe(
+      "3 branches haven't recorded attendance in 14 days",
+    );
+    expect(home.pulse!.warnings[1]!.text).toBe('1 branch has no Main Pastor assigned');
+  });
+
+  it('does not ask for branch warnings at personal altitude', async () => {
+    await getMyHome(db, auth());
+    expect(mockFindUnrecordedService).not.toHaveBeenCalled();
+    expect(mockGetMissingMembers).not.toHaveBeenCalled();
+  });
+});
+
+describe("getMyHome — the Main Pastor on today's service", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-04T08:00:00.000Z'));
+    mockGetBranchMainPastorName.mockResolvedValue('Jude Fletcher');
+    mockListUpcomingServices.mockResolvedValue([
+      { id: 's1', serviceName: 'Sunday Service', serviceDate: '2026-10-04T10:00:00.000Z', branchName: 'London' },
+      { id: 's2', serviceName: 'Midweek', serviceDate: '2026-10-07T19:00:00.000Z', branchName: 'London' },
+    ]);
+  });
+
+  it("appends the pastor to today's service only", async () => {
+    const home = await getMyHome(db, auth());
+    expect(home.today.find((i) => i.id === 's1')!.subtitle).toBe('London · Jude Fletcher');
+    expect(home.thisWeek.find((i) => i.id === 's2')!.subtitle).toBe('London');
+    vi.useRealTimers();
+  });
+
+  it('falls back to the branch name when no Main Pastor is recorded', async () => {
+    mockGetBranchMainPastorName.mockResolvedValue(null);
+    const home = await getMyHome(db, auth());
+    expect(home.today.find((i) => i.id === 's1')!.subtitle).toBe('London');
+    vi.useRealTimers();
   });
 });

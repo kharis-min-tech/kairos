@@ -2,6 +2,7 @@ import type { Database } from '@kairos/database';
 import type {
   AuthContext,
   HomeAgendaItem,
+  HomePulseWarning,
   HomeGettingStartedItem,
   HomeGroupSummary,
   HomePulse,
@@ -14,6 +15,7 @@ import { listMyApprovals, listMyFollowups } from './service';
 import { getAdminStats, getBranchStats } from '../analytics/service';
 import { listMyUpcomingRota } from '../departments/rota-service';
 import { listConcernFollowups } from '../members/followups-history-service';
+import { getMissingMembers } from '../attendance/service';
 import {
   listUpcomingServices,
   listMyUpcomingMeetings,
@@ -22,6 +24,12 @@ import {
   listMyGroupSummaries,
   getAttendanceStreak,
   getProfileCompleteness,
+  findUnrecordedService,
+  countBranchesBehind,
+  countBranchesWithoutPastor,
+  getBranchMainPastorName,
+  BRANCH_BEHIND_DAYS,
+  DRIFTING_SERVICES_WINDOW,
 } from './home-queries';
 
 /**
@@ -88,6 +96,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     groups,
     streakWeeks,
     completeness,
+    mainPastorName,
     pulse,
   ] = await Promise.all([
     listUpcomingServices(db, auth.branchId, now, windowEnd),
@@ -109,6 +118,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     isPersonal
       ? getProfileCompleteness(db, auth.memberId)
       : Promise.resolve({ complete: true, hasFellowship: true, hasMembershipInterest: true }),
+    getBranchMainPastorName(db, auth.branchId),
     buildPulse(db, auth, altitude),
   ]);
 
@@ -116,11 +126,17 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
   const agenda: HomeAgendaItem[] = [];
 
   for (const s of upcomingServices) {
+    const isToday = new Date(s.serviceDate) <= endOfToday;
     agenda.push({
       kind: 'service',
       id: s.id,
       title: s.serviceName,
-      subtitle: s.branchName,
+      // The Main Pastor rides on today's service only — repeating the name
+      // down every row this week is noise.
+      subtitle:
+        isToday && mainPastorName
+          ? [s.branchName, mainPastorName].filter(Boolean).join(' · ')
+          : s.branchName,
       at: s.serviceDate,
       refs: { serviceId: s.id },
     });
@@ -284,10 +300,10 @@ function rotaTimestamp(row: { serviceDate?: unknown; startTime?: unknown }): str
  * Numbers for branch and church altitude, sourced from the existing dashboard
  * stats so the control centre and /reports can never disagree.
  *
- * `warnings` is empty for now. The signals the design calls for — members not
- * seen in N weeks, branches that haven't recorded attendance — each need their
- * own query, and shipping them as real data is a follow-up rather than
- * inventing numbers here.
+ * Warnings are concrete gaps rather than metrics, and each links to the screen
+ * that resolves it. The drifting count reuses `getMissingMembers` over the same
+ * window the Not-seen-recently screen defaults to, so the number here agrees
+ * with the number the user lands on.
  */
 async function buildPulse(
   db: Database,
@@ -295,7 +311,34 @@ async function buildPulse(
   altitude: ReturnType<typeof resolveHomeAltitude>,
 ): Promise<HomePulse | null> {
   if (altitude === 'church') {
-    const stats = await getAdminStats(db, auth);
+    const [stats, branchesBehind, branchesWithoutPastor] = await Promise.all([
+      getAdminStats(db, auth),
+      countBranchesBehind(db, BRANCH_BEHIND_DAYS),
+      countBranchesWithoutPastor(db),
+    ]);
+
+    const warnings: HomePulseWarning[] = [];
+    if (branchesBehind > 0) {
+      warnings.push({
+        kind: 'branches_behind',
+        text:
+          branchesBehind === 1
+            ? `1 branch hasn't recorded attendance in ${BRANCH_BEHIND_DAYS} days`
+            : `${branchesBehind} branches haven't recorded attendance in ${BRANCH_BEHIND_DAYS} days`,
+        refs: {},
+      });
+    }
+    if (branchesWithoutPastor > 0) {
+      warnings.push({
+        kind: 'branch_without_pastor',
+        text:
+          branchesWithoutPastor === 1
+            ? '1 branch has no Main Pastor assigned'
+            : `${branchesWithoutPastor} branches have no Main Pastor assigned`,
+        refs: {},
+      });
+    }
+
     return {
       scope: 'church',
       scopeLabel: 'Church-wide',
@@ -305,12 +348,19 @@ async function buildPulse(
         { key: 'members', label: 'Confirmed members', value: stats.totalMembers, delta: null },
         { key: 'fellowships', label: 'Fellowships', value: stats.totalFellowships, delta: null },
       ],
-      warnings: [],
+      warnings,
     };
   }
 
   if (altitude === 'branch') {
-    const stats = await getBranchStats(db, auth);
+    const [stats, unrecorded, drifting] = await Promise.all([
+      getBranchStats(db, auth),
+      findUnrecordedService(db, auth.branchId),
+      getMissingMembers(db, auth, {
+        branchId: auth.branchId,
+        services: DRIFTING_SERVICES_WINDOW,
+      }),
+    ]);
     const trend = stats.attendanceTrend ?? [];
     const latest = trend[trend.length - 1];
     const prior = trend.slice(-5, -1);
@@ -322,6 +372,25 @@ async function buildPulse(
             Math.round(latest.rate - priorMean),
           )}% vs 4wk`
         : null;
+
+    const warnings: HomePulseWarning[] = [];
+    if (unrecorded) {
+      warnings.push({
+        kind: 'attendance_unrecorded',
+        text: `Attendance not recorded for ${shortDate(unrecorded.serviceDate)}`,
+        refs: { serviceId: unrecorded.serviceId },
+      });
+    }
+    if (drifting.length > 0) {
+      warnings.push({
+        kind: 'members_drifting',
+        text:
+          drifting.length === 1
+            ? `1 member has missed the last ${DRIFTING_SERVICES_WINDOW} services`
+            : `${drifting.length} members have missed the last ${DRIFTING_SERVICES_WINDOW} services`,
+        refs: {},
+      });
+    }
 
     return {
       scope: 'branch',
@@ -337,7 +406,7 @@ async function buildPulse(
         },
         { key: 'fellowships', label: 'Fellowships', value: stats.totalFellowships, delta: null },
       ],
-      warnings: [],
+      warnings,
     };
   }
 

@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc } from 'drizzle-orm';
+import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc, isNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   services,
@@ -11,6 +11,7 @@ import {
   departmentMembers,
   departments,
   branches,
+  branchLeadership,
   members,
   membershipInterest,
 } from '@kairos/database';
@@ -201,13 +202,16 @@ export async function listMyGroupSummaries(
       .select({
         id: fellowships.id,
         name: fellowships.fellowshipName,
-        headcount: sql<number>`(
-          SELECT COUNT(*) FROM ${fellowshipMembers}
-          WHERE ${fellowshipMembers.fellowshipId} = ${fellowships.id}
-            AND ${fellowshipMembers.isActive} = TRUE
-        )`,
+        headcount: count(fellowshipMembers.id),
       })
       .from(fellowships)
+      .leftJoin(
+        fellowshipMembers,
+        and(
+          eq(fellowshipMembers.fellowshipId, fellowships.id),
+          eq(fellowshipMembers.isActive, true),
+        )!,
+      )
       .where(
         and(
           eq(fellowships.isActive, true),
@@ -216,19 +220,23 @@ export async function listMyGroupSummaries(
             eq(fellowships.coLeaderId, auth.memberId),
           )!,
         ),
-      ),
+      )
+      .groupBy(fellowships.id, fellowships.fellowshipName),
     db
       .select({
         id: branchDepartments.id,
         name: departments.departmentName,
-        headcount: sql<number>`(
-          SELECT COUNT(*) FROM ${departmentMembers}
-          WHERE ${departmentMembers.branchDepartmentId} = ${branchDepartments.id}
-            AND ${departmentMembers.isActive} = TRUE
-        )`,
+        headcount: count(departmentMembers.id),
       })
       .from(branchDepartments)
       .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
+      .leftJoin(
+        departmentMembers,
+        and(
+          eq(departmentMembers.branchDepartmentId, branchDepartments.id),
+          eq(departmentMembers.isActive, true),
+        )!,
+      )
       .where(
         and(
           eq(branchDepartments.isActive, true),
@@ -237,7 +245,8 @@ export async function listMyGroupSummaries(
             eq(branchDepartments.deputyMemberId, auth.memberId),
           )!,
         ),
-      ),
+      )
+      .groupBy(branchDepartments.id, departments.departmentName),
   ]);
 
   const fellowshipIds = ledFellowships.map((f) => f.id);
@@ -309,14 +318,15 @@ export async function listBranchSummaries(db: Database): Promise<HomeGroupSummar
     .select({
       id: branches.id,
       name: branches.branchName,
-      headcount: sql<number>`(
-        SELECT COUNT(*) FROM ${members}
-        WHERE ${members.homeBranchId} = ${branches.id}
-          AND ${members.isActive} = TRUE
-      )`,
+      headcount: count(members.id),
     })
     .from(branches)
+    .leftJoin(
+      members,
+      and(eq(members.homeBranchId, branches.id), eq(members.isActive, true))!,
+    )
     .where(eq(branches.isActive, true))
+    .groupBy(branches.id, branches.branchName)
     .orderBy(asc(branches.branchName));
 
   if (branchRows.length === 0) return [];
@@ -452,4 +462,139 @@ export async function getProfileCompleteness(
     hasFellowship: fellowshipRow.length > 0,
     hasMembershipInterest: interestRow.length > 0,
   };
+}
+
+// ── Pulse warnings ─────────────────────────────────────────
+//
+// Each warning is a concrete, actionable gap rather than a metric. They are
+// deliberately cheap: a branch-altitude home does two extra reads, a church
+// one does two different ones.
+
+/** How far back an unrecorded service is still worth chasing. */
+const UNRECORDED_LOOKBACK_DAYS = 28;
+
+/** A branch with no attendance for this long is behind, not merely quiet. */
+export const BRANCH_BEHIND_DAYS = 14;
+
+/**
+ * Services the drifting-member warning counts over. Matches the default on
+ * the Not-seen-recently screen the warning links to, so the number the user
+ * taps agrees with the number they land on.
+ */
+export const DRIFTING_SERVICES_WINDOW = 3;
+
+export interface UnrecordedServiceRow {
+  serviceId: string;
+  serviceDate: string;
+}
+
+/**
+ * The most recent past service in the branch that has no attendance rows at
+ * all. "No rows" rather than "incomplete" — a register marked with everyone
+ * absent is a decision, not an omission.
+ */
+export async function findUnrecordedService(
+  db: Database,
+  branchId: string,
+): Promise<UnrecordedServiceRow | null> {
+  const since = new Date(Date.now() - UNRECORDED_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+
+  const rows = await db
+    .select({
+      serviceId: services.id,
+      serviceDate: services.serviceDate,
+      marked: count(serviceAttendance.memberId),
+    })
+    .from(services)
+    .leftJoin(serviceAttendance, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        lt(services.serviceDate, new Date()),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .groupBy(services.id, services.serviceDate)
+    .having(sql`COUNT(${serviceAttendance.memberId}) = 0`)
+    .orderBy(desc(services.serviceDate))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    serviceId: row.serviceId,
+    serviceDate: (row.serviceDate as Date).toISOString(),
+  };
+}
+
+/**
+ * Active branches that held at least one service in the window and recorded
+ * no attendance against any of them. A branch with no services isn't behind —
+ * it has nothing to record — so the inner join excludes it naturally.
+ */
+export async function countBranchesBehind(db: Database, days: number): Promise<number> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const rows = await db
+    .select({ branchId: services.branchId })
+    .from(services)
+    .leftJoin(serviceAttendance, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.isActive, true),
+        lt(services.serviceDate, new Date()),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .groupBy(services.branchId)
+    .having(sql`COUNT(${serviceAttendance.memberId}) = 0`);
+
+  return rows.length;
+}
+
+/** Active branches with no current Main Pastor on `branch_leadership`. */
+export async function countBranchesWithoutPastor(db: Database): Promise<number> {
+  const rows = await db
+    .select({ value: count() })
+    .from(branches)
+    .leftJoin(
+      branchLeadership,
+      and(
+        eq(branchLeadership.branchId, branches.id),
+        eq(branchLeadership.role, 'Main Pastor'),
+        eq(branchLeadership.isCurrent, true),
+      )!,
+    )
+    .where(and(eq(branches.isActive, true), isNull(branchLeadership.id)));
+
+  return Number(rows[0]?.value ?? 0);
+}
+
+/**
+ * The branch's current Main Pastor, for the service row's subtitle. Folded in
+ * here so the home screen is one request — the clients used to fetch the whole
+ * leadership roster separately and pick this one name out of it, which made
+ * the service row reflow once the second response landed.
+ */
+export async function getBranchMainPastorName(
+  db: Database,
+  branchId: string,
+): Promise<string | null> {
+  const rows = await db
+    .select({ firstName: members.firstName, lastName: members.lastName })
+    .from(branchLeadership)
+    .innerJoin(members, eq(branchLeadership.memberId, members.id))
+    .where(
+      and(
+        eq(branchLeadership.branchId, branchId),
+        eq(branchLeadership.role, 'Main Pastor'),
+        eq(branchLeadership.isCurrent, true),
+      ),
+    )
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return null;
+  return `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim() || null;
 }

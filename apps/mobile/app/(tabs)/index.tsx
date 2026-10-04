@@ -57,19 +57,6 @@ export default function Home() {
     enabled: !!user,
   });
 
-  // Branch leadership is still its own request — the Main Pastor's name rides
-  // on the service row and isn't worth a join in the home endpoint yet.
-  const leadership = useQuery({
-    queryKey: ['home', 'branch-leadership', user?.homeBranchId],
-    queryFn: async () => (await api.leadership.list(user!.homeBranchId)).data ?? [],
-    enabled: !!user?.homeBranchId,
-  });
-  const mainPastorName = useMemo(() => {
-    const pastor = (leadership.data ?? []).find((l) => l.role === 'Main Pastor' && l.isCurrent);
-    if (!pastor) return null;
-    return `${pastor.memberFirstName ?? ''} ${pastor.memberLastName ?? ''}`.trim() || null;
-  }, [leadership.data]);
-
   const dateHeader = useMemo(
     () =>
       new Date().toLocaleDateString('en-GB', {
@@ -83,16 +70,6 @@ export default function Home() {
   const data = home.data;
   const altitude = data?.altitude ?? 'personal';
 
-  // The pastor's name belongs on the service, nowhere else.
-  const today = useMemo(
-    () =>
-      (data?.today ?? []).map((item) =>
-        item.kind === 'service' && mainPastorName
-          ? { ...item, subtitle: [item.subtitle, mainPastorName].filter(Boolean).join(' · ') }
-          : item,
-      ),
-    [data?.today, mainPastorName],
-  );
 
   function openAgendaItem(item: HomeAgendaItem) {
     switch (item.kind) {
@@ -154,7 +131,7 @@ export default function Home() {
 
   const agendaBlocks = (
     <>
-      <AgendaBlock label="Today" items={today} onPress={openAgendaItem} />
+      <AgendaBlock label="Today" items={data?.today ?? []} onPress={openAgendaItem} />
       <AgendaBlock
         label="This week"
         items={data?.thisWeek ?? []}
@@ -183,10 +160,7 @@ export default function Home() {
         refreshControl={
           <RefreshControl
             refreshing={home.isFetching}
-            onRefresh={() => {
-              home.refetch();
-              leadership.refetch();
-            }}
+            onRefresh={() => home.refetch()}
             tintColor={c.primary}
           />
         }
