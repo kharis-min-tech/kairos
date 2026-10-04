@@ -118,7 +118,6 @@ export default function ProfilePage() {
     homeBranchId,
   });
   const { data: branchList } = useBranches();
-  const homeBranchName = branchList?.find((b) => b.id === homeBranchId)?.branchName ?? null;
 
   function openEditMode() {
     reset({
@@ -575,8 +574,6 @@ export default function ProfilePage() {
           <MyLeadershipCard
             memberId={memberId}
             showAdminRole={profileSystemRole === 'admin'}
-            showPastorRole={(profileSystemRole as string) === 'pastor'}
-            homeBranchName={homeBranchName}
           />
 
           {fullProfile?.secondaryBranchId && (fullProfile.secondaryAddress || fullProfile.secondaryCity || fullProfile.secondaryPostalCode) && (

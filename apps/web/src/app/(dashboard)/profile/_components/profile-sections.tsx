@@ -25,8 +25,6 @@ export function useFriendlyRoleLines(opts: {
   const lines: string[] = [];
   if (systemRole === 'admin') {
     lines.push('Church administrator');
-  } else if ((systemRole as string) === 'pastor') {
-    lines.push(homeBranchName ? `Pastor of ${homeBranchName} branch` : 'Pastor');
   }
 
   // Fellowship leadership
@@ -213,13 +211,9 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
 export function MyLeadershipCard({
   memberId,
   showAdminRole = false,
-  showPastorRole = false,
-  homeBranchName,
 }: {
   memberId?: string | null;
   showAdminRole?: boolean;
-  showPastorRole?: boolean;
-  homeBranchName?: string | null;
 }) {
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
@@ -254,12 +248,10 @@ export function MyLeadershipCard({
 
   const churchRoles: { key: string; label: string; href?: string }[] = [];
   if (showAdminRole) churchRoles.push({ key: 'admin', label: 'Church administrator' });
-  if (showPastorRole) {
-    churchRoles.push({
-      key: 'pastor',
-      label: homeBranchName ? `Pastor, ${homeBranchName} branch` : 'Pastor',
-    });
-  }
+  // A "Pastor, X branch" row used to sit here behind a systemRole === 'pastor'
+  // test that has been unreachable since the RBAC rebuild. Pastor is an
+  // identity on branch_leadership, not a system role — if this row comes back
+  // it reads from there, never from a role string.
 
   const total = churchRoles.length + fellowshipRoles.length + deptRoles.length;
   if (total === 0) return null;
