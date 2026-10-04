@@ -70,7 +70,7 @@ export default function RollcallLanding() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Take rollcall</Text>
+          <Text style={styles.introTitle}>Take the register</Text>
           <Text style={styles.introMeta}>
             Pick a fellowship, then mark attendance for its next meeting.
           </Text>

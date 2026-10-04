@@ -336,7 +336,7 @@ export default function RollcallMeeting() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Rollcall</Text>
+        <Text style={styles.headerTitle}>Register</Text>
         <View style={{ width: 24 }} />
       </View>
 

@@ -203,7 +203,7 @@ export default function RollcallFellowship() {
             <Text style={styles.emptyTitle}>No meetings yet</Text>
             <Text style={styles.emptyMeta}>
               Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
-              rollcall.
+              the register.
             </Text>
           </Card>
         ) : null}

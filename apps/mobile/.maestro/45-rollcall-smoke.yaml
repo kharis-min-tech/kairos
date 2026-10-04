@@ -1,16 +1,22 @@
 appId: ${APP_ID}
-name: Rollcall — landing → fellowship view (no destructive save)
+name: Fellowship register — landing → fellowship view (no destructive save)
 tags:
   - smoke
   - rollcall
 env:
   APP_ID: "com.kharis.kairos"
 ---
-# Idempotent — safe to run in isolation. Rollcall auto-forwards to
-# /rollcall/[id] if the user leads exactly one fellowship — so we accept
-# either the landing ("Take rollcall") or the fellowship view ("Meetings" +
-# "Start today's meeting"). Doesn't tap Start — that would create a
-# persistent meeting row.
+# Idempotent — safe to run in isolation. Doesn't tap "Start today's meeting",
+# which would create a persistent meeting row.
+#
+# NOTE: this flow was stale before 2026-10-04 — it tapped text "Rollcall" in
+# the More menu, but that row has read "Fellowship attendance" for a while, so
+# it could never have matched. Copy now matches the app: the row and the
+# landing header say "Fellowship attendance", the landing's intro says "Take
+# the register", and the per-meeting screen header says "Register".
+#
+# /rollcall auto-forwards to /rollcall/[id] when the user leads exactly one
+# fellowship, so either destination is valid and each is asserted on its own.
 
 - tapOn: "More"
 - extendedWaitUntil:
@@ -20,23 +26,39 @@ env:
 
 - scrollUntilVisible:
     element:
-      text: "Rollcall"
+      text: "Fellowship attendance"
     direction: DOWN
     timeout: 8000
     speed: 40
 - tapOn:
-    text: "Rollcall"
-    # Index 0 = More menu row; the header of the destination screen also says
-    # "Rollcall" so we want the first match (the tappable row).
+    text: "Fellowship attendance"
+    # Index 0 = the More menu row; the landing screen's header carries the
+    # same words, so take the first match.
     index: 0
 
-# One of two things will be true after tap:
-#   a) Single-fellowship user — auto-redirect to /rollcall/[id] shows "Meetings"
-#   b) Multi- or no-fellowship user — landing page shows "Take rollcall"
+# Proves we actually left the More tab, whichever destination rendered.
 - extendedWaitUntil:
-    visible:
-      text: "Rollcall"
+    notVisible:
+      text: "For you"
     timeout: 10000
+
+# (a) Single-fellowship user — auto-redirected to the meeting picker.
+- runFlow:
+    when:
+      visible:
+        text: "Meetings"
+    commands:
+      - assertVisible:
+          text: "Start today's meeting"
+
+# (b) Multi- or no-fellowship user — the fellowship picker landing.
+- runFlow:
+    when:
+      visible:
+        text: "Take the register"
+    commands:
+      - assertVisible:
+          text: "Take the register"
 
 # Back to More. Two back-presses handle the auto-redirect case: one out of the
 # meeting-picker, one out of the landing (Expo Router keeps both on the stack).

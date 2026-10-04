@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -116,6 +117,12 @@ export default function More() {
           </Card>
         </Pressable>
 
+        {/* Nav taxonomy: plain nouns, one vocabulary shared with the web
+            sidebar and both control centres. Clusters are named for what
+            they contain, so a new module has an obvious home and nobody has
+            to learn a scheme. Row-level capability gates are unchanged from
+            the previous grouping — only the grouping moved. */}
+
         <Section label="For you">
           <NavRow
             icon={Bell}
@@ -123,33 +130,10 @@ export default function More() {
             onPress={() => router.push('/notifications')}
           />
           <NavRow
-            icon={BookOpen}
-            label="My New Believer journey"
-            onPress={() => router.push('/new-believers?scope=mine')}
-          />
-          {/* Membership classes are church-wide, so this is open to every
-              member: they browse cohorts, join the interest pool and track
-              their own progress. Enrolment is not self-service — an admin
-              admits from the pool — and membership admins get the pool and
-              register surfaces on the same screen. */}
-          <NavRow
-            icon={GraduationCap}
-            label="Membership classes"
-            onPress={() => router.push('/membership' as never)}
-          />
-          <NavRow
             icon={Calendar}
             label="My attendance"
             onPress={() => router.push('/my-attendance')}
           />
-          <NavRow
-            icon={FileText}
-            label="My form submissions"
-            onPress={() => router.push('/my-form-submissions')}
-          />
-        </Section>
-
-        <Section label="My groups">
           <NavRow
             icon={UsersRound}
             label="My fellowship"
@@ -161,6 +145,16 @@ export default function More() {
             onPress={() => router.push('/my-department')}
           />
           <NavRow icon={Map} label="My branch" onPress={() => router.push('/my-branch')} />
+          <NavRow
+            icon={BookOpen}
+            label="My New Believer journey"
+            onPress={() => router.push('/new-believers?scope=mine')}
+          />
+          <NavRow
+            icon={FileText}
+            label="My form submissions"
+            onPress={() => router.push('/my-form-submissions')}
+          />
         </Section>
 
         <Section label="People">
@@ -169,30 +163,67 @@ export default function More() {
             label="Members directory"
             onPress={() => router.push('/members')}
           />
-          {canSeeNewBelieversTeam ? (
-            <>
-              <NavRow
-                icon={Sparkles}
-                label="New Believers pipeline"
-                onPress={() => router.push('/new-believers')}
-              />
-              <NavRow
-                icon={CalendarClock}
-                label="New Believers sessions"
-                onPress={() => router.push('/new-believers/sessions' as never)}
-              />
-            </>
+          {hasAnyLeadership ? (
+            <NavRow
+              icon={CheckSquare}
+              label="Approvals"
+              onPress={() => router.push('/approvals')}
+            />
           ) : null}
+          {hasAnyLeadership ? (
+            <NavRow
+              icon={Handshake}
+              label="Follow-ups"
+              onPress={() => router.push('/follow-ups')}
+            />
+          ) : null}
+          {canSeeAdminSection ? (
+            <NavRow
+              icon={ShieldAlert}
+              label="Concerns"
+              onPress={() => router.push('/concerns' as never)}
+            />
+          ) : null}
+          {/* Membership classes are church-wide, so this is open to every
+              member: they browse cohorts, join the interest pool and track
+              their own progress. Enrolment is not self-service — an admin
+              admits from the pool — and membership admins get the pool and
+              register surfaces on the same screen. */}
+          <NavRow
+            icon={GraduationCap}
+            label="Membership classes"
+            onPress={() => router.push('/membership' as never)}
+          />
+          {canSeeNewBelieversTeam ? (
+            <NavRow
+              icon={Sparkles}
+              label="New Believers pipeline"
+              onPress={() => router.push('/new-believers')}
+            />
+          ) : null}
+          {canSeeNewBelieversTeam ? (
+            <NavRow
+              icon={CalendarClock}
+              label="New Believers sessions"
+              onPress={() => router.push('/new-believers/sessions' as never)}
+            />
+          ) : null}
+          <NavRow icon={Handshake} label="Souls" onPress={() => router.push('/souls')} />
           <NavRow
             icon={UserPlus}
             label="Outreach programs"
             onPress={() => router.push('/outreach')}
           />
-          <NavRow icon={Handshake} label="Souls" onPress={() => router.push('/souls')} />
           <NavRow
-            icon={PieChart}
-            label="Souls dashboard"
-            onPress={() => router.push('/souls-dashboard' as never)}
+            icon={Users}
+            label="Dormant attendees"
+            onPress={() => router.push('/forms/attendees' as never)}
+          />
+          <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
+          <NavRow
+            icon={ClipboardList}
+            label="Form submissions"
+            onPress={() => router.push('/forms/submissions' as never)}
           />
         </Section>
 
@@ -207,78 +238,58 @@ export default function More() {
             label="Departments"
             onPress={() => router.push('/departments')}
           />
-        </Section>
-
-        {hasAnyLeadership ? (
-          <Section label="Leader tools">
-            <NavRow
-              icon={CheckSquare}
-              label="Approvals"
-              onPress={() => router.push('/approvals')}
-            />
-            <NavRow
-              icon={Handshake}
-              label="Follow-ups"
-              onPress={() => router.push('/follow-ups')}
-            />
-            {canSeeAdminSection ? (
-              <NavRow
-                icon={ShieldAlert}
-                label="Concerns"
-                onPress={() => router.push('/concerns' as never)}
-              />
-            ) : null}
+          {hasAnyLeadership ? (
             <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
-            <NavRow
-              icon={ClipboardList}
-              label="Fellowship attendance"
-              onPress={() => router.push('/rollcall')}
-            />
-          </Section>
-        ) : null}
-
-        <Section label="Forms">
-          <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
-          <NavRow
-            icon={ClipboardList}
-            label="Submissions"
-            onPress={() => router.push('/forms/submissions' as never)}
-          />
-          <NavRow
-            icon={Users}
-            label="Dormant attendees"
-            onPress={() => router.push('/forms/attendees' as never)}
-          />
+          ) : null}
         </Section>
 
-        {canSeeReports ? (
-          <Section label="Reports & analytics">
-            <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
+        <Section label="Gatherings">
+          {canSeeReports ? (
             <NavRow
               icon={BarChart3}
               label="Services"
               onPress={() => router.push('/attendance' as never)}
             />
-          </Section>
-        ) : null}
-
-        {canSeeAdminSection ? (
-          <Section label="Admin">
+          ) : null}
+          {canSeeAdminSection ? (
             <NavRow
               icon={ClipboardList}
               label="Check-in desk"
               onPress={() => router.push('/admin/checkin')}
             />
+          ) : null}
+          {hasAnyLeadership ? (
+            <NavRow
+              icon={ClipboardList}
+              label="Fellowship attendance"
+              onPress={() => router.push('/rollcall')}
+            />
+          ) : null}
+        </Section>
+
+        <Section label="Insights">
+          {canSeeReports ? (
+            <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
+          ) : null}
+          <NavRow
+            icon={PieChart}
+            label="Souls dashboard"
+            onPress={() => router.push('/souls-dashboard' as never)}
+          />
+        </Section>
+
+        <Section label="Organisation">
+          {canSeeAdminSection ? (
             <NavRow
               icon={Building2}
               label="Branch settings"
               onPress={() => router.push('/branches')}
             />
-            {caps.systemRole === 'admin' ? (
-              <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
-            ) : null}
-          </Section>
-        ) : null}
+          ) : null}
+          {caps.systemRole === 'admin' ? (
+            <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
+          ) : null}
+        </Section>
 
         <Section label="Settings">
           <NavRow
@@ -333,8 +344,16 @@ export default function More() {
   );
 }
 
+/**
+ * Renders nothing when every row inside is gated out — React.Children.toArray
+ * drops the `null`s a capability check leaves behind, so a plain member never
+ * sees an empty "Organisation" heading. Gated rows must therefore be written
+ * as `{cond ? <NavRow/> : null}` siblings, not wrapped in a fragment, or the
+ * fragment counts as one present child.
+ */
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   const styles = useThemedStyles(makeStyles);
+  if (React.Children.toArray(children).length === 0) return null;
   return (
     <View style={styles.group}>
       <Text style={styles.groupLabel}>{label}</Text>
