@@ -33,38 +33,74 @@ type NavItem = {
    */
   anyCapability?: Capability[];
   badge?: string;
+  /**
+   * Which cluster the item sits under. Plain-noun nav taxonomy (2026-10-04),
+   * the same vocabulary as the mobile More tab and the control-centre blocks:
+   * clusters are named for what they contain, so a new module has an obvious
+   * home. Items with no section render ungrouped above the first header.
+   */
+  section?: NavSection;
 };
 
+type NavSection =
+  | 'For you'
+  | 'People'
+  | 'Groups'
+  | 'Gatherings'
+  | 'Insights'
+  | 'Organisation';
+
+/** Render order. A section with no visible items is skipped, header and all. */
+const NAV_SECTIONS: NavSection[] = [
+  'For you',
+  'People',
+  'Groups',
+  'Gatherings',
+  'Insights',
+  'Organisation',
+];
+
 const navItems: NavItem[] = [
+  // Ungrouped — the control centre is the front door, not a category.
   { href: '/dashboard', label: 'Overview' },
-  { href: '/admin/branches', label: 'Branches', adminOnly: true },
-  { href: '/admin/regions', label: 'Regions', adminOnly: true },
-  { href: '/my-branch', label: 'My Branch', capability: 'branch:write' },
-  { href: '/members', label: 'Members', capability: 'branch:write' },
-  { href: '/fellowships', label: 'Fellowships' },
-  // /attendance is open to all — page-level gating (canRecord) hides write CTAs from non-writers,
-  // and Admin-dept members (systemRole='member') need the entry point to reach the desk.
-  { href: '/attendance', label: 'Attendance' },
-  // /attendance/check-in is the member self-check-in surface (honour system + QR scanner).
-  // Open to any authenticated member — the API 403s if the branch has self-check-in off.
-  { href: '/attendance/check-in', label: 'Check in' },
-  { href: '/me/attendance', label: 'My Attendance' },
-  { href: '/reports', label: 'Reports' },
-  { href: '/new-believers', label: 'New Believers' },
+
+  { href: '/my-branch', label: 'My Branch', capability: 'branch:write', section: 'For you' },
+  { href: '/me/attendance', label: 'My Attendance', section: 'For you' },
+  { href: '/profile', label: 'Profile', section: 'For you' },
+
+  { href: '/members', label: 'Members', capability: 'branch:write', section: 'People' },
+  { href: '/new-believers', label: 'New Believers', section: 'People' },
   // Membership classes are church-wide, so every approved member sees this:
-  // they can view cohorts and self-enrol. Admin-only actions gate inside the page.
-  { href: '/membership', label: 'Membership' },
-  { href: '/departments', label: 'Departments' },
+  // they can view cohorts and join the interest pool. Admin-only actions gate
+  // inside the page.
+  { href: '/membership', label: 'Membership', section: 'People' },
   {
     href: '/concerns',
     label: 'Concerns',
     anyCapability: ['branch:write', 'safeguarding:read'],
+    section: 'People',
   },
-  { href: '/outreach/programs', label: 'Outreach Programs' },
-  { href: '/souls', label: 'Souls Pipeline' },
-  { href: '/forms', label: 'Forms' },
-  { href: '/souls-dashboard', label: 'Souls Dashboard' },
-  { href: '/profile', label: 'Profile' },
+  { href: '/outreach/programs', label: 'Outreach Programs', section: 'People' },
+  { href: '/souls', label: 'Souls Pipeline', section: 'People' },
+  { href: '/forms', label: 'Forms', section: 'People' },
+
+  { href: '/fellowships', label: 'Fellowships', section: 'Groups' },
+  { href: '/departments', label: 'Departments', section: 'Groups' },
+
+  // /attendance is open to all — page-level gating (canRecord) hides write CTAs
+  // from non-writers, and Admin-dept members (systemRole='member') need the
+  // entry point to reach the desk.
+  { href: '/attendance', label: 'Attendance', section: 'Gatherings' },
+  // /attendance/check-in is the member self-check-in surface (honour system +
+  // QR scanner). Open to any authenticated member — the API 403s if the branch
+  // has self-check-in off.
+  { href: '/attendance/check-in', label: 'Check in', section: 'Gatherings' },
+
+  { href: '/reports', label: 'Reports', section: 'Insights' },
+  { href: '/souls-dashboard', label: 'Souls Dashboard', section: 'Insights' },
+
+  { href: '/admin/branches', label: 'Branches', adminOnly: true, section: 'Organisation' },
+  { href: '/admin/regions', label: 'Regions', adminOnly: true, section: 'Organisation' },
 ];
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
@@ -338,14 +374,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 px-3 pb-4">
-        {visibleNavItems.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            pathname={pathname}
-            onClick={() => setMobileOpen(false)}
-          />
-        ))}
+        {visibleNavItems
+          .filter((item) => !item.section)
+          .map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              onClick={() => setMobileOpen(false)}
+            />
+          ))}
+
+        {NAV_SECTIONS.map((section) => {
+          const items = visibleNavItems.filter((item) => item.section === section);
+          if (items.length === 0) return null;
+          return (
+            <div key={section} className="pt-4">
+              <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                {section}
+              </p>
+              {items.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  pathname={pathname}
+                  onClick={() => setMobileOpen(false)}
+                />
+              ))}
+            </div>
+          );
+        })}
         <a
           href="https://docs.kairos.kharis.org"
           target="_blank"
