@@ -183,7 +183,6 @@ export default function SessionsPage() {
                 session={selectedSession}
                 branchId={branchId}
                 userMemberId={userMemberId}
-                userRole={userRole}
               />
             ) : (
               <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CalendarDays, MapPin, Users } from 'lucide-react';
 import { Badge } from '@kairos/ui';
 import type { NewBelieverSession, NewBelieverStageValue } from '@kairos/types';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { AttendanceTab } from './attendance-tab';
 import { NotesTab } from './notes-tab';
 import { RosterTab } from './roster-tab';
@@ -21,19 +22,26 @@ interface Props {
   session: NewBelieverSession;
   branchId: string;
   userMemberId: string;
-  userRole: string;
 }
 
-export function SessionDetailPane({ session, branchId, userMemberId, userRole }: Props) {
+export function SessionDetailPane({ session, branchId, userMemberId }: Props) {
+  const caps = useCapabilities();
   const [tab, setTab] = useState<Tab>('attendance');
   const stageDef = getSessionStageDef(session.sessionStage);
   const upcoming = isUpcomingSession(session.sessionDate);
   const status = upcoming ? 'Upcoming' : 'Past';
 
-  const isAdminOrPastor = userRole === 'admin' || userRole === 'pastor';
+  // Mirrors the server gate in apps/api/src/new-believers/service.ts: the
+  // session's own teacher, or anyone holding branch:read.
+  //
+  // This used to compare a role string against 'admin' | 'pastor' | 'leader'.
+  // SystemRole has only been 'admin' | 'member' since the RBAC rebuild, so the
+  // pastor and leader branches were dead and a branch pastor could neither
+  // edit session notes nor record attendance unless they happened to be the
+  // teacher. Authority comes from capabilities, never from a role name.
   const isTeacherOfSession = !!session.teacherId && session.teacherId === userMemberId;
-  const canEditNotes = isTeacherOfSession || isAdminOrPastor;
-  const canRecordAttendance = canEditNotes || userRole === 'leader';
+  const canEditNotes = isTeacherOfSession || caps.has('branch:read');
+  const canRecordAttendance = canEditNotes || caps.has('newbelievers:teach');
 
   return (
     <div className="rounded-xl border border-input/10 bg-card shadow-ambient">
