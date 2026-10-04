@@ -201,10 +201,55 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
-  const isActive = item.href === '/dashboard'
+/**
+ * Whether a nav item matches the current route. Shared with the section-open
+ * rule below so an active link can never sit inside a collapsed section.
+ */
+function isItemActive(href: string, pathname: string): boolean {
+  return href === '/dashboard'
     ? pathname === '/dashboard'
-    : pathname === item.href || (pathname.startsWith(item.href + '/'));
+    : pathname === href || pathname.startsWith(href + '/');
+}
+
+/**
+ * A collapsible nav cluster. Collapsed by default so the sidebar stays short
+ * as modules land; the section holding the current route opens itself, so you
+ * can always see where you are. Opening one is remembered for the session —
+ * the dashboard layout doesn't remount on client-side navigation.
+ */
+function NavSectionHeader({
+  label,
+  open,
+  onToggle,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 transition-colors hover:text-foreground"
+    >
+      <svg
+        className={cn('h-3 w-3 transition-transform', open ? 'rotate-90' : '')}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        aria-hidden
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
+function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
+  const isActive = isItemActive(item.href, pathname);
 
   return (
     <Link
@@ -213,7 +258,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         isActive
-          ? 'border-l-2 border-violet-500 bg-primary/10 pl-[10px] text-foreground font-semibold'
+          ? 'border-l-2 border-[#5D3FD3] bg-primary/10 pl-[10px] text-foreground font-semibold'
           : 'border-l-2 border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
       )}
     >
@@ -242,6 +287,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   } = useAuthStore();
   const caps = useCapabilities();
   const [mobileOpen, setMobileOpen] = useState(false);
+  /**
+   * Sections the user has explicitly toggled this session. Absent means
+   * "follow the default", which is closed unless the section holds the
+   * current route.
+   */
+  const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({});
+
 
   // Wait for zustand-persist to rehydrate from localStorage before deciding
   // whether we're logged out. Otherwise every legitimate refresh flashes a
@@ -354,6 +406,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   //      the router swaps routes.
   if (consentQueryPending || pendingConsentCount > 0) return null;
 
+  const sectionOpen = (section: string, items: NavItem[]) =>
+    toggledSections[section] ?? items.some((item) => isItemActive(item.href, pathname));
+
   const visibleNavItems = navItems.filter((item) => {
     if (item.adminOnly) return activeRole === 'admin';
     if (item.anyCapability) return item.anyCapability.some((c) => caps.has(c));
@@ -388,19 +443,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {NAV_SECTIONS.map((section) => {
           const items = visibleNavItems.filter((item) => item.section === section);
           if (items.length === 0) return null;
+          const open = sectionOpen(section, items);
           return (
-            <div key={section} className="pt-4">
-              <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                {section}
-              </p>
-              {items.map((item) => (
-                <NavLink
-                  key={item.href}
-                  item={item}
-                  pathname={pathname}
-                  onClick={() => setMobileOpen(false)}
-                />
-              ))}
+            <div key={section} className="pt-2">
+              <NavSectionHeader
+                label={section}
+                open={open}
+                onToggle={() =>
+                  setToggledSections((prev) => ({ ...prev, [section]: !open }))
+                }
+              />
+              {open
+                ? items.map((item) => (
+                    <NavLink
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      onClick={() => setMobileOpen(false)}
+                    />
+                  ))
+                : null}
             </div>
           );
         })}

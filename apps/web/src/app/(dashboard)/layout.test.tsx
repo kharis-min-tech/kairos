@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 let authState: Record<string, unknown> = {};
 vi.mock('@/lib/auth-store', () => ({
@@ -49,6 +49,19 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+/**
+ * Nav clusters are collapsed by default (2026-10-04), and only the cluster
+ * holding the current route opens itself. These tests mock the pathname as
+ * /dashboard — which is ungrouped — so a section has to be opened before its
+ * links are in the DOM. Opening it is setup, not the thing under test: what's
+ * asserted is still which links a given role may see.
+ */
+function openSection(label: string) {
+  // The layout renders the sidebar twice — desktop rail and mobile drawer —
+  // from one piece of state, so toggling either opens both.
+  fireEvent.click(screen.getAllByRole('button', { name: label })[0]!);
+}
+
 describe('Dashboard nav — Attendance gating', () => {
   // Phase-1 attendance rebuild: write access is gated by Admin-dept membership at the page
   // level (via canRecord), so /attendance is now open to all roles in the sidebar — including
@@ -58,24 +71,28 @@ describe('Dashboard nav — Attendance gating', () => {
   it('shows Attendance to plain members (page-level canRecord gates the CTAs)', () => {
     authState = makeState('member');
     render(<DashboardLayout>{null}</DashboardLayout>);
+    openSection('Gatherings');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 
   it('shows My Attendance to plain members (personal view)', () => {
     authState = makeState('member');
     render(<DashboardLayout>{null}</DashboardLayout>);
+    openSection('For you');
     expect(screen.getAllByRole('link', { name: /My Attendance/ }).length).toBeGreaterThan(0);
   });
 
   it('shows Attendance to leaders', () => {
     authState = makeState('leader');
     render(<DashboardLayout>{null}</DashboardLayout>);
+    openSection('Gatherings');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 
   it('shows Attendance to admins', () => {
     authState = makeState('admin');
     render(<DashboardLayout>{null}</DashboardLayout>);
+    openSection('Gatherings');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 });
