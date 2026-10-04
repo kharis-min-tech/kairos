@@ -290,6 +290,50 @@ export function GettingStartedBlock({
   );
 }
 
+/**
+ * Shown while the single home request is in flight. Without this, a pending
+ * or failed request renders every block as null and the screen reads as
+ * "nothing here" — which is exactly how it looked on 2026-10-04.
+ */
+export function HomeSkeleton() {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View style={styles.block} accessibilityLabel="Loading your dashboard">
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={styles.skeletonCard} />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * Surfaces the API's own message rather than a generic failure. The home
+ * payload is the whole screen, so a silent failure leaves nothing to look at.
+ */
+export function HomeError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <View style={styles.block}>
+      <Card padding="md" style={styles.errorCard}>
+        <View style={styles.errorHeader}>
+          <TriangleAlert color={c.danger} size={18} strokeWidth={1.5} />
+          <Text style={styles.errorTitle}>We couldn&apos;t load your dashboard</Text>
+        </View>
+        <Text style={styles.rowSubtitle}>{message}</Text>
+        <Pressable
+          onPress={onRetry}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
+          style={styles.retryButton}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
+      </Card>
+    </View>
+  );
+}
+
 /** Personal attendance streak — the only number a plain member gets. */
 export function StreakBlock({ weeks, onPress }: { weeks: number; onPress: () => void }) {
   const styles = useThemedStyles(makeStyles);
@@ -444,6 +488,39 @@ function makeStyles(c: ThemeColors) {
     streakValue: {
       ...typography.cardTitle,
       color: c.ink,
+    },
+    skeletonCard: {
+      height: 72,
+      borderRadius: radii.lg,
+      backgroundColor: c.subtle,
+      marginBottom: spacing.md,
+    },
+    errorCard: {
+      borderWidth: 1,
+      borderColor: c.danger,
+      gap: spacing.sm,
+    },
+    errorHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    errorTitle: {
+      ...typography.cardTitle,
+      color: c.ink,
+      flex: 1,
+    },
+    retryButton: {
+      alignSelf: 'flex-start',
+      marginTop: spacing.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radii.lg,
+      backgroundColor: c.primary,
+    },
+    retryText: {
+      ...typography.button,
+      color: c.onPrimary,
     },
   });
 }
