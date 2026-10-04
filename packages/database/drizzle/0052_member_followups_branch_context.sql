@@ -54,6 +54,10 @@ ALTER TABLE member_followups
   ADD COLUMN IF NOT EXISTS context_kind VARCHAR(20),
   ADD COLUMN IF NOT EXISTS department_id UUID REFERENCES branch_departments(id) ON DELETE CASCADE;
 
+-- Department rows arrive with fellowship_id NULL, so this has to come before
+-- the copy below rather than with the other constraint work further down.
+ALTER TABLE member_followups ALTER COLUMN fellowship_id DROP NOT NULL;
+
 -- Existing rows are all fellowship-context; their branch comes from the
 -- fellowship they hang off.
 UPDATE member_followups f
@@ -95,7 +99,6 @@ DELETE FROM member_followups WHERE branch_id IS NULL OR context_kind IS NULL;
 
 ALTER TABLE member_followups ALTER COLUMN branch_id SET NOT NULL;
 ALTER TABLE member_followups ALTER COLUMN context_kind SET NOT NULL;
-ALTER TABLE member_followups ALTER COLUMN fellowship_id DROP NOT NULL;
 
 ALTER TABLE member_followups DROP CONSTRAINT IF EXISTS member_followups_context_check;
 ALTER TABLE member_followups
