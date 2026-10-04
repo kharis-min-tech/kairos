@@ -20,21 +20,14 @@ interface BranchPickerProps {
  */
 export function BranchPicker({ value, onChange }: BranchPickerProps) {
   const user = useAuthStore((s) => s.user);
-  const systemRole = user?.systemRole;
   const homeBranchId = (user as { homeBranchId?: string } | null)?.homeBranchId;
-  const canPickBranch = systemRole === 'admin' || (systemRole as string) === 'pastor';
+  const canPickBranch = user?.systemRole === 'admin';
   const { data: branches } = useBranches();
 
   if (!canPickBranch) return null;
   if (!branches || branches.length === 0) return null;
 
-  const visibleBranches =
-    (systemRole as string) === 'pastor' && homeBranchId
-      ? branches.filter((b) => b.id === homeBranchId)
-      : branches;
-  if (visibleBranches.length <= 1 && (systemRole as string) === 'pastor') return null;
-
-  const options = visibleBranches.map((b) => ({ value: b.id, label: b.branchName }));
+  const options = branches.map((b) => ({ value: b.id, label: b.branchName }));
 
   return (
     <div className="space-y-1.5 rounded-lg border bg-card p-3">

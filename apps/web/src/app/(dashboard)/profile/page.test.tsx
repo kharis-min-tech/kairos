@@ -175,10 +175,15 @@ describe('ProfilePage', () => {
     expect(screen.getByText(/Member of Kharis Church, Brixton branch/i)).toBeDefined();
   });
 
-  it('renders "Pastor of Brixton branch" for a pastor', () => {
-    memberProfile!.systemRole = 'pastor';
+  // Replaced 2026-10-04. The old test asserted a "Pastor of Brixton branch"
+  // line, but only passed by assigning systemRole = 'pastor' — a value
+  // SystemRole has not held since the RBAC rebuild ('admin' | 'member').
+  // It was keeping dead code alive. Pastor is an identity on
+  // branch_leadership, not a system role; if that line returns it reads
+  // from there.
+  it('does not derive a pastor line from a role string', () => {
     render(<ProfilePage />, { wrapper });
-    expect(screen.getByText(/Pastor of Brixton branch/i)).toBeDefined();
+    expect(screen.queryByText(/Pastor of/i)).toBeNull();
   });
 
   it('renders "Church administrator" for admin', () => {
