@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,7 +35,6 @@ import {
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import {
-  Badge,
   Card,
   Avatar,
   spacing,
@@ -345,19 +344,49 @@ export default function More() {
 }
 
 /**
+ * A collapsible nav cluster, collapsed by default. With 37 rows across eight
+ * clusters the flat list was a long scroll, and it only grows as modules land
+ * — collapsed headers keep the whole taxonomy on one screen.
+ *
  * Renders nothing when every row inside is gated out — React.Children.toArray
  * drops the `null`s a capability check leaves behind, so a plain member never
  * sees an empty "Organisation" heading. Gated rows must therefore be written
  * as `{cond ? <NavRow/> : null}` siblings, not wrapped in a fragment, or the
  * fragment counts as one present child.
  */
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({
+  label,
+  defaultOpen = false,
+  children,
+}: {
+  label: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
   const styles = useThemedStyles(makeStyles);
-  if (React.Children.toArray(children).length === 0) return null;
+  const c = useColors();
+  const [open, setOpen] = useState(defaultOpen);
+  const visible = React.Children.toArray(children);
+  if (visible.length === 0) return null;
   return (
     <View style={styles.group}>
-      <Text style={styles.groupLabel}>{label}</Text>
-      {children}
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={label}
+        style={styles.groupHeader}
+      >
+        <ChevronRight
+          color={c.inkFaded}
+          size={14}
+          strokeWidth={2}
+          style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}
+        />
+        <Text style={styles.groupLabel}>{label}</Text>
+        <Text style={styles.groupCount}>{visible.length}</Text>
+      </Pressable>
+      {open ? children : null}
     </View>
   );
 }
@@ -404,10 +433,20 @@ function makeStyles(c: ThemeColors) {
   profileName: { ...typography.cardTitle, color: c.ink },
   profileMeta: { ...typography.meta, color: c.inkMuted },
   group: { gap: spacing.xs },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
   groupLabel: {
     ...typography.eyebrow,
     color: c.inkFaded,
-    marginBottom: spacing.xs,
+    flex: 1,
+  },
+  groupCount: {
+    ...typography.meta,
+    color: c.inkVeryFaded,
   },
   row: {
     flexDirection: 'row',
