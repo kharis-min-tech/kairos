@@ -6,9 +6,14 @@ tags:
 env:
   APP_ID: "com.kharis.kairos"
 ---
-# Assumes signed-in state. Ensures the full grouped taxonomy is present in the
-# More tab — every section header from the 2026-08-08 web-parity refactor. A
-# regression here means a section got renamed or dropped.
+# Assumes a signed-in PRIVILEGED session — "Gatherings" and "Organisation"
+# are capability-gated and a plain member sees neither.
+#
+# Section headers are the plain-noun nav taxonomy (2026-10-04): clusters named
+# for what they contain, shared with the web sidebar. A regression here means
+# a section got renamed or dropped. Replaces the 2026-08-08 grouping
+# ("My groups", "Leader tools", "Forms", "Reports & analytics"), whose rows
+# were redistributed rather than removed.
 
 - tapOn: "More"
 
@@ -19,13 +24,6 @@ env:
 
 - scrollUntilVisible:
     element:
-      text: "My groups"
-    direction: DOWN
-    timeout: 8000
-    speed: 40
-
-- scrollUntilVisible:
-    element:
       text: "People"
     direction: DOWN
     timeout: 8000
@@ -33,21 +31,28 @@ env:
 
 - scrollUntilVisible:
     element:
-      text: "Leader tools"
+      text: "Groups"
     direction: DOWN
     timeout: 8000
     speed: 40
 
 - scrollUntilVisible:
     element:
-      text: "Forms"
+      text: "Gatherings"
     direction: DOWN
     timeout: 8000
     speed: 40
 
 - scrollUntilVisible:
     element:
-      text: "Reports & analytics"
+      text: "Insights"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+
+- scrollUntilVisible:
+    element:
+      text: "Organisation"
     direction: DOWN
     timeout: 8000
     speed: 40
