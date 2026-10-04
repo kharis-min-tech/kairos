@@ -4,7 +4,7 @@ import { authHasCapability } from '../lib/grants';
 import {
   branchDepartments,
   departmentMembers,
-  departmentFollowups,
+  memberFollowups,
   members,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
@@ -117,9 +117,14 @@ export async function createFollowup(
   await ensureMemberInDepartment(db, branchDeptId, memberId);
 
   const [created] = await db
-    .insert(departmentFollowups)
+    .insert(memberFollowups)
     .values({
-      branchDepartmentId: branchDeptId,
+      // Context is declared, never inferred: this write came from the
+      // department surface, so it is a department follow-up even if the
+      // subject also belongs to a fellowship.
+      contextKind: 'department',
+      departmentId: branchDeptId,
+      branchId: bd.branchId,
       memberId,
       recordedById: auth.memberId,
       assignedToId: input.assignedToId ?? null,
@@ -180,12 +185,12 @@ export async function updateFollowup(
 
   const [existing] = await db
     .select({
-      id: departmentFollowups.id,
-      branchDepartmentId: departmentFollowups.branchDepartmentId,
-      recordedById: departmentFollowups.recordedById,
+      id: memberFollowups.id,
+      branchDepartmentId: memberFollowups.departmentId,
+      recordedById: memberFollowups.recordedById,
     })
-    .from(departmentFollowups)
-    .where(eq(departmentFollowups.id, followupId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.id, followupId));
   if (!existing || existing.branchDepartmentId !== branchDeptId) {
     throw new NotFoundError('Followup not found');
   }
@@ -204,9 +209,9 @@ export async function updateFollowup(
   if (input.assignedToId !== undefined) patch.assignedToId = input.assignedToId;
 
   const [updated] = await db
-    .update(departmentFollowups)
+    .update(memberFollowups)
     .set(patch)
-    .where(eq(departmentFollowups.id, followupId))
+    .where(eq(memberFollowups.id, followupId))
     .returning();
   return updated!;
 }
@@ -222,16 +227,16 @@ export async function deleteFollowup(
 
   const [existing] = await db
     .select({
-      id: departmentFollowups.id,
-      branchDepartmentId: departmentFollowups.branchDepartmentId,
+      id: memberFollowups.id,
+      branchDepartmentId: memberFollowups.departmentId,
     })
-    .from(departmentFollowups)
-    .where(eq(departmentFollowups.id, followupId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.id, followupId));
   if (!existing || existing.branchDepartmentId !== branchDeptId) {
     throw new NotFoundError('Followup not found');
   }
 
-  await db.delete(departmentFollowups).where(eq(departmentFollowups.id, followupId));
+  await db.delete(memberFollowups).where(eq(memberFollowups.id, followupId));
   return { id: followupId };
 }
 
@@ -247,32 +252,32 @@ export async function listFollowupsForMember(
   const recorder = members;
   return db
     .select({
-      id: departmentFollowups.id,
-      branchDepartmentId: departmentFollowups.branchDepartmentId,
-      memberId: departmentFollowups.memberId,
-      recordedById: departmentFollowups.recordedById,
+      id: memberFollowups.id,
+      branchDepartmentId: memberFollowups.departmentId,
+      memberId: memberFollowups.memberId,
+      recordedById: memberFollowups.recordedById,
       recordedByFirstName: recorder.firstName,
       recordedByLastName: recorder.lastName,
-      assignedToId: departmentFollowups.assignedToId,
-      contactedAt: departmentFollowups.contactedAt,
-      contactMethod: departmentFollowups.contactMethod,
-      contactStatus: departmentFollowups.contactStatus,
-      durationMinutes: departmentFollowups.durationMinutes,
-      notes: departmentFollowups.notes,
-      nextFollowUpDate: departmentFollowups.nextFollowUpDate,
-      createdAt: departmentFollowups.createdAt,
-      updatedAt: departmentFollowups.updatedAt,
-      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${departmentFollowups.contactedAt})::int`,
+      assignedToId: memberFollowups.assignedToId,
+      contactedAt: memberFollowups.contactedAt,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      durationMinutes: memberFollowups.durationMinutes,
+      notes: memberFollowups.notes,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+      createdAt: memberFollowups.createdAt,
+      updatedAt: memberFollowups.updatedAt,
+      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${memberFollowups.contactedAt})::int`,
     })
-    .from(departmentFollowups)
-    .leftJoin(recorder, eq(departmentFollowups.recordedById, recorder.id))
+    .from(memberFollowups)
+    .leftJoin(recorder, eq(memberFollowups.recordedById, recorder.id))
     .where(
       and(
-        eq(departmentFollowups.branchDepartmentId, branchDeptId),
-        eq(departmentFollowups.memberId, memberId),
+        eq(memberFollowups.departmentId, branchDeptId),
+        eq(memberFollowups.memberId, memberId),
       ),
     )
-    .orderBy(desc(departmentFollowups.contactedAt));
+    .orderBy(desc(memberFollowups.contactedAt));
 }
 
 export async function listFollowupsForDepartment(
@@ -287,36 +292,36 @@ export async function listFollowupsForDepartment(
 
   const limit = query.limit ?? 50;
 
-  const conditions = [eq(departmentFollowups.branchDepartmentId, branchDeptId)];
+  const conditions = [eq(memberFollowups.departmentId, branchDeptId)];
   if (query.days !== undefined) {
     conditions.push(
-      sql`${departmentFollowups.contactedAt} >= NOW() - (${query.days} || ' days')::interval`,
+      sql`${memberFollowups.contactedAt} >= NOW() - (${query.days} || ' days')::interval`,
     );
   }
   if (query.memberId) {
-    conditions.push(eq(departmentFollowups.memberId, query.memberId));
+    conditions.push(eq(memberFollowups.memberId, query.memberId));
   }
 
   return db
     .select({
-      id: departmentFollowups.id,
-      memberId: departmentFollowups.memberId,
+      id: memberFollowups.id,
+      memberId: memberFollowups.memberId,
       memberFirstName: members.firstName,
       memberLastName: members.lastName,
-      contactedAt: departmentFollowups.contactedAt,
-      contactMethod: departmentFollowups.contactMethod,
-      contactStatus: departmentFollowups.contactStatus,
-      durationMinutes: departmentFollowups.durationMinutes,
-      notes: departmentFollowups.notes,
-      nextFollowUpDate: departmentFollowups.nextFollowUpDate,
-      recordedById: departmentFollowups.recordedById,
-      assignedToId: departmentFollowups.assignedToId,
-      createdAt: departmentFollowups.createdAt,
+      contactedAt: memberFollowups.contactedAt,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      durationMinutes: memberFollowups.durationMinutes,
+      notes: memberFollowups.notes,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+      recordedById: memberFollowups.recordedById,
+      assignedToId: memberFollowups.assignedToId,
+      createdAt: memberFollowups.createdAt,
     })
-    .from(departmentFollowups)
-    .leftJoin(members, eq(departmentFollowups.memberId, members.id))
+    .from(memberFollowups)
+    .leftJoin(members, eq(memberFollowups.memberId, members.id))
     .where(and(...conditions))
-    .orderBy(desc(departmentFollowups.contactedAt))
+    .orderBy(desc(memberFollowups.contactedAt))
     .limit(limit);
 }
 
@@ -358,19 +363,19 @@ export async function listOverdueFollowups(
   const memberIds = roster.map((r) => r.memberId);
   const lastFollowups = await db
     .select({
-      memberId: departmentFollowups.memberId,
+      memberId: memberFollowups.memberId,
       // String at runtime, not a Date — see me/service.ts. Safe here only
       // because the consumer below coerces through `new Date`.
-      lastContactedAt: sql<Date | string | null>`MAX(${departmentFollowups.contactedAt})`,
+      lastContactedAt: sql<Date | string | null>`MAX(${memberFollowups.contactedAt})`,
     })
-    .from(departmentFollowups)
+    .from(memberFollowups)
     .where(
       and(
-        eq(departmentFollowups.branchDepartmentId, branchDeptId),
-        inArray(departmentFollowups.memberId, memberIds),
+        eq(memberFollowups.departmentId, branchDeptId),
+        inArray(memberFollowups.memberId, memberIds),
       ),
     )
-    .groupBy(departmentFollowups.memberId);
+    .groupBy(memberFollowups.memberId);
 
   // Date | string because the aggregate is a string at runtime (see above).
   const lastByMember = new Map<string, Date | string | null>();

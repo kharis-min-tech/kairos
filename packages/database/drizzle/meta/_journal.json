@@ -365,6 +365,13 @@
       "when": 1808300000000,
       "tag": "0051_membership_champion_role",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1809300000000,
+      "tag": "0052_member_followups_branch_context",
+      "breakpoints": true
     }
   ]
 }

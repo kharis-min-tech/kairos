@@ -5,7 +5,7 @@ import { departments } from './departments';
 import { members } from './members';
 import { departmentMembers } from './department-members';
 import { departmentJoinRequests } from './department-join-requests';
-import { departmentFollowups } from './department-followups';
+import { memberFollowups } from './member-followups';
 import { departmentUniformOutfits } from './department-uniform-outfits';
 import { departmentUniformSchedule } from './department-uniform-schedule';
 import { rotaTemplates } from './rota-templates';
@@ -43,7 +43,7 @@ export const branchDepartmentsRelations = relations(branchDepartments, ({ one, m
   deputy: one(members, { fields: [branchDepartments.deputyMemberId], references: [members.id], relationName: 'departmentDeputy' }),
   members: many(departmentMembers),
   joinRequests: many(departmentJoinRequests),
-  followups: many(departmentFollowups),
+  followups: many(memberFollowups),
   uniformOutfits: many(departmentUniformOutfits),
   uniformSchedule: many(departmentUniformSchedule),
   rotaTemplates: many(rotaTemplates),

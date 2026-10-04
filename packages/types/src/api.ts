@@ -1504,14 +1504,19 @@ export type MeFollowupItem =
 // ── Follow-up history (0046) ────────────────────────────────
 //
 // Unified per-member follow-up timeline surfaced on the member profile.
-// Unions fellowship_followups + department_followups. Visit-shape fields are
-// all optional so contact-only rows serialise cleanly with nulls.
+// Reads member_followups. Visit-shape fields are all optional so contact-only
+// rows serialise cleanly with nulls.
+//
+// `source` is the follow-up's declared context. A 'branch' row is a pastoral
+// follow-up made outside any group — the context people in no fellowship and
+// no department have, and the one a pastor uses deliberately — so it carries
+// no scope id or name.
 
 export interface MemberFollowupHistoryItem {
   id: string;
-  source: 'fellowship' | 'department';
-  scopeId: string;
-  scopeName: string;
+  source: 'fellowship' | 'department' | 'branch';
+  scopeId: string | null;
+  scopeName: string | null;
   memberId: string;
   recordedById: string;
   recordedByFirstName: string;
@@ -1760,4 +1765,34 @@ export interface MeHomeResponse {
   gettingStarted: HomeGettingStartedItem[];
   /** Consecutive weeks present at a service. Null above group altitude. */
   streakWeeks: number | null;
+}
+
+// ── Follow-up queues (GET /api/followups/queues/*) ─────────
+//
+// Two cohorts, deliberately two queues rather than one "needs follow-up"
+// list: a first-timer is a welcome motion on a clock of hours to days, a
+// member in no group is a retention motion on a clock of weeks.
+
+export interface FollowupQueueRow {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  memberType: string;
+  branchName: string | null;
+  /** When they first appeared. */
+  since: string | null;
+  /** Who brought them, where the first-timer form recorded it. */
+  invitedByName: string | null;
+}
+
+export interface DueFollowupRow {
+  id: string;
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  contextKind: string;
+  nextFollowUpDate: string | null;
+  assignedToId: string | null;
 }

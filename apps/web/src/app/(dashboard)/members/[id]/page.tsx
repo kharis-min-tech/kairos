@@ -639,7 +639,7 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {
           )}
         </div>
         <p className="truncate text-xs text-muted-foreground">
-          {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
+          {dateLabel} · {row.scopeName ?? 'Branch'} · by {row.recordedByFirstName}{' '}
           {row.recordedByLastName}
         </p>
         {row.notes && (

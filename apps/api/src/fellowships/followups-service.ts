@@ -3,7 +3,7 @@ import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
-  fellowshipFollowups,
+  memberFollowups,
   fellowshipMembers,
   fellowships,
   members,
@@ -112,7 +112,7 @@ export async function createFellowshipFollowup(
   memberId: string,
   input: CreateFellowshipFollowupInput,
 ) {
-  await enforceFellowshipAccess(db, auth, fellowshipId);
+  const fellowship = await enforceFellowshipAccess(db, auth, fellowshipId);
 
   if (input.durationMinutes !== undefined && input.durationMinutes !== null && input.durationMinutes < 1) {
     throw new ValidationError('Duration must be at least 1 minute');
@@ -121,9 +121,12 @@ export async function createFellowshipFollowup(
   await ensureMemberInFellowship(db, fellowshipId, memberId);
 
   const [created] = await db
-    .insert(fellowshipFollowups)
+    .insert(memberFollowups)
     .values({
+      // Declared, not inferred — see departments/followups-service.ts.
+      contextKind: 'fellowship',
       fellowshipId,
+      branchId: fellowship.branchId,
       memberId,
       recordedById: auth.memberId,
       assignedToId: input.assignedToId ?? null,
@@ -184,11 +187,11 @@ export async function updateFellowshipFollowup(
 
   const [existing] = await db
     .select({
-      id: fellowshipFollowups.id,
-      fellowshipId: fellowshipFollowups.fellowshipId,
+      id: memberFollowups.id,
+      fellowshipId: memberFollowups.fellowshipId,
     })
-    .from(fellowshipFollowups)
-    .where(eq(fellowshipFollowups.id, followupId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.id, followupId));
 
   if (!existing || existing.fellowshipId !== fellowshipId) {
     throw new NotFoundError('Followup not found');
@@ -208,9 +211,9 @@ export async function updateFellowshipFollowup(
   if (input.assignedToId !== undefined) patch.assignedToId = input.assignedToId;
 
   const [updated] = await db
-    .update(fellowshipFollowups)
+    .update(memberFollowups)
     .set(patch)
-    .where(eq(fellowshipFollowups.id, followupId))
+    .where(eq(memberFollowups.id, followupId))
     .returning();
 
   return updated!;
@@ -226,17 +229,17 @@ export async function deleteFellowshipFollowup(
 
   const [existing] = await db
     .select({
-      id: fellowshipFollowups.id,
-      fellowshipId: fellowshipFollowups.fellowshipId,
+      id: memberFollowups.id,
+      fellowshipId: memberFollowups.fellowshipId,
     })
-    .from(fellowshipFollowups)
-    .where(eq(fellowshipFollowups.id, followupId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.id, followupId));
 
   if (!existing || existing.fellowshipId !== fellowshipId) {
     throw new NotFoundError('Followup not found');
   }
 
-  await db.delete(fellowshipFollowups).where(eq(fellowshipFollowups.id, followupId));
+  await db.delete(memberFollowups).where(eq(memberFollowups.id, followupId));
   return { id: followupId };
 }
 
@@ -253,35 +256,35 @@ export async function listFellowshipFollowupsForMember(
 
   return db
     .select({
-      id: fellowshipFollowups.id,
-      fellowshipId: fellowshipFollowups.fellowshipId,
-      memberId: fellowshipFollowups.memberId,
-      recordedById: fellowshipFollowups.recordedById,
+      id: memberFollowups.id,
+      fellowshipId: memberFollowups.fellowshipId,
+      memberId: memberFollowups.memberId,
+      recordedById: memberFollowups.recordedById,
       recordedByFirstName: recordedBy.firstName,
       recordedByLastName: recordedBy.lastName,
-      assignedToId: fellowshipFollowups.assignedToId,
+      assignedToId: memberFollowups.assignedToId,
       assignedToFirstName: assignedTo.firstName,
       assignedToLastName: assignedTo.lastName,
-      contactedAt: fellowshipFollowups.contactedAt,
-      contactMethod: fellowshipFollowups.contactMethod,
-      contactStatus: fellowshipFollowups.contactStatus,
-      durationMinutes: fellowshipFollowups.durationMinutes,
-      notes: fellowshipFollowups.notes,
-      nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
-      createdAt: fellowshipFollowups.createdAt,
-      updatedAt: fellowshipFollowups.updatedAt,
-      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${fellowshipFollowups.contactedAt})::int`,
+      contactedAt: memberFollowups.contactedAt,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      durationMinutes: memberFollowups.durationMinutes,
+      notes: memberFollowups.notes,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+      createdAt: memberFollowups.createdAt,
+      updatedAt: memberFollowups.updatedAt,
+      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${memberFollowups.contactedAt})::int`,
     })
-    .from(fellowshipFollowups)
-    .leftJoin(recordedBy, eq(fellowshipFollowups.recordedById, recordedBy.id))
-    .leftJoin(assignedTo, eq(fellowshipFollowups.assignedToId, assignedTo.id))
+    .from(memberFollowups)
+    .leftJoin(recordedBy, eq(memberFollowups.recordedById, recordedBy.id))
+    .leftJoin(assignedTo, eq(memberFollowups.assignedToId, assignedTo.id))
     .where(
       and(
-        eq(fellowshipFollowups.fellowshipId, fellowshipId),
-        eq(fellowshipFollowups.memberId, memberId),
+        eq(memberFollowups.fellowshipId, fellowshipId),
+        eq(memberFollowups.memberId, memberId),
       ),
     )
-    .orderBy(desc(fellowshipFollowups.contactedAt));
+    .orderBy(desc(memberFollowups.contactedAt));
 }
 
 export async function listFellowshipFollowups(
@@ -293,15 +296,15 @@ export async function listFellowshipFollowups(
   await enforceFellowshipAccess(db, auth, fellowshipId);
 
   const limit = query.limit ?? 50;
-  const conditions = [eq(fellowshipFollowups.fellowshipId, fellowshipId)];
+  const conditions = [eq(memberFollowups.fellowshipId, fellowshipId)];
 
   if (query.days !== undefined) {
     conditions.push(
-      sql`${fellowshipFollowups.contactedAt} >= NOW() - (${query.days} || ' days')::interval`,
+      sql`${memberFollowups.contactedAt} >= NOW() - (${query.days} || ' days')::interval`,
     );
   }
   if (query.memberId) {
-    conditions.push(eq(fellowshipFollowups.memberId, query.memberId));
+    conditions.push(eq(memberFollowups.memberId, query.memberId));
   }
 
   const subject = alias(members, 'subject');
@@ -310,33 +313,33 @@ export async function listFellowshipFollowups(
 
   return db
     .select({
-      id: fellowshipFollowups.id,
-      fellowshipId: fellowshipFollowups.fellowshipId,
-      memberId: fellowshipFollowups.memberId,
+      id: memberFollowups.id,
+      fellowshipId: memberFollowups.fellowshipId,
+      memberId: memberFollowups.memberId,
       memberFirstName: subject.firstName,
       memberLastName: subject.lastName,
-      recordedById: fellowshipFollowups.recordedById,
+      recordedById: memberFollowups.recordedById,
       recordedByFirstName: recordedBy.firstName,
       recordedByLastName: recordedBy.lastName,
-      assignedToId: fellowshipFollowups.assignedToId,
+      assignedToId: memberFollowups.assignedToId,
       assignedToFirstName: assignedTo.firstName,
       assignedToLastName: assignedTo.lastName,
-      contactedAt: fellowshipFollowups.contactedAt,
-      contactMethod: fellowshipFollowups.contactMethod,
-      contactStatus: fellowshipFollowups.contactStatus,
-      durationMinutes: fellowshipFollowups.durationMinutes,
-      notes: fellowshipFollowups.notes,
-      nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
-      createdAt: fellowshipFollowups.createdAt,
-      updatedAt: fellowshipFollowups.updatedAt,
-      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${fellowshipFollowups.contactedAt})::int`,
+      contactedAt: memberFollowups.contactedAt,
+      contactMethod: memberFollowups.contactMethod,
+      contactStatus: memberFollowups.contactStatus,
+      durationMinutes: memberFollowups.durationMinutes,
+      notes: memberFollowups.notes,
+      nextFollowUpDate: memberFollowups.nextFollowUpDate,
+      createdAt: memberFollowups.createdAt,
+      updatedAt: memberFollowups.updatedAt,
+      daysSinceFollowup: sql<number>`EXTRACT(DAY FROM NOW() - ${memberFollowups.contactedAt})::int`,
     })
-    .from(fellowshipFollowups)
-    .leftJoin(subject, eq(fellowshipFollowups.memberId, subject.id))
-    .leftJoin(recordedBy, eq(fellowshipFollowups.recordedById, recordedBy.id))
-    .leftJoin(assignedTo, eq(fellowshipFollowups.assignedToId, assignedTo.id))
+    .from(memberFollowups)
+    .leftJoin(subject, eq(memberFollowups.memberId, subject.id))
+    .leftJoin(recordedBy, eq(memberFollowups.recordedById, recordedBy.id))
+    .leftJoin(assignedTo, eq(memberFollowups.assignedToId, assignedTo.id))
     .where(and(...conditions))
-    .orderBy(desc(fellowshipFollowups.contactedAt))
+    .orderBy(desc(memberFollowups.contactedAt))
     .limit(limit);
 }
 
@@ -370,19 +373,19 @@ export async function listOverdueFellowshipFollowups(
   const memberIds = roster.map((r) => r.memberId);
   const lastFollowups = await db
     .select({
-      memberId: fellowshipFollowups.memberId,
+      memberId: memberFollowups.memberId,
       // String at runtime, not a Date — see me/service.ts. Safe here only
       // because the consumer below coerces through `new Date`.
-      lastContactedAt: sql<Date | string | null>`MAX(${fellowshipFollowups.contactedAt})`,
+      lastContactedAt: sql<Date | string | null>`MAX(${memberFollowups.contactedAt})`,
     })
-    .from(fellowshipFollowups)
+    .from(memberFollowups)
     .where(
       and(
-        eq(fellowshipFollowups.fellowshipId, fellowshipId),
-        inArray(fellowshipFollowups.memberId, memberIds),
+        eq(memberFollowups.fellowshipId, fellowshipId),
+        inArray(memberFollowups.memberId, memberIds),
       ),
     )
-    .groupBy(fellowshipFollowups.memberId);
+    .groupBy(memberFollowups.memberId);
 
   // Date | string because the aggregate is a string at runtime (see above).
   const lastByMember = new Map<string, Date | string | null>();

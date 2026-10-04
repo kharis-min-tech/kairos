@@ -6,7 +6,7 @@ import {
   fellowshipMembers,
   fellowshipMeetings,
   fellowshipMeetingAttendance,
-  fellowshipFollowups,
+  memberFollowups,
   fellowshipJoinRequests,
   members,
   branches,
@@ -683,10 +683,10 @@ export async function getFellowshipStats(
   const followupRows = await db
     .select({
       total: count(),
-      closed: sql<number>`COUNT(*) FILTER (WHERE LOWER(${fellowshipFollowups.contactStatus}) IN ('completed', 'closed'))::int`,
+      closed: sql<number>`COUNT(*) FILTER (WHERE LOWER(${memberFollowups.contactStatus}) IN ('completed', 'closed'))::int`,
     })
-    .from(fellowshipFollowups)
-    .where(eq(fellowshipFollowups.fellowshipId, fellowshipId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.fellowshipId, fellowshipId));
   const totalFollowups = Number(followupRows[0]?.total ?? 0);
   const closedFollowups = Number(followupRows[0]?.closed ?? 0);
 

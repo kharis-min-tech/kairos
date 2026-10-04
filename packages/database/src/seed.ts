@@ -28,7 +28,6 @@ import {
   branchDepartments,
   departmentMembers,
   departmentJoinRequests,
-  departmentFollowups,
   departmentUniformOutfits,
   departmentUniformSchedule,
   rotaTemplates,
@@ -43,7 +42,7 @@ import {
   fellowshipMeetings,
   fellowshipMeetingAttendance,
   fellowshipJoinRequests,
-  fellowshipFollowups,
+  memberFollowups,
   newBelieverEnrollments,
   newBelieverSessions,
   newBelieverAttendance,
@@ -731,9 +730,9 @@ async function seed() {
   console.log(`✓ 4 department join requests (incl. 1 offered awaiting Emma)`);
 
   // Followups (one current week, one prior month, one overdue >30 days, one never-followed-up via no entry)
-  await db.insert(departmentFollowups).values([
+  await db.insert(memberFollowups).values([
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: regularMembers[0]!.id, // Emma — recent
       recordedById: leaderSarah!.id,
       assignedToId: leaderSarah!.id,
@@ -744,7 +743,7 @@ async function seed() {
       contactedAt: new Date('2026-05-02T18:00:00Z'),
     },
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: regularMembers[2]!.id, // Priscilla — overdue
       recordedById: leaderSarah!.id,
       assignedToId: leaderSarah!.id,
@@ -755,7 +754,7 @@ async function seed() {
       nextFollowUpDate: '2026-04-01',
     },
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: pastorLondon!.id, // Pastor — pastoral check-in
       recordedById: leaderSarah!.id,
       contactMethod: 'In-Person',
@@ -1758,11 +1757,11 @@ async function seed() {
   ]);
 
   // ── 15c. Followups (contact activity per dept) ──
-  await db.insert(departmentFollowups).values([
-    { branchDepartmentId: choirAccra.id,       memberId: accraAdults[3]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(7), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 15, notes: 'Rehearsal reminder' },
-    { branchDepartmentId: choirAccra.id,       memberId: accraAdults[4]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(3), contactMethod: 'WhatsApp',   contactStatus: 'Unreachable', notes: 'No response yet' },
-    { branchDepartmentId: ushersManchester.id, memberId: manchesterAdults[3]!.id, recordedById: findExtra('hannah.peters@kairos.local').id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 8,  notes: 'Rota confirmation' },
-    { branchDepartmentId: adminKumasi.id,      memberId: kumasiAdults[2]!.id,     recordedById: findExtra('adjoa.antwi@kairos.local').id,   contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 20, notes: 'Audit prep review' },
+  await db.insert(memberFollowups).values([
+    { departmentId: choirAccra.id, branchId: choirAccra.branchId, contextKind: 'department',       memberId: accraAdults[3]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(7), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 15, notes: 'Rehearsal reminder' },
+    { departmentId: choirAccra.id, branchId: choirAccra.branchId, contextKind: 'department',       memberId: accraAdults[4]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(3), contactMethod: 'WhatsApp',   contactStatus: 'Unreachable', notes: 'No response yet' },
+    { departmentId: ushersManchester.id, branchId: ushersManchester.branchId, contextKind: 'department', memberId: manchesterAdults[3]!.id, recordedById: findExtra('hannah.peters@kairos.local').id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 8,  notes: 'Rota confirmation' },
+    { departmentId: adminKumasi.id, branchId: adminKumasi.branchId, contextKind: 'department',      memberId: kumasiAdults[2]!.id,     recordedById: findExtra('adjoa.antwi@kairos.local').id,   contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 20, notes: 'Audit prep review' },
   ]);
   console.log(`✓ 4 dept join requests + 4 dept followups`);
 
@@ -1997,10 +1996,10 @@ async function seed() {
     { fellowshipId: newBreedsAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   status: 'rejected', reviewedBy: pastorAccra!.id,  reviewedAt: daysAgo(10), notes: 'Already committed to another fellowship' },
     { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('akosua.gyasi@kairos.local').id,   status: 'pending' },
   ]);
-  await db.insert(fellowshipFollowups).values([
-    { fellowshipId: kGroupLondon!.id,   memberId: regularMembers[0]!.id,                   recordedById: leaderSarah!.id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 20, notes: 'Prayer request for family' },
-    { fellowshipId: kGroupAccra!.id,    memberId: regularMembers[2]!.id,                   recordedById: leaderDavid!.id, contactedAt: daysAgo(2), contactMethod: 'WhatsApp',   contactStatus: 'Successful',                       notes: 'Sunday meet confirmed' },
-    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('afia.sarpong@kairos.local').id, recordedById: pastorAccra!.id, contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 15 },
+  await db.insert(memberFollowups).values([
+    { fellowshipId: kGroupLondon!.id, branchId: kGroupLondon!.branchId, contextKind: 'fellowship',   memberId: regularMembers[0]!.id,                   recordedById: leaderSarah!.id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 20, notes: 'Prayer request for family' },
+    { fellowshipId: kGroupAccra!.id, branchId: kGroupAccra!.branchId, contextKind: 'fellowship',    memberId: regularMembers[2]!.id,                   recordedById: leaderDavid!.id, contactedAt: daysAgo(2), contactMethod: 'WhatsApp',   contactStatus: 'Successful',                       notes: 'Sunday meet confirmed' },
+    { fellowshipId: newBreedsAccra!.id, branchId: newBreedsAccra!.branchId, contextKind: 'fellowship', memberId: findExtra('afia.sarpong@kairos.local').id, recordedById: pastorAccra!.id, contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 15 },
   ]);
   console.log(`✓ 5 fellowship join requests + 3 fellowship followups`);
 

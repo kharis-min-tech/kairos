@@ -18,8 +18,7 @@ import {
   notificationPreferences,
   fellowshipJoinRequests,
   departmentJoinRequests,
-  fellowshipFollowups,
-  departmentFollowups,
+  memberFollowups,
   mentorFollowups,
   souls,
 } from '@kairos/database';
@@ -592,7 +591,9 @@ export async function listMyApprovals(
         id: r.id,
         subjectMemberId: r.memberId,
         subjectName: `${r.firstName} ${r.lastName}`,
-        fellowshipId: r.fellowshipId,
+        // Non-null by the query: it filters fellowship_id to a known list,
+        // and the table CHECK means only fellowship-context rows have it set.
+        fellowshipId: r.fellowshipId!,
         fellowshipName: r.fellowshipName,
         createdAt: (r.createdAt as Date).toISOString(),
       });
@@ -640,7 +641,8 @@ export async function listMyApprovals(
         id: r.id,
         subjectMemberId: r.memberId,
         subjectName: `${r.firstName} ${r.lastName}`,
-        branchDeptId: r.branchDeptId,
+        // Non-null by the query — see the fellowship case above.
+        branchDeptId: r.branchDeptId!,
         departmentName: r.departmentName,
         status: r.status,
         createdAt: (r.createdAt as Date).toISOString(),
@@ -694,33 +696,35 @@ export async function listMyFollowups(
   if (fellowshipIds.length > 0) {
     const ffRows = await db
       .select({
-        id: fellowshipFollowups.id,
-        memberId: fellowshipFollowups.memberId,
+        id: memberFollowups.id,
+        memberId: memberFollowups.memberId,
         firstName: members.firstName,
         lastName: members.lastName,
-        fellowshipId: fellowshipFollowups.fellowshipId,
+        fellowshipId: memberFollowups.fellowshipId,
         fellowshipName: fellowships.fellowshipName,
-        nextFollowUpDate: fellowshipFollowups.nextFollowUpDate,
-        notes: fellowshipFollowups.notes,
+        nextFollowUpDate: memberFollowups.nextFollowUpDate,
+        notes: memberFollowups.notes,
       })
-      .from(fellowshipFollowups)
-      .innerJoin(members, eq(fellowshipFollowups.memberId, members.id))
-      .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
+      .from(memberFollowups)
+      .innerJoin(members, eq(memberFollowups.memberId, members.id))
+      .innerJoin(fellowships, eq(memberFollowups.fellowshipId, fellowships.id))
       .where(
         and(
-          inArray(fellowshipFollowups.fellowshipId, fellowshipIds),
-          isNotNull(fellowshipFollowups.nextFollowUpDate),
-          lte(fellowshipFollowups.nextFollowUpDate, today),
+          inArray(memberFollowups.fellowshipId, fellowshipIds),
+          isNotNull(memberFollowups.nextFollowUpDate),
+          lte(memberFollowups.nextFollowUpDate, today),
         ),
       )
-      .orderBy(fellowshipFollowups.nextFollowUpDate);
+      .orderBy(memberFollowups.nextFollowUpDate);
     for (const r of ffRows) {
       items.push({
         kind: 'fellowship_followup',
         id: r.id,
         memberId: r.memberId,
         subjectName: `${r.firstName} ${r.lastName}`,
-        fellowshipId: r.fellowshipId,
+        // Non-null by the query: it filters fellowship_id to a known list,
+        // and the table CHECK means only fellowship-context rows have it set.
+        fellowshipId: r.fellowshipId!,
         fellowshipName: r.fellowshipName,
         nextFollowUpDate: r.nextFollowUpDate as string,
         notes: r.notes,
@@ -733,37 +737,38 @@ export async function listMyFollowups(
   if (branchDeptIds.length > 0) {
     const dfRows = await db
       .select({
-        id: departmentFollowups.id,
-        memberId: departmentFollowups.memberId,
+        id: memberFollowups.id,
+        memberId: memberFollowups.memberId,
         firstName: members.firstName,
         lastName: members.lastName,
-        branchDeptId: departmentFollowups.branchDepartmentId,
+        branchDeptId: memberFollowups.departmentId,
         departmentName: departments.departmentName,
-        nextFollowUpDate: departmentFollowups.nextFollowUpDate,
-        notes: departmentFollowups.notes,
+        nextFollowUpDate: memberFollowups.nextFollowUpDate,
+        notes: memberFollowups.notes,
       })
-      .from(departmentFollowups)
-      .innerJoin(members, eq(departmentFollowups.memberId, members.id))
+      .from(memberFollowups)
+      .innerJoin(members, eq(memberFollowups.memberId, members.id))
       .innerJoin(
         branchDepartments,
-        eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
+        eq(memberFollowups.departmentId, branchDepartments.id),
       )
       .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
       .where(
         and(
-          inArray(departmentFollowups.branchDepartmentId, branchDeptIds),
-          isNotNull(departmentFollowups.nextFollowUpDate),
-          lte(departmentFollowups.nextFollowUpDate, today),
+          inArray(memberFollowups.departmentId, branchDeptIds),
+          isNotNull(memberFollowups.nextFollowUpDate),
+          lte(memberFollowups.nextFollowUpDate, today),
         ),
       )
-      .orderBy(departmentFollowups.nextFollowUpDate);
+      .orderBy(memberFollowups.nextFollowUpDate);
     for (const r of dfRows) {
       items.push({
         kind: 'department_followup',
         id: r.id,
         memberId: r.memberId,
         subjectName: `${r.firstName} ${r.lastName}`,
-        branchDeptId: r.branchDeptId,
+        // Non-null by the query — see the fellowship case above.
+        branchDeptId: r.branchDeptId!,
         departmentName: r.departmentName,
         nextFollowUpDate: r.nextFollowUpDate as string,
         notes: r.notes,
@@ -871,20 +876,20 @@ export async function listMyActivity(
   // 2) Fellowship followups I recorded.
   const fellowshipRows = await db
     .select({
-      id: fellowshipFollowups.id,
-      memberId: fellowshipFollowups.memberId,
+      id: memberFollowups.id,
+      memberId: memberFollowups.memberId,
       firstName: members.firstName,
       lastName: members.lastName,
-      fellowshipId: fellowshipFollowups.fellowshipId,
+      fellowshipId: memberFollowups.fellowshipId,
       fellowshipName: fellowships.fellowshipName,
-      contactedAt: fellowshipFollowups.contactedAt,
-      notes: fellowshipFollowups.notes,
+      contactedAt: memberFollowups.contactedAt,
+      notes: memberFollowups.notes,
     })
-    .from(fellowshipFollowups)
-    .innerJoin(members, eq(fellowshipFollowups.memberId, members.id))
-    .innerJoin(fellowships, eq(fellowshipFollowups.fellowshipId, fellowships.id))
-    .where(eq(fellowshipFollowups.recordedById, auth.memberId))
-    .orderBy(desc(fellowshipFollowups.contactedAt))
+    .from(memberFollowups)
+    .innerJoin(members, eq(memberFollowups.memberId, members.id))
+    .innerJoin(fellowships, eq(memberFollowups.fellowshipId, fellowships.id))
+    .where(eq(memberFollowups.recordedById, auth.memberId))
+    .orderBy(desc(memberFollowups.contactedAt))
     .limit(50);
   for (const r of fellowshipRows) {
     items.push({
@@ -892,7 +897,8 @@ export async function listMyActivity(
       id: r.id,
       memberId: r.memberId,
       subjectName: `${r.firstName} ${r.lastName}`,
-      fellowshipId: r.fellowshipId,
+      // Non-null by the query — see listMyFollowups.
+      fellowshipId: r.fellowshipId!,
       fellowshipName: r.fellowshipName,
       contactedAt: r.contactedAt.toISOString(),
       notes: r.notes,
@@ -902,24 +908,24 @@ export async function listMyActivity(
   // 3) Department followups I recorded.
   const deptRows = await db
     .select({
-      id: departmentFollowups.id,
-      memberId: departmentFollowups.memberId,
+      id: memberFollowups.id,
+      memberId: memberFollowups.memberId,
       firstName: members.firstName,
       lastName: members.lastName,
-      branchDeptId: departmentFollowups.branchDepartmentId,
+      branchDeptId: memberFollowups.departmentId,
       departmentName: departments.departmentName,
-      contactedAt: departmentFollowups.contactedAt,
-      notes: departmentFollowups.notes,
+      contactedAt: memberFollowups.contactedAt,
+      notes: memberFollowups.notes,
     })
-    .from(departmentFollowups)
-    .innerJoin(members, eq(departmentFollowups.memberId, members.id))
+    .from(memberFollowups)
+    .innerJoin(members, eq(memberFollowups.memberId, members.id))
     .innerJoin(
       branchDepartments,
-      eq(departmentFollowups.branchDepartmentId, branchDepartments.id),
+      eq(memberFollowups.departmentId, branchDepartments.id),
     )
     .innerJoin(departments, eq(branchDepartments.departmentId, departments.id))
-    .where(eq(departmentFollowups.recordedById, auth.memberId))
-    .orderBy(desc(departmentFollowups.contactedAt))
+    .where(eq(memberFollowups.recordedById, auth.memberId))
+    .orderBy(desc(memberFollowups.contactedAt))
     .limit(50);
   for (const r of deptRows) {
     items.push({
@@ -927,7 +933,8 @@ export async function listMyActivity(
       id: r.id,
       memberId: r.memberId,
       subjectName: `${r.firstName} ${r.lastName}`,
-      branchDeptId: r.branchDeptId,
+      // Non-null by the query — see listMyFollowups.
+      branchDeptId: r.branchDeptId!,
       departmentName: r.departmentName,
       contactedAt: r.contactedAt.toISOString(),
       notes: r.notes,

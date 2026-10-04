@@ -175,7 +175,7 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {
               {row.memberFirstName} {row.memberLastName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
+              {dateLabel} · {row.scopeName ?? 'Branch'} · by {row.recordedByFirstName}{' '}
               {row.recordedByLastName}
             </p>
           </div>

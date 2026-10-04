@@ -9,7 +9,7 @@ export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-memb
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
 export { fellowshipMeetingAttendance, fellowshipMeetingAttendanceRelations } from './fellowship-meeting-attendance';
 export { fellowshipJoinRequests, fellowshipJoinRequestsRelations } from './fellowship-join-requests';
-export { fellowshipFollowups, fellowshipFollowupsRelations } from './fellowship-followups';
+export { memberFollowups, memberFollowupsRelations } from './member-followups';
 export { outreachPrograms, outreachProgramsRelations } from './outreach-programs';
 export { souls, soulsRelations } from './souls';
 export { followUps, followUpsRelations } from './follow-ups';
@@ -44,7 +44,7 @@ export { departments, departmentsRelations } from './departments';
 export { branchDepartments, branchDepartmentsRelations } from './branch-departments';
 export { departmentMembers, departmentMembersRelations } from './department-members';
 export { departmentJoinRequests, departmentJoinRequestsRelations } from './department-join-requests';
-export { departmentFollowups, departmentFollowupsRelations } from './department-followups';
+
 export { departmentUniformOutfits, departmentUniformOutfitsRelations } from './department-uniform-outfits';
 export { departmentUniformSchedule, departmentUniformScheduleRelations } from './department-uniform-schedule';
 export { rotaTemplates, rotaTemplatesRelations } from './rota-templates';
