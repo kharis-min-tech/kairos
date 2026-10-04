@@ -51,6 +51,7 @@ const mockFindUnrecordedService = vi.fn();
 const mockCountBranchesBehind = vi.fn();
 const mockCountBranchesWithoutPastor = vi.fn();
 const mockGetBranchMainPastorName = vi.fn();
+const mockListRecentActivity = vi.fn();
 
 vi.mock('./home-queries', () => ({
   listUpcomingServices: (...a: unknown[]) => mockListUpcomingServices(...a),
@@ -64,6 +65,7 @@ vi.mock('./home-queries', () => ({
   countBranchesBehind: (...a: unknown[]) => mockCountBranchesBehind(...a),
   countBranchesWithoutPastor: (...a: unknown[]) => mockCountBranchesWithoutPastor(...a),
   getBranchMainPastorName: (...a: unknown[]) => mockGetBranchMainPastorName(...a),
+  listRecentActivity: (...a: unknown[]) => mockListRecentActivity(...a),
   BRANCH_BEHIND_DAYS: 14,
   DRIFTING_SERVICES_WINDOW: 3,
 }));
@@ -111,6 +113,7 @@ beforeEach(() => {
   mockCountBranchesBehind.mockResolvedValue(0);
   mockCountBranchesWithoutPastor.mockResolvedValue(0);
   mockGetBranchMainPastorName.mockResolvedValue(null);
+  mockListRecentActivity.mockResolvedValue([]);
   mockGetMissingMembers.mockResolvedValue([]);
   mockGetProfileCompleteness.mockResolvedValue({ complete: true, hasFellowship: true, hasMembershipInterest: true });
   mockGetBranchStats.mockResolvedValue({
@@ -462,8 +465,41 @@ describe("getMyHome — the Main Pastor on today's service", () => {
 
   it('falls back to the branch name when no Main Pastor is recorded', async () => {
     mockGetBranchMainPastorName.mockResolvedValue(null);
+  mockListRecentActivity.mockResolvedValue([]);
     const home = await getMyHome(db, auth());
     expect(home.today.find((i) => i.id === 's1')!.subtitle).toBe('London');
     vi.useRealTimers();
+  });
+});
+
+describe('getMyHome — recent activity', () => {
+  it('passes the altitude through so scope is enforced in the query, not after it', async () => {
+    await getMyHome(
+      db,
+      auth({ grants: [grant(FunctionalRole.FellowshipLeader, 'fellowship', 'f1')] }),
+    );
+    expect(mockListRecentActivity).toHaveBeenCalledWith(db, expect.anything(), 'group');
+  });
+
+  it('carries the feed through to the payload', async () => {
+    mockListRecentActivity.mockResolvedValue([
+      {
+        kind: 'membership_graduated',
+        id: 'en-1',
+        title: 'Ada Okoro completed the membership class',
+        subtitle: 'Kharis London',
+        at: '2026-10-03T18:00:00.000Z',
+        refs: { memberId: 'm-1' },
+      },
+    ]);
+    const home = await getMyHome(db, auth({ systemRole: 'admin' }));
+    expect(home.recentActivity).toHaveLength(1);
+    expect(home.recentActivity[0]!.kind).toBe('membership_graduated');
+  });
+
+  it('is empty at personal altitude', async () => {
+    const home = await getMyHome(db, auth());
+    expect(mockListRecentActivity).toHaveBeenCalledWith(db, expect.anything(), 'personal');
+    expect(home.recentActivity).toEqual([]);
   });
 });

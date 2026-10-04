@@ -28,6 +28,7 @@ import {
   countBranchesBehind,
   countBranchesWithoutPastor,
   getBranchMainPastorName,
+  listRecentActivity,
   BRANCH_BEHIND_DAYS,
   DRIFTING_SERVICES_WINDOW,
 } from './home-queries';
@@ -97,6 +98,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     streakWeeks,
     completeness,
     mainPastorName,
+    recentActivity,
     pulse,
   ] = await Promise.all([
     listUpcomingServices(db, auth.branchId, now, windowEnd),
@@ -119,6 +121,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
       ? getProfileCompleteness(db, auth.memberId)
       : Promise.resolve({ complete: true, hasFellowship: true, hasMembershipInterest: true }),
     getBranchMainPastorName(db, auth.branchId),
+    listRecentActivity(db, auth, altitude),
     buildPulse(db, auth, altitude),
   ]);
 
@@ -275,6 +278,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     needsYou,
     pulse,
     groups: groups as HomeGroupSummary[],
+    recentActivity,
     gettingStarted,
     streakWeeks,
   };

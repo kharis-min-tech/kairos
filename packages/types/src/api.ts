@@ -1723,6 +1723,26 @@ export interface HomeGroupSummary {
   lastTotal: number | null;
 }
 
+/**
+ * Something that has already happened, newest first — the counterpart to the
+ * agenda's what's next. Scoped by altitude: church sees every branch, branch
+ * sees its own, a group leader sees only their groups, and a plain member
+ * gets none (there is no community feed at personal altitude).
+ */
+export interface HomeActivityItem {
+  kind:
+    | 'member_joined'
+    | 'soul_captured'
+    | 'form_submitted'
+    | 'membership_graduated'
+    | 'fellowship_met';
+  id: string;
+  title: string;
+  subtitle: string | null;
+  at: string;
+  refs: HomeRefs;
+}
+
 /** Shown only when a member has no group, no class and a thin profile. */
 export interface HomeGettingStartedItem {
   key: 'join_fellowship' | 'membership_interest' | 'complete_profile';
@@ -1736,6 +1756,7 @@ export interface MeHomeResponse {
   needsYou: HomeTaskItem[];
   pulse: HomePulse | null;
   groups: HomeGroupSummary[];
+  recentActivity: HomeActivityItem[];
   gettingStarted: HomeGettingStartedItem[];
   /** Consecutive weeks present at a service. Null above group altitude. */
   streakWeeks: number | null;

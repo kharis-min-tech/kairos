@@ -1,15 +1,14 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMeHome, useMyLeadership } from '@/hooks/use-me';
-import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { CustomSelect } from '@kairos/ui';
 import {
   AgendaBlock,
+  RecentActivityBlock,
   GettingStartedBlock,
   GroupsBlock,
   HomeSkeleton,
@@ -113,89 +112,6 @@ function deriveRoleLabel(i: RoleLabelInputs): string {
 
 // ── Recent activity ────────────────────────────────────────
 
-/**
- * What has happened, as opposed to the agenda's what's next.
- *
- * It used to also list fellowships with their meeting schedules under a
- * "Recently" heading, which was doubly wrong: a schedule is not activity, and
- * upcoming fellowship meetings are already agenda items. Only things that have
- * actually happened belong here.
- */
-function RecentActivity({ branchId, isMember }: { branchId?: string; isMember: boolean }) {
-  const { data: result } = useMembers({ approvalStatus: 'pending', branchId, limit: 4 });
-  const pending = result?.data ?? [];
-
-  const items: { text: React.ReactNode; sub: string; href?: string }[] = [];
-  // Membership requests are a leadership concern — a plain member seeing
-  // other people's pending signups would be a disclosure, not a feature.
-  if (!isMember) {
-    pending.slice(0, 2).forEach((m) =>
-      items.push({
-        text: (
-          <>
-            <span className="font-semibold text-foreground">
-              {m.firstName} {m.lastName}
-            </span>
-            <span className="text-muted-foreground"> requested membership.</span>
-          </>
-        ),
-        sub: 'Recently',
-        href: `/members/${m.id}`,
-      }),
-    );
-  }
-  return (
-    <section>
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        Recent activity
-      </p>
-      <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
-        {items.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-muted-foreground/70">No recent activity.</p>
-        ) : (
-          <div className="divide-y divide-border">
-            {items.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.04]"
-              >
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/15">
-                  <svg
-                    className="h-3.5 w-3.5 text-[#5D3FD3] dark:text-[#a488ff]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    aria-hidden
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                    />
-                  </svg>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-snug">
-                    {item.href ? (
-                      <Link href={item.href} className="hover:underline">
-                        {item.text}
-                      </Link>
-                    ) : (
-                      item.text
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground/70">{item.sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 // ── Branch scope picker ────────────────────────────────────
 
 /**
@@ -254,7 +170,6 @@ export default function DashboardPage() {
     day: 'numeric',
     month: 'long',
   });
-  const branchId = scope?.kind === 'branch' ? scope.id : user?.homeBranchId;
   const verse = getDailyVerse();
 
   const bsaIds = leadership.data?.branchSystemAdminBranchIds ?? [];
@@ -366,7 +281,7 @@ export default function DashboardPage() {
         groups={data.groups}
       />
       {data.streakWeeks ? <StreakBlock weeks={data.streakWeeks} /> : null}
-      <RecentActivity branchId={branchId} isMember={altitude === 'personal'} />
+      {altitude === 'personal' ? null : <RecentActivityBlock items={data.recentActivity} />}
     </>
   );
 
