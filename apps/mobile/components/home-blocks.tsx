@@ -10,6 +10,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import type {
+  HomeActivityItem,
   HomeAgendaItem,
   HomeGettingStartedItem,
   HomeGroupSummary,
@@ -282,6 +283,66 @@ export function GettingStartedBlock({
             <View style={styles.rowBody}>
               <Text style={styles.taskTitle} numberOfLines={2}>
                 {item.title}
+              </Text>
+            </View>
+            <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+          </Pressable>
+        ))}
+      </Card>
+    </View>
+  );
+}
+
+/** "2 hours ago", "Yesterday", "Tue" — recency is the point, not the clock. */
+function whenLabel(iso: string): string {
+  const then = new Date(iso);
+  const minutes = Math.round((Date.now() - then.getTime()) / 60000);
+  if (minutes < 60) return minutes <= 1 ? 'Just now' : `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+  const days = Math.round(hours / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return then.toLocaleDateString('en-GB', { weekday: 'long' });
+  return then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+/** What has already happened, newest first. Absent at personal altitude. */
+export function RecentActivityBlock({
+  items,
+  onPress,
+}: {
+  items: HomeActivityItem[];
+  onPress: (item: HomeActivityItem) => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  if (items.length === 0) return null;
+
+  return (
+    <View style={styles.block}>
+      <SectionHeader label="Recent activity" />
+      <Card padding="none" style={styles.taskCard}>
+        {items.map((item, index) => (
+          <Pressable
+            key={`${item.kind}:${item.id}`}
+            onPress={() => onPress(item)}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            style={[styles.taskRow, index > 0 && styles.taskRowDivided]}
+          >
+            <View
+              style={[
+                styles.rowDot,
+                {
+                  backgroundColor:
+                    item.kind === 'membership_graduated' ? c.gold : c.primary,
+                },
+              ]}
+            />
+            <View style={styles.rowBody}>
+              <Text style={styles.taskTitle}>{item.title}</Text>
+              <Text style={styles.rowSubtitle} numberOfLines={1}>
+                {[whenLabel(item.at), item.subtitle].filter(Boolean).join(' · ')}
               </Text>
             </View>
             <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />

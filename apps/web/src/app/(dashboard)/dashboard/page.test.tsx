@@ -69,6 +69,7 @@ function home(overrides: Partial<MeHomeResponse> = {}): MeHomeResponse {
     needsYou: [],
     pulse: null,
     groups: [],
+    recentActivity: [],
     gettingStarted: [],
     streakWeeks: null,
     ...overrides,
@@ -252,6 +253,45 @@ describe('DashboardPage — needs you', () => {
   it('is absent entirely when nothing is waiting', () => {
     render(<DashboardPage />, { wrapper });
     expect(screen.queryByText('Needs you')).not.toBeInTheDocument();
+  });
+});
+
+describe('DashboardPage — recent activity', () => {
+  it('renders the feed from the payload with a relative timestamp', async () => {
+    homeState = {
+      data: home({
+        altitude: 'branch',
+        recentActivity: [
+          {
+            kind: 'membership_graduated',
+            id: 'en-1',
+            title: 'Ada Okoro completed the membership class',
+            subtitle: 'Kharis London',
+            at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            refs: { memberId: 'm-1' },
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
+    };
+    render(<DashboardPage />, { wrapper });
+    const link = screen.getByRole('link', {
+      name: /Ada Okoro completed the membership class/,
+    });
+    expect(link).toHaveAttribute('href', '/members/m-1');
+    expect(screen.getByText('2 hours ago · Kharis London')).toBeInTheDocument();
+  });
+
+  it('shows an empty state rather than disappearing', () => {
+    homeState = { data: home({ altitude: 'branch' }), isLoading: false, isError: false };
+    render(<DashboardPage />, { wrapper });
+    expect(screen.getByText('Nothing in the last two weeks.')).toBeInTheDocument();
+  });
+
+  it('is absent entirely at personal altitude', () => {
+    render(<DashboardPage />, { wrapper });
+    expect(screen.queryByText('Recent activity')).not.toBeInTheDocument();
   });
 });
 

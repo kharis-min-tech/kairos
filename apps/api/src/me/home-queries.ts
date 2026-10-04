@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc, isNull } from 'drizzle-orm';
+import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc, isNull, isNotNull } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   services,
@@ -14,8 +14,12 @@ import {
   branchLeadership,
   members,
   membershipInterest,
+  membershipEnrollments,
+  formSubmissions,
+  souls,
+  outreachPrograms,
 } from '@kairos/database';
-import type { AuthContext, HomeGroupSummary } from '@kairos/types';
+import type { AuthContext, HomeActivityItem, HomeGroupSummary } from '@kairos/types';
 
 /**
  * The reads behind GET /api/me/home that don't already exist elsewhere.
@@ -597,4 +601,260 @@ export async function getBranchMainPastorName(
   const row = rows[0];
   if (!row) return null;
   return `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim() || null;
+}
+
+// ── Recent activity ────────────────────────────────────────
+
+/** How far back the feed looks. Beyond this it stops being "recent". */
+const ACTIVITY_LOOKBACK_DAYS = 14;
+
+/** Rows pulled per source before the merge; the merged feed is capped below. */
+const ACTIVITY_PER_SOURCE = 6;
+
+/** Rows returned to the client. */
+const ACTIVITY_LIMIT = 6;
+
+const FORM_TYPE_LABEL: Record<string, string> = {
+  first_time_visitor: 'First-time visitor',
+  altar_call: 'Altar call',
+  baptism: 'Baptism',
+  testimony: 'Testimony',
+  baby_naming: 'Baby naming',
+  baby_dedication: 'Baby dedication',
+};
+
+function formLabel(formType: string): string {
+  return (
+    FORM_TYPE_LABEL[formType] ??
+    formType.replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase())
+  );
+}
+
+/**
+ * What has happened lately, in the caller's reach.
+ *
+ * Five sources, each queried in parallel and capped, then merged and sorted so
+ * no single busy source can crowd the others out. Scope is enforced per query
+ * rather than filtered afterwards — a fellowship leader must never be handed
+ * branch-wide rows and trusted not to render them.
+ */
+export async function listRecentActivity(
+  db: Database,
+  auth: AuthContext,
+  altitude: 'church' | 'branch' | 'group' | 'personal',
+): Promise<HomeActivityItem[]> {
+  // A plain member has no community feed — nothing here is theirs to see.
+  if (altitude === 'personal') return [];
+
+  const since = new Date(Date.now() - ACTIVITY_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+  const items: HomeActivityItem[] = [];
+
+  // A group leader sees their own groups' meetings and nothing else.
+  if (altitude === 'group') {
+    const led = await db
+      .select({ id: fellowships.id })
+      .from(fellowships)
+      .where(
+        and(
+          eq(fellowships.isActive, true),
+          or(
+            eq(fellowships.leaderId, auth.memberId),
+            eq(fellowships.coLeaderId, auth.memberId),
+          )!,
+        ),
+      );
+    const ledIds = led.map((f) => f.id);
+    if (ledIds.length === 0) return [];
+
+    const meetings = await db
+      .select({
+        id: fellowshipMeetings.id,
+        fellowshipId: fellowships.id,
+        fellowshipName: fellowships.fellowshipName,
+        meetingDate: fellowshipMeetings.meetingDate,
+      })
+      .from(fellowshipMeetings)
+      .innerJoin(fellowships, eq(fellowshipMeetings.fellowshipId, fellowships.id))
+      .where(
+        and(
+          inArray(fellowshipMeetings.fellowshipId, ledIds),
+          lt(fellowshipMeetings.meetingDate, new Date()),
+          gte(fellowshipMeetings.meetingDate, since),
+        ),
+      )
+      .orderBy(desc(fellowshipMeetings.meetingDate))
+      .limit(ACTIVITY_LIMIT);
+
+    return meetings.map((m) => ({
+      kind: 'fellowship_met' as const,
+      id: m.id,
+      title: `${m.fellowshipName} met`,
+      subtitle: null,
+      at: (m.meetingDate as Date).toISOString(),
+      refs: { fellowshipId: m.fellowshipId, meetingId: m.id },
+    }));
+  }
+
+  // `undefined` means church altitude — every branch.
+  const branchId = altitude === 'branch' ? auth.branchId : undefined;
+
+  const [joined, forms, graduated, met, reached] = await Promise.all([
+    db
+      .select({
+        id: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        createdAt: members.createdAt,
+        branchName: branches.branchName,
+      })
+      .from(members)
+      .leftJoin(branches, eq(members.homeBranchId, branches.id))
+      .where(
+        and(
+          eq(members.isActive, true),
+          gte(members.createdAt, since),
+          branchId ? eq(members.homeBranchId, branchId) : undefined,
+        ),
+      )
+      .orderBy(desc(members.createdAt))
+      .limit(ACTIVITY_PER_SOURCE),
+
+    db
+      .select({
+        id: formSubmissions.id,
+        formType: formSubmissions.formType,
+        createdAt: formSubmissions.createdAt,
+        branchName: branches.branchName,
+      })
+      .from(formSubmissions)
+      .leftJoin(branches, eq(formSubmissions.branchId, branches.id))
+      .where(
+        and(
+          gte(formSubmissions.createdAt, since),
+          branchId ? eq(formSubmissions.branchId, branchId) : undefined,
+        ),
+      )
+      .orderBy(desc(formSubmissions.createdAt))
+      .limit(ACTIVITY_PER_SOURCE),
+
+    db
+      .select({
+        id: membershipEnrollments.id,
+        memberId: membershipEnrollments.memberId,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        graduatedAt: membershipEnrollments.graduatedAt,
+        branchName: branches.branchName,
+      })
+      .from(membershipEnrollments)
+      .innerJoin(members, eq(membershipEnrollments.memberId, members.id))
+      .leftJoin(branches, eq(membershipEnrollments.branchId, branches.id))
+      .where(
+        and(
+          isNotNull(membershipEnrollments.graduatedAt),
+          gte(membershipEnrollments.graduatedAt, since),
+          branchId ? eq(membershipEnrollments.branchId, branchId) : undefined,
+        ),
+      )
+      .orderBy(desc(membershipEnrollments.graduatedAt))
+      .limit(ACTIVITY_PER_SOURCE),
+
+    db
+      .select({
+        id: fellowshipMeetings.id,
+        fellowshipId: fellowships.id,
+        fellowshipName: fellowships.fellowshipName,
+        meetingDate: fellowshipMeetings.meetingDate,
+      })
+      .from(fellowshipMeetings)
+      .innerJoin(fellowships, eq(fellowshipMeetings.fellowshipId, fellowships.id))
+      .where(
+        and(
+          eq(fellowships.isActive, true),
+          lt(fellowshipMeetings.meetingDate, new Date()),
+          gte(fellowshipMeetings.meetingDate, since),
+          branchId ? eq(fellowships.branchId, branchId) : undefined,
+        ),
+      )
+      .orderBy(desc(fellowshipMeetings.meetingDate))
+      .limit(ACTIVITY_PER_SOURCE),
+
+    db
+      .select({
+        id: souls.id,
+        firstName: souls.firstName,
+        lastName: souls.lastName,
+        createdAt: souls.createdAt,
+        programName: outreachPrograms.programName,
+      })
+      .from(souls)
+      .innerJoin(outreachPrograms, eq(souls.outreachId, outreachPrograms.id))
+      .where(
+        and(
+          gte(souls.createdAt, since),
+          branchId ? eq(outreachPrograms.branchId, branchId) : undefined,
+        ),
+      )
+      .orderBy(desc(souls.createdAt))
+      .limit(ACTIVITY_PER_SOURCE),
+  ]);
+
+  for (const r of joined) {
+    items.push({
+      kind: 'member_joined',
+      id: r.id,
+      title: `${r.firstName} ${r.lastName} registered`,
+      subtitle: r.branchName,
+      at: (r.createdAt as Date).toISOString(),
+      refs: { memberId: r.id },
+    });
+  }
+
+  for (const r of forms) {
+    items.push({
+      kind: 'form_submitted',
+      id: r.id,
+      title: `${formLabel(r.formType)} form submitted`,
+      subtitle: r.branchName,
+      at: (r.createdAt as Date).toISOString(),
+      refs: {},
+    });
+  }
+
+  for (const r of graduated) {
+    items.push({
+      kind: 'membership_graduated',
+      id: r.id,
+      title: `${r.firstName} ${r.lastName} completed the membership class`,
+      subtitle: r.branchName,
+      at: (r.graduatedAt as Date).toISOString(),
+      refs: { memberId: r.memberId },
+    });
+  }
+
+  for (const r of met) {
+    items.push({
+      kind: 'fellowship_met',
+      id: r.id,
+      title: `${r.fellowshipName} met`,
+      subtitle: null,
+      at: (r.meetingDate as Date).toISOString(),
+      refs: { fellowshipId: r.fellowshipId, meetingId: r.id },
+    });
+  }
+
+  for (const r of reached) {
+    items.push({
+      kind: 'soul_captured',
+      id: r.id,
+      title: `${r.firstName} ${r.lastName} was reached`,
+      subtitle: r.programName,
+      at: (r.createdAt as Date).toISOString(),
+      refs: {},
+    });
+  }
+
+  return items
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, ACTIVITY_LIMIT);
 }

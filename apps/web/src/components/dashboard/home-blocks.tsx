@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type {
+  HomeActivityItem,
   HomeAgendaItem,
   HomeGettingStartedItem,
   HomeGroupSummary,
@@ -314,6 +315,72 @@ export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[]
             </Link>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+export function hrefForActivity(item: HomeActivityItem): string {
+  switch (item.kind) {
+    case 'member_joined':
+    case 'membership_graduated':
+      return `/members/${item.refs.memberId}`;
+    case 'fellowship_met':
+      return `/fellowships/${item.refs.fellowshipId}`;
+    case 'form_submitted':
+      return '/forms/submissions';
+    case 'soul_captured':
+      return '/souls';
+  }
+}
+
+/** "2 hours ago", "Yesterday", "Tue" — recency is the point, not the clock. */
+function whenLabel(iso: string): string {
+  const then = new Date(iso);
+  const minutes = Math.round((Date.now() - then.getTime()) / 60000);
+  if (minutes < 60) return minutes <= 1 ? 'Just now' : `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+  const days = Math.round(hours / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return then.toLocaleDateString('en-GB', { weekday: 'long' });
+  return then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+/** What has already happened, newest first. Empty at personal altitude. */
+export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {
+  return (
+    <section>
+      <SectionLabel>Recent activity</SectionLabel>
+      <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
+        {items.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-muted-foreground/70">
+            Nothing in the last two weeks.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {items.map((item) => (
+              <Link
+                key={`${item.kind}:${item.id}`}
+                href={hrefForActivity(item)}
+                className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.04]"
+              >
+                <span
+                  aria-hidden
+                  className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                    item.kind === 'membership_graduated' ? 'bg-[#f8b537]' : 'bg-[#5D3FD3]'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-snug text-foreground">{item.title}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground/70">
+                    {[whenLabel(item.at), item.subtitle].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

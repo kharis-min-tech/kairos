@@ -13,6 +13,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import type {
+  HomeActivityItem,
   HomeAgendaItem,
   HomeGettingStartedItem,
   HomeGroupSummary,
@@ -29,6 +30,7 @@ import {
   HomeSkeleton,
   NeedsYouBlock,
   PulseBlock,
+  RecentActivityBlock,
   StreakBlock,
 } from '@/components/home-blocks';
 
@@ -123,6 +125,24 @@ export default function Home() {
     else router.push('/profile');
   }
 
+  function openActivity(item: HomeActivityItem) {
+    switch (item.kind) {
+      case 'member_joined':
+      case 'membership_graduated':
+        router.push(`/members/${item.refs.memberId}` as never);
+        return;
+      case 'fellowship_met':
+        router.push(`/fellowships/${item.refs.fellowshipId}` as never);
+        return;
+      case 'form_submitted':
+        router.push('/forms/submissions' as never);
+        return;
+      case 'soul_captured':
+        router.push('/souls' as never);
+        return;
+    }
+  }
+
   function openWarning(warning: HomePulseWarning) {
     if (warning.kind === 'members_drifting') router.push('/reports/missing-members' as never);
     else if (warning.kind === 'attendance_unrecorded') router.push('/attendance' as never);
@@ -145,6 +165,9 @@ export default function Home() {
   const pulseBlock = data?.pulse ? (
     <PulseBlock pulse={data.pulse} onWarningPress={openWarning} />
   ) : null;
+  const activityBlock = (
+    <RecentActivityBlock items={data?.recentActivity ?? []} onPress={openActivity} />
+  );
   const tailBlock = (
     <GroupsBlock
       label={altitude === 'church' ? 'All branches' : 'My groups'}
@@ -204,6 +227,7 @@ export default function Home() {
             {pulseBlock}
             {queueBlock}
             {tailBlock}
+            {activityBlock}
             {agendaBlocks}
           </>
         ) : (
@@ -222,6 +246,7 @@ export default function Home() {
               items={data?.gettingStarted ?? []}
               onPress={openGettingStarted}
             />
+            {activityBlock}
           </>
         )}
 
