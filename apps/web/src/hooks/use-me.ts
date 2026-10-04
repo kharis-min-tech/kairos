@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { DeleteAccountRequest, MeLeadershipResponse } from '@kairos/types';
+import type { DeleteAccountRequest, MeHomeResponse, MeLeadershipResponse } from '@kairos/types';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { buildDataExportHtml } from '@/lib/data-export-html';
@@ -19,6 +19,26 @@ export function useMyRota(params?: MyRotaParams) {
       const res = await api.me.rota(params);
       return res.data!;
     },
+  });
+}
+
+/**
+ * The control-centre payload. One request for the whole page — agenda, the
+ * queue of things waiting on the caller, the pulse numbers and the tail —
+ * arranged server-side by altitude so the client holds no role logic.
+ *
+ * Shared with the mobile home screen; items carry ids rather than routes, so
+ * the route mapping lives in the page.
+ */
+export function useMeHome() {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  return useQuery<MeHomeResponse>({
+    queryKey: ['me', 'home'],
+    queryFn: async () => {
+      const res = await api.me.home();
+      return res.data!;
+    },
+    enabled: !!accessToken,
   });
 }
 
