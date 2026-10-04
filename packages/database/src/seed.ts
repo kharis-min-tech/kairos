@@ -602,8 +602,12 @@ async function seed() {
     { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
     { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
     { departmentName: 'Admin', description: 'Branch operations: operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
+    // Owns the follow-up of first-timers and of members who aren't in any
+    // group yet. Distinct from Host Team, which greets guests on the day —
+    // this team makes contact during the week.
+    { departmentName: 'Follow-Up Team', description: 'Contacts first-timers after their visit and members who are not yet in a fellowship or department', iconKey: 'phone' },
   ]).returning();
-  console.log(`✓ 14 global departments`);
+  console.log(`✓ 15 global departments`);
 
   // ── 4c. Branch Departments (smoke seed: 4 active instances) ─
   const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon, adminLondon, /* adminManchester */, /* adminAccra */] = await db.insert(branchDepartments).values([
@@ -1678,6 +1682,9 @@ async function seed() {
     { branch: kumasi!,     deptName: 'Admin',             lead: findExtra('adjoa.antwi@kairos.local'),       description: 'Kumasi admin desk.' },
     { branch: freetown!,   deptName: 'Choir',             lead: findExtra('adama.turay@kairos.local'),       description: 'Freetown choir.' },
     { branch: freetown!,   deptName: 'Admin',             lead: freetownElder,                               description: 'Freetown admin desk.' },
+    // Follow-up teams — the owners of first-timer and no-group follow-ups.
+    { branch: london!,     deptName: 'Follow-Up Team',    lead: leaderSarah!,                                description: 'London follow-up team: first-timers and members not yet in a group.' },
+    { branch: manchester!, deptName: 'Follow-Up Team',    lead: manchesterElder,                             description: 'Manchester follow-up team.' },
   ];
   const newBranchDepts = await db.insert(branchDepartments).values(
     newBranchDeptSpecs.map((s) => ({
