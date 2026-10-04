@@ -168,7 +168,7 @@ export default function Home() {
   ) : null;
   const tailBlock = (
     <GroupsBlock
-      label={altitude === 'church' ? 'Branches' : 'My groups'}
+      label={altitude === 'church' ? 'All branches' : 'My groups'}
       groups={data?.groups ?? []}
       onPress={openGroup}
     />

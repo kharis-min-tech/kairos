@@ -1,74 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import type { MeHomeResponse } from '@kairos/types';
 
-// ── Mutable mock state ─────────────────────────────────────
+// The page holds no role logic — `altitude` in the payload decides what
+// renders. These tests drive the payload and assert the arrangement, which is
+// what the old seven-way persona cascade used to decide in the component.
 
-type LeadershipFixture = {
-  branchSystemAdminBranchIds: string[];
-  branchDataAdminBranchIds: string[];
-  leadFellowships: Array<{ id: string; fellowshipName: string; branchId: string }>;
-  coLeadFellowships: Array<{ id: string; fellowshipName: string; branchId: string }>;
-  leadDepartments: Array<{ id: string; departmentName: string; branchId: string }>;
-  deputyDepartments: Array<{ id: string; departmentName: string; branchId: string }>;
+let authState = {
+  user: { firstName: 'Grace', homeBranchId: 'b-1' } as Record<string, unknown> | null,
+  activeRole: 'member' as string | null,
+  scope: null as { kind: string; id: string } | null,
+  setScope: vi.fn(),
 };
-
-const emptyLeadership: LeadershipFixture = {
-  branchSystemAdminBranchIds: [],
-  branchDataAdminBranchIds: [],
-  leadFellowships: [],
-  coLeadFellowships: [],
-  leadDepartments: [],
-  deputyDepartments: [],
-};
-
-type Scope =
-  | { kind: 'branch'; id: string }
-  | { kind: 'fellowship'; id: string }
-  | { kind: 'department'; id: string }
-  | null;
-
-let authState: {
-  user: { id: string; firstName: string; homeBranchId?: string } | null;
-  activeRole: string | null;
-  scope: Scope;
-  branchSystemAdminBranchIds: string[];
-  branchDataAdminBranchIds: string[];
-  setBranchAdminAuthority: (a: unknown) => void;
-} = {
-  user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
-  activeRole: 'member',
-  scope: null,
-  branchSystemAdminBranchIds: [],
-  branchDataAdminBranchIds: [],
-  setBranchAdminAuthority: vi.fn(),
-};
-
-let leadershipData: LeadershipFixture | null = emptyLeadership;
-let leadershipLoading = false;
-
-const branches = [
-  { id: 'b-1', branchName: 'London' },
-  { id: 'b-2', branchName: 'Accra' },
-];
-
-// ── Mocks ──────────────────────────────────────────────────
-
-vi.mock('next/link', () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>{children}</a>
-  ),
-}));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    back: vi.fn(),
-    prefetch: vi.fn(),
-  }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock('@/lib/auth-store', () => ({
@@ -76,78 +24,34 @@ vi.mock('@/lib/auth-store', () => ({
     selector ? selector(authState) : (authState as unknown as T),
 }));
 
+vi.mock('@/hooks/use-capabilities', () => ({
+  useCapabilities: () => ({ has: () => false }),
+}));
+
+let homeState: {
+  data: MeHomeResponse | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error?: unknown;
+} = { data: undefined, isLoading: false, isError: false };
+
+const refetch = vi.fn();
+
 vi.mock('@/hooks/use-me', () => ({
-  useMyLeadership: () => ({ data: leadershipData, isLoading: leadershipLoading, isSuccess: !leadershipLoading }),
-}));
-
-vi.mock('@/hooks/use-dashboard', () => ({
-  useAdminDashboard: () => ({
-    data: {
-      totalBranches: 3,
-      totalRoll: 60,
-      memberBreakdown: { members: 42, returners: 10, visitors: 6, children: 2 },
-      totalMembers: 42,
-      totalFellowships: 7,
-      pendingApprovals: 2,
-      membersByApproval: [{ status: 'pending', count: 2 }],
-    },
-    isLoading: false,
-  }),
-  useBranchDashboard: () => ({
-    data: {
-      totalRoll: 20,
-      memberBreakdown: { members: 12, returners: 5, visitors: 2, children: 1 },
-      totalMembers: 12,
-      totalFellowships: 3,
-      recentMeetings: 4,
-      pendingApprovals: 1,
-    },
-    isLoading: false,
-  }),
-  useMemberDashboard: () => ({
-    data: {
-      fellowshipsJoined: 1,
-      fellowships: [{ fellowshipId: 'f-1', fellowshipName: 'Youth', fellowshipType: 'youth' }],
-      recentAttendance: { total: 4, present: 3, late: 0, absent: 1, rate: 75 },
-    },
-    isLoading: false,
-  }),
-}));
-
-vi.mock('@/hooks/use-members', () => ({
-  useMembers: () => ({ data: { data: [], meta: { total: 0 } } }),
+  useMeHome: () => ({ ...homeState, refetch }),
+  useMyLeadership: () => ({ data: undefined }),
 }));
 
 vi.mock('@/hooks/use-branches', () => ({
-  useBranches: () => ({ data: branches, isLoading: false }),
+  useBranches: () => ({ data: [] }),
+}));
+
+vi.mock('@/hooks/use-members', () => ({
+  useMembers: () => ({ data: { data: [] } }),
 }));
 
 vi.mock('@/hooks/use-fellowships', () => ({
   useFellowships: () => ({ data: { data: [] } }),
-}));
-
-vi.mock('@/hooks/use-reports', () => ({
-  useMemberGrowth: () => ({ data: [], isLoading: false }),
-  useAttendanceTrend: () => ({ data: [], isLoading: false }),
-}));
-
-vi.mock('@/hooks/use-attendance', () => ({
-  useMyAttendance: () => ({
-    data: {
-      rate: 0,
-      servicesInWindow: 0,
-      attendedCount: 0,
-      currentStreak: { length: 0, kind: 'attended' },
-    },
-    isLoading: false,
-  }),
-  useAttendanceSummary: () => ({ data: null, isLoading: false }),
-  useAttendanceByBranch: () => ({ data: [], isLoading: false }),
-}));
-
-vi.mock('@/hooks/use-new-believers', () => ({
-  useNewBelieversHealth: () => ({ data: null, isLoading: false }),
-  useEnrollments: () => ({ data: { data: [] }, isLoading: false }),
 }));
 
 import DashboardPage from './page';
@@ -157,242 +61,234 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 }
 
-function resetState() {
-  authState = {
-    user: { id: 'u-1', firstName: 'Pat', homeBranchId: 'b-1' },
-    activeRole: 'member',
-    scope: null,
-    branchSystemAdminBranchIds: [],
-    branchDataAdminBranchIds: [],
-    setBranchAdminAuthority: vi.fn(),
+function home(overrides: Partial<MeHomeResponse> = {}): MeHomeResponse {
+  return {
+    altitude: 'personal',
+    today: [],
+    thisWeek: [],
+    needsYou: [],
+    pulse: null,
+    groups: [],
+    gettingStarted: [],
+    streakWeeks: null,
+    ...overrides,
   };
-  leadershipData = emptyLeadership;
-  leadershipLoading = false;
 }
 
-describe('DashboardPage — role-label fork', () => {
-  beforeEach(resetState);
+beforeEach(() => {
+  vi.clearAllMocks();
+  authState = {
+    user: { firstName: 'Grace', homeBranchId: 'b-1' },
+    activeRole: 'member',
+    scope: null,
+    setScope: vi.fn(),
+  };
+  homeState = { data: home(), isLoading: false, isError: false };
+});
 
-  it('shows "Administrator" for system admin', () => {
-    authState.activeRole = 'admin';
+describe('DashboardPage — states', () => {
+  it('shows a skeleton while the single home request is in flight', () => {
+    homeState = { data: undefined, isLoading: true, isError: false };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Administrator')).toBeInTheDocument();
-  });
-  it('shows "Branch System Admin, {branch}" when caller is BSA at home branch', () => {
-    authState.activeRole = 'leader';
-    leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-1'] };
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Branch System Admin, London')).toBeInTheDocument();
-  });
-
-  it('shows "Branch Data Admin" when BDA only (no BSA)', () => {
-    authState.activeRole = 'leader';
-    leadershipData = { ...emptyLeadership, branchDataAdminBranchIds: ['b-1'] };
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Branch Data Admin, London')).toBeInTheDocument();
+    expect(screen.getByText('Good day, Grace!')).toBeInTheDocument();
+    expect(document.querySelector('[aria-busy="true"]')).toBeTruthy();
   });
 
-  it('shows "Fellowship Leader, {name}" for a fellowship-only leader', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
+  it('surfaces the API message and a retry on failure', () => {
+    homeState = {
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error('Upstream unavailable'),
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Fellowship Leader, Youth')).toBeInTheDocument();
-  });
-
-  it('shows "Department Lead, {name}" for a department-only leader', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
-    };
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Department Lead, Worship')).toBeInTheDocument();
-  });
-
-  it('shows "Fellowship & Department Lead" for the dual case', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
-    };
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Fellowship & Department Lead')).toBeInTheDocument();
-  });
-
-  it('shows "Member" for a plain member with no leadership', () => {
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Member')).toBeInTheDocument();
+    expect(screen.getByText('Upstream unavailable')).toBeInTheDocument();
+    screen.getByRole('button', { name: 'Retry' }).click();
+    expect(refetch).toHaveBeenCalled();
   });
 });
 
-describe('DashboardPage — stats fork', () => {
-  beforeEach(resetState);
-
-  it('renders AdminStats (Total Branches card) for system admin', () => {
-    authState.activeRole = 'admin';
+describe('DashboardPage — altitude decides the arrangement', () => {
+  it('a plain member gets no pulse', () => {
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('Total Branches')).toBeInTheDocument();
+    expect(screen.queryByText('Branch pulse')).not.toBeInTheDocument();
+    expect(screen.queryByText('Church pulse')).not.toBeInTheDocument();
   });
 
-  it('renders BranchAdminStats (Branch Admin chip + branch members card) for branch admin', () => {
-    authState.activeRole = 'leader';
-    leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-1'] };
-    render(<DashboardPage />, { wrapper });
-    // Chip
-    expect(screen.getByText('Branch Admin')).toBeInTheDocument();
-    // PastorStats-style card
-    expect(screen.getAllByText(/Branch Congregation|Branch Members/i).length).toBeGreaterThan(0);
-  });
-  it('renders FellowshipStats for fellowship-only leader', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
+  it('a plain member gets the getting-started prompts and their streak', () => {
+    homeState = {
+      data: home({
+        streakWeeks: 7,
+        gettingStarted: [{ key: 'join_fellowship', title: 'Join a fellowship' }],
+      }),
+      isLoading: false,
+      isError: false,
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('My Fellowships')).toBeInTheDocument();
-    expect(screen.getAllByText('Youth').length).toBeGreaterThan(0);
+    expect(screen.getByText('Join a fellowship')).toBeInTheDocument();
+    expect(screen.getByText('7 weeks running')).toBeInTheDocument();
   });
 
-  it('renders DepartmentStats for department-only leader', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+  it('branch altitude renders the branch pulse with its metrics', () => {
+    homeState = {
+      data: home({
+        altitude: 'branch',
+        pulse: {
+          scope: 'branch',
+          scopeLabel: 'This branch',
+          metrics: [
+            { key: 'congregation', label: 'Total congregation', value: 1204, delta: null },
+            { key: 'attendance_rate', label: 'Attendance last week', value: 71, delta: '−4% vs 4wk' },
+          ],
+          warnings: [],
+        },
+      }),
+      isLoading: false,
+      isError: false,
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('My Departments')).toBeInTheDocument();
-    expect(screen.getAllByText('Worship').length).toBeGreaterThan(0);
+    expect(screen.getByText('Branch pulse')).toBeInTheDocument();
+    expect(screen.getByText('1,204')).toBeInTheDocument();
+    expect(screen.getByText('−4% vs 4wk')).toBeInTheDocument();
   });
 
-  it('renders DualLeaderTabs with both panels reachable when caller is dual lead', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
+  it('church altitude labels the tail block Branches', () => {
+    homeState = {
+      data: home({
+        altitude: 'church',
+        pulse: {
+          scope: 'church',
+          scopeLabel: 'Church-wide',
+          metrics: [{ key: 'branches', label: 'Branches', value: 12, delta: null }],
+          warnings: [],
+        },
+        groups: [
+          { kind: 'branch', id: 'b-1', name: 'London', headcount: 412, lastPresent: 412, lastTotal: null },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
     };
     render(<DashboardPage />, { wrapper });
-    // Tab bar present (Tabs primitive renders role="tab" per ARIA APG).
-    const fellowshipTab = screen.getByRole('tab', { name: 'My Fellowship' });
-    const departmentTab = screen.getByRole('tab', { name: 'My Department' });
-    expect(fellowshipTab).toBeInTheDocument();
-    expect(departmentTab).toBeInTheDocument();
-    // Default tab — Fellowship panel
-    expect(screen.getByText('My Fellowships')).toBeInTheDocument();
-    // Switch to Department panel
-    fireEvent.click(departmentTab);
-    expect(screen.getByText('My Departments')).toBeInTheDocument();
+    expect(screen.getByText('Church pulse')).toBeInTheDocument();
+    expect(screen.getByText('All branches')).toBeInTheDocument();
+    expect(screen.getByText('London')).toBeInTheDocument();
   });
 
-  it('renders MemberStats for plain member', () => {
+  it('group altitude labels the tail block My groups and still has no pulse', () => {
+    homeState = {
+      data: home({
+        altitude: 'group',
+        groups: [
+          {
+            kind: 'fellowship',
+            id: 'f-1',
+            name: 'Grace Fellowship',
+            headcount: 24,
+            lastPresent: 18,
+            lastTotal: 24,
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
+    };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getAllByText('My Fellowships').length).toBeGreaterThan(0);
-    expect(screen.getByText('Attendance Rate')).toBeInTheDocument();
+    expect(screen.getByText('My groups')).toBeInTheDocument();
+    expect(screen.getByText('24 members · last 18/24')).toBeInTheDocument();
+    expect(screen.queryByText('Branch pulse')).not.toBeInTheDocument();
   });
 });
 
-describe('DashboardPage — Pending Approvals visibility', () => {
-  beforeEach(resetState);
-
-  // Only the StatCard now — the right-rail duplicate panel was removed in
-  // 2026-09-30. AdminStats / PastorStats / BranchAdminStats each render their
-  // own StatCard that routes to /members/approval on click.
-
-  it('shows the StatCard for system admin', () => {
-    authState.activeRole = 'admin';
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getAllByText('Pending Approvals').length).toBe(1);
-  });
-
-  it('shows the StatCard for branch admin', () => {
-    authState.activeRole = 'leader';
-    leadershipData = { ...emptyLeadership, branchDataAdminBranchIds: ['b-1'] };
-    render(<DashboardPage />, { wrapper });
-    expect(screen.getAllByText('Pending Approvals').length).toBe(1);
-  });
-
-  it('hides for a fellowship-only leader (no branch authority)', () => {
-    authState.activeRole = 'leader';
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'Youth', branchId: 'b-1' }],
+describe('DashboardPage — needs you', () => {
+  it('renders a counted task row and links it to the web route', () => {
+    homeState = {
+      data: home({
+        altitude: 'branch',
+        needsYou: [
+          {
+            kind: 'member_approval',
+            id: 'member_approval',
+            title: '3 member approvals',
+            subtitle: null,
+            count: 3,
+            urgency: 'normal',
+            refs: {},
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.queryByText('Pending Approvals')).not.toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /3 member approvals/ });
+    expect(link).toHaveAttribute('href', '/members/approval');
   });
 
-  it('hides for plain member', () => {
+  it('routes a missing register to the fellowship page — web has no register route', () => {
+    homeState = {
+      data: home({
+        altitude: 'group',
+        needsYou: [
+          {
+            kind: 'register_missing',
+            id: 'mtg-1',
+            title: 'Register not taken',
+            subtitle: 'Grace Fellowship · Thu 2 Oct',
+            count: 1,
+            urgency: 'high',
+            refs: { fellowshipId: 'f-1', meetingId: 'mtg-1' },
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
+    };
     render(<DashboardPage />, { wrapper });
-    expect(screen.queryByText('Pending Approvals')).not.toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /Register not taken/ });
+    expect(link).toHaveAttribute('href', '/fellowships/f-1');
+  });
+
+  it('is absent entirely when nothing is waiting', () => {
+    render(<DashboardPage />, { wrapper });
+    expect(screen.queryByText('Needs you')).not.toBeInTheDocument();
   });
 });
 
-// ── Phase 4: scope-aware dashboard fork ──────────────────────────────
-//
-// /api/me/leadership now scope-filters its response server-side. The
-// dashboard reads that filtered shape, so it doesn't need extra logic to
-// pick the right fork. These tests stand in for the end-to-end:
-//   - The mocked leadership data here represents what the API would return
-//     for a scope-bound login (single fellowship / department / branch).
-//   - The dashboard renders the expected single-tier fork.
-//   - The role label honors the scope choice instead of falling back to
-//     dual-role labels.
-
-describe('DashboardPage — scope-aware fork', () => {
-  beforeEach(resetState);
-
-  it('fellowship-scoped login: renders FellowshipStats with ONLY the scoped fellowship, never DualLeaderTabs', () => {
-    authState.activeRole = 'leader';
-    authState.scope = { kind: 'fellowship', id: 'f-1' };
-    // Server-side scope filtering empties the department arrays.
-    leadershipData = {
-      ...emptyLeadership,
-      leadFellowships: [{ id: 'f-1', fellowshipName: 'K-Groups Central', branchId: 'b-1' }],
+describe('DashboardPage — agenda', () => {
+  it('shows today and this week separately', () => {
+    homeState = {
+      data: home({
+        today: [
+          {
+            kind: 'service',
+            id: 's-1',
+            title: 'Sunday Service',
+            subtitle: 'Kharis London',
+            at: '2026-10-04T10:00:00.000Z',
+            refs: { serviceId: 's-1' },
+          },
+        ],
+        thisWeek: [
+          {
+            kind: 'fellowship_meeting',
+            id: 'm-1',
+            title: 'Grace Fellowship',
+            subtitle: null,
+            at: '2026-10-08T19:00:00.000Z',
+            refs: { fellowshipId: 'f-1', meetingId: 'm-1' },
+          },
+        ],
+      }),
+      isLoading: false,
+      isError: false,
     };
     render(<DashboardPage />, { wrapper });
-
-    // Single-fellowship view — FellowshipStats card visible.
-    expect(screen.getByText('My Fellowships')).toBeInTheDocument();
-    expect(screen.getAllByText('K-Groups Central').length).toBeGreaterThan(0);
-    // No DualLeaderTabs.
-    expect(screen.queryByRole('tab', { name: 'My Department' })).not.toBeInTheDocument();
-    // Role label reflects the scope choice.
-    expect(screen.getByText('Fellowship Leader, K-Groups Central')).toBeInTheDocument();
-  });
-
-  it('department-scoped login: renders DepartmentStats with ONLY the scoped department', () => {
-    authState.activeRole = 'leader';
-    authState.scope = { kind: 'department', id: 'd-1' };
-    leadershipData = {
-      ...emptyLeadership,
-      leadDepartments: [{ id: 'd-1', departmentName: 'Worship', branchId: 'b-1' }],
-    };
-    render(<DashboardPage />, { wrapper });
-
-    expect(screen.getByText('My Departments')).toBeInTheDocument();
-    expect(screen.getAllByText('Worship').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('tab', { name: 'My Fellowship' })).not.toBeInTheDocument();
-    expect(screen.getByText('Department Lead, Worship')).toBeInTheDocument();
-  });
-
-  it('branch-scoped BSA login (activeRole=admin): renders BSA chip + branch-suffixed role label', () => {
-    // Per the picker contract in @kairos/types api.ts:
-    //   Branch System Admin → activeRole='admin', scope={branch:<branchId>}
-    authState.activeRole = 'admin';
-    authState.scope = { kind: 'branch', id: 'b-2' };
-    // The user holds BSA on the scoped branch (b-2). homeBranchId is b-1 —
-    // the role label should still suffix b-2 (Accra), not London.
-    leadershipData = { ...emptyLeadership, branchSystemAdminBranchIds: ['b-2'] };
-    render(<DashboardPage />, { wrapper });
-
-    // BranchAdminStats wins over AdminStats because isBranchAdmin is true.
-    expect(screen.getByText('Branch Admin')).toBeInTheDocument();
-    expect(screen.getAllByText(/Branch Congregation|Branch Members/i).length).toBeGreaterThan(0);
-    expect(screen.getByText('Branch System Admin, Accra')).toBeInTheDocument();
+    expect(screen.getByText('Today')).toBeInTheDocument();
+    expect(screen.getByText('This week')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Sunday Service/ })).toHaveAttribute(
+      'href',
+      '/attendance/s-1',
+    );
   });
 });

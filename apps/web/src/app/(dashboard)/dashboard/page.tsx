@@ -1,29 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
-import { useAdminDashboard, useBranchDashboard, useMemberDashboard } from '@/hooks/use-dashboard';
+import { useMeHome, useMyLeadership } from '@/hooks/use-me';
 import { useMembers } from '@/hooks/use-members';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
-import { useMemberGrowth, useAttendanceTrend } from '@/hooks/use-reports';
-import { useMyAttendance } from '@/hooks/use-attendance';
-import { useAttendanceSummary, useAttendanceByBranch } from '@/hooks/use-attendance';
-import { useNewBelieversHealth, useEnrollments } from '@/hooks/use-new-believers';
-import { useMyLeadership } from '@/hooks/use-me';
-import type { MeLeadershipFellowship, MeLeadershipDepartment, NewBelieverHealthSummary, NewBelieverEnrollmentWithMember } from '@kairos/types';
+import { CustomSelect } from '@kairos/ui';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  Tabs, TabsList, TabsTrigger, TabsContent,
-  CustomSelect,
-} from '@kairos/ui';
-import {
-  LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar,
-} from 'recharts';
+  AgendaBlock,
+  GettingStartedBlock,
+  GroupsBlock,
+  HomeSkeleton,
+  NeedsYouBlock,
+  PulseBlock,
+  StreakBlock,
+} from '@/components/dashboard/home-blocks';
+
+/**
+ * The control centre.
+ *
+ * One set of blocks for every lens. `altitude` from GET /api/me/home decides
+ * which blocks render and where — so adding a role never means adding a
+ * branch to this file. That replaced a seven-way persona cascade, each arm of
+ * which carried its own hard-coded stat row; the cascade was also why a
+ * fellowship leader saw branch-wide numbers (they fell through to the pastor
+ * arm). Scope now comes from the payload, which is derived from the caller's
+ * own grants.
+ *
+ * Mobile stacks the same blocks and reads priority top-down; here they're
+ * zones and priority is read by position and size.
+ */
 
 // ── Daily verses ───────────────────────────────────────────
 
@@ -38,1964 +47,175 @@ const DAILY_VERSES = [
 ];
 const getDailyVerse = () => DAILY_VERSES[new Date().getDay() % DAILY_VERSES.length]!;
 
-// ── Stat card ──────────────────────────────────────────────
+// ── Role label ─────────────────────────────────────────────
 
-/**
- * Member-roll breakdown the StatCard can render under the headline. Always
- * sums to the headline value when supplied.
- */
-type StatCardBreakdown = {
-  members: number;
-  returners: number;
-  visitors: number;
-  children: number;
-};
-
-function StatCard({ title, value, sub, icon, accent, onClick, breakdown }: {
-  title: string; value: string | number; sub?: string; icon: React.ReactNode;
-  accent: 'purple' | 'gold' | 'emerald' | 'rose'; onClick?: () => void;
-  breakdown?: StatCardBreakdown;
-}) {
-  const valueColor = { purple: 'text-[#a78bfa]', gold: 'text-[#f8b537]', emerald: 'text-emerald-400', rose: 'text-rose-400' }[accent];
-  const iconColor = { purple: 'text-[#a78bfa]/50', gold: 'text-[#f8b537]/50', emerald: 'text-emerald-400/50', rose: 'text-rose-400/50' }[accent];
-  const borderColor = { purple: 'border-primary/20', gold: 'border-[#f8b537]/20', emerald: 'border-emerald-400/20', rose: 'border-rose-400/20' }[accent];
-  const glowColor = { purple: 'shadow-primary/5', gold: 'shadow-[#f8b537]/10', emerald: 'shadow-emerald-400/10', rose: 'shadow-rose-400/10' }[accent];
-
-  return (
-    <div
-      className={`rounded-lg border ${borderColor} bg-card px-5 py-4 shadow-lg ${glowColor} ${onClick ? 'cursor-pointer hover:border-opacity-60 hover:bg-muted/80 transition-colors' : ''}`}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
-          <p className={`mt-2 text-4xl font-bold tracking-tight ${valueColor}`}>{value}</p>
-          {sub && !breakdown && <p className="mt-1 text-xs text-muted-foreground/70">{sub}</p>}
-          {breakdown && (
-            <div className="mt-3 grid grid-cols-4 gap-1 text-[10px]">
-              <BreakdownPill label="Members" value={breakdown.members} />
-              <BreakdownPill label="Returners" value={breakdown.returners} />
-              <BreakdownPill label="Visitors" value={breakdown.visitors} />
-              <BreakdownPill label="Children" value={breakdown.children} />
-            </div>
-          )}
-        </div>
-        <div className={`mt-1 ml-2 flex-shrink-0 ${iconColor}`}>{icon}</div>
-      </div>
-    </div>
-  );
-}
-
-function BreakdownPill({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex flex-col items-start rounded bg-muted/40 px-1.5 py-1">
-      <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
-      <span className="text-xs font-semibold text-foreground">{value.toLocaleString()}</span>
-    </div>
-  );
-}
-
-// ── Icons ──────────────────────────────────────────────────
-
-const BranchIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18l2.25 2.25m0 0l6-6 6 6 2.25-2.25M12 3.75l6 6v10.5M9.75 21V12h4.5V21" /></svg>;
-const MembersIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>;
-const FellowshipsIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>;
-const AlertIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>;
-const CalendarIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>;
-const CheckIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-
-// ── Stat skeletons ─────────────────────────────────────────
-
-function StatsSkeleton({ cols = 4 }: { cols?: number }) {
-  return (
-    <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-${cols}`}>
-      {Array.from({ length: cols }).map((_, i) => (
-        <div key={i} className="h-28 animate-pulse rounded-lg border border-border bg-card" />
-      ))}
-    </div>
-  );
-}
-
-// ── Role stat rows ─────────────────────────────────────────
-
-function AdminStats() {
-  const router = useRouter();
-  const { data, isLoading } = useAdminDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'branches' | 'members' | 'fellowships' | null>(null);
-
-  if (isLoading || !data) return <StatsSkeleton />;
-  // Prefer the dedicated pendingApprovals count (matches the /members?pending
-  // list). Fall back to the breakdown-derived value for older backends.
-  const pending = data.pendingApprovals ?? (data.membersByApproval.find(s => s.status === 'pending')?.count ?? 0);
-  return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Branches" value={data.totalBranches} sub="Active" accent="purple" icon={<BranchIcon />} onClick={() => setEvidenceOpen('branches')} />
-        <StatCard
-          title="Total Congregation"
-          value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()}
-          accent="emerald"
-          icon={<MembersIcon />}
-          onClick={() => setEvidenceOpen('members')}
-          breakdown={data.memberBreakdown}
-        />
-        <StatCard title="Total Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
-        {/* Pending Approvals routes straight to the approval queue rather than
-            opening a read-only evidence drawer — clicking a metric that names
-            actionable work should take the caller to the action. */}
-        <StatCard title="Pending Approvals" value={pending} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
-      </div>
-
-      {/* Evidence Dialogs */}
-      <AdminEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
-    </>
-  );
-}
-
-function AdminEvidenceDialog({ type, onClose }: { type: 'branches' | 'members' | 'fellowships' | null; onClose: () => void }) {
-  const { data: branchesData } = useBranches();
-  const { data: membersData } = useMembers({ limit: 100 });
-  const { data: fellowshipsData } = useFellowships({ page: 1, limit: 100 });
-
-  const allMembers = membersData?.data ?? [];
-  const allBranches = branchesData ?? [];
-  const allFellowships = fellowshipsData?.data ?? [];
-
-  const titles: Record<string, string> = {
-    branches: 'Total Branches: Evidence',
-    members: 'Total Members: Evidence',
-    fellowships: 'Total Fellowships: Evidence',
-  };
-
-  return (
-    <Dialog open={!!type} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">{type ? titles[type] : ''}</DialogTitle>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 pr-2">
-          {type === 'branches' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {allBranches.length} active branches</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Type</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allBranches.map((b, i) => (
-                    <tr key={b.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{b.branchName}</td>
-                      <td className="py-2 text-muted-foreground capitalize">{b.branchType?.replace(/_/g, ' ') ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground">{b.city ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'members' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {allMembers.length} active members</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Email</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allMembers.map((m, i) => (
-                    <tr key={m.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{m.firstName} {m.lastName}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.email ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.branchName ?? '—'}</td>
-                      <td className="py-2">
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          m.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-400' :
-                          m.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
-                          'bg-red-500/15 text-red-400'
-                        }`}>{m.approvalStatus}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'fellowships' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {allFellowships.length} active fellowships</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Fellowship Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Type</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Schedule</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allFellowships.map((f, i) => (
-                    <tr key={f.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{f.fellowshipName}</td>
-                      <td className="py-2 text-muted-foreground text-xs capitalize">{f.fellowshipType?.replace(/_/g, ' ') ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{f.branchName ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{f.meetingSchedule ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function PastorStats() {
-  const router = useRouter();
-  const { data, isLoading } = useBranchDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | null>(null);
-
-  if (isLoading || !data) return <StatsSkeleton />;
-  return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
-        <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
-        <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
-        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
-      </div>
-      <PastorEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
-    </>
-  );
-}
-
-function PastorEvidenceDialog({ type, onClose }: { type: 'members' | 'fellowships' | 'meetings' | null; onClose: () => void }) {
-  const branchId = useAuthStore((s) => s.user?.homeBranchId);
-  const { data: membersData } = useMembers({ branchId, limit: 100 });
-  const { data: fellowshipsData } = useFellowships({ page: 1, limit: 100, branchId });
-
-  const allMembers = membersData?.data ?? [];
-  const allFellowships = fellowshipsData?.data ?? [];
-
-  const titles: Record<string, string> = {
-    members: 'Branch Members: Evidence',
-    fellowships: 'Branch Fellowships: Evidence',
-    meetings: 'Recent Meetings (30 days): Evidence',
-  };
-
-  return (
-    <Dialog open={!!type} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">{type ? titles[type] : ''}</DialogTitle>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 pr-2">
-          {type === 'members' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {allMembers.length} branch members</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Email</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allMembers.map((m, i) => (
-                    <tr key={m.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{m.firstName} {m.lastName}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{m.email ?? '—'}</td>
-                      <td className="py-2">
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          m.approvalStatus === 'approved' ? 'bg-emerald-500/15 text-emerald-400' :
-                          m.approvalStatus === 'pending' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
-                          'bg-red-500/15 text-red-400'
-                        }`}>{m.approvalStatus}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'fellowships' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Showing all {allFellowships.length} branch fellowships</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Fellowship Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Type</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Schedule</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allFellowships.map((f, i) => (
-                    <tr key={f.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{f.fellowshipName}</td>
-                      <td className="py-2 text-muted-foreground text-xs capitalize">{f.fellowshipType?.replace(/_/g, ' ') ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{f.meetingSchedule ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'meetings' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Fellowships with recent meeting activity (last 30 days)</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Fellowship</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Type</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Schedule</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allFellowships.map((f, i) => (
-                    <tr key={f.id} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{f.fellowshipName}</td>
-                      <td className="py-2 text-muted-foreground text-xs capitalize">{f.fellowshipType?.replace(/_/g, ' ') ?? '—'}</td>
-                      <td className="py-2 text-muted-foreground text-xs">{f.meetingSchedule ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ── Branch admin stats ─────────────────────────────────────
-//
-// Visually identical to PastorStats — the distinction is the label upstream
-// and the small "Branch Admin" chip. Pulls from the same branch dashboard
-// endpoint (scoped to the caller's home branch by the API).
-
-function BranchAdminStats() {
-  const router = useRouter();
-  const { data, isLoading } = useBranchDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'members' | 'fellowships' | 'meetings' | null>(null);
-
-  if (isLoading || !data) return <StatsSkeleton />;
-  return (
-    <>
-      <div className="mb-2 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#a78bfa]">
-          Branch Admin
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Branch Congregation" value={(data.totalRoll ?? data.totalMembers ?? 0).toLocaleString()} accent="purple" icon={<MembersIcon />} onClick={() => setEvidenceOpen('members')} breakdown={data.memberBreakdown} />
-        <StatCard title="Fellowships" value={data.totalFellowships} sub="Scheduled" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
-        <StatCard title="Meetings (30d)" value={data.recentMeetings} sub="This month" accent="emerald" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
-        <StatCard title="Pending Approvals" value={data.pendingApprovals} sub="Requests" accent="rose" icon={<AlertIcon />} onClick={() => router.push('/members/approval')} />
-      </div>
-      <PastorEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} />
-    </>
-  );
-}
-
-// ── Fellowship-leader stats ────────────────────────────────
-//
-// For each fellowship the caller leads (or co-leads), surface the fellowship
-// name + a quick link. We keep this card cheap: no per-fellowship N+1 fetches —
-// detail lives one click away on /fellowships/{id}.
-
-function FellowshipStats({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {
-  if (fellowships.length === 0) {
-    return (
-      <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-lg shadow-primary/5">
-        <p className="text-sm text-muted-foreground">You don't currently lead any fellowships.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
-      <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">My Fellowships</p>
-        <Link href="/fellowships" className="text-xs font-medium text-[#a78bfa] hover:underline">All fellowships</Link>
-      </div>
-      <div className="divide-y divide-border">
-        {fellowships.map((f) => (
-          <div key={f.id} className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-foreground/4 transition-colors">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-[#5D3FD3]/20 text-[#a78bfa]">
-                <FellowshipsIcon />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{f.fellowshipName}</p>
-                <p className="text-xs text-muted-foreground">Fellowship lead</p>
-              </div>
-            </div>
-            <Link
-              href={`/fellowships/${f.id}`}
-              className="flex-shrink-0 rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors"
-            >
-              Open
-            </Link>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Department-lead stats ──────────────────────────────────
-
-function DepartmentStats({ departments }: { departments: MeLeadershipDepartment[] }) {
-  if (departments.length === 0) {
-    return (
-      <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-lg shadow-primary/5">
-        <p className="text-sm text-muted-foreground">You don't currently lead any departments.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
-      <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">My Departments</p>
-        <Link href="/departments" className="text-xs font-medium text-[#a78bfa] hover:underline">All departments</Link>
-      </div>
-      <div className="divide-y divide-border">
-        {departments.map((d) => (
-          <div key={d.id} className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-foreground/4 transition-colors">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-[#f8b537]/20 text-[#f8b537]">
-                <MembersIcon />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{d.departmentName}</p>
-                <p className="text-xs text-muted-foreground">Department lead</p>
-              </div>
-            </div>
-            <Link
-              href={`/departments/${d.id}`}
-              className="flex-shrink-0 rounded-full bg-[#5D3FD3] px-3 py-1 text-xs font-bold text-white hover:bg-[#451ebb] transition-colors"
-            >
-              Open
-            </Link>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Dual-leader tabs ───────────────────────────────────────
-//
-// Top-level "My Fellowship / My Department" tabs for the user who leads both.
-// Uses a simple controlled state — no `packages/ui` Tabs primitive yet.
-
-function DualLeaderTabs({
-  leadFellowships,
-  leadDepartments,
-}: {
-  leadFellowships: MeLeadershipFellowship[];
-  leadDepartments: MeLeadershipDepartment[];
-}) {
-  const [tab, setTab] = useState<'fellowship' | 'department'>('fellowship');
-  return (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as 'fellowship' | 'department')}>
-      <TabsList aria-label="My leadership">
-        <TabsTrigger value="fellowship">My Fellowship</TabsTrigger>
-        <TabsTrigger value="department">My Department</TabsTrigger>
-      </TabsList>
-      <TabsContent value="fellowship">
-        <FellowshipStats fellowships={leadFellowships} />
-      </TabsContent>
-      <TabsContent value="department">
-        <DepartmentStats departments={leadDepartments} />
-      </TabsContent>
-    </Tabs>
-  );
-}
-
-function MemberStats() {
-  const { data, isLoading } = useMemberDashboard();
-  const [evidenceOpen, setEvidenceOpen] = useState<'fellowships' | 'attendance' | 'meetings' | null>(null);
-
-  if (isLoading || !data) return <StatsSkeleton cols={3} />;
-  return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard title="My Fellowships" value={data.fellowshipsJoined} sub="Joined" accent="gold" icon={<FellowshipsIcon />} onClick={() => setEvidenceOpen('fellowships')} />
-        <StatCard title="Attendance Rate" value={`${data.recentAttendance.rate}%`} sub="Last 30 days" accent="emerald" icon={<CheckIcon />} onClick={() => setEvidenceOpen('attendance')} />
-        <StatCard title="Meetings Attended" value={`${data.recentAttendance.present}/${data.recentAttendance.total}`} sub="This period" accent="purple" icon={<CalendarIcon />} onClick={() => setEvidenceOpen('meetings')} />
-      </div>
-      <MyServiceAttendanceCard />
-      <MemberEvidenceDialog type={evidenceOpen} onClose={() => setEvidenceOpen(null)} data={data} />
-    </>
-  );
+interface RoleLabelInputs {
+  scope: { kind: string; id: string } | null | undefined;
+  scopeBranchName?: string;
+  homeBranchName?: string;
+  homeBranchInBsa: boolean;
+  homeBranchInBda: boolean;
+  isSystemAdmin: boolean;
+  isBranchSystemAdmin: boolean;
+  isBranchDataAdmin: boolean;
+  canWriteBranch: boolean;
+  canLead: boolean;
+  leadFellowshipName?: string;
+  leadDepartmentName?: string;
 }
 
 /**
- * Compact service-attendance card on the member dashboard linking to /me/attendance.
- * Surfaces the rate over the last 12 weeks + current streak. Distinct from the
- * existing fellowship-meeting attendance stat above.
+ * The badge under the greeting — which lens the caller is looking through.
+ * Display only: it carries no authority and gates nothing. First match wins,
+ * higher authority overriding lower. When `scope` is set the caller has
+ * picked a specific branch, so the label reflects that choice rather than
+ * their full authority.
  */
-function MyServiceAttendanceCard() {
-  const { data, isLoading } = useMyAttendance({ weeks: 12 });
-  if (isLoading || !data) {
-    return <div className="mt-3 h-20 animate-pulse rounded-xl bg-foreground/[0.04]" />;
+function deriveRoleLabel(i: RoleLabelInputs): string {
+  if (i.scope?.kind === 'branch') {
+    const suffix = i.scopeBranchName ? `, ${i.scopeBranchName}` : '';
+    if (i.isSystemAdmin) {
+      return i.isBranchSystemAdmin
+        ? `Branch System Admin${suffix}`
+        : `Administrator${suffix}`;
+    }
+    if (i.isBranchDataAdmin) return `Branch Data Admin${suffix}`;
+    if (i.canWriteBranch) return `Pastor${suffix}`;
+    return `Branch${suffix}`;
   }
-  const ratePct = Math.round(data.rate * 100);
-  const rateTone =
-    data.servicesInWindow === 0
-      ? 'text-muted-foreground'
-      : data.rate >= 0.8
-        ? 'text-emerald-700 dark:text-emerald-400'
-        : data.rate >= 0.6
-          ? 'text-[#9a6b04] dark:text-[#f8b537]'
-          : 'text-destructive';
-  return (
-    <Link
-      href="/me/attendance"
-      className="mt-3 flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3 hover:bg-foreground/[0.02] transition-colors"
-    >
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-          Service Attendance
-        </p>
-        <p className={`mt-0.5 text-2xl font-bold ${rateTone}`}>
-          {data.servicesInWindow === 0 ? '—' : `${ratePct}%`}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {data.servicesInWindow === 0
-            ? 'No services yet in window'
-            : `${data.attendedCount} of ${data.servicesInWindow} services attended`}
-        </p>
-      </div>
-      <div className="text-right text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">
-          {data.currentStreak.length}{' '}
-          {data.currentStreak.kind === 'attended' ? 'attended in a row' : 'missed in a row'}
-        </p>
-        <p className="mt-1 text-[#5D3FD3]">View details →</p>
-      </div>
-    </Link>
-  );
-}
-
-function MemberEvidenceDialog({ type, onClose, data }: { type: 'fellowships' | 'attendance' | 'meetings' | null; onClose: () => void; data: { fellowshipsJoined: number; fellowships: { fellowshipId: string; fellowshipName: string; fellowshipType: string }[]; recentAttendance: { total: number; present: number; late: number; absent: number; rate: number } } }) {
-  const titles: Record<string, string> = {
-    fellowships: 'My Fellowships: Evidence',
-    attendance: 'Attendance Rate: Evidence',
-    meetings: 'Meetings Attended: Evidence',
-  };
-
-  return (
-    <Dialog open={!!type} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">{type ? titles[type] : ''}</DialogTitle>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 pr-2">
-          {type === 'fellowships' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">You are a member of {data.fellowshipsJoined} fellowship{data.fellowshipsJoined !== 1 ? 's' : ''}</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Fellowship Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Type</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.fellowships.map((f, i) => (
-                    <tr key={f.fellowshipId} className="border-b border-border/50 hover:bg-white/3">
-                      <td className="py-2 text-muted-foreground/70">{i + 1}</td>
-                      <td className="py-2 text-foreground font-medium">{f.fellowshipName}</td>
-                      <td className="py-2 text-muted-foreground text-xs capitalize">{f.fellowshipType?.replace(/_/g, ' ') ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'attendance' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">Your attendance breakdown (last 30 days)</p>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-muted p-4 text-center">
-                    <p className="text-3xl font-bold text-emerald-400">{data.recentAttendance.rate}%</p>
-                    <p className="text-xs text-muted-foreground mt-1">Overall Rate</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-4 text-center">
-                    <p className="text-3xl font-bold text-foreground">{data.recentAttendance.total}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Total Meetings</p>
-                  </div>
-                </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Status</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Count</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Percentage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 text-emerald-400 font-medium">Present</td>
-                      <td className="py-2 text-foreground">{data.recentAttendance.present}</td>
-                      <td className="py-2 text-muted-foreground">{data.recentAttendance.total > 0 ? Math.round((data.recentAttendance.present / data.recentAttendance.total) * 100) : 0}%</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 text-[#10b981] font-medium">Late</td>
-                      <td className="py-2 text-foreground">{data.recentAttendance.late}</td>
-                      <td className="py-2 text-muted-foreground">{data.recentAttendance.total > 0 ? Math.round((data.recentAttendance.late / data.recentAttendance.total) * 100) : 0}%</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 text-[#f8b537] font-medium">Absent</td>
-                      <td className="py-2 text-foreground">{data.recentAttendance.absent}</td>
-                      <td className="py-2 text-muted-foreground">{data.recentAttendance.total > 0 ? Math.round((data.recentAttendance.absent / data.recentAttendance.total) * 100) : 0}%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {type === 'meetings' && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground mb-3">You attended {data.recentAttendance.present} out of {data.recentAttendance.total} meetings this period</p>
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-muted p-4 text-center">
-                    <p className="text-3xl font-bold text-[#a78bfa]">{data.recentAttendance.present}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Present</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-4 text-center">
-                    <p className="text-3xl font-bold text-[#10b981]">{data.recentAttendance.late}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Late</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-4 text-center">
-                    <p className="text-3xl font-bold text-[#f8b537]">{data.recentAttendance.absent}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Absent</p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground/70 text-center">Data from the last 30 days across all your fellowships</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ── Upcoming fellowships ───────────────────────────────────
-
-function UpcomingFellowships({ branchId }: { branchId?: string }) {
-  const { data: result } = useFellowships({ page: 1, limit: 5, branchId });
-  const fellowships = result?.data ?? [];
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Upcoming Fellowships</p>
-        <Link href="/fellowships" className="text-xs font-medium text-[#a78bfa] hover:underline">View all</Link>
-      </div>
-      {fellowships.length === 0 ? (
-        <p className="px-4 pb-4 text-sm text-muted-foreground/70">No fellowships found.</p>
-      ) : (
-        <div className={fellowships.length > 4 ? 'divide-y divide-border max-h-64 overflow-y-auto scrollbar-thin' : 'divide-y divide-border'}>
-          {fellowships.slice(0, 4).map((f, idx, arr) => {
-            const isLast = idx === arr.length - 1;
-            const m = f.meetingSchedule?.match(/(\w+day)[,\s]*([\d:]+\s*[AP]M)/i);
-            const dayAbbr = m?.[1]?.slice(0, 3).toUpperCase() ?? '—';
-            const dayNum = new Date().getDate();
-            const time = m?.[2] ?? f.meetingSchedule ?? '';
-            return (
-              <div key={f.id} className={`flex items-center gap-3 px-4 hover:bg-foreground/4 transition-colors ${isLast ? 'pt-3 pb-5' : 'py-3'}`}>
-                <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-md bg-[#5D3FD3]/20 text-center">
-                  <span className="text-[9px] font-bold uppercase text-[#a78bfa] leading-none">{dayAbbr}</span>
-                  <span className="text-base font-bold text-[#a78bfa] leading-tight mt-0.5">{dayNum}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{f.fellowshipName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{time}{f.branchName ? ` · ${f.branchName}` : ''}</p>
-                </div>
-                <Link href={`/fellowships/${f.id}`} className="flex-shrink-0 text-xs font-medium text-[#a78bfa] hover:underline">Details</Link>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+  if (i.scope?.kind === 'fellowship') {
+    return i.leadFellowshipName
+      ? `Fellowship Leader, ${i.leadFellowshipName}`
+      : 'Fellowship Leader';
+  }
+  if (i.scope?.kind === 'department') {
+    return i.leadDepartmentName
+      ? `Department Lead, ${i.leadDepartmentName}`
+      : 'Department Lead';
+  }
+  if (i.isSystemAdmin) return 'Administrator';
+  if (i.isBranchSystemAdmin) {
+    return i.homeBranchInBsa && i.homeBranchName
+      ? `Branch System Admin, ${i.homeBranchName}`
+      : 'Branch System Admin';
+  }
+  if (i.isBranchDataAdmin) {
+    return i.homeBranchInBda && i.homeBranchName
+      ? `Branch Data Admin, ${i.homeBranchName}`
+      : 'Branch Data Admin';
+  }
+  if (i.canWriteBranch) return 'Pastor';
+  if (i.leadFellowshipName && i.leadDepartmentName) return 'Fellowship & Department Lead';
+  if (i.leadFellowshipName) return `Fellowship Leader, ${i.leadFellowshipName}`;
+  if (i.leadDepartmentName) return `Department Lead, ${i.leadDepartmentName}`;
+  if (i.canLead) return 'Leader';
+  return 'Member';
 }
 
 // ── Recent activity ────────────────────────────────────────
 
-function RecentActivity({ branchId, role }: { branchId?: string; role?: string }) {
+/**
+ * What has happened, as opposed to the agenda's what's next. Kept through the
+ * 2026-10-04 rebuild because it has no equivalent anywhere else in the app.
+ */
+function RecentActivity({ branchId, isMember }: { branchId?: string; isMember: boolean }) {
   const { data: result } = useMembers({ approvalStatus: 'pending', branchId, limit: 4 });
   const pending = result?.data ?? [];
   const { data: fr } = useFellowships({ page: 1, limit: 3, branchId });
   const fellowships = fr?.data ?? [];
+
   const items: { text: React.ReactNode; sub: string; href?: string }[] = [];
-  // Only show membership requests for leadership roles, not for members
-  if (role !== 'member') {
-    pending.slice(0, 2).forEach(m => items.push({
-      text: <><span className="font-semibold text-foreground">{m.firstName} {m.lastName}</span><span className="text-muted-foreground"> requested membership.</span></>,
-      sub: 'Recently', href: `/members/${m.id}`,
-    }));
+  // Membership requests are a leadership concern — a plain member seeing
+  // other people's pending signups would be a disclosure, not a feature.
+  if (!isMember) {
+    pending.slice(0, 2).forEach((m) =>
+      items.push({
+        text: (
+          <>
+            <span className="font-semibold text-foreground">
+              {m.firstName} {m.lastName}
+            </span>
+            <span className="text-muted-foreground"> requested membership.</span>
+          </>
+        ),
+        sub: 'Recently',
+        href: `/members/${m.id}`,
+      }),
+    );
   }
-  fellowships.slice(0, 2).forEach(f => items.push({
-    text: <><span className="font-semibold text-foreground">{f.fellowshipName}</span><span className="text-muted-foreground">, {f.meetingSchedule ?? 'schedule TBC'}.</span></>,
-    sub: 'Upcoming', href: `/fellowships/${f.id}`,
-  }));
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card shadow-lg shadow-primary/5">
-      <p className="px-4 pt-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recent Community Activity</p>
-      {items.length === 0 ? (
-        <p className="px-4 pb-4 text-sm text-muted-foreground/70">No recent activity.</p>
-      ) : (
-        <div className="divide-y divide-border">
-          {items.map((item, i) => {
-            const isLast = i === items.length - 1;
-            return (
-            <div key={i} className={`flex items-start gap-3 px-4 hover:bg-foreground/4 transition-colors ${isLast ? 'pt-2.5 pb-5' : 'py-2.5'}`}>
-              <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/20">
-                <svg className="h-3.5 w-3.5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm leading-snug">
-                  {item.href ? <Link href={item.href} className="hover:underline">{item.text}</Link> : item.text}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground/70">{item.sub}</p>
-              </div>
-            </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+  fellowships.slice(0, 2).forEach((f) =>
+    items.push({
+      text: (
+        <>
+          <span className="font-semibold text-foreground">{f.fellowshipName}</span>
+          <span className="text-muted-foreground">
+            , {f.meetingSchedule ?? 'schedule TBC'}.
+          </span>
+        </>
+      ),
+      sub: 'Upcoming',
+      href: `/fellowships/${f.id}`,
+    }),
   );
-}
-
-// ── Quick actions ──────────────────────────────────────────
-
-// Note 2026-06-29: 'Export Members CSV' Quick Action was hidden (see backlog
-// in [[project-resumption-2026-06-16]]). Working impl recoverable from commit
-// 39d745f if/when we want to re-enable. Capability gating on the endpoint
-// itself is unchanged — the /members page export button still works for
-// branch:write holders.
-
-type QAItem = { label: string; icon: React.ReactNode; href?: string; onClick?: () => void };
-
-function QuickActions({ role }: { role: string }) {
-  const map: Record<string, QAItem[]> = {
-    // Temporary 2026-06-29: 'Export Members CSV' CTA hidden from dashboard
-    // Quick Actions. Capability gating unchanged — the /members page export
-    // button still works for branch:write holders. Re-enable here when we
-    // want it surfaced again. Tracked in [[project-resumption-2026-06-16]].
-    admin: [
-      { label: 'Manage Branches', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18l2.25 2.25m0 0l6-6 6 6 2.25-2.25M12 3.75l6 6v10.5M9.75 21V12h4.5V21" /></svg>, href: '/admin/branches' },
-      { label: 'View Reports', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>, href: '/reports' },
-    ],
-    pastor: [
-      { label: 'View Members', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>, href: '/members' },
-      { label: 'View Reports', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>, href: '/reports' },
-    ],
-    leader: [
-      { label: 'My Fellowship', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>, href: '/fellowships' },
-      { label: 'Record Attendance', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, href: '/attendance/record-service' },
-      { label: 'Souls Pipeline', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>, href: '/souls' },
-    ],
-    member: [
-      { label: 'My Fellowships', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>, href: '/fellowships' },
-      { label: 'My Profile', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>, href: '/profile' },
-      { label: 'Souls Dashboard', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>, href: '/souls-dashboard' },
-    ],
-  };
-  const actions = map[role] ?? map.member!;
-  return (
-    <div>
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Quick Actions</p>
-      <div className="rounded-lg border border-primary/20 bg-card divide-y divide-border shadow-lg shadow-primary/5">
-        {actions.map((a, i) => {
-          const inner = (
-            <>
-              <div className="flex items-center gap-3"><span className="text-muted-foreground">{a.icon}</span><span className="text-sm font-medium text-foreground/80">{a.label}</span></div>
-              <svg className="h-3.5 w-3.5 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-            </>
-          );
-          return a.href
-            ? <Link key={i} href={a.href} className="flex items-center justify-between px-4 py-3 hover:bg-foreground/4 transition-colors">{inner}</Link>
-            : <button key={i} onClick={a.onClick} className="flex w-full items-center justify-between px-4 py-3 hover:bg-foreground/4 transition-colors text-left">{inner}</button>;
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Donut (shared by the service-attendance status + rate cards) ──
-
-function MissionDonut({ segments, colors, centerValue, centerLabel }: {
-  segments: { name: string; value: number }[];
-  colors: string[];
-  centerValue: string;
-  centerLabel: string;
-}) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative aspect-square w-full max-w-[120px]">
-        <svg viewBox="0 0 120 120" className="h-full w-full">
-          {(() => {
-            const cx = 60, cy = 60, r = 48;
-            const circumference = 2 * Math.PI * r;
-            const gapDegrees = 8;
-            const totalGaps = segments.length * gapDegrees;
-            const availableDegrees = 360 - totalGaps;
-            let currentAngle = -90;
-            return segments.map((d, i) => {
-              const fraction = d.value / 100;
-              const segmentDegrees = fraction * availableDegrees;
-              const arcLength = (segmentDegrees / 360) * circumference;
-              const rotation = currentAngle;
-              currentAngle += segmentDegrees + gapDegrees;
-              return (
-                <circle
-                  key={i}
-                  cx={cx} cy={cy} r={r}
-                  fill="none"
-                  stroke={colors[i % colors.length]}
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={`${arcLength} ${circumference}`}
-                  transform={`rotate(${rotation} ${cx} ${cy})`}
-                />
-              );
-            });
-          })()}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: '4px' }}>
-          <span className="text-xl font-bold text-foreground">{centerValue}</span>
-          <span className="text-[9px] text-muted-foreground text-center leading-tight font-medium">{centerLabel}</span>
-        </div>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-        {segments.map((d, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-            <span className="text-[10px] text-muted-foreground">{d.name}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Map the by-branch report into the small bar chart shape (short code + label).
-function toBranchChart(rows?: { branchName: string; distinctAttendees: number; attendanceRate: number }[]) {
-  return (rows ?? []).map((b) => ({
-    name: b.branchName.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase() || b.branchName.slice(0, 3).toUpperCase(),
-    label: b.branchName,
-    count: b.distinctAttendees,
-    rate: Math.round(b.attendanceRate * 100),
-  }));
-}
-
-// ── Mission Control Reports (Admin) ────────────────────────
-
-function AdminMissionControlReports() {
-  const [missionEvidence, setMissionEvidence] = useState<'growth' | 'attendance' | 'engagement' | 'branch' | 'newBelievers' | null>(null);
-  const { data: growthData } = useMemberGrowth();
-  const { data: nbHealth } = useNewBelieversHealth();
-  const { data: attendanceData } = useAttendanceTrend();
-  const { data: adminData } = useAdminDashboard();
-  const { data: attendanceSummary } = useAttendanceSummary();
-  const { data: branchAttendance } = useAttendanceByBranch();
-
-  const totalMembers = adminData?.totalMembers ?? 0;
-
-  const avgAttendance = attendanceData?.length
-    ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length)
-    : 0;
-
-  // Service-attendance status split (Present/Late/Virtual) from the summary endpoint.
-  const statusBreakdown = attendanceSummary?.statusBreakdown;
-  const statusTotal = statusBreakdown?.total ?? 0;
-  const hasAttendanceData = statusTotal > 0;
-  const presentPct = hasAttendanceData ? Math.round((statusBreakdown!.present / statusTotal) * 100) : 0;
-  const latePct = hasAttendanceData ? Math.round((statusBreakdown!.late / statusTotal) * 100) : 0;
-  const virtualPct = hasAttendanceData ? Math.round((statusBreakdown!.virtual / statusTotal) * 100) : 0;
-  const statusSegments = hasAttendanceData
-    ? [
-        { name: `Present ${presentPct}%`, value: presentPct },
-        { name: `Late ${latePct}%`, value: latePct },
-        { name: `Virtual ${virtualPct}%`, value: virtualPct },
-      ]
-    : [{ name: 'No data', value: 100 }];
-  const statusColors = hasAttendanceData ? ['#16A34A', '#f8b537', '#5D3FD3'] : ['rgba(255,255,255,0.12)'];
-
-  // Second donut — attendance rate (distinct attendees ÷ active members).
-  const ratePct = attendanceSummary ? Math.round(attendanceSummary.rate.rate * 100) : 0;
-  const distinctAttendees = attendanceSummary?.rate.distinctAttendees ?? 0;
-  const activeForRate = attendanceSummary?.rate.activeMembers ?? 0;
-  const rateSegments = [
-    { name: `Attended ${ratePct}%`, value: ratePct },
-    { name: `Not yet ${100 - ratePct}%`, value: 100 - ratePct },
-  ];
-  const rateColors = ['#5D3FD3', 'rgba(255,255,255,0.12)'];
-
-  // Real per-branch attendance for the branch bar (replaces the hardcoded placeholders).
-  const branchData = toBranchChart(branchAttendance);
-
-  const engagementPct = avgAttendance;
-  const engagementLabel = engagementPct >= 70 ? 'High' : engagementPct >= 40 ? 'Medium' : 'Low';
-  const engagementColor = engagementPct >= 70 ? '#10b981' : engagementPct >= 40 ? '#f8b537' : '#e11d48';
-
-  // Build 6-month chart data — pad missing months with 0 so we always have 6 points
-  const now = new Date();
-  const monthLabels = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-    return {
-      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-      label: d.toLocaleString('en', { month: 'short' }),
-    };
-  });
-
-  const growthMap = new Map((growthData ?? []).map(d => [d.month, d.newSignups]));
-
-  // Use raw monthly counts (not cumulative) — pad with 0 for missing months
-  const chartGrowth = monthLabels.map(({ key, label }) => ({
-    month: label,
-    members: growthMap.get(key) ?? 0,
-  }));
-
-  // Calculate total new signups in the last 6 months
-  const totalNewSignups = (growthData ?? []).reduce((sum, d) => sum + d.newSignups, 0);
-
-  const tooltipStyle = { background: 'var(--card)', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'var(--foreground)', fontSize: '11px' };
 
   return (
-    <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3">
-
-        {/* 1 — Membership Growth */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('growth')}>
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Membership Growth</p>
-              <p className="text-[10px] text-muted-foreground/70">Last 6 Months</p>
-            </div>
-            <span className="text-2xl font-bold text-foreground">{totalNewSignups}</span>
-          </div>
-          <div className="h-[130px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartGrowth} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => [v, 'New Members']} />
-                <Line type="monotone" dataKey="members" stroke="#7c3aed" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: '#a78bfa' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 2 — Service Attendance (Present/Late/Virtual split) */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Service Attendance</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Last 30 Days</p>
-          <MissionDonut segments={statusSegments} colors={statusColors} centerValue={String(statusTotal)} centerLabel="Check-ins" />
-        </div>
-
-        {/* 3 — Attendance Rate (distinct attendees ÷ active members) */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Rate</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct vs Active</p>
-          <MissionDonut segments={rateSegments} colors={rateColors} centerValue={`${ratePct}%`} centerLabel={`${distinctAttendees}/${activeForRate} active`} />
-        </div>
-
-        {/* 4 — Member Engagement */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('engagement')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Member Engagement</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
-          <div className="flex flex-col items-center">
-            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
-              <svg viewBox="0 0 160 90" className="h-full w-full">
-                {/* Dark track */}
-                <path
-                  d="M 16 80 A 64 64 0 0 1 144 80"
-                  fill="none"
-                  stroke="hsl(var(--border))"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                />
-                {/* Colored arc */}
-                <path
-                  d="M 16 80 A 64 64 0 0 1 144 80"
-                  fill="none"
-                  stroke={engagementColor}
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  opacity="0.75"
-                  strokeDasharray="201"
-                  strokeDashoffset="0"
-                  style={{
-                    animation: 'drawArc 1.5s ease-out forwards',
-                    strokeDashoffset: '201',
-                  }}
-                />
-                {/* Gold end dot */}
-                <circle 
-                  cx="144" 
-                  cy="80" 
-                  r="5" 
-                  fill="#f8b537"
-                  style={{
-                    animation: 'chartFadeIn 0.3s ease-out forwards',
-                    animationDelay: '1.5s',
-                    opacity: 0,
-                  }}
-                />
-              </svg>
-              {/* Label — centered vertically inside the arc */}
-              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
-                <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
-                <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
-              </div>
-            </div>
-            <div className="mt-1 flex w-full justify-between px-1">
-              <div>
-                <p className="text-xs text-muted-foreground">Active Members</p>
-                <p className="text-3xl font-bold text-foreground">{totalMembers}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Inactive Members</p>
-                <p className="text-3xl font-bold text-foreground">3</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5 — Attendance by Branch */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('branch')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance by Branch</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct Attendees</p>
-          <div className="h-[130px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={branchData} barSize={14} margin={{ top: 4, right: 4, bottom: 16, left: -18 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v, _, p) => [`${v} attendees (${p.payload.rate}%)`, p.payload.label]} />
-                <Bar dataKey="count" fill="#5D3FD3" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 6 — New Believers Pipeline */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('newBelievers')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">New Believers</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Pipeline</p>
-          <div className="flex flex-col items-center justify-center h-[130px]">
-            <span className="text-4xl font-bold text-[#a78bfa]">{nbHealth?.summary.activeEnrollments ?? 0}</span>
-            <span className="text-[10px] text-muted-foreground mt-1">Active Enrollments</span>
-            <div className="mt-3 w-full space-y-1">
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Avg Attendance</span>
-                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
-              </div>
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Stale</span>
-                <span className="text-rose-400 font-medium">{nbHealth?.stale.count ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Completed</span>
-                <span className="text-emerald-400 font-medium">{(nbHealth?.stageFunnel.completed ?? 0) + (nbHealth?.stageFunnel.integrated ?? 0)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Mission Evidence Dialog */}
-      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} virtualPct={virtualPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={branchData} nbHealth={nbHealth} />
-    </div>
-  );
-}
-
-// ── Mission Control Evidence Dialog (shared) ───────────────
-
-function MissionControlEvidenceDialog({ type, onClose, chartGrowth, presentPct, latePct, virtualPct, engagementLabel, totalMembers, branchData: _branchData, nbHealth }: {
-  type: 'growth' | 'attendance' | 'engagement' | 'branch' | 'newBelievers' | null;
-  onClose: () => void;
-  chartGrowth: { month: string; members: number }[];
-  presentPct: number;
-  latePct: number;
-  virtualPct: number;
-  engagementLabel: string;
-  totalMembers: number;
-  branchData: { name: string; label: string; count: number }[];
-  nbHealth?: NewBelieverHealthSummary | null;
-}) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const { data: membersData } = useMembers({ limit: 100 });
-  const { data: branchesListData } = useBranches();
-  const { data: staleEnrollmentsRes } = useEnrollments({ stale: true, limit: 50 }, { enabled: type === 'newBelievers' });
-  const { data: activeEnrollmentsRes } = useEnrollments({ limit: 50 }, { enabled: type === 'newBelievers' });
-  const allMembers = membersData?.data ?? [];
-  const allBranches = branchesListData ?? [];
-  const staleList = staleEnrollmentsRes?.data ?? [];
-  const activeList = activeEnrollmentsRes?.data ?? [];
-
-  // Filter members by search
-  const filteredMembers = searchQuery
-    ? allMembers.filter(m => `${m.firstName} ${m.lastName} ${m.branchName ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : allMembers;
-
-  const titles: Record<string, string> = {
-    growth: 'Membership Growth: Evidence',
-    attendance: 'Service Attendance: Evidence',
-    engagement: 'Member Engagement: Evidence',
-    branch: 'Membership by Branch: Evidence',
-    newBelievers: 'New Believers Pipeline: Evidence',
-  };
-
-  return (
-    <Dialog open={!!type} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">{type ? titles[type] : ''}</DialogTitle>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 pr-2">
-          {type === 'growth' && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Monthly new member signups (last 6 months)</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Month</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">New Members</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {chartGrowth.map((d, i) => (
-                    <tr key={i} className="border-b border-border/50">
-                      <td className="py-2 text-foreground font-medium">{d.month}</td>
-                      <td className="py-2 text-[#a78bfa] font-bold">{d.members}</td>
-                    </tr>
-                  ))}
-                  <tr className="border-t border-border">
-                    <td className="py-2 text-foreground font-bold">Total</td>
-                    <td className="py-2 text-[#a78bfa] font-bold">{chartGrowth.reduce((s, d) => s + d.members, 0)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'attendance' && (
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Service attendance breakdown (last 30 days)</p>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#16A34A]">{presentPct}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">Present</p>
+    <section>
+      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        Recent community activity
+      </p>
+      <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
+        {items.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-muted-foreground/70">No recent activity.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {items.map((item, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.04]"
+              >
+                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/15">
+                  <svg
+                    className="h-3.5 w-3.5 text-[#5D3FD3] dark:text-[#a488ff]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
                 </div>
-                <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#f8b537]">{latePct}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">Late</p>
-                </div>
-                <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-[#5D3FD3]">{virtualPct}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">Virtual</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-snug">
+                    {item.href ? (
+                      <Link href={item.href} className="hover:underline">
+                        {item.text}
+                      </Link>
+                    ) : (
+                      item.text
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground/70">{item.sub}</p>
                 </div>
               </div>
-
-              {/* Per-branch attendance breakdown */}
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-2">Attendance by Branch</p>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Members</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Present</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Late</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Absent</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allBranches.map((b) => {
-                      const branchMembers = allMembers.filter(m => m.branchName === b.branchName);
-                      return (
-                        <tr key={b.id} className="border-b border-border/50">
-                          <td className="py-2 text-foreground font-medium">{b.branchName}</td>
-                          <td className="py-2 text-muted-foreground">{branchMembers.length}</td>
-                          <td className="py-2 text-[#5D3FD3]">—</td>
-                          <td className="py-2 text-[#10b981]">—</td>
-                          <td className="py-2 text-[#f8b537]">—</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Member-level drill-down */}
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-2">Member Attendance Details <span className="text-[#a78bfa]">({allMembers.length} total)</span></p>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allMembers.slice(0, 25).map((m, i) => (
-                      <tr key={m.id} className="border-b border-border/50">
-                        <td className="py-1.5 text-muted-foreground/70 text-xs">{i + 1}</td>
-                        <td className="py-1.5 text-foreground text-xs">{m.firstName} {m.lastName}</td>
-                        <td className="py-1.5 text-muted-foreground text-xs">{m.branchName ?? '—'}</td>
-                        <td className="py-1.5">
-                          <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium bg-emerald-500/15 text-emerald-400">Active</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {allMembers.length > 25 && <p className="text-[10px] text-muted-foreground/70 mt-1">...and {allMembers.length - 25} more members</p>}
-              </div>
-
-              <p className="text-[10px] text-muted-foreground/70">Percentages are calculated from all service meeting attendance records in the last 30 days. Per-member attendance details require recording attendance for specific meetings.</p>
-            </div>
-          )}
-
-          {type === 'engagement' && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Engagement is calculated from attendance rate and meeting frequency</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold text-foreground">{totalMembers}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Active Members</p>
-                </div>
-                <div className="rounded-lg bg-muted p-4 text-center">
-                  <p className="text-3xl font-bold" style={{ color: engagementLabel === 'High' ? '#10b981' : engagementLabel === 'Medium' ? '#f8b537' : '#e11d48' }}>{engagementLabel}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Engagement Level</p>
-                </div>
-              </div>
-              <p className="text-[10px] text-muted-foreground/70"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1"></span>High = Members attend most meetings and fellowships meet regularly. <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-400 mr-1 ml-2"></span>Low = Members are missing meetings or fellowships aren&apos;t meeting often enough.</p>
-
-              <div className="flex items-center gap-2 mt-2">
-                <p className="text-xs text-muted-foreground">Active members list:</p>
-                <input
-                  type="text"
-                  placeholder="Search by name or branch..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]"
-                />
-                <span className="text-xs font-bold text-[#a78bfa]">{searchQuery ? filteredMembers.length : ''}</span>
-              </div>
-              {searchQuery && filteredMembers.length > 0 && (() => {
-                const highCount = filteredMembers.filter(m => { const c = allMembers.filter(x => x.branchName === m.branchName).length; return c >= 5; }).length;
-                const lowCount = filteredMembers.length - highCount;
-                return (
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="flex items-center gap-1 text-emerald-400 font-medium"><span className="inline-block h-2 w-2 rounded-full bg-emerald-400"></span> High: {highCount}</span>
-                    <span className="flex items-center gap-1 text-rose-400 font-medium"><span className="inline-block h-2 w-2 rounded-full bg-rose-400"></span> Low: {lowCount}</span>
-                  </div>
-                );
-              })()}
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Engagement</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMembers.map((m, i) => {
-                    const memberBranchCount = allMembers.filter(x => x.branchName === m.branchName).length;
-                    const memberEng = memberBranchCount >= 5 ? 'High' : memberBranchCount >= 3 ? 'Medium' : 'Low';
-                    const engColor = memberEng === 'High' ? 'bg-emerald-500/15 text-emerald-400' : memberEng === 'Medium' ? 'bg-[#f8b537]/15 text-[#f8b537]' : 'bg-rose-500/15 text-rose-400';
-                    return (
-                      <tr key={m.id} className="border-b border-border/50">
-                        <td className="py-1.5 text-muted-foreground/70 text-xs">{i + 1}</td>
-                        <td className="py-1.5 text-foreground text-xs">{m.firstName} {m.lastName}</td>
-                        <td className="py-1.5 text-muted-foreground text-xs">{m.branchName ?? '—'}</td>
-                        <td className="py-1.5"><span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${engColor}`}>{memberEng}</span></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {filteredMembers.length === 0 && searchQuery && <p className="text-sm text-muted-foreground/70">No members match &quot;{searchQuery}&quot;</p>}
-            </div>
-          )}
-
-          {type === 'branch' && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Members distributed across branches</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Full Name</th>
-                    <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Members</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allBranches.map((b) => {
-                    const count = allMembers.filter(m => m.branchName === b.branchName).length;
-                    return (
-                      <tr key={b.id} className="border-b border-border/50">
-                        <td className="py-2 text-[#a78bfa] font-medium">{b.branchName}</td>
-                        <td className="py-2 text-muted-foreground text-xs">{b.city ?? '—'}</td>
-                        <td className="py-2 text-foreground font-bold">{count}</td>
-                      </tr>
-                    );
-                  })}
-                  <tr className="border-t border-border">
-                    <td className="py-2 text-foreground font-bold" colSpan={2}>Total</td>
-                    <td className="py-2 text-foreground font-bold">{allMembers.length}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {type === 'newBelievers' && (
-            <NewBelieversEvidence nbHealth={nbHealth} staleList={staleList} activeList={activeList} />
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function NewBelieversEvidence({ nbHealth, staleList, activeList }: { nbHealth: NewBelieverHealthSummary | null | undefined; staleList: NewBelieverEnrollmentWithMember[]; activeList: NewBelieverEnrollmentWithMember[] }) {
-  const [view, setView] = useState<'overview' | 'stale' | 'active'>('overview');
-
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Click a card to see the people behind the numbers</p>
-      <div className="grid grid-cols-3 gap-3">
-        <div className={`rounded-lg bg-muted p-4 text-center cursor-pointer transition-colors ${view === 'active' ? 'ring-1 ring-[#a78bfa]' : 'hover:bg-muted/80'}`} onClick={() => setView(view === 'active' ? 'overview' : 'active')}>
-          <p className="text-3xl font-bold text-[#a78bfa]">{nbHealth?.summary.activeEnrollments ?? 0}</p>
-          <p className="text-xs text-muted-foreground mt-1">Active Enrollments</p>
-        </div>
-        <div className="rounded-lg bg-muted p-4 text-center">
-          <p className="text-3xl font-bold text-emerald-400">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</p>
-          <p className="text-xs text-muted-foreground mt-1">Avg Attendance</p>
-        </div>
-        <div className={`rounded-lg bg-muted p-4 text-center cursor-pointer transition-colors ${view === 'stale' ? 'ring-1 ring-rose-400' : 'hover:bg-muted/80'}`} onClick={() => setView(view === 'stale' ? 'overview' : 'stale')}>
-          <p className="text-3xl font-bold text-rose-400">{nbHealth?.stale.count ?? 0}</p>
-          <p className="text-xs text-muted-foreground mt-1">Stale ({nbHealth?.stale.thresholdDays ?? 7}d+)</p>
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      {view === 'stale' && (
-        <div>
-          <p className="text-xs text-rose-400 font-medium mb-2">People who haven&apos;t progressed in {nbHealth?.stale.thresholdDays ?? 7}+ days</p>
-          {staleList.length === 0 ? (
-            <p className="text-sm text-muted-foreground/70">No stale enrollments. Everyone is progressing.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Stage</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Branch</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {staleList.map((e, i) => (
-                  <tr key={e.id} className="border-b border-border/50">
-                    <td className="py-2 text-muted-foreground/70 text-xs">{i + 1}</td>
-                    <td className="py-2 text-foreground font-medium text-xs">{e.memberFirstName ?? '—'} {e.memberLastName ?? ''}</td>
-                    <td className="py-2"><span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium bg-rose-500/15 text-rose-400 capitalize">{e.stage?.replace('-', ' ')}</span></td>
-                    <td className="py-2 text-muted-foreground text-xs">{e.branchId?.slice(0, 8) ?? '—'}</td>
-                    <td className="py-2 text-muted-foreground text-xs">{e.enrolledAt ? new Date(e.enrolledAt).toLocaleDateString() : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {view === 'active' && (
-        <div>
-          <p className="text-xs text-[#a78bfa] font-medium mb-2">All active enrollments in the pipeline</p>
-          {activeList.length === 0 ? (
-            <p className="text-sm text-muted-foreground/70">No active enrollments.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Stage</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Teacher</th>
-                  <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeList.map((e, i) => (
-                  <tr key={e.id} className="border-b border-border/50">
-                    <td className="py-2 text-muted-foreground/70 text-xs">{i + 1}</td>
-                    <td className="py-2 text-foreground font-medium text-xs">{e.memberFirstName ?? '—'} {e.memberLastName ?? ''}</td>
-                    <td className="py-2"><span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
-                      e.stage === 'completed' || e.stage === 'integrated' ? 'bg-emerald-500/15 text-emerald-400' :
-                      e.stage === 'enrolled' ? 'bg-[#a78bfa]/15 text-[#a78bfa]' :
-                      'bg-[#f8b537]/15 text-[#f8b537]'
-                    }`}>{e.stage?.replace('-', ' ')}</span></td>
-                    <td className="py-2 text-muted-foreground text-xs">{e.teacherFirstName ? `${e.teacherFirstName} ${e.teacherLastName}` : '—'}</td>
-                    <td className="py-2 text-muted-foreground text-xs">{e.enrolledAt ? new Date(e.enrolledAt).toLocaleDateString() : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {view === 'overview' && (
-        <div>
-          <p className="text-xs text-muted-foreground font-medium mb-2">Stage Funnel</p>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Stage</th>
-                <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(['enrolled', 'session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'] as const).map((stage) => (
-                <tr key={stage} className="border-b border-border/50">
-                  <td className="py-2 text-foreground font-medium capitalize">{stage.replace('-', ' ')}</td>
-                  <td className="py-2 text-[#a78bfa] font-bold">{nbHealth?.stageFunnel?.[stage] ?? 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="text-[10px] text-muted-foreground/70 mt-3">Click "Active Enrollments" or "Stale" cards above to see the people.</p>
-        </div>
-      )}
-    </div>
+    </section>
   );
 }
 
-// ── Mission Control Reports (Pastor/Leader) ────────────────
+// ── Branch scope picker ────────────────────────────────────
 
-function BranchMissionControlReports() {
-  const [missionEvidence, setMissionEvidence] = useState<'growth' | 'attendance' | 'engagement' | 'newBelievers' | null>(null);
-  const { data: growthData } = useMemberGrowth();
-  const { data: attendanceData } = useAttendanceTrend();
-  const { data: branchData } = useBranchDashboard();
-  const { data: attendanceSummary } = useAttendanceSummary();
-  const { data: nbHealth } = useNewBelieversHealth();
-
-  const totalMembers = branchData?.totalMembers ?? 0;
-
-  const avgAttendance = attendanceData?.length
-    ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length)
-    : 0;
-
-  // Service-attendance status split (Present/Late/Virtual) for this branch.
-  const statusBreakdown = attendanceSummary?.statusBreakdown;
-  const statusTotal = statusBreakdown?.total ?? 0;
-  const hasAttendanceData = statusTotal > 0;
-  const presentPct = hasAttendanceData ? Math.round((statusBreakdown!.present / statusTotal) * 100) : 0;
-  const latePct = hasAttendanceData ? Math.round((statusBreakdown!.late / statusTotal) * 100) : 0;
-  const virtualPct = hasAttendanceData ? Math.round((statusBreakdown!.virtual / statusTotal) * 100) : 0;
-  const statusSegments = hasAttendanceData
-    ? [
-        { name: `Present ${presentPct}%`, value: presentPct },
-        { name: `Late ${latePct}%`, value: latePct },
-        { name: `Virtual ${virtualPct}%`, value: virtualPct },
-      ]
-    : [{ name: 'No data', value: 100 }];
-  const statusColors = hasAttendanceData ? ['#16A34A', '#f8b537', '#5D3FD3'] : ['rgba(255,255,255,0.12)'];
-
-  // Second donut — attendance rate (distinct attendees ÷ active members).
-  const ratePct = attendanceSummary ? Math.round(attendanceSummary.rate.rate * 100) : 0;
-  const distinctAttendees = attendanceSummary?.rate.distinctAttendees ?? 0;
-  const activeForRate = attendanceSummary?.rate.activeMembers ?? 0;
-  const rateSegments = [
-    { name: `Attended ${ratePct}%`, value: ratePct },
-    { name: `Not yet ${100 - ratePct}%`, value: 100 - ratePct },
-  ];
-  const rateColors = ['#5D3FD3', 'rgba(255,255,255,0.12)'];
-
-  const engagementPct = avgAttendance;
-  const engagementLabel = engagementPct >= 70 ? 'High' : engagementPct >= 40 ? 'Medium' : 'Low';
-  const engagementColor = engagementPct >= 70 ? '#10b981' : engagementPct >= 40 ? '#f8b537' : '#e11d48';
-
-  const now = new Date();
-  const monthLabels = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-    return {
-      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-      label: d.toLocaleString('en', { month: 'short' }),
-    };
-  });
-
-  const growthMap = new Map((growthData ?? []).map(d => [d.month, d.newSignups]));
-  const chartGrowth = monthLabels.map(({ key, label }) => ({
-    month: label,
-    members: growthMap.get(key) ?? 0,
-  }));
-  const totalNewSignups = (growthData ?? []).reduce((sum, d) => sum + d.newSignups, 0);
-
-  const tooltipStyle = { background: 'var(--card)', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'var(--foreground)', fontSize: '11px' };
-
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3">
-
-        {/* 1 — Membership Growth */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('growth')}>
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Membership Growth</p>
-              <p className="text-[10px] text-muted-foreground/70">Last 6 Months</p>
-            </div>
-            <span className="text-2xl font-bold text-foreground">{totalNewSignups}</span>
-          </div>
-          <div className="h-[130px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartGrowth} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => [v, 'New Members']} />
-                <Line type="monotone" dataKey="members" stroke="#7c3aed" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: '#a78bfa' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 2 — Service Attendance (Present/Late/Virtual split) */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Service Attendance</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Last 30 Days</p>
-          <MissionDonut segments={statusSegments} colors={statusColors} centerValue={String(statusTotal)} centerLabel="Check-ins" />
-        </div>
-
-        {/* 3 — Attendance Rate (distinct attendees ÷ active members) */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('attendance')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Rate</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Distinct vs Active</p>
-          <MissionDonut segments={rateSegments} colors={rateColors} centerValue={`${ratePct}%`} centerLabel={`${distinctAttendees}/${activeForRate} active`} />
-        </div>
-
-        {/* 4 — Member Engagement */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('engagement')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Member Engagement</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
-          <div className="flex flex-col items-center">
-            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
-              <svg viewBox="0 0 160 90" className="h-full w-full">
-                <path
-                  d="M 16 80 A 64 64 0 0 1 144 80"
-                  fill="none"
-                  stroke="hsl(var(--border))"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M 16 80 A 64 64 0 0 1 144 80"
-                  fill="none"
-                  stroke={engagementColor}
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  opacity="0.75"
-                  strokeDasharray="201"
-                  strokeDashoffset="0"
-                  style={{
-                    animation: 'drawArc 1.5s ease-out forwards',
-                    strokeDashoffset: '201',
-                  }}
-                />
-                <circle 
-                  cx="144" 
-                  cy="80" 
-                  r="5" 
-                  fill="#f8b537"
-                  style={{
-                    animation: 'chartFadeIn 0.3s ease-out forwards',
-                    animationDelay: '1.5s',
-                    opacity: 0,
-                  }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
-                <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
-                <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
-              </div>
-            </div>
-            <div className="mt-1 flex w-full justify-between px-1">
-              <div>
-                <p className="text-xs text-muted-foreground">Active Members</p>
-                <p className="text-3xl font-bold text-foreground">{totalMembers}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Inactive Members</p>
-                <p className="text-3xl font-bold text-foreground">3</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5 — New Believers Pipeline */}
-        <div className="rounded-lg bg-muted p-3 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => setMissionEvidence('newBelievers')}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">New Believers</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Pipeline</p>
-          <div className="flex flex-col items-center justify-center h-[130px]">
-            <span className="text-4xl font-bold text-[#a78bfa]">{nbHealth?.summary.activeEnrollments ?? 0}</span>
-            <span className="text-[10px] text-muted-foreground mt-1">Active Enrollments</span>
-            <div className="mt-3 w-full space-y-1">
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Avg Attendance</span>
-                <span className="text-foreground font-medium">{nbHealth?.summary.avgAttendanceRate !== undefined && nbHealth?.summary.avgAttendanceRate !== null ? `${Math.round(nbHealth.summary.avgAttendanceRate)}%` : '—'}</span>
-              </div>
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Stale</span>
-                <span className="text-rose-400 font-medium">{nbHealth?.stale.count ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-muted-foreground">Completed</span>
-                <span className="text-emerald-400 font-medium">{(nbHealth?.stageFunnel.completed ?? 0) + (nbHealth?.stageFunnel.integrated ?? 0)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Branch Mission Evidence Dialog */}
-      <MissionControlEvidenceDialog type={missionEvidence} onClose={() => setMissionEvidence(null)} chartGrowth={chartGrowth} presentPct={presentPct} latePct={latePct} virtualPct={virtualPct} engagementLabel={engagementLabel} totalMembers={totalMembers} branchData={[]} nbHealth={nbHealth} />
-    </div>
-  );
-}
-
-// ── Mission Control Reports (Member) ──────────────────────
-
-function MemberMissionControlReports() {
-  const { data: memberData } = useMemberDashboard();
-  const { data: attendanceData } = useAttendanceTrend();
-
-  const attendanceRate = memberData?.recentAttendance.rate ?? 0;
-  const present = memberData?.recentAttendance.present ?? 0;
-  const late = memberData?.recentAttendance.late ?? 0;
-  const absent = memberData?.recentAttendance.absent ?? 0;
-  const total = memberData?.recentAttendance.total ?? 0;
-  const fellowshipsJoined = memberData?.fellowshipsJoined ?? 0;
-  const branchCount = memberData?.branchCount ?? 0;
-
-  // Attendance donut: present vs late vs absent (percentages)
-  const presentPct = total > 0 ? Math.round((present / total) * 100) : 0;
-  const latePct = total > 0 ? Math.round((late / total) * 100) : 0;
-  const absentPct = total > 0 ? Math.max(0, 100 - presentPct - latePct) : 100;
-  const donutData = [
-    { name: `Present ${presentPct}%`, value: Math.max(presentPct, 0.1) },
-    { name: `Late ${latePct}%`, value: Math.max(latePct, 0.1) },
-    { name: `Absent ${absentPct}%`, value: Math.max(absentPct, 0.1) },
-  ];
-  const DONUT = ['#5D3FD3', '#10b981', '#f8b537'];
-
-  // Engagement gauge
-  const engagementPct = attendanceRate;
-  const engagementLabel = engagementPct >= 70 ? 'High' : engagementPct >= 40 ? 'Medium' : 'Low';
-  const engagementColor = engagementPct >= 70 ? '#10b981' : engagementPct >= 40 ? '#f8b537' : '#e11d48';
-
-  // Attendance trend (last 6 months)
-  const now = new Date();
-  const monthLabels = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-    return {
-      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-      label: d.toLocaleString('en', { month: 'short' }),
-    };
-  });
-  const trendMap = new Map((attendanceData ?? []).map(d => [d.week, d.rate]));
-  const chartTrend = monthLabels.map(({ key, label }) => ({
-    month: label,
-    rate: trendMap.get(key) ?? 0,
-  }));
-
-  const tooltipStyle = { background: 'var(--card)', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'var(--foreground)', fontSize: '11px' };
-
-  return (
-    <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5">
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mission Control Reports</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-
-        {/* 1 — My Branches */}
-        <div className="rounded-lg bg-muted p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">My Branches</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">Active</p>
-          <div className="flex flex-col items-center justify-center h-[130px]">
-            <span className="text-5xl font-bold text-[#a78bfa]">{branchCount}</span>
-            <span className="text-xs text-muted-foreground mt-2">{branchCount === 1 ? 'Branch' : 'Branches'}</span>
-            {memberData?.branches && memberData.branches.length > 0 && (
-              <div className="mt-3 space-y-1 w-full">
-                {memberData.branches.map((b) => (
-                  <div key={b.branchId} className="flex items-center gap-2 px-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-[#a78bfa]" />
-                    <span className="text-[10px] text-muted-foreground truncate">{b.branchName}</span>
-                    {b.isHome && <span className="text-[8px] text-[#a78bfa]/60 ml-auto">Home</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 2 — My Attendance Trend */}
-        <div className="rounded-lg bg-muted p-3">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">My Attendance</p>
-              <p className="text-[10px] text-muted-foreground/70">Last 6 Months</p>
-            </div>
-            <span className="text-2xl font-bold text-foreground">{attendanceRate}%</span>
-          </div>
-          <div className="h-[130px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartTrend} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, 100]} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v}%`, 'Attendance Rate']} />
-                <Line type="monotone" dataKey="rate" stroke="#7c3aed" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: '#a78bfa' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 3 — Attendance Breakdown (percentages) */}
-        <div className="rounded-lg bg-muted p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Attendance Breakdown</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-2">This Period</p>
-          <div className="flex flex-col items-center">
-            <div className="relative aspect-square w-full max-w-[120px]">
-              <svg viewBox="0 0 120 120" className="h-full w-full">
-                {(() => {
-                  const cx = 60, cy = 60, r = 48;
-                  const circumference = 2 * Math.PI * r;
-                  const gapDegrees = 8;
-                  const availableDegrees = 360 - donutData.length * gapDegrees;
-                  let currentAngle = -90;
-                  return donutData.map((d, i) => {
-                    const segmentDegrees = (d.value / 100) * availableDegrees;
-                    const arcLength = (segmentDegrees / 360) * circumference;
-                    const rotation = currentAngle;
-                    currentAngle += segmentDegrees + gapDegrees;
-                    return (
-                      <circle key={i} cx={cx} cy={cy} r={r} fill="none"
-                        stroke={DONUT[i]} strokeWidth="12" strokeLinecap="round"
-                        strokeDasharray={`${arcLength} ${circumference}`}
-                        strokeDashoffset="0"
-                        transform={`rotate(${rotation} ${cx} ${cy})`}
-                        style={{ animation: `drawCircle 1.5s ease-out forwards`, animationDelay: `${i * 0.2}s`, strokeDashoffset: circumference }}
-                      />
-                    );
-                  });
-                })()}
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: '4px' }}>
-                <span className="text-xl font-bold text-foreground">{presentPct}%</span>
-                <span className="text-[9px] text-muted-foreground text-center leading-tight font-medium">Avg. Attendance</span>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-3">
-              {donutData.map((d, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: DONUT[i] }} />
-                  <span className="text-[10px] text-muted-foreground">{d.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 4 — My Engagement */}
-        <div className="rounded-lg bg-muted p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">My Engagement</p>
-          <p className="text-[10px] text-muted-foreground/70 mb-1">This Month</p>
-          <div className="flex flex-col items-center">
-            <div className="relative mx-auto w-full max-w-[160px] aspect-[16/9]">
-              <svg viewBox="0 0 160 90" className="h-full w-full">
-                <path d="M 16 80 A 64 64 0 0 1 144 80" fill="none" stroke="hsl(var(--border))" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 16 80 A 64 64 0 0 1 144 80" fill="none" stroke={engagementColor} strokeWidth="8" strokeLinecap="round"
-                  opacity="0.75" strokeDasharray="201" strokeDashoffset="0"
-                  style={{ animation: 'drawArc 1.5s ease-out forwards', strokeDashoffset: '201' }}
-                />
-                <circle cx="144" cy="80" r="5" fill="#f8b537"
-                  style={{ animation: 'chartFadeIn 0.3s ease-out forwards', animationDelay: '1.5s', opacity: 0 }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center pt-[33%]">
-                <span className="text-xl font-bold leading-none" style={{ color: engagementColor }}>{engagementLabel}</span>
-                <span className="text-[10px] text-muted-foreground mt-1">Engagement Level</span>
-              </div>
-            </div>
-            <div className="mt-1 flex w-full justify-between px-1">
-              <div>
-                <p className="text-xs text-muted-foreground">Fellowships</p>
-                <p className="text-3xl font-bold text-foreground">{fellowshipsJoined}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Absent</p>
-                <p className="text-3xl font-bold text-foreground">{absent}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-// ── Mission Summary bar ────────────────────────────────────
-
-function MissionSummary({ role }: { role: string }) {
-  const { data: adminData } = useAdminDashboard();
-  const { data: branchData } = useBranchDashboard();
-  const { data: memberData } = useMemberDashboard();
-  const { data: attendanceData } = useAttendanceTrend();
-  
-  const avgAttendance = attendanceData?.length
-    ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length)
-    : 0;
-  const engagementLabel = avgAttendance >= 70 ? 'High' : avgAttendance >= 40 ? 'Medium' : 'Low';
-  const engagementColor = avgAttendance >= 70 ? '#10b981' : avgAttendance >= 40 ? '#f8b537' : '#e11d48';
-
-  let items: { label: string; value: string | number; color: string }[] = [];
-
-  if (role === 'admin') {
-    items = [
-      { label: 'Branches', value: adminData?.totalBranches ?? '—', color: '#a78bfa' },
-      { label: 'Total Congregation', value: adminData?.totalRoll ?? '—', color: '#10b981' },
-      { label: 'Members', value: adminData?.memberBreakdown?.members ?? '—', color: '#10b981' },
-      { label: 'Returners', value: adminData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
-      { label: 'Fellowships', value: adminData?.totalFellowships ?? '—', color: '#f8b537' },
-      { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
-      { label: 'Engagement', value: engagementLabel, color: engagementColor },
-    ];
-  } else if (role === 'pastor') {
-    items = [
-      { label: 'Total Congregation', value: branchData?.totalRoll ?? '—', color: '#10b981' },
-      { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
-      { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
-      { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
-      { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
-      { label: 'Engagement', value: engagementLabel, color: engagementColor },
-    ];
-  } else if (role === 'leader') {
-    items = [
-      { label: 'Total Congregation', value: branchData?.totalRoll ?? '—', color: '#10b981' },
-      { label: 'Members', value: branchData?.memberBreakdown?.members ?? '—', color: '#10b981' },
-      { label: 'Returners', value: branchData?.memberBreakdown?.returners ?? '—', color: '#a78bfa' },
-      { label: 'Fellowships', value: branchData?.totalFellowships ?? '—', color: '#f8b537' },
-      { label: 'Attendance', value: `${avgAttendance}%`, color: '#a78bfa' },
-      { label: 'Engagement', value: engagementLabel, color: engagementColor },
-    ];
-  } else {
-    // member — personalised with all titles
-    const memberAttRate = memberData?.recentAttendance.rate ?? 0;
-    const memberEngagement = memberAttRate >= 70 ? 'High' : memberAttRate >= 40 ? 'Medium' : 'Low';
-    const memberEngColor = memberAttRate >= 70 ? '#10b981' : memberAttRate >= 40 ? '#f8b537' : '#e11d48';
-    items = [
-      { label: 'My Branches', value: memberData?.branchCount ?? '—', color: '#a78bfa' },
-      { label: 'My Fellowships', value: memberData?.fellowshipsJoined ?? '—', color: '#f8b537' },
-      { label: 'Attendance', value: `${memberAttRate}%`, color: '#10b981' },
-      { label: 'Meetings Attended', value: `${memberData?.recentAttendance.present ?? 0}/${memberData?.recentAttendance.total ?? 0}`, color: '#a78bfa' },
-      { label: 'Engagement', value: memberEngagement, color: memberEngColor },
-    ];
-  }
-
-  return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex flex-col items-center gap-3 px-5 py-4 sm:flex-row sm:justify-center sm:gap-4">
-        <div className="flex items-center gap-3 sm:flex-shrink-0">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/20">
-            <svg className="h-5 w-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>
-          </div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Mission Summary</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:gap-12">
-          {items.map((item, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <div className="hidden h-12 w-px bg-white/10 sm:block" />}
-              <div className="text-center">
-                <p className="text-2xl font-bold" style={{ color: item.color }}>{item.value}</p>
-                <p className="text-[10px] text-muted-foreground/70 mt-0.5">{item.label}</p>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Branch scope picker (#9) ───────────────────────────────
-//
-// Closes the gap left by RBAC Phase 5b: users with branch-admin authority at
-// MULTIPLE branches need a way to switch which branch context they're acting
-// in. The chip renders only when there are 2+ branches to pick between;
-// single-branch admins and plain members see nothing.
-//
-// "All my branches" resets scope to null — the dashboard fork reverts to the
-// cross-branch admin tile (or the user's legacy home-branch view, depending
-// on their authority).
+/**
+ * Per-page scope selector, retained from the RBAC rebuild. Only renders for
+ * someone holding branch-admin authority on more than one branch.
+ */
 function BranchScopePicker({
   adminBranchIds,
   allBranches,
@@ -2011,10 +231,7 @@ function BranchScopePicker({
   const branchById = new Map(allBranches.map((b) => [b.id, b.branchName]));
   const options = [
     { value: '__all__', label: 'All my branches' },
-    ...adminBranchIds.map((id) => ({
-      value: id,
-      label: branchById.get(id) ?? id,
-    })),
+    ...adminBranchIds.map((id) => ({ value: id, label: branchById.get(id) ?? id })),
   ];
   const currentValue = scope?.kind === 'branch' ? scope.id : '__all__';
 
@@ -2022,11 +239,8 @@ function BranchScopePicker({
     <CustomSelect
       value={currentValue}
       onValueChange={(value) => {
-        if (value === '__all__') {
-          setScope(null);
-        } else {
-          setScope({ kind: 'branch', id: value });
-        }
+        if (value === '__all__') setScope(null);
+        else setScope({ kind: 'branch', id: value });
       }}
       options={options}
       placeholder="Pick a branch"
@@ -2041,206 +255,154 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
-  // Phase 4: `scope` narrows the dashboard fork. /api/me/leadership already
-  // scope-filters its response server-side, so the existing arrays here are
-  // already narrowed. We still read scope directly to drive the role label
-  // and the branch name used in the "Branch System Admin — X" suffix.
   const scope = useAuthStore((s) => s.scope);
+
+  const home = useMeHome();
+  // Leadership still drives the role badge and the scope picker's branch list.
+  // The blocks themselves need none of it — that's the point of the payload.
   const leadership = useMyLeadership();
   const { data: branches } = useBranches();
 
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  // Branch context for sub-panels. When scope is a branch, the user is acting
-  // AS that branch even if homeBranchId differs.
+  const today = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
   const branchId = scope?.kind === 'branch' ? scope.id : user?.homeBranchId;
   const verse = getDailyVerse();
 
-  // ── Authority derived from the /api/me/leadership snapshot ──────────────
-  const isSystemAdmin = activeRole === 'admin';
   const bsaIds = leadership.data?.branchSystemAdminBranchIds ?? [];
   const bdaIds = leadership.data?.branchDataAdminBranchIds ?? [];
-  const isBranchSystemAdmin = bsaIds.length > 0;
-  const isBranchDataAdmin = bdaIds.length > 0;
-  const isBranchAdmin = isBranchSystemAdmin || isBranchDataAdmin;
-  const leadFellowships = leadership.data?.leadFellowships ?? [];
-  const coLeadFellowships = leadership.data?.coLeadFellowships ?? [];
-  const leadDepartments = leadership.data?.leadDepartments ?? [];
-  const deputyDepartments = leadership.data?.deputyDepartments ?? [];
-  const allLeadFellowships = [...leadFellowships, ...coLeadFellowships];
-  const allLeadDepartments = [...leadDepartments, ...deputyDepartments];
-  const hasFellowshipLead = allLeadFellowships.length > 0;
-  const hasDepartmentLead = allLeadDepartments.length > 0;
+  const allLeadFellowships = [
+    ...(leadership.data?.leadFellowships ?? []),
+    ...(leadership.data?.coLeadFellowships ?? []),
+  ];
+  const allLeadDepartments = [
+    ...(leadership.data?.leadDepartments ?? []),
+    ...(leadership.data?.deputyDepartments ?? []),
+  ];
 
-  // Resolve a branch name for the role-label suffix. With scope=branch, pull
-  // the scoped branch directly; without scope, fall back to the legacy
-  // homeBranchId path (only valid when home branch is one of the BSA/BDA
-  // branches the user holds).
-  const scopeBranchName =
-    scope?.kind === 'branch' && branches
-      ? branches.find((b) => b.id === scope.id)?.branchName
-      : undefined;
-  const homeBranchName =
-    user?.homeBranchId && branches
-      ? branches.find((b) => b.id === user.homeBranchId)?.branchName
-      : undefined;
-  const homeBranchInBsa = !!user?.homeBranchId && bsaIds.includes(user.homeBranchId);
-  const homeBranchInBda = !!user?.homeBranchId && bdaIds.includes(user.homeBranchId);
+  const roleLabel = deriveRoleLabel({
+    scope,
+    scopeBranchName:
+      scope?.kind === 'branch'
+        ? branches?.find((b) => b.id === scope.id)?.branchName
+        : undefined,
+    homeBranchName: user?.homeBranchId
+      ? branches?.find((b) => b.id === user.homeBranchId)?.branchName
+      : undefined,
+    homeBranchInBsa: !!user?.homeBranchId && bsaIds.includes(user.homeBranchId),
+    homeBranchInBda: !!user?.homeBranchId && bdaIds.includes(user.homeBranchId),
+    isSystemAdmin: activeRole === 'admin',
+    isBranchSystemAdmin: bsaIds.length > 0,
+    isBranchDataAdmin: bdaIds.length > 0,
+    canWriteBranch: caps.has('branch:write'),
+    canLead: caps.has('fellowship:write') || caps.has('department:write'),
+    leadFellowshipName: allLeadFellowships[0]?.fellowshipName,
+    leadDepartmentName: allLeadDepartments[0]?.departmentName,
+  });
 
-  // ── Role label — first match wins; higher authority overrides lower ────
-  //
-  // Phase 4: when `scope` is set the user picked a specific role at
-  // /select-role. The label should reflect THAT choice, not the user's full
-  // authority. We branch on scope first; absent scope, fall through to the
-  // legacy ladder (which still resolves correctly because /api/me/leadership
-  // is unfiltered for unscoped sessions).
-  let roleLabel: string;
-  if (scope?.kind === 'branch') {
-    // The scoped branch is the load-bearing identifier — pair it with the
-    // most-specific tier of authority the user holds on it.
-    const suffix = scopeBranchName ? `, ${scopeBranchName}` : '';
-    if (activeRole === 'admin') {
-      roleLabel = isBranchSystemAdmin
-        ? `Branch System Admin${suffix}`
-        : `Administrator${suffix}`;
-    } else if (isBranchDataAdmin) {
-      roleLabel = `Branch Data Admin${suffix}`;
-    } else if (caps.has('branch:write')) {
-      roleLabel = `Pastor${suffix}`;
-    } else {
-      roleLabel = `Branch${suffix}`;
-    }
-  } else if (scope?.kind === 'fellowship') {
-    const name = allLeadFellowships[0]?.fellowshipName;
-    roleLabel = name ? `Fellowship Leader, ${name}` : 'Fellowship Leader';
-  } else if (scope?.kind === 'department') {
-    const name = allLeadDepartments[0]?.departmentName;
-    roleLabel = name ? `Department Lead, ${name}` : 'Department Lead';
-  } else if (activeRole === 'admin') {
-    roleLabel = 'Administrator';
-  } else if (isBranchSystemAdmin) {
-    roleLabel =
-      homeBranchInBsa && homeBranchName
-        ? `Branch System Admin, ${homeBranchName}`
-        : 'Branch System Admin';
-  } else if (isBranchDataAdmin) {
-    roleLabel =
-      homeBranchInBda && homeBranchName
-        ? `Branch Data Admin, ${homeBranchName}`
-        : 'Branch Data Admin';
-  } else if (caps.has('branch:write')) {
-    roleLabel = 'Pastor';
-  } else if (hasFellowshipLead && hasDepartmentLead) {
-    roleLabel = 'Fellowship & Department Lead';
-  } else if (hasFellowshipLead) {
-    const name = allLeadFellowships[0]?.fellowshipName;
-    roleLabel = name ? `Fellowship Leader, ${name}` : 'Fellowship Leader';
-  } else if (hasDepartmentLead) {
-    const name = allLeadDepartments[0]?.departmentName;
-    roleLabel = name ? `Department Lead, ${name}` : 'Department Lead';
-  } else if ((caps.has('fellowship:write') || caps.has('department:write'))) {
-    roleLabel = 'Leader';
-  } else {
-    roleLabel = 'Member';
-  }
+  const data = home.data;
+  const altitude = data?.altitude ?? 'personal';
 
-  return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">{today}</p>
-          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
-            {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
-          </h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
-              {roleLabel}
-            </span>
-            <BranchScopePicker
-              adminBranchIds={[...new Set([...bsaIds, ...bdaIds])]}
-              allBranches={branches ?? []}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats — forked by branch-admin authority, then fellowship/department
-          leadership, then activeRole.
-
-          Phase 4: a branch-scoped session (scope.kind === 'branch') narrows
-          even a system admin down to a single-branch view. The BranchAdminStats
-          tile reads the scoped branch through the analytics API (which honors
-          auth.scope.id), so rendering it directly is correct. */}
-      <div className="mb-10">
-        {scope?.kind === 'branch' ? (
-          <BranchAdminStats />
-        ) : isSystemAdmin ? (
-          <AdminStats />
-        ) : isBranchAdmin ? (
-          <BranchAdminStats />
-        ) : caps.has('branch:write') ? (
-          <PastorStats />
-        ) : hasFellowshipLead && hasDepartmentLead ? (
-          <DualLeaderTabs
-            leadFellowships={allLeadFellowships}
-            leadDepartments={allLeadDepartments}
+  const header = (
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-xs text-muted-foreground">{today}</p>
+        <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
+          {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
+        </h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#5D3FD3] dark:text-[#a488ff]">
+            {roleLabel}
+          </span>
+          <BranchScopePicker
+            adminBranchIds={[...new Set([...bsaIds, ...bdaIds])]}
+            allBranches={branches ?? []}
           />
-        ) : hasFellowshipLead ? (
-          <FellowshipStats fellowships={allLeadFellowships} />
-        ) : hasDepartmentLead ? (
-          <DepartmentStats departments={allLeadDepartments} />
-        ) : (
-          <MemberStats />
-        )}
-      </div>
-
-      {/* Middle grid: Upcoming + Activity | Right panel */}
-      <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
-            <UpcomingFellowships branchId={activeRole !== 'admin' ? branchId : undefined} />
-            <RecentActivity branchId={activeRole !== 'admin' ? branchId : undefined} role={activeRole ?? 'member'} />
-          </div>
-          
-          {/* Mission Control Reports — all roles, scoped by role.
-              NOTE: Fellowship/Department leaders fall through to the branch-scoped
-              report for now; finer-grained scoping is Phase 6 work. */}
-          <div className="-mt-1">
-            {isSystemAdmin ? (
-              <AdminMissionControlReports />
-            ) : isBranchAdmin || caps.has('branch:write') || hasFellowshipLead || hasDepartmentLead ? (
-              <BranchMissionControlReports />
-            ) : (
-              <MemberMissionControlReports />
-            )}
-          </div>
-
-          {/* Mission Summary — all roles */}
-          <MissionSummary role={activeRole ?? 'member'} />
-        </div>
-        
-        <div className="space-y-4">
-          {/* Pending approvals live on the Pending Approvals StatCard above —
-              clicking it routes straight to /members/approval where Approve
-              and Reject buttons live. This sidebar used to render a second
-              read-only "Pending Approvals" card whose Review link 404'd on
-              members who could not yet be viewed by role. */}
-          <QuickActions role={activeRole ?? 'member'} />
-          
-          {/* Daily verse */}
-          <div className="rounded-xl border border-[#f8b537]/20 bg-gradient-to-br from-card to-[#f8b537]/5 dark:from-card dark:to-[#f8b537]/10 p-4 shadow-lg">
-            <div className="mb-2 flex items-center gap-2">
-              <svg className="h-5 w-5 text-[#f8b537]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-              </svg>
-              <p className="text-xs font-bold uppercase tracking-widest text-[#f8b537]">Daily Verse</p>
-            </div>
-            <p className="text-sm leading-relaxed text-foreground/80 italic mb-2">&ldquo;{verse.text}&rdquo;</p>
-            <p className="text-sm font-bold text-[#f8b537]">— {verse.ref}</p>
-          </div>
         </div>
       </div>
     </div>
   );
-}
 
+  if (home.isLoading) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <HomeSkeleton />
+      </div>
+    );
+  }
+
+  if (home.isError || !data) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <div className="rounded-lg border border-[#e11d48]/40 bg-[#e11d48]/10 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            We couldn&apos;t load your dashboard.
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {home.error instanceof Error ? home.error.message : 'Please try again.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => home.refetch()}
+            className="mt-3 rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-3 py-1.5 text-sm font-medium text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const pulse = data.pulse ? <PulseBlock pulse={data.pulse} /> : null;
+  const agenda = (
+    <>
+      <AgendaBlock label="Today" items={data.today} />
+      <AgendaBlock label="This week" items={data.thisWeek} withDay />
+      {data.gettingStarted.length > 0 ? (
+        <GettingStartedBlock items={data.gettingStarted} />
+      ) : null}
+    </>
+  );
+  const sidebar = (
+    <>
+      <NeedsYouBlock items={data.needsYou} />
+      <GroupsBlock
+        label={altitude === 'church' ? 'All branches' : 'My groups'}
+        groups={data.groups}
+      />
+      {data.streakWeeks ? <StreakBlock weeks={data.streakWeeks} /> : null}
+      <RecentActivity branchId={branchId} isMember={altitude === 'personal'} />
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      {header}
+
+      {/* Pulse spans the top where it exists; the agenda leads the left
+          column and the queue the right. At church altitude the numbers are
+          the whole story — a system admin has no personal duties — so the
+          agenda drops below the fold rather than leading an empty section. */}
+      {pulse}
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-6">{altitude === 'church' ? sidebar : agenda}</div>
+        <div className="space-y-6">{altitude === 'church' ? agenda : sidebar}</div>
+      </div>
+
+      <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-ambient">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Daily verse
+        </p>
+        <p className="mb-2 text-sm italic leading-relaxed text-foreground/80">
+          &ldquo;{verse.text}&rdquo;
+        </p>
+        <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">— {verse.ref}</p>
+      </div>
+    </div>
+  );
+}
