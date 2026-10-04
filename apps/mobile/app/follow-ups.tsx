@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import {
   Badge,
+  Card,
   spacing,
   typography,
   radii,
@@ -30,8 +31,9 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
-import type { MeActivityItem, MeFollowupItem } from '@kairos/types';
+import type { FollowupQueueRow, MeActivityItem, MeFollowupItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useCapabilities } from '@/lib/capabilities';
 
 type FilterKind =
   | 'all'
@@ -65,7 +67,88 @@ function daysAgo(iso: string | null): number | null {
   return Math.max(0, Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24)));
 }
 
-type Tab = 'todo' | 'activity';
+// The two queue tabs are branch-level work and only render for branch:write —
+// see apps/api/src/followups/service.ts, which enforces the same gate.
+type Tab = 'todo' | 'activity' | 'first-timers' | 'no-group';
+
+/** Rows for the two branch queues. Same shape, different urgency. */
+function QueueList({
+  rows,
+  loading,
+  emptyText,
+  showInviter,
+}: {
+  rows: FollowupQueueRow[];
+  loading: boolean;
+  emptyText: string;
+  showInviter: boolean;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+
+  if (loading) {
+    return <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />;
+  }
+  if (rows.length === 0) {
+    return (
+      <View style={styles.listContent}>
+        <Text style={styles.emptyMeta}>{emptyText}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.listContent}>
+      {rows.map((row) => (
+        <Pressable
+          key={row.memberId}
+          onPress={() => router.push(`/members/${row.memberId}` as never)}
+          accessibilityRole="button"
+          accessibilityLabel={`${row.firstName} ${row.lastName}`}
+        >
+          <Card padding="md" style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowTitle}>
+                {row.firstName} {row.lastName}
+              </Text>
+              <Text style={styles.rowMeta} numberOfLines={1}>
+                {[
+                  row.phone ?? row.email,
+                  showInviter && row.invitedByName ? `invited by ${row.invitedByName}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
+            </View>
+            <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+          </Card>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
+
+const TAB_LABEL: Record<Tab, string> = {
+  todo: 'To do',
+  'first-timers': 'First-timers',
+  'no-group': 'No group',
+  activity: 'My activity',
+};
+
+const SUB_TITLE: Record<Tab, string> = {
+  todo: 'Owe someone a call',
+  'first-timers': 'Needs a first visit',
+  'no-group': 'In no fellowship or department',
+  activity: 'Recently recorded',
+};
+
+const SUB_META: Record<Tab, string> = {
+  todo: 'Souls, meeting follow-ups, and new-believer mentees you look after.',
+  'first-timers': 'They came and nobody has been in touch yet. Short clock.',
+  'no-group': 'Already part of the church, but drifting. Longer clock.',
+  activity: 'Every touchpoint you’ve personally logged, most recent first.',
+};
 
 export default function FollowUps() {
   const styles = useThemedStyles(makeStyles);
@@ -78,6 +161,21 @@ export default function FollowUps() {
     queryKey: ['me', 'followups'],
     queryFn: async () => (await api.me.followups()).data ?? [],
     enabled: tab === 'todo',
+  });
+
+  const caps = useCapabilities();
+  const canSeeQueues = caps.has('branch:write');
+
+  const firstTimers = useQuery({
+    queryKey: ['followups', 'queue', 'first-timers'],
+    queryFn: async () => (await api.followups.firstTimerQueue()).data ?? [],
+    enabled: canSeeQueues && tab === 'first-timers',
+  });
+
+  const noGroup = useQuery({
+    queryKey: ['followups', 'queue', 'no-group'],
+    queryFn: async () => (await api.followups.noGroupQueue()).data ?? [],
+    enabled: canSeeQueues && tab === 'no-group',
   });
 
   const activity = useQuery({
@@ -122,7 +220,9 @@ export default function FollowUps() {
       </View>
 
       <View style={styles.tabsRow}>
-        {(['todo', 'activity'] as Tab[]).map((t) => {
+        {((canSeeQueues
+          ? ['todo', 'first-timers', 'no-group', 'activity']
+          : ['todo', 'activity']) as Tab[]).map((t) => {
           const active = t === tab;
           return (
             <Pressable
@@ -131,7 +231,7 @@ export default function FollowUps() {
               style={[styles.tabBtn, active && styles.tabBtnActive]}
             >
               <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                {t === 'todo' ? 'To do' : 'My activity'}
+                {TAB_LABEL[t]}
               </Text>
             </Pressable>
           );
@@ -139,17 +239,22 @@ export default function FollowUps() {
       </View>
 
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>
-          {tab === 'todo' ? 'Owe someone a call' : 'Recently recorded'}
-        </Text>
-        <Text style={styles.subMeta}>
-          {tab === 'todo'
-            ? 'Souls, meeting follow-ups, and new-believer mentees you look after.'
-            : 'Every touchpoint you’ve personally logged, most recent first.'}
-        </Text>
+        <Text style={styles.subTitle}>{SUB_TITLE[tab]}</Text>
+        <Text style={styles.subMeta}>{SUB_META[tab]}</Text>
       </View>
 
-      {tab === 'todo' ? (
+      {tab === 'first-timers' || tab === 'no-group' ? (
+        <QueueList
+          rows={(tab === 'first-timers' ? firstTimers.data : noGroup.data) ?? []}
+          loading={tab === 'first-timers' ? firstTimers.isLoading : noGroup.isLoading}
+          showInviter={tab === 'first-timers'}
+          emptyText={
+            tab === 'first-timers'
+              ? 'No first-timers waiting on a first visit.'
+              : 'Everyone here belongs to a fellowship or department.'
+          }
+        />
+      ) : tab === 'todo' ? (
         <>
           <ScrollView
             horizontal

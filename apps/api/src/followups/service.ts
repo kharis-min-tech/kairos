@@ -8,6 +8,7 @@ import {
   departmentMembers,
   formSubmissions,
 } from '@kairos/database';
+import { alias } from 'drizzle-orm/pg-core';
 import type { AuthContext } from '@kairos/types';
 import { NotFoundError, ForbiddenError } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
@@ -134,6 +135,7 @@ export async function listFirstTimersNeedingFollowup(
   enforceBranchWrite(auth, branchId);
 
   const since = new Date(Date.now() - FIRST_TIMER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const inviter = alias(members, 'inviter');
 
   const rows = await db
     .select({
@@ -146,10 +148,18 @@ export async function listFirstTimersNeedingFollowup(
       branchName: branches.branchName,
       since: formSubmissions.createdAt,
       payload: formSubmissions.payload,
+      inviterFirstName: inviter.firstName,
+      inviterLastName: inviter.lastName,
     })
     .from(formSubmissions)
     .innerJoin(members, eq(formSubmissions.subjectMemberId, members.id))
     .leftJoin(branches, eq(members.homeBranchId, branches.id))
+    // The inviter is a real member reference on new submissions; older ones
+    // only carry a typed name, which readInvitedBy falls back to.
+    .leftJoin(
+      inviter,
+      sql`${inviter.id}::text = ${formSubmissions.payload}->>'invitedByMemberId'`,
+    )
     .where(
       and(
         eq(formSubmissions.formType, 'first_time_visitor'),
@@ -177,11 +187,14 @@ export async function listFirstTimersNeedingFollowup(
     memberType: r.memberType,
     branchName: r.branchName,
     since: (r.since as Date).toISOString(),
-    invitedByName: readInvitedBy(r.payload),
+    invitedByName:
+      r.inviterFirstName && r.inviterLastName
+        ? `${r.inviterFirstName} ${r.inviterLastName}`
+        : readInvitedBy(r.payload),
   }));
 }
 
-/** `invitedBy` is free text on the form payload until the picker lands. */
+/** Legacy fallback: submissions made before the picker carry a typed name. */
 function readInvitedBy(payload: unknown): string | null {
   if (!payload || typeof payload !== 'object') return null;
   const value = (payload as Record<string, unknown>).invitedBy;

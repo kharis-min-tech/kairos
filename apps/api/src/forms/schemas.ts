@@ -146,7 +146,9 @@ export const firstTimeVisitorPayloadSchema = z
       .enum(['fellowship', 'department', 'new_believers', 'just_visiting'])
       .optional(),
     howDidYouHear: z.string().max(500).optional(),
+    // Legacy free text, kept so historical submissions still validate.
     invitedBy: z.string().max(200).optional(),
+    invitedByMemberId: z.string().uuid().optional(),
   })
   .superRefine((v, ctx) => {
     const under16 = isVisitorUnder16(v as Record<string, unknown>);

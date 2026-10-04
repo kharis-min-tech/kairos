@@ -1672,7 +1672,8 @@ export interface HomeTaskItem {
     | 'welfare_concern'
     | 'safeguarding_concern'
     | 'membership_interest'
-    | 'rota_swap';
+    | 'rota_swap'
+    | 'first_timer_followup';
   id: string;
   title: string;
   subtitle: string | null;

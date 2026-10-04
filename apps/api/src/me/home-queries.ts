@@ -1,6 +1,7 @@
-import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc, isNull, isNotNull } from 'drizzle-orm';
+import { eq, and, or, gte, lte, lt, count, sql, inArray, desc, asc, isNull, isNotNull, notExists } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
+  memberFollowups,
   services,
   serviceAttendance,
   fellowships,
@@ -30,6 +31,12 @@ import type { AuthContext, HomeActivityItem, HomeGroupSummary } from '@kairos/ty
  * filtering in JS, so a leader can never be handed rows they then have to be
  * trusted not to render.
  */
+
+/**
+ * Matches FIRST_TIMER_WINDOW_DAYS in apps/api/src/followups/service.ts — the
+ * count here and the list there must not disagree.
+ */
+const FIRST_TIMER_WINDOW_DAYS = 60;
 
 /** How far back a fellowship meeting can be and still be worth chasing. */
 const REGISTER_CHASE_DAYS = 21;
@@ -857,4 +864,38 @@ export async function listRecentActivity(
   return items
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     .slice(0, ACTIVITY_LIMIT);
+}
+
+/**
+ * First-timers in the branch nobody has contacted yet. The count behind the
+ * control centre's "needs a first visit" row; the list itself lives on
+ * /api/followups/queues/first-timers, and both use the same window so the
+ * number agrees with the page it opens.
+ */
+export async function countFirstTimersNeedingFollowup(
+  db: Database,
+  branchId: string,
+): Promise<number> {
+  const since = new Date(Date.now() - FIRST_TIMER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+
+  const rows = await db
+    .select({ value: count() })
+    .from(formSubmissions)
+    .innerJoin(members, eq(formSubmissions.subjectMemberId, members.id))
+    .where(
+      and(
+        eq(formSubmissions.formType, 'first_time_visitor'),
+        eq(formSubmissions.branchId, branchId),
+        gte(formSubmissions.createdAt, since),
+        eq(members.isActive, true),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(memberFollowups)
+            .where(eq(memberFollowups.memberId, members.id)),
+        ),
+      ),
+    );
+
+  return Number(rows[0]?.value ?? 0);
 }

@@ -52,6 +52,7 @@ const mockCountBranchesBehind = vi.fn();
 const mockCountBranchesWithoutPastor = vi.fn();
 const mockGetBranchMainPastorName = vi.fn();
 const mockListRecentActivity = vi.fn();
+const mockCountFirstTimers = vi.fn();
 
 vi.mock('./home-queries', () => ({
   listUpcomingServices: (...a: unknown[]) => mockListUpcomingServices(...a),
@@ -66,6 +67,7 @@ vi.mock('./home-queries', () => ({
   countBranchesWithoutPastor: (...a: unknown[]) => mockCountBranchesWithoutPastor(...a),
   getBranchMainPastorName: (...a: unknown[]) => mockGetBranchMainPastorName(...a),
   listRecentActivity: (...a: unknown[]) => mockListRecentActivity(...a),
+  countFirstTimersNeedingFollowup: (...a: unknown[]) => mockCountFirstTimers(...a),
   BRANCH_BEHIND_DAYS: 14,
   DRIFTING_SERVICES_WINDOW: 3,
 }));
@@ -114,6 +116,7 @@ beforeEach(() => {
   mockCountBranchesWithoutPastor.mockResolvedValue(0);
   mockGetBranchMainPastorName.mockResolvedValue(null);
   mockListRecentActivity.mockResolvedValue([]);
+  mockCountFirstTimers.mockResolvedValue(0);
   mockGetMissingMembers.mockResolvedValue([]);
   mockGetProfileCompleteness.mockResolvedValue({ complete: true, hasFellowship: true, hasMembershipInterest: true });
   mockGetBranchStats.mockResolvedValue({
@@ -466,6 +469,7 @@ describe("getMyHome — the Main Pastor on today's service", () => {
   it('falls back to the branch name when no Main Pastor is recorded', async () => {
     mockGetBranchMainPastorName.mockResolvedValue(null);
   mockListRecentActivity.mockResolvedValue([]);
+  mockCountFirstTimers.mockResolvedValue(0);
     const home = await getMyHome(db, auth());
     expect(home.today.find((i) => i.id === 's1')!.subtitle).toBe('London');
     vi.useRealTimers();
@@ -501,5 +505,40 @@ describe('getMyHome — recent activity', () => {
     const home = await getMyHome(db, auth());
     expect(mockListRecentActivity).toHaveBeenCalledWith(db, expect.anything(), 'personal');
     expect(home.recentActivity).toEqual([]);
+  });
+});
+
+describe('getMyHome — first-timers needing a visit', () => {
+  it('surfaces a high-urgency row at branch altitude', async () => {
+    mockCountFirstTimers.mockResolvedValue(3);
+    const home = await getMyHome(
+      db,
+      auth({ grants: [grant(FunctionalRole.BranchAdmin, 'branch', TEST_IDS.branchId)] }),
+    );
+    const row = home.needsYou.find((t) => t.kind === 'first_timer_followup');
+    expect(row).toMatchObject({
+      title: '3 first-timers need a first visit',
+      urgency: 'high',
+      count: 3,
+    });
+  });
+
+  it('uses the singular for one', async () => {
+    mockCountFirstTimers.mockResolvedValue(1);
+    const home = await getMyHome(
+      db,
+      auth({ grants: [grant(FunctionalRole.BranchAdmin, 'branch', TEST_IDS.branchId)] }),
+    );
+    expect(home.needsYou.find((t) => t.kind === 'first_timer_followup')!.title).toBe(
+      '1 first-timer needs a first visit',
+    );
+  });
+
+  it('is not asked for below branch altitude — a group leader has no reach here', async () => {
+    await getMyHome(
+      db,
+      auth({ grants: [grant(FunctionalRole.FellowshipLeader, 'fellowship', 'f1')] }),
+    );
+    expect(mockCountFirstTimers).not.toHaveBeenCalled();
   });
 });
