@@ -17,6 +17,12 @@ export const outreachPrograms = pgTable('outreach_programs', {
   city: varchar('city', { length: 100 }),
   description: text('description'),
   coordinatorId: uuid('coordinator_id').references(() => members.id, { onDelete: 'set null' }),
+  /**
+   * The institutional coordinator — set to 'Kharis' when the church itself
+   * runs the programme and there is no member. Mutually exclusive with
+   * coordinatorId: setting both would freeze a name that beats the live
+   * member's, so a CHECK (migration 0053) forbids it.
+   */
   coordinatorName: varchar('coordinator_name', { length: 200 }),
   createdBy: uuid('created_by').references(() => members.id, { onDelete: 'set null' }),
   // Optional attribution: this program is organized by / for a specific

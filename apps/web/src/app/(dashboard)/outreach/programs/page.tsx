@@ -244,7 +244,8 @@ export default function OutreachProgramsPage() {
                 const userCreatedProgram = program.createdBy && program.createdBy === user?.id;
                 
                 // For pastor/leader: can only register if admin created it AND coordinator is "Kharis"
-                const isKharisCoordinator = program.coordinatorName === 'Kharis';
+                // No member coordinator means the church itself runs it.
+                const isKharisCoordinator = !program.coordinatorId;
                 const canRegisterForProgram = isMember || 
                   (canRegister && !userCreatedProgram && program.creatorRole === 'admin' && isKharisCoordinator);
 

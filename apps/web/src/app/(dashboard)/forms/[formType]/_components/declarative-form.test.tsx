@@ -77,7 +77,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
     it('hides the guardian section by default (not under 16)', () => {
       renderForm();
       expect(screen.queryByRole('heading', { name: 'Parent / guardian' })).not.toBeInTheDocument();
-      expect(screen.queryByText(/Guardian name/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Guardian phone/)).not.toBeInTheDocument();
     });
 
     it('hides the children repeatable group until brought-children is checked', () => {
@@ -94,7 +94,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       renderForm();
       await pickRadio(user, 'Are you under 16?', 'Yes');
       expect(await screen.findByRole('heading', { name: 'Parent / guardian' })).toBeInTheDocument();
-      expect(screen.getByText(/Guardian name/)).toBeInTheDocument();
+      expect(screen.getByText(/Guardian phone/)).toBeInTheDocument();
       expect(screen.getByText(/Guardian phone/)).toBeInTheDocument();
     });
 
@@ -185,7 +185,25 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await screen.findByText(/First name is required/);
       // Guardian section is hidden, so no guardian-required errors appear.
-      expect(screen.queryByText(/Guardian name is required/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Guardian is required/)).not.toBeInTheDocument();
+    });
+
+    // Pick-or-type (2026-10-05): a visiting child's guardian is often not in
+    // the directory, so a typed name satisfies the requirement just as a
+    // picked member does. Requiring the reference would have blocked the form.
+    it('accepts a typed guardian name in place of a member reference', async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await pickRadio(user, 'Are you under 16?', 'Yes');
+      await screen.findByRole('heading', { name: 'Parent / guardian' });
+
+      await user.type(screen.getByPlaceholderText('Full name'), 'Grace Adeyemi');
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+      await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+
+      // Other fields still fail, but the guardian no longer does.
+      await screen.findByText(/First name is required/);
+      expect(screen.queryByText(/Guardian is required/)).not.toBeInTheDocument();
     });
 
     it('requires guardian fields once the guardian section is visible (under 16)', async () => {
@@ -195,7 +213,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await screen.findByRole('heading', { name: 'Parent / guardian' });
       await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
-      expect(await screen.findByText(/Guardian name is required/)).toBeInTheDocument();
+      expect(await screen.findByText(/Guardian is required/)).toBeInTheDocument();
       expect(screen.getByText(/Guardian phone is required/)).toBeInTheDocument();
       // Under 16: email/phone are no longer required (relaxed variants render).
       expect(screen.queryByText(/Email is required/)).not.toBeInTheDocument();
