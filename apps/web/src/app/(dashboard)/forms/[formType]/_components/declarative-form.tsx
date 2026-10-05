@@ -14,6 +14,7 @@ import {
 import { Search, X, Plus, Trash2 } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
 import { MemberSearchLink } from './member-search-link';
+import { MemberPickOrType } from './member-pick-or-type';
 import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
@@ -213,7 +214,13 @@ export function DeclarativeForm({
         for (const field of block.fields) {
           if (!field.required) continue;
           if (!isFieldVisible(field, blockVisible, values, now)) continue;
-          if (!isFilled(state.values[field.id])) {
+          // A member field with a free-text companion is satisfied by either
+          // one — the person is identified whether or not they're in the
+          // directory, so demanding the reference would block the form.
+          const satisfied =
+            isFilled(state.values[field.id]) ||
+            (!!field.freeTextFieldId && isFilled(state.values[field.freeTextFieldId]));
+          if (!satisfied) {
             found[field.id] = `${field.label} is required`;
           }
         }
@@ -346,19 +353,41 @@ export function DeclarativeForm({
 
     const control = (() => {
       switch (field.type) {
-        case 'member':
+        case 'member': {
           // The stored value is a member id, so the picked person can actually
-          // be routed to — a typed name never could be.
+          // be routed to — a typed name never could be. Fields that name a
+          // companion accept a typed name too, for people not in the
+          // directory; the two keys stay mutually exclusive.
+          const companionId = field.freeTextFieldId;
+          if (!companionId) {
+            return (
+              <MemberSearchLink
+                value={typeof value === 'string' ? value : undefined}
+                onSelect={(m: FormMemberSearchResult) => onChange(m.id)}
+                onClear={() => onChange('')}
+                label={field.label}
+                helpText={field.placeholder ?? 'Search by name or phone.'}
+                linkedNote="Linked."
+              />
+            );
+          }
+          const companionValue = state.values[companionId];
           return (
-            <MemberSearchLink
-              value={typeof value === 'string' ? value : undefined}
-              onSelect={(m: FormMemberSearchResult) => onChange(m.id)}
-              onClear={() => onChange('')}
-              label={field.label}
-              helpText={field.placeholder ?? 'Search by name or phone.'}
-              linkedNote="Linked."
+            <MemberPickOrType
+              field={field}
+              memberId={typeof value === 'string' ? value : ''}
+              typedName={typeof companionValue === 'string' ? companionValue : ''}
+              onPickMember={(id) => {
+                onChange(id);
+                setValue(companionId, '');
+              }}
+              onTypeName={(name) => {
+                setValue(companionId, name);
+                onChange('');
+              }}
             />
           );
+        }
         case 'date':
           return (
             <DateSelect

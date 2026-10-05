@@ -63,30 +63,60 @@ export const testimonyPayloadSchema = z.object({
   }),
 });
 
+
+/**
+ * Each parent is satisfied by a member reference OR a typed name. Both forms
+ * ask whether the parents are members, so either is legitimate — but where
+ * they ARE members we want the reference, so the record can be followed up.
+ */
+function requireParent(
+  v: { fathersName?: string; fatherMemberId?: string; mothersName?: string; motherMemberId?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (!v.fatherMemberId && !v.fathersName?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['fathersName'],
+      message: 'Father is required — pick a member or type their name',
+    });
+  }
+  if (!v.motherMemberId && !v.mothersName?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['mothersName'],
+      message: 'Mother is required — pick a member or type their name',
+    });
+  }
+}
+
 export const babyNamingPayloadSchema = z.object({
   babyFullName: z.string().min(1).max(200),
   dateOfBirth: z.string().min(1),
   gender: genderEnum.optional(),
-  fathersName: z.string().min(1).max(200),
-  mothersName: z.string().min(1).max(200),
+  fathersName: z.string().max(200).optional(),
+  fatherMemberId: z.string().uuid().optional(),
+  mothersName: z.string().max(200).optional(),
+  motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
   parentContactEmail: z.string().email().optional(),
   preferredCeremonyDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
-});
+}).superRefine(requireParent);
 
 export const babyDedicationPayloadSchema = z.object({
   babyFullName: z.string().min(1).max(200),
   dateOfBirth: z.string().min(1),
   gender: genderEnum.optional(),
-  fathersName: z.string().min(1).max(200),
-  mothersName: z.string().min(1).max(200),
+  fathersName: z.string().max(200).optional(),
+  fatherMemberId: z.string().uuid().optional(),
+  mothersName: z.string().max(200).optional(),
+  motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
   parentsAreMembers: z.boolean().optional(),
   parentContactEmail: z.string().email().optional(),
   preferredDedicationDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
-});
+}).superRefine(requireParent);
 
 // ── First-time visitor (branching-aware) ───────────────────
 //
@@ -149,17 +179,23 @@ export const firstTimeVisitorPayloadSchema = z
     // Legacy free text, kept so historical submissions still validate.
     invitedBy: z.string().max(200).optional(),
     invitedByMemberId: z.string().uuid().optional(),
+    guardianMemberId: z.string().uuid().optional(),
   })
   .superRefine((v, ctx) => {
     const under16 = isVisitorUnder16(v as Record<string, unknown>);
 
     if (under16) {
       // Guardian carries the contact burden; contact fields relaxed.
-      if (!v.guardianName || v.guardianName.trim().length === 0) {
+      // A member reference OR a typed name — a visiting child's guardian is
+      // often not in the directory yet, so requiring a pick would block the
+      // form, but where they ARE a member we want the reference.
+      const hasGuardian =
+        !!v.guardianMemberId || !!(v.guardianName && v.guardianName.trim().length > 0);
+      if (!hasGuardian) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['guardianName'],
-          message: 'Guardian name is required for visitors under 16',
+          message: 'Guardian is required for visitors under 16',
         });
       }
       if (!v.guardianPhone || v.guardianPhone.trim().length === 0) {

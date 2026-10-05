@@ -513,6 +513,12 @@ function SectionBlock({
             field={field}
             value={state.values[field.id]}
             onChange={(v) => setValue(field.id, v)}
+            companionValue={
+              field.freeTextFieldId ? state.values[field.freeTextFieldId] : undefined
+            }
+            onCompanionChange={(v) => {
+              if (field.freeTextFieldId) setValue(field.freeTextFieldId, v);
+            }}
             errorKey={field.id}
             error={errors[field.id]}
           />
@@ -599,11 +605,16 @@ function FieldRenderer({
   field,
   value,
   onChange,
+  companionValue,
+  onCompanionChange,
   error,
 }: {
   field: FormFieldDef;
   value: FieldValue;
   onChange: (v: FieldValue) => void;
+  /** Current value of `field.freeTextFieldId`, for member pick-or-type. */
+  companionValue?: FieldValue;
+  onCompanionChange?: (v: FieldValue) => void;
   errorKey: string;
   error: string | undefined;
 }) {
@@ -668,7 +679,15 @@ function FieldRenderer({
   if (field.type === 'member') {
     // Stores a member id, not a typed name — the point is that the picked
     // person can be routed to afterwards.
-    return <MemberField field={field} value={value} onChange={onChange} />;
+    return (
+      <MemberField
+        field={field}
+        value={value}
+        onChange={onChange}
+        companionValue={companionValue}
+        onCompanionChange={onCompanionChange}
+      />
+    );
   }
 
   if (field.type === 'textarea') {
@@ -764,10 +783,14 @@ function MemberField({
   field,
   value,
   onChange,
+  companionValue,
+  onCompanionChange,
 }: {
   field: FormFieldDef;
   value: FieldValue;
   onChange: (v: FieldValue) => void;
+  companionValue?: FieldValue;
+  onCompanionChange?: (v: FieldValue) => void;
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
@@ -790,6 +813,21 @@ function MemberField({
         <Pressable onPress={() => onChange('')} accessibilityRole="button">
           <Text style={styles.memberFieldClear}>Clear</Text>
         </Pressable>
+      ) : field.freeTextFieldId && onCompanionChange ? (
+        // Not everyone is in the directory — a visiting child's guardian or a
+        // baby's parent often isn't. Hidden once a member is linked, so nobody
+        // fills in two different people and wonders which one counted.
+        <View style={{ gap: spacing.xs }}>
+          <Text style={styles.helpText}>…or type their name if they’re not a member</Text>
+          <Input
+            value={typeof companionValue === 'string' ? companionValue : ''}
+            onChangeText={(v) => {
+              onCompanionChange(v);
+              onChange('');
+            }}
+            placeholder="Full name"
+          />
+        </View>
       ) : null}
       <MemberPickerSheet
         open={open}
@@ -800,6 +838,7 @@ function MemberField({
         subtitle="Search members in this branch."
         onPick={(memberId) => {
           onChange(memberId);
+          onCompanionChange?.('');
           setOpen(false);
         }}
       />

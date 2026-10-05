@@ -71,6 +71,18 @@ export interface FormFieldDef {
   placeholder?: string;
   /** For `select` / `radio` (and multi-select via `select`). */
   options?: FormFieldOption[];
+  /**
+   * For `member` fields only. Names a companion text field the renderer
+   * writes to when the person typed isn't in the directory — a visiting
+   * child's guardian or a baby's parent is often not a member yet, so
+   * requiring a pick would block the form.
+   *
+   * The two keys are mutually exclusive: picking a member sets this field's
+   * id and clears the companion; typing a name does the reverse. A reference
+   * where one exists, a name where one doesn't, and never an ambiguous value
+   * under a single key.
+   */
+  freeTextFieldId?: string;
   helpText?: string;
   /**
    * Value the field starts with. For date fields, the magic string
@@ -271,7 +283,14 @@ export const FIRST_TIME_VISITOR_FORM: FormDefinition = {
       },
       fields: [
         // Reuses the member emergency-contact shape (name/phone/relationship).
-        { id: 'guardianName', type: 'text', label: 'Guardian name', required: true },
+        {
+          id: 'guardianMemberId',
+          type: 'member',
+          label: 'Guardian',
+          placeholder: 'Search, or type their name if they’re new',
+          freeTextFieldId: 'guardianName',
+          required: true,
+        },
         { id: 'guardianPhone', type: 'tel', label: 'Guardian phone', required: true },
         {
           id: 'guardianRelationship',
@@ -543,8 +562,22 @@ function babyForm(
         id: 'parents',
         title: 'Parents',
         fields: [
-          { id: 'fathersName', type: 'text', label: 'Father’s name', required: true },
-          { id: 'mothersName', type: 'text', label: 'Mother’s name', required: true },
+          {
+            id: 'fatherMemberId',
+            type: 'member',
+            label: 'Father',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'fathersName',
+            required: true,
+          },
+          {
+            id: 'motherMemberId',
+            type: 'member',
+            label: 'Mother',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'mothersName',
+            required: true,
+          },
           ...(formType === 'baby_dedication'
             ? [
                 {

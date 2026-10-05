@@ -764,14 +764,31 @@ describe('firstTimeVisitorPayloadSchema', () => {
     }
   });
 
-  it('rejects an under-16 payload missing guardianName', async () => {
+  it('rejects an under-16 payload with neither a guardian reference nor a name', async () => {
     const { firstTimeVisitorPayloadSchema } = await import('./schemas');
-    const r = firstTimeVisitorPayloadSchema.safeParse({ ...under16ByFlag, guardianName: undefined });
+    const r = firstTimeVisitorPayloadSchema.safeParse({
+      ...under16ByFlag,
+      guardianName: undefined,
+      guardianMemberId: undefined,
+    });
     expect(r.success).toBe(false);
     if (!r.success) {
       const issue = r.error.errors.find((e) => e.path.join('.') === 'guardianName');
-      expect(issue?.message).toBe('Guardian name is required for visitors under 16');
+      expect(issue?.message).toBe('Guardian is required for visitors under 16');
     }
+  });
+
+  // Pick-or-type: a visiting child's guardian is often not in the directory,
+  // so either identifier satisfies the rule — but where they ARE a member we
+  // want the reference, which is why both keys exist.
+  it('accepts an under-16 payload with a guardian member reference and no name', async () => {
+    const { firstTimeVisitorPayloadSchema } = await import('./schemas');
+    const r = firstTimeVisitorPayloadSchema.safeParse({
+      ...under16ByFlag,
+      guardianName: undefined,
+      guardianMemberId: '11111111-1111-1111-1111-111111111111',
+    });
+    expect(r.success).toBe(true);
   });
 
   it('rejects an under-16 payload missing guardianPhone', async () => {
