@@ -467,8 +467,8 @@ function EmptyState() {
       </View>
       <Text style={styles.emptyTitle}>No home branch set</Text>
       <Text style={styles.emptyMeta}>
-        Complete onboarding to pick your home branch, or ask an admin to set one
-        for you.
+        Set your home branch from your profile, or ask an admin to set one for
+        you.
       </Text>
     </Card>
   );

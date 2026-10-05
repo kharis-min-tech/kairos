@@ -8,7 +8,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@kairos/ui-native';
 import { registerAuthCallbacks } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
-import { useOnboardingStore } from '@/store/onboarding';
 import { useThemeStore } from '@/store/theme';
 import { AlertHost } from '@/components/alert-host';
 import {
@@ -28,10 +27,8 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const hydrateAuth = useAuthStore((s) => s.hydrate);
-  const hydrateOnboarding = useOnboardingStore((s) => s.hydrate);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
   const authHydrated = useAuthStore((s) => s.hydrated);
-  const onboardingHydrated = useOnboardingStore((s) => s.hydrated);
   const themeHydrated = useThemeStore((s) => s.hydrated);
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
@@ -51,11 +48,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrateAuth();
-    void hydrateOnboarding();
     void hydrateTheme();
-  }, [hydrateAuth, hydrateOnboarding, hydrateTheme]);
+  }, [hydrateAuth, hydrateTheme]);
 
-  const ready = authHydrated && onboardingHydrated && themeHydrated;
+  const ready = authHydrated && themeHydrated;
 
   useEffect(() => {
     if (ready) {
@@ -70,7 +66,7 @@ export default function RootLayout() {
           <ThemedChrome />
           {ready ? <RouterHost /> : null}
           {/* Persistent bottom tab bar — visible on every authenticated
-              screen, hidden on auth/onboarding routes and when the caller
+              screen, hidden on auth routes and when the caller
               isn't approved. Lives here (not inside `(tabs)/_layout.tsx`)
               so the bar survives navigation to routes outside the tab
               group. The default expo-router Tabs bar is disabled in
@@ -134,7 +130,7 @@ function ThemedChrome() {
  *     any route the user was on gets redirected. The sign-out button also
  *     navigates manually; this is the backstop.
  *
- * The auth and onboarding groups are excluded so we don't ping-pong a user
+ * The auth group is excluded so we don't ping-pong a user
  * who is already on the login/signup screen.
  */
 function AuthGuard() {
@@ -145,7 +141,7 @@ function AuthGuard() {
   useEffect(() => {
     if (accessToken) return;
     const top = (segments as readonly string[])[0];
-    if (top === '(auth)' || top === '(onboarding)') return;
+    if (top === '(auth)') return;
     router.replace('/(auth)/login');
   }, [accessToken, segments, router]);
 

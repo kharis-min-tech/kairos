@@ -6,7 +6,7 @@ tags:
 env:
   # Android Expo Go bundle id. iOS is host.exp.Exponent (capital E).
   EXPO_GO_APP_ID: "host.exp.exponent"
-  # EMAIL, PASSWORD, METRO_URL, BRANCH_NAME MUST be passed via --env at run
+  # EMAIL, PASSWORD, METRO_URL MUST be passed via --env at run
   # time. Do NOT set defaults here — Maestro 2.x's flow env block always wins
   # over CLI --env.
 ---
@@ -21,11 +21,6 @@ env:
       text: "KAIROS"
     timeout: 120000
 
-- runFlow:
-    file: 00-onboarding.yaml
-    env:
-      APP_ID: ${EXPO_GO_APP_ID}
-      BRANCH_NAME: ${BRANCH_NAME}
 
 - runFlow:
     file: 10-login.yaml
