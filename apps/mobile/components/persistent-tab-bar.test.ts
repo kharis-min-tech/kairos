@@ -90,14 +90,6 @@ describe('useTabBarReservedSpace', () => {
     expect(result.current).toBe(0);
   });
 
-  it('reserves nothing on onboarding routes', () => {
-    signIn();
-    mockSegments = ['(onboarding)', 'branch'];
-
-    const { result } = renderHook(() => useTabBarReservedSpace());
-
-    expect(result.current).toBe(0);
-  });
 
   it('reserves nothing when signed out', () => {
     const { result } = renderHook(() => useTabBarReservedSpace());
@@ -137,7 +129,6 @@ describe('useTabBarVisible', () => {
     const cases: { segments: string[]; signedIn: boolean }[] = [
       { segments: ['(tabs)'], signedIn: true },
       { segments: ['(auth)', 'login'], signedIn: true },
-      { segments: ['(onboarding)', 'branch'], signedIn: true },
       { segments: ['profile'], signedIn: true },
       { segments: ['(tabs)'], signedIn: false },
     ];

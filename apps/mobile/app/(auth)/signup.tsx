@@ -443,7 +443,7 @@ export default function SignupScreen() {
                   variant="icons"
                 />
                 <Text style={styles.ssoCaption}>
-                  You&apos;ll pick your branch during onboarding.
+                  You&apos;ll complete your profile and pick your branch next.
                 </Text>
               </>
             )}

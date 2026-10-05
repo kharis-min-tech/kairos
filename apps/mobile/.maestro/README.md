@@ -5,9 +5,9 @@ Golden-path flows for the mobile app. Two entry points, sharing the same UI subf
 - `golden-path.yaml` — targets a **native build** (`com.kharis.kairos`). Cleanest, fastest, closest to production.
 - `golden-path-expo-go.yaml` — targets **Expo Go** and loads the project via a Metro deep link. Zero build required; works with the same setup you use for `npx expo start`.
 
-The four UI subflows (`00-onboarding`, `10-login`, `20-tab-navigation`, `30-sign-out`) are shared — they drop `appId` from their frontmatter and inherit from the parent flow.
+The three UI subflows (`10-login`, `20-tab-navigation`, `30-sign-out`) are shared — they drop `appId` from their frontmatter and inherit from the parent flow.
 
-A broader **wave-navigation** flow layers on top of the golden path — it re-uses onboarding + login, walks every screen shipped in the 2026-08 Wave 1 + Wave 2 web-parity push (GDPR, notif prefs, forms, my-submissions, my-groups, members directory, rollcall, reports), then signs out. Two entry points, same shape:
+A broader **wave-navigation** flow layers on top of the golden path — it re-uses login, walks every screen shipped in the 2026-08 Wave 1 + Wave 2 web-parity push (GDPR, notif prefs, forms, my-submissions, my-groups, members directory, rollcall, reports), then signs out. Two entry points, same shape:
 
 - `wave-navigation.yaml` — native build.
 - `wave-navigation-expo-go.yaml` — Expo Go via Metro deep link.
@@ -99,7 +99,6 @@ npm run e2e:expo-go -- \
   --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
   --env EMAIL=<staging-email> \
   --env PASSWORD=<staging-password> \
-  --env BRANCH_NAME=Kharis
 ```
 
 ### iOS notes
@@ -133,7 +132,6 @@ npm run e2e:expo-go -- \
   --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
   --env EMAIL=<staging-email> \
   --env PASSWORD=<staging-password> \
-  --env BRANCH_NAME=Kharis
 ```
 
 For the broader wave-navigation flow, swap the script name — same env args:
@@ -143,7 +141,6 @@ npm run e2e:waves:expo-go -- \
   --env METRO_URL="exp://<subdomain>.trycloudflare.com" \
   --env EMAIL=<staging-email> \
   --env PASSWORD=<staging-password> \
-  --env BRANCH_NAME=Kharis
 ```
 
 For **iOS Expo Go** add `--env EXPO_GO_APP_ID=host.exp.Exponent` (capital E).
@@ -171,7 +168,6 @@ Then:
 npm run e2e -- \
   --env EMAIL=<staging-email> \
   --env PASSWORD=<staging-password> \
-  --env BRANCH_NAME=Kharis
 ```
 
 The flow launches `com.kharis.kairos` directly and clears its own state / keychain — no Metro deep link needed.
@@ -195,6 +191,13 @@ Opens a browser with a live element tree — useful for finding new selectors wh
 
 ## Notes on stability
 
-- `BRANCH_NAME` narrows the branch-picker search to a known seed value. The default `Kharis` works against the staging seed. Change it if you're pointing at a differently-seeded environment.
 - The login flow uses `testID` selectors (`login-email`, `login-password`) so it survives copy changes on the sign-in screen. When adding new critical inputs (search fields, checkout forms, etc.), prefer adding a `testID` upfront over depending on visible text.
 - Waits for the splash use a 2-minute timeout on the Expo Go path — first-load bundle compile can be slow on cold Metro.
+
+## Removed: `00-onboarding`
+
+The pre-login onboarding sequence (language + branch) was removed on
+2026-10-05. Multilingual work hasn't started, and the home branch is already
+collected where it belongs — at signup for password accounts, on the
+complete-profile screen for SSO ones. A fresh install now goes straight to
+login, so there is nothing for a subflow to drive.

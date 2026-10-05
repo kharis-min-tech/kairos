@@ -6,7 +6,6 @@ tags:
 env:
   EMAIL: ""
   PASSWORD: ""
-  BRANCH_NAME: "Kharis"
 ---
 # End-to-end walk of every Wave 3 screen (Fellowships/Departments/Members
 # CRUD; Branches + Regions; Outreach + Souls; Security + My attendance).
@@ -18,11 +17,6 @@ env:
     clearState: true
     clearKeychain: true
 
-- runFlow:
-    file: 00-onboarding.yaml
-    env:
-      APP_ID: com.kharis.kairos
-      BRANCH_NAME: ${BRANCH_NAME}
 
 - runFlow:
     file: 10-login.yaml

@@ -1,13 +1,14 @@
 import { Redirect } from 'expo-router';
 import { useAuthStore } from '@/store/auth';
-import { useOnboardingStore } from '@/store/onboarding';
 
 export default function Index() {
   const hasSession = useAuthStore((s) => !!s.accessToken);
-  const onboardingDone = useOnboardingStore((s) => s.done);
   const user = useAuthStore((s) => s.user);
 
-  if (!onboardingDone) return <Redirect href="/(onboarding)/splash" />;
+  // There is no pre-login onboarding sequence. It used to ask for a language
+  // and a home branch: multilingual work hasn't started, and the branch is
+  // already collected where it belongs — at signup for password accounts, and
+  // on the complete-profile screen for SSO ones.
   if (!hasSession) return <Redirect href="/(auth)/login" />;
 
   // Phase 1.5 Better-Auth guards. SSO signup drops the user here with

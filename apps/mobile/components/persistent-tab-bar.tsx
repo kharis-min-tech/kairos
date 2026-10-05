@@ -45,12 +45,11 @@ export function useTabBarVisible(): boolean {
   // Reading segments rather than the pathname avoids brittle string matches.
   const topGroup = segments[0];
   const isAuthRoute = topGroup === '(auth)';
-  const isOnboardingRoute = topGroup === '(onboarding)';
   const isSignedIn = !!accessToken && !!user;
   const isReadyForTabs =
     isSignedIn && !user?.mustCompleteProfile && user?.approvalStatus === 'approved';
 
-  return !isAuthRoute && !isOnboardingRoute && isReadyForTabs;
+  return !isAuthRoute && isReadyForTabs;
 }
 
 /**
