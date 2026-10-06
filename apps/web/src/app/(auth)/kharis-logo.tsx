@@ -16,8 +16,8 @@ import { DOVE_PATH, DOVE_VIEWBOX } from '@kairos/core';
  * The mark.
  *
  * With `draw`, the outline strokes itself on first paint and the fill arrives
- * behind it — one brand beat, once, about 900ms. Under reduce-motion the
- * stroke never shows and the fill is simply there (globals.css gates it).
+ * behind it — one brand beat, once, about 1.4s end to end. Under reduce-motion
+ * the stroke never shows and the fill is simply there (globals.css gates it).
  */
 export function KharisDove({
   size = 40,
@@ -44,10 +44,17 @@ export function KharisDove({
           className="dove-stroke"
           d={DOVE_PATH}
           stroke="currentColor"
-          strokeWidth={1.25}
+          // User units, deliberately — not `vector-effect: non-scaling-stroke`.
+          // That was here and it silently defeated the draw: with it set the
+          // browser resolves the dash pattern in screen space, so pathLength
+          // normalises nothing and a 1px dash against a 1px gap tiles the
+          // ~266px outline into what reads as a solid line. The mark looked
+          // fully drawn on the first frame and the animation was invisible.
+          // In user units the stroke also scales with the mark, which is what
+          // a logo wants. 12 ≈ 1px at the 27px the brand lockup renders at.
+          strokeWidth={12}
           strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-          // Normalised, so all six subpaths draw over the same 900ms however
+          // Normalised, so all six subpaths draw over the same beat however
           // long each one actually is.
           pathLength={1}
           strokeDasharray={1}

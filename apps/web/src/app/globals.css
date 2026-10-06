@@ -337,10 +337,16 @@
 /*
  * One brand beat: the dove draws itself on first paint.
  *
- * 900ms, once, never on a loop — a logo that keeps animating stops being a
- * logo. The outline strokes in, then the fill arrives behind it and the
- * stroke retires. Under reduce-motion the stroke never shows at all and the
- * mark is simply there, which is why the fill is opaque by default.
+ * Once, never on a loop — a logo that keeps animating stops being a logo. The
+ * outline strokes in, then the fill arrives behind it and the stroke retires.
+ * Under reduce-motion the stroke never shows at all and the mark is simply
+ * there, which is why the fill is opaque by default.
+ *
+ * It used to run 900ms from zero and nobody ever saw it: at the 27px the
+ * lockup renders at, the whole beat was over before a first paint had settled
+ * and the eye had found the corner. A 220ms rest before the pen moves and a
+ * slightly longer stroke buy it enough time to be read as a drawing without
+ * turning it into an entrance.
  */
 .dove-stroke {
   opacity: 0;
@@ -350,11 +356,11 @@
   .dove-draw .dove-stroke {
     opacity: 1;
     animation:
-      dove-draw 900ms cubic-bezier(0.65, 0, 0.35, 1) both,
-      dove-stroke-out 260ms ease-out 760ms both;
+      dove-draw 1100ms cubic-bezier(0.65, 0, 0.35, 1) 220ms both,
+      dove-stroke-out 260ms ease-out 1150ms both;
   }
   .dove-draw .dove-fill {
-    animation: dove-fill-in 420ms ease-out 620ms both;
+    animation: dove-fill-in 420ms ease-out 980ms both;
   }
 }
 

@@ -15,6 +15,14 @@ import { pickAuthVerse } from '@kairos/core';
  * without ever being perceived as movement, the field's warmth tracks the
  * hour, the dove draws itself once, and the verse rotates per load so the
  * page has a voice rather than a slogan.
+ *
+ * The field is full-bleed but the two columns are not. Once the seam went,
+ * letting the pair span the whole viewport stopped reading as a two-column
+ * layout: on a 1900px screen the verse hugged the far left, the card landed
+ * at 63% with ~550px of nothing between them, and the margins disagreed —
+ * 40px on the left against 490px on the right. Capping the pair and centring
+ * it puts equal air on both sides and turns that void into a measured gutter,
+ * so the asymmetry inside the composition reads as intent rather than drift.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const verse = pickAuthVerse();
@@ -22,55 +30,60 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-[#fafafa] dark:bg-[#07060e]">
       {/* The field — one continuous background behind both columns, lit for
-          the viewer's hour. */}
+          the viewer's hour. Full-bleed; only the columns are capped. */}
       <AuthField />
 
-      {/* Brand column. No background of its own any more — it sits ON the
-          field, so there is nothing to seam against. */}
-      <div className="relative z-10 hidden w-[480px] flex-col justify-between p-10 lg:flex">
-        <div className="flex items-center gap-3">
-          <KharisLogoIcon size={40} draw />
-          <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
-            Kharis Church
-          </span>
-        </div>
-
-        <div className="space-y-8">
-          <p className="auth-verse text-[28px] font-light leading-snug text-gray-800 dark:text-white/90">
-            {verse.before}
-            <em className="font-semibold not-italic text-[#5D3FD3] dark:text-[#a488ff]">
-              {verse.primaryWord}
-            </em>
-            {verse.between}
-            <em className="font-semibold not-italic text-[#f8b537]">{verse.accentWord}</em>
-            {verse.after}
-          </p>
-
-          <div className="auth-verse-ref flex items-center gap-3">
-            <div className="h-px w-8 bg-gray-300 dark:bg-white/20" />
-            <span className="text-[11px] font-medium uppercase tracking-widest text-gray-500 dark:text-white/50">
-              {verse.reference}
-            </span>
-          </div>
-        </div>
-
-        <div />
+      {/* Pinned to the viewport corner, not the capped shell — chrome belongs
+          to the window, not to the composition. */}
+      <div className="absolute right-4 top-4 z-20">
+        <ThemeToggle variant="full" />
       </div>
 
-      {/* Content column. */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
-        <div className="absolute right-4 top-4">
-          <ThemeToggle variant="full" />
-        </div>
-
-        <div className="w-full max-w-md space-y-6">
-          <div className="flex items-center justify-center gap-2 lg:hidden">
-            <KharisLogoIcon size={32} draw />
-            <span className="text-lg font-bold uppercase tracking-widest text-primary">
+      {/* The pair. Capped and centred so the composition has equal margins. */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1200px]">
+        {/* Brand column. No background of its own any more — it sits ON the
+            field, so there is nothing to seam against. */}
+        <div className="hidden w-[480px] flex-col justify-between p-10 lg:flex">
+          <div className="flex items-center gap-3">
+            <KharisLogoIcon size={40} draw />
+            <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
               Kharis Church
             </span>
           </div>
-          {children}
+
+          <div className="space-y-8">
+            <p className="auth-verse text-[28px] font-light leading-snug text-gray-800 dark:text-white/90">
+              {verse.before}
+              <em className="font-semibold not-italic text-[#5D3FD3] dark:text-[#a488ff]">
+                {verse.primaryWord}
+              </em>
+              {verse.between}
+              <em className="font-semibold not-italic text-[#f8b537]">{verse.accentWord}</em>
+              {verse.after}
+            </p>
+
+            <div className="auth-verse-ref flex items-center gap-3">
+              <div className="h-px w-8 bg-gray-300 dark:bg-white/20" />
+              <span className="text-[11px] font-medium uppercase tracking-widest text-gray-500 dark:text-white/50">
+                {verse.reference}
+              </span>
+            </div>
+          </div>
+
+          <div />
+        </div>
+
+        {/* Content column. */}
+        <div className="flex flex-1 items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md space-y-6">
+            <div className="flex items-center justify-center gap-2 lg:hidden">
+              <KharisLogoIcon size={32} draw />
+              <span className="text-lg font-bold uppercase tracking-widest text-primary">
+                Kharis Church
+              </span>
+            </div>
+            {children}
+          </div>
         </div>
       </div>
     </div>
