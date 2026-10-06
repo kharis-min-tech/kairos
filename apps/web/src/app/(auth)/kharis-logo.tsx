@@ -1,35 +1,80 @@
 /**
  * Kharis Church branding components for auth pages.
- * - KharisLogoIcon: Purple rounded-square icon with dove logo (sidebar)
- * - KharisCardHeader: Dove logo + "Kharis Church" label for card headers
+ *
+ * The mark is a line-drawn dove. The paths live in @kairos/core so web and
+ * mobile draw the identical bird; see `.dove-draw` in globals.css for the
+ * animation this component opts into.
+ *
+ * - KharisDove: the mark itself, inheriting currentColor
+ * - KharisLogoIcon: the dove in a purple tile — the brand lockup
+ * - KharisCardHeader: dove + "Kharis Church" above a card heading
  */
 
-import Image from 'next/image';
+import { DOVE_PATH, DOVE_VIEWBOX } from '@kairos/core';
 
-/** Dove logo inside a purple rounded square — used in the sidebar */
-export function KharisLogoIcon({ size = 40 }: { size?: number }) {
+/**
+ * The mark.
+ *
+ * With `draw`, the outline strokes itself on first paint and the fill arrives
+ * behind it — one brand beat, once, about 900ms. Under reduce-motion the
+ * stroke never shows and the fill is simply there (globals.css gates it).
+ */
+export function KharisDove({
+  size = 40,
+  className,
+  draw = false,
+}: {
+  size?: number;
+  className?: string;
+  draw?: boolean;
+}) {
+  return (
+    <svg
+      viewBox={DOVE_VIEWBOX}
+      width={size}
+      height={size}
+      fill="none"
+      role="img"
+      aria-label="Kharis Church"
+      className={draw ? `dove-draw ${className ?? ''}` : className}
+    >
+      <path className="dove-fill" d={DOVE_PATH} fill="currentColor" fillRule="evenodd" />
+      {draw ? (
+        <path
+          className="dove-stroke"
+          d={DOVE_PATH}
+          stroke="currentColor"
+          strokeWidth={1.25}
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+          // Normalised, so all six subpaths draw over the same 900ms however
+          // long each one actually is.
+          pathLength={1}
+          strokeDasharray={1}
+        />
+      ) : null}
+    </svg>
+  );
+}
+
+/** Dove inside a purple rounded square — the brand lockup */
+export function KharisLogoIcon({ size = 40, draw = false }: { size?: number; draw?: boolean }) {
   return (
     <div
       className="flex items-center justify-center rounded-xl bg-gradient-to-br from-[#451ebb] to-[#5d3fd3]"
       style={{ width: size, height: size }}
     >
-      <Image
-        src="/logo.png"
-        alt="Kharis Church"
-        width={size * 0.65}
-        height={size * 0.65}
-        priority
-      />
+      <KharisDove size={size * 0.68} className="text-white" draw={draw} />
     </div>
   );
 }
 
-/** Dove logo + "Kharis Church" — used above card headings */
+/** Dove + "Kharis Church" — used above card headings */
 export function KharisCardHeader({ heading, subtitle }: { heading: React.ReactNode; subtitle: React.ReactNode }) {
   return (
     <div className="px-1 text-center">
       <div className="mb-4 flex items-center justify-center gap-2">
-        <Image src="/logo.png" alt="" width={22} height={22} className="opacity-80 invert dark:invert-0" />
+        <KharisDove size={22} className="text-gray-900/80 dark:text-white/80" />
         <span className="text-sm font-medium text-muted-foreground">Kharis Church</span>
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
