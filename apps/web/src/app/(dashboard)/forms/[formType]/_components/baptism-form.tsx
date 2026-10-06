@@ -11,7 +11,6 @@ import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
 import { MemberCombobox } from './member-combobox';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
-import { BranchPicker } from './branch-picker';
 
 const schema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -31,7 +30,6 @@ export function BaptismForm() {
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '' });
   const [consentAck, setConsentAck] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
 
   function set(field: keyof typeof form, value: string) {
     setForm((p) => ({ ...p, [field]: value }));
@@ -69,7 +67,6 @@ export function BaptismForm() {
         formType: 'baptism',
         data: {
           subjectMemberId,
-          branchId: selectedBranchId,
           payload: parsed.data,
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -86,7 +83,6 @@ export function BaptismForm() {
     setErrors({});
     setSubjectMemberId(undefined);
     setConsentAck(false);
-    setSelectedBranchId(undefined);
     setForm({ firstName: '', lastName: '', phone: '' });
   }
 
@@ -101,7 +97,6 @@ export function BaptismForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
-        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
         <Card>
           <CardContent className="py-5">

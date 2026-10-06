@@ -12,7 +12,6 @@ import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
 import { MemberCombobox } from './member-combobox';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
-import { BranchPicker } from './branch-picker';
 
 const schema = z.object({
   todaysDate: z.string().min(1, 'Today’s date is required'),
@@ -36,7 +35,6 @@ export function AltarCallForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
   const [consentAck, setConsentAck] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
 
   const [form, setForm] = useState({
     todaysDate: today(),
@@ -86,7 +84,6 @@ export function AltarCallForm() {
         formType: 'altar_call',
         data: {
           subjectMemberId,
-          branchId: selectedBranchId,
           payload: parsed.data,
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -103,7 +100,6 @@ export function AltarCallForm() {
     setSubjectMemberId(undefined);
     setErrors({});
     setConsentAck(false);
-    setSelectedBranchId(undefined);
     setForm({ todaysDate: today(), firstName: '', lastName: '', phone: '' });
   }
 
@@ -122,7 +118,6 @@ export function AltarCallForm() {
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-6">
-        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
         <Card>
           <CardContent className="py-5">
