@@ -17,3 +17,5 @@ export {
   type AddressSuggestion,
   type ResolvedAddress,
 } from './address-suggestions';
+
+export { AUTH_VERSES, pickAuthVerse, type AuthVerse } from './auth-verses';
