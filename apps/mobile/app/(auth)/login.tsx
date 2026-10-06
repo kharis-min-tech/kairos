@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  AccessibilityInfo,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +32,7 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { pickAuthVerse } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
@@ -37,6 +41,53 @@ import { OAuthButtonGroup } from '@/components/oauth-button-group';
 export default function LoginScreen() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const scheme = useColorScheme();
+
+  // Rotates per mount, so the page has a voice rather than a slogan. Shared
+  // with web via the same verse set.
+  const verse = useMemo(() => pickAuthVerse(), []);
+
+  // The field's drift. Reanimated is not installed and adding it would force a
+  // native rebuild, so this is RN's built-in Animated on the native driver —
+  // a compositor-only transform, no bridge traffic.
+  const blobDrift = useRef(new Animated.Value(0)).current;
+  const blobOpacity = useRef(new Animated.Value(0)).current;
+  const fieldColors = useMemo<[string, string, string]>(
+    () =>
+      scheme === 'dark'
+        ? ['#120b2e', '#0b0818', '#050408']
+        : ['#f6f3ff', '#fafafa', '#f4f4f6'],
+    [scheme],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    let loop: Animated.CompositeAnimation | null = null;
+
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (cancelled) return;
+      // The field itself still renders — only the drift is suppressed, so the
+      // page keeps its depth without anything moving.
+      Animated.timing(blobOpacity, {
+        toValue: 1,
+        duration: reduced ? 0 : 600,
+        useNativeDriver: true,
+      }).start();
+      if (reduced) return;
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blobDrift, { toValue: 1, duration: 28000, useNativeDriver: true }),
+          Animated.timing(blobDrift, { toValue: 0, duration: 28000, useNativeDriver: true }),
+        ]),
+      );
+      loop.start();
+    });
+
+    return () => {
+      cancelled = true;
+      loop?.stop();
+    };
+  }, [blobDrift, blobOpacity]);
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
   const signInWithBiometric = useAuthStore((s) => s.signInWithBiometric);
@@ -200,6 +251,32 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {/* The field. Mobile has no brand panel to confine atmosphere to, so it
+          sits behind everything and the card floats on it — the same single
+          continuous background the web auth shell now uses. One slow drift
+          (28s) gives it depth; it stops under reduce-motion. */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <LinearGradient
+          colors={fieldColors}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Animated.View
+          style={[
+            styles.fieldBlob,
+            {
+              opacity: blobOpacity,
+              transform: [
+                { translateX: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [-24, 24] }) },
+                { translateY: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [16, -16] }) },
+                { scale: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) },
+              ],
+            },
+          ]}
+        />
+      </View>
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -219,6 +296,14 @@ export default function LoginScreen() {
               <Text style={styles.logoK}>K</Text>
             </View>
             <Text style={styles.brandLabel}>Kharis Church</Text>
+            <Text style={styles.verse}>
+              {verse.before}
+              <Text style={styles.versePrimary}>{verse.primaryWord}</Text>
+              {verse.between}
+              <Text style={styles.verseAccent}>{verse.accentWord}</Text>
+              {verse.after}
+            </Text>
+            <Text style={styles.verseRef}>{verse.reference}</Text>
           </View>
 
           <View style={styles.card}>
@@ -362,6 +447,34 @@ async function fetchMemberProfile(accessToken: string): Promise<Member> {
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.page },
+  fieldBlob: {
+    position: 'absolute',
+    top: '12%',
+    left: '-20%',
+    width: '140%',
+    height: '55%',
+    borderRadius: 9999,
+    backgroundColor: c.primary,
+    // Very low alpha: this is atmosphere, not a shape anyone should notice.
+    opacity: 0.12,
+  },
+  verse: {
+    ...typography.body,
+    color: c.inkMuted,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  versePrimary: { color: c.primary, fontWeight: '600' },
+  verseAccent: { color: c.gold, fontWeight: '600' },
+  verseRef: {
+    ...typography.meta,
+    color: c.inkFaded,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,

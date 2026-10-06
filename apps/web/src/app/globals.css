@@ -186,3 +186,78 @@
     background: hsl(var(--foreground) / 0.30);
   }
 }
+
+/* ── Auth field ─────────────────────────────────────────────────── */
+/*
+ * One continuous background across the whole auth viewport. The brand panel
+ * used to stop at 480px with a hard seam, leaving the card floating in flat
+ * grey — which is what read as "flat and bland". The field is the fix; the
+ * drift below only gives it depth.
+ *
+ * Three colour points move on independent 28–46s phases. At that speed it is
+ * not perceived as animation, it is perceived as atmosphere. Nothing travels
+ * more than ~8% of the viewport, so there is no distracting sweep.
+ */
+.auth-field {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Light: a pale wash so the white card still reads as elevated. */
+.auth-blob-1 {
+  background: radial-gradient(circle at 30% 35%, rgba(93, 63, 211, 0.20), transparent 60%);
+}
+.auth-blob-2 {
+  background: radial-gradient(circle at 72% 28%, rgba(69, 30, 187, 0.14), transparent 58%);
+}
+.auth-blob-3 {
+  background: radial-gradient(circle at 55% 78%, rgba(248, 181, 55, 0.10), transparent 55%);
+}
+
+/* Dark: the same geometry, deeper and slightly stronger so it survives the
+   near-black page colour. */
+.dark .auth-blob-1 {
+  background: radial-gradient(circle at 30% 35%, rgba(93, 63, 211, 0.34), transparent 60%);
+}
+.dark .auth-blob-2 {
+  background: radial-gradient(circle at 72% 28%, rgba(30, 16, 80, 0.85), transparent 58%);
+}
+.dark .auth-blob-3 {
+  background: radial-gradient(circle at 55% 78%, rgba(248, 181, 55, 0.07), transparent 55%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-blob-1 { animation: auth-drift-1 34s ease-in-out infinite alternate; }
+  .auth-blob-2 { animation: auth-drift-2 46s ease-in-out infinite alternate; }
+  .auth-blob-3 { animation: auth-drift-3 28s ease-in-out infinite alternate; }
+}
+
+@keyframes auth-drift-1 {
+  to { transform: translate3d(5%, -4%, 0) scale(1.08); }
+}
+@keyframes auth-drift-2 {
+  to { transform: translate3d(-6%, 5%, 0) scale(1.06); }
+}
+@keyframes auth-drift-3 {
+  to { transform: translate3d(4%, 6%, 0) scale(1.1); }
+}
+
+/*
+ * The verse rotates per load. Opacity only — the words must not move, or a
+ * line of scripture reads as an advert.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .auth-verse {
+    animation: auth-verse-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .auth-verse-ref {
+    animation: auth-verse-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 160ms both;
+  }
+}
+
+@keyframes auth-verse-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
