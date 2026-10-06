@@ -42,8 +42,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* The pair. Capped and centred so the composition has equal margins. */}
       <div className="relative z-10 mx-auto flex w-full max-w-[1200px]">
         {/* Brand column. No background of its own any more — it sits ON the
-            field, so there is nothing to seam against. */}
-        <div className="hidden w-[480px] flex-col justify-between p-10 lg:flex">
+            field, so there is nothing to seam against.
+
+            It appears at xl, not lg. At exactly 1024px the split left the card
+            480px of brand plus a 544px column to centre in, which reads as
+            cramped rather than composed; below xl the single centred card is
+            the better layout, so the pair only engages once there is room for
+            it. shrink-0 keeps the column at its stated width instead of
+            quietly compressing the verse. */}
+        <div className="hidden w-[480px] shrink-0 flex-col justify-between p-10 xl:flex">
           <div className="flex items-center gap-3">
             <KharisLogoIcon size={40} draw />
             <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
@@ -76,7 +83,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Content column. */}
         <div className="flex flex-1 items-center justify-center px-4 py-12">
           <div className="w-full max-w-md space-y-6">
-            <div className="flex items-center justify-center gap-2 lg:hidden">
+            <div className="flex items-center justify-center gap-2 xl:hidden">
               <KharisLogoIcon size={32} draw />
               <span className="text-lg font-bold uppercase tracking-widest text-primary">
                 Kharis Church

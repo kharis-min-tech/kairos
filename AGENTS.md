@@ -65,7 +65,7 @@ Current API routes are mounted under `/api/*` in `apps/api/src/app.ts`, not `/v1
 
 - Module folders usually contain `schemas.ts`, `service.ts`, `router.ts`, and focused tests.
 - Use `zValidator` or Zod schemas at route boundaries.
-- Use `authMiddleware`, `requireCapability`, `requireAnyCapability`, and `getAuth` from `apps/api/src/middleware/auth.ts`. Service files use the inline helpers `enforceBranchScope(auth, branchId?)` and `enforceLeaderOrAbove(auth, entity)`. The legacy `requireRole(...)` is gone — gate on capabilities, not role names.
+- Use `authMiddleware`, `requireCapability`, `requireAnyCapability`, and `getAuth` from `apps/api/src/middleware/auth.ts`. Service files use the inline helpers `enforceBranchScope(auth, branchId?)` and `enforceLeaderOrAbove(auth, entity)`. Gate on capabilities, not role names. `requireRole(...)` still exists and is still correct for the handful of genuinely platform-admin routes (`requireRole('admin')` on region/branch create-delete and global department CRUD), because `admin` is a real `systemRole`. It must never be handed a role name that is not — a gate reading `requireRole('admin', 'pastor', 'leader', 'member')` passes for every authenticated caller, since `systemRole` only has two possible values and both are in the list. Anything scope-aware belongs in `requireCapability`.
 - Use shared errors from `@kairos/utils` and return via `successResponse`.
 - Keep business rules in services; keep routers thin.
 - Register static routes like `/import`, `/export`, `/roles`, and `/me` before `/:id` routes.

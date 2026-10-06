@@ -10,9 +10,12 @@ import type { AuthContext } from '@kairos/types';
 import { isPastoralMember } from '../lib/member-predicates';
 
 function branchScope(auth: AuthContext) {
-  // Phase 4: scope=branch pins reports to the scoped branch even for system
-  // admins. Otherwise admin = church-wide, everyone else = home branch.
-  if (auth.scope?.kind === 'branch') return auth.scope.id;
+  // Admin reads church-wide; everyone else is pinned to their home branch.
+  //
+  // There used to be an `auth.scope?.kind === 'branch'` branch above this,
+  // left over from the per-request role switcher. Nothing populates `scope`
+  // any more — `finalize-role` and `switch-role` were deleted — so it was
+  // dead code that read like a live narrowing rule.
   if (auth.systemRole === 'admin') return undefined;
   return auth.branchId;
 }

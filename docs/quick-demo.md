@@ -6,7 +6,7 @@ The fastest way to see Kairos running. You only need **Docker**. No Node.js or d
 
 ```bash
 # 1. Get the demo compose file
-curl -O https://raw.githubusercontent.com/kharis-github/kairos/main/docker-compose.demo.yml
+curl -O https://raw.githubusercontent.com/kharis-min-tech/kairos/main/docker-compose.demo.yml
 
 # 2. Start everything
 docker compose -f docker-compose.demo.yml up --build

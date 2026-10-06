@@ -213,13 +213,13 @@ describe('PATCH /api/members/:id', () => {
 // ── DELETE /api/members/:id ────────────────────────────────
 
 describe('DELETE /api/members/:id', () => {
-  it('should return 401 for non-admin', async () => {
+  it('should return 403 for non-admin', async () => {
     const res = await app.request(`/api/members/${TEST_IDS.memberId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -247,14 +247,14 @@ describe('POST /api/members/:id/approve', () => {
     expect(body.success).toBe(true);
   });
 
-  it('should return 401 for regular member', async () => {
+  it('should return 403 for regular member', async () => {
     const res = await app.request(`/api/members/pending-member-id/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ approved: true }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -297,14 +297,14 @@ describe('POST /api/members/:id/membership-class', () => {
     expect(res.status).toBe(200);
   });
 
-  it('returns 401 for a regular member', async () => {
+  it('returns 403 for a regular member', async () => {
     const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ completedAt: '2026-06-01T00:00:00.000Z' }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects a malformed body', async () => {

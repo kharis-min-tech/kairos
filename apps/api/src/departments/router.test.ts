@@ -127,13 +127,13 @@ describe('POST /api/departments/global', () => {
     expect(res.status).toBe(201);
   });
 
-  it('returns 401 for pastor (admin-only)', async () => {
+  it('returns 403 for pastor (admin-only)', async () => {
     const res = await app.request('/api/departments/global', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${pastorToken}` },
       body: JSON.stringify({ departmentName: 'Drama' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -186,7 +186,7 @@ describe('GET /api/departments/:id', () => {
 // ── POST /api/departments ──────────────────────────────────
 
 describe('POST /api/departments', () => {
-  it('returns 401 for regular member', async () => {
+  it('returns 403 for regular member', async () => {
     const res = await app.request('/api/departments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
@@ -196,19 +196,19 @@ describe('POST /api/departments', () => {
         leadMemberId: TEST_IDS.pastorId,
       }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
 // ── DELETE /api/departments/:id ────────────────────────────
 
 describe('DELETE /api/departments/:id', () => {
-  it('returns 401 for regular member', async () => {
+  it('returns 403 for regular member', async () => {
     const res = await app.request(`/api/departments/${branchDeptId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -229,25 +229,25 @@ describe('GET /api/departments/:id/members', () => {
 // ── POST /api/departments/:id/members ──────────────────────
 
 describe('POST /api/departments/:id/members', () => {
-  it('returns 401 for regular member', async () => {
+  it('returns 403 for regular member', async () => {
     const res = await app.request(`/api/departments/${branchDeptId}/members`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
 // ── DELETE /api/departments/:id/members/:memberId ──────────
 
 describe('DELETE /api/departments/:id/members/:memberId', () => {
-  it('returns 401 for regular member', async () => {
+  it('returns 403 for regular member', async () => {
     const res = await app.request(
       `/api/departments/${branchDeptId}/members/${TEST_IDS.memberId}`,
       { method: 'DELETE', headers: { Authorization: `Bearer ${memberToken}` } },
     );
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 

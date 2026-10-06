@@ -294,7 +294,7 @@ describe('reports', () => {
     const res = await app.request('/api/attendance/reports/missing-members', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('GET /reports/by-branch returns 200 for admin', async () => {
