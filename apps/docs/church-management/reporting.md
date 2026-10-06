@@ -4,7 +4,9 @@ Kairos has built-in reports for tracking church health over time. Reports are ro
 
 ## Accessing reports
 
-Go to **Reports** in the sidebar. The page opens on the **Attendance** tab by default. Switch between **Attendance**, **Growth**, and **Outreach** using the tabs in the top-right.
+Go to **Reports** in the sidebar. The page opens on the **Attendance** tab by default. Leadership gets **Attendance**, **Growth**, and **Outreach**; everybody else gets **Attendance** and **Outreach**, answering questions about themselves rather than about the church.
+
+For the detailed attendance surface, including the per-member heatmap and the attendance frequency bands, go to **Attendance → Reports** instead. See [Attendance Reports](/analytics/attendance-reports).
 
 ## Attendance reports
 
@@ -45,11 +47,11 @@ Most list views in Kairos have a CSV export. From the Reports page:
 
 Members and attendance lists also have their own export buttons.
 
-## Role-based scope
+## Scope
 
-| Role | Report scope |
-|------|-------------|
+| Who | Report scope |
+|-----|-------------|
 | Admin | All branches, all data |
-| Pastor | Their branch only |
-| Leader | Their department or fellowship only |
-| Member | No access to Reports page |
+| Branch grant | Their branch only |
+| Group leader | Their department or fellowship only |
+| No grants | A personal version of the page, covering their own activity |

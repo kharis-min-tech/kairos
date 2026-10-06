@@ -44,11 +44,14 @@ export default defineConfig({
           { text: 'Branches', link: '/platform/branches' },
           { text: 'Regions', link: '/platform/regions' },
           { text: 'Members', link: '/platform/members' },
+          { text: 'Membership', link: '/platform/membership' },
           { text: 'Attendance', link: '/platform/attendance' },
           { text: 'Fellowships', link: '/platform/fellowships' },
           { text: 'Reports', link: '/platform/reports' },
           { text: 'Departments', link: '/platform/departments' },
           { text: 'New Believers', link: '/platform/new-believers' },
+          { text: 'Follow-ups', link: '/platform/follow-ups' },
+          { text: 'Concerns', link: '/platform/concerns' },
           { text: 'Outreach', link: '/platform/outreach' },
           { text: 'Forms', link: '/platform/forms' },
           { text: 'Souls Pipeline', link: '/platform/souls-pipeline' },
@@ -71,6 +74,7 @@ export default defineConfig({
         text: 'Administration',
         items: [
           { text: 'User Permissions', link: '/administration/permissions' },
+          { text: 'Capability Reference', link: '/administration/capabilities' },
           { text: 'Approvals', link: '/administration/approvals' },
           { text: 'Settings', link: '/administration/settings' },
         ],
@@ -104,11 +108,14 @@ export default defineConfig({
           { text: 'Branches', link: '/platform/branches' },
           { text: 'Regions', link: '/platform/regions' },
           { text: 'Members', link: '/platform/members' },
+          { text: 'Membership', link: '/platform/membership' },
           { text: 'Attendance', link: '/platform/attendance' },
           { text: 'Fellowships', link: '/platform/fellowships' },
           { text: 'Reports', link: '/platform/reports' },
           { text: 'Departments', link: '/platform/departments' },
           { text: 'New Believers', link: '/platform/new-believers' },
+          { text: 'Follow-ups', link: '/platform/follow-ups' },
+          { text: 'Concerns', link: '/platform/concerns' },
           { text: 'Outreach', link: '/platform/outreach' },
           { text: 'Forms', link: '/platform/forms' },
           { text: 'Souls Pipeline', link: '/platform/souls-pipeline' },
@@ -131,6 +138,7 @@ export default defineConfig({
         text: 'Administration',
         items: [
           { text: 'User Permissions', link: '/administration/permissions' },
+          { text: 'Capability Reference', link: '/administration/capabilities' },
           { text: 'Approvals', link: '/administration/approvals' },
           { text: 'Settings', link: '/administration/settings' },
         ],
@@ -165,7 +173,10 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Kairos: Church Administration System by Kharis Church',
+      message:
+        'Kairos: Church Administration System by Kharis Church &middot; ' +
+        '<a href="/legal/terms">Terms &amp; Conditions</a> &middot; ' +
+        '<a href="/legal/privacy">Privacy Notice</a>',
     },
 
     outline: {

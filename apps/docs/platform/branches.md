@@ -69,7 +69,9 @@ Shows the city, address, phone, email, total members, and active status.
 
 ### Current Leadership
 
-Lists the current Main Pastor and any Elders assigned to the branch, shown with their names and roles.
+Lists the current Main Pastor and any Ministers assigned to the branch, shown with their names and roles. A branch has at most one current Main Pastor; Ministers are in addition to them.
+
+Branch leadership is an **office**, not a permission. It records who holds which post. The one thing it does carry is safeguarding sight: the current Main Pastor automatically sees their branch's [safeguarding inbox](/platform/concerns), and a Minister does not, even when both hold the same branch grant.
 
 ### Quick Actions
 

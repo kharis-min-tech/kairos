@@ -24,23 +24,25 @@ Use the Reports page Growth tab for a more detailed view with date range control
 
 A member is counted as new when their account is **approved**, not when they register. This prevents pending accounts from inflating growth numbers.
 
-Returners (members who were inactive and re-engaged) are tracked separately from new members so you can distinguish genuine growth from reactivation.
-
 ## Congregation breakdown
 
-The Dashboard shows the total congregation broken down into:
+The Dashboard shows the total congregation broken down into four categories, and the four always sum to the whole roll.
 
-| Category | Description |
-|----------|-------------|
-| Members | Fully approved and active |
-| Returners | Previously inactive, now re-engaged |
-| Visitors | First-time or occasional attendees not yet on the member register |
-| Children | Youth members tracked separately |
+| Category | What it actually counts |
+|----------|------------------------|
+| Members | People who have **completed the four-week membership class**. This is the formal membership figure, and nothing else produces it. |
+| Returners | People who attend regularly but have not done the class yet. For most branches this is the largest of the four. |
+| Visitors | Occasional attendees, usually created by a First-Time Visitor form |
+| Children | Tracked separately, with their own protections |
+
+::: warning Members is not "everyone with an account"
+This is the single most misread number in Kairos. A faithful regular who has served in a department for five years is a **Returner**, not a Member, until they complete the class. A rising Returners count with a flat Members count means people are arriving and staying but the class is not running often enough. See [Membership Classes](/platform/membership).
+:::
 
 ## Branch-level vs church-wide
 
 - **Admins** see growth across all branches, with a branch comparison chart
-- **Pastors** see growth for their branch only
+- **Pastors** (anyone with a branch grant) see growth for their branch only
 - **Leaders** see growth for their department or fellowship only
 - **Members** do not have access to Reports
 

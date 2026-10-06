@@ -51,7 +51,35 @@ After creating a service, open it via **Check In →**. Mark each member as:
 
 You can also flag a member as a **First-Time Visitor** during check-in.
 
-Attendance can be recorded by Admins, Pastors, and Leaders with the appropriate branch permissions.
+Recording attendance for a service needs a branch grant, or platform admin.
+
+## Reports
+
+For the detailed report surface, including the per-member heatmap, attendance frequency bands, and the first-time versus returning split, open **Reports** from the Attendance page. See [Attendance Reports](/analytics/attendance-reports#the-detailed-report-surface).
+
+## Self check-in
+
+Members can check themselves in, so the welcome desk is not the only route onto the register. **Check in** is in everybody's sidebar.
+
+There are two ways:
+
+- **Tap to check in.** One tap records the member at a service whose check-in window is currently open.
+- **Scan the desk QR code.** An administrator opens the service and shows **Self check-in QR** on a screen at the desk. The code refreshes every 30 seconds, and the member scans it from **Check in → Scan QR at the desk**. The previous code stays valid for a moment after a refresh, so somebody mid-scan is not rejected.
+
+The rotating code is what stops a member checking in from home: a screenshot taken last Sunday is no longer valid.
+
+### Branch settings
+
+Each branch controls its own self check-in from **My Branch → Attendance settings**:
+
+| Setting | What it does |
+|---------|--------------|
+| Self check-in enabled | The master switch. Off means neither route works for this branch. |
+| Opens before start | How many minutes before the service starts the window opens |
+| Closes after start | How many minutes after the start the window closes |
+| Late after | How many minutes after the start a check-in is recorded as **Late** rather than **Present** |
+
+Checking in twice does not create two records, and the Late threshold is applied by the server, so it is the same whichever route was used.
 
 ## My Attendance
 

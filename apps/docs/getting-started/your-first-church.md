@@ -85,6 +85,20 @@ Go to **Departments → + New Department**. Select the ministry type (Choir, Ush
 
 </div>
 
-## Step 7: You're ready
+## Step 7: Hand out permissions
 
-With branches, members, fellowships, and departments in place, your team can start recording attendance, tracking outreach, and managing the discipleship pipeline.
+Nobody has authority until you grant it. Work out who runs each branch and give them a **Branch System Admin** grant from their member profile; that person can then hand out the rest within their own branch. Name each fellowship's leader on the fellowship and each department's lead on the department, which creates those grants for you.
+
+Two grants are church-wide and worth deciding early: **Membership Admin**, who runs the membership class programme, and **Safeguarding Head**. Also appoint each branch's **Main Pastor** in **My Branch → Current Leadership**, since that appointment is what gives them sight of their branch's safeguarding queue.
+
+See [User Permissions](/administration/permissions).
+
+## Step 8: Schedule your first membership class
+
+Being on the roll is not the same as being a Member. The formal step is the four-week class, so set up a cohort early: go to **Membership**, create a cohort, schedule its four sessions, and let people express interest. You admit them from the waitlist when you are ready.
+
+See [Membership Classes](/platform/membership).
+
+## Step 9: You're ready
+
+With branches, members, fellowships, departments, permissions, and a class scheduled, your team can start recording attendance, working the follow-up queues, tracking outreach, and running the discipleship pipeline.

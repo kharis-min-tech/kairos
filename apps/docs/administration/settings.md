@@ -28,7 +28,7 @@ Move your account to a new email address. Both the old and new address receive a
 
 ### Recent sign-ins
 
-View a history of sign-ins, password changes, and role updates on your account. Useful for spotting unauthorised access.
+View a history of sign-ins, password changes, email changes, linked sign-in providers, and grant updates on your account. Useful for spotting unauthorised access.
 
 ## Display
 
@@ -50,15 +50,15 @@ Manage which email categories reach your inbox and how often.
 
 ### Legal & consent
 
-Review the Terms of Service, Privacy Notice, and manage your marketing preferences.
+Review the Terms & Conditions, the Privacy Notice, the Acceptable Use Policy, and the Confidentiality Undertaking, see which versions you have accepted, and manage your marketing preferences. When a policy is reissued you are asked to accept the new version before continuing.
 
 ### Export my data
 
-Download a copy of your personal data (GDPR right to portability). **Coming soon.**
+Download a copy of your personal data, in exercise of the GDPR right to portability. The export is generated on request and covers your own record only.
 
 ### Delete my account
 
-Withdraw consent and request account deletion. **Coming soon.**
+Withdraw consent and delete your account. You will be asked for your current password to confirm, because this cannot be undone from inside the app.
 
 ## Log Out
 
