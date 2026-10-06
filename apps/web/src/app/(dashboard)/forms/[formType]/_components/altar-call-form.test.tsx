@@ -100,7 +100,7 @@ describe('AltarCallForm', () => {
     render(<AltarCallForm />, { wrapper });
 
     await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
-    await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
 
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
     expect(screen.getByLabelText(/Last name/)).toHaveValue('Lovelace');

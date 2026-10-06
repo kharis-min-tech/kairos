@@ -9,7 +9,6 @@ import { isFormType } from '../_lib/form-meta';
 import { AltarCallForm } from './_components/altar-call-form';
 import { BaptismForm } from './_components/baptism-form';
 import { TestimonyForm } from './_components/testimony-form';
-import { BabyForm } from './_components/baby-form';
 import { DeclarativeForm } from './_components/declarative-form';
 import { FORM_DEFINITIONS } from '@kairos/types';
 
@@ -51,10 +50,27 @@ export default function FormFillPage({
       return <BaptismForm />;
     case 'testimony':
       return <TestimonyForm />;
+    // Both baby forms render from the shared definition rather than a bespoke
+    // component. The definition already declared `fatherMemberId` /
+    // `motherMemberId` with their free-text twins, and mobile was already
+    // rendering it — the bespoke web component only ever asked for plain names,
+    // so the same form produced different data depending on the device.
     case 'baby_naming':
-      return <BabyForm mode="baby_naming" />;
+      return (
+        <DeclarativeForm
+          definition={FORM_DEFINITIONS.baby_naming!}
+          successTitle="Naming request submitted"
+          successMessage="Your request has been recorded. A leader will follow up to confirm a date."
+        />
+      );
     case 'baby_dedication':
-      return <BabyForm mode="baby_dedication" />;
+      return (
+        <DeclarativeForm
+          definition={FORM_DEFINITIONS.baby_dedication!}
+          successTitle="Dedication request submitted"
+          successMessage="Your request has been recorded. A leader will follow up to confirm a date."
+        />
+      );
     default:
       return null;
   }

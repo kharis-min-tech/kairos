@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button, Checkbox, Input, CustomSelect, Textarea } from '@kairos/ui';
+import { Button, Card, CardContent, Checkbox, Input, CustomSelect, Textarea } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
-import type { FormMemberSearchResult } from '@kairos/types';
+import { TESTIMONY_FORM, type FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META, TESTIMONY_CATEGORIES } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
-import { MemberSearchLink } from './member-search-link';
+import { MemberCombobox } from './member-combobox';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 import { BranchPicker } from './branch-picker';
 
@@ -32,6 +32,10 @@ const schema = z.object({
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+// One source for the subject-link copy: the shared definition, which the
+// declarative renderer and the mobile renderer read too.
+const SUBJECT = TESTIMONY_FORM.subjectLink!;
 const YES_NO = [
   { value: 'Yes', label: 'Yes' },
   { value: 'No', label: 'No' },
@@ -179,16 +183,19 @@ export function TestimonyForm() {
       <form onSubmit={onSubmit} className="space-y-6">
         <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
-        <MemberSearchLink
-          value={subjectMemberId}
-          onSelect={selectExisting}
-          onClear={clearExisting}
-          label="Find the person giving the testimony"
-          helpText="Search by name or phone. Leave blank to create a new contact."
-          linkedNote="Linked to an existing person, so this testimony will be tied to their record."
-          disabled={isAnonymous}
-          disabledHint="An anonymous testimony won’t be linked to a person’s record."
-        />
+        <Card>
+          <CardContent className="py-5">
+            <MemberCombobox
+              label={SUBJECT.label}
+              helpText={SUBJECT.helpText}
+              linkedNote={SUBJECT.linkedNote}
+              memberId={subjectMemberId ?? ''}
+              onPick={(m) => (m ? selectExisting(m) : clearExisting())}
+              disabled={isAnonymous}
+              disabledHint="An anonymous testimony won’t be linked to a person’s record."
+            />
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">

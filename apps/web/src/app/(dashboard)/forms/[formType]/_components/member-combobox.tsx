@@ -3,79 +3,94 @@
 import { useId, useState } from 'react';
 import type { FormFieldDef, FormMemberSearchResult } from '@kairos/types';
 import { memberReferenceState } from '@kairos/types';
-import { Badge, Input } from '@kairos/ui';
+import { Badge, Input, cn } from '@kairos/ui';
 import { Search, X, UserCheck, PenLine } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useFormMemberSearch } from '@/hooks/use-forms';
 import { FieldError, FieldLabel } from './field';
 
 /**
- * One question, one control.
+ * The one way to find a person anywhere in the forms surface.
  *
- * A baby's parent and a visiting child's guardian are often — but not always —
- * in the directory. Where they are we want a reference, because a reference is
- * a person who can be followed up; where they aren't, a typed name is all the
- * truth there is.
+ * There used to be three: this combobox for `member` fields, a `MemberSearchLink`
+ * card for the bespoke forms' subject link, and a third hand-rolled typeahead
+ * inlined in the declarative renderer. All three searched the same endpoint and
+ * none of them looked or behaved quite the same — and the card hardcoded
+ * `id="member-search"`, so two of them on one page shared a DOM id and the
+ * labels pointed at whichever won.
  *
- * The earlier composition asked that as two questions: a labelled search field,
- * then a second labelled text input introduced by "…or type their name". Two
- * controls and two labels for one answer, and the person filling the form had to
- * work out which half was theirs before they could start. (It also rendered the
- * field's label twice and reused one DOM id across every member field on the
- * page.)
- *
- * This is a single combobox instead. Typing searches the directory; the matches
- * are offered as options; and when the field carries a free-text companion the
- * text being typed IS the answer already — the last option simply confirms
- * "keep what I typed, we only have a name". So the fallback needs no second
- * control and is discovered exactly when it's needed, rather than sitting
- * underneath as an afterthought.
+ * It answers one question with one control. Typing searches the directory and
+ * the matches are offered as options. Where a typed name is a legitimate answer
+ * — a visiting child's guardian, a baby's parent, people who may simply not be
+ * in the directory — the caller passes `onTypeName`, the text being typed IS the
+ * answer already, and the last option merely confirms "keep what I typed". So
+ * the fallback needs no second control and is discovered exactly when it's
+ * needed rather than sitting underneath as an afterthought.
  *
  * Mutual exclusion is structural, not a rule applied afterwards: while nothing
  * is linked the input is bound to the free-text key, and the moment a match is
  * picked the input is replaced by a resolved token and the free-text key is
  * cleared. There is no state in which both are editable, so the payload can
- * never carry both. A reader can trust that an id means a real member.
+ * never carry both. A reader can trust that an id means a real person.
  */
-export function MemberPickOrType({
-  field,
-  memberId,
-  typedName,
-  onPickMember,
-  onTypeName,
-  errorMessage,
-}: {
-  field: FormFieldDef;
-  /** Current value of `field.id` — a member id, or '' when nothing is linked. */
+export interface MemberComboboxProps {
+  /** Label above the control. */
+  label: string;
+  /** Helper line, shown while nothing has been answered. */
+  helpText?: string;
+  placeholder?: string;
+  required?: boolean;
+  /** Current member id, or '' when nothing is linked. */
   memberId: string;
-  /** Current value of `field.freeTextFieldId`. Always '' when there is none. */
-  typedName: string;
+  /** Current typed name. Always '' for a reference-only control. */
+  typedName?: string;
   /** Picking writes the id and clears the typed name; `null` clears both. */
-  onPickMember: (member: FormMemberSearchResult | null) => void;
+  onPick: (member: FormMemberSearchResult | null) => void;
   /**
-   * Writes the typed name and clears the id. Omitted for a reference-only
-   * field (`invitedByMemberId`), where a name we can't route to is worth
-   * nothing and typing is search only.
+   * Writes the typed name and clears the id. Omit for a reference-only control,
+   * where a name we can't route to is worth nothing and typing is search only.
    */
   onTypeName?: (name: string) => void;
+  /** Extra line shown under a linked answer, e.g. what submitting will do. */
+  linkedNote?: string;
   errorMessage?: string;
-}) {
+  /** De-emphasise and lock the control — an anonymous submission has nothing to link. */
+  disabled?: boolean;
+  /** Shown in place of the control's guidance while disabled. */
+  disabledHint?: string;
+  /** Overrides the generated input id, for a stable label association. */
+  id?: string;
+}
+
+export function MemberCombobox({
+  label,
+  helpText,
+  placeholder,
+  required,
+  memberId,
+  typedName = '',
+  onPick,
+  onTypeName,
+  linkedNote,
+  errorMessage,
+  disabled = false,
+  disabledHint,
+  id,
+}: MemberComboboxProps) {
   const user = useAuthStore((s) => s.user);
-  const inputId = useId();
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   const listId = `${inputId}-options`;
 
   const allowTypedName = typeof onTypeName === 'function';
-  const state = memberReferenceState(field, {
-    [field.id]: memberId,
-    ...(field.freeTextFieldId ? { [field.freeTextFieldId]: typedName } : {}),
-  });
-  const linked = state === 'linked';
+  const linked = memberId.trim().length > 0;
+  const named = !linked && typedName.trim().length > 0;
 
   // The picked person's name only ever lives here: writing it into the
   // free-text key as well would put a name and an id under the same answer,
-  // which is the one thing this component exists to prevent.
+  // which is the one thing this control exists to prevent.
   const [picked, setPicked] = useState<FormMemberSearchResult | null>(null);
-  // Reference-only fields have nowhere to keep the search text, so it stays local.
+  // Reference-only controls have nowhere to keep the search text, so it stays local.
   const [draft, setDraft] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -84,7 +99,7 @@ export function MemberPickOrType({
 
   const { data: results, isFetching: searching } = useFormMemberSearch(
     { q: text, branchId: user?.homeBranchId },
-    { enabled: open && canSearch },
+    { enabled: !disabled && open && canSearch },
   );
 
   function handleText(next: string) {
@@ -92,7 +107,7 @@ export function MemberPickOrType({
     if (onTypeName) onTypeName(next);
     else {
       setDraft(next);
-      if (linked) onPickMember(null);
+      if (linked) onPick(null);
     }
   }
 
@@ -100,28 +115,29 @@ export function MemberPickOrType({
     setPicked(member);
     setDraft(`${member.firstName} ${member.lastName}`);
     setOpen(false);
-    onPickMember(member);
+    onPick(member);
   }
 
   function handleUnlink() {
     setPicked(null);
     setDraft('');
     setOpen(false);
-    onPickMember(null);
+    onPick(null);
   }
 
   // `htmlFor` only where there is an input to point at: a linked answer is a
   // resolved token, not a control, so the label stands on its own.
   const renderLabel = (forInput: boolean) => (
-    <FieldLabel htmlFor={forInput ? inputId : undefined} required={field.required}>
-      {field.label}
+    <FieldLabel htmlFor={forInput ? inputId : undefined} required={required}>
+      {label}
     </FieldLabel>
   );
 
-  if (linked) {
-    const name = picked && picked.id === memberId
-      ? `${picked.firstName} ${picked.lastName}`
-      : 'A directory record';
+  if (linked && !disabled) {
+    const name =
+      picked && picked.id === memberId
+        ? `${picked.firstName} ${picked.lastName}`
+        : 'A directory record';
     return (
       <div className="space-y-2">
         {renderLabel(false)}
@@ -144,23 +160,25 @@ export function MemberPickOrType({
           <button
             type="button"
             onClick={handleUnlink}
-            aria-label={`Change ${field.label.toLowerCase()}`}
+            aria-label={`Change ${label.toLowerCase()}`}
             className="shrink-0 text-sm font-medium text-[#5D3FD3] hover:underline"
           >
             Change
           </button>
         </div>
+        {linkedNote ? (
+          <p className="text-xs font-medium text-[#16A34A]">{linkedNote}</p>
+        ) : null}
         <FieldError message={errorMessage} />
       </div>
     );
   }
 
-  const named = state === 'named';
-  const expanded = open && text.trim().length > 0;
+  const expanded = !disabled && open && text.trim().length > 0;
 
   return (
     <div
-      className="space-y-2"
+      className={cn('space-y-2', disabled && 'opacity-50')}
       // Closing on blur is what lets the settled answer announce itself below.
       // `relatedTarget` keeps a click on an option from closing the list before
       // the click lands.
@@ -183,18 +201,19 @@ export function MemberPickOrType({
           aria-autocomplete="list"
           autoComplete="off"
           className="pl-9 pr-9"
+          disabled={disabled}
           placeholder={
-            field.placeholder ??
+            placeholder ??
             (allowTypedName ? 'Search the directory, or type a name' : 'Search by name or phone…')
           }
-          value={text}
+          value={disabled ? '' : text}
           onChange={(e) => handleText(e.target.value)}
           onFocus={() => setOpen(true)}
         />
-        {text ? (
+        {text && !disabled ? (
           <button
             type="button"
-            aria-label={`Clear ${field.label.toLowerCase()}`}
+            aria-label={`Clear ${label.toLowerCase()}`}
             onClick={handleUnlink}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
@@ -207,7 +226,7 @@ export function MemberPickOrType({
         <div
           id={listId}
           role="listbox"
-          aria-label={`${field.label} matches`}
+          aria-label={`${label} matches`}
           className="overflow-hidden rounded-lg border border-input/15 dark:border-white/10"
         >
           {!canSearch ? (
@@ -270,13 +289,17 @@ export function MemberPickOrType({
 
       {/* While the list is open it is doing the explaining; once it closes, this
           says which of the two things was actually recorded. */}
-      {expanded ? null : named ? (
+      {disabled ? (
+        disabledHint ? (
+          <p className="text-xs text-muted-foreground">{disabledHint}</p>
+        ) : null
+      ) : expanded ? null : named ? (
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <PenLine className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
           <span>Recorded as a name only — not linked to anyone in the directory.</span>
         </p>
-      ) : field.helpText ? (
-        <p className="text-xs text-muted-foreground">{field.helpText}</p>
+      ) : helpText ? (
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       ) : allowTypedName ? (
         <p className="text-xs text-muted-foreground">
           Pick them from the directory so they can be followed up, or just type their name.
@@ -285,5 +308,48 @@ export function MemberPickOrType({
 
       <FieldError message={errorMessage} />
     </div>
+  );
+}
+
+/**
+ * Adapter for a declarative `member` field: the definition already says what to
+ * call it, whether it's required, and whether a typed name is acceptable
+ * (`freeTextFieldId`). Nothing here but the mapping.
+ */
+export function MemberPickOrType({
+  field,
+  memberId,
+  typedName,
+  onPickMember,
+  onTypeName,
+  errorMessage,
+}: {
+  field: FormFieldDef;
+  memberId: string;
+  typedName: string;
+  onPickMember: (member: FormMemberSearchResult | null) => void;
+  onTypeName?: (name: string) => void;
+  errorMessage?: string;
+}) {
+  // Reads the pair through the shared matcher so the control and validation
+  // agree on what counts as linked.
+  const linked =
+    memberReferenceState(field, {
+      [field.id]: memberId,
+      ...(field.freeTextFieldId ? { [field.freeTextFieldId]: typedName } : {}),
+    }) === 'linked';
+
+  return (
+    <MemberCombobox
+      label={field.label}
+      helpText={field.helpText}
+      placeholder={field.placeholder}
+      required={field.required}
+      memberId={linked ? memberId : ''}
+      typedName={field.freeTextFieldId ? typedName : ''}
+      onPick={onPickMember}
+      onTypeName={onTypeName}
+      errorMessage={errorMessage}
+    />
   );
 }

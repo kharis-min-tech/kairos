@@ -86,7 +86,7 @@ describe('BaptismForm', () => {
     render(<BaptismForm />, { wrapper });
 
     await user.type(screen.getByLabelText(/Find the baptism candidate/), 'ada');
-    await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
 
     // Linked-state note + pre-filled fields.
     expect(
@@ -105,7 +105,7 @@ describe('BaptismForm', () => {
     render(<BaptismForm />, { wrapper });
 
     await user.type(screen.getByLabelText(/Find the baptism candidate/), 'ada');
-    await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
     await tickConsent(user);
     await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 

@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button, Input } from '@kairos/ui';
-import type { FormMemberSearchResult } from '@kairos/types';
+import { Button, Card, CardContent, Input } from '@kairos/ui';
+import { BAPTISM_FORM, type FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
-import { MemberSearchLink } from './member-search-link';
+import { MemberCombobox } from './member-combobox';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 import { BranchPicker } from './branch-picker';
 
@@ -18,6 +18,8 @@ const schema = z.object({
   lastName: z.string().trim().min(1, 'Last name is required'),
   phone: z.string().trim().min(1, 'Phone is required'),
 });
+
+const SUBJECT = BAPTISM_FORM.subjectLink!;
 
 export function BaptismForm() {
   const meta = FORM_META.baptism;
@@ -101,14 +103,17 @@ export function BaptismForm() {
       <form onSubmit={onSubmit} className="space-y-6">
         <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
-        <MemberSearchLink
-          value={subjectMemberId}
-          onSelect={selectExisting}
-          onClear={clearExisting}
-          label="Find the baptism candidate"
-          helpText="Search by name or phone. Leave blank to create a new contact."
-          linkedNote="Linked to an existing person. Their record will be used."
-        />
+        <Card>
+          <CardContent className="py-5">
+            <MemberCombobox
+              label={SUBJECT.label}
+              helpText={SUBJECT.helpText}
+              linkedNote={SUBJECT.linkedNote}
+              memberId={subjectMemberId ?? ''}
+              onPick={(m) => (m ? selectExisting(m) : clearExisting())}
+            />
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">

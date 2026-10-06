@@ -122,11 +122,58 @@ export interface FormSectionDef {
 /** Ordered block within a form: either a section or a repeatable group. */
 export type FormBlockDef = FormSectionDef | RepeatableGroupDef;
 
+/**
+ * The "find an existing person" control that sits above every form.
+ *
+ * It answers a different question from a `member` field: not "who is the
+ * guardian" but "is this submission about somebody we already hold?", and the
+ * answer becomes `subjectMemberId`, which is what lets the server update a
+ * record instead of minting a duplicate.
+ *
+ * It lives in the definition rather than in each renderer because the copy is
+ * form-specific and load-bearing — on a baby form the linked person is recorded
+ * as the baby's guardian, so "Find an existing person" would be actively
+ * misleading — and because web and mobile must say the same thing and pre-fill
+ * the same fields. Both used to hardcode their own.
+ */
+export interface FormSubjectLinkDef {
+  /** Label above the search control. */
+  label: string;
+  /** Helper line under the label. */
+  helpText?: string;
+  /** Confirmation line shown once somebody is linked. */
+  linkedNote?: string;
+  /**
+   * Which payload fields to pre-fill from the picked person, by attribute.
+   * Each value is a field id: a form that doesn't declare that id is left
+   * alone, so pre-fill can never invent a key the form never asked for.
+   */
+  prefill?: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+}
+
 export interface FormDefinition {
   formType: FormType;
   title: string;
   description?: string;
+  /** Omit to render the form with no subject link at all. */
+  subjectLink?: FormSubjectLinkDef;
   blocks: FormBlockDef[];
+}
+
+/** Every field id the definition declares, including repeatable sub-fields. */
+export function declaredFieldIds(def: FormDefinition): Set<string> {
+  const ids = new Set<string>();
+  for (const block of def.blocks) {
+    for (const field of block.fields) {
+      ids.add(field.id);
+      if (field.freeTextFieldId) ids.add(field.freeTextFieldId);
+    }
+  }
+  return ids;
 }
 
 // ── Member references ──────────────────────────────────────
@@ -231,12 +278,212 @@ export function evaluateCondition(
   }
 }
 
+// ── Renderer core: seed, validate, build ───────────────────
+//
+// These three were hand-copied into the web renderer and the mobile renderer,
+// which is how they came to disagree: mobile honoured a field's `defaultValue`
+// and web didn't, and web learned that a typed name satisfies a member field
+// while mobile still rejected it. They are pure, so they belong here, and both
+// platforms now emit the same payload from the same values by construction
+// rather than by inspection.
+
+export type FormFieldValue = string | boolean | undefined;
+export type FormRowValues = Record<string, FormFieldValue>;
+
+/** A form in progress: the flat bag of top-level answers plus repeatable rows. */
+export interface FormValues {
+  values: Record<string, FormFieldValue>;
+  rows: Record<string, FormRowValues[]>;
+}
+
+/** Error keys are field ids, plus `${groupId}.${index}.${fieldId}` for rows. */
+export type FormErrors = Record<string, string>;
+
+function seedValue(field: FormFieldDef, today: string): FormFieldValue {
+  if (field.defaultValue !== undefined) {
+    if (field.type === 'date' && field.defaultValue === 'today') return today;
+    if (field.type === 'checkbox') return Boolean(field.defaultValue);
+    return typeof field.defaultValue === 'string' ? field.defaultValue : '';
+  }
+  return field.type === 'checkbox' ? false : '';
+}
+
+export function emptyFormRow(group: RepeatableGroupDef, now: Date = new Date()): FormRowValues {
+  const today = now.toISOString().slice(0, 10);
+  const row: FormRowValues = {};
+  for (const f of group.fields) row[f.id] = seedValue(f, today);
+  return row;
+}
+
+/** Starting values for a definition, honouring each field's `defaultValue`. */
+export function initialFormValues(def: FormDefinition, now: Date = new Date()): FormValues {
+  const today = now.toISOString().slice(0, 10);
+  const values: Record<string, FormFieldValue> = {};
+  const rows: Record<string, FormRowValues[]> = {};
+  for (const block of def.blocks) {
+    if (block.kind === 'section') {
+      for (const f of block.fields) values[f.id] = seedValue(f, today);
+    } else {
+      const min = block.min ?? 0;
+      rows[block.id] = Array.from({ length: min }, () => emptyFormRow(block, now));
+    }
+  }
+  return { values, rows };
+}
+
+function isVisible(
+  field: FormFieldDef,
+  blockVisible: boolean,
+  values: Record<string, unknown>,
+  now: Date,
+): boolean {
+  if (!blockVisible) return false;
+  if (!field.visibleWhen) return true;
+  return evaluateCondition(field.visibleWhen, values, now);
+}
+
+function isFilled(v: FormFieldValue): boolean {
+  if (typeof v === 'boolean') return v;
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+/**
+ * Whether a required field has an answer. A `member` field is answered by a
+ * reference OR by its free-text twin — the person is identified either way, and
+ * demanding the reference would block the form for anyone not in the directory.
+ */
+export function isFieldAnswered(
+  field: FormFieldDef,
+  bag: Record<string, FormFieldValue>,
+): boolean {
+  if (field.type === 'member') return memberReferenceState(field, bag) !== 'empty';
+  return isFilled(bag[field.id]);
+}
+
+/**
+ * Write a member field's single answer.
+ *
+ * The free-text twin is not a field of its own in the definition — only
+ * `freeTextFieldId` names it — so a generic "emit every field id" loop dropped
+ * every typed name, and the server then rejected the submission as missing a
+ * guardian or a parent. Emitting exactly one of the two keys makes "a reference
+ * or a name, never both" true of the payload itself, not just of the UI that
+ * produced it.
+ */
+function writeMemberAnswer(
+  out: Record<string, unknown>,
+  field: FormFieldDef,
+  bag: Record<string, FormFieldValue>,
+): void {
+  const state = memberReferenceState(field, bag);
+  if (state === 'linked') out[field.id] = String(bag[field.id]).trim();
+  else if (state === 'named' && field.freeTextFieldId) {
+    out[field.freeTextFieldId] = String(bag[field.freeTextFieldId]).trim();
+  }
+}
+
+/** Required-field errors, evaluated only against what is actually visible. */
+export function validateForm(
+  def: FormDefinition,
+  state: FormValues,
+  now: Date = new Date(),
+): FormErrors {
+  const found: FormErrors = {};
+  const values = state.values as Record<string, unknown>;
+
+  for (const block of def.blocks) {
+    const blockVisible = block.visibleWhen
+      ? evaluateCondition(block.visibleWhen, values, now)
+      : true;
+    if (!blockVisible) continue;
+
+    if (block.kind === 'section') {
+      for (const field of block.fields) {
+        if (!field.required) continue;
+        if (!isVisible(field, blockVisible, values, now)) continue;
+        if (!isFieldAnswered(field, state.values)) {
+          found[field.id] = `${field.label} is required`;
+        }
+      }
+    } else {
+      for (const field of block.fields) {
+        if (!field.required) continue;
+        (state.rows[block.id] ?? []).forEach((row, index) => {
+          // Sub-field visibility evaluates against the row's own values.
+          const rowVisible = field.visibleWhen
+            ? evaluateCondition(field.visibleWhen, row as Record<string, unknown>, now)
+            : true;
+          if (!rowVisible) return;
+          if (!isFieldAnswered(field, row)) {
+            found[`${block.id}.${index}.${field.id}`] = `${field.label} is required`;
+          }
+        });
+      }
+    }
+  }
+  return found;
+}
+
+/** The submitted payload: visible answers only, keyed by field id. */
+export function buildFormPayload(
+  def: FormDefinition,
+  state: FormValues,
+  now: Date = new Date(),
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  const values = state.values as Record<string, unknown>;
+
+  for (const block of def.blocks) {
+    const blockVisible = block.visibleWhen
+      ? evaluateCondition(block.visibleWhen, values, now)
+      : true;
+    if (!blockVisible) continue;
+
+    if (block.kind === 'section') {
+      for (const field of block.fields) {
+        if (!isVisible(field, blockVisible, values, now)) continue;
+        if (field.type === 'member') {
+          writeMemberAnswer(payload, field, state.values);
+          continue;
+        }
+        const v = state.values[field.id];
+        if (field.type === 'checkbox') payload[field.id] = Boolean(v);
+        else if (typeof v === 'string' && v.trim().length > 0) payload[field.id] = v.trim();
+      }
+    } else {
+      const rows = (state.rows[block.id] ?? [])
+        .map((row) => {
+          const out: Record<string, unknown> = {};
+          for (const field of block.fields) {
+            if (field.type === 'member') {
+              writeMemberAnswer(out, field, row);
+              continue;
+            }
+            const v = row[field.id];
+            if (field.type === 'checkbox') out[field.id] = Boolean(v);
+            else if (typeof v === 'string' && v.trim().length > 0) out[field.id] = v.trim();
+          }
+          return out;
+        })
+        .filter((row) => Object.keys(row).length > 0);
+      if (rows.length > 0) payload[block.id] = rows;
+    }
+  }
+  return payload;
+}
+
 // ── First-time-visitor form definition (authored as data) ──
 
 export const FIRST_TIME_VISITOR_FORM: FormDefinition = {
   formType: 'first_time_visitor',
   title: 'First-Time Visitor',
   description: 'Welcome! Tell us a little about yourself so we can follow up.',
+  subjectLink: {
+    label: 'Find an existing person',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person, so submitting will update their record.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
   blocks: [
     {
       kind: 'section',
@@ -420,6 +667,12 @@ export const ALTAR_CALL_FORM: FormDefinition = {
   title: 'New Believers Class',
   description:
     'Enrol someone into the New Believers programme. We’ll follow up to arrange the four-week class.',
+  subjectLink: {
+    label: 'Find an existing person',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person, so submitting will enrol them.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
   blocks: [
     {
       kind: 'section',
@@ -448,6 +701,12 @@ export const BAPTISM_FORM: FormDefinition = {
   title: 'Baptism',
   description:
     'Request baptism. A leader will get in touch to talk through timing and next steps.',
+  subjectLink: {
+    label: 'Find the baptism candidate',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person. Their record will be used.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
   blocks: [
     {
       kind: 'section',
@@ -469,6 +728,12 @@ export const TESTIMONY_FORM: FormDefinition = {
   title: 'Testimony',
   description:
     'Share what God has done. Leaders may reach out to celebrate with you or ask if you’d share it on a Sunday.',
+  subjectLink: {
+    label: 'Find the person giving the testimony',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person, so this testimony will be tied to their record.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
   blocks: [
     {
       kind: 'section',
@@ -567,6 +832,16 @@ function babyForm(
     formType,
     title,
     description,
+    // The linked person is recorded as the baby's guardian, not as the subject
+    // of the submission — the baby is. Hence the label, and hence a pre-fill
+    // that touches the parent's phone and nothing else.
+    subjectLink: {
+      label: 'Find the parent/guardian',
+      helpText: 'Search by name or phone to link an existing member. Leave blank otherwise.',
+      linkedNote:
+        'Linked to an existing member. They’ll be recorded as the parent/guardian.',
+      prefill: { phone: 'parentContactPhone' },
+    },
     blocks: [
       {
         kind: 'section',

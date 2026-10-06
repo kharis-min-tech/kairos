@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button, Input } from '@kairos/ui';
-import type { FormMemberSearchResult } from '@kairos/types';
+import { Button, Card, CardContent, Input } from '@kairos/ui';
+import { ALTAR_CALL_FORM, type FormMemberSearchResult } from '@kairos/types';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm } from '@/hooks/use-forms';
 import { FORM_META } from '../../_lib/form-meta';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel } from './field';
-import { MemberSearchLink } from './member-search-link';
+import { MemberCombobox } from './member-combobox';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 import { BranchPicker } from './branch-picker';
 
@@ -22,6 +22,10 @@ const schema = z.object({
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+// One source for the subject-link copy: the shared definition, which the
+// declarative renderer and the mobile renderer read too.
+const SUBJECT = ALTAR_CALL_FORM.subjectLink!;
 
 export function AltarCallForm() {
   const meta = FORM_META.altar_call;
@@ -120,12 +124,17 @@ export function AltarCallForm() {
       <form onSubmit={onSubmit} className="space-y-6">
         <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
-        <MemberSearchLink
-          value={subjectMemberId}
-          onSelect={selectExisting}
-          onClear={clearExisting}
-          linkedNote="Linked to an existing person, so submitting will enrol them."
-        />
+        <Card>
+          <CardContent className="py-5">
+            <MemberCombobox
+              label={SUBJECT.label}
+              helpText={SUBJECT.helpText}
+              linkedNote={SUBJECT.linkedNote}
+              memberId={subjectMemberId ?? ''}
+              onPick={(m) => (m ? selectExisting(m) : clearExisting())}
+            />
+          </CardContent>
+        </Card>
 
         <div className="space-y-2">
           <FieldLabel required>Today’s date</FieldLabel>

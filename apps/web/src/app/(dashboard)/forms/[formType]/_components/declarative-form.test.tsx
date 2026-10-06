@@ -403,6 +403,12 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
     const ANON_FORM = {
       formType: 'testimony' as const,
       title: 'Testimony',
+      subjectLink: {
+        label: 'Find an existing person',
+        helpText: 'Search by name or phone.',
+        linkedNote: 'Linked to an existing person.',
+        prefill: { firstName: 'firstName' },
+      },
       blocks: [
         {
           kind: 'section' as const,
@@ -424,12 +430,13 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       render(<DeclarativeForm definition={ANON_FORM} />, { wrapper });
 
       await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
-      await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+      await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
       if (anonymously) {
         await user.click(screen.getByLabelText(/Share anonymously/));
-        // The control goes with the link: an anonymous submission has nothing to
-        // link to, so offering the search would promise something submit undoes.
-        expect(screen.queryByLabelText(/Find an existing person/)).not.toBeInTheDocument();
+        // The question stays visible but locked, with the reason stated — the
+        // bespoke testimony form behaved this way and it reads better than the
+        // control vanishing, which looks like a bug.
+        expect(screen.getByLabelText(/Find an existing person/)).toBeDisabled();
         expect(
           screen.getByText(/An anonymous submission won’t be linked to anyone’s record/),
         ).toBeInTheDocument();
@@ -445,7 +452,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       expect((await linkThenSubmit(false)).subjectMemberId).toBe('m-7');
     });
 
-    it('drops the link, and the control, once anonymity is ticked', async () => {
+    it('drops the link, and locks the control, once anonymity is ticked', async () => {
       expect((await linkThenSubmit(true)).subjectMemberId).toBeUndefined();
     });
   });
@@ -467,7 +474,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       render(<DeclarativeForm definition={trimmed} />, { wrapper });
 
       await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
-      await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+      await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
 
       expect(screen.getByLabelText(/^First name/)).toHaveValue('Ada');
       expect(screen.getByLabelText(/^Last name/)).toHaveValue('Lovelace');
