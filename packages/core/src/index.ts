@@ -19,3 +19,13 @@ export {
 } from './address-suggestions';
 
 export { AUTH_VERSES, pickAuthVerse, type AuthVerse } from './auth-verses';
+
+export {
+  DOVE_PATH,
+  DOVE_SUBPATHS,
+  DOVE_VIEWBOX,
+  DOVE_VIEWBOX_SIZE,
+  type DoveSubpath,
+} from './brand-mark';
+
+export { resolveDaypart, type Daypart } from './daypart';

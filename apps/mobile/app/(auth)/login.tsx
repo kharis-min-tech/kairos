@@ -32,11 +32,12 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
-import { pickAuthVerse } from '@kairos/core';
+import { pickAuthVerse, resolveDaypart, type Daypart } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
+import { KharisDove } from '@/components/kharis-dove';
 
 export default function LoginScreen() {
   const styles = useThemedStyles(makeStyles);
@@ -52,13 +53,41 @@ export default function LoginScreen() {
   // a compositor-only transform, no bridge traffic.
   const blobDrift = useRef(new Animated.Value(0)).current;
   const blobOpacity = useRef(new Animated.Value(0)).current;
-  const fieldColors = useMemo<[string, string, string]>(
-    () =>
-      scheme === 'dark'
-        ? ['#120b2e', '#0b0818', '#050408']
-        : ['#f6f3ff', '#fafafa', '#f4f4f6'],
-    [scheme],
-  );
+  // Time-of-day light. The field's warmth tracks the hour the congregant is
+  // actually opening the app in — gold at dawn, deeper violet at dusk, indigo
+  // after dark — so Sunday morning does not look like Thursday night. Same
+  // four cuts as web, out of @kairos/core.
+  const { fieldColors, blobColor, blobAlpha } = useMemo(() => {
+    const daypart = resolveDaypart(new Date().getHours());
+    const dark = scheme === 'dark';
+
+    const colors: Record<Daypart, [string, string, string]> = dark
+      ? {
+          dawn: ['#1b1030', '#120b1e', '#07060c'],
+          day: ['#120b2e', '#0b0818', '#050408'],
+          dusk: ['#180c38', '#0d0820', '#050409'],
+          night: ['#0b0a22', '#070614', '#030308'],
+        }
+      : {
+          dawn: ['#fff6ec', '#fdfaf7', '#f7f3f8'],
+          day: ['#f6f3ff', '#fafafa', '#f4f4f6'],
+          dusk: ['#f3eeff', '#f8f3f5', '#f3eff2'],
+          night: ['#eef0f8', '#f6f6fa', '#f2f3f7'],
+        };
+
+    const blob: Record<Daypart, { color: string; alpha: number }> = {
+      dawn: { color: '#f8b537', alpha: dark ? 0.14 : 0.16 },
+      day: { color: '#5d3fd3', alpha: dark ? 0.16 : 0.12 },
+      dusk: { color: '#6d44c8', alpha: dark ? 0.18 : 0.16 },
+      night: { color: '#312e81', alpha: dark ? 0.14 : 0.1 },
+    };
+
+    return {
+      fieldColors: colors[daypart],
+      blobColor: blob[daypart].color,
+      blobAlpha: blob[daypart].alpha,
+    };
+  }, [scheme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -266,7 +295,8 @@ export default function LoginScreen() {
           style={[
             styles.fieldBlob,
             {
-              opacity: blobOpacity,
+              backgroundColor: blobColor,
+              opacity: Animated.multiply(blobOpacity, blobAlpha),
               transform: [
                 { translateX: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [-24, 24] }) },
                 { translateY: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [16, -16] }) },
@@ -293,7 +323,7 @@ export default function LoginScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.logoGradientFill}
               />
-              <Text style={styles.logoK}>K</Text>
+              <KharisDove size={32} draw />
             </View>
             <Text style={styles.brandLabel}>Kharis Church</Text>
             <Text style={styles.verse}>
@@ -454,9 +484,8 @@ function makeStyles(c: ThemeColors) {
     width: '140%',
     height: '55%',
     borderRadius: 9999,
-    backgroundColor: c.primary,
-    // Very low alpha: this is atmosphere, not a shape anyone should notice.
-    opacity: 0.12,
+    // Colour and alpha are set inline from the daypart — this is atmosphere,
+    // not a shape anyone should notice, so the alpha never climbs past ~0.18.
   },
   verse: {
     ...typography.body,
@@ -501,11 +530,6 @@ function makeStyles(c: ThemeColors) {
     right: 0,
     bottom: 0,
     borderRadius: radii.md,
-  },
-  logoK: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#ffffff',
   },
   brandLabel: {
     ...typography.eyebrow,

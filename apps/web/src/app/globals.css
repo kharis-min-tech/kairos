@@ -205,27 +205,99 @@
   will-change: transform;
 }
 
-/* Light: a pale wash so the white card still reads as elevated. */
-.auth-blob-1 {
-  background: radial-gradient(circle at 30% 35%, rgba(93, 63, 211, 0.20), transparent 60%);
+/*
+ * Time-of-day light.
+ *
+ * The field's warmth tracks the viewer's hour: gold rises at dawn, the violet
+ * deepens at dusk, and after dark the whole field cools to indigo. Sunday
+ * morning genuinely does not look like Thursday night, and unlike the drift
+ * this carries meaning rather than just depth.
+ *
+ * Registering the three tints with @property makes them real <color> values
+ * rather than opaque tokens, which is the only reason they can transition —
+ * the field eases into the hour when auth-field.tsx hydrates instead of
+ * snapping to it. Browsers without @property simply snap, which is fine.
+ */
+@property --auth-tint-1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(93, 63, 211, 0.2);
 }
-.auth-blob-2 {
-  background: radial-gradient(circle at 72% 28%, rgba(69, 30, 187, 0.14), transparent 58%);
+@property --auth-tint-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(69, 30, 187, 0.14);
 }
-.auth-blob-3 {
-  background: radial-gradient(circle at 55% 78%, rgba(248, 181, 55, 0.10), transparent 55%);
+@property --auth-tint-3 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(248, 181, 55, 0.1);
 }
 
-/* Dark: the same geometry, deeper and slightly stronger so it survives the
-   near-black page colour. */
-.dark .auth-blob-1 {
-  background: radial-gradient(circle at 30% 35%, rgba(93, 63, 211, 0.34), transparent 60%);
+.auth-field-root {
+  transition:
+    --auth-tint-1 1400ms ease,
+    --auth-tint-2 1400ms ease,
+    --auth-tint-3 1400ms ease;
 }
-.dark .auth-blob-2 {
-  background: radial-gradient(circle at 72% 28%, rgba(30, 16, 80, 0.85), transparent 58%);
+
+/* Light. Day is the baseline the other three bend away from. */
+.auth-field-root,
+.auth-field-root[data-daypart='day'] {
+  --auth-tint-1: rgba(93, 63, 211, 0.2);
+  --auth-tint-2: rgba(69, 30, 187, 0.14);
+  --auth-tint-3: rgba(248, 181, 55, 0.1);
 }
-.dark .auth-blob-3 {
-  background: radial-gradient(circle at 55% 78%, rgba(248, 181, 55, 0.07), transparent 55%);
+/* Dawn: the violet steps back and the gold comes up. */
+.auth-field-root[data-daypart='dawn'] {
+  --auth-tint-1: rgba(93, 63, 211, 0.12);
+  --auth-tint-2: rgba(244, 142, 98, 0.13);
+  --auth-tint-3: rgba(248, 181, 55, 0.24);
+}
+/* Dusk: both deepen — low warm sun against a darkening violet. */
+.auth-field-root[data-daypart='dusk'] {
+  --auth-tint-1: rgba(78, 46, 196, 0.24);
+  --auth-tint-2: rgba(69, 30, 187, 0.2);
+  --auth-tint-3: rgba(242, 150, 72, 0.2);
+}
+/* Night: indigo, and the gold almost gone. */
+.auth-field-root[data-daypart='night'] {
+  --auth-tint-1: rgba(49, 46, 129, 0.17);
+  --auth-tint-2: rgba(30, 16, 80, 0.12);
+  --auth-tint-3: rgba(248, 181, 55, 0.05);
+}
+
+/* Dark. Same geometry, deeper and stronger so it survives the near-black page. */
+.dark .auth-field-root,
+.dark .auth-field-root[data-daypart='day'] {
+  --auth-tint-1: rgba(93, 63, 211, 0.34);
+  --auth-tint-2: rgba(30, 16, 80, 0.85);
+  --auth-tint-3: rgba(248, 181, 55, 0.07);
+}
+.dark .auth-field-root[data-daypart='dawn'] {
+  --auth-tint-1: rgba(93, 63, 211, 0.26);
+  --auth-tint-2: rgba(58, 26, 92, 0.72);
+  --auth-tint-3: rgba(248, 181, 55, 0.16);
+}
+.dark .auth-field-root[data-daypart='dusk'] {
+  --auth-tint-1: rgba(93, 63, 211, 0.36);
+  --auth-tint-2: rgba(44, 18, 108, 0.85);
+  --auth-tint-3: rgba(242, 150, 72, 0.14);
+}
+.dark .auth-field-root[data-daypart='night'] {
+  --auth-tint-1: rgba(40, 28, 110, 0.3);
+  --auth-tint-2: rgba(18, 10, 52, 0.92);
+  --auth-tint-3: rgba(248, 181, 55, 0.04);
+}
+
+.auth-blob-1 {
+  background: radial-gradient(circle at 30% 35%, var(--auth-tint-1), transparent 60%);
+}
+.auth-blob-2 {
+  background: radial-gradient(circle at 72% 28%, var(--auth-tint-2), transparent 58%);
+}
+.auth-blob-3 {
+  background: radial-gradient(circle at 55% 78%, var(--auth-tint-3), transparent 55%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -258,6 +330,42 @@
 }
 
 @keyframes auth-verse-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/*
+ * One brand beat: the dove draws itself on first paint.
+ *
+ * 900ms, once, never on a loop — a logo that keeps animating stops being a
+ * logo. The outline strokes in, then the fill arrives behind it and the
+ * stroke retires. Under reduce-motion the stroke never shows at all and the
+ * mark is simply there, which is why the fill is opaque by default.
+ */
+.dove-stroke {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dove-draw .dove-stroke {
+    opacity: 1;
+    animation:
+      dove-draw 900ms cubic-bezier(0.65, 0, 0.35, 1) both,
+      dove-stroke-out 260ms ease-out 760ms both;
+  }
+  .dove-draw .dove-fill {
+    animation: dove-fill-in 420ms ease-out 620ms both;
+  }
+}
+
+@keyframes dove-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes dove-stroke-out {
+  to { opacity: 0; }
+}
+@keyframes dove-fill-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }

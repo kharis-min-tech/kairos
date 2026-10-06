@@ -1,5 +1,6 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
+import { AuthField } from './auth-field';
 import { pickAuthVerse } from '@kairos/core';
 
 /**
@@ -11,26 +12,24 @@ import { pickAuthVerse } from '@kairos/core';
  *
  * Now a single field spans the whole viewport and everything sits on it. The
  * drifting colour points (globals.css, 28–46s, under 8% travel) give it depth
- * without ever being perceived as movement, and the verse rotates per load so
- * the page has a voice rather than a slogan.
+ * without ever being perceived as movement, the field's warmth tracks the
+ * hour, the dove draws itself once, and the verse rotates per load so the
+ * page has a voice rather than a slogan.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const verse = pickAuthVerse();
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-[#fafafa] dark:bg-[#07060e]">
-      {/* The field — one continuous background behind both columns. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="auth-field auth-blob-1" />
-        <div className="auth-field auth-blob-2" />
-        <div className="auth-field auth-blob-3" />
-      </div>
+      {/* The field — one continuous background behind both columns, lit for
+          the viewer's hour. */}
+      <AuthField />
 
       {/* Brand column. No background of its own any more — it sits ON the
           field, so there is nothing to seam against. */}
       <div className="relative z-10 hidden w-[480px] flex-col justify-between p-10 lg:flex">
         <div className="flex items-center gap-3">
-          <KharisLogoIcon size={40} />
+          <KharisLogoIcon size={40} draw />
           <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
             Kharis Church
           </span>
@@ -66,7 +65,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="w-full max-w-md space-y-6">
           <div className="flex items-center justify-center gap-2 lg:hidden">
-            <KharisLogoIcon size={32} />
+            <KharisLogoIcon size={32} draw />
             <span className="text-lg font-bold uppercase tracking-widest text-primary">
               Kharis Church
             </span>
