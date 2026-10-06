@@ -129,6 +129,45 @@ export interface FormDefinition {
   blocks: FormBlockDef[];
 }
 
+// ── Member references ──────────────────────────────────────
+
+/**
+ * How a `member` field has been answered.
+ *
+ * - `linked` — a directory record was picked; the value is a member id and the
+ *   person can actually be followed up.
+ * - `named`  — only a name was given, into the field's `freeTextFieldId`.
+ * - `empty`  — neither.
+ */
+export type MemberReferenceState = 'linked' | 'named' | 'empty';
+
+/**
+ * The one place that reads a member field's pair of keys.
+ *
+ * The renderers keep the two keys mutually exclusive when writing, but reading
+ * must still be total: legacy submissions and hand-edited payloads can carry
+ * both. `linked` wins in that case — a reference is the stronger claim, and
+ * showing the record a reviewer can open is the safe read.
+ *
+ * Shared deliberately: the web renderer, the mobile renderer and validation all
+ * call this, so "is this field answered?" cannot drift between them. Mobile used
+ * to omit the free-text half and so rejected a typed name on a required field.
+ */
+export function memberReferenceState(
+  field: Pick<FormFieldDef, 'id' | 'freeTextFieldId'>,
+  values: Record<string, unknown>,
+): MemberReferenceState {
+  if (isNonEmptyString(values[field.id])) return 'linked';
+  if (field.freeTextFieldId && isNonEmptyString(values[field.freeTextFieldId])) {
+    return 'named';
+  }
+  return 'empty';
+}
+
+function isNonEmptyString(v: unknown): boolean {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
 // ── Evaluator ──────────────────────────────────────────────
 
 function isCombinator(cond: FormConditionDef): cond is FormCombinatorCondition {

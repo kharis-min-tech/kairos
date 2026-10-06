@@ -13,13 +13,12 @@ import {
 } from '@kairos/ui';
 import { Search, X, Plus, Trash2 } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
-import { MemberSearchLink } from './member-search-link';
 import { MemberPickOrType } from './member-pick-or-type';
-import type { FormMemberSearchResult } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
 import {
   evaluateCondition,
+  memberReferenceState,
   type FormDefinition,
   type FormFieldDef,
   type FormSectionDef,
@@ -92,6 +91,42 @@ function isFilled(v: FieldValue): boolean {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
+/**
+ * Whether a required field has an answer. A `member` field is answered by a
+ * reference OR by its free-text twin — the person is identified either way, and
+ * demanding the reference would block the form for anyone not in the directory.
+ * `memberReferenceState` is shared with the mobile renderer so the two can't
+ * disagree about what counts as answered.
+ */
+function isAnswered(field: FormFieldDef, bag: Record<string, FieldValue>): boolean {
+  if (field.type === 'member') {
+    return memberReferenceState(field, bag) !== 'empty';
+  }
+  return isFilled(bag[field.id]);
+}
+
+/**
+ * Write a member field's single answer.
+ *
+ * The free-text twin is not a field of its own in the definition — it only
+ * exists as `freeTextFieldId` — so a generic "emit every field id" loop silently
+ * dropped every typed name, and the server then rejected the submission as
+ * missing a guardian. Emitting exactly one of the two keys here also makes the
+ * invariant true of the payload itself, not just of the UI that produced it.
+ */
+function writeMemberAnswer(
+  out: Record<string, unknown>,
+  field: FormFieldDef,
+  bag: Record<string, FieldValue>,
+): void {
+  const state = memberReferenceState(field, bag);
+  if (state === 'linked') {
+    out[field.id] = String(bag[field.id]).trim();
+  } else if (state === 'named' && field.freeTextFieldId) {
+    out[field.freeTextFieldId] = String(bag[field.freeTextFieldId]).trim();
+  }
+}
+
 export interface DeclarativeFormProps {
   definition: FormDefinition;
   successTitle?: string;
@@ -128,7 +163,16 @@ export function DeclarativeForm({
     { enabled: searchOpen && searchTerm.trim().length >= 2 },
   );
 
+  // A submission shared anonymously must not carry the subject link. The
+  // bespoke testimony form has always dropped it; read it off the answer rather
+  // than the form type so any definition asking the same question inherits the
+  // rule, and so the mobile renderer can mirror it exactly.
+  const isAnonymous = state.values.shareAnonymously === true;
+
   function setValue(id: string, value: FieldValue) {
+    // Ticking anonymity retracts the link rather than leaving one on screen
+    // that submit would silently discard.
+    if (id === 'shareAnonymously' && value === true) setSubjectMemberId(undefined);
     setState((p) => ({ ...p, values: { ...p.values, [id]: value } }));
     setErrors((p) => {
       const next = { ...p };
@@ -214,13 +258,7 @@ export function DeclarativeForm({
         for (const field of block.fields) {
           if (!field.required) continue;
           if (!isFieldVisible(field, blockVisible, values, now)) continue;
-          // A member field with a free-text companion is satisfied by either
-          // one — the person is identified whether or not they're in the
-          // directory, so demanding the reference would block the form.
-          const satisfied =
-            isFilled(state.values[field.id]) ||
-            (!!field.freeTextFieldId && isFilled(state.values[field.freeTextFieldId]));
-          if (!satisfied) {
+          if (!isAnswered(field, state.values)) {
             found[field.id] = `${field.label} is required`;
           }
         }
@@ -233,7 +271,7 @@ export function DeclarativeForm({
               ? evaluateCondition(field.visibleWhen, row as Record<string, unknown>, now)
               : true;
             if (!rowVisible) return;
-            if (!isFilled(row[field.id])) {
+            if (!isAnswered(field, row)) {
               found[`${block.id}.${index}.${field.id}`] =
                 `${field.label} is required`;
             }
@@ -257,6 +295,10 @@ export function DeclarativeForm({
       if (block.kind === 'section') {
         for (const field of block.fields) {
           if (!isFieldVisible(field, blockVisible, values, now)) continue;
+          if (field.type === 'member') {
+            writeMemberAnswer(payload, field, state.values);
+            continue;
+          }
           const v = state.values[field.id];
           if (field.type === 'checkbox') {
             payload[field.id] = Boolean(v);
@@ -269,6 +311,10 @@ export function DeclarativeForm({
           .map((row) => {
             const out: Record<string, unknown> = {};
             for (const field of block.fields) {
+              if (field.type === 'member') {
+                writeMemberAnswer(out, field, row);
+                continue;
+              }
               const v = row[field.id];
               if (field.type === 'checkbox') out[field.id] = Boolean(v);
               else if (typeof v === 'string' && v.trim().length > 0)
@@ -294,7 +340,7 @@ export function DeclarativeForm({
       await submitForm.mutateAsync({
         formType: definition.formType,
         data: {
-          subjectMemberId,
+          subjectMemberId: isAnonymous ? undefined : subjectMemberId,
           branchId: selectedBranchId,
           payload: buildPayload(),
           consentGivenAt: new Date().toISOString(),
@@ -327,6 +373,11 @@ export function DeclarativeForm({
     value: FieldValue,
     onChange: (v: FieldValue) => void,
     errorKey: string,
+    // Writes a sibling field in the SAME bag as `onChange` — the top-level
+    // values for a section, the row's own values inside a repeatable group.
+    // Only member fields use it, to clear their free-text twin.
+    setSibling: (fieldId: string, v: FieldValue) => void = setValue,
+    siblingValues: Record<string, FieldValue> = state.values,
   ) {
     const errorMsg = errors[errorKey];
 
@@ -351,43 +402,37 @@ export function DeclarativeForm({
       );
     }
 
+    if (field.type === 'member') {
+      // The stored value is a member id, so the picked person can actually be
+      // routed to — a typed name never could be. The control owns its own
+      // label, help text and error line: it is one question with one answer,
+      // and the generic wrapper below would print the label a second time.
+      const companionId = field.freeTextFieldId;
+      const companionValue = companionId ? siblingValues[companionId] : undefined;
+      return (
+        <MemberPickOrType
+          field={field}
+          memberId={typeof value === 'string' ? value : ''}
+          typedName={typeof companionValue === 'string' ? companionValue : ''}
+          errorMessage={errorMsg}
+          onPickMember={(m) => {
+            onChange(m ? m.id : '');
+            if (companionId) setSibling(companionId, '');
+          }}
+          onTypeName={
+            companionId
+              ? (name) => {
+                  setSibling(companionId, name);
+                  onChange('');
+                }
+              : undefined
+          }
+        />
+      );
+    }
+
     const control = (() => {
       switch (field.type) {
-        case 'member': {
-          // The stored value is a member id, so the picked person can actually
-          // be routed to — a typed name never could be. Fields that name a
-          // companion accept a typed name too, for people not in the
-          // directory; the two keys stay mutually exclusive.
-          const companionId = field.freeTextFieldId;
-          if (!companionId) {
-            return (
-              <MemberSearchLink
-                value={typeof value === 'string' ? value : undefined}
-                onSelect={(m: FormMemberSearchResult) => onChange(m.id)}
-                onClear={() => onChange('')}
-                label={field.label}
-                helpText={field.placeholder ?? 'Search by name or phone.'}
-                linkedNote="Linked."
-              />
-            );
-          }
-          const companionValue = state.values[companionId];
-          return (
-            <MemberPickOrType
-              field={field}
-              memberId={typeof value === 'string' ? value : ''}
-              typedName={typeof companionValue === 'string' ? companionValue : ''}
-              onPickMember={(id) => {
-                onChange(id);
-                setValue(companionId, '');
-              }}
-              onTypeName={(name) => {
-                setValue(companionId, name);
-                onChange('');
-              }}
-            />
-          );
-        }
         case 'date':
           return (
             <DateSelect
@@ -519,6 +564,8 @@ export function DeclarativeForm({
                         row[field.id],
                         (v) => setRowValue(block.id, index, field.id, v),
                         `${block.id}.${index}.${field.id}`,
+                        (fieldId, v) => setRowValue(block.id, index, fieldId, v),
+                        row,
                       )}
                     </div>
                   ))}
@@ -553,77 +600,88 @@ export function DeclarativeForm({
       <form onSubmit={onSubmit} className="space-y-8">
         <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
-        {/* Find existing person — link a returning/known visitor. */}
-        <Card>
-          <CardContent className="space-y-3 py-5">
-            <FieldLabel htmlFor="member-search">Find an existing person</FieldLabel>
-            <p className="text-xs text-muted-foreground">
-              Search by name or phone. Leave blank to create a new contact.
-            </p>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="member-search"
-                className="pl-9 pr-9"
-                placeholder="Search by name or phone…"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setSearchOpen(true);
-                  if (subjectMemberId) setSubjectMemberId(undefined);
-                }}
-                onFocus={() => setSearchOpen(true)}
-              />
-              {(searchTerm || subjectMemberId) && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={clearExisting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {subjectMemberId ? (
-              <p className="text-xs font-medium text-[#16A34A]">
-                Linked to an existing person, so submitting will update their record.
+        {/* Find existing person — link a returning/known visitor. Suppressed for
+            an anonymous submission, which by definition isn't tied to a record. */}
+        {isAnonymous ? (
+          <Card>
+            <CardContent className="py-5">
+              <p className="text-xs text-muted-foreground">
+                An anonymous submission won’t be linked to anyone’s record.
               </p>
-            ) : null}
-
-            {searchOpen && searchTerm.trim().length >= 2 && !subjectMemberId ? (
-              <div className="rounded-lg border border-input/15">
-                {searching ? (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
-                ) : searchResults && searchResults.length > 0 ? (
-                  <ul>
-                    {searchResults.map((r) => (
-                      <li key={r.id}>
-                        <button
-                          type="button"
-                          onClick={() => selectExisting(r)}
-                          className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-foreground/5"
-                        >
-                          <span className="font-medium text-foreground">
-                            {r.firstName} {r.lastName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {r.phone ?? 'No phone'} · {r.memberType}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">
-                    No matches. A new contact will be created.
-                  </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="space-y-3 py-5">
+              <FieldLabel htmlFor="member-search">Find an existing person</FieldLabel>
+              <p className="text-xs text-muted-foreground">
+                Search by name or phone. Leave blank to create a new contact.
+              </p>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="member-search"
+                  className="pl-9 pr-9"
+                  placeholder="Search by name or phone…"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setSearchOpen(true);
+                    if (subjectMemberId) setSubjectMemberId(undefined);
+                  }}
+                  onFocus={() => setSearchOpen(true)}
+                />
+                {(searchTerm || subjectMemberId) && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={clearExisting}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 )}
               </div>
-            ) : null}
-          </CardContent>
-        </Card>
+
+              {subjectMemberId ? (
+                <p className="text-xs font-medium text-[#16A34A]">
+                  Linked to an existing person, so submitting will update their record.
+                </p>
+              ) : null}
+
+              {searchOpen && searchTerm.trim().length >= 2 && !subjectMemberId ? (
+                <div className="rounded-lg border border-input/15">
+                  {searching ? (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
+                  ) : searchResults && searchResults.length > 0 ? (
+                    <ul>
+                      {searchResults.map((r) => (
+                        <li key={r.id}>
+                          <button
+                            type="button"
+                            onClick={() => selectExisting(r)}
+                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-foreground/5"
+                          >
+                            <span className="font-medium text-foreground">
+                              {r.firstName} {r.lastName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {r.phone ?? 'No phone'} · {r.memberType}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">
+                      No matches. A new contact will be created.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        )}
 
         {definition.blocks.map((block) => {
           const blockVisible = block.visibleWhen

@@ -197,7 +197,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await pickRadio(user, 'Are you under 16?', 'Yes');
       await screen.findByRole('heading', { name: 'Parent / guardian' });
 
-      await user.type(screen.getByPlaceholderText('Full name'), 'Grace Adeyemi');
+      await user.type(screen.getByRole('combobox', { name: /Guardian/ }), 'Grace Adeyemi');
       await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
 
@@ -335,6 +335,118 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       const call = submitMutate.mock.calls[0]![0];
       expect(call.data.payload.broughtChildren).toBe(true);
       expect(call.data.payload.children).toEqual([{ firstName: 'Kid', lastName: 'Bakare' }]);
+    });
+
+    // The invariant the member-reference design exists to protect: an id means a
+    // real person who can be followed up, a name means we only have a name, and
+    // a payload never carries both under one answer.
+    describe('guardian — a reference or a name, never both', () => {
+      const noDob = {
+        ...FIRST_TIME_VISITOR_FORM,
+        blocks: FIRST_TIME_VISITOR_FORM.blocks.map((b) =>
+          b.kind === 'section' && b.id === 'about-you'
+            ? { ...b, fields: b.fields.filter((f) => f.id !== 'dateOfBirth') }
+            : b,
+        ),
+      };
+
+      async function fillUnder16(user: ReturnType<typeof userEvent.setup>) {
+        render(<DeclarativeForm definition={noDob} />, { wrapper });
+        await user.type(screen.getByLabelText(/^First name/), 'Tunde');
+        await user.type(screen.getByLabelText(/^Last name/), 'Bakare');
+        await pickRadio(user, 'Are you under 16?', 'Yes');
+        await screen.findByRole('heading', { name: 'Parent / guardian' });
+        await user.type(screen.getByLabelText(/Guardian phone/), '07123456789');
+      }
+
+      it('submits the typed name alone when no directory match is picked', async () => {
+        const user = userEvent.setup();
+        await fillUnder16(user);
+
+        await user.type(screen.getByRole('combobox', { name: /^Guardian/ }), 'Grace Adeyemi');
+        await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+        await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+        await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+
+        const payload = submitMutate.mock.calls[0]![0].data.payload;
+        expect(payload.guardianName).toBe('Grace Adeyemi');
+        expect(payload.guardianMemberId).toBeUndefined();
+      });
+
+      it('submits the reference alone once a directory match is picked', async () => {
+        searchResults = [
+          { id: 'm-7', firstName: 'Ada', lastName: 'Lovelace', phone: '0700', memberType: 'member' },
+        ];
+        const user = userEvent.setup();
+        await fillUnder16(user);
+
+        const guardian = screen.getByRole('combobox', { name: /^Guardian/ });
+        await user.type(guardian, 'ada');
+        await user.click(screen.getByRole('option', { name: /^Ada Lovelace/ }));
+
+        await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+        await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+        await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+
+        const payload = submitMutate.mock.calls[0]![0].data.payload;
+        expect(payload.guardianMemberId).toBe('m-7');
+        expect(payload.guardianName).toBeUndefined();
+      });
+    });
+  });
+
+  // The bespoke testimony form has always dropped the subject link for an
+  // anonymous testimony. The declarative renderer now carries subjectMemberId on
+  // both platforms, so it has to honour the same rule — otherwise the one form
+  // that promises anonymity is the one that leaks a reference to the submitter.
+  describe('anonymous submissions drop the subject link', () => {
+    const ANON_FORM = {
+      formType: 'testimony' as const,
+      title: 'Testimony',
+      blocks: [
+        {
+          kind: 'section' as const,
+          id: 'about',
+          title: 'About you',
+          fields: [
+            { id: 'firstName', type: 'text' as const, label: 'First name', required: true },
+            { id: 'shareAnonymously', type: 'checkbox' as const, label: 'Share anonymously' },
+          ],
+        },
+      ],
+    };
+
+    async function linkThenSubmit(anonymously: boolean) {
+      searchResults = [
+        { id: 'm-7', firstName: 'Ada', lastName: 'Lovelace', phone: '0700', memberType: 'member' },
+      ];
+      const user = userEvent.setup();
+      render(<DeclarativeForm definition={ANON_FORM} />, { wrapper });
+
+      await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
+      await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+      if (anonymously) {
+        await user.click(screen.getByLabelText(/Share anonymously/));
+        // The control goes with the link: an anonymous submission has nothing to
+        // link to, so offering the search would promise something submit undoes.
+        expect(screen.queryByLabelText(/Find an existing person/)).not.toBeInTheDocument();
+        expect(
+          screen.getByText(/An anonymous submission won’t be linked to anyone’s record/),
+        ).toBeInTheDocument();
+      }
+
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+      await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+      await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+      return submitMutate.mock.calls[0]![0].data;
+    }
+
+    it('carries the link when the submission is not anonymous', async () => {
+      expect((await linkThenSubmit(false)).subjectMemberId).toBe('m-7');
+    });
+
+    it('drops the link, and the control, once anonymity is ticked', async () => {
+      expect((await linkThenSubmit(true)).subjectMemberId).toBeUndefined();
     });
   });
 

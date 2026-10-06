@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   evaluateCondition,
+  memberReferenceState,
   FIRST_TIME_VISITOR_FORM,
   type FormConditionDef,
 } from './form-engine';
@@ -162,5 +163,46 @@ describe('FIRST_TIME_VISITOR_FORM', () => {
     expect(guardian?.visibleWhen).toBeDefined();
     expect(evaluateCondition(guardian!.visibleWhen!, { dateOfBirth: '2020-01-01' }, NOW)).toBe(true);
     expect(evaluateCondition(guardian!.visibleWhen!, { dateOfBirth: '1990-01-01' }, NOW)).toBe(false);
+  });
+});
+
+describe('memberReferenceState', () => {
+  const guardian = { id: 'guardianMemberId', freeTextFieldId: 'guardianName' };
+
+  it('is empty when neither key is set', () => {
+    expect(memberReferenceState(guardian, {})).toBe('empty');
+    expect(memberReferenceState(guardian, { guardianMemberId: '', guardianName: '' })).toBe(
+      'empty',
+    );
+  });
+
+  it('is empty when the typed name is only whitespace', () => {
+    expect(memberReferenceState(guardian, { guardianName: '   ' })).toBe('empty');
+  });
+
+  it('is linked when the member id is set', () => {
+    expect(memberReferenceState(guardian, { guardianMemberId: 'm-7' })).toBe('linked');
+  });
+
+  it('is named when only the free-text companion is set', () => {
+    expect(memberReferenceState(guardian, { guardianName: 'Grace Adeyemi' })).toBe('named');
+  });
+
+  // Mutual exclusion is enforced on write, but reads must still be total:
+  // legacy rows can carry both. The reference wins — it is the stronger claim
+  // and it is the one a reviewer can open.
+  it('prefers the reference when a legacy payload carries both', () => {
+    expect(
+      memberReferenceState(guardian, {
+        guardianMemberId: 'm-7',
+        guardianName: 'Grace Adeyemi',
+      }),
+    ).toBe('linked');
+  });
+
+  it('never reports named for a field with no free-text companion', () => {
+    const invitedBy = { id: 'invitedByMemberId' };
+    expect(memberReferenceState(invitedBy, { invitedBy: 'A friend' })).toBe('empty');
+    expect(memberReferenceState(invitedBy, { invitedByMemberId: 'm-3' })).toBe('linked');
   });
 });

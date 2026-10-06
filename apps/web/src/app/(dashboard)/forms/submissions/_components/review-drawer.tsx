@@ -48,12 +48,67 @@ const FIELD_LABELS: Record<string, string> = {
   preferredCeremonyDate: 'Preferred ceremony date',
   preferredDedicationDate: 'Preferred dedication date',
   additionalNotes: 'Additional notes',
+  // Member references and their free-text twins. The pair is deliberately
+  // labelled so a reviewer sees which one they got without decoding the key.
+  guardianMemberId: 'Guardian',
+  guardianName: 'Guardian',
+  guardianPhone: 'Guardian phone',
+  guardianRelationship: 'Relationship to guardian',
+  fatherMemberId: 'Father',
+  motherMemberId: 'Mother',
+  invitedByMemberId: 'Invited by',
+  invitedBy: 'Invited by',
 };
+
+/**
+ * A member-reference key. The convention is the field id, so a new reference
+ * field is readable here without another entry being added by hand.
+ */
+function isMemberRefKey(key: string): boolean {
+  return key.endsWith('MemberId');
+}
+
+/**
+ * The free-text halves of the member-reference pairs. Marked explicitly because
+ * the key alone ("guardianName") doesn't say that the matching reference was
+ * offered and declined — which is exactly what a reviewer needs to know.
+ */
+const MEMBER_FREE_TEXT_KEYS = new Set([
+  'guardianName',
+  'fathersName',
+  'mothersName',
+  'invitedBy',
+]);
 
 function renderValue(value: unknown): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (value === null || value === undefined || value === '') return '—';
   return String(value);
+}
+
+/**
+ * A reference is a person who can be followed up; a typed name is only a name.
+ * A raw UUID under `guardianMemberId` told a reviewer neither, so a reference
+ * now reads as an openable record and a typed name is marked as name-only —
+ * the distinction the two keys exist to carry, visible at a glance.
+ */
+function MemberRefValue({ id }: { id: string }) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <Link
+        href={`/members/${id}`}
+        className="font-medium text-[#5D3FD3] hover:underline"
+      >
+        Open member record
+      </Link>
+      <Badge
+        variant="outline"
+        className="border-[#5D3FD3]/25 bg-[#5D3FD3]/10 text-[#5D3FD3]"
+      >
+        Directory member
+      </Badge>
+    </span>
+  );
 }
 
 export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerProps) {
@@ -118,12 +173,24 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
                   </div>
                 );
               }
+              const isRef = isMemberRefKey(key) && typeof value === 'string' && value.length > 0;
               return (
                 <div key={key}>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {FIELD_LABELS[key] ?? key}
                   </dt>
-                  <dd className="text-sm text-foreground break-words">{renderValue(value)}</dd>
+                  <dd className="text-sm text-foreground break-words">
+                    {isRef ? (
+                      <MemberRefValue id={value as string} />
+                    ) : (
+                      <>
+                        {renderValue(value)}
+                        {MEMBER_FREE_TEXT_KEYS.has(key) ? (
+                          <span className="ml-1.5 text-xs text-muted-foreground">(name only)</span>
+                        ) : null}
+                      </>
+                    )}
+                  </dd>
                 </div>
               );
             })}
