@@ -129,7 +129,7 @@ describe('GET /api/fellowships/:id', () => {
 // ── POST /api/fellowships ──────────────────────────────────
 
 describe('POST /api/fellowships', () => {
-  it('should return 401 for regular member', async () => {
+  it('should return 403 for regular member', async () => {
     const res = await app.request('/api/fellowships', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
@@ -141,20 +141,20 @@ describe('POST /api/fellowships', () => {
       }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
 // ── DELETE /api/fellowships/:id ────────────────────────────
 
 describe('DELETE /api/fellowships/:id', () => {
-  it('should return 401 for regular member', async () => {
+  it('should return 403 for regular member', async () => {
     const res = await app.request(`/api/fellowships/${TEST_IDS.fellowshipId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -203,14 +203,14 @@ describe('GET /api/fellowships/:id/meetings', () => {
 // ── POST /api/fellowships/:id/meetings ─────────────────────
 
 describe('POST /api/fellowships/:id/meetings', () => {
-  it('should return 401 for regular member', async () => {
+  it('should return 403 for regular member', async () => {
     const res = await app.request(`/api/fellowships/${TEST_IDS.fellowshipId}/meetings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ meetingDate: '2024-06-20', topic: 'Worship' }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 

@@ -460,8 +460,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   };
   const [showColorPicker, setShowColorPicker] = useState(false);
 
-  const { data: growthData, isLoading: growthLoading } = useMemberGrowth();
-  const { data: attendanceData, isLoading: attendanceLoading } = useAttendanceTrend();
+  // Branch-wide, and only ever rendered for leadership — so only fetched
+  // for leadership. The API gates these on `branch:read` either way.
+  const { data: growthData, isLoading: growthLoading } = useMemberGrowth(isLeadership);
+  const { data: attendanceData, isLoading: attendanceLoading } = useAttendanceTrend(isLeadership);
   const { data: outreachOverview, isLoading: outreachLoading } = useOutreachOverview();
   const { data: outreachAnalytics } = useOutreachAnalytics();
   const { data: memberData } = useMemberDashboard();

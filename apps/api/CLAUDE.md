@@ -92,7 +92,9 @@ export async function listX(db: Database, auth: AuthContext, query: ListXQuery) 
 - **`getDb()` doesn't exist here** — the singleton is `db` from `apps/api/src/db.ts`. Import that.
 - **Listing endpoints** that join across tables: use Drizzle `leftJoin` and select specific columns. Don't `SELECT *` and reshape in JS.
 - **Mutations always return the affected entity** (or list for batch ops), shaped consistently with the list endpoint.
-- **Gate on capabilities, not role names.** `requireCapability('cap', scopeFn?)` and `requireAnyCapability(...caps)` are the only standard gates — `requireRole(...)` is gone. Adding a new capability means extending the `Capability` union and `RoleCapabilities` map in `@kairos/types/rbac`.
+- **Gate on capabilities, not role names.** `requireCapability('cap', scopeFn?)` and `requireAnyCapability(...caps)` are the standard gates. Adding a new capability means extending the `Capability` union and `RoleCapabilities` map in `@kairos/types/rbac`.
+- **`requireRole(...)` is not gone**, despite what this file used to say. It survives on the handful of genuinely platform-admin routes as `requireRole('admin')`, which is correct, because `admin` is a real `systemRole`. **Never pass it a name that is not one.** `requireRole('admin', 'pastor', 'leader', 'member')` guarded `/api/reports/*` for a long time and passed for every authenticated caller — `systemRole` collapsed to `'admin' | 'member'` and both were in the list. A gate that reads as a gate and is not will eventually be trusted.
+- **Permission rejections are 403, not 401.** Every "Insufficient permissions" throw in `middleware/auth.ts` uses `ForbiddenError`. This matters beyond pedantry: the api-client refreshes the token on 401 and logs out on terminal auth failure, so throwing 401 at someone who merely lacks a grant can bounce them to `/login` instead of telling them they have no access. 401 is reserved for a missing, malformed or expired token.
 
 ## Tests
 

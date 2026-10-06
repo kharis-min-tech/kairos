@@ -4,8 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 
-// member-growth and attendance-trend are admin/pastor only
-export function useMemberGrowth() {
+/**
+ * Branch-wide growth and attendance.
+ *
+ * Both are leadership reading and the API now gates them on `branch:read`,
+ * so callers pass `enabled` rather than fetching and letting the server
+ * refuse. The panels these feed were already `isLeadership`-gated at render;
+ * only the fetch was unconditional, which left plain members making two
+ * requests whose results they never saw.
+ */
+export function useMemberGrowth(enabled = true) {
   const activeRole = useAuthStore((s) => s.activeRole);
   return useQuery({
     queryKey: ['reports', 'member-growth'],
@@ -13,15 +21,13 @@ export function useMemberGrowth() {
       const res = await api.reports.memberGrowth();
       return res.data!;
     },
-    // RBAC Phase 4c: API gates by capability now; any authenticated user
-    // may have access. Fetch when logged in and let the server narrow.
-    enabled: !!activeRole,
+    enabled: !!activeRole && enabled,
     retry: false,
     throwOnError: false,
   });
 }
 
-export function useAttendanceTrend() {
+export function useAttendanceTrend(enabled = true) {
   const activeRole = useAuthStore((s) => s.activeRole);
   return useQuery({
     queryKey: ['reports', 'attendance-trend'],
@@ -29,9 +35,7 @@ export function useAttendanceTrend() {
       const res = await api.reports.attendanceTrend();
       return res.data!;
     },
-    // RBAC Phase 4c: API gates by capability now; any authenticated user
-    // may have access. Fetch when logged in and let the server narrow.
-    enabled: !!activeRole,
+    enabled: !!activeRole && enabled,
     retry: false,
     throwOnError: false,
   });

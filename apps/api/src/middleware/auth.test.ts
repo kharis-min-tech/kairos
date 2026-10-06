@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Context } from 'hono';
 import { SignJWT } from 'jose';
-import { UnauthorizedError } from '@kairos/utils';
+import { UnauthorizedError, ForbiddenError } from '@kairos/utils';
 import type { AuthContext } from '@kairos/types';
 
 async function signTestJwt(
@@ -133,10 +133,10 @@ describe('requireRole', () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
-  it('throws Unauthorized when systemRole does not match', async () => {
+  it('throws Forbidden when systemRole does not match', async () => {
     const next = vi.fn();
     const ctx = makeCtx(makeAuth({ systemRole: 'member' }));
-    await expect(requireRole('admin')(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireRole('admin')(ctx, next)).rejects.toThrow(ForbiddenError);
     expect(next).not.toHaveBeenCalled();
   });
 });
@@ -177,14 +177,14 @@ describe('requireBranchAdmin', () => {
       makeAuth({ branchSystemAdminBranchIds: [branchB] }),
       { id: branchA },
     );
-    await expect(requireBranchAdmin()(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireBranchAdmin()(ctx, next)).rejects.toThrow(ForbiddenError);
     expect(next).not.toHaveBeenCalled();
   });
 
   it('rejects plain member with neither role', async () => {
     const next = vi.fn();
     const ctx = makeCtx(makeAuth(), { id: branchA });
-    await expect(requireBranchAdmin()(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireBranchAdmin()(ctx, next)).rejects.toThrow(ForbiddenError);
   });
 
   it('throws when branch param is missing', async () => {
@@ -243,7 +243,7 @@ describe('requireBranchSystemAdmin', () => {
       makeAuth({ branchDataAdminBranchIds: [branchA] }),
       { id: branchA },
     );
-    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(ForbiddenError);
   });
 
   it('rejects Branch System Admin of a different branch', async () => {
@@ -252,13 +252,13 @@ describe('requireBranchSystemAdmin', () => {
       makeAuth({ branchSystemAdminBranchIds: [branchB] }),
       { id: branchA },
     );
-    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(ForbiddenError);
   });
 
   it('rejects plain member', async () => {
     const next = vi.fn();
     const ctx = makeCtx(makeAuth(), { id: branchA });
-    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(UnauthorizedError);
+    await expect(requireBranchSystemAdmin()(ctx, next)).rejects.toThrow(ForbiddenError);
   });
 
   it('throws when branch param is missing', async () => {

@@ -113,14 +113,14 @@ describe('GET /api/branches/regions', () => {
 // ── POST /api/branches/regions ─────────────────────────────
 
 describe('POST /api/branches/regions', () => {
-  it('should return 401 for non-admin', async () => {
+  it('should return 403 for non-admin', async () => {
     const res = await app.request('/api/branches/regions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ regionName: 'Test', country: 'UK' }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('should create a region for admin', async () => {
@@ -143,13 +143,13 @@ describe('POST /api/branches/regions', () => {
 // ── PATCH /api/branches/regions/:id ────────────────────────
 
 describe('PATCH /api/branches/regions/:id', () => {
-  it('rejects non-admin callers with 401', async () => {
+  it('rejects non-admin callers with 403', async () => {
     const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ regionName: 'Europe', country: 'France' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('updates the region when no branches are attached', async () => {
@@ -189,12 +189,12 @@ describe('PATCH /api/branches/regions/:id', () => {
 // ── DELETE /api/branches/regions/:id ───────────────────────
 
 describe('DELETE /api/branches/regions/:id', () => {
-  it('rejects non-admin callers with 401', async () => {
+  it('rejects non-admin callers with 403', async () => {
     const res = await app.request(`/api/branches/regions/${TEST_IDS.regionId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('deletes when the region is empty', async () => {
@@ -281,14 +281,14 @@ describe('GET /api/branches/:id', () => {
 // ── POST /api/branches ─────────────────────────────────────
 
 describe('POST /api/branches', () => {
-  it('should return 401 for non-admin', async () => {
+  it('should return 403 for non-admin', async () => {
     const res = await app.request('/api/branches', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ branchName: 'Test', regionId: TEST_IDS.regionId }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('should create branch as admin', async () => {
@@ -310,13 +310,13 @@ describe('POST /api/branches', () => {
 // ── DELETE /api/branches/:id ───────────────────────────────
 
 describe('DELETE /api/branches/:id', () => {
-  it('should return 401 for non-admin', async () => {
+  it('should return 403 for non-admin', async () => {
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${pastorToken}` },
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -352,13 +352,13 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
     isActive: true,
   };
 
-  it('rejects a plain member with 401', async () => {
+  it('rejects a plain member with 403', async () => {
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/leadership`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('allows system admin to assign Main Pastor', async () => {
@@ -420,7 +420,7 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bdaToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects branch system admin of a DIFFERENT branch', async () => {
@@ -435,7 +435,7 @@ describe('POST /api/branches/:id/leadership (BSA-gated)', () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${otherBsaToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId, role: 'Main Pastor' }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -455,11 +455,11 @@ const sampleRoleAssignment = {
 };
 
 describe('GET /api/branches/:id/roles', () => {
-  it('returns 401 for plain member', async () => {
+  it('returns 403 for plain member', async () => {
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns assignments for system admin', async () => {
@@ -498,7 +498,7 @@ describe('GET /api/branches/:id/roles', () => {
     expect(res.status).toBe(200);
   });
 
-  it('returns 401 for branch system admin of OTHER branch', async () => {
+  it('returns 403 for branch system admin of OTHER branch', async () => {
     const otherBsaToken = await signTestToken({
       systemRole: 'member',
       memberId: TEST_IDS.memberId,
@@ -508,7 +508,7 @@ describe('GET /api/branches/:id/roles', () => {
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
       headers: { Authorization: `Bearer ${otherBsaToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -534,13 +534,13 @@ describe('POST /api/branches/:id/roles', () => {
     isActive: true,
   };
 
-  it('rejects plain member with 401', async () => {
+  it('rejects plain member with 403', async () => {
     const res = await app.request(`/api/branches/${TEST_IDS.branchId}/roles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects branch DATA admin alone (BSA is required to grant)', async () => {
@@ -555,7 +555,7 @@ describe('POST /api/branches/:id/roles', () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bdaToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('allows system admin to assign', async () => {
@@ -604,7 +604,7 @@ describe('POST /api/branches/:id/roles', () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${otherBsaToken}` },
       body: JSON.stringify({ memberId: TEST_IDS.memberId }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -634,7 +634,7 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects branch DATA admin alone', async () => {
@@ -648,7 +648,7 @@ describe('DELETE /api/branches/:id/roles/:assignmentId', () => {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${bdaToken}` },
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects revocation of the LAST active Branch System Admin (lockout guard)', async () => {
