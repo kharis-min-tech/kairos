@@ -2,8 +2,20 @@
  * Seed script for local development.
  * Populates the database with realistic test data.
  *
- * Usage:  npm run db:seed  (from repo root)
- *    or:  npx tsx src/seed.ts  (from packages/database)
+ * ⚠ THIS SCRIPT IS DESTRUCTIVE. It opens with
+ * `TRUNCATE regions, roles, departments CASCADE`, and because regions cascade
+ * to branches, branches to members and members to very nearly everything,
+ * that wipes the database. The name does not say so, which is why it now
+ * refuses to run against a database that already holds members unless you
+ * pass --force.
+ *
+ * To apply schema changes to a database with real accounts on it, use
+ * `db:bootstrap` instead — it only runs pending migrations, each in its own
+ * transaction, and destroys nothing.
+ *
+ * Usage:  npm run db:seed            (from repo root — refuses if not empty)
+ *         npm run db:seed -- --force (wipe and reseed anyway)
+ *    or:  npx tsx src/seed.ts        (from packages/database)
  *
  * All passwords: "Password1!"
  */
@@ -49,19 +61,55 @@ import {
   mentorFollowups,
   notificationPreferences,
 } from './schema';
-import { sql } from 'drizzle-orm';
+import { sql, count } from 'drizzle-orm';
 import { hashPassword } from '@kairos/utils';
 
 const DATABASE_URL =
   process.env['DATABASE_URL'] ?? 'postgresql://kairos:kairos@localhost:5432/kairos';
 
+/**
+ * Refuse to wipe a database that someone is using.
+ *
+ * The truncate below is how this script stays idempotent, but it means a
+ * mistyped DATABASE_URL destroys every account on whatever it pointed at.
+ * Staging carries real tester accounts; production carries a church. Neither
+ * should be one shell-history arrow key away from being erased.
+ */
+async function guardNonEmpty(db: ReturnType<typeof createDb>, force: boolean) {
+  const [row] = await db.select({ n: count() }).from(members);
+  const existing = Number(row?.n ?? 0);
+  if (existing === 0 || force) {
+    if (existing > 0) {
+      console.warn(`⚠ --force: wiping a database that holds ${existing} members.\n`);
+    }
+    return;
+  }
+
+  console.error('');
+  console.error(`Refusing to seed: this database already holds ${existing} members.`);
+  console.error('');
+  console.error('  db:seed TRUNCATEs regions, roles and departments CASCADE, which');
+  console.error('  removes every branch, member, grant and record in the database.');
+  console.error('');
+  console.error('  To apply pending migrations without destroying anything:');
+  console.error('      npm run db:bootstrap --workspace=@kairos/database');
+  console.error('');
+  console.error('  If you genuinely meant to wipe and reseed:');
+  console.error('      npm run db:seed --workspace=@kairos/database -- --force');
+  console.error('');
+  process.exit(1);
+}
+
 async function seed() {
   const db = createDb(DATABASE_URL);
+  await guardNonEmpty(db, process.argv.includes('--force'));
+
   const password = await hashPassword('Password1!');
 
   console.log('Seeding database...\n');
 
-  // Clean existing data so seed is idempotent
+  // Clean existing data so seed is idempotent. See guardNonEmpty above — this
+  // is why the script will not run against a populated database unguarded.
   await db.execute(sql`TRUNCATE regions, roles, departments CASCADE`);
   console.log('✓ Cleared existing data');
 
