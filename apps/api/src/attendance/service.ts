@@ -27,10 +27,12 @@ import {
 // ── Local auth helpers (per-module, not imported — see CLAUDE.md) ──
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
-  if (authHasCapability(auth, 'branch:read')) return;
-  if (branchId && branchId !== auth.branchId) {
-    throw new ForbiddenError('You can only access attendance in your branch');
-  }
+  if (!branchId || branchId === auth.branchId) return;
+  // Scoped, NOT scope-less: `authHasCapability(auth, 'branch:read')` with no
+  // scope is true when the caller holds the capability on ANY branch, so a
+  // Branch Admin for one branch passed it for every other one.
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) return;
+  throw new ForbiddenError('You can only access attendance in your branch');
 }
 
 /**
@@ -74,7 +76,7 @@ async function enforceServiceWriter(
   auth: AuthContext,
   branchId: string,
 ): Promise<void> {
-  if (authHasCapability(auth, 'branch:read')) return;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) return;
   if (await isInAdminDepartment(db, auth.memberId, branchId)) return;
   throw new ForbiddenError(
     'Only admin-desk volunteers (Admin department), pastors, and admins can manage services',
@@ -142,13 +144,11 @@ async function resolveFilterMemberIds(
 
 /** Resolve which branch a write/report targets, enforcing scope for non-admin/pastor. */
 function resolveBranchId(auth: AuthContext, requested?: string): string {
-  if (authHasCapability(auth, 'branch:read')) {
-    return requested ?? auth.branchId;
+  if (!requested || requested === auth.branchId) return auth.branchId;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: requested })) {
+    return requested;
   }
-  if (requested && requested !== auth.branchId) {
-    throw new ForbiddenError('You can only access attendance in your branch');
-  }
-  return auth.branchId;
+  throw new ForbiddenError('You can only access attendance in your branch');
 }
 
 /** Absolute cutoff for the "engaged member" window — N months back from now. */
@@ -238,11 +238,11 @@ export async function canRecordAttendance(
   auth: AuthContext,
   branchId?: string,
 ): Promise<{ canRecord: boolean }> {
-  if (authHasCapability(auth, 'branch:read')) {
-    return { canRecord: true };
-  }
   if (!auth.branchId) return { canRecord: false };
   const targetBranch = branchId ?? auth.branchId;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: targetBranch })) {
+    return { canRecord: true };
+  }
   if (targetBranch !== auth.branchId) return { canRecord: false };
   return { canRecord: await isInAdminDepartment(db, auth.memberId, targetBranch) };
 }
@@ -296,10 +296,12 @@ export async function createService(db: Database, auth: AuthContext, data: Creat
 export async function listServices(db: Database, auth: AuthContext, query: ListServicesQuery) {
   const conditions = [eq(services.isActive, true)];
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    conditions.push(eq(services.branchId, auth.branchId));
-  } else if (query.branchId) {
-    conditions.push(eq(services.branchId, query.branchId));
+  // Only a system admin sees services across branches. A branch-scoped grant
+  // authorises its own branch and nothing else.
+  if (auth.systemRole === 'admin') {
+    if (query.branchId) conditions.push(eq(services.branchId, query.branchId));
+  } else {
+    conditions.push(eq(services.branchId, resolveBranchId(auth, query.branchId)));
   }
 
   if (query.type) conditions.push(eq(services.serviceType, query.type));
@@ -985,7 +987,9 @@ export async function getMissingMembers(
   // branch:read + no explicit filter → all active branches (mirrors the
   // Attendance-by-branch tile on the same page). Otherwise fall back to
   // the single-branch resolution that enforces scope.
-  const canReadAcrossBranches = authHasCapability(auth, 'branch:read');
+  // Across ALL branches is a system-admin view. No branch-scoped grant can
+  // authorise an aggregate that spans branches it has no reach over.
+  const canReadAcrossBranches = auth.systemRole === 'admin';
   const isAllBranches = canReadAcrossBranches && !query.branchId;
   let targetBranchIds: string[];
   if (isAllBranches) {
@@ -1877,7 +1881,7 @@ export async function getAttendanceByBranch(
   // subquery rendered them unqualified (so `branches.id` resolved to the inner
   // table's own id, breaking the correlation) and couldn't encode the Date bound.
   const branchConditions = [eq(branches.isActive, true)];
-  if (!authHasCapability(auth, 'branch:read')) {
+  if (auth.systemRole !== 'admin') {
     branchConditions.push(eq(branches.id, auth.branchId));
   } else if (query.branchId) {
     branchConditions.push(eq(branches.id, query.branchId));

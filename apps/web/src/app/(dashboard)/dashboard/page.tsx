@@ -54,6 +54,8 @@ interface RoleLabelInputs {
   homeBranchInBsa: boolean;
   homeBranchInBda: boolean;
   isSystemAdmin: boolean;
+  /** Main Pastor of their branch — an identity, which outranks authority here. */
+  isBranchMainPastor: boolean;
   isBranchSystemAdmin: boolean;
   isBranchDataAdmin: boolean;
   canWriteBranch: boolean;
@@ -70,6 +72,12 @@ interface RoleLabelInputs {
  * their full authority.
  */
 function deriveRoleLabel(i: RoleLabelInputs): string {
+  // Pastor is an identity on branch_leadership; branch-admin authority is a
+  // grant. A pastor usually holds both, and the lens they think in is pastor.
+  if (i.isBranchMainPastor) {
+    const branch = i.scopeBranchName ?? i.homeBranchName;
+    return branch ? `Pastor, ${branch}` : 'Pastor';
+  }
   if (i.scope?.kind === 'branch') {
     const suffix = i.scopeBranchName ? `, ${i.scopeBranchName}` : '';
     if (i.isSystemAdmin) {
@@ -183,6 +191,9 @@ export default function DashboardPage() {
     ...(leadership.data?.deputyDepartments ?? []),
   ];
 
+  const data = home.data;
+  const altitude = data?.altitude ?? 'personal';
+
   const roleLabel = deriveRoleLabel({
     scope,
     scopeBranchName:
@@ -195,6 +206,7 @@ export default function DashboardPage() {
     homeBranchInBsa: !!user?.homeBranchId && bsaIds.includes(user.homeBranchId),
     homeBranchInBda: !!user?.homeBranchId && bdaIds.includes(user.homeBranchId),
     isSystemAdmin: activeRole === 'admin',
+    isBranchMainPastor: data?.viewerIsBranchMainPastor ?? false,
     isBranchSystemAdmin: bsaIds.length > 0,
     isBranchDataAdmin: bdaIds.length > 0,
     canWriteBranch: caps.has('branch:write'),
@@ -202,9 +214,6 @@ export default function DashboardPage() {
     leadFellowshipName: allLeadFellowships[0]?.fellowshipName,
     leadDepartmentName: allLeadDepartments[0]?.departmentName,
   });
-
-  const data = home.data;
-  const altitude = data?.altitude ?? 'personal';
 
   const header = (
     <div className="flex items-start justify-between">
@@ -277,7 +286,7 @@ export default function DashboardPage() {
     <>
       <NeedsYouBlock items={data.needsYou} />
       <GroupsBlock
-        label={altitude === 'church' ? 'All branches' : 'My groups'}
+        label={altitude === 'church' ? 'All branches' : 'Groups I lead'}
         groups={data.groups}
       />
       {data.streakWeeks ? <StreakBlock weeks={data.streakWeeks} /> : null}

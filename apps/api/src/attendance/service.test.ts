@@ -598,9 +598,26 @@ describe('getMissingMembers', () => {
     });
   });
 
-  it('lets a pastor query any branch', async () => {
+  // Regression, 2026-10-06: this used to assert a branch-scoped pastor could
+  // query ANY branch, which is the bug a Branch System Admin for Kharis London
+  // Central hit — they saw every branch's attendance. `branch:read` checked
+  // without a scope is true when the caller holds it on any branch at all.
+  it('refuses a branch-scoped pastor another branch', async () => {
     setupSelectSequence([]);
-    const result = await getMissingMembers(mockDb, pastorAuth, { branchId: otherBranchId });
+    await expect(
+      getMissingMembers(mockDb, pastorAuth, { branchId: otherBranchId }),
+    ).rejects.toThrow(/only access attendance in your branch/i);
+  });
+
+  it('lets a branch-scoped pastor query their own branch', async () => {
+    setupSelectSequence([]);
+    const result = await getMissingMembers(mockDb, pastorAuth, { branchId });
+    expect(result).toEqual([]);
+  });
+
+  it('lets a system admin query any branch', async () => {
+    setupSelectSequence([]);
+    const result = await getMissingMembers(mockDb, adminAuth, { branchId: otherBranchId });
     expect(result).toEqual([]);
   });
 });

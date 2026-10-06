@@ -1762,6 +1762,9 @@ export interface MeHomeResponse {
   needsYou: HomeTaskItem[];
   pulse: HomePulse | null;
   groups: HomeGroupSummary[];
+  /** True when the caller is the Main Pastor of their branch (an identity on
+   *  `branch_leadership`, independent of any RBAC grant they hold). */
+  viewerIsBranchMainPastor: boolean;
   recentActivity: HomeActivityItem[];
   gettingStarted: HomeGettingStartedItem[];
   /** Consecutive weeks present at a service. Null above group altitude. */

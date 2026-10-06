@@ -1089,13 +1089,38 @@ function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellows
 function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId: string; fellowshipName: string }) {
   const statsQ = useFellowshipStats(fellowshipId);
 
-  if (statsQ.isLoading || !statsQ.data) {
+  if (statsQ.isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}><CardContent className="py-8"><div className="h-16 animate-pulse rounded-md bg-muted" /></CardContent></Card>
         ))}
       </div>
+    );
+  }
+
+  // `isLoading || !data` used to cover both cases, so a failed query rendered
+  // the skeleton forever and read as a hang. Loading and failed are different
+  // states and the second one has to say so.
+  if (statsQ.isError || !statsQ.data) {
+    return (
+      <Card>
+        <CardContent className="space-y-3 py-6">
+          <p className="text-sm font-semibold text-foreground">
+            We couldn&apos;t load {fellowshipName}&apos;s stats.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {statsQ.error instanceof Error ? statsQ.error.message : 'Please try again.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => statsQ.refetch()}
+            className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-3 py-1.5 text-sm font-medium text-white"
+          >
+            Retry
+          </button>
+        </CardContent>
+      </Card>
     );
   }
 

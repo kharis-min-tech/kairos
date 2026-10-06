@@ -452,7 +452,7 @@ describe("getMyHome — the Main Pastor on today's service", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-04T08:00:00.000Z'));
-    mockGetBranchMainPastorName.mockResolvedValue('Jude Fletcher');
+    mockGetBranchMainPastorName.mockResolvedValue({ memberId: 'pastor-1', name: 'Jude Fletcher' });
     mockListUpcomingServices.mockResolvedValue([
       { id: 's1', serviceName: 'Sunday Service', serviceDate: '2026-10-04T10:00:00.000Z', branchName: 'London' },
       { id: 's2', serviceName: 'Midweek', serviceDate: '2026-10-07T19:00:00.000Z', branchName: 'London' },
