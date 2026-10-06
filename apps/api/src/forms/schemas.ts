@@ -266,7 +266,12 @@ export const payloadSchemaByFormType = {
  *  (Phase 2 GDPR/safeguarding). consentBy is derived server-side from auth. */
 export const submitFormSchema = z.object({
   subjectMemberId: z.string().uuid().optional(),
-  // branchId may be present on the wire but is ignored — auth.branchId is forced.
+  // Accepted and ignored. The branch is always auth.branchId: a submission
+  // belongs to the branch of the person capturing it, and letting a client
+  // name a different one would be a cross-branch write. The web picker that
+  // offered admins exactly that promise has been removed — it never worked,
+  // it just looked like it did. This stays only so an older shipped client
+  // that still sends the key is not rejected.
   branchId: z.string().uuid().optional(),
   payload: z.record(z.string(), z.unknown()),
   consentGivenAt: z.string().datetime({

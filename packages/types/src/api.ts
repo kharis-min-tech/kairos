@@ -896,8 +896,6 @@ export interface SessionListParams {
 export interface SubmitFormRequest {
   /** Set when the altar-call UI search-and-select picked an existing member/attendee. */
   subjectMemberId?: string;
-  /** Ignored by the server — branch is forced to auth.branchId. */
-  branchId?: string;
   payload: FormSubmissionPayload | Record<string, unknown>;
   /**
    * GDPR / safeguarding consent — REQUIRED in production. Marked optional on the

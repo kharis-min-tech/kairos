@@ -35,7 +35,6 @@ import {
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
-import { BranchPicker } from './branch-picker';
 
 // ── Value model ─────────────────────────────────────────────
 //
@@ -79,7 +78,6 @@ export function DeclarativeForm({
   // values — and only where the person hasn't since edited them.
   const [prefilled, setPrefilled] = useState<Record<string, string>>({});
   const [consentAck, setConsentAck] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
 
   // `now` is stable for one render of the form so age-based branches don't
   // flicker between keystrokes.
@@ -198,7 +196,6 @@ export function DeclarativeForm({
         formType: definition.formType,
         data: {
           subjectMemberId: isAnonymous ? undefined : subjectMemberId,
-          branchId: selectedBranchId,
           payload: buildFormPayload(definition, state, now),
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -217,7 +214,6 @@ export function DeclarativeForm({
     setSubjectMemberId(undefined);
     setPrefilled({});
     setConsentAck(false);
-    setSelectedBranchId(undefined);
   }
 
   const values = state.values as Record<string, unknown>;
@@ -454,7 +450,6 @@ export function DeclarativeForm({
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-8">
-        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
         {/* The subject link. Withheld entirely when the definition declares none,
             and withdrawn for an anonymous submission, which by construction isn't
