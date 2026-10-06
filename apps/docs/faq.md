@@ -20,7 +20,11 @@ Not directly. Contact your church admin. Branch assignments are managed by Admin
 
 **Can members see other members' profiles?**
 
-No. Members can only see their own profile. Only Pastors and Admins have access to the full member directory.
+No. A member with no grants sees only their own profile, and the Members directory is not in their sidebar. Group leaders see the people in the fellowship or department they lead, including contact details. The full branch directory needs a branch grant.
+
+**Who shows up in the Members directory?**
+
+Confirmed Members and Returners: the people who have signed in and belong to the branch. Visitor and child records, which are usually created automatically by a form or a safeguarding process, stay behind their own surfaces rather than flooding the directory. You can narrow the list to one kind with the filters.
 
 **How do I join a fellowship?**
 
@@ -36,11 +40,35 @@ Yes. Go to **My Attendance** in the sidebar. It shows your last 12 weeks of serv
 
 ---
 
+## Membership classes
+
+**Am I a "Member"?**
+
+Only if you have completed the four-week membership class. It is a specific thing with a specific certificate, and nothing else confers it: not years of attendance, not serving in a department, not leading a fellowship, not completing the New Believers programme. See [Membership Classes](/platform/membership).
+
+**How do I join a membership class?**
+
+You cannot enrol yourself. Go to **Membership**, look at the cohorts, and express interest. That puts you on the waitlist. A membership administrator then admits people from the waitlist into a specific cohort.
+
+**How long does my place on the waitlist last?**
+
+180 days. If it lapses you can express interest again, and the clock restarts.
+
+**What do I have to do to graduate?**
+
+Six things: attend all four sessions, pass the homework for each, pass the quiz for each, pass the final test, take that test before the deadline if the cohort set one, and attend the induction. Your own Membership page shows which of the six are still outstanding.
+
+---
+
 ## Leaders
 
 **I'm a department leader. Why can't I see members outside my department?**
 
 Leader access is strictly scoped to the groups you lead. You can only see and manage members who are in your department or fellowship. This is by design: it protects member privacy.
+
+**Can I see my own group's New Believers and membership class progress?**
+
+Yes. A fellowship or department leader sees that progress for their own people, narrowed by who is in their group rather than by branch.
 
 **Can I approve members into the church?**
 
@@ -56,7 +84,11 @@ Yes. Admin department leaders can review front-desk form submissions including F
 
 **Can I see data from other branches?**
 
-No. Pastors are strictly scoped to their own branch. Cross-branch visibility is an Admin-only capability.
+No. A branch grant is strictly scoped to that branch. Cross-branch visibility belongs to platform admins, and to the two church-wide grants: Membership Admin and Safeguarding Head.
+
+**I administer my branch. Why can't I see the safeguarding inbox?**
+
+Because safeguarding sight does not come from a branch grant. The branch's current **Main Pastor** gets it automatically from holding that office, and a **Safeguarding Lead** gets it by grant, deliberately as somebody independent of branch leadership. A Minister holding the same branch grant as the Main Pastor does not see it. The welfare inbox is separate again, and belongs to the Branch System Admin.
 
 **Can I create new branches?**
 
@@ -72,15 +104,21 @@ No. Granting system-level admin access is an Admin-only action.
 
 **How do I give someone fellowship leader access?**
 
-Go to the member's profile, navigate to their roles section, add a `FellowshipLeader` grant, and scope it to the specific fellowship. Their access updates immediately.
+Not from their profile. Fellowship and department grants are conferred by the group, so go to **Fellowships**, open the fellowship, and name them as its leader or co-leader. The grant is written for you, and removing them from the group removes it. The same applies to Department Lead and Deputy, from **Departments**. Attempting to add those grants from a member profile is refused with a message pointing you to the group.
+
+Branch-scoped and church-scoped grants, such as Branch System Admin or Membership Admin, *are* assigned from the member's roles section.
+
+**I added a grant but the person says nothing changed.**
+
+The server honoured it immediately; their screen did not. Menu items and buttons are drawn from their sign-in token, which renews in the background during normal use. Asking them to sign out and back in makes it appear at once. Revocation is the other way round: the server stops honouring a removed grant instantly, even if a now-useless button is briefly still on their screen.
 
 **Does giving someone the "Pastor" honorific give them any permissions?**
 
 No. The honorific is display-only. For a member to have pastor-level access to a branch, they need a `BranchAdmin` grant assigned by an Admin.
 
-**Can I see donation history for all members?**
+**Does Kairos handle giving or donations?**
 
-By design, financial data access requires explicit privileges even for Admins. This separation of duties is intentional to protect sensitive member information.
+No. Financial records are deliberately out of scope, and there is no donation data in the system.
 
 ---
 
@@ -88,7 +126,7 @@ By design, financial data access requires explicit privileges even for Admins. T
 
 **Is my data ever deleted?**
 
-Kairos uses soft deletes, so deactivating a member or group preserves all historical records. Permanent deletion can be requested by contacting your church admin. An **Export my data** feature (GDPR right to portability) is coming soon.
+Kairos uses soft deletes, so deactivating a member or group preserves all historical records. You can download a copy of your own data, and request deletion of your account, from **Settings → Privacy & Data**.
 
 **Who can see my attendance?**
 

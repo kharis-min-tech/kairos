@@ -28,12 +28,13 @@ Once a department exists, members can request to join. Department leaders approv
 
 ## Follow-up notes
 
-Leaders can log pastoral notes on department members. Each note captures:
-- Date and time
-- Contact method
-- Notes
+Leaders can log pastoral notes on department members. A note is either a **contact** or a **visit**, and records the channels used, duration, notes, and an optional next follow-up date, plus the fields specific to its kind (whether you reached them and their interest level for a contact; in person or virtual, announced or not, arrival and departure, outcome, and who went with you for a visit).
+
+Anything logged here is recorded against the **department** as its context. Any follow-up can also be flagged as a welfare or a safeguarding concern, which routes it to the [Concerns](/platform/concerns) inbox.
 
 Notes are visible to the deputy as well, enabling team collaboration on pastoral care. The system generates alerts for members who haven't been followed up within 7 days (configurable by Admins).
+
+See [Follow-ups](/platform/follow-ups) for the full picture.
 
 ## Recruitment pipeline
 

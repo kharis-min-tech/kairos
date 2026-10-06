@@ -29,14 +29,21 @@ Fellowship leaders can:
 
 ## Logging follow-ups
 
-Follow-up notes on fellowship members help leaders track pastoral care. From the fellowship roster, open a member and add a follow-up:
+Follow-up notes on fellowship members help leaders track pastoral care. From the fellowship roster, open a member and add a follow-up.
 
-- Date and time
-- Contact method (Phone, WhatsApp, In-Person, etc.)
-- Status (Successful, No Answer, etc.)
-- Notes
+A follow-up is either a **contact** or a **visit**, and the form adapts:
+
+- Both record the channels used (up to six, so one multi-channel attempt is one record), duration, notes, and an optional next follow-up date
+- A contact also records whether you reached them, and their interest level
+- A visit also records in person or virtual, whether it was announced, arrival and departure times, the outcome, and who went with you
+
+Anything logged here is recorded against the **fellowship** as its context, so it stays attributable to the group it happened in.
+
+Any follow-up can be flagged as a **welfare concern** or a **safeguarding concern**, independently, which routes it to the matching tab of the [Concerns](/platform/concerns) inbox for whoever reads that. Use the flag: a safeguarding matter written only into the notes of an unflagged follow-up reaches nobody.
 
 Follow-up notes are visible to the co-leader as well, enabling collaborative pastoral coverage. Leaders receive alerts when a member has not been followed up within the configured window (default: 7 days).
+
+See [Follow-ups](/platform/follow-ups) for the full picture, including the branch-level queues.
 
 ## Recording meeting attendance
 

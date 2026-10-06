@@ -8,7 +8,9 @@ Service attendance is managed from the **Attendance** page in the sidebar.
 
 ### Who records it
 
-Admins, Pastors, and Leaders with branch permissions can record service attendance.
+Anyone with a branch grant, and platform admins.
+
+Members can also record themselves, if their branch has self check-in switched on: one tap, or by scanning the rotating QR code on the welcome-desk screen. See [Attendance](/platform/attendance#self-check-in).
 
 ### Creating a service record
 
@@ -79,6 +81,8 @@ This page is visible only to the member, their pastor, and admins.
 
 ## Attendance in reports
 
-Service attendance trends appear in **Reports → Attendance tab** for Pastors and Admins. The chart shows average attendance rate over the last 8 weeks per branch, with trend direction indicators.
+Service attendance trends appear in **Reports → Attendance tab**. The chart shows average attendance rate over the last 8 weeks per branch, with trend direction indicators.
+
+For the detailed view, including the per-member heatmap, the attendance frequency bands, and the first-time versus returning split, open **Attendance → Reports**. See [Attendance Reports](/analytics/attendance-reports).
 
 Leaders see attendance data scoped to their own fellowship or department members only.

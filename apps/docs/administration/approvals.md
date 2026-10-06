@@ -1,6 +1,6 @@
 # Approvals
 
-The approval queue is where Pastors and Admins review new member registrations before granting full access.
+The approval queue is where anyone holding a branch grant reviews new member registrations before granting full access.
 
 ## Why approvals exist
 
@@ -10,7 +10,7 @@ When someone self-registers via the login page, they are not immediately given f
 
 Go to **Members**. The **Approval Queue** button appears in the page header. The count of pending requests is shown on the button.
 
-The Admin dashboard also shows pending approvals in the top-right summary card. A count of **0** means no action is needed.
+The dashboard also shows pending approvals in its summary stats, for anyone who can act on them. A count of **0** means no action is needed.
 
 ## Reviewing a request
 
@@ -33,8 +33,12 @@ Click **Reject**. The account is removed. The email address becomes available fo
 
 ## Members added by staff
 
-Members added directly by a Pastor or Admin (via **Members → + Add Member**) are automatically approved. The approval queue only applies to self-registrations.
+Members added directly by staff (via **Members → + Add Member**) are automatically approved. The approval queue only applies to self-registrations.
 
 ## Pending member access
 
 Until approved, a pending member can only view their own profile. They cannot see the member directory, fellowships, departments, or any reports. This is enforced at the API level, not just the UI.
+
+::: tip Approval is not membership
+Approving an account lets somebody sign in and take part. It does not make them a Member in the formal sense, which only the [membership class](/platform/membership) does.
+:::

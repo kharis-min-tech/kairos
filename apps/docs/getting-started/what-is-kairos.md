@@ -26,7 +26,9 @@ That's the design principle behind Kairos.
 
 **Role-aware by default.** Every page, every action, every data point is filtered to what you're actually responsible for. A fellowship leader sees their fellowship. A pastor sees their branch. An admin sees everything.
 
-**One login, everything in context.** There's no "select your role" step after logging in. Your permissions are built into your token when you sign in. The UI shows exactly what your role allows: nothing more, nothing less.
+**One login, everything in context.** There's no "select your role" step after logging in. Your permissions are built into your token when you sign in. The UI shows exactly what your grants allow: nothing more, nothing less.
+
+Sign in with an email address and password, or with **Google**, **Microsoft**, or **Apple**. All four arrive at the same account, so somebody who registered with a password can later sign in with Google and still be the same person, with the same history.
 
 **Branch isolation is built in.** Data never leaks across branches by accident. A pastor in London cannot see member records from Accra. Admins have explicit cross-branch access.
 
@@ -36,6 +38,6 @@ Kairos is designed around Kharis Church's structure:
 
 - Multiple branches across different countries (UK, Ghana, Sierra Leone)
 - Branches grouped into geographic regions
-- Each branch has its own pastor, departments, and fellowships
+- Each branch has its own Main Pastor, optional Ministers, departments, and fellowships
 - Members can attend any branch but have a home branch
 - A small admin team manages the whole network

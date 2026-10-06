@@ -16,28 +16,30 @@ Departments are the ministry teams within each branch. Kairos supports the full 
 
 ## Ministry types
 
+A department is created from a **catalogue** of ministry types rather than by typing a name, so the same ministry means the same thing in every branch. The catalogue is a managed list; the dropdown on the create form is always the authority for your church.
+
+These are the types Kairos ships with:
+
 | Ministry | Description |
 |----------|-------------|
-| Administration | Service-day registers and first-timer captures |
-| Children's Department | Sunday school and children's ministry |
+| Admin | Service-day registers and first-timer captures |
+| Choir | Music ministry and worship |
 | Design | Graphics and creative |
 | Drama | Drama and stage performances |
+| Follow-Up Team | Contacts first-timers after their visit, and members not yet in a fellowship or department |
 | Hospitality | Food, refreshments and guest care |
-| Host Team | First-time guest management |
-| Production | Stage production and lighting |
-| Music | Music ministry and worship |
-| Follow Up | Pastoral follow-up team |
+| Host Team | Greets first-time guests on the day |
 | New Believers | New convert care and discipleship |
-| Evangelism | Outreach and evangelism team |
+| Production | Stage production and lighting |
 | Sanctuary Keepers | Facility cleaning and preparation |
-| Set-up | Stage and venue setup |
 | Social Media | Online presence and content |
 | Sound | Audio engineering and mixing |
-| Uniform | Uniform management and scheduling |
 | Ushers | Door, seating and order management |
 | Welfare | Pastoral care and benevolence |
-| Security | Site security and safety |
-| Media | Media production and recording |
+
+::: tip Host Team and Follow-Up Team are not the same job
+Host Team greets somebody while they are in the building. Follow-Up Team contacts them afterwards, and also works the list of members who belong to no group yet. They are deliberately separate departments because they are separate shifts with separate skills. See [Follow-ups](/platform/follow-ups).
+:::
 
 Use the **All Branches** dropdown to filter by branch when managing multiple locations.
 

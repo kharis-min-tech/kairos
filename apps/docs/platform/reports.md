@@ -16,7 +16,9 @@ The Reports page gives you a clear picture of your church's health: attendance t
 
 ## Summary stats
 
-Four headline numbers appear at the top:
+Four headline numbers appear at the top, and which four depends on your grants.
+
+**With a branch grant or above:**
 
 | Stat | Description |
 |------|-------------|
@@ -25,9 +27,18 @@ Four headline numbers appear at the top:
 | Souls Reached | Total souls captured via outreach, with conversion rate |
 | Growth Months | Number of months of consecutive growth |
 
+**Without one:**
+
+| Stat | Description |
+|------|-------------|
+| My Fellowships | How many you have joined |
+| My Attendance | Your own recent attendance rate |
+| My Souls | Souls you have personally captured |
+| Meetings Attended | Your meeting attendance over the last 30 days |
+
 ## View tabs
 
-Switch between three report types using the tabs in the top-right:
+Switch between report types using the tabs in the top-right. Which tabs you get depends on your grants: leadership sees **Attendance**, **Growth**, and **Outreach**; everybody else sees **Attendance** and **Outreach**.
 
 - **Attendance**: service attendance over time
 - **Growth**: membership numbers and new joiners
@@ -47,15 +58,19 @@ A contextual insight box on the right-hand side that surfaces what needs attenti
 
 A bar chart showing which fellowships have the highest meeting attendance. Click any bar to drill into that fellowship's meeting history.
 
-## Role-based scope
+## Scope
 
-| Role | What they see |
-|------|--------------|
+| Who | What they see |
+|-----|--------------|
 | Admin | Church-wide data across all branches |
-| Pastor | Their branch only |
-| Leader | Their department or fellowship only |
-| Member | Their own attendance only, via **My Attendance** in the sidebar |
+| Branch grant | Their branch only |
+| Group leader | Their department or fellowship only |
+| No grants | A personal version of the page: their own fellowships, attendance, souls, and meetings |
 
-::: tip Members and Reports
-Members do not access the main Reports page. Their personal attendance history is available separately via **My Attendance** in the sidebar, showing their 12-week rate, punctuality breakdown, streak, and service history. Only they, their pastor, and admins can see this.
+::: tip Reports is not an admin-only page
+Everybody can open **Reports**. What changes is what is in it: without a grant it answers questions about you, not about the church. Your fuller personal attendance history, with the 12-week rate, punctuality breakdown, streak, and service history, is on **My Attendance**.
 :::
+
+## Deeper attendance analysis
+
+The Reports page gives the headline trend. For the per-member heatmap, the attendance frequency bands, the engaged-member denominator, and the first-time versus returning split, open **Attendance → Reports**. See [Attendance Reports](/analytics/attendance-reports#the-detailed-report-surface).

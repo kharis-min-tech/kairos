@@ -8,8 +8,8 @@ Kairos is a Turborepo monorepo with a clear separation between the API, frontend
 |-------|-----------|
 | Frontend | Next.js 15 (App Router), React 19, Tailwind CSS |
 | Backend | Hono on Node.js |
-| Database | PostgreSQL 15 via Docker, Drizzle ORM |
-| Auth | bcrypt + jsonwebtoken, refresh tokens |
+| Database | PostgreSQL: Docker locally, PlanetScale in staging and production. Drizzle ORM. |
+| Auth | bcrypt + jsonwebtoken, refresh tokens, plus Google / Microsoft / Apple OAuth |
 | State | TanStack Query (server), Zustand (client) |
 | Build | Turborepo + npm workspaces |
 | Testing | Vitest, React Testing Library |
@@ -20,6 +20,8 @@ Kairos is a Turborepo monorepo with a clear separation between the API, frontend
 apps/
   api/          Hono REST API: module routers, services, schemas, tests
   web/          Next.js frontend: App Router, components, hooks, pages
+  mobile/       Expo / React Native client
+  docs/         This VitePress documentation site
 
 packages/
   types/        Shared entity, enum, and API contract types
@@ -65,6 +67,29 @@ Every feature spans five layers that must stay in sync:
 4. TanStack Query hook in `apps/web/src/hooks`
 5. Page or component in `apps/web/src/app` or `apps/web/src/components`
 
-## Deployment note
+## Deployment
 
-The API is structured so each module router can later map to an AWS Lambda function. Auth will swap to Cognito at deployment time. Neither is active in the current local runtime.
+| Piece | Where it runs |
+|-------|---------------|
+| API | Cloudflare Workers (`apps/api/wrangler.jsonc`) |
+| Web | Cloudflare Pages |
+| Docs | Cloudflare Pages, a separate project rooted at `apps/docs` |
+| Database | PlanetScale (PostgreSQL) |
+| Transactional email | Amazon SES |
+
+Routing is path-based on one origin: Pages serves `/`, the Worker serves `/api/*`. Same origin means no CORS preflight.
+
+::: warning Older notes are stale
+Earlier planning documents describe mapping each module router to an AWS Lambda and swapping auth to Cognito. Neither happened. The deployment target is Cloudflare, and OAuth sign-in is already live. The architecture decision record is `docs/database-architecture.md` in the repository.
+:::
+
+## Migrations
+
+Migrations live in `packages/database/drizzle` and run through the bootstrap script, not through `drizzle-kit migrate` directly:
+
+```bash
+DATABASE_URL='…' npm run db:bootstrap --workspace=@kairos/database
+# add -- --dry-run to preview, -- --force to proceed past guards
+```
+
+See [Commands](/guide/commands).

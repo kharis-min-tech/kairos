@@ -34,8 +34,8 @@ onMounted(load)
               <p class="consent-bar-title">Please review our policies</p>
               <p class="consent-bar-sub">Terms &amp; Conditions (v2026-07-v1) · Privacy Notice (v2026-07-v1)</p>
               <p class="consent-bar-links">
-                <a href="/KairosDocument/legal/terms" @click="dismiss">Read the Terms &amp; Conditions</a>
-                <a href="/KairosDocument/legal/privacy" @click="dismiss">Read the Privacy Notice</a>
+                <a href="/legal/terms" @click="dismiss">Read the Terms &amp; Conditions</a>
+                <a href="/legal/privacy" @click="dismiss">Read the Privacy Notice</a>
               </p>
               <button class="consent-accept" @click="dismiss">Accept &amp; continue</button>
             </div>

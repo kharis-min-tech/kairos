@@ -14,57 +14,69 @@ The dashboard is the first thing you see after logging in. It gives you an at-a-
 
 </div>
 
-## What you see
+## One page, built from blocks
 
-### Summary stats (top row)
+The dashboard used to be seven different pages hidden behind one URL, each with its own hard-coded set of numbers. It is now one set of blocks, and which of them appear is decided by the **altitude** your grants put you at.
 
-| Stat | Who sees it |
-|------|-------------|
-| Total Branches | Admin only |
-| Total Congregation | Admin and Pastor |
-| Total Fellowships | Admin and Pastor |
-| Pending Approvals | Admin and Pastor |
+| Altitude | Who is at it | What they get |
+|----------|-------------|---------------|
+| Church | Platform admins | Church-wide numbers lead; no personal agenda |
+| Branch | Anyone with a branch grant | Branch numbers, the branch queue, and an agenda |
+| Group | Fellowship and department leaders | An agenda and a queue, scoped to their own group |
+| Personal | Everybody else | Their own week |
 
-The congregation count breaks down further into **Members**, **Returners**, **Visitors**, and **Children**.
+Altitude is worked out from capabilities, never from a role field. It is why a fellowship leader now sees their fellowship's numbers: under the old arrangement they fell through to the branch view and saw branch-wide figures that were none of their business.
 
-### Upcoming Fellowships
+A badge under the greeting tells you which lens you are looking through. It is display only and gates nothing.
 
-Shows the next scheduled fellowship meetings across your branch, with the date, time, branch, and a **Details** link to open the fellowship directly.
+## The blocks
 
-### Recent Community Activity
+### Pulse
 
-A live feed of fellowship activity: which groups met recently and which are coming up next.
+The row of numbers across the top, at branch altitude and above.
 
-### Pending Approvals
+**Church pulse** shows Branches, Total congregation, Confirmed members, and Fellowships. **Branch pulse** shows Total congregation, Confirmed members, Attendance last week, and Fellowships.
 
-If there are any member registrations waiting to be approved, this panel shows the count and links directly to the approval queue. Admins and Pastors see this; regular members do not.
+::: tip Total congregation and Confirmed members are different numbers
+Total congregation is the whole roll. Confirmed members counts only the people who have completed the [membership class](/platform/membership). A healthy branch usually has far more of the first than the second. See [Growth Reports](/analytics/growth-reports#congregation-breakdown).
+:::
 
-### Quick Actions
+Underneath, Pulse carries **warnings** when something needs attention: a register that was never taken, members drifting out of attendance, branches falling behind, or a branch with no Main Pastor. Each warning is a link straight to the page where you would fix it.
 
-Shortcut buttons to the most common admin tasks: **Manage Branches** and **View Reports**.
+### Needs you
 
-### Mission Control Reports
+Things actually waiting on you, counted and linked: registrations to approve, flagged concerns, follow-ups that have come due. High-urgency items are marked.
 
-A mini analytics section showing six key metrics at a glance:
+This replaced a pattern where approvals were a number on a card you had to notice, and concerns lived on a page you had to remember to visit.
 
-- **Membership Growth**: chart of new members over the last 6 months
-- **Service Attendance**: check-in count over the last 30 days
-- **Attendance Rate**: percentage of active members attending
-- **Member Engagement**: High / Medium / Low based on activity
-- **Attendance by Branch**: bar chart comparing branches
-- **New Believers**: pipeline summary (Active, Avg Attendance, Stale, Completed)
+### Agenda
 
-### Mission Summary
+What is happening, in time order: upcoming fellowship meetings, services, and sessions. At group altitude it is scoped to your own group.
 
-A single engagement score for your branch or church (**High**, **Medium**, or **Low**), based on attendance and activity data.
+### Groups
 
-### Daily Verse
+At church altitude, a summary per branch. Below that, a summary of the groups you lead.
 
-A scripture displayed at the bottom-right of the dashboard each day.
+### Recent activity
 
-## Role differences
+A live feed drawn from five real sources: new registrations, form submissions, membership graduations, fellowship meetings, and souls reached.
 
-- **Admin**: sees data across all branches, total congregation includes everyone
-- **Pastor**: sees only their branch; "Total Branches" is not shown
-- **Leader**: sees a simplified view scoped to their department or fellowship
-- **Member**: sees a personal dashboard with their own upcoming fellowships and My Attendance summary
+### Getting started
+
+Only for people who have not finished setting themselves up. It offers the next concrete step: complete your profile, join a fellowship, or express interest in the membership class.
+
+### Streak
+
+Your own run of consecutive services attended.
+
+### Daily verse
+
+A scripture, rotating by day.
+
+## What happened to Mission Control
+
+Earlier versions of the dashboard had a "Mission Control Reports" strip of six mini-charts and a "Mission Summary" engagement band. Both are gone, replaced by Pulse and its warnings. The underlying figures did not disappear; they moved to where they can be interrogated properly:
+
+- Attendance trends and the per-member heatmap: [Attendance Reports](/analytics/attendance-reports)
+- Membership growth and the congregation breakdown: [Growth Reports](/analytics/growth-reports)
+- The souls funnel: [Souls Dashboard](/platform/souls-dashboard)

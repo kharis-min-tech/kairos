@@ -1,6 +1,6 @@
 # Branch Management
 
-Branch management is an Admin-only function. Pastors manage everything *within* their branch but cannot create, modify, or deactivate branches themselves.
+Creating and deactivating branches is an Admin-only function. Branch administrators can edit their own branch's operational details and appoint its leadership, but cannot bring a branch into existence or take one out.
 
 ## Creating a branch
 
@@ -25,13 +25,19 @@ After creating a branch, assign its Main Pastor:
 2. In the **Current Leadership** section, add the pastor
 3. Only members who exist in the system can be assigned
 4. Each branch can have **one current Main Pastor** at a time
-5. Elders can be added in addition to the Main Pastor
+5. Ministers can be added in addition to the Main Pastor
+
+Appointing and ending leadership needs the branch permissions key, so a platform admin or the branch's own Branch System Admin can do it. A Branch Data Admin cannot.
+
+::: tip Main Pastor carries one permission
+Branch leadership is an office rather than a grant, but the current Main Pastor does automatically gain sight of their branch's [safeguarding inbox](/platform/concerns). Ending the appointment removes it again. See [User Permissions](/administration/permissions#the-derived-grant-branch-pastor).
+:::
 
 Leadership assignments include a start date and optional end date, which creates a complete leadership history for the branch.
 
 ## Editing branch details
 
-Click into a branch from the Branches page to edit its name, type, contact details, or region. Only Admins can make these changes.
+Click into a branch from the Branches page to edit its name, type, contact details, or region. A platform admin can edit any branch; a Branch System Admin or Branch Data Admin can edit their own.
 
 ## Deactivating a branch
 
