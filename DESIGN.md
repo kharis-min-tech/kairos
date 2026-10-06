@@ -8,16 +8,29 @@ The visual north star is **The Modern Sanctuary**: architectural spacing, layere
 
 ## Color Tokens
 
-Use the app tokens in `apps/web/src/app/globals.css` and shared UI components as the implementation source.
+**These values are authoritative. The Tailwind tokens are not — not yet.**
 
-- Primary purple: `#6D28D9`
-- Deep purple: `#451ebb` / `#5d3fd3`
+`apps/web/tailwind.config.ts` and `globals.css` still carry the pre-Modern-Sanctuary
+palette (`#6D28D9` primary, `#D97706` gold), and migrating them is a wide-blast-radius
+change nobody has taken yet. Until that lands, write Modern Sanctuary colours as
+**arbitrary Tailwind values** (`bg-[#5D3FD3]`, `text-[#f8b537]`,
+`from-[#451ebb] to-[#5d3fd3]`) rather than reaching for `primary` or `accent`, which
+will give you the old hues. On mobile, `packages/ui-native` theme colours are already
+correct and should be used by name.
+
+- Primary purple: `#5D3FD3`
+- Deep purple: `#451ebb` — pairs with primary as `from-[#451ebb] to-[#5d3fd3]`
 - Dark header purple: `#3b0764` / `#4c1d95`
-- Accent gold: `#D97706` / `#f8b537`
+- Accent gold: `#f8b537`
+- Dark-mode primary: `#a488ff` — `#5D3FD3` does not hold contrast on near-black
 - Success emerald: `#059669`
 - Error rose: `#E11D48`
 - Base surface: near-white `#f9f9f9`
 - Primary text: near-black `#1a1c1c`
+
+**Never introduce `purple-700`, `purple-900`, `amber-400`, `#6D28D9` or `#D97706` in
+new work.** Migrate them inline when a change already touches the file; anything larger
+is a `/gap-fix tailwind-palette` pass, which should be proposed before it is run.
 
 Avoid navy headers and one-note purple-only screens. Charts and status views should include purple, gold, emerald, rose, and a cool secondary such as sky where useful.
 

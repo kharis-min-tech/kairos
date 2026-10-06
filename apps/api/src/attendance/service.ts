@@ -1615,7 +1615,11 @@ export async function getDepartmentAttendance(
     const serviceIds = svcRows.map((s) => s.id);
     const trendRows = await db
       .select({
-        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        // to_char, not sql<Date>: a raw fragment skips Drizzle's type mapper,
+        // so casting here makes the annotation true instead of hopeful.
+        weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`.as(
+          'week_start',
+        ),
         attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
       })
       .from(serviceAttendance)
@@ -1629,7 +1633,7 @@ export async function getDepartmentAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     trend = trendRows.map((r) => ({
-      weekStart: new Date(r.weekStart as Date | string).toISOString(),
+      weekStart: new Date(r.weekStart).toISOString(),
       attendees: Number(r.attendees),
     }));
   }
@@ -1748,7 +1752,11 @@ export async function getFellowshipAttendance(
     svcDistinct = svcAttended.size;
     const trendRows = await db
       .select({
-        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        // to_char, not sql<Date>: a raw fragment skips Drizzle's type mapper,
+        // so casting here makes the annotation true instead of hopeful.
+        weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`.as(
+          'week_start',
+        ),
         attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
       })
       .from(serviceAttendance)
@@ -1762,7 +1770,7 @@ export async function getFellowshipAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     svcTrend = trendRows.map((r) => ({
-      weekStart: new Date(r.weekStart as Date | string).toISOString(),
+      weekStart: new Date(r.weekStart).toISOString(),
       attendees: Number(r.attendees),
     }));
   }

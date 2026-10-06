@@ -657,7 +657,11 @@ export async function getFellowshipStats(
 
   const meetingRows = await db
     .select({
-      week: sql<Date>`date_trunc('week', ${fellowshipMeetings.meetingDate})`.as('w'),
+      // Already a 'YYYY-MM-DD' string by the time it lands, so the consumer
+      // below needs no Date round-trip and no cast.
+      week: sql<string>`to_char(date_trunc('week', ${fellowshipMeetings.meetingDate}), 'YYYY-MM-DD')`.as(
+        'w',
+      ),
       c: count(),
     })
     .from(fellowshipMeetings)
@@ -675,7 +679,7 @@ export async function getFellowshipStats(
     const c = Number(r.c);
     meetingsLast90d += c;
     return {
-      week: new Date(r.week as Date | string).toISOString().slice(0, 10),
+      week: r.week,
       count: c,
     };
   });

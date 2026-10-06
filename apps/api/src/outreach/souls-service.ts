@@ -1,4 +1,5 @@
 import { eq, and, or, ilike, count, sql, inArray, exists, type SQL } from 'drizzle-orm';
+import { toIsoOrNull } from '../lib/sql-dates';
 import type { Database } from '@kairos/database';
 import {
   souls,
@@ -588,7 +589,7 @@ export async function listSouls(
         notes: souls.notes,
         createdAt: souls.createdAt,
         updatedAt: souls.updatedAt,
-        lastFollowUpDate: sql<Date>`(
+        lastFollowUpDate: sql<Date | string | null>`(
           SELECT MAX(follow_up_date) 
           FROM follow_ups 
           WHERE follow_ups.soul_id = ${souls.id}
@@ -615,7 +616,11 @@ export async function listSouls(
   ]);
 
   return {
-    data: rows,
+    // lastFollowUpDate comes out of a correlated subquery, so Drizzle's type
+    // mappers never touch it and the driver may hand back a Date or a string.
+    // Normalise before it crosses JSON, or the wire shape depends on the
+    // driver — see lib/sql-dates.ts.
+    data: rows.map((r) => ({ ...r, lastFollowUpDate: toIsoOrNull(r.lastFollowUpDate) })),
     meta: {
       page: query.page,
       limit: query.limit,
@@ -654,7 +659,7 @@ export async function getSoul(
       notes: souls.notes,
       createdAt: souls.createdAt,
       updatedAt: souls.updatedAt,
-      lastFollowUpDate: sql<Date>`(
+      lastFollowUpDate: sql<Date | string | null>`(
         SELECT MAX(follow_up_date) 
         FROM follow_ups 
         WHERE follow_ups.soul_id = ${souls.id}
@@ -699,7 +704,7 @@ export async function getSoul(
     }
   }
 
-  return soul;
+  return { ...soul, lastFollowUpDate: toIsoOrNull(soul.lastFollowUpDate) };
 }
 
 /**
