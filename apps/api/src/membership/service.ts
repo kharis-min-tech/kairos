@@ -27,6 +27,7 @@ import {
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 import { logger } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
+import { resolveLeaderScopeMemberIds } from '../lib/leader-scope';
 import { setMembershipClassCompleted } from '../members/service';
 import { dispatchNotification } from '../notifications/service';
 import type { z } from 'zod';
@@ -1373,22 +1374,42 @@ export async function getBranchMembershipView(db: Database, auth: AuthContext) {
   const admin = isMembershipAdmin(auth);
   const branchIds = admin ? [] : championBranchIds(auth);
 
-  if (!admin && branchIds.length === 0) {
-    throw new ForbiddenError('You are not a Membership Champion of any branch');
+  // Three tiers of sight, narrowing as they go.
+  //
+  //   Membership Admin → every branch
+  //   Champion         → the branches they are champion of
+  //   Group leader     → their own people, wherever those people sit
+  //
+  // The last one is a member-ID narrowing rather than a branch one: a
+  // fellowship leader has no branch-wide standing and should not acquire any
+  // here, but they do need to know that someone they shepherd is on the
+  // waitlist or part-way through a cohort. Returns null when the caller leads
+  // nothing, which means no sight at all rather than unrestricted sight.
+  const ledMemberIds =
+    admin || branchIds.length > 0
+      ? null
+      : await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
+  const leadsPeople = !!ledMemberIds && ledMemberIds.length > 0;
+
+  if (!admin && branchIds.length === 0 && !leadsPeople) {
+    throw new ForbiddenError(
+      'You are not a Membership Champion of any branch, and you lead no group',
+    );
   }
 
-  // Admins see every branch — pass no branch filter. Champions see only their
-  // own branches.
-  const waitlistWhere = admin
-    ? and(
-        eq(membershipInterest.status, 'waiting'),
-        eq(membershipInterest.isActive, true),
-      )
-    : and(
-        eq(membershipInterest.status, 'waiting'),
-        eq(membershipInterest.isActive, true),
-        inArray(membershipInterest.branchId, branchIds),
-      );
+  /** The one narrowing clause all four queries below share. */
+  const narrow = <C extends { branchId: unknown; memberId: unknown }>(t: C) =>
+    admin
+      ? undefined
+      : branchIds.length > 0
+        ? inArray(t.branchId as never, branchIds)
+        : inArray(t.memberId as never, ledMemberIds!);
+
+  const waitlistWhere = and(
+    eq(membershipInterest.status, 'waiting'),
+    eq(membershipInterest.isActive, true),
+    narrow(membershipInterest),
+  );
 
   const waitlist = await db
     .select({
@@ -1410,12 +1431,10 @@ export async function getBranchMembershipView(db: Database, auth: AuthContext) {
     .where(waitlistWhere)
     .orderBy(asc(membershipInterest.expressedAt));
 
-  const enrolledWhere = admin
-    ? eq(membershipEnrollments.status, 'enrolled')
-    : and(
-        eq(membershipEnrollments.status, 'enrolled'),
-        inArray(membershipEnrollments.branchId, branchIds),
-      );
+  const enrolledWhere = and(
+    eq(membershipEnrollments.status, 'enrolled'),
+    narrow(membershipEnrollments),
+  );
 
   const enrolled = await db
     .select({
