@@ -20,7 +20,9 @@ interface Soul {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  lastFollowUpDate?: Date;
+  // String: it arrives as JSON. @kairos/types and the dashboard types
+  // already said string; this one disagreed.
+  lastFollowUpDate?: string;
   daysSinceLastFollowUp?: number;
 }
 

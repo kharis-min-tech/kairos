@@ -1,4 +1,5 @@
 import { eq, and, desc, count, sql, type SQL } from 'drizzle-orm';
+import { toIsoOrNull } from '../lib/sql-dates';
 import { authHasAnyCapability } from '../lib/grants';
 import { authHasCapability } from '../lib/grants';
 import type { Database } from '@kairos/database';
@@ -209,7 +210,7 @@ export async function getFollowUpStatistics(
     .select({
       totalFollowUps: count(),
       avgDuration: sql<number>`AVG(${followUps.durationMinutes})`,
-      lastFollowUpDate: sql<Date>`MAX(${followUps.followUpDate})`,
+      lastFollowUpDate: sql<Date | string | null>`MAX(${followUps.followUpDate})`,
     })
     .from(followUps)
     .where(eq(followUps.soulId, soulId));
@@ -221,7 +222,7 @@ export async function getFollowUpStatistics(
   return {
     totalFollowUps: stats?.totalFollowUps ?? 0,
     avgDuration: stats?.avgDuration ? Math.round(stats.avgDuration) : null,
-    lastFollowUpDate: stats?.lastFollowUpDate ?? null,
+    lastFollowUpDate: toIsoOrNull(stats?.lastFollowUpDate),
     daysSinceLastFollowUp,
   };
 }
