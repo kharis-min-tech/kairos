@@ -379,6 +379,13 @@
       "when": 1810300000000,
       "tag": "0053_outreach_coordinator_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791263375986,
+      "tag": "0054_safeguarding_head_and_minister",
+      "breakpoints": true
     }
   ]
 }

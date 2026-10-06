@@ -53,7 +53,7 @@ export default function BranchDetailPage() {
   const canSeeRolesLink = isAdmin || isBSAHere;
   const [showHistory, setShowHistory] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [assignRole, setAssignRole] = useState<'Main Pastor' | 'Elder'>('Elder');
+  const [assignRole, setAssignRole] = useState<'Main Pastor' | 'Minister'>('Minister');
   const [assignMemberId, setAssignMemberId] = useState('');
   const [assignStartDate, setAssignStartDate] = useState('');
   const { data: branch, isLoading, error } = useBranch(id);
@@ -319,8 +319,8 @@ export default function BranchDetailPage() {
                   <label className="text-sm font-medium">Role</label>
                   <CustomSelect
                     value={assignRole}
-                    onValueChange={(v) => setAssignRole(v as 'Main Pastor' | 'Elder')}
-                    options={[{ value: 'Elder', label: 'Elder' }, { value: 'Main Pastor', label: 'Main Pastor' }]}
+                    onValueChange={(v) => setAssignRole(v as 'Main Pastor' | 'Minister')}
+                    options={[{ value: 'Minister', label: 'Minister' }, { value: 'Main Pastor', label: 'Main Pastor' }]}
                   />
                 </div>
                 <div className="space-y-1">
@@ -358,7 +358,7 @@ export default function BranchDetailPage() {
                           setShowAssignDialog(false);
                           setAssignMemberId('');
                           setAssignStartDate('');
-                          setAssignRole('Elder');
+                          setAssignRole('Minister');
                         },
                       }
                     );

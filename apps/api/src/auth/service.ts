@@ -437,10 +437,11 @@ export async function refreshAccessToken(
     throw new UnauthorizedError('Member not found or inactive');
   }
 
-  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
-    db,
-    member.id,
-  );
+  const [authority, grants] = await Promise.all([
+    resolveBranchAdminAuthority(db, member.id),
+    resolveGrants(db, member.id),
+  ]);
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = authority;
 
   const authContext: AuthContext = {
     memberId: member.id,
@@ -450,8 +451,14 @@ export async function refreshAccessToken(
     activeRole: member.systemRole as AuthContext['systemRole'],
     branchSystemAdminBranchIds,
     branchDataAdminBranchIds,
-    // RBAC Phase 1: grants live outside the JWT; populated per-request.
-    grants: [],
+    // The API re-resolves grants from the database on every request, so it
+    // never reads these. Both clients do: `useCapabilities()` on web and its
+    // mobile twin decode the access token to decide which affordances to
+    // offer. Minting a refreshed token with an empty array therefore stripped
+    // every capability-gated button, menu and page the moment the first
+    // refresh landed — and logging out and back in "fixed" it, because only
+    // the login path filled this in. Re-resolve here too.
+    grants,
   };
 
   const [accessToken, newRefreshToken] = await Promise.all([

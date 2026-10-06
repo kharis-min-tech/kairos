@@ -72,8 +72,20 @@ function shortDate(iso: string): string {
 function canSeeConcerns(auth: AuthContext, kind: 'welfare' | 'safeguarding'): boolean {
   if (auth.systemRole === 'admin') return true;
   const scope = { kind: 'branch' as const, id: auth.branchId };
-  if (authHasCapability(auth, 'branch:write', scope)) return true;
-  return kind === 'safeguarding' && authHasCapability(auth, 'safeguarding:read', scope);
+  // Two queues, two capabilities, deliberately in different hands.
+  //
+  // Welfare is pastoral care and belongs to branch leadership. Safeguarding
+  // is protection and belongs to someone independent of it — the branch's
+  // Safeguarding Lead, the church-wide Head, and the Main Pastor via the
+  // derived BranchPastor grant, but NOT a Minister and NOT a Branch Data
+  // Admin. This used to read `branch:write`, which both branch admin roles
+  // hold, so a pure data-ops role could read every safeguarding case in the
+  // branch.
+  const cap = kind === 'welfare' ? 'welfare:read' : 'safeguarding:read';
+  // A church grant reaches every branch, so the Safeguarding Head passes the
+  // branch-scoped check too — the matcher handles that, this is just the
+  // same question asked once.
+  return authHasCapability(auth, cap, scope);
 }
 
 export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHomeResponse> {

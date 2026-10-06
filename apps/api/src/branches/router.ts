@@ -111,7 +111,7 @@ branchesRouter.delete('/:id', requireRole('admin'), async (c) => {
   return c.json(successResponse(null, 'Branch deactivated'));
 });
 
-// ── Leadership (Main Pastor / Elder) ───────────────────────
+// ── Leadership (Main Pastor / Minister) ───────────────────────
 
 branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySchema), async (c) => {
   const auth = getAuth(c);
@@ -120,7 +120,7 @@ branchesRouter.get('/:id/leadership', zValidator('query', getLeadershipQuerySche
   return c.json(successResponse(leadership));
 });
 
-// Appointing the Main Pastor / Elder is a branch-system-admin decision (and
+// Appointing the Main Pastor / Minister is a branch-system-admin decision (and
 // global admins). Branch Data Admin alone is not enough. RBAC Phase 2: was
 // requireBranchSystemAdmin('id').
 branchesRouter.post('/:id/leadership', requireCapability('branch:rbac', branchScope), zValidator('json', assignLeadershipSchema), async (c) => {

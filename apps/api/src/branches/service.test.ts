@@ -398,7 +398,7 @@ describe('assignLeadership', () => {
     setupSelectSequence([]);
 
     await expect(
-      assignLeadership(mockDb, 'bad-branch', { memberId, role: 'Elder' }, adminAuth),
+      assignLeadership(mockDb, 'bad-branch', { memberId, role: 'Minister' }, adminAuth),
     ).rejects.toThrow('Branch not found');
   });
 
@@ -407,7 +407,7 @@ describe('assignLeadership', () => {
     setupSelectSequence([sampleBranch], []);
 
     await expect(
-      assignLeadership(mockDb, branchId, { memberId: 'bad-member', role: 'Elder' }, adminAuth),
+      assignLeadership(mockDb, branchId, { memberId: 'bad-member', role: 'Minister' }, adminAuth),
     ).rejects.toThrow('Member not found or inactive');
   });
 
@@ -510,7 +510,7 @@ describe('scope=branch narrowing', () => {
     const { assignLeadership } = await import('./service');
     const auth = { ...adminAuth, scope: { kind: 'branch' as const, id: branchId } };
     await expect(
-      assignLeadership(mockDb, otherBranchId, { memberId, role: 'Elder' }, auth),
+      assignLeadership(mockDb, otherBranchId, { memberId, role: 'Minister' }, auth),
     ).rejects.toThrow(/outside your current branch scope/);
   });
 

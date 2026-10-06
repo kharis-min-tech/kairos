@@ -20,6 +20,9 @@ function grant(role: FunctionalRole, scope: RoleScope, branchId = 'B-1'): Grant 
 
 const branchAdmin = grant(FunctionalRole.BranchAdmin, { kind: 'branch', id: 'B-1' });
 const membershipAdmin = grant(FunctionalRole.MembershipAdmin, CHURCH_SCOPE);
+const safeguardingHead = grant(FunctionalRole.SafeguardingHead, CHURCH_SCOPE);
+const safeguardingLead = grant(FunctionalRole.SafeguardingLead, { kind: 'branch', id: 'B-1' });
+const branchPastor = grant(FunctionalRole.BranchPastor, { kind: 'branch', id: 'B-1' });
 
 describe('matchesCapability — break-glass', () => {
   it('a platform admin bypasses every capability and scope', () => {
@@ -131,10 +134,123 @@ describe('the RBAC catalog', () => {
     expect(RoleScopeKind.MembershipAdmin).toBe('church');
   });
 
-  it('is the only church-scoped role, so far', () => {
-    const churchRoles = Object.values(FunctionalRole).filter(
-      (r) => RoleScopeKind[r] === 'church',
-    );
-    expect(churchRoles).toEqual([FunctionalRole.MembershipAdmin]);
+  it('scopes SafeguardingHead to the church, so it can reach every branch', () => {
+    // A concern raised in one branch may need to escape that branch. A branch
+    // grant could not describe that reach.
+    expect(RoleScopeKind.SafeguardingHead).toBe('church');
+  });
+
+  it('keeps welfare and safeguarding in different hands', () => {
+    // The whole point of the split: a Branch Data Admin is branch ops with no
+    // pastoral standing and must see neither queue, and a Safeguarding Lead
+    // is independent of branch leadership and must not inherit welfare.
+    expect(RoleCapabilities.BranchDataAdmin).not.toContain('welfare:read');
+    expect(RoleCapabilities.BranchDataAdmin).not.toContain('safeguarding:read');
+    expect(RoleCapabilities.BranchAdmin).toContain('welfare:read');
+    expect(RoleCapabilities.SafeguardingLead).not.toContain('welfare:read');
+    expect(RoleCapabilities.SafeguardingHead).not.toContain('welfare:read');
+  });
+
+  it('gives BranchPastor safeguarding sight and nothing else', () => {
+    // It is derived from branch_leadership, not granted, and exists purely to
+    // separate a Main Pastor from a Minister holding the same BranchAdmin
+    // grant. Anything else it carried would be invisible authority.
+    expect(RoleCapabilities.BranchPastor).toEqual(['safeguarding:read', 'safeguarding:write']);
+  });
+});
+
+// ── Church reach ──────────────────────────────────────────
+
+describe('a church grant', () => {
+  it('reaches a branch target', () => {
+    expect(
+      matchesCapability([safeguardingHead], 'member', 'safeguarding:read', {
+        kind: 'branch',
+        id: 'B-9',
+      }),
+    ).toBe(true);
+  });
+
+  it('reaches a fellowship and a department target', () => {
+    expect(
+      matchesCapability([safeguardingHead], 'member', 'safeguarding:read', {
+        kind: 'fellowship',
+        id: 'F-1',
+        branchId: 'B-9',
+      }),
+    ).toBe(true);
+    expect(
+      matchesCapability([safeguardingHead], 'member', 'safeguarding:write', {
+        kind: 'department',
+        id: 'D-1',
+        branchId: 'B-9',
+      }),
+    ).toBe(true);
+  });
+
+  it('still carries only its own capabilities down', () => {
+    // Reach is not power. The head reaches every branch, but only ever for
+    // safeguarding.
+    expect(
+      matchesCapability([safeguardingHead], 'member', 'branch:write', {
+        kind: 'branch',
+        id: 'B-9',
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('a branch safeguarding grant', () => {
+  it('covers its own branch', () => {
+    expect(
+      matchesCapability([safeguardingLead], 'member', 'safeguarding:read', {
+        kind: 'branch',
+        id: 'B-1',
+      }),
+    ).toBe(true);
+  });
+
+  it('does not cover another branch', () => {
+    expect(
+      matchesCapability([safeguardingLead], 'member', 'safeguarding:read', {
+        kind: 'branch',
+        id: 'B-2',
+      }),
+    ).toBe(false);
+  });
+
+  it('never satisfies a church-scoped check', () => {
+    // The head's reach is not reachable by climbing. A lead is not a head.
+    expect(
+      matchesCapability([safeguardingLead], 'member', 'safeguarding:read', CHURCH_SCOPE),
+    ).toBe(false);
+  });
+});
+
+describe('the pastor / minister split', () => {
+  it('lets a Main Pastor read their branch safeguarding queue', () => {
+    expect(
+      matchesCapability([branchAdmin, branchPastor], 'member', 'safeguarding:read', {
+        kind: 'branch',
+        id: 'B-1',
+      }),
+    ).toBe(true);
+  });
+
+  it('denies it to a Minister holding the same BranchAdmin grant', () => {
+    // This is the case the role→capability map alone cannot express: both
+    // carry BranchAdmin, and only one carries the derived BranchPastor.
+    expect(
+      matchesCapability([branchAdmin], 'member', 'safeguarding:read', {
+        kind: 'branch',
+        id: 'B-1',
+      }),
+    ).toBe(false);
+  });
+
+  it('still gives both of them welfare', () => {
+    expect(
+      matchesCapability([branchAdmin], 'member', 'welfare:read', { kind: 'branch', id: 'B-1' }),
+    ).toBe(true);
   });
 });

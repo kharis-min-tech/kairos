@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { memberRoles, roles } from '@kairos/database';
+import { branchLeadership, memberRoles, roles } from '@kairos/database';
 import {
   type AuthContext,
   type Capability,
@@ -26,6 +26,7 @@ export const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'Branch System Admin': FunctionalRole.BranchAdmin,
   'Branch Data Admin': FunctionalRole.BranchDataAdmin,
   'Safeguarding Lead': FunctionalRole.SafeguardingLead,
+  'Safeguarding Head': FunctionalRole.SafeguardingHead,
   'Fellowship Leader': FunctionalRole.FellowshipLeader,
   'Department Lead': FunctionalRole.DepartmentLeader,
   'Department Deputy': FunctionalRole.DepartmentDeputy,
@@ -51,7 +52,51 @@ export async function resolveGrants(
   db: Database,
   memberId: string,
 ): Promise<Grant[]> {
+  const [rows, pastorOf] = await Promise.all([
+    selectRoleGrants(db, memberId),
+    selectMainPastorBranchIds(db, memberId),
+  ]);
+
+  const out: Grant[] = [];
+
+  // Derived, not stored: whoever currently holds the `Main Pastor` row for a
+  // branch gets a BranchPastor grant over it.
+  //
+  // This is the one place identity feeds authority, and it is deliberate. A
+  // Main Pastor and a Minister both carry BranchAdmin, so no role→capability
+  // mapping can give the pastor safeguarding sight and withhold it from the
+  // minister — only `branch_leadership` knows which of them is which. Keeping
+  // it as a synthesised grant means every existing gate, on the API and on
+  // both clients, keeps running through the one matcher instead of learning a
+  // second mechanism.
+  for (const branchId of pastorOf) {
+    out.push({
+      role: FunctionalRole.BranchPastor,
+      scope: { kind: 'branch', id: branchId },
+      branchId,
+    });
+  }
+
+  return out.concat(toGrants(rows));
+}
+
+/** The member's current Main Pastor appointments. */
+async function selectMainPastorBranchIds(db: Database, memberId: string): Promise<string[]> {
   const rows = await db
+    .select({ branchId: branchLeadership.branchId })
+    .from(branchLeadership)
+    .where(
+      and(
+        eq(branchLeadership.memberId, memberId),
+        eq(branchLeadership.role, 'Main Pastor'),
+        eq(branchLeadership.isCurrent, true),
+      ),
+    );
+  return rows.map((r) => r.branchId);
+}
+
+function selectRoleGrants(db: Database, memberId: string) {
+  return db
     .select({
       roleName: roles.roleName,
       branchId: memberRoles.branchId,
@@ -67,7 +112,11 @@ export async function resolveGrants(
         eq(roles.isActive, true),
       ),
     );
+}
 
+type RoleGrantRow = Awaited<ReturnType<typeof selectRoleGrants>>[number];
+
+function toGrants(rows: RoleGrantRow[]): Grant[] {
   const out: Grant[] = [];
   for (const row of rows) {
     const fnRole = DB_ROLE_NAME_TO_FUNCTIONAL[row.roleName];

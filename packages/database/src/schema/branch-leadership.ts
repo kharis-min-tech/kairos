@@ -24,7 +24,7 @@ export const branchLeadership = pgTable('branch_leadership', {
   uniqueIndex('idx_branch_leadership_current_member_role')
     .on(table.branchId, table.memberId, table.role)
     .where(sql`is_current = TRUE`),
-  sql`CHECK (role IN ('Main Pastor', 'Elder'))`,
+  sql`CHECK (role IN ('Main Pastor', 'Minister'))`,
   sql`CHECK (end_date IS NULL OR end_date >= start_date)`,
 ]);
 
