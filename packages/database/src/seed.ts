@@ -517,11 +517,11 @@ async function seed() {
     youthCoordRole,
     mediaTeamRole,
     welcomeTeamRole,
-    safeguardingLeadRole,
-    // Elision — the Safeguarding Head row is inserted but nobody is granted it
-    // in the seed yet. This bindings list is POSITIONAL, so a new row in
-    // `.values([...])` must get a slot here or every binding after it silently
-    // points at the wrong role.
+    // Elisions — these roles ARE granted, but from section 14c, which looks
+    // them up by name out of the roles table rather than relying on position.
+    // This bindings list is POSITIONAL: a new row in `.values([...])` must get
+    // a slot here or every binding below it silently points at the wrong role.
+    /* safeguardingLeadRole */,
     /* safeguardingHeadRole */,
     branchSystemAdminRole,
     branchDataAdminRole,
@@ -651,15 +651,20 @@ async function seed() {
       // Pastor + system admin retain write access as a fallback per the Admin-dept gate.
       branchId: london!.id,
       departmentId: adminDept!.id,
-      leadMemberId: leaderSarah!.id,
+      // Emma Thompson, not Sarah. The Admin-desk lead derives Branch Data
+      // Admin, which is pure operational authority with no pastoral standing
+      // — it must not land on the Minister, who already holds BranchAdmin and
+      // would then carry both the welfare queue and the data desk.
+      leadMemberId: regularMembers[0]!.id,
       description: 'London admin desk — service-day registers and first-timer captures.',
     },
     {
       // Manchester admin desk — lead = Branch Data Admin for Manchester.
-      // Pastor Grace Mensah is the only seeded Manchester leader, so she doubles up here.
+      // John Smith, not Pastor Grace: the data desk is a separate person from
+      // the Main Pastor everywhere, including the smaller branches.
       branchId: manchester!.id,
       departmentId: adminDept!.id,
-      leadMemberId: pastorManchester!.id,
+      leadMemberId: regularMembers[3]!.id,
       description: 'Manchester admin desk — service-day registers and first-timer captures.',
     },
     {
@@ -678,7 +683,6 @@ async function seed() {
     { branchDepartmentId: choirLondon!.id, memberId: leaderSarah!.id },
     { branchDepartmentId: choirLondon!.id, memberId: regularMembers[0]!.id },
     { branchDepartmentId: choirLondon!.id, memberId: regularMembers[2]!.id },
-    { branchDepartmentId: choirLondon!.id, memberId: pastorLondon!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: leaderDavid!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: regularMembers[1]!.id },
     // Admin-dept (London) — gives at least one non-pastor/non-admin caller write access.
@@ -941,8 +945,6 @@ async function seed() {
     { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
     { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
-    // Safeguarding Lead in London — grants full access to London minors' records.
-    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
   ]);
   console.log(`✓ 5 member-role assignments`);
 
@@ -952,6 +954,8 @@ async function seed() {
   // access is explicit — every pastor who needs branch authority gets a BSA
   // grant here so the dev demo continues to work post-cutover.
   await db.insert(memberRoles).values([
+    // Sarah is the London Minister: ministers support the Main Pastor and
+    // typically carry BranchAdmin alongside him.
     { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: pastorLondon!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
@@ -971,9 +975,13 @@ async function seed() {
   // in branch_id, which is only a query handle. See migration 0048.
   await db.insert(memberRoles).values([
     {
-      memberId: regularMembers[0]!.id,
+      // Fatima Kamara, Freetown. A plain member with no branch authority and
+      // no leadership anywhere, in a branch that is not HQ — which is exactly
+      // what proves a church grant stands on its own rather than riding on
+      // something else the holder happens to have.
+      memberId: regularMembers[4]!.id,
       roleId: membershipAdminRole!.id,
-      branchId: london!.id,
+      branchId: freetown!.id,
       scopeKind: 'church',
       // The nil UUID. Mirrors CHURCH_SCOPE_ID in @kairos/types, inlined
       // because this package sits below @kairos/types and must not import it.
@@ -1088,7 +1096,11 @@ async function seed() {
         branchId: london!.id,
         fellowshipType: 'Kharis Express',
         description: 'Friday evening young professionals fellowship',
-        leaderId: pastorLondon!.id,
+        // NOT the Main Pastor. A branch's Main Pastor oversees every
+        // fellowship and leads none of them — making him the leader of one
+        // would give him a scoped grant that says less than the branch grant
+        // he already holds, and would misrepresent how Kharis actually runs.
+        leaderId: regularMembers[0]!.id,
         meetingSchedule: 'Every Friday, 6:30 PM',
         meetingDay: 'Friday',
         meetingTime: '18:30',
@@ -1114,7 +1126,7 @@ async function seed() {
         branchId: accra!.id,
         fellowshipType: 'New Breeds',
         description: 'New members integration fellowship',
-        leaderId: pastorAccra!.id,
+        leaderId: regularMembers[2]!.id,
         meetingSchedule: 'Every Saturday, 10:00 AM',
         meetingDay: 'Saturday',
         meetingTime: '10:00',
@@ -1127,7 +1139,7 @@ async function seed() {
         branchId: kumasi!.id,
         fellowshipType: 'K-Groups',
         description: 'Tuesday evening small group fellowship',
-        leaderId: pastorKumasi!.id,
+        leaderId: amaBoateng!.id,
         meetingSchedule: 'Every Tuesday, 6:30 PM',
         meetingDay: 'Tuesday',
         meetingTime: '18:30',
@@ -1149,19 +1161,22 @@ async function seed() {
     // FellowshipLeader grants (one per leader/co-leader; only `leaderId` is
     // set in the seed today).
     { memberId: leaderSarah!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: kGroupLondon!.id },
-    { memberId: pastorLondon!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: expressLondon!.id },
+    { memberId: regularMembers[0]!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: expressLondon!.id },
     { memberId: leaderDavid!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: kGroupAccra!.id },
-    { memberId: pastorAccra!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: newBreedsAccra!.id },
-    { memberId: pastorKumasi!.id, roleId: fellowshipLeaderRole!.id, branchId: kumasi!.id, scopeKind: 'fellowship', scopeId: kGroupKumasi!.id },
+    { memberId: regularMembers[2]!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: newBreedsAccra!.id },
+    { memberId: amaBoateng!.id, roleId: fellowshipLeaderRole!.id, branchId: kumasi!.id, scopeKind: 'fellowship', scopeId: kGroupKumasi!.id },
     // DepartmentLead grants (no deputies seeded today; lead-only).
     { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: choirLondon!.id },
     { memberId: leaderDavid!.id, roleId: departmentLeadRole!.id, branchId: accra!.id, scopeKind: 'department', scopeId: ushersAccra!.id },
     { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: hostTeamLondon!.id },
-    { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: adminLondon!.id },
-    // Branch Data Admin (derived from being the lead of the Admin dept).
-    // London → Sarah, Manchester → Grace, Accra → David.
-    { memberId: leaderSarah!.id, roleId: branchDataAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
-    { memberId: pastorManchester!.id, roleId: branchDataAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
+    { memberId: regularMembers[0]!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: adminLondon!.id },
+    // Branch Data Admin, derived from leading the Admin dept. Always someone
+    // other than the branch's Main Pastor and other than its Minister: this
+    // role is branch operations with no pastoral standing, and since the
+    // welfare/safeguarding split it can read neither concerns queue.
+    // London → Emma, Manchester → John, Accra → David.
+    { memberId: regularMembers[0]!.id, roleId: branchDataAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: regularMembers[3]!.id, roleId: branchDataAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
     { memberId: leaderDavid!.id, roleId: branchDataAdminRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
   ]);
   console.log(`✓ 12 RBAC grants (FellowshipLeader/DepartmentLead/BDA)`);
@@ -1174,14 +1189,14 @@ async function seed() {
   await db.insert(fellowshipMembers).values([
     { fellowshipId: kGroupLondon!.id, memberId: leaderSarah!.id },
     { fellowshipId: kGroupLondon!.id, memberId: regularMembers[0]!.id },
-    { fellowshipId: kGroupLondon!.id, memberId: pastorLondon!.id },
+    // No pastorLondon and no admin here, deliberately. A Main Pastor belongs
+    // to no fellowship — he is over all of them — and the HQ system admin is
+    // a platform operator rather than a congregant of any one branch.
     { fellowshipId: expressLondon!.id, memberId: regularMembers[0]!.id },
-    { fellowshipId: expressLondon!.id, memberId: admin!.id },
     { fellowshipId: kGroupAccra!.id, memberId: leaderDavid!.id },
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[1]!.id },
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[2]!.id },
     { fellowshipId: newBreedsAccra!.id, memberId: regularMembers[2]!.id },
-    { fellowshipId: kGroupKumasi!.id, memberId: pastorKumasi!.id },
     { fellowshipId: kGroupKumasi!.id, memberId: abenaOsei!.id },
     { fellowshipId: kGroupKumasi!.id, memberId: amaBoateng!.id },
   ]);
@@ -1675,6 +1690,116 @@ async function seed() {
   ]);
   console.log(`✓ 4 leadership backfill entries`);
 
+  // ── 14c. Persona grants: safeguarding, discipleship, membership ──
+  //
+  // These roles were in the catalogue but nobody held them, so every surface
+  // they gate was unreachable in the demo. Each one follows the rule that the
+  // role exists to express: a reach, over one domain, held by the right
+  // person — and specifically NOT by whoever happens to be nearest.
+  const allRoles = await db.select().from(roles);
+  const roleByName = new Map(allRoles.map((r) => [r.roleName, r]));
+  const roleId = (name: string) => roleByName.get(name)!.id;
+
+  // Safeguarding Lead — one per branch, and never that branch's Main Pastor.
+  // The role's whole value is independence from branch leadership: a concern
+  // raised about the leadership has to reach someone outside it.
+  const safeguardingLeads = [
+    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london! },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester! },
+    { member: findExtra('efua.danquah@kairos.local'),    branch: accra! },
+    { member: findExtra('adjoa.antwi@kairos.local'),     branch: kumasi! },
+    // Freetown is small enough that the Minister doubles as safeguarding lead.
+    // The matrix allows it — the rule is that the lead is never the MAIN
+    // PASTOR, not that they hold nothing else — and a branch where one person
+    // wears two hats is worth having in the seed, because the UI meets it.
+    { member: freetownMinister,                          branch: freetown! },
+  ];
+
+  // Safeguarding Head — church-scoped, so the escalation path above every
+  // branch lead goes somewhere that is not a platform admin. Church grants
+  // carry the nil UUID in scope_id and the holder's home branch in branch_id,
+  // which is a query handle and not the grant's reach.
+  const CHURCH_SCOPE_ID = '00000000-0000-0000-0000-000000000000';
+  const safeguardingHead = findExtra('tobi.balogun@kairos.local');
+
+  // Membership Champion — the per-branch liaison for the church-wide class.
+  // Read-only, and distinct from the church-scoped Membership Admin.
+  const membershipChampions = [
+    { member: findExtra('chidera.nnamani@kairos.local'), branch: london! },
+    { member: findExtra('hannah.peters@kairos.local'),   branch: manchester! },
+    { member: findExtra('kwesi.frimpong@kairos.local'),  branch: accra! },
+    { member: findExtra('kofi.owusu@kairos.local'),      branch: kumasi! },
+    { member: findExtra('adama.turay@kairos.local'),     branch: freetown! },
+  ];
+
+  await db.insert(memberRoles).values([
+    ...safeguardingLeads.map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('Safeguarding Lead'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+    {
+      memberId: safeguardingHead.id,
+      roleId: roleId('Safeguarding Head'),
+      branchId: london!.id,
+      scopeKind: 'church',
+      scopeId: CHURCH_SCOPE_ID,
+    },
+    ...membershipChampions.map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('Membership Champion'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+  ]);
+  console.log(`✓ 5 safeguarding leads + 1 church safeguarding head + 5 membership champions`);
+
+  // New Believers teachers and mentors — two different jobs, and at Kharis two
+  // different people. Kumasi is the deliberate exception where one person
+  // holds both, because small branches do that and the UI must cope.
+  const nbTeacherLondon     = findExtra('chidera.nnamani@kairos.local');
+  const nbMentorLondon      = leaderSarah!;
+  const nbTeacherManchester = findExtra('isaac.ojewale@kairos.local');
+  const nbMentorManchester  = findExtra('micah.odumosu@kairos.local');
+  const nbTeacherAccra      = findExtra('kojo.boateng@kairos.local');
+  const nbMentorAccra       = leaderDavid!;
+  const nbBothKumasi        = findExtra('kwabena.osei@kairos.local');
+  const nbTeacherFreetown   = findExtra('adama.turay@kairos.local');
+  const nbMentorFreetown    = findExtra('mohamed.bangura@kairos.local');
+
+  await db.insert(memberRoles).values([
+    ...[
+      { member: nbTeacherLondon, branch: london! },
+      { member: nbTeacherManchester, branch: manchester! },
+      { member: nbTeacherAccra, branch: accra! },
+      { member: nbBothKumasi, branch: kumasi! },
+      { member: nbTeacherFreetown, branch: freetown! },
+    ].map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('New Believers Teacher'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+    ...[
+      { member: nbMentorLondon, branch: london! },
+      { member: nbMentorManchester, branch: manchester! },
+      { member: nbMentorAccra, branch: accra! },
+      { member: nbBothKumasi, branch: kumasi! },
+      { member: nbMentorFreetown, branch: freetown! },
+    ].map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('New Believers Mentor'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+  ]);
+  console.log(`✓ 5 NB teachers + 5 NB mentors (Kumasi deliberately holds both)`);
+
   // ── 15. Additional branch departments ──
   const allDepts = await db.select().from(departments);
   const deptByName = new Map(allDepts.map((d) => [d.departmentName, d]));
@@ -2013,15 +2138,20 @@ async function seed() {
   console.log(`✓ 5 fellowship join requests + 3 fellowship followups`);
 
   // ── 20. New Believers pipeline (spread across stages, all 5 branches) ──
+  // Teacher and mentor are different jobs and, at Kharis, different people:
+  // one runs the sessions, the other walks alongside the new believer. The
+  // Main Pastor is neither — he oversees the pipeline rather than staffing it.
+  // Kumasi is the deliberate exception where one person does both, because
+  // that does happen in smaller branches and the UI has to survive it.
   const nbSpecs = [
-    { member: findExtra('amina.bello@kairos.local'),     branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-2',  enrolledDaysAgo: 21 },
-    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-3',  enrolledDaysAgo: 35 },
-    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: pastorManchester!, mentor: manchesterMinister, stage: 'session-1',  enrolledDaysAgo: 10 },
-    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: pastorManchester!, mentor: manchesterMinister, stage: 'session-4',  enrolledDaysAgo: 42 },
-    { member: findExtra('afia.sarpong@kairos.local'),    branch: accra!,      teacher: pastorAccra!,      mentor: leaderDavid!,    stage: 'completed',  enrolledDaysAgo: 60 },
-    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: pastorKumasi!,     mentor: kumasiMinister,     stage: 'session-1',  enrolledDaysAgo: 7  },
-    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: freetownPastor,    mentor: freetownMinister,   stage: 'session-2',  enrolledDaysAgo: 21 },
-    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: freetownPastor,    mentor: freetownMinister,   stage: 'integrated', enrolledDaysAgo: 90 },
+    { member: findExtra('amina.bello@kairos.local'),     branch: london!,     teacher: nbTeacherLondon,     mentor: nbMentorLondon,     stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london!,     teacher: nbTeacherLondon,     mentor: nbMentorLondon,     stage: 'session-3',  enrolledDaysAgo: 35 },
+    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: nbTeacherManchester, mentor: nbMentorManchester, stage: 'session-1',  enrolledDaysAgo: 10 },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: nbTeacherManchester, mentor: nbMentorManchester, stage: 'session-4',  enrolledDaysAgo: 42 },
+    { member: findExtra('afia.sarpong@kairos.local'),    branch: accra!,      teacher: nbTeacherAccra,      mentor: nbMentorAccra,      stage: 'completed',  enrolledDaysAgo: 60 },
+    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: nbBothKumasi,        mentor: nbBothKumasi,       stage: 'session-1',  enrolledDaysAgo: 7  },
+    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: nbTeacherFreetown,   mentor: nbMentorFreetown,   stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: nbTeacherFreetown,   mentor: nbMentorFreetown,   stage: 'integrated', enrolledDaysAgo: 90 },
   ];
   const stageOrder = ['session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'];
   const newBelievers = await db.insert(newBelieverEnrollments).values(
