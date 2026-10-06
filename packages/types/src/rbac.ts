@@ -15,7 +15,15 @@ export const FunctionalRole = {
   FellowshipLeader: 'FellowshipLeader',
   DepartmentLeader: 'DepartmentLeader',
   DepartmentDeputy: 'DepartmentDeputy',
+  // Safeguarding for one branch, and nothing else. Branch reach over the
+  // safeguarding domain only — not welfare, not the directory, not reports.
+  // Always a different person from the branch's Main Pastor: the role exists
+  // to be independent of branch leadership.
   SafeguardingLead: 'SafeguardingLead',
+  // Safeguarding across every branch. Church-scoped because a concern raised
+  // in one branch may need to escape that branch entirely — this is the
+  // escalation path above the lead, and no branch grant could describe it.
+  SafeguardingHead: 'SafeguardingHead',
   NewBelieversMentor: 'NewBelieversMentor',
   NewBelieversTeacher: 'NewBelieversTeacher',
   // The only church-scoped role. Runs the membership class programme end to
@@ -30,6 +38,15 @@ export const FunctionalRole = {
   // notifications for members of their branch (join waitlist, admitted,
   // graduated, withdrew/lapsed).
   MembershipChampion: 'MembershipChampion',
+  // DERIVED — never stored in `member_roles` and never assignable in the RBAC
+  // admin UI. `resolveGrants` synthesises it for whoever currently holds the
+  // `Main Pastor` row in `branch_leadership` for a branch.
+  //
+  // It exists because safeguarding sight follows identity, not authority: the
+  // Main Pastor sees their branch's safeguarding queue and a Minister does
+  // not, yet both carry the same `BranchAdmin` grant. No role→capability
+  // mapping can tell those two apart, so the identity table has to speak.
+  BranchPastor: 'BranchPastor',
 } as const;
 export type FunctionalRole = (typeof FunctionalRole)[keyof typeof FunctionalRole];
 
@@ -43,6 +60,11 @@ export const Capability = {
   DepartmentWrite: 'department:write',
   SafeguardingRead: 'safeguarding:read',
   SafeguardingWrite: 'safeguarding:write',
+  // Pastoral-care concerns, split out from safeguarding so the two queues can
+  // be held by different people. It used to ride on `branch:write`, which
+  // meant a Branch Data Admin — a pure ops role with no pastoral standing —
+  // could read both inboxes.
+  WelfareRead: 'welfare:read',
   SignupApprove: 'signup:approve',
   NewBelieversMentor: 'newbelievers:mentor',
   NewBelieversTeach: 'newbelievers:teach',
@@ -63,18 +85,26 @@ export const RoleCapabilities: Record<FunctionalRole, readonly Capability[]> = {
   // for a branch. Can grant/revoke roles AND edit branch data, but does NOT
   // bypass fellowship/department scope (that's pastor-equivalent power, which
   // Phase 4 will narrow away).
-  BranchAdmin: ['branch:read', 'branch:write', 'branch:rbac', 'signup:approve'],
+  BranchAdmin: ['branch:read', 'branch:write', 'branch:rbac', 'signup:approve', 'welfare:read'],
   // Branch Data Admin — branch ops without RBAC. Promoted from "Admin
   // department lead" in the prior model.
   BranchDataAdmin: ['branch:read', 'branch:write', 'signup:approve'],
   FellowshipLeader: ['fellowship:read', 'fellowship:write'],
   DepartmentLeader: ['department:read', 'department:write'],
   DepartmentDeputy: ['department:read', 'department:write'],
+  // Safeguarding only — deliberately NOT 'welfare:read'. Welfare is pastoral
+  // care and belongs to the branch's leadership; safeguarding is protection
+  // and belongs to someone independent of it.
   SafeguardingLead: ['safeguarding:read', 'safeguarding:write'],
+  SafeguardingHead: ['safeguarding:read', 'safeguarding:write'],
   NewBelieversMentor: ['newbelievers:mentor'],
   NewBelieversTeacher: ['newbelievers:teach'],
   MembershipAdmin: ['membership:admin'],
   MembershipChampion: ['membership:branch:read'],
+  // Carries safeguarding sight and nothing else. Everything else a Main
+  // Pastor can do already comes from their BranchAdmin grant; this bundle is
+  // only what must NOT extend to a Minister holding the same grant.
+  BranchPastor: ['safeguarding:read', 'safeguarding:write'],
 };
 
 // Which scope kind each role's `scope.kind` field must be. Used by
@@ -87,10 +117,12 @@ export const RoleScopeKind: Record<FunctionalRole, RoleScope['kind']> = {
   DepartmentLeader: 'department',
   DepartmentDeputy: 'department',
   SafeguardingLead: 'branch',
+  SafeguardingHead: 'church',
   NewBelieversMentor: 'branch',
   NewBelieversTeacher: 'branch',
   MembershipAdmin: 'church',
   MembershipChampion: 'branch',
+  BranchPastor: 'branch',
 };
 
 // A single role assignment with its scope. For fellowship/department grants,
@@ -120,9 +152,11 @@ export interface Grant {
  *   - Hierarchical match → a `branch` grant covers fellowship and department
  *     targets in the same branch, provided the caller passes the target's
  *     parent `branchId` on the scope object.
- *   - `church` targets take NO hierarchical match. The church contains every
- *     branch, not the other way round, so a branch grant must never satisfy a
- *     church-scoped check — only a church grant, or a platform admin, does.
+ *   - A `church` GRANT satisfies any target, at any depth. The church is the
+ *     root and contains every branch, fellowship and department in it.
+ *   - A `church` TARGET takes NO hierarchical match. The containment above
+ *     runs one way only, so a branch grant must never satisfy a church-scoped
+ *     check — only a church grant, or a platform admin, does.
  */
 export function matchesCapability(
   grants: readonly Grant[],
@@ -145,6 +179,11 @@ export function matchesCapability(
     const caps: readonly Capability[] = RoleCapabilities[grant.role] ?? [];
     if (!caps.includes(cap)) continue;
     if (!scope) return true;
+    // A church grant reaches everything the church contains — every branch,
+    // every fellowship, every department. There is one church and it is the
+    // root. The converse is deliberately absent: no branch grant below ever
+    // satisfies a church check, because the church is not inside a branch.
+    if (grant.scope.kind === 'church') return true;
     if (grant.scope.kind === scope.kind && grant.scope.id === scope.id) return true;
     if (grant.scope.kind === 'branch' && targetBranchId && grant.scope.id === targetBranchId) {
       return true;

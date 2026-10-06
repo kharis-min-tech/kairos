@@ -31,10 +31,14 @@ type Tab = 'welfare' | 'safeguarding';
 
 /**
  * Concerns inbox — 0046. Leader tool that surfaces follow-ups flagged
- * `welfare_concern` or `safeguarding_concern`. Two tabs so a branch admin
- * who also serves as the safeguarding lead can triage both without leaving
- * the screen; a plain welfare-only leader sees the welfare tab and hits a
- * 403 if they somehow tap into safeguarding. Endpoints:
+ * `welfare_concern` or `safeguarding_concern`.
+ *
+ * The two tabs are gated separately, because the two queues are deliberately
+ * held by different people: welfare is pastoral care (`welfare:read`, branch
+ * leadership) and safeguarding is protection (`safeguarding:read`, the
+ * branch's Safeguarding Lead, the church-wide Head, or the Main Pastor —
+ * never a Minister or a Branch Data Admin). Someone who holds both sees both
+ * tabs; someone who holds one sees one. Endpoints:
  *   /api/me/followups/welfare
  *   /api/me/followups/safeguarding
  */
@@ -42,14 +46,18 @@ export default function ConcernsInbox() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('welfare');
-
   const caps = useCapabilities();
   const branchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
-  const canAccess =
-    caps.systemRole === 'admin' ||
-    (!!branchId && caps.has('branch:write', { kind: 'branch', id: branchId })) ||
-    (!!branchId && caps.has('safeguarding:read', { kind: 'branch', id: branchId }));
+  const scope = branchId ? ({ kind: 'branch', id: branchId } as const) : undefined;
+  const canSeeWelfare = caps.has('welfare:read', scope);
+  const canSeeSafeguarding = caps.has('safeguarding:read', scope);
+  const visibleTabs = ([] as Tab[]).concat(
+    canSeeWelfare ? ['welfare'] : [],
+    canSeeSafeguarding ? ['safeguarding'] : [],
+  );
+  const canAccess = visibleTabs.length > 0;
+
+  const [tab, setTab] = useState<Tab>(canSeeWelfare ? 'welfare' : 'safeguarding');
   useRequireCapability(canAccess);
 
   const welfare = useQuery({
@@ -77,7 +85,7 @@ export default function ConcernsInbox() {
       </View>
 
       <View style={styles.tabs}>
-        {(['welfare', 'safeguarding'] as Tab[]).map((t) => {
+        {visibleTabs.map((t) => {
           const isActive = t === tab;
           const Icon = t === 'welfare' ? HeartHandshake : ShieldAlert;
           return (

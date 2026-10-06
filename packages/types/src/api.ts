@@ -548,7 +548,7 @@ export interface GetLeadershipParams {
 
 export interface AssignLeadershipRequest {
   memberId: string;
-  role: 'Main Pastor' | 'Elder';
+  role: 'Main Pastor' | 'Minister';
   startDate?: string;
 }
 

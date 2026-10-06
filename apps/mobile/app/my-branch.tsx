@@ -81,7 +81,7 @@ export default function MyBranch() {
     [leadership.data],
   );
   const mainPastor = currentLeaders.find((l) => l.role === 'Main Pastor');
-  const elders = currentLeaders.filter((l) => l.role === 'Elder');
+  const ministers = currentLeaders.filter((l) => l.role === 'Minister');
 
   const refresh = () => {
     branches.refetch();
@@ -236,7 +236,7 @@ export default function MyBranch() {
               </View>
             ) : null}
 
-            {(mainPastor || elders.length > 0) ? (
+            {(mainPastor || ministers.length > 0) ? (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconTile}>
@@ -260,18 +260,18 @@ export default function MyBranch() {
                     </View>
                   </View>
                 ) : null}
-                {elders.map((elder) => (
-                  <View key={elder.id} style={styles.leaderCard}>
+                {ministers.map((minister) => (
+                  <View key={minister.id} style={styles.leaderCard}>
                     <Avatar
                       size="md"
-                      photoUrl={elder.memberPhotoUrl ?? undefined}
-                      firstName={elder.memberFirstName}
-                      lastName={elder.memberLastName}
+                      photoUrl={minister.memberPhotoUrl ?? undefined}
+                      firstName={minister.memberFirstName}
+                      lastName={minister.memberLastName}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.leaderRole}>ELDER</Text>
+                      <Text style={styles.leaderRole}>MINISTER</Text>
                       <Text style={styles.leaderName}>
-                        {elder.memberFirstName} {elder.memberLastName}
+                        {minister.memberFirstName} {minister.memberLastName}
                       </Text>
                     </View>
                   </View>

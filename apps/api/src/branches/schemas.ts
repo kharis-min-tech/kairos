@@ -38,7 +38,7 @@ export const updateRegionSchema = createRegionSchema.partial();
 
 export const assignLeadershipSchema = z.object({
   memberId: z.string().uuid('Invalid member ID'),
-  role: z.enum(['Main Pastor', 'Elder']),
+  role: z.enum(['Main Pastor', 'Minister']),
   startDate: z.string().optional(),
 });
 

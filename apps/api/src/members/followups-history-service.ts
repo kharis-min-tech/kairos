@@ -8,7 +8,7 @@ import {
   departments,
   members,
 } from '@kairos/database';
-import type { AuthContext } from '@kairos/types';
+import { CHURCH_SCOPE, type AuthContext } from '@kairos/types';
 import { ForbiddenError, NotFoundError } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
 
@@ -175,22 +175,35 @@ export async function listConcernFollowups(
   auth: AuthContext,
   kind: ConcernKind,
 ): Promise<ConcernInboxItem[]> {
-  // Gate: welfare = branch:write on caller's branch. Safeguarding =
-  // safeguarding:read or branch:write. System admins pass everywhere.
+  // Two queues, two capabilities, deliberately in different hands.
+  //
+  // Welfare is pastoral care: `welfare:read`, which only BranchAdmin carries.
+  // Safeguarding is protection and belongs to someone independent of branch
+  // leadership: the branch Safeguarding Lead, the church-wide Safeguarding
+  // Head, or the Main Pastor through the derived BranchPastor grant — but
+  // not a Minister, who holds the same BranchAdmin grant as the pastor and
+  // nothing more.
+  //
+  // Both used to read `branch:write`, which BranchAdmin and BranchDataAdmin
+  // both hold, so a pure data-ops role could read every safeguarding case in
+  // its branch.
   const isAdmin = auth.systemRole === 'admin';
   const branchId = auth.branchId;
-  const canSeeWelfare =
-    isAdmin || (!!branchId && authHasCapability(auth, 'branch:write', { kind: 'branch', id: branchId }));
-  const canSeeSafeguarding =
-    isAdmin ||
-    (!!branchId && authHasCapability(auth, 'safeguarding:read', { kind: 'branch', id: branchId })) ||
-    (!!branchId && authHasCapability(auth, 'branch:write', { kind: 'branch', id: branchId }));
-  if (kind === 'welfare' && !canSeeWelfare) {
-    throw new ForbiddenError('You cannot see the welfare inbox');
+  const cap = kind === 'welfare' ? 'welfare:read' : 'safeguarding:read';
+  const canSee =
+    isAdmin || (!!branchId && authHasCapability(auth, cap, { kind: 'branch', id: branchId }));
+  if (!canSee) {
+    throw new ForbiddenError(
+      kind === 'welfare'
+        ? 'You cannot see the welfare inbox'
+        : 'You cannot see the safeguarding inbox',
+    );
   }
-  if (kind === 'safeguarding' && !canSeeSafeguarding) {
-    throw new ForbiddenError('You cannot see the safeguarding inbox');
-  }
+
+  // A church-scoped grant reaches every branch, so the Safeguarding Head's
+  // inbox is church-wide rather than their home branch's — same unscoped
+  // read a platform admin gets, but only for safeguarding.
+  const readsEveryBranch = isAdmin || authHasCapability(auth, cap, CHURCH_SCOPE);
 
   const flagCol = (t: typeof memberFollowups | typeof memberFollowups) =>
     kind === 'welfare' ? t.welfareConcern : t.safeguardingConcern;
@@ -241,7 +254,7 @@ export async function listConcernFollowups(
     .innerJoin(recorder, eq(memberFollowups.recordedById, recorder.id))
     .innerJoin(subject, eq(memberFollowups.memberId, subject.id))
     .where(
-      isAdmin
+      readsEveryBranch
         ? eq(flagCol(memberFollowups), true)
         : and(eq(flagCol(memberFollowups), true), eq(memberFollowups.branchId, branchId)),
     )

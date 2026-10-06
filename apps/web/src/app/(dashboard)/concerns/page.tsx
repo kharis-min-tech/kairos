@@ -33,15 +33,20 @@ export default function ConcernsInboxPage() {
   const caps = useCapabilities();
   const branchId = user?.homeBranchId ?? null;
 
-  const canAccess =
-    caps.systemRole === 'admin' ||
-    caps.has('branch:write', branchId ? { kind: 'branch', id: branchId } : undefined) ||
-    caps.has(
-      'safeguarding:read',
-      branchId ? { kind: 'branch', id: branchId } : undefined,
-    );
+  // Per tab, not per page. Welfare is pastoral care and safeguarding is
+  // protection, and they are deliberately held by different people — a
+  // Safeguarding Lead has no welfare sight, and showing them a welfare tab
+  // that 403s on open is just a worse way of saying no.
+  const scope = branchId ? ({ kind: 'branch', id: branchId } as const) : undefined;
+  const canSeeWelfare = caps.has('welfare:read', scope);
+  const canSeeSafeguarding = caps.has('safeguarding:read', scope);
+  const visibleTabs = ([] as Tab[]).concat(
+    canSeeWelfare ? ['welfare'] : [],
+    canSeeSafeguarding ? ['safeguarding'] : [],
+  );
+  const canAccess = visibleTabs.length > 0;
 
-  const [tab, setTab] = useState<Tab>('welfare');
+  const [tab, setTab] = useState<Tab>(canSeeWelfare ? 'welfare' : 'safeguarding');
 
   useEffect(() => {
     if (!canAccess) router.replace('/dashboard');
@@ -77,7 +82,7 @@ export default function ConcernsInboxPage() {
       </div>
 
       <div className="flex gap-2">
-        {(['welfare', 'safeguarding'] as Tab[]).map((t) => {
+        {visibleTabs.map((t) => {
           const isActive = t === tab;
           const Icon = t === 'welfare' ? HeartHandshake : ShieldAlert;
           return (
