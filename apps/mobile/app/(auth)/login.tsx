@@ -10,6 +10,7 @@ import {
   Animated,
   AccessibilityInfo,
   useColorScheme,
+  type DimensionValue,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,6 +34,18 @@ import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
 import { pickAuthVerse, resolveDaypart, type Daypart } from '@kairos/core';
+
+/** Where the field's one light sits, and how strongly, at a given hour. */
+interface FieldBlob {
+  color: string;
+  alpha: number;
+  // DimensionValue, not string — RN types percentages as `${number}%` and a
+  // plain string will not satisfy ViewStyle.
+  top: DimensionValue;
+  left: DimensionValue;
+  width: DimensionValue;
+  height: DimensionValue;
+}
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
@@ -53,40 +66,74 @@ export default function LoginScreen() {
   // a compositor-only transform, no bridge traffic.
   const blobDrift = useRef(new Animated.Value(0)).current;
   const blobOpacity = useRef(new Animated.Value(0)).current;
-  // Time-of-day light. The field's warmth tracks the hour the congregant is
-  // actually opening the app in — gold at dawn, deeper violet at dusk, indigo
-  // after dark — so Sunday morning does not look like Thursday night. Same
-  // four cuts as web, out of @kairos/core.
-  const { fieldColors, blobColor, blobAlpha } = useMemo(() => {
+  // Time-of-day light.
+  //
+  // The warm point in the field is a low sun: wide and low at dawn, small and
+  // high through the day, crossed over and amber at dusk, and overnight it is
+  // gone entirely — replaced by a cold high glow where the moon would be.
+  //
+  // It moves rather than merely brightening because nobody ever sees two hours
+  // side by side: one sign-in is one hour, with nothing to compare against.
+  // Changing only opacity is invisible; changing where the light comes from
+  // reads as a time of day on a single viewing. Same four cuts as web, out of
+  // @kairos/core. Web carries three gradient points and can afford a separate
+  // moon; here the sky gradient does that work and the one blob is the light.
+  const { fieldColors, blob } = useMemo(() => {
     const daypart = resolveDaypart(new Date().getHours());
     const dark = scheme === 'dark';
 
-    const colors: Record<Daypart, [string, string, string]> = dark
+    const sky: Record<Daypart, [string, string, string]> = dark
       ? {
-          dawn: ['#1b1030', '#120b1e', '#07060c'],
+          dawn: ['#15102c', '#140d20', '#2a1608'],
           day: ['#120b2e', '#0b0818', '#050408'],
-          dusk: ['#180c38', '#0d0820', '#050409'],
-          night: ['#0b0a22', '#070614', '#030308'],
+          dusk: ['#180c38', '#2a0f2c', '#2b1206'],
+          night: ['#0b0d26', '#070614', '#030308'],
         }
       : {
-          dawn: ['#fff6ec', '#fdfaf7', '#f7f3f8'],
+          dawn: ['#f3f0ff', '#fdf6ee', '#ffeedb'],
           day: ['#f6f3ff', '#fafafa', '#f4f4f6'],
-          dusk: ['#f3eeff', '#f8f3f5', '#f3eff2'],
-          night: ['#eef0f8', '#f6f6fa', '#f2f3f7'],
+          dusk: ['#f3eeff', '#fbeff5', '#ffeede'],
+          night: ['#eef0f8', '#f4f5fa', '#f0f1f7'],
         };
 
-    const blob: Record<Daypart, { color: string; alpha: number }> = {
-      dawn: { color: '#f8b537', alpha: dark ? 0.14 : 0.16 },
-      day: { color: '#5d3fd3', alpha: dark ? 0.16 : 0.12 },
-      dusk: { color: '#6d44c8', alpha: dark ? 0.18 : 0.16 },
-      night: { color: '#312e81', alpha: dark ? 0.14 : 0.1 },
+    // Geometry as well as colour — this is the half that does the talking.
+    const light: Record<Daypart, FieldBlob> = {
+      dawn: {
+        color: '#f8a84a',
+        alpha: dark ? 0.26 : 0.3,
+        top: '58%',
+        left: '-30%',
+        width: '160%',
+        height: '72%',
+      },
+      day: {
+        color: '#5d3fd3',
+        alpha: dark ? 0.16 : 0.12,
+        top: '8%',
+        left: '14%',
+        width: '78%',
+        height: '42%',
+      },
+      dusk: {
+        color: '#f2863e',
+        alpha: dark ? 0.24 : 0.26,
+        top: '56%',
+        left: '6%',
+        width: '150%',
+        height: '74%',
+      },
+      // The sun is below the frame. This is the moon.
+      night: {
+        color: '#92aaec',
+        alpha: dark ? 0.12 : 0.14,
+        top: '-16%',
+        left: '28%',
+        width: '62%',
+        height: '36%',
+      },
     };
 
-    return {
-      fieldColors: colors[daypart],
-      blobColor: blob[daypart].color,
-      blobAlpha: blob[daypart].alpha,
-    };
+    return { fieldColors: sky[daypart], blob: light[daypart] };
   }, [scheme]);
 
   useEffect(() => {
@@ -295,8 +342,12 @@ export default function LoginScreen() {
           style={[
             styles.fieldBlob,
             {
-              backgroundColor: blobColor,
-              opacity: Animated.multiply(blobOpacity, blobAlpha),
+              backgroundColor: blob.color,
+              top: blob.top,
+              left: blob.left,
+              width: blob.width,
+              height: blob.height,
+              opacity: Animated.multiply(blobOpacity, blob.alpha),
               transform: [
                 { translateX: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [-24, 24] }) },
                 { translateY: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [16, -16] }) },
@@ -479,10 +530,8 @@ function makeStyles(c: ThemeColors) {
   safe: { flex: 1, backgroundColor: c.page },
   fieldBlob: {
     position: 'absolute',
-    top: '12%',
-    left: '-20%',
-    width: '140%',
-    height: '55%',
+    // Position, size, colour and alpha are all set inline from the daypart —
+    // the light moves across the day, it does not just change brightness.
     borderRadius: 9999,
     // Colour and alpha are set inline from the daypart — this is atmosphere,
     // not a shape anyone should notice, so the alpha never climbs past ~0.18.
