@@ -21,6 +21,9 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle2,
+  UserCheck,
+  PenLine,
+  X,
 } from 'lucide-react-native';
 import {
   Button,
@@ -37,6 +40,7 @@ import {
   FORM_DEFINITIONS,
   FormType,
   evaluateCondition,
+  memberReferenceState,
   type FormDefinition,
   type FormFieldDef,
   type FormSectionDef,
@@ -45,7 +49,7 @@ import {
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
-import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { MemberPickerSheet, type PickedMember } from '@/components/member-picker-sheet';
 import { apiBaseUrl } from '@/lib/config';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
@@ -121,6 +125,40 @@ function isFieldVisible(
 function isFilled(v: FieldValue): boolean {
   if (typeof v === 'boolean') return v;
   return typeof v === 'string' && v.trim().length > 0;
+}
+
+/**
+ * Whether a required field has an answer. A `member` field is answered by a
+ * reference OR by its free-text twin: a visiting child's guardian and a baby's
+ * parent are often not in the directory, and demanding the reference would
+ * block the form outright. `memberReferenceState` is shared with the web
+ * renderer so the two platforms cannot disagree about what counts as answered —
+ * this renderer used to ignore the free-text half, which made both required
+ * parents on the baby forms unanswerable by anyone not already a member.
+ */
+function isAnswered(field: FormFieldDef, bag: Record<string, FieldValue>): boolean {
+  if (field.type === 'member') return memberReferenceState(field, bag) !== 'empty';
+  return isFilled(bag[field.id]);
+}
+
+/**
+ * Write a member field's single answer. The free-text twin is not a field of its
+ * own in the definition — only `freeTextFieldId` names it — so a generic
+ * "emit every field id" loop dropped every typed name and the server then
+ * rejected the submission as missing a guardian/parent. Emitting exactly one of
+ * the two keys makes "a reference or a name, never both" true of the payload
+ * itself, not just of the UI that produced it.
+ */
+function writeMemberAnswer(
+  out: Record<string, unknown>,
+  field: FormFieldDef,
+  bag: Record<string, FieldValue>,
+): void {
+  const state = memberReferenceState(field, bag);
+  if (state === 'linked') out[field.id] = String(bag[field.id]).trim();
+  else if (state === 'named' && field.freeTextFieldId) {
+    out[field.freeTextFieldId] = String(bag[field.freeTextFieldId]).trim();
+  }
 }
 
 export default function FormRenderer() {
@@ -233,6 +271,15 @@ function DeclarativeForm({
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Subject linking — the web forms have always had this and mobile never did,
+  // so every mobile submission arrived as a brand-new contact even when the
+  // person was already on the roll. `subjectMemberId` is what lets the server
+  // update the existing record instead of minting a duplicate.
+  const user = useAuthStore((st) => st.user);
+  const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
+  const [subject, setSubject] = useState<PickedMember | null>(null);
+  const [subjectOpen, setSubjectOpen] = useState(false);
+
   const submit = useMutation({
     mutationFn: async (data: SubmitFormRequest) =>
       (await api.forms.submit(definition.formType, data)).data!,
@@ -240,7 +287,19 @@ function DeclarativeForm({
 
   const values = state.values as Record<string, unknown>;
 
+  // A testimony shared anonymously must not carry the subject link — the web
+  // form has always dropped it, and the review drawer hides the submitter's
+  // name on the strength of the same answer. Read off the answer, not the form
+  // type, so any future form with the same question inherits the rule.
+  const isAnonymous = state.values.shareAnonymously === true;
+
   function setValue(id: string, value: FieldValue) {
+    // Ticking anonymity retracts the link rather than leaving one on screen
+    // that submit would silently discard.
+    if (id === 'shareAnonymously' && value === true) {
+      setSubjectMemberId(undefined);
+      setSubject(null);
+    }
     setState((p) => ({ ...p, values: { ...p.values, [id]: value } }));
     setErrors((p) => {
       const next = { ...p };
@@ -280,6 +339,28 @@ function DeclarativeForm({
     });
   }
 
+  /** Mirrors the web renderer: link the subject and pre-fill what we know. */
+  function linkSubject(member: PickedMember) {
+    setSubjectMemberId(member.id);
+    setSubject(member);
+    setState((p) => ({
+      ...p,
+      values: {
+        ...p.values,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        // Only when the form actually asks for a phone, so we never invent a key.
+        ...(p.values.phone !== undefined ? { phone: member.phone ?? '' } : {}),
+      },
+    }));
+    setSubjectOpen(false);
+  }
+
+  function unlinkSubject() {
+    setSubjectMemberId(undefined);
+    setSubject(null);
+  }
+
   function validate(): Record<string, string> {
     const found: Record<string, string> = {};
     for (const block of definition.blocks) {
@@ -292,7 +373,7 @@ function DeclarativeForm({
         for (const field of block.fields) {
           if (!field.required) continue;
           if (!isFieldVisible(field, blockVisible, values, now)) continue;
-          if (!isFilled(state.values[field.id])) {
+          if (!isAnswered(field, state.values)) {
             found[field.id] = `${field.label} is required`;
           }
         }
@@ -304,7 +385,7 @@ function DeclarativeForm({
               ? evaluateCondition(field.visibleWhen, row as Record<string, unknown>, now)
               : true;
             if (!rowVisible) return;
-            if (!isFilled(row[field.id])) {
+            if (!isAnswered(field, row)) {
               found[`${block.id}.${index}.${field.id}`] = `${field.label} is required`;
             }
           });
@@ -324,6 +405,10 @@ function DeclarativeForm({
       if (block.kind === 'section') {
         for (const field of block.fields) {
           if (!isFieldVisible(field, blockVisible, values, now)) continue;
+          if (field.type === 'member') {
+            writeMemberAnswer(payload, field, state.values);
+            continue;
+          }
           const v = state.values[field.id];
           if (field.type === 'checkbox') payload[field.id] = Boolean(v);
           else if (typeof v === 'string' && v.trim().length > 0)
@@ -334,6 +419,10 @@ function DeclarativeForm({
           .map((row) => {
             const out: Record<string, unknown> = {};
             for (const field of block.fields) {
+              if (field.type === 'member') {
+                writeMemberAnswer(out, field, row);
+                continue;
+              }
               const v = row[field.id];
               if (field.type === 'checkbox') out[field.id] = Boolean(v);
               else if (typeof v === 'string' && v.trim().length > 0) out[field.id] = v.trim();
@@ -356,6 +445,7 @@ function DeclarativeForm({
     }
     try {
       await submit.mutateAsync({
+        subjectMemberId: isAnonymous ? undefined : subjectMemberId,
         payload: buildPayload(),
         consentGivenAt: new Date().toISOString(),
         consentPolicyVersion: CONSENT_POLICY_VERSION,
@@ -396,6 +486,28 @@ function DeclarativeForm({
           {definition.description ? (
             <Text style={styles.formDescription}>{definition.description}</Text>
           ) : null}
+
+          <Card padding="md" style={{ gap: spacing.sm }}>
+            <Text style={styles.consentTitle}>Find an existing person</Text>
+            <Text style={styles.consentBody}>
+              Search by name or phone to link this to someone already on the roll. Leave it
+              blank to create a new contact.
+            </Text>
+            {isAnonymous ? (
+              <Text style={styles.helpText}>
+                An anonymous submission won’t be linked to anyone’s record.
+              </Text>
+            ) : (
+              <PersonRow
+                state={subjectMemberId ? 'linked' : 'empty'}
+                name={subject ? `${subject.firstName} ${subject.lastName}` : null}
+                placeholder="Search by name or phone"
+                linkedTag="Linked — submitting updates their record"
+                onPress={() => setSubjectOpen(true)}
+                onClear={subjectMemberId ? unlinkSubject : undefined}
+              />
+            )}
+          </Card>
 
           {definition.blocks.map((block) => {
             const blockVisible = block.visibleWhen
@@ -452,6 +564,19 @@ function DeclarativeForm({
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <MemberPickerSheet
+        open={subjectOpen}
+        onClose={() => setSubjectOpen(false)}
+        branchId={user?.homeBranchId ?? ''}
+        source="forms"
+        selectedMemberId={subjectMemberId}
+        title="Find an existing person"
+        subtitle="Search by name or phone. Leave blank to create a new contact."
+        onPick={(id, member) =>
+          linkSubject(member ?? { id, firstName: '', lastName: '', phone: null })
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -513,12 +638,8 @@ function SectionBlock({
             field={field}
             value={state.values[field.id]}
             onChange={(v) => setValue(field.id, v)}
-            companionValue={
-              field.freeTextFieldId ? state.values[field.freeTextFieldId] : undefined
-            }
-            onCompanionChange={(v) => {
-              if (field.freeTextFieldId) setValue(field.freeTextFieldId, v);
-            }}
+            bag={state.values}
+            setSibling={setValue}
             errorKey={field.id}
             error={errors[field.id]}
           />
@@ -584,6 +705,8 @@ function RepeatableBlock({
                   field={field}
                   value={row[field.id]}
                   onChange={(v) => setRowValue(block.id, index, field.id, v)}
+                  bag={row}
+                  setSibling={(fieldId, v) => setRowValue(block.id, index, fieldId, v)}
                   errorKey={`${block.id}.${index}.${field.id}`}
                   error={errors[`${block.id}.${index}.${field.id}`]}
                 />
@@ -605,16 +728,17 @@ function FieldRenderer({
   field,
   value,
   onChange,
-  companionValue,
-  onCompanionChange,
+  bag,
+  setSibling,
   error,
 }: {
   field: FormFieldDef;
   value: FieldValue;
   onChange: (v: FieldValue) => void;
-  /** Current value of `field.freeTextFieldId`, for member pick-or-type. */
-  companionValue?: FieldValue;
-  onCompanionChange?: (v: FieldValue) => void;
+  /** The values bag this field lives in — top-level, or a repeatable row's own. */
+  bag: Record<string, FieldValue>;
+  /** Writes a sibling in that same bag. Only member fields use it, to clear their twin. */
+  setSibling: (fieldId: string, v: FieldValue) => void;
   errorKey: string;
   error: string | undefined;
 }) {
@@ -678,14 +802,28 @@ function FieldRenderer({
 
   if (field.type === 'member') {
     // Stores a member id, not a typed name — the point is that the picked
-    // person can be routed to afterwards.
+    // person can be routed to afterwards. Where a typed name is legitimate the
+    // field names a free-text twin, and exactly one of the two is ever set.
+    const companionId = field.freeTextFieldId;
+    const companion = companionId ? bag[companionId] : undefined;
     return (
       <MemberField
         field={field}
-        value={value}
-        onChange={onChange}
-        companionValue={companionValue}
-        onCompanionChange={onCompanionChange}
+        memberId={typeof value === 'string' ? value : ''}
+        typedName={typeof companion === 'string' ? companion : ''}
+        error={error}
+        onPickMember={(m) => {
+          onChange(m ? m.id : '');
+          if (companionId) setSibling(companionId, '');
+        }}
+        onTypeName={
+          companionId
+            ? (name) => {
+                setSibling(companionId, name);
+                onChange('');
+              }
+            : undefined
+        }
       />
     );
   }
@@ -776,73 +914,163 @@ function CheckboxRow({
 }
 
 /**
- * A member reference picked by search. Shows who is linked and lets it be
- * cleared; the stored value is the member id.
+ * One question, one control.
+ *
+ * The earlier composition stacked a tappable search card and then, underneath
+ * it, a second labelled text input introduced by "…or type their name" — one
+ * answer with two visible controls, and the person filling the form had to
+ * decide which half was theirs before they could start.
+ *
+ * Now a single row opens a single sheet. Searching and typing happen in the same
+ * box; the sheet's last row, "Use “<what you typed>” as a name only", is the way
+ * out, offered where it's needed instead of sitting underneath as an
+ * afterthought. The row then reads back as either a linked directory member or a
+ * name-only answer, so the distinction survives the answer being given.
+ *
+ * Mutual exclusion is structural: the sheet is the only writer, and each of its
+ * two exits sets one key and clears the other.
  */
 function MemberField({
   field,
-  value,
-  onChange,
-  companionValue,
-  onCompanionChange,
+  memberId,
+  typedName,
+  onPickMember,
+  onTypeName,
+  error,
 }: {
   field: FormFieldDef;
-  value: FieldValue;
-  onChange: (v: FieldValue) => void;
-  companionValue?: FieldValue;
-  onCompanionChange?: (v: FieldValue) => void;
+  memberId: string;
+  typedName: string;
+  onPickMember: (member: PickedMember | null) => void;
+  /** Omitted for a reference-only field, where a name we can't route to is worth nothing. */
+  onTypeName?: (name: string) => void;
+  error?: string;
 }) {
   const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
-  const selectedId = typeof value === 'string' && value ? value : null;
+  const [picked, setPicked] = useState<PickedMember | null>(null);
+
+  const state = memberReferenceState(field, {
+    [field.id]: memberId,
+    ...(field.freeTextFieldId ? { [field.freeTextFieldId]: typedName } : {}),
+  });
+  const pickedName =
+    picked && picked.id === memberId ? `${picked.firstName} ${picked.lastName}` : null;
+
+  function clear() {
+    setPicked(null);
+    onPickMember(null);
+    onTypeName?.('');
+  }
 
   return (
     <View style={{ gap: spacing.xs }}>
       <FieldLabel label={field.label} required={field.required} />
-      <Pressable onPress={() => setOpen(true)} accessibilityRole="button">
-        <Card padding="md" style={styles.memberFieldCard}>
-          <Text style={selectedId ? styles.memberFieldValue : styles.memberFieldPlaceholder}>
-            {selectedId ? 'Linked — tap to change' : (field.placeholder ?? 'Search for a person')}
-          </Text>
-          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
-        </Card>
-      </Pressable>
-      {selectedId ? (
-        <Pressable onPress={() => onChange('')} accessibilityRole="button">
-          <Text style={styles.memberFieldClear}>Clear</Text>
-        </Pressable>
-      ) : field.freeTextFieldId && onCompanionChange ? (
-        // Not everyone is in the directory — a visiting child's guardian or a
-        // baby's parent often isn't. Hidden once a member is linked, so nobody
-        // fills in two different people and wonders which one counted.
-        <View style={{ gap: spacing.xs }}>
-          <Text style={styles.helpText}>…or type their name if they’re not a member</Text>
-          <Input
-            value={typeof companionValue === 'string' ? companionValue : ''}
-            onChangeText={(v) => {
-              onCompanionChange(v);
-              onChange('');
-            }}
-            placeholder="Full name"
-          />
-        </View>
-      ) : null}
+      <PersonRow
+        state={state}
+        name={state === 'linked' ? (pickedName ?? 'A directory record') : typedName}
+        placeholder={
+          field.placeholder ??
+          (onTypeName ? 'Search the directory, or type a name' : 'Search for a person')
+        }
+        linkedTag="Directory member"
+        namedTag="Name only — not in the directory"
+        onPress={() => setOpen(true)}
+        onClear={state === 'empty' ? undefined : clear}
+      />
+      {error ? <Text style={styles.errorLine}>{error}</Text> : null}
+      {field.helpText ? <Text style={styles.helpText}>{field.helpText}</Text> : null}
+
       <MemberPickerSheet
         open={open}
         onClose={() => setOpen(false)}
         branchId={user?.homeBranchId ?? ''}
-        selectedMemberId={selectedId ?? undefined}
+        source="forms"
+        selectedMemberId={memberId || undefined}
         title={field.label}
-        subtitle="Search members in this branch."
-        onPick={(memberId) => {
-          onChange(memberId);
-          onCompanionChange?.('');
+        subtitle={
+          onTypeName
+            ? 'Search by name or phone — or use the name you type, if they aren’t a member.'
+            : 'Search members in this branch by name or phone.'
+        }
+        initialQuery={onTypeName ? typedName : undefined}
+        onUseTypedName={
+          onTypeName
+            ? (name) => {
+                setPicked(null);
+                onTypeName(name);
+                setOpen(false);
+              }
+            : undefined
+        }
+        onPick={(id, member) => {
+          const resolved = member ?? { id, firstName: '', lastName: '', phone: null };
+          setPicked(resolved);
+          onPickMember(resolved);
           setOpen(false);
         }}
       />
     </View>
+  );
+}
+
+/**
+ * The collapsed answer: a placeholder, a linked member, or a name we only have
+ * as text. Shared by the member fields and the subject link so the three read
+ * the same, and so a linked reference never looks like a typed name.
+ */
+function PersonRow({
+  state,
+  name,
+  placeholder,
+  linkedTag,
+  namedTag,
+  onPress,
+  onClear,
+}: {
+  state: 'linked' | 'named' | 'empty';
+  name: string | null;
+  placeholder: string;
+  linkedTag: string;
+  namedTag?: string;
+  onPress: () => void;
+  onClear?: () => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const tag = state === 'linked' ? linkedTag : state === 'named' ? namedTag : null;
+
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button">
+      <View style={[styles.personRow, state === 'linked' && styles.personRowLinked]}>
+        {state === 'linked' ? (
+          <UserCheck color={c.primary} size={18} strokeWidth={1.5} />
+        ) : state === 'named' ? (
+          <PenLine color={c.inkMuted} size={18} strokeWidth={1.5} />
+        ) : null}
+        <View style={{ flex: 1 }}>
+          <Text
+            style={state === 'empty' ? styles.personRowPlaceholder : styles.personRowValue}
+            numberOfLines={1}
+          >
+            {state === 'empty' ? placeholder : (name || placeholder)}
+          </Text>
+          {tag ? (
+            <Text style={state === 'linked' ? styles.personRowTagLinked : styles.personRowTag}>
+              {tag}
+            </Text>
+          ) : null}
+        </View>
+        {onClear ? (
+          <Pressable onPress={onClear} hitSlop={10} accessibilityRole="button">
+            <X color={c.inkFaded} size={18} strokeWidth={1.5} />
+          </Pressable>
+        ) : (
+          <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+        )}
+      </View>
+    </Pressable>
   );
 }
 
@@ -1190,10 +1418,26 @@ function makeStyles(c: ThemeColors) {
     ...typography.button,
     color: c.primary,
   },
-  memberFieldCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  memberFieldValue: { ...typography.body, color: c.ink, flex: 1 },
-  memberFieldPlaceholder: { ...typography.body, color: c.inkFaded, flex: 1 },
-  memberFieldClear: { ...typography.meta, color: c.primary },
+  personRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: c.card,
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minHeight: 48,
+  },
+  personRowLinked: {
+    borderColor: 'rgba(93,63,211,0.45)',
+    backgroundColor: 'rgba(93,63,211,0.06)',
+  },
+  personRowValue: { ...typography.body, color: c.ink },
+  personRowPlaceholder: { ...typography.body, color: c.inkFaded },
+  personRowTag: { ...typography.meta, color: c.inkMuted },
+  personRowTagLinked: { ...typography.meta, color: c.primary, fontWeight: '600' },
 });
 }
 

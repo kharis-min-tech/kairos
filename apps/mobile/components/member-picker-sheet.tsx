@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Search, UserPlus, Check } from 'lucide-react-native';
+import { Search, UserPlus, Check, PenLine } from 'lucide-react-native';
 import {
   Avatar,
   Input,
@@ -33,6 +33,20 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
+/** The picked row, handed back so a caller can show a name without a second fetch. */
+export interface PickedMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+}
+
+interface PickerRow extends PickedMember {
+  photoUrl: string | null;
+  /** Secondary line — email for the directory source, phone · type for forms. */
+  meta: string | null;
+}
+
 interface MemberPickerSheetProps {
   open: boolean;
   onClose: () => void;
@@ -41,13 +55,34 @@ interface MemberPickerSheetProps {
   /** Member ids already picked / already in the target group — hidden from results. */
   excludeMemberIds?: Set<string>;
   /** Fires with the picked member id. Sheet does NOT auto-close — the caller controls it. */
-  onPick: (memberId: string) => void;
+  onPick: (memberId: string, member?: PickedMember) => void;
   /** Sheet title. Defaults to "Add a member". */
   title?: string;
   /** Subtitle under the sheet title. */
   subtitle?: string;
   /** Confirms-on-tap: render a check for the currently selected id instead of the UserPlus glyph. */
   selectedMemberId?: string;
+  /**
+   * Which search to run.
+   *
+   * `members` (default) hits the directory — the right source for picking a
+   * lead, a mentor or a rota slot, where the target is always a real member.
+   * `forms` hits `/api/forms/member-search`, which any logged-in member may
+   * call and which matches on phone as well as name, because a form may be
+   * filled by someone with no directory reach of their own. It is also the
+   * endpoint the web forms use, so a match found on one platform is found on
+   * the other.
+   */
+  source?: 'members' | 'forms';
+  /**
+   * Offers "Use “<query>” as a name only" as the last row. Present only for a
+   * field whose answer may legitimately be a name we can't route to — a
+   * visiting child's guardian, a baby's parent. Calling it is the caller's cue
+   * to store the typed name and clear any reference.
+   */
+  onUseTypedName?: (name: string) => void;
+  /** Seeds the search box each time the sheet opens. Omit to keep what was typed. */
+  initialQuery?: string;
 }
 
 /**
@@ -64,28 +99,54 @@ export function MemberPickerSheet({
   title = 'Add a member',
   subtitle = 'Search members in this branch. Tap to add.',
   selectedMemberId,
+  source = 'members',
+  onUseTypedName,
+  initialQuery,
 }: MemberPickerSheetProps) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState(initialQuery ?? '');
   const debounced = useDebounced(searchInput.trim(), 250);
 
+  // Only seed when the caller asked for it, so existing callers keep whatever
+  // they had typed last time the sheet was open.
+  useEffect(() => {
+    if (open && initialQuery !== undefined) setSearchInput(initialQuery);
+  }, [open, initialQuery]);
+
   const results = useQuery({
-    queryKey: ['members', 'picker', { branchId, search: debounced }],
-    enabled: open,
-    queryFn: async () =>
-      (
-        await api.members.list({
-          branchId,
-          search: debounced || undefined,
-          limit: 20,
-        })
-      ).data?.data ?? [],
+    queryKey: ['members', 'picker', { branchId, search: debounced, source }],
+    enabled: open && (source === 'members' || debounced.length > 0),
+    queryFn: async (): Promise<PickerRow[]> => {
+      if (source === 'forms') {
+        const found = (await api.forms.memberSearch({ q: debounced, branchId })).data ?? [];
+        return found.map((m) => ({
+          id: m.id,
+          firstName: m.firstName,
+          lastName: m.lastName,
+          phone: m.phone,
+          photoUrl: null,
+          meta: `${m.phone ?? 'No phone'} · ${m.memberType}`,
+        }));
+      }
+      const found =
+        (await api.members.list({ branchId, search: debounced || undefined, limit: 20 })).data
+          ?.data ?? [];
+      return found.map((m) => ({
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        phone: m.phone ?? null,
+        photoUrl: m.photoUrl ?? null,
+        meta: m.email && !m.redacted ? m.email : null,
+      }));
+    },
   });
 
   const filtered = (results.data ?? []).filter((m) =>
     excludeMemberIds ? !excludeMemberIds.has(m.id) : true,
   );
+  const typed = searchInput.trim();
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
@@ -124,7 +185,7 @@ export function MemberPickerSheet({
               filtered.map((m) => {
                 const isSelected = selectedMemberId === m.id;
                 return (
-                  <Pressable key={m.id} onPress={() => onPick(m.id)} style={styles.row}>
+                  <Pressable key={m.id} onPress={() => onPick(m.id, m)} style={styles.row}>
                     <Avatar
                       size="sm"
                       photoUrl={m.photoUrl ?? undefined}
@@ -135,9 +196,9 @@ export function MemberPickerSheet({
                       <Text style={styles.name} numberOfLines={1}>
                         {m.firstName} {m.lastName}
                       </Text>
-                      {m.email && !m.redacted ? (
+                      {m.meta ? (
                         <Text style={styles.meta} numberOfLines={1}>
-                          {m.email}
+                          {m.meta}
                         </Text>
                       ) : null}
                     </View>
@@ -150,6 +211,26 @@ export function MemberPickerSheet({
                 );
               })
             )}
+
+            {/* The way out, offered under the matches rather than as a second
+                field on the form behind this sheet. */}
+            {onUseTypedName && typed.length > 0 ? (
+              <Pressable
+                style={styles.freeTextRow}
+                onPress={() => onUseTypedName(typed)}
+                accessibilityRole="button"
+              >
+                <PenLine color={c.inkMuted} size={16} strokeWidth={1.5} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    Use “{typed}” as a name only
+                  </Text>
+                  <Text style={styles.meta}>
+                    They aren’t in the directory, so we’ll record the name without a record.
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
           </ScrollView>
 
           <Pressable style={styles.cancel} onPress={onClose}>
@@ -201,6 +282,16 @@ function makeStyles(c: ThemeColors) {
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.divider,
+  },
+  freeTextRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    marginTop: spacing.xs,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(93,63,211,0.05)',
   },
   name: { ...typography.body, color: c.ink, fontWeight: '500' },
   meta: { ...typography.meta, color: c.inkMuted },
