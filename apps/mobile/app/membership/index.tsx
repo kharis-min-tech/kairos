@@ -67,6 +67,9 @@ export default function MembershipScreen() {
   // Champion holds `membership:branch:read` on some branch. The branch-view
   // endpoint returns the union across every branch they cover.
   const isChampion = caps.has('membership:branch:read');
+  // A fellowship or department leader gets the same panel narrowed to their
+  // own people — the endpoint does the narrowing.
+  const isGroupLeader = caps.has('fellowship:read') || caps.has('department:read');
 
   const cohorts = useQuery({
     queryKey: ['membership', 'cohorts'],
@@ -83,7 +86,7 @@ export default function MembershipScreen() {
   const branchView = useQuery({
     queryKey: ['membership', 'branch-view'],
     queryFn: async () => (await api.membership.branchView()).data ?? null,
-    enabled: isChampion || isAdmin,
+    enabled: isChampion || isAdmin || isGroupLeader,
   });
 
   const express = useMutation({
@@ -139,8 +142,13 @@ export default function MembershipScreen() {
           leaving={withdrawInterest.isPending}
         />
 
-        {(isChampion || isAdmin) && branchView.data ? (
-          <ChampionBranchView view={branchView.data} styles={styles} c={c} />
+        {branchView.data ? (
+          <ChampionBranchView
+            view={branchView.data}
+            scope={isChampion || isAdmin ? 'branch' : 'group'}
+            styles={styles}
+            c={c}
+          />
         ) : null}
 
         {isAdmin ? (
@@ -341,27 +349,39 @@ function MyMembership({
 }
 
 /**
- * Champion / admin liaison view: their branch's waitlist and admitted
- * members side by side. Read-only.
+ * The waitlist and admitted members side by side, read-only. A Champion or
+ * Membership Admin is reading a branch; a fellowship/department leader is
+ * reading the people they lead, which `scope` labels.
  */
 function ChampionBranchView({
   view,
+  scope,
   styles,
   c,
 }: {
   view: NonNullable<Awaited<ReturnType<typeof api.membership.branchView>>['data']>;
+  scope: 'branch' | 'group';
   styles: ReturnType<typeof makeStyles>;
   c: ReturnType<typeof useColors>;
 }) {
   const { waitlist, enrolled } = view;
+  // A Champion is reading a branch; a group leader is reading the people they
+  // lead. Say which, so a partial list is never mistaken for the whole one.
+  const isGroup = scope === 'group';
   return (
     <Card style={styles.card}>
       <View style={styles.cardHead}>
         <Users color={c.primary} size={16} strokeWidth={1.8} />
-        <Text style={styles.cardTitle}>Branch waitlist ({waitlist.length})</Text>
+        <Text style={styles.cardTitle}>
+          {isGroup ? 'Your people waiting' : 'Branch waitlist'} ({waitlist.length})
+        </Text>
       </View>
       {waitlist.length === 0 ? (
-        <Text style={styles.metaText}>Nobody from your branch is currently waiting.</Text>
+        <Text style={styles.metaText}>
+          {isGroup
+            ? 'Nobody you lead is currently waiting.'
+            : 'Nobody from your branch is currently waiting.'}
+        </Text>
       ) : (
         waitlist.map((row) => (
           <View key={row.id} style={styles.branchRow}>
@@ -377,10 +397,16 @@ function ChampionBranchView({
 
       <View style={[styles.cardHead, { marginTop: spacing.md }]}>
         <GraduationCap color={c.primary} size={16} strokeWidth={1.8} />
-        <Text style={styles.cardTitle}>Admitted from your branch ({enrolled.length})</Text>
+        <Text style={styles.cardTitle}>
+          {isGroup ? 'Your people admitted' : 'Admitted from your branch'} ({enrolled.length})
+        </Text>
       </View>
       {enrolled.length === 0 ? (
-        <Text style={styles.metaText}>No one from your branch is currently enrolled.</Text>
+        <Text style={styles.metaText}>
+          {isGroup
+            ? 'No one you lead is currently enrolled.'
+            : 'No one from your branch is currently enrolled.'}
+        </Text>
       ) : (
         enrolled.map((row) => (
           <View key={row.enrollmentId} style={styles.branchRow}>

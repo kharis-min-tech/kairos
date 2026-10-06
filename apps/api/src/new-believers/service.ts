@@ -1,6 +1,7 @@
-import { eq, and, or, asc, desc, lt, sql, count } from 'drizzle-orm';
+import { eq, and, or, asc, desc, lt, sql, count, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
+import { resolveLeaderScopeMemberIds } from '../lib/leader-scope';
 import {
   newBelieverEnrollments,
   newBelieverSessions,
@@ -244,15 +245,26 @@ export async function listEnrollments(
       // No branch context for a non-admin/non-pastor → return empty rather than leak.
       return { data: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
     }
-    const [isNbLeader, hasTeacherRole] = await Promise.all([
+    const [isNbLeader, hasTeacherRole, ledMemberIds] = await Promise.all([
       isNewBelieversDeptLeader(db, auth.memberId, scopedBranchId),
       isNewBelieverTeacher(db, auth.memberId, scopedBranchId),
+      // A fellowship or department leader sees their own people's progress.
+      // Shepherding someone and being unable to see that they are three weeks
+      // into the New Believers pipeline is the same pastoral blindness the
+      // branch-level roles were given sight to avoid, one altitude down.
+      //
+      // Returns null for a caller who leads nothing, which here contributes
+      // no rows rather than meaning "no narrowing".
+      resolveLeaderScopeMemberIds(db, auth, scopedBranchId),
     ]);
     if (!isNbLeader && !hasTeacherRole) {
       const personaOr = or(
         eq(newBelieverEnrollments.memberId, auth.memberId),
         eq(newBelieverEnrollments.teacherId, auth.memberId),
         eq(newBelieverEnrollments.mentorId, auth.memberId),
+        ledMemberIds && ledMemberIds.length > 0
+          ? inArray(newBelieverEnrollments.memberId, ledMemberIds)
+          : undefined,
       );
       if (personaOr) personaConditions.push(personaOr);
     }

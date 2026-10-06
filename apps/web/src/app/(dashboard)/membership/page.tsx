@@ -51,6 +51,10 @@ export default function MembershipPage() {
   // don't need to name which branch here — the branch-view endpoint returns
   // the union of everything they cover, and admins see everything.
   const isChampion = caps.has('membership:branch:read');
+  // A fellowship or department leader gets the same panel narrowed to their
+  // own people — the endpoint does the narrowing, so the only question here
+  // is whether to ask for it at all.
+  const isGroupLeader = caps.has('fellowship:read') || caps.has('department:read');
 
   const [statusFilter, setStatusFilter] = useState<MembershipCohortStatus | 'all'>('all');
 
@@ -59,7 +63,7 @@ export default function MembershipPage() {
     isAdmin,
   );
   const { data: mine } = useMyMembership();
-  const { data: branchView } = useMembershipBranchView(isChampion || isAdmin);
+  const { data: branchView } = useMembershipBranchView(isChampion || isAdmin || isGroupLeader);
 
   const cohorts = data?.cohorts ?? [];
 
@@ -101,8 +105,8 @@ export default function MembershipPage() {
       {/* Champion + admin liaison view of the branch: waitlist plus
           currently-admitted members from their branch. Read-only. Not shown
           to plain members. */}
-      {(isChampion || isAdmin) && branchView ? (
-        <ChampionBranchView view={branchView} />
+      {branchView ? (
+        <ChampionBranchView view={branchView} scope={isChampion || isAdmin ? 'branch' : 'group'} />
       ) : null}
 
       {/* Cohort list is admin-only. Waitlist members shouldn't be sizing up
@@ -288,8 +292,20 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
  * expressing interest, admitting, marking, and graduating all belong to
  * either the candidate themselves (interest) or the membership admin team.
  */
-function ChampionBranchView({ view }: { view: MembershipBranchViewResponse }) {
+/**
+ * The same two lists at two different reaches. A Champion or Membership Admin
+ * is reading a branch; a fellowship/department leader is reading the people
+ * they lead. Say which, so nobody mistakes a partial list for the whole one.
+ */
+function ChampionBranchView({
+  view,
+  scope,
+}: {
+  view: MembershipBranchViewResponse;
+  scope: 'branch' | 'group';
+}) {
   const { waitlist, enrolled } = view;
+  const isGroup = scope === 'group';
   return (
     <Card>
       <CardContent className="space-y-5 py-5">
@@ -297,12 +313,14 @@ function ChampionBranchView({ view }: { view: MembershipBranchViewResponse }) {
           <div className="flex items-center gap-2">
             <Users className="size-4 text-[#5D3FD3]" />
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Branch waitlist ({waitlist.length})
+              {isGroup ? 'Your people waiting' : 'Branch waitlist'} ({waitlist.length})
             </h2>
           </div>
           {waitlist.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground/70">
-              Nobody from your branch is currently waiting.
+              {isGroup
+                ? 'Nobody you lead is currently waiting.'
+                : 'Nobody from your branch is currently waiting.'}
             </p>
           ) : (
             <ul className="mt-3 divide-y divide-border">
@@ -325,7 +343,7 @@ function ChampionBranchView({ view }: { view: MembershipBranchViewResponse }) {
           <div className="flex items-center gap-2">
             <GraduationCap className="size-4 text-[#5D3FD3]" />
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Admitted from your branch ({enrolled.length})
+              {isGroup ? 'Your people admitted' : 'Admitted from your branch'} ({enrolled.length})
             </h2>
           </div>
           {enrolled.length === 0 ? (
