@@ -99,7 +99,7 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     groups,
     streakWeeks,
     completeness,
-    mainPastorName,
+    mainPastor,
     recentActivity,
     pulse,
   ] = await Promise.all([
@@ -144,8 +144,8 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
       // The Main Pastor rides on today's service only — repeating the name
       // down every row this week is noise.
       subtitle:
-        isToday && mainPastorName
-          ? [s.branchName, mainPastorName].filter(Boolean).join(' · ')
+        isToday && mainPastor
+          ? [s.branchName, mainPastor.name].filter(Boolean).join(' · ')
           : s.branchName,
       at: s.serviceDate,
       refs: { serviceId: s.id },
@@ -237,11 +237,6 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     });
   }
 
-  const approvalCounts = new Map<string, number>();
-  for (const a of approvals) {
-    approvalCounts.set(a.kind, (approvalCounts.get(a.kind) ?? 0) + 1);
-  }
-
   const approvalRows: Array<[string, HomeTaskItem['kind'], string, string]> = [
     ['member_signup', 'member_approval', 'member approval', 'member approvals'],
     ['fellowship_join', 'fellowship_join', 'fellowship join request', 'fellowship join requests'],
@@ -249,16 +244,30 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
   ];
 
   for (const [sourceKind, taskKind, one, many] of approvalRows) {
-    const n = approvalCounts.get(sourceKind) ?? 0;
-    if (n === 0) continue;
+    const matching = approvals.filter((a) => a.kind === sourceKind);
+    if (matching.length === 0) continue;
+    // Carry the group id when every pending request is for the SAME group, so
+    // the row opens the page that actually shows them rather than a list the
+    // reader then has to search. Mixed groups have no single destination.
+    const groupIds = new Set(
+      matching.map((a) =>
+        'fellowshipId' in a ? a.fellowshipId : 'branchDeptId' in a ? a.branchDeptId : null,
+      ),
+    );
+    const only = groupIds.size === 1 ? [...groupIds][0] : null;
     needsYou.push({
       kind: taskKind,
       id: taskKind,
-      title: pluralise(n, one, many),
+      title: pluralise(matching.length, one, many),
       subtitle: null,
-      count: n,
+      count: matching.length,
       urgency: 'normal',
-      refs: {},
+      refs:
+        only && sourceKind === 'fellowship_join'
+          ? { fellowshipId: only }
+          : only && sourceKind === 'department_join'
+            ? { departmentId: only }
+            : {},
     });
   }
 
@@ -301,6 +310,11 @@ export async function getMyHome(db: Database, auth: AuthContext): Promise<MeHome
     needsYou,
     pulse,
     groups: groups as HomeGroupSummary[],
+    // Pastor is an IDENTITY on branch_leadership, not a system role or a grant
+    // — so the badge can prefer it over whatever authority the caller also
+    // happens to hold. A Main Pastor who is also a Branch System Admin was
+    // being labelled the latter.
+    viewerIsBranchMainPastor: mainPastor?.memberId === auth.memberId,
     recentActivity,
     gettingStarted,
     streakWeeks,

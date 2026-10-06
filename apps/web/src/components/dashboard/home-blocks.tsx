@@ -62,12 +62,14 @@ export function hrefForTask(item: HomeTaskItem): string {
   switch (item.kind) {
     case 'member_approval':
       return '/members/approval';
+    // The join requests live on the group's own page, so open it directly when
+    // every pending request is for the same group.
     case 'fellowship_join':
-      return '/fellowships';
+      return item.refs.fellowshipId ? `/fellowships/${item.refs.fellowshipId}` : '/fellowships';
     case 'department_join':
-      return '/departments';
+      return item.refs.departmentId ? `/departments/${item.refs.departmentId}` : '/departments';
     case 'followup_due':
-      return '/souls';
+      return '/follow-ups?queue=due';
     // Web has no standalone register page — a fellowship's meetings and their
     // attendance live on the fellowship detail page.
     case 'register_missing':

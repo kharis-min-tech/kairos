@@ -69,6 +69,7 @@ function home(overrides: Partial<MeHomeResponse> = {}): MeHomeResponse {
     needsYou: [],
     pulse: null,
     groups: [],
+    viewerIsBranchMainPastor: false,
     recentActivity: [],
     gettingStarted: [],
     streakWeeks: null,
@@ -176,7 +177,7 @@ describe('DashboardPage — altitude decides the arrangement', () => {
     expect(screen.getByText('London')).toBeInTheDocument();
   });
 
-  it('group altitude labels the tail block My groups and still has no pulse', () => {
+  it('group altitude labels the tail block Groups I lead and still has no pulse', () => {
     homeState = {
       data: home({
         altitude: 'group',
@@ -195,7 +196,9 @@ describe('DashboardPage — altitude decides the arrangement', () => {
       isError: false,
     };
     render(<DashboardPage />, { wrapper });
-    expect(screen.getByText('My groups')).toBeInTheDocument();
+    // "My groups" was ambiguous: this block lists groups the caller LEADS,
+    // while the profile lists groups they BELONG to.
+    expect(screen.getByText('Groups I lead')).toBeInTheDocument();
     expect(screen.getByText('24 members · last 18/24')).toBeInTheDocument();
     expect(screen.queryByText('Branch pulse')).not.toBeInTheDocument();
   });

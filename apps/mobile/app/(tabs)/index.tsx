@@ -100,7 +100,20 @@ export default function Home() {
         router.push('/concerns' as never);
         return;
       case 'followup_due':
-        router.push('/follow-ups');
+        router.push('/follow-ups?queue=due' as never);
+        return;
+      case 'fellowship_join':
+        router.push(
+          (item.refs.fellowshipId ? `/fellowships/${item.refs.fellowshipId}` : '/fellowships') as never,
+        );
+        return;
+      case 'department_join':
+        // Mobile shows a department's pending requests on its recruitment tab.
+        router.push(
+          (item.refs.departmentId
+            ? `/departments/${item.refs.departmentId}/recruitment`
+            : '/departments') as never,
+        );
         return;
       case 'first_timer_followup':
         router.push('/follow-ups?queue=first-timers' as never);
@@ -173,7 +186,7 @@ export default function Home() {
   );
   const tailBlock = (
     <GroupsBlock
-      label={altitude === 'church' ? 'All branches' : 'My groups'}
+      label={altitude === 'church' ? 'All branches' : 'Groups I lead'}
       groups={data?.groups ?? []}
       onPress={openGroup}
     />

@@ -591,9 +591,9 @@ export async function countBranchesWithoutPastor(db: Database): Promise<number> 
 export async function getBranchMainPastorName(
   db: Database,
   branchId: string,
-): Promise<string | null> {
+): Promise<{ memberId: string; name: string } | null> {
   const rows = await db
-    .select({ firstName: members.firstName, lastName: members.lastName })
+    .select({ id: members.id, firstName: members.firstName, lastName: members.lastName })
     .from(branchLeadership)
     .innerJoin(members, eq(branchLeadership.memberId, members.id))
     .where(
@@ -607,7 +607,8 @@ export async function getBranchMainPastorName(
 
   const row = rows[0];
   if (!row) return null;
-  return `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim() || null;
+  const name = `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim();
+  return name ? { memberId: row.id, name } : null;
 }
 
 // ── Recent activity ────────────────────────────────────────
