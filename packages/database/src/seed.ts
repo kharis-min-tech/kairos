@@ -518,6 +518,11 @@ async function seed() {
     mediaTeamRole,
     welcomeTeamRole,
     safeguardingLeadRole,
+    // Elision — the Safeguarding Head row is inserted but nobody is granted it
+    // in the seed yet. This bindings list is POSITIONAL, so a new row in
+    // `.values([...])` must get a slot here or every binding after it silently
+    // points at the wrong role.
+    /* safeguardingHeadRole */,
     branchSystemAdminRole,
     branchDataAdminRole,
     fellowshipLeaderRole,
@@ -535,7 +540,11 @@ async function seed() {
       { roleName: 'Welcome Team', description: 'Greets and assists visitors at services' },
       {
         roleName: 'Safeguarding Lead',
-        description: 'Authorised to view and manage safeguarding and health records for minors',
+        description: 'Authorised to view and manage safeguarding and health records for minors. Branch-scoped, and deliberately independent of branch leadership.',
+      },
+      {
+        roleName: 'Safeguarding Head',
+        description: 'Church-wide safeguarding oversight. Reads and acts on safeguarding concerns in every branch; the escalation path above each branch Safeguarding Lead. Carries no welfare, directory or branch-operations sight.',
       },
       {
         roleName: 'Branch System Admin',
@@ -1049,10 +1058,10 @@ async function seed() {
   // ── 6. Branch Leadership ────────────────────────────────────
   await db.insert(branchLeadership).values([
     { branchId: london!.id, memberId: pastorLondon!.id, role: 'Main Pastor', isCurrent: true },
-    { branchId: london!.id, memberId: leaderSarah!.id, role: 'Elder', isCurrent: true },
+    { branchId: london!.id, memberId: leaderSarah!.id, role: 'Minister', isCurrent: true },
     { branchId: manchester!.id, memberId: pastorManchester!.id, role: 'Main Pastor', isCurrent: true },
     { branchId: accra!.id, memberId: pastorAccra!.id, role: 'Main Pastor', isCurrent: true },
-    { branchId: accra!.id, memberId: leaderDavid!.id, role: 'Elder', isCurrent: true },
+    { branchId: accra!.id, memberId: leaderDavid!.id, role: 'Minister', isCurrent: true },
     { branchId: kumasi!.id, memberId: pastorKumasi!.id, role: 'Main Pastor', isCurrent: true },
   ]);
   console.log(`✓ 6 leadership assignments`);
@@ -1654,15 +1663,15 @@ async function seed() {
   const freetownAdults   = [regularMembers[4]!, ...inBranch(freetown!.id)];
 
   // ── 14b. Branch leadership backfill ──
-  const manchesterElder = findExtra('elijah.owoyele@kairos.local');
-  const kumasiElder     = findExtra('nana.amoah@kairos.local');
+  const manchesterMinister = findExtra('elijah.owoyele@kairos.local');
+  const kumasiMinister     = findExtra('nana.amoah@kairos.local');
   const freetownPastor  = findExtra('sahr.koroma@kairos.local');
-  const freetownElder   = findExtra('foday.sesay@kairos.local');
+  const freetownMinister   = findExtra('foday.sesay@kairos.local');
   await db.insert(branchLeadership).values([
-    { branchId: manchester!.id, memberId: manchesterElder.id, role: 'Elder',       startDate: '2023-01-15' },
-    { branchId: kumasi!.id,     memberId: kumasiElder.id,     role: 'Elder',       startDate: '2022-06-01' },
+    { branchId: manchester!.id, memberId: manchesterMinister.id, role: 'Minister',       startDate: '2023-01-15' },
+    { branchId: kumasi!.id,     memberId: kumasiMinister.id,     role: 'Minister',       startDate: '2022-06-01' },
     { branchId: freetown!.id,   memberId: freetownPastor.id,  role: 'Main Pastor', startDate: '2020-01-10' },
-    { branchId: freetown!.id,   memberId: freetownElder.id,   role: 'Elder',       startDate: '2021-03-05' },
+    { branchId: freetown!.id,   memberId: freetownMinister.id,   role: 'Minister',       startDate: '2021-03-05' },
   ]);
   console.log(`✓ 4 leadership backfill entries`);
 
@@ -1670,20 +1679,20 @@ async function seed() {
   const allDepts = await db.select().from(departments);
   const deptByName = new Map(allDepts.map((d) => [d.departmentName, d]));
   const newBranchDeptSpecs = [
-    { branch: manchester!, deptName: 'Choir',             lead: manchesterElder,                             description: 'Manchester choir under Elder Elijah.' },
+    { branch: manchester!, deptName: 'Choir',             lead: manchesterMinister,                             description: 'Manchester choir under Minister Elijah.' },
     { branch: manchester!, deptName: 'Ushers',            lead: findExtra('hannah.peters@kairos.local'),     description: 'Manchester welcome and seating team.' },
     { branch: manchester!, deptName: 'Sanctuary Keepers', lead: findExtra('micah.odumosu@kairos.local'),     description: 'Manchester sanctuary care.' },
     { branch: accra!,      deptName: 'Choir',             lead: findExtra('kojo.boateng@kairos.local'),      description: 'Accra choir ministry.' },
     { branch: accra!,      deptName: 'Sound',             lead: findExtra('kwesi.frimpong@kairos.local'),    description: 'Accra sound engineering.' },
     // (accra, Admin) already created by the smoke seed above — do not re-add.
     { branch: kumasi!,     deptName: 'Choir',             lead: findExtra('kwabena.osei@kairos.local'),      description: 'Kumasi choir ministry.' },
-    { branch: kumasi!,     deptName: 'Ushers',            lead: kumasiElder,                                 description: 'Kumasi ushers under Elder Nana.' },
+    { branch: kumasi!,     deptName: 'Ushers',            lead: kumasiMinister,                                 description: 'Kumasi ushers under Minister Nana.' },
     { branch: kumasi!,     deptName: 'Admin',             lead: findExtra('adjoa.antwi@kairos.local'),       description: 'Kumasi admin desk.' },
     { branch: freetown!,   deptName: 'Choir',             lead: findExtra('adama.turay@kairos.local'),       description: 'Freetown choir.' },
-    { branch: freetown!,   deptName: 'Admin',             lead: freetownElder,                               description: 'Freetown admin desk.' },
+    { branch: freetown!,   deptName: 'Admin',             lead: freetownMinister,                               description: 'Freetown admin desk.' },
     // Follow-up teams — the owners of first-timer and no-group follow-ups.
     { branch: london!,     deptName: 'Follow-Up Team',    lead: leaderSarah!,                                description: 'London follow-up team: first-timers and members not yet in a group.' },
-    { branch: manchester!, deptName: 'Follow-Up Team',    lead: manchesterElder,                             description: 'Manchester follow-up team.' },
+    { branch: manchester!, deptName: 'Follow-Up Team',    lead: manchesterMinister,                             description: 'Manchester follow-up team.' },
   ];
   const newBranchDepts = await db.insert(branchDepartments).values(
     newBranchDeptSpecs.map((s) => ({
@@ -1731,16 +1740,16 @@ async function seed() {
     }));
   };
   const dmRows = [
-    ...buildDmRows(choirManchester,     manchesterElder,                             manchesterAdults, 90),
+    ...buildDmRows(choirManchester,     manchesterMinister,                             manchesterAdults, 90),
     ...buildDmRows(ushersManchester,    findExtra('hannah.peters@kairos.local'),     manchesterAdults, 75),
     ...buildDmRows(sanctuaryManchester, findExtra('micah.odumosu@kairos.local'),     manchesterAdults, 60),
     ...buildDmRows(choirAccra,          findExtra('kojo.boateng@kairos.local'),      accraAdults,      100),
     ...buildDmRows(soundAccra,          findExtra('kwesi.frimpong@kairos.local'),    accraAdults,      80),
     ...buildDmRows(choirKumasi,         findExtra('kwabena.osei@kairos.local'),      kumasiAdults,     90),
-    ...buildDmRows(ushersKumasi,        kumasiElder,                                 kumasiAdults,     70),
+    ...buildDmRows(ushersKumasi,        kumasiMinister,                                 kumasiAdults,     70),
     ...buildDmRows(adminKumasi,         findExtra('adjoa.antwi@kairos.local'),       kumasiAdults,     110),
     ...buildDmRows(choirFreetown,       findExtra('adama.turay@kairos.local'),       freetownAdults,   80),
-    ...buildDmRows(adminFreetown,       freetownElder,                               freetownAdults,   130),
+    ...buildDmRows(adminFreetown,       freetownMinister,                               freetownAdults,   130),
     // Extend existing ushersAccra with more members so its rota pool has depth.
     { branchDepartmentId: ushersAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   joinDate: dateStr(daysAgo(72)), membershipStatus: 'active' as const },
     { branchDepartmentId: ushersAccra!.id, memberId: findExtra('kwesi.frimpong@kairos.local').id, joinDate: dateStr(daysAgo(65)), membershipStatus: 'active' as const },
@@ -1774,15 +1783,15 @@ async function seed() {
     )}`;
   const [ushersAccraOutfit, ushersKumasiOutfit, choirManchesterOutfit] = await db.insert(departmentUniformOutfits).values([
     { branchDepartmentId: ushersAccra!.id,     name: 'Sunday burgundy', imageUrl: swatch('#800020'), genderTarget: 'Unisex', notes: 'Full Sunday service dress', uploadedById: leaderDavid!.id },
-    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: swatch('#000080'), genderTarget: 'Unisex',                                     uploadedById: kumasiElder.id },
-    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: swatch('#4169e1'), genderTarget: 'Unisex',                                     uploadedById: manchesterElder.id },
+    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: swatch('#000080'), genderTarget: 'Unisex',                                     uploadedById: kumasiMinister.id },
+    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: swatch('#4169e1'), genderTarget: 'Unisex',                                     uploadedById: manchesterMinister.id },
   ]).returning();
   await db.insert(departmentUniformSchedule).values([
     { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
     { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
-    { branchDepartmentId: ushersKumasi.id,     outfitId: ushersKumasiOutfit!.id,    serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: kumasiElder.id },
-    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: manchesterElder.id },
-    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: manchesterElder.id },
+    { branchDepartmentId: ushersKumasi.id,     outfitId: ushersKumasiOutfit!.id,    serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: kumasiMinister.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: manchesterMinister.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: manchesterMinister.id },
   ]);
   console.log(`✓ 3 more uniforms + 5 schedule entries`);
 
@@ -2007,12 +2016,12 @@ async function seed() {
   const nbSpecs = [
     { member: findExtra('amina.bello@kairos.local'),     branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-2',  enrolledDaysAgo: 21 },
     { member: findExtra('ruth.adeleke@kairos.local'),    branch: london!,     teacher: pastorLondon!,     mentor: leaderSarah!,    stage: 'session-3',  enrolledDaysAgo: 35 },
-    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: pastorManchester!, mentor: manchesterElder, stage: 'session-1',  enrolledDaysAgo: 10 },
-    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: pastorManchester!, mentor: manchesterElder, stage: 'session-4',  enrolledDaysAgo: 42 },
+    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: pastorManchester!, mentor: manchesterMinister, stage: 'session-1',  enrolledDaysAgo: 10 },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: pastorManchester!, mentor: manchesterMinister, stage: 'session-4',  enrolledDaysAgo: 42 },
     { member: findExtra('afia.sarpong@kairos.local'),    branch: accra!,      teacher: pastorAccra!,      mentor: leaderDavid!,    stage: 'completed',  enrolledDaysAgo: 60 },
-    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: pastorKumasi!,     mentor: kumasiElder,     stage: 'session-1',  enrolledDaysAgo: 7  },
-    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: freetownPastor,    mentor: freetownElder,   stage: 'session-2',  enrolledDaysAgo: 21 },
-    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: freetownPastor,    mentor: freetownElder,   stage: 'integrated', enrolledDaysAgo: 90 },
+    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: pastorKumasi!,     mentor: kumasiMinister,     stage: 'session-1',  enrolledDaysAgo: 7  },
+    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: freetownPastor,    mentor: freetownMinister,   stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: freetownPastor,    mentor: freetownMinister,   stage: 'integrated', enrolledDaysAgo: 90 },
   ];
   const stageOrder = ['session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'];
   const newBelievers = await db.insert(newBelieverEnrollments).values(
@@ -2037,7 +2046,7 @@ async function seed() {
   await db.insert(mentorFollowups).values([
     { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Great session — reading through Genesis this week', contactedAt: daysAgo(6) },
     { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Confirmed for Sunday class',                        contactedAt: daysAgo(1) },
-    { enrollmentId: newBelievers[3]!.id, mentorMemberId: manchesterElder.id, note: 'Ready for baptism conversation',                    contactedAt: daysAgo(3) },
+    { enrollmentId: newBelievers[3]!.id, mentorMemberId: manchesterMinister.id, note: 'Ready for baptism conversation',                    contactedAt: daysAgo(3) },
     { enrollmentId: newBelievers[4]!.id, mentorMemberId: leaderDavid!.id,    note: 'Encouraged to join Ushers',                         contactedAt: daysAgo(5) },
   ]);
 
