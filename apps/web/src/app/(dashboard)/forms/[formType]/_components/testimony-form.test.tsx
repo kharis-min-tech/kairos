@@ -135,7 +135,7 @@ describe('TestimonyForm', () => {
     render(<TestimonyForm />, { wrapper });
 
     await user.type(screen.getByLabelText(/Find the person giving the testimony/), 'ada');
-    await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
     // Identity fields are pre-filled by the link.
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
     await fillRequiredExceptIdentity(user);
@@ -158,7 +158,7 @@ describe('TestimonyForm', () => {
 
     // Link a member first.
     await user.type(screen.getByLabelText(/Find the person giving the testimony/), 'ada');
-    await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
     expect(screen.getByLabelText(/First name/)).toHaveValue('Ada');
 
     // Now flip anonymity to Yes.

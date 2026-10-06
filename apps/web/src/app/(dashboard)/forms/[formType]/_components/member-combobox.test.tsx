@@ -17,7 +17,7 @@ vi.mock('@/hooks/use-forms', () => ({
   useFormMemberSearch: () => ({ data: searchResults, isFetching: searching }),
 }));
 
-import { MemberPickOrType } from './member-pick-or-type';
+import { MemberCombobox, MemberPickOrType } from './member-combobox';
 
 const ADA: FormMemberSearchResult = {
   id: 'm-7',
@@ -88,6 +88,114 @@ beforeEach(() => {
   vi.clearAllMocks();
   searchResults = [];
   searching = false;
+});
+
+// Coverage inherited from `MemberSearchLink`, which this control replaced as the
+// one way to find a person. Those cases were about the reference-only mode — the
+// subject link on every form — so they belong here now.
+describe('MemberCombobox — reference-only (the subject link)', () => {
+  function renderSubject(props: Partial<React.ComponentProps<typeof MemberCombobox>> = {}) {
+    return render(
+      <MemberCombobox
+        label="Find an existing person"
+        helpText="Search by name or phone. Leave blank to create a new contact."
+        memberId=""
+        onPick={vi.fn()}
+        {...props}
+      />,
+      { wrapper },
+    );
+  }
+
+  it('renders the labelled control and its help text', () => {
+    renderSubject();
+    expect(screen.getByLabelText(/Find an existing person/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Search by name or phone\. Leave blank to create a new contact\./),
+    ).toBeInTheDocument();
+  });
+
+  it('does not search on fewer than 2 characters', async () => {
+    searchResults = [ADA];
+    const user = userEvent.setup();
+    renderSubject();
+    await user.type(screen.getByLabelText(/Find an existing person/), 'a');
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    expect(screen.getByText(/Keep typing to search the directory/)).toBeInTheDocument();
+  });
+
+  it('lists matches once 2+ characters are typed, including one with no phone', async () => {
+    searchResults = [
+      ADA,
+      { id: 'm-10', firstName: 'Adam', lastName: 'Smith', phone: null, memberType: 'attendee' },
+    ];
+    const user = userEvent.setup();
+    renderSubject();
+    await user.type(screen.getByLabelText(/Find an existing person/), 'ad');
+    expect(await screen.findByRole('option', { name: /^Ada Lovelace/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^Adam Smith/ })).toBeInTheDocument();
+    expect(screen.getByText(/No phone/)).toBeInTheDocument();
+  });
+
+  it('shows a Searching… state while fetching', async () => {
+    searching = true;
+    const user = userEvent.setup();
+    renderSubject();
+    await user.type(screen.getByLabelText(/Find an existing person/), 'ad');
+    expect(await screen.findByText(/Searching…/)).toBeInTheDocument();
+  });
+
+  it('says so when nothing in the branch matches', async () => {
+    const user = userEvent.setup();
+    renderSubject();
+    await user.type(screen.getByLabelText(/Find an existing person/), 'zz');
+    expect(await screen.findByText(/No one in your branch matches “zz”/)).toBeInTheDocument();
+  });
+
+  it('never offers the plain-name fallback — a name we can’t route to is worth nothing here', async () => {
+    const user = userEvent.setup();
+    renderSubject();
+    await user.type(screen.getByLabelText(/Find an existing person/), 'zz');
+    expect(screen.queryByText(/as a name only/)).not.toBeInTheDocument();
+  });
+
+  it('hands the full match back on pick, so the caller can pre-fill from it', async () => {
+    const onPick = vi.fn();
+    searchResults = [ADA];
+    const user = userEvent.setup();
+    renderSubject({ onPick });
+    await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
+    await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
+    expect(onPick).toHaveBeenCalledWith(ADA);
+  });
+
+  it('calls onPick(null) when the link is removed', async () => {
+    const onPick = vi.fn();
+    const user = userEvent.setup();
+    renderSubject({ memberId: 'm-9', onPick });
+    await user.click(screen.getByRole('button', { name: /Change find an existing person/i }));
+    expect(onPick).toHaveBeenCalledWith(null);
+  });
+
+  it('shows the linked note once somebody is linked', () => {
+    renderSubject({ memberId: 'm-9', linkedNote: 'Linked to an existing person.' });
+    expect(screen.getByText('Linked to an existing person.')).toBeInTheDocument();
+  });
+
+  it('locks the control and explains why when disabled', () => {
+    renderSubject({
+      memberId: 'm-9',
+      disabled: true,
+      disabledHint: 'An anonymous testimony won’t be linked.',
+    });
+    // Disabled wins over the linked token: the question stays visible and
+    // locked rather than showing a link that submit will discard.
+    expect(screen.getByLabelText(/Find an existing person/)).toBeDisabled();
+    expect(screen.getByText('An anonymous testimony won’t be linked.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Change find an existing person/i }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('MemberPickOrType', () => {
