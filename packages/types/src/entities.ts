@@ -879,6 +879,11 @@ export interface BabyDedicationPayload {
   gender?: 'Male' | 'Female';
   fathersName: string;
   mothersName: string;
+  /**
+   * Retired 2026-10-07. Derived from the parent member references instead —
+   * see the note on the dedication form's parents section. Dedications
+   * captured before that still carry it.
+   */
   parentsAreMembers?: boolean;
   parentContactPhone: string;
   parentContactEmail?: string;

@@ -12,6 +12,7 @@ vi.mock('@/hooks/use-forms', () => ({
   useMyFormCapabilities: () => ({ data: capabilities, isLoading: false }),
 }));
 
+import { FORM_DEFINITIONS, FORM_TYPES } from '@kairos/types';
 import FormsLandingPage from './page';
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -30,9 +31,13 @@ describe('FormsLandingPage', () => {
   it('shows the form cards to every caller', () => {
     capabilities = { visibleFormTypes: [], canSeeAttendees: false };
     render(<FormsLandingPage />, { wrapper });
-    // The 6 form cards render regardless of admin access.
-    expect(screen.getAllByText(/Altar Call/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Baptism/i).length).toBeGreaterThan(0);
+    // Every form card renders regardless of admin access, each one titled and
+    // described by its own definition — the single source both platforms read.
+    for (const type of FORM_TYPES) {
+      const definition = FORM_DEFINITIONS[type];
+      expect(screen.getByText(definition.title)).toBeInTheDocument();
+      expect(screen.getByText(definition.description!)).toBeInTheDocument();
+    }
   });
 
   it('hides the Administration section for a caller with no visible forms and no attendees', () => {

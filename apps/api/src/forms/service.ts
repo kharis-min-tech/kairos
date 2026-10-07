@@ -1131,6 +1131,8 @@ const EXPORT_COLUMNS: Record<string, string[]> = {
     'fathersName',
     'mothersName',
     'parentContactPhone',
+    // Derived below from the parent member references, which is where the
+    // answer actually lives now — the checkbox that used to store it is gone.
     'parentsAreMembers',
     'parentContactEmail',
     'preferredDedicationDate',
@@ -1211,6 +1213,15 @@ export async function exportSubmissionsToCSV(
       if (col === 'childrenCount') {
         const kids = row.payload?.children;
         return Array.isArray(kids) ? kids.length : 0;
+      }
+      // Derived column — a parent is a member if they were filed as a member
+      // reference rather than a typed name. Dedications captured before the
+      // checkbox was removed fall back to what they stored, because the web
+      // form of that era recorded names only and has no reference to read.
+      if (col === 'parentsAreMembers') {
+        const hasRef = !!row.payload?.fatherMemberId || !!row.payload?.motherMemberId;
+        if (hasRef) return true;
+        return row.payload?.parentsAreMembers ?? false;
       }
       return row.payload?.[col];
     });

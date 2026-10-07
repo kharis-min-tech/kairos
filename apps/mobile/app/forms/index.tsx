@@ -21,53 +21,25 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
-import { FORM_DEFINITIONS, type FormType } from '@kairos/types';
+import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
 
-interface FormTile {
-  type: FormType;
-  title: string;
-  description: string;
-  Icon: LucideIcon;
-}
-
-const TILES: FormTile[] = [
-  {
-    type: 'first_time_visitor',
-    title: 'First-Time Visitor',
-    description: 'Welcome a first-time visitor and capture their details for follow-up.',
-    Icon: UserPlus,
-  },
-  {
-    type: 'altar_call',
-    title: 'New Believers Class',
-    description: 'Register someone who responded to an altar call.',
-    Icon: Flame,
-  },
-  {
-    type: 'baptism',
-    title: 'Baptism',
-    description: 'Capture a request to be baptised.',
-    Icon: Droplets,
-  },
-  {
-    type: 'testimony',
-    title: 'Testimony',
-    description: 'Share a testimony of what God has done.',
-    Icon: MessageSquareQuote,
-  },
-  {
-    type: 'baby_naming',
-    title: 'Baby Naming',
-    description: 'Request a baby naming ceremony.',
-    Icon: Baby,
-  },
-  {
-    type: 'baby_dedication',
-    title: 'Baby Dedication',
-    description: 'Request a baby dedication.',
-    Icon: HandHeart,
-  },
-];
+/*
+ * Icons only. Each form's title and description come from FORM_DEFINITIONS —
+ * the same descriptor the form itself renders — so the tile you tap and the
+ * screen you land on can no longer disagree. They used to, in three places:
+ * this array, web's FORM_META and the definition.
+ *
+ * A lucide-react-native component is the one thing that cannot move into the
+ * shared definition, since web needs the lucide-react equivalent.
+ */
+const FORM_ICONS: Record<FormType, LucideIcon> = {
+  first_time_visitor: UserPlus,
+  altar_call: Flame,
+  baptism: Droplets,
+  testimony: MessageSquareQuote,
+  baby_naming: Baby,
+  baby_dedication: HandHeart,
+};
 
 export default function FormsLanding() {
   const styles = useThemedStyles(makeStyles);
@@ -93,23 +65,21 @@ export default function FormsLanding() {
         </View>
 
         <View style={styles.tileList}>
-          {TILES.map((tile) => {
-            const declarative = !!FORM_DEFINITIONS[tile.type];
+          {FORM_TYPES.map((type) => {
+            const definition = FORM_DEFINITIONS[type];
+            const Icon = FORM_ICONS[type];
             return (
-              <Pressable
-                key={tile.type}
-                onPress={() => router.push(`/forms/${tile.type}`)}
-              >
+              <Pressable key={type} onPress={() => router.push(`/forms/${type}`)}>
                 <Card padding="md" style={styles.tileCard}>
                   <View style={styles.iconTile}>
-                    <tile.Icon color={c.primary} size={22} strokeWidth={1.5} />
+                    <Icon color={c.primary} size={22} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.tileTitle}>{tile.title}</Text>
-                    <Text style={styles.tileDesc}>{tile.description}</Text>
-                    <Text style={styles.tileCta}>
-                      {declarative ? 'Open form' : 'View on web'}
-                    </Text>
+                    <Text style={styles.tileTitle}>{definition.title}</Text>
+                    <Text style={styles.tileDesc}>{definition.description}</Text>
+                    {/* Every form renders from its definition now, so there is
+                        no longer a "view on web" case. */}
+                    <Text style={styles.tileCta}>Open form</Text>
                   </View>
                   <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
                 </Card>

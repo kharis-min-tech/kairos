@@ -22,14 +22,9 @@ import {
   useExportFormSubmissions,
   useMyFormCapabilities,
 } from '@/hooks/use-forms';
-import {
-  FORM_META,
-  FORM_TYPES,
-  STATUS_META,
-  STATUS_OPTIONS,
-  subjectName,
-} from '../_lib/form-meta';
+import { STATUS_META, STATUS_OPTIONS, subjectName } from '../_lib/form-meta';
 import { ReviewDrawer } from './_components/review-drawer';
+import { FORM_DEFINITIONS, FORM_TYPES } from '@kairos/types';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
 
 export default function SubmissionsPage() {
@@ -127,7 +122,7 @@ export default function SubmissionsPage() {
                 { value: '', label: 'All forms' },
                 ...FORM_TYPES
                   .filter((t) => visibleSet.includes(t))
-                  .map((t) => ({ value: t, label: FORM_META[t].title })),
+                  .map((t) => ({ value: t, label: FORM_DEFINITIONS[t].title })),
               ]}
             />
           </div>
@@ -201,7 +196,7 @@ export default function SubmissionsPage() {
                         subjectName(payload)
                       )}
                     </TableCell>
-                    <TableCell>{FORM_META[s.formType].title}</TableCell>
+                    <TableCell>{FORM_DEFINITIONS[s.formType].title}</TableCell>
                     <TableCell>
                       {s.branchName ? (
                         <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-xs font-medium text-[#5D3FD3]">

@@ -375,7 +375,7 @@ describe('boolean fields (explicit yes/no)', () => {
     expect(values.shareAnonymously).toBeUndefined();
     expect(values.happyToShareSunday).toBeUndefined();
     // A plain checkbox still starts false — it is an opt-in, not a question.
-    expect(initialFormValues(BABY_DEDICATION_FORM, FIXED).values.parentsAreMembers).toBe(
+    expect(initialFormValues(FIRST_TIME_VISITOR_FORM, FIXED).values.broughtChildren).toBe(
       false,
     );
   });

@@ -5,9 +5,8 @@ export const runtime = 'edge';
 import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@kairos/ui';
-import { isFormType } from '../_lib/form-meta';
 import { DeclarativeForm } from './_components/declarative-form';
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { FORM_DEFINITIONS, isFormType } from '@kairos/types';
 
 /**
  * Every form renders from its definition.
