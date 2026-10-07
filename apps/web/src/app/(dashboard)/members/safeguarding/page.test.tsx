@@ -31,7 +31,7 @@ const noGuardian: UnguardedMinor = {
   dateOfBirth: '2015-04-10',
   branchName: 'Central',
   guardianStatus: 'none',
-  guardianName: null,
+  guardianNames: null,
 };
 
 const inactiveGuardian: UnguardedMinor = {
@@ -41,7 +41,7 @@ const inactiveGuardian: UnguardedMinor = {
   dateOfBirth: '2017-09-01',
   branchName: 'Riverside',
   guardianStatus: 'inactive',
-  guardianName: 'Mary Stone',
+  guardianNames: 'Mary Stone, Joseph Stone',
 };
 
 beforeEach(() => {

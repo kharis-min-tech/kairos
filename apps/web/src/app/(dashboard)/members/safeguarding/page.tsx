@@ -136,7 +136,7 @@ function GuardianChip({ minor }: { minor: UnguardedMinor }) {
   }
   return (
     <span className="flex-shrink-0 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
-      Guardian inactive{minor.guardianName ? ` · ${minor.guardianName}` : ''}
+      Guardian inactive{minor.guardianNames ? ` · ${minor.guardianNames}` : ''}
     </span>
   );
 }

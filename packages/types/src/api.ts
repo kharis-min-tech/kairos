@@ -406,8 +406,10 @@ export interface UnguardedMinor {
   lastName: string;
   dateOfBirth: string | null;
   branchName: string;
+  /** 'none' = nobody was ever named. 'inactive' = everyone named is deactivated. */
   guardianStatus: 'none' | 'inactive';
-  guardianName: string | null;
+  /** Comma-separated, primary first. A minor may have more than one. */
+  guardianNames: string | null;
 }
 
 // Task #4 Phase B: minor surfaced for SG-Lead review (dormant child shell).

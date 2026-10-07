@@ -916,8 +916,11 @@ describe('getMember — minor redaction', () => {
   });
 
   it('guardian sees their own child full record', async () => {
-    // select 1: member row; guardian match short-circuits capability lookup
-    setupSelect([minorMember]);
+    // select 1: member row; 2: viewer SG-Lead branches → none;
+    // 3: the members this viewer guards → includes this child.
+    // The guardian link is a row now, not a column on the member, so it costs
+    // a query instead of a short-circuit.
+    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', guardianAuth);
     expect(result.redacted).toBe(false);
     expect(result.phone).toBe('555000');
@@ -928,7 +931,7 @@ describe('getMember — minor redaction', () => {
     // The guardian link is branch-independent — a guardian scoped to another
     // branch must not be locked out of their own child's record.
     const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
-    setupSelect([minorMember]); // guardian match short-circuits, no capability query
+    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', crossBranchGuardian);
     expect(result.redacted).toBe(false);
     expect(result.dateOfBirth).toBe('2016-01-01');
@@ -996,8 +999,9 @@ describe('getMember — minor redaction', () => {
 describe('listMembers — minor redaction', () => {
   it('redacts in-list minors for an unrelated in-branch leader', async () => {
     const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01' };
-    // select 1: viewer SG-Lead branches → none; select 2: rows; select 3: count
-    setupSelectSequence([], [minorMember, adult], [{ count: 2 }]);
+    // select 1: viewer SG-Lead branches → none; 2: members they guard → none;
+    // 3: rows; 4: count
+    setupSelectSequence([], [], [minorMember, adult], [{ count: 2 }]);
     const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
     const minorRow = result.data.find((m) => m.id === 'minor-1')!;
     const adultRow = result.data.find((m) => m.id === 'adult-1')!;
@@ -1011,8 +1015,9 @@ describe('listMembers — minor redaction', () => {
   });
 
   it('does not redact for a guardian viewing their own child in the list', async () => {
-    // guardian has no SG-Lead role; select 1: SG branches → none; select 2: rows; select 3: count
-    setupSelectSequence([], [minorMember], [{ count: 1 }]);
+    // guardian has no SG-Lead role; 1: SG branches → none; 2: the members they
+    // guard → this child; 3: rows; 4: count
+    setupSelectSequence([], [{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
     const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
     const minorRow = result.data[0]!;
     expect(minorRow.redacted).toBe(false);
@@ -1159,15 +1164,17 @@ describe('upsertHealthRecord', () => {
 });
 
 describe('listUnguardedMinors', () => {
+  // The query now counts guardian LINKS and aggregates their names, rather
+  // than left-joining one column: "nobody was ever named" and "everyone named
+  // is deactivated" are different rows, and a child can have several.
   const unguardedRow = {
     id: 'minor-1',
     firstName: 'Lily',
     lastName: 'Thompson',
     dateOfBirth: '2016-01-01',
     branchName: 'Lagos Branch',
-    guardianMemberId: null,
-    guardianFirstName: null,
-    guardianLastName: null,
+    linkedGuardianCount: 0,
+    guardianNames: null,
   };
 
   it('admin gets the list (no capability query) with guardianStatus "none"', async () => {
@@ -1175,16 +1182,17 @@ describe('listUnguardedMinors', () => {
     const result = await listUnguardedMinors(mockDb, adminAuth, {});
     expect(result).toHaveLength(1);
     expect(result[0]!.guardianStatus).toBe('none');
-    expect(result[0]!.guardianName).toBeNull();
+    expect(result[0]!.guardianNames).toBeNull();
   });
 
-  it('maps an inactive-guardian row to guardianStatus "inactive" with the name', async () => {
+  it('maps an inactive-guardian row to guardianStatus "inactive" with the names', async () => {
     setupSelect([
-      { ...unguardedRow, guardianMemberId: guardianId, guardianFirstName: 'Emma', guardianLastName: 'Thompson' },
+      { ...unguardedRow, linkedGuardianCount: 2, guardianNames: 'Emma Thompson, Joseph Thompson' },
     ]);
     const result = await listUnguardedMinors(mockDb, adminAuth, {});
     expect(result[0]!.guardianStatus).toBe('inactive');
-    expect(result[0]!.guardianName).toBe('Emma Thompson');
+    // Both named guardians, primary first — the point of the aggregate.
+    expect(result[0]!.guardianNames).toBe('Emma Thompson, Joseph Thompson');
   });
 
   it('allows a Safeguarding Lead scoped to the branch', async () => {

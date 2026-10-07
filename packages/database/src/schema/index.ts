@@ -4,6 +4,7 @@ export { members, membersRelations } from './members';
 export { branchLeadership, branchLeadershipRelations } from './branch-leadership';
 export { roles, rolesRelations } from './roles';
 export { memberRoles, memberRolesRelations } from './member-roles';
+export { memberGuardians, memberGuardiansRelations } from './member-guardians';
 export { fellowships, fellowshipsRelations } from './fellowships';
 export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-members';
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
