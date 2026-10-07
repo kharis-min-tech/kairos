@@ -65,9 +65,11 @@ export const testimonyPayloadSchema = z.object({
 
 
 /**
- * Each parent is satisfied by a member reference OR a typed name. Both forms
- * ask whether the parents are members, so either is legitimate — but where
- * they ARE members we want the reference, so the record can be followed up.
+ * Each parent is satisfied by a member reference OR a typed name. A parent may
+ * genuinely not be a member, so either is legitimate — but where they ARE one
+ * we want the reference, so the record can be followed up. Which half arrived
+ * is also the answer to "are the parents members", and the only answer worth
+ * trusting: it is the same act that recorded who they are.
  */
 function requireParent(
   v: { fathersName?: string; fatherMemberId?: string; mothersName?: string; motherMemberId?: string },
@@ -112,7 +114,6 @@ export const babyDedicationPayloadSchema = z.object({
   mothersName: z.string().max(200).optional(),
   motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
-  parentsAreMembers: z.boolean().optional(),
   parentContactEmail: z.string().email().optional(),
   preferredDedicationDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
@@ -245,7 +246,9 @@ export type TestimonyPayload = z.infer<typeof testimonyPayloadSchema>;
 export type BabyNamingPayload = z.infer<typeof babyNamingPayloadSchema>;
 export type BabyDedicationPayload = z.infer<typeof babyDedicationPayloadSchema>;
 /** Baby naming and dedication share the fields the service touches (babyFullName,
- *  dateOfBirth, gender, parentContactPhone); dedication adds parentsAreMembers. */
+ *  dateOfBirth, gender, parentContactPhone). They now declare the same fields:
+ *  dedication's `parentsAreMembers` checkbox was removed in favour of reading
+ *  the parent member references, and its preferred-date key differs in name. */
 export type BabyPayload = BabyNamingPayload | BabyDedicationPayload;
 
 /** Map of formType → payload schema. Used to validate the submit body

@@ -1,69 +1,11 @@
-import type { FormType, FormSubmissionStatus } from '@kairos/types';
+import type { FormSubmissionStatus } from '@kairos/types';
 
-export const FORM_TYPES: FormType[] = [
-  'first_time_visitor',
-  'altar_call',
-  'baptism',
-  'testimony',
-  'baby_naming',
-  'baby_dedication',
-];
-
-export function isFormType(value: string): value is FormType {
-  return (FORM_TYPES as string[]).includes(value);
-}
-
-export interface FormMetaEntry {
-  type: FormType;
-  title: string;
-  description: string;
-}
-
-export const FORM_META: Record<FormType, FormMetaEntry> = {
-  first_time_visitor: {
-    type: 'first_time_visitor',
-    title: 'First-Time Visitor',
-    description: 'Welcome a first-time visitor and capture their details for follow-up.',
-  },
-  altar_call: {
-    type: 'altar_call',
-    title: 'New Believers Class',
-    description: 'Register someone who responded to an altar call into the New Believers programme.',
-  },
-  baptism: {
-    type: 'baptism',
-    title: 'Baptism',
-    description: 'Capture a request to be baptised.',
-  },
-  testimony: {
-    type: 'testimony',
-    title: 'Testimony',
-    description: 'Share a testimony of what God has done.',
-  },
-  baby_naming: {
-    type: 'baby_naming',
-    title: 'Baby Naming',
-    description: 'Request a baby naming ceremony.',
-  },
-  baby_dedication: {
-    type: 'baby_dedication',
-    title: 'Baby Dedication',
-    description: 'Request a baby dedication.',
-  },
-};
-
-export const TESTIMONY_CATEGORIES = [
-  'Business',
-  'Career/Job',
-  'Deliverance',
-  'Education',
-  'Financial',
-  'Health/Healing',
-  'Marriage/Family',
-  'Salvation',
-  'Unusual Favour',
-  'Other',
-] as const;
+/*
+ * Form titles, descriptions, the ordered type list and `isFormType` used to
+ * live here. They now live beside the form definitions in `@kairos/types`,
+ * which is the only place both web and mobile can read — see FORM_DEFINITIONS.
+ * What is left here is genuinely web-only presentation.
+ */
 
 // Status → label + Modern Sanctuary colour tokens.
 export const STATUS_META: Record<

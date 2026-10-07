@@ -37,12 +37,12 @@ import {
 } from '@kairos/ui-native';
 import {
   FORM_DEFINITIONS,
-  FormType,
   buildFormPayload,
   declaredFieldIds,
   emptyFormRow,
   evaluateCondition,
   initialFormValues,
+  isFormType,
   memberReferenceState,
   validateForm,
   type FormDefinition,
@@ -63,11 +63,6 @@ const YES_NO = [
   { value: 'Yes', label: 'Yes' },
   { value: 'No', label: 'No' },
 ];
-
-function isFormType(value: string | undefined): value is FormType {
-  if (!value) return false;
-  return (Object.values(FormType) as string[]).includes(value);
-}
 
 // Seeding, validation and payload assembly are pure, and they live in
 // `@kairos/types/form-engine` so this renderer and the web one cannot disagree
@@ -97,7 +92,7 @@ export default function FormRenderer() {
 
   // Every form type has a definition, and one renderer draws all of them on
   // both platforms. There is no "open it on the web" fallback any more.
-  const definition = FORM_DEFINITIONS[formType]!;
+  const definition = FORM_DEFINITIONS[formType];
 
   return <DeclarativeForm definition={definition} onDone={() => router.replace('/forms')} />;
 }
@@ -177,6 +172,24 @@ function DeclarativeForm({
   // name on the strength of the same answer. Read off the answer, not the form
   // type, so any future form with the same question inherits the rule.
   const isAnonymous = state.values.shareAnonymously === true;
+
+  /**
+   * Back to a blank form for the next person. Everything the submission
+   * touched goes, consent included — a fresh submission needs its own
+   * acknowledgement, and the subject link above all must not carry over, or
+   * the next person's answers would be filed against the last person's record.
+   */
+  function reset() {
+    setSubmitted(false);
+    setSubmitError(null);
+    setErrors({});
+    setState(initialFormValues(definition));
+    setConsentAck(false);
+    setSubjectMemberId(undefined);
+    setSubject(null);
+    setSubjectOpen(false);
+    setPrefilled({});
+  }
 
   function setValue(id: string, value: FieldValue) {
     // Ticking anonymity retracts the link rather than leaving one on screen
@@ -296,6 +309,7 @@ function DeclarativeForm({
           'Thank you. A leader will follow up with you soon.'
         }
         onDone={onDone}
+        onSubmitAnother={reset}
       />
     );
   }
@@ -425,10 +439,12 @@ function SuccessScreen({
   title,
   message,
   onDone,
+  onSubmitAnother,
 }: {
   title: string;
   message: string;
   onDone: () => void;
+  onSubmitAnother: () => void;
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
@@ -440,7 +456,15 @@ function SuccessScreen({
         </View>
         <Text style={styles.successTitle}>{title}</Text>
         <Text style={styles.emptyMessage}>{message}</Text>
-        <Button label="Back to forms" variant="primary" size="md" onPress={onDone} />
+        <View style={styles.successActions}>
+          <Button
+            label="Submit another"
+            variant="primary"
+            size="md"
+            onPress={onSubmitAnother}
+          />
+          <Button label="Back to forms" variant="outline" size="md" onPress={onDone} />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -1084,6 +1108,14 @@ function makeStyles(c: ThemeColors) {
     ...typography.screenTitle,
     color: c.ink,
     marginTop: spacing.sm,
+  },
+  // Stacked, not a row: "Submit another" beside "Back to forms" is two long
+  // labels fighting for a phone's width, and a mis-tap here either loses the
+  // next submission or files it against the wrong person.
+  successActions: {
+    alignSelf: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
   formDescription: {
     ...typography.body,

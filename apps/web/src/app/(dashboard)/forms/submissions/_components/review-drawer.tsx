@@ -16,7 +16,8 @@ import {
 } from '@kairos/ui';
 import { formatShortDate } from '@kairos/core';
 import { useUpdateFormSubmission } from '@/hooks/use-forms';
-import { FORM_META, STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
+import { STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
+import { FORM_DEFINITIONS } from '@kairos/types';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
 
 interface ReviewDrawerProps {
@@ -44,6 +45,9 @@ const FIELD_LABELS: Record<string, string> = {
   gender: 'Gender',
   fathersName: 'Father’s name',
   mothersName: 'Mother’s name',
+  // Retired from the form — the Father and Mother rows above answer it, a
+  // member reference reading as an openable record and a typed name reading
+  // as name-only. Kept for dedications captured before the change.
   parentsAreMembers: 'Parents are members',
   parentContactPhone: 'Parent contact phone',
   parentContactEmail: 'Parent contact email',
@@ -130,7 +134,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
   const payload = submission.payload as unknown as Record<string, unknown>;
   const isTestimony = submission.formType === 'testimony';
   const anonymous = isTestimony && payload.shareAnonymously === true;
-  const meta = FORM_META[submission.formType];
+  const definition = FORM_DEFINITIONS[submission.formType];
   const statusMeta = STATUS_META[submission.status];
 
   // Hide submitter identity for anonymous testimonies.
@@ -151,7 +155,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {meta.title}
+            {definition.title}
             <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
           </DialogTitle>
           <DialogDescription>

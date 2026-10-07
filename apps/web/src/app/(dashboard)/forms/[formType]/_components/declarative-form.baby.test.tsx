@@ -96,13 +96,19 @@ describe('DeclarativeForm — baby forms', () => {
       expect(screen.getByLabelText(/Anything else\?/)).toBeInTheDocument();
     });
 
-    it('asks whether the parents are members only on the dedication form', () => {
+    // The dedication form used to carry a "One or both parents are members of
+     // Kharis" checkbox. It asked for something the form already knows: both
+     // parents are captured as member references, so a reference means member
+     // and a typed name means not. The checkbox could also contradict them.
+    it('asks neither form whether the parents are members, since the references say', () => {
       const { unmount } = renderNaming();
       expect(screen.queryByText(/parents are members/i)).not.toBeInTheDocument();
       unmount();
 
       render(<DeclarativeForm definition={BABY_DEDICATION_FORM} />, { wrapper });
-      expect(screen.getByText(/One or both parents are members of Kharis/)).toBeInTheDocument();
+      expect(screen.queryByText(/parents are members/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /^Father/ })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /^Mother/ })).toBeInTheDocument();
       expect(screen.getByText(/Preferred dedication date/)).toBeInTheDocument();
     });
 

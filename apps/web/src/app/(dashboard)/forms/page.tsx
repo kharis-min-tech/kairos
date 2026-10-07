@@ -14,8 +14,7 @@ import {
   Archive,
   ChevronRight,
 } from 'lucide-react';
-import { FORM_TYPES, FORM_META } from './_lib/form-meta';
-import type { FormType } from '@kairos/types';
+import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
 
 const FORM_ICONS: Record<FormType, React.ReactNode> = {
   first_time_visitor: <UserPlus className="h-6 w-6" />,
@@ -43,7 +42,7 @@ export default function FormsLandingPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FORM_TYPES.map((type) => {
-          const meta = FORM_META[type];
+          const definition = FORM_DEFINITIONS[type];
           return (
             <Link key={type} href={`/forms/${type}`} className="group">
               <Card className="h-full transition-shadow hover:shadow-ambient">
@@ -52,8 +51,8 @@ export default function FormsLandingPage() {
                     {FORM_ICONS[type]}
                   </span>
                   <div className="flex-1">
-                    <h2 className="font-semibold text-foreground">{meta.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{meta.description}</p>
+                    <h2 className="font-semibold text-foreground">{definition.title}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{definition.description}</p>
                   </div>
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-[#5D3FD3] group-hover:gap-2 transition-all">
                     Open form <ChevronRight className="h-4 w-4" />

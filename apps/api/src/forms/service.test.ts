@@ -1294,6 +1294,66 @@ describe('exportSubmissionsToCSV', () => {
     expect(csv).toContain('details');
   });
 
+  // `parentsAreMembers` is no longer a stored answer — the dedication form's
+  // checkbox is gone, because both parents are captured as member references
+  // and a reference IS the answer. The column stays, derived.
+  describe('derived parentsAreMembers column', () => {
+    const dedication = {
+      babyFullName: 'Baby Doe',
+      dateOfBirth: '2026-01-31',
+      parentContactPhone: '0700',
+    };
+
+    async function exportDedication(payload: Record<string, unknown>) {
+      setupSelectSequence([
+        {
+          id: submissionId,
+          formType: 'baby_dedication',
+          status: 'new',
+          createdAt: new Date('2026-10-07T00:00:00Z'),
+          payload,
+        },
+      ]);
+      const { exportSubmissionsToCSV } = await import('./service');
+      const csv = await exportSubmissionsToCSV(mockDb, adminAuth, {
+        formType: 'baby_dedication',
+      });
+      const [headers, row] = csv.split('\n');
+      const i = headers!.split(',').indexOf('parentsAreMembers');
+      expect(i).toBeGreaterThan(-1);
+      return row!.split(',')[i];
+    }
+
+    it('reads true when either parent was filed as a member reference', async () => {
+      expect(
+        await exportDedication({
+          ...dedication,
+          fathersName: 'John Doe',
+          motherMemberId: '550e8400-e29b-41d4-a716-446655440099',
+        }),
+      ).toBe('true');
+    });
+
+    it('reads false when both parents are typed names', async () => {
+      expect(
+        await exportDedication({ ...dedication, fathersName: 'John Doe', mothersName: 'Jane Doe' }),
+      ).toBe('false');
+    });
+
+    // The web form of that era recorded names only, so there is no reference
+    // to read and the stored answer is the only one there is.
+    it('falls back to the stored answer on a dedication captured before the change', async () => {
+      expect(
+        await exportDedication({
+          ...dedication,
+          fathersName: 'John Doe',
+          mothersName: 'Jane Doe',
+          parentsAreMembers: true,
+        }),
+      ).toBe('true');
+    });
+  });
+
   it('redacts name + phone for an anonymous testimony', async () => {
     setupSelectSequence([
       {

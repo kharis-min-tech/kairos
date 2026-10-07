@@ -951,15 +951,13 @@ function babyForm(
             freeTextFieldId: 'mothersName',
             required: true,
           },
-          ...(formType === 'baby_dedication'
-            ? [
-                {
-                  id: 'parentsAreMembers',
-                  type: 'checkbox' as const,
-                  label: 'One or both parents are members of Kharis',
-                },
-              ]
-            : []),
+          // The dedication form used to ask "One or both parents are members
+          // of Kharis" as a checkbox. It is gone: both parents are captured as
+          // member references above, so whether either is a member is already
+          // in the payload, and an untouched checkbox recorded a flat "no"
+          // that nobody chose. Worse, the two could contradict each other —
+          // pick Mum from the member list, leave the box alone, and the record
+          // asserted both that she is a member and that she is not.
           {
             id: 'parentContactPhone',
             type: 'tel',
@@ -1008,8 +1006,25 @@ export const BABY_DEDICATION_FORM = babyForm(
   'Request a baby dedication.',
 );
 
-/** Registry of declarative form definitions, keyed by `FormType`. */
-export const FORM_DEFINITIONS: Partial<Record<FormType, FormDefinition>> = {
+/**
+ * Registry of declarative form definitions, keyed by `FormType`.
+ *
+ * Total, not partial: every form type renders from a definition on both
+ * platforms, so a consumer never has to handle a missing one. It was `Partial`
+ * while the bespoke web forms were being retired, which left callers writing
+ * `FORM_DEFINITIONS[t]!` or branching on a case that can no longer happen.
+ *
+ * This is also the one place a form's title and description live. Web kept a
+ * `FORM_META` table and mobile a `TILES` array, each with its own copy of both
+ * strings, and all three had already drifted — the altar-call description was
+ * three different sentences, and the first-timer form greeted you in the third
+ * person on the index card and the second person on the form itself. Add a
+ * form here and both platforms pick it up; edit the words here and both
+ * platforms show them.
+ *
+ * Key order is display order on the forms index.
+ */
+export const FORM_DEFINITIONS: Record<FormType, FormDefinition> = {
   first_time_visitor: FIRST_TIME_VISITOR_FORM,
   altar_call: ALTAR_CALL_FORM,
   baptism: BAPTISM_FORM,
@@ -1017,3 +1032,10 @@ export const FORM_DEFINITIONS: Partial<Record<FormType, FormDefinition>> = {
   baby_naming: BABY_NAMING_FORM,
   baby_dedication: BABY_DEDICATION_FORM,
 };
+
+/** Every form type, in the order the forms index lists them. */
+export const FORM_TYPES = Object.keys(FORM_DEFINITIONS) as FormType[];
+
+export function isFormType(value: string | undefined): value is FormType {
+  return value !== undefined && value in FORM_DEFINITIONS;
+}
