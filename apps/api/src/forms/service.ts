@@ -1108,6 +1108,9 @@ const EXPORT_COLUMNS: Record<string, string[]> = {
     'details',
     'shareAnonymously',
     'happyToShareSunday',
+    // Retired from the form, kept in the projection: testimonies captured
+    // before 2026-10-07 answered it, and an export that drops the column
+    // loses that answer. Blank on everything newer.
     'acknowledged',
   ],
   baby_naming: [

@@ -67,7 +67,6 @@ async function fillBody(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByText(/Choose a category/));
   await user.click(screen.getByRole('button', { name: 'Salvation' }));
   await user.type(screen.getByLabelText(/What happened\?/), 'God did it');
-  await user.click(screen.getByLabelText(/I confirm this is my testimony/));
 }
 
 beforeEach(() => {
@@ -125,22 +124,21 @@ describe('DeclarativeForm — testimony', () => {
         details: 'God did it',
         shareAnonymously: false,
         happyToShareSunday: true,
-        acknowledged: true,
       });
       expect(call.data.payload.todaysDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(call.data.payload.dateOfTestimony).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
-    it('requires the acknowledgement', async () => {
-      const user = userEvent.setup();
+    // Removed 2026-10-07. The form used to carry its own attestation on top of
+    // the privacy notice, and the sentence asserted two unrelated things — that
+    // the testimony is true, and that Kharis may make contact. The privacy
+    // notice below the submit is the one consent gate, and it stays.
+    it('asks for no attestation beyond the privacy notice', () => {
       renderForm();
-      await user.type(screen.getByLabelText(/^First name/), 'Ada');
-      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
-      await user.click(screen.getByRole('button', { name: /^Submit$/ }));
-      expect(
-        await screen.findByText(/I confirm this is my testimony.*is required/),
-      ).toBeInTheDocument();
-      expect(submitMutate).not.toHaveBeenCalled();
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes).toHaveLength(1);
+      expect(checkboxes[0]).toHaveAccessibleName(/privacy notice/i);
+      expect(screen.queryByText(/I confirm this is my testimony/)).not.toBeInTheDocument();
     });
   });
 
