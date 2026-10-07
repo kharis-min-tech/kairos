@@ -851,7 +851,14 @@ export interface TestimonyPayload {
   details: string;
   shareAnonymously: boolean;
   happyToShareSunday: boolean;
-  acknowledged: boolean;
+  /**
+   * Retired 2026-10-07. The form no longer asks for an attestation — the
+   * privacy notice every form already requires covers consent, and the old
+   * sentence asserted two different things at once (that the testimony is
+   * true, and that Kharis may make contact). Submissions captured before
+   * that still carry it, so this stays readable and stays optional.
+   */
+  acknowledged?: boolean;
 }
 
 export interface BabyNamingPayload {

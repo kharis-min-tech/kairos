@@ -58,9 +58,9 @@ export const testimonyPayloadSchema = z.object({
   details: z.string().min(1),
   shareAnonymously: z.boolean(),
   happyToShareSunday: z.boolean(),
-  acknowledged: z.literal(true, {
-    errorMap: () => ({ message: 'You must acknowledge before submitting' }),
-  }),
+  // No `acknowledged` here by design — the attestation was removed from the
+  // form. An older shipped client that still sends the key is accepted and
+  // the key is dropped, because z.object strips what it does not declare.
 });
 
 

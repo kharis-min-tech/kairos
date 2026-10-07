@@ -867,12 +867,6 @@ export const TESTIMONY_FORM: FormDefinition = {
           label: 'Happy to share during Sunday service?',
           required: true,
         },
-        {
-          id: 'acknowledged',
-          type: 'checkbox',
-          required: true,
-          label: 'I confirm this is my testimony and Kharis may follow up with me.',
-        },
       ],
     },
   ],

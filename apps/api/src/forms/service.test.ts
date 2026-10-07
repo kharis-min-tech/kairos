@@ -136,7 +136,6 @@ const testimonyPayload = {
   details: 'Healed',
   shareAnonymously: false,
   happyToShareSunday: true,
-  acknowledged: true,
 };
 
 beforeEach(() => {
@@ -323,14 +322,15 @@ describe('submitForm — store-only', () => {
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it('rejects testimony payload with acknowledged:false (Zod ValidationError)', async () => {
+  // The attestation was removed from the form on 2026-10-07. An APK already on
+  // somebody's phone still sends the key, and must not start failing for it.
+  it('accepts a testimony from an older client that still sends acknowledged', async () => {
     const { submitForm } = await import('./service');
-    const { ValidationError } = await import('@kairos/utils');
     await expect(
       submitForm(mockDb, memberAuth, 'testimony', {
-        payload: { ...testimonyPayload, acknowledged: false },
+        payload: { ...testimonyPayload, acknowledged: true },
       })
-    ).rejects.toBeInstanceOf(ValidationError);
+    ).resolves.toBeDefined();
   });
 
   it('rejects testimony payload with an invalid category', async () => {

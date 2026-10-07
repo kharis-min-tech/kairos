@@ -36,6 +36,8 @@ const FIELD_LABELS: Record<string, string> = {
   details: 'Details',
   shareAnonymously: 'Share anonymously',
   happyToShareSunday: 'Happy to share on Sunday',
+  // Retired from the form; still present on submissions captured before
+  // 2026-10-07, which must not render as a raw key.
   acknowledged: 'Acknowledged',
   babyFullName: 'Baby’s full name',
   dateOfBirth: 'Date of birth',
