@@ -6,12 +6,20 @@ import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@kairos/ui';
 import { isFormType } from '../_lib/form-meta';
-import { AltarCallForm } from './_components/altar-call-form';
-import { BaptismForm } from './_components/baptism-form';
-import { TestimonyForm } from './_components/testimony-form';
 import { DeclarativeForm } from './_components/declarative-form';
 import { FORM_DEFINITIONS } from '@kairos/types';
 
+/**
+ * Every form renders from its definition.
+ *
+ * There used to be a bespoke component per form beside the declarative
+ * renderer, and the two drifted: web's baby forms asked for parent names where
+ * mobile captured references, and web's testimony used Yes/No radios where the
+ * definition used checkboxes. The questions matched by nobody's decision in
+ * particular. One renderer, one definition per form, one set of questions on
+ * both platforms — including the success copy, which mobile previously had no
+ * way to reach.
+ */
 export default function FormFillPage({
   params,
 }: {
@@ -19,7 +27,9 @@ export default function FormFillPage({
 }) {
   const { formType } = use(params);
 
-  if (!isFormType(formType)) {
+  const definition = isFormType(formType) ? FORM_DEFINITIONS[formType] : undefined;
+
+  if (!definition) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground">Form not found</h1>
@@ -33,45 +43,5 @@ export default function FormFillPage({
     );
   }
 
-  switch (formType) {
-    case 'first_time_visitor': {
-      const definition = FORM_DEFINITIONS.first_time_visitor!;
-      return (
-        <DeclarativeForm
-          definition={definition}
-          successTitle="Welcome recorded"
-          successMessage="Thank you for visiting. A leader will reach out to you soon."
-        />
-      );
-    }
-    case 'altar_call':
-      return <AltarCallForm />;
-    case 'baptism':
-      return <BaptismForm />;
-    case 'testimony':
-      return <TestimonyForm />;
-    // Both baby forms render from the shared definition rather than a bespoke
-    // component. The definition already declared `fatherMemberId` /
-    // `motherMemberId` with their free-text twins, and mobile was already
-    // rendering it — the bespoke web component only ever asked for plain names,
-    // so the same form produced different data depending on the device.
-    case 'baby_naming':
-      return (
-        <DeclarativeForm
-          definition={FORM_DEFINITIONS.baby_naming!}
-          successTitle="Naming request submitted"
-          successMessage="Your request has been recorded. A leader will follow up to confirm a date."
-        />
-      );
-    case 'baby_dedication':
-      return (
-        <DeclarativeForm
-          definition={FORM_DEFINITIONS.baby_dedication!}
-          successTitle="Dedication request submitted"
-          successMessage="Your request has been recorded. A leader will follow up to confirm a date."
-        />
-      );
-    default:
-      return null;
-  }
+  return <DeclarativeForm definition={definition} />;
 }

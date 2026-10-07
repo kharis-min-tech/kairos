@@ -363,3 +363,73 @@ describe('renderer core (shared by web and mobile)', () => {
     });
   });
 });
+
+// A checkbox submits `false` whether somebody chose "no" or never looked at it.
+// For a preference the API declares required — anonymity above all — that
+// difference is the whole question, so `boolean` fields start unanswered.
+describe('boolean fields (explicit yes/no)', () => {
+  const FIXED = new Date('2026-05-23T12:00:00Z');
+
+  it('starts unanswered rather than false', () => {
+    const { values } = initialFormValues(TESTIMONY_FORM, FIXED);
+    expect(values.shareAnonymously).toBeUndefined();
+    expect(values.happyToShareSunday).toBeUndefined();
+    // A plain checkbox still starts false — it is an opt-in, not a question.
+    expect(values.acknowledged).toBe(false);
+  });
+
+  it('fails validation while unanswered, and passes on either answer', () => {
+    const base = initialFormValues(TESTIMONY_FORM, FIXED);
+    expect(validateForm(TESTIMONY_FORM, base, FIXED).shareAnonymously).toBe(
+      'Share anonymously? is required',
+    );
+
+    for (const answer of [true, false]) {
+      const answered = {
+        ...base,
+        values: { ...base.values, shareAnonymously: answer },
+      };
+      expect(validateForm(TESTIMONY_FORM, answered, FIXED).shareAnonymously).toBeUndefined();
+    }
+  });
+
+  it('submits the boolean it was given, including false', () => {
+    const base = initialFormValues(TESTIMONY_FORM, FIXED);
+    const payload = buildFormPayload(
+      TESTIMONY_FORM,
+      {
+        ...base,
+        values: { ...base.values, shareAnonymously: false, happyToShareSunday: true },
+      },
+      FIXED,
+    );
+    // `false` has to reach the wire: the API schema requires the key.
+    expect(payload.shareAnonymously).toBe(false);
+    expect(payload.happyToShareSunday).toBe(true);
+  });
+
+  it('omits the key entirely while unanswered, rather than guessing false', () => {
+    const base = initialFormValues(TESTIMONY_FORM, FIXED);
+    const payload = buildFormPayload(TESTIMONY_FORM, base, FIXED);
+    expect('shareAnonymously' in payload).toBe(false);
+  });
+});
+
+describe('success copy', () => {
+  it('is defined for every form, so neither platform falls back to generic text', () => {
+    for (const def of Object.values(FORM_DEFINITIONS)) {
+      expect(def!.success?.title).toBeTruthy();
+      expect(def!.success?.message).toBeTruthy();
+    }
+  });
+
+  it('gives the altar call a different line when the person was linked', () => {
+    expect(ALTAR_CALL_FORM.success?.linkedMessage).toMatch(/linked and enrolled/);
+    expect(ALTAR_CALL_FORM.success?.message).toMatch(/new contact was created/);
+  });
+
+  it('names the ceremony each baby form is actually for', () => {
+    expect(BABY_NAMING_FORM.success?.title).toBe('Naming request submitted');
+    expect(BABY_DEDICATION_FORM.success?.title).toBe('Dedication request submitted');
+  });
+});

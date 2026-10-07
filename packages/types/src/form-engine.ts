@@ -28,6 +28,17 @@ export const FormFieldType = {
    * routed to, which free text never allowed.
    */
   Member: 'member',
+  /**
+   * An explicit yes/no that submits a boolean.
+   *
+   * Distinct from `Checkbox`, which cannot tell "answered no" from "never
+   * looked" — it submits `false` either way. Where the answer is a preference
+   * the person must actually make, such as whether a testimony is shared
+   * anonymously, that difference is the whole point: an unanswered `Boolean`
+   * field fails validation, so the `false` on the wire always means somebody
+   * chose it.
+   */
+  Boolean: 'boolean',
 } as const;
 export type FormFieldType = (typeof FormFieldType)[keyof typeof FormFieldType];
 
@@ -155,12 +166,27 @@ export interface FormSubjectLinkDef {
   };
 }
 
+/**
+ * What the person sees once the form is in.
+ *
+ * Here rather than at each call site because mobile had no way to reach it: it
+ * showed "Submission received / Thank you. A leader will follow up with you
+ * soon." for all six forms while web gave each its own wording.
+ */
+export interface FormSuccessDef {
+  title: string;
+  message: string;
+  /** Used instead of `message` when the submission was linked to an existing person. */
+  linkedMessage?: string;
+}
+
 export interface FormDefinition {
   formType: FormType;
   title: string;
   description?: string;
   /** Omit to render the form with no subject link at all. */
   subjectLink?: FormSubjectLinkDef;
+  success?: FormSuccessDef;
   blocks: FormBlockDef[];
 }
 
@@ -302,10 +328,15 @@ export type FormErrors = Record<string, string>;
 function seedValue(field: FormFieldDef, today: string): FormFieldValue {
   if (field.defaultValue !== undefined) {
     if (field.type === 'date' && field.defaultValue === 'today') return today;
-    if (field.type === 'checkbox') return Boolean(field.defaultValue);
+    if (field.type === 'checkbox' || field.type === 'boolean') {
+      return Boolean(field.defaultValue);
+    }
     return typeof field.defaultValue === 'string' ? field.defaultValue : '';
   }
-  return field.type === 'checkbox' ? false : '';
+  if (field.type === 'checkbox') return false;
+  // A boolean starts unanswered, which is what makes "no" meaningful.
+  if (field.type === 'boolean') return undefined;
+  return '';
 }
 
 export function emptyFormRow(group: RepeatableGroupDef, now: Date = new Date()): FormRowValues {
@@ -357,6 +388,8 @@ export function isFieldAnswered(
   bag: Record<string, FormFieldValue>,
 ): boolean {
   if (field.type === 'member') return memberReferenceState(field, bag) !== 'empty';
+  // Either way round counts — the question is answered, not necessarily agreed to.
+  if (field.type === 'boolean') return typeof bag[field.id] === 'boolean';
   return isFilled(bag[field.id]);
 }
 
@@ -448,7 +481,9 @@ export function buildFormPayload(
         }
         const v = state.values[field.id];
         if (field.type === 'checkbox') payload[field.id] = Boolean(v);
-        else if (typeof v === 'string' && v.trim().length > 0) payload[field.id] = v.trim();
+        else if (field.type === 'boolean') {
+          if (typeof v === 'boolean') payload[field.id] = v;
+        } else if (typeof v === 'string' && v.trim().length > 0) payload[field.id] = v.trim();
       }
     } else {
       const rows = (state.rows[block.id] ?? [])
@@ -461,7 +496,9 @@ export function buildFormPayload(
             }
             const v = row[field.id];
             if (field.type === 'checkbox') out[field.id] = Boolean(v);
-            else if (typeof v === 'string' && v.trim().length > 0) out[field.id] = v.trim();
+            else if (field.type === 'boolean') {
+              if (typeof v === 'boolean') out[field.id] = v;
+            } else if (typeof v === 'string' && v.trim().length > 0) out[field.id] = v.trim();
           }
           return out;
         })
@@ -483,6 +520,10 @@ export const FIRST_TIME_VISITOR_FORM: FormDefinition = {
     helpText: 'Search by name or phone. Leave blank to create a new contact.',
     linkedNote: 'Linked to an existing person, so submitting will update their record.',
     prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
+  success: {
+    title: 'Welcome recorded',
+    message: 'Thank you for visiting. A leader will reach out to you soon.',
   },
   blocks: [
     {
@@ -673,6 +714,11 @@ export const ALTAR_CALL_FORM: FormDefinition = {
     linkedNote: 'Linked to an existing person, so submitting will enrol them.',
     prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
   },
+  success: {
+    title: 'Enrollment created',
+    message: 'A new contact was created and enrolled in the New Believers programme.',
+    linkedMessage: 'This person was linked and enrolled in the New Believers programme.',
+  },
   blocks: [
     {
       kind: 'section',
@@ -707,6 +753,10 @@ export const BAPTISM_FORM: FormDefinition = {
     linkedNote: 'Linked to an existing person. Their record will be used.',
     prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
   },
+  success: {
+    title: 'Baptism request submitted',
+    message: 'Your baptism request has been recorded. A leader will be in touch.',
+  },
   blocks: [
     {
       kind: 'section',
@@ -733,6 +783,10 @@ export const TESTIMONY_FORM: FormDefinition = {
     helpText: 'Search by name or phone. Leave blank to create a new contact.',
     linkedNote: 'Linked to an existing person, so this testimony will be tied to their record.',
     prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
+  success: {
+    title: 'Testimony shared',
+    message: 'Thank you for sharing your testimony. To God be the glory!',
   },
   blocks: [
     {
@@ -796,15 +850,22 @@ export const TESTIMONY_FORM: FormDefinition = {
       id: 'sharing',
       title: 'Sharing preferences',
       fields: [
+        // Explicit yes/no rather than a checkbox. An untouched checkbox submits
+        // `false`, which for an anonymity preference would record a decision
+        // nobody made — and the API declares the key required, so it should
+        // carry an answer somebody actually gave.
         {
           id: 'shareAnonymously',
-          type: 'checkbox',
-          label: 'Share anonymously (don’t use my name if published)',
+          type: 'boolean',
+          label: 'Share anonymously?',
+          required: true,
+          helpText: 'We won’t use your name if this is published.',
         },
         {
           id: 'happyToShareSunday',
-          type: 'checkbox',
-          label: 'I’d be happy to share this on a Sunday',
+          type: 'boolean',
+          label: 'Happy to share during Sunday service?',
+          required: true,
         },
         {
           id: 'acknowledged',
@@ -841,6 +902,10 @@ function babyForm(
       linkedNote:
         'Linked to an existing member. They’ll be recorded as the parent/guardian.',
       prefill: { phone: 'parentContactPhone' },
+    },
+    success: {
+      title: formType === 'baby_dedication' ? 'Dedication request submitted' : 'Naming request submitted',
+      message: 'Your request has been recorded. A leader will follow up to confirm a date.',
     },
     blocks: [
       {
