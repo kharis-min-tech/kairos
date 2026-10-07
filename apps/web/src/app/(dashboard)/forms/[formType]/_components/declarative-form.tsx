@@ -48,20 +48,26 @@ import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent'
 // disagree about what a given set of answers submits. They had already drifted
 // apart twice before they moved there.
 
+const YES_NO = [
+  { value: 'Yes', label: 'Yes' },
+  { value: 'No', label: 'No' },
+];
+
 type FieldValue = FormFieldValue;
 type RowValues = FormRowValues;
 type FormState = FormValues;
 
 export interface DeclarativeFormProps {
   definition: FormDefinition;
+  /** Overrides `definition.success`. Rarely needed — the copy belongs in the definition. */
   successTitle?: string;
   successMessage?: string;
 }
 
 export function DeclarativeForm({
   definition,
-  successTitle = 'Submission received',
-  successMessage = 'Thank you. A leader will follow up with you soon.',
+  successTitle,
+  successMessage,
 }: DeclarativeFormProps) {
   const user = useAuthStore((s) => s.user);
   const submitForm = useSubmitForm();
@@ -310,6 +316,17 @@ export function DeclarativeForm({
               onChange={(v) => onChange(v)}
             />
           );
+        case 'boolean':
+          // Yes/No on screen, a boolean in the payload. Unanswered renders as
+          // neither pill selected, which is what makes "No" mean something.
+          return (
+            <RadioRow
+              name={field.label}
+              value={typeof value === 'boolean' ? (value ? 'Yes' : 'No') : ''}
+              options={YES_NO}
+              onChange={(v) => onChange(v === 'Yes')}
+            />
+          );
         case 'textarea':
           return (
             <Textarea
@@ -445,8 +462,15 @@ export function DeclarativeForm({
       description={definition.description ?? ''}
       branchName={(user as { branchName?: string | null })?.branchName}
       submitted={submitted}
-      successTitle={successTitle}
-      successMessage={successMessage}
+      successTitle={successTitle ?? definition.success?.title ?? 'Submission received'}
+      successMessage={
+        successMessage ??
+        (subjectMemberId && !isAnonymous
+          ? definition.success?.linkedMessage
+          : undefined) ??
+        definition.success?.message ??
+        'Thank you. A leader will follow up with you soon.'
+      }
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-8">

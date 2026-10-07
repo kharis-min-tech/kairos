@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Pressable,
   Modal,
-  Linking,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -19,7 +18,6 @@ import {
   Check,
   Plus,
   Trash2,
-  ExternalLink,
   CheckCircle2,
   UserCheck,
   PenLine,
@@ -28,6 +26,7 @@ import {
 import {
   Button,
   Card,
+  DatePicker,
   Input,
   radii,
   spacing,
@@ -58,20 +57,12 @@ import {
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { MemberPickerSheet, type PickedMember } from '@/components/member-picker-sheet';
-import { apiBaseUrl } from '@/lib/config';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
-// Mirror the API origin so staging builds don't cross-link into prod.
-const WEB_FORMS_BASE = `${apiBaseUrl.replace(/\/$/, '')}/forms`;
-
-const FORM_TITLES: Record<FormType, string> = {
-  first_time_visitor: 'First-Time Visitor',
-  altar_call: 'New Believers Class',
-  baptism: 'Baptism',
-  testimony: 'Testimony',
-  baby_naming: 'Baby Naming',
-  baby_dedication: 'Baby Dedication',
-};
+const YES_NO = [
+  { value: 'Yes', label: 'Yes' },
+  { value: 'No', label: 'No' },
+];
 
 function isFormType(value: string | undefined): value is FormType {
   if (!value) return false;
@@ -90,8 +81,6 @@ type RowValues = FormRowValues;
 type FormState = FormValues;
 
 export default function FormRenderer() {
-  const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ formType: string }>();
   const formType = params.formType;
@@ -106,12 +95,9 @@ export default function FormRenderer() {
     );
   }
 
-  const definition = FORM_DEFINITIONS[formType];
-  if (!definition) {
-    return (
-      <BespokePlaceholder formType={formType} onBack={() => router.back()} />
-    );
-  }
+  // Every form type has a definition, and one renderer draws all of them on
+  // both platforms. There is no "open it on the web" fallback any more.
+  const definition = FORM_DEFINITIONS[formType]!;
 
   return <DeclarativeForm definition={definition} onDone={() => router.replace('/forms')} />;
 }
@@ -141,44 +127,6 @@ function NotFoundState({
         <Text style={styles.emptyMessage}>{message}</Text>
         <Button label="Back to forms" variant="primary" size="md" onPress={onBack} />
       </View>
-    </SafeAreaView>
-  );
-}
-
-function BespokePlaceholder({ formType, onBack }: { formType: FormType; onBack: () => void }) {
-  const styles = useThemedStyles(makeStyles);
-  const c = useColors();
-  const title = FORM_TITLES[formType];
-  const href = `${WEB_FORMS_BASE}/${formType}`;
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.headerBar}>
-        <Pressable onPress={onBack} hitSlop={8}>
-          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <View style={{ width: 24 }} />
-      </View>
-      <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1, justifyContent: 'center' }]}>
-        <Card padding="md" style={{ gap: spacing.md, alignItems: 'center' }}>
-          <View style={styles.webIconTile}>
-            <ExternalLink color={c.primary} size={24} strokeWidth={1.5} />
-          </View>
-          <Text style={[styles.emptyTitle, { textAlign: 'center' }]}>{title}</Text>
-          <Text style={[styles.emptyMessage, { textAlign: 'center' }]}>
-            This form uses custom fields that aren&apos;t on mobile yet. Open it on the web to
-            fill it out. You&apos;ll see it here soon.
-          </Text>
-          <Button
-            label="Open in web"
-            variant="primary"
-            size="md"
-            fullWidth
-            iconRight={<ExternalLink color="#ffffff" size={16} strokeWidth={1.5} />}
-            onPress={() => Linking.openURL(href)}
-          />
-        </Card>
-      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -341,8 +289,12 @@ function DeclarativeForm({
   if (submitted) {
     return (
       <SuccessScreen
-        title="Submission received"
-        message="Thank you. A leader will follow up with you soon."
+        title={definition.success?.title ?? 'Submission received'}
+        message={
+          (subjectMemberId && !isAnonymous ? definition.success?.linkedMessage : undefined) ??
+          definition.success?.message ??
+          'Thank you. A leader will follow up with you soon.'
+        }
         onDone={onDone}
       />
     );
@@ -508,7 +460,6 @@ function SectionBlock({
   now: Date;
 }) {
   const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   const values = state.values as Record<string, unknown>;
   const visibleFields = block.fields.filter((f) =>
     f.visibleWhen ? evaluateCondition(f.visibleWhen, values, now) : true,
@@ -631,7 +582,6 @@ function FieldRenderer({
   error: string | undefined;
 }) {
   const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   if (field.type === 'checkbox') {
     return (
       <CheckboxRow
@@ -662,6 +612,56 @@ function FieldRenderer({
                 <Text
                   style={[styles.radioChipLabel, selected && styles.radioChipLabelActive]}
                 >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {error ? <Text style={styles.errorLine}>{error}</Text> : null}
+      </View>
+    );
+  }
+
+  if (field.type === 'date') {
+    // Was a plain text input with a `YYYY-MM-DD` placeholder, which is a poor
+    // ask on a phone keyboard. `DatePicker` opens the OS picker and its value
+    // contract is the same ISO `YYYY-MM-DD` string the engine and the API
+    // expect, so nothing downstream changes.
+    return (
+      <View style={{ gap: spacing.xs }}>
+        <FieldLabel label={field.label} required={field.required} />
+        <DatePicker
+          value={stringValue}
+          onChange={(iso) => onChange(iso)}
+          placeholder={field.placeholder ?? 'Select a date'}
+          error={error ?? null}
+        />
+        {field.helpText ? <Text style={styles.helpText}>{field.helpText}</Text> : null}
+      </View>
+    );
+  }
+
+  if (field.type === 'boolean') {
+    // An explicit yes/no that stores a boolean. Neither chip is selected while
+    // the question is unanswered — the distinction a checkbox cannot make.
+    const answered = typeof value === 'boolean';
+    return (
+      <View style={{ gap: spacing.xs }}>
+        <FieldLabel label={field.label} required={field.required} />
+        {field.helpText ? <Text style={styles.helpText}>{field.helpText}</Text> : null}
+        <View style={styles.radioRow}>
+          {YES_NO.map((opt) => {
+            const selected = answered && value === (opt.value === 'Yes');
+            return (
+              <Pressable
+                key={opt.value}
+                onPress={() => onChange(opt.value === 'Yes')}
+                style={[styles.radioChip, selected && styles.radioChipActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.radioChipLabel, selected && styles.radioChipLabelActive]}>
                   {opt.label}
                 </Text>
               </Pressable>
@@ -744,8 +744,7 @@ function FieldRenderer({
           ? 'numeric'
           : 'default';
 
-  const placeholder =
-    field.placeholder ?? (field.type === 'date' ? 'YYYY-MM-DD' : undefined);
+  const placeholder = field.placeholder;
 
   return (
     <View style={{ gap: spacing.xs }}>
@@ -766,7 +765,6 @@ function FieldRenderer({
 
 function FieldLabel({ label, required }: { label: string; required?: boolean }) {
   const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   return (
     <View style={styles.fieldLabelRow}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -787,7 +785,6 @@ function CheckboxRow({
   error?: string;
 }) {
   const styles = useThemedStyles(makeStyles);
-  const c = useColors();
   return (
     <View style={{ gap: spacing.xs }}>
       <Pressable style={styles.checkboxRow} onPress={() => onChange(!value)}>
@@ -1067,14 +1064,6 @@ function makeStyles(c: ThemeColors) {
     justifyContent: 'center',
     padding: spacing.lg,
     gap: spacing.md,
-  },
-  webIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyTitle: { ...typography.screenTitle, color: c.ink },
   emptyMessage: {
