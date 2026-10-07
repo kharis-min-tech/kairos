@@ -26,6 +26,7 @@ import {
   members,
   roles,
   memberRoles,
+  memberGuardians,
   memberHealthRecords,
   services,
   serviceAttendance,
@@ -61,7 +62,7 @@ import {
   mentorFollowups,
   notificationPreferences,
 } from './schema';
-import { sql, count } from 'drizzle-orm';
+import { sql, count, eq } from 'drizzle-orm';
 import { hashPassword } from '@kairos/utils';
 
 const DATABASE_URL =
@@ -508,7 +509,6 @@ async function seed() {
       gender: 'Female',
       dateOfBirth: '2015-09-14', // ~10 years old → under 16
       homeBranchId: london!.id,
-      guardianMemberId: guardianEmma.id,
       memberType: 'child',
       passwordHash: password,
       emailVerified: false,
@@ -529,7 +529,6 @@ async function seed() {
       gender: 'Male',
       dateOfBirth: '2014-03-02', // ~11 → under 16
       homeBranchId: london!.id,
-      guardianMemberId: null,
       memberType: 'child',
       passwordHash: password,
       emailVerified: false,
@@ -550,7 +549,6 @@ async function seed() {
       gender: 'Female',
       dateOfBirth: '2012-11-20', // ~13 → under 16
       homeBranchId: london!.id,
-      guardianMemberId: guardianEmma.id,
       memberType: 'child',
       passwordHash: password,
       emailVerified: true,
@@ -558,6 +556,24 @@ async function seed() {
       systemRole: 'member',
     });
   console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
+
+  // ── 3d. Guardianship ────────────────────────────────────────
+  // Lily has one guardian; Maya has two, because 0056 exists precisely so a
+  // child can, and a seed that only ever shows one would never exercise it.
+  // Noah is deliberately left with none — he is the "no guardian" row the
+  // /members/safeguarding review page is built to surface.
+  const [mayaBello] = await db
+    .select()
+    .from(members)
+    .where(eq(members.email, 'maya.bello@kairos.local'))
+    .limit(1);
+
+  await db.insert(memberGuardians).values([
+    { memberId: childLily!.id, guardianMemberId: guardianEmma.id, relationship: 'Mother', isPrimary: true },
+    { memberId: mayaBello!.id, guardianMemberId: guardianEmma.id, relationship: 'Mother', isPrimary: true },
+    { memberId: mayaBello!.id, guardianMemberId: pastorLondon!.id, relationship: 'Father' },
+  ]);
+  console.log(`✓ 3 guardian links (Lily 1, Maya 2, Noah deliberately none)`);
 
   // ── 4. Roles ────────────────────────────────────────────────
   const [

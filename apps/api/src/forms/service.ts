@@ -19,7 +19,7 @@ import {
   ConflictError,
 } from '@kairos/utils';
 import { createEnrollmentInternal } from '../new-believers/service';
-import { createMemberShell } from '../lib/member-shell';
+import { createMemberShell, linkGuardians, type GuardianLink } from '../lib/member-shell';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { NotificationEventType } from '@kairos/types';
@@ -287,7 +287,7 @@ type OnNoMatch =
       dateOfBirth?: string | null;
       gender?: 'Male' | 'Female' | null;
       email?: string;
-      guardianMemberId?: string | null;
+      guardians?: GuardianLink[];
     }
   | { mode: 'linkOnly' };
 
@@ -364,7 +364,7 @@ async function resolveOrMintSubject(
     dateOfBirth: opts.onNoMatch.dateOfBirth ?? null,
     gender: opts.onNoMatch.gender ?? null,
     memberType: opts.onNoMatch.memberType,
-    guardianMemberId: opts.onNoMatch.guardianMemberId ?? null,
+    guardians: opts.onNoMatch.guardians ?? [],
   });
 }
 
@@ -546,8 +546,8 @@ async function submitFormByType(
  * existing member by name+phone, else mint a shell) but WITHOUT new-believer
  * enrollment — there is no decision-for-Christ branch here. The subject shell is
  * a `child` when the visitor is under 16, else a `visitor`. Each entry in the
- * `children` array becomes a `child` shell linked to the subject via
- * `guardianMemberId`. Interest/source live in the payload only (no auto join in
+ * `children` array becomes a `child` shell linked to the subject
+ * through `member_guardians`. Interest/source live in the payload only (no auto join in
  * v1). Status stays `new` — never auto-converted.
  */
 async function submitFirstTimeVisitor(
@@ -618,7 +618,34 @@ async function submitFirstTimeVisitor(
     });
   }
 
-  // (e) mint a child shell per entry, linked to the subject via guardianMemberId
+  // (d-ii) link the under-16 subject to the guardian the form insisted on.
+  //
+  // The schema refuses the submission without a guardian for an under-16
+  // visitor, and until now that answer went into the payload and nowhere else:
+  // the child was minted, the guardian was demanded, and no record survived of
+  // who they were. Anything that later asks "who is responsible for this
+  // child" — the safeguarding review page, minor-record access — would have
+  // said nobody.
+  if (under16 && payload.guardianMemberId) {
+    const [guardian] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(
+          eq(members.id, payload.guardianMemberId),
+          eq(members.homeBranchId, branchId),
+          eq(members.isActive, true),
+        ),
+      )
+      .limit(1);
+    // A typed guardian name (the pick-or-type fallback) resolves to no member
+    // and stays in the payload only — there is nobody to link to.
+    if (guardian) {
+      await linkGuardians(db, subjectMemberId, [{ memberId: guardian.id, isPrimary: true }]);
+    }
+  }
+
+  // (e) mint a child shell per entry, linked to the subject as its guardian
   const childMemberIds: string[] = [];
   if (payload.broughtChildren === true && payload.children) {
     for (const child of payload.children) {
@@ -628,7 +655,9 @@ async function submitFirstTimeVisitor(
         dateOfBirth: child.dateOfBirth ?? null,
         gender: child.gender ?? null,
         memberType: 'child',
-        guardianMemberId: subjectMemberId,
+        guardians: subjectMemberId
+          ? [{ memberId: subjectMemberId, isPrimary: true }]
+          : [],
       });
       childMemberIds.push(childId);
     }
@@ -636,7 +665,7 @@ async function submitFirstTimeVisitor(
 
   // (f) record the submission — linked but NOT converted. Minted child ids are
   //     persisted on the payload so the triage drawer can surface them; the
-  //     guardian link lives on members.guardianMemberId.
+  //     guardian links live in member_guardians.
   const enrichedPayload = { ...payload, childMemberIds };
 
   const [row] = await db
@@ -765,7 +794,12 @@ async function submitBabyForm(
   body: { subjectMemberId?: string } & ConsentEnvelope,
   payload: BabyPayload,
 ) {
-  let guardianMemberId: string | null = null;
+  // Both parents become guardians, each labelled. The form asks for father and
+  // mother separately and now captures them as real member references on both
+  // platforms, so recording one and discarding the other — which is all a
+  // single guardian column could do — threw away information we had asked for.
+  const guardians: GuardianLink[] = [];
+
   if (body.subjectMemberId) {
     const [parent] = await db
       .select({ id: members.id, branchId: members.homeBranchId })
@@ -776,8 +810,33 @@ async function submitBabyForm(
     if (parent.branchId !== branchId) {
       throw new ForbiddenError('You can only link to members in your branch');
     }
-    guardianMemberId = parent.id;
-  } else if (payload.parentContactPhone && payload.parentContactPhone.trim().length > 0) {
+    // The person the submitter searched for is who to contact first.
+    guardians.push({ memberId: parent.id, isPrimary: true });
+  }
+
+  // The two parent references. Validated against the branch like any other
+  // cross-member link; a reference that does not resolve in this branch is
+  // skipped rather than fatal, because the rest of the submission is still
+  // worth keeping and the name is preserved in the payload either way.
+  const parentRefs: Array<{ id: string | undefined; relationship: string }> = [
+    { id: payload.fatherMemberId, relationship: 'Father' },
+    { id: payload.motherMemberId, relationship: 'Mother' },
+  ];
+  for (const ref of parentRefs) {
+    if (!ref.id) continue;
+    const [m] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(eq(members.id, ref.id), eq(members.homeBranchId, branchId), eq(members.isActive, true)),
+      )
+      .limit(1);
+    if (m) guardians.push({ memberId: m.id, relationship: ref.relationship });
+  }
+
+  // Phone match is the last resort — an explicit reference beats guessing from
+  // a contact number, so this only runs when nobody was named at all.
+  if (guardians.length === 0 && payload.parentContactPhone?.trim()) {
     const [byPhone] = await db
       .select({ id: members.id })
       .from(members)
@@ -789,7 +848,7 @@ async function submitBabyForm(
         ),
       )
       .limit(1);
-    if (byPhone) guardianMemberId = byPhone.id;
+    if (byPhone) guardians.push({ memberId: byPhone.id, isPrimary: true });
   }
 
   const { firstName, lastName } = splitFullName(payload.babyFullName);
@@ -800,14 +859,18 @@ async function submitBabyForm(
     dateOfBirth: payload.dateOfBirth ?? null,
     gender: payload.gender ?? null,
     memberType: 'child',
-    guardianMemberId,
+    guardians,
   });
 
-  // The baby is the subject; the matched parent (if any) lives on members.guardianMemberId.
+  // The baby is the subject; the adults responsible for it live in
+  // member_guardians. The ids are echoed onto the payload so the triage drawer
+  // can show who was linked without a second query.
   const enrichedPayload = {
     ...payload,
     babyMemberId,
-    ...(guardianMemberId ? { matchedGuardianMemberId: guardianMemberId } : {}),
+    ...(guardians.length > 0
+      ? { matchedGuardianMemberIds: guardians.map((g) => g.memberId) }
+      : {}),
   };
 
   const [row] = await db

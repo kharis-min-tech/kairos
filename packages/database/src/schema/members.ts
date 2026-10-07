@@ -44,7 +44,8 @@ export const members = pgTable('members', {
   // NULL = not a confirmed Member yet (provenance tag `memberType` is separate).
   // See docs/domain-model.md §0 for why this is the real Membership signal.
   membershipClassCompletedAt: timestamp('membership_class_completed_at'),
-  guardianMemberId: uuid('guardian_member_id').references((): AnyPgColumn => members.id, { onDelete: 'set null' }),
+  // Guardianship moved to the `member_guardians` join table in 0056 — a
+  // single self-FK could only ever hold one guardian. See that file.
   // Task #4 Phase B: Safeguarding Lead review state for dormant minors.
   // NULL = never reviewed. The /members/safeguarding page re-surfaces a
   // minor when reviewed_at is older than 90 days.
@@ -73,7 +74,6 @@ export const members = pgTable('members', {
   index('idx_members_secondary_branch_id').on(table.secondaryBranchId),
   index('idx_members_is_active').on(table.isActive),
   index('idx_members_name').on(table.lastName, table.firstName),
-  index('idx_members_guardian_member_id').on(table.guardianMemberId),
   uniqueIndex('idx_members_phone_active')
     .on(table.phone)
     .where(sql`phone IS NOT NULL AND is_active = TRUE`),
@@ -87,7 +87,6 @@ export const members = pgTable('members', {
 export const membersRelations = relations(members, ({ one, many }) => ({
   homeBranch: one(branches, { fields: [members.homeBranchId], references: [branches.id], relationName: 'homeBranch' }),
   secondaryBranch: one(branches, { fields: [members.secondaryBranchId], references: [branches.id], relationName: 'secondaryBranch' }),
-  guardian: one(members, { fields: [members.guardianMemberId], references: [members.id], relationName: 'guardian' }),
   memberRoles: many(memberRoles),
   fellowshipMemberships: many(fellowshipMembers),
   leadershipPositions: many(branchLeadership),

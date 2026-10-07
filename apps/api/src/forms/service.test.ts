@@ -5,7 +5,7 @@ function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};
   const methods = [
     'select', 'from', 'where', 'innerJoin', 'leftJoin', 'orderBy', 'limit', 'offset',
-    'insert', 'values', 'returning', 'onConflictDoUpdate',
+    'insert', 'values', 'returning', 'onConflictDoUpdate', 'onConflictDoNothing',
     'update', 'set',
     'groupBy',
   ];
@@ -541,8 +541,9 @@ describe('submitForm — testimony', () => {
 // ── submitForm: baby_naming / baby_dedication ─────────────
 //
 // The subject is the baby, minted as a `child` shell with name split from
-// babyFullName. A matched parent (explicit pick, else in-branch phone) becomes
-// the baby's guardianMemberId. The parent is never minted. Status stays 'new'.
+// babyFullName. Every parent we can identify becomes a guardian row — the
+// explicit subject link, the father and mother references, else an in-branch
+// phone match as a last resort. Parents are never minted. Status stays 'new'.
 describe('submitForm — baby forms', () => {
   const babyPayload = {
     babyFullName: 'Baby Grace Doe',
@@ -570,8 +571,8 @@ describe('submitForm — baby forms', () => {
     expect(shell.firstName).toBe('Baby');
     expect(shell.lastName).toBe('Grace Doe');
     expect(shell.homeBranchId).toBe(branchId);
-    // No parent matched → guardian null.
-    expect(shell.guardianMemberId).toBeNull();
+    // Nobody identified → no guardian rows written at all, so the only two
+    // inserts are the shell and the submission.
 
     const submission = insertValuesArgs[1] as Record<string, unknown>;
     expect(submission.formType).toBe('baby_naming');
@@ -593,12 +594,18 @@ describe('submitForm — baby forms', () => {
 
     const shell = insertValuesArgs[0] as Record<string, unknown>;
     expect(shell.memberType).toBe('child');
-    expect(shell.guardianMemberId).toBe(parentId);
 
-    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    // [1] is now the guardian link, written by createMemberShell.
+    const links = insertValuesArgs[1] as Array<Record<string, unknown>>;
+    expect(links).toHaveLength(1);
+    expect(links[0]).toMatchObject({ guardianMemberId: parentId, isPrimary: true });
+
+    const submission = insertValuesArgs[2] as Record<string, unknown>;
     expect(submission.formType).toBe('baby_dedication');
-    // Matched guardian surfaced on payload for the triage drawer.
-    expect((submission.payload as Record<string, unknown>).matchedGuardianMemberId).toBe(parentId);
+    // Matched guardians surfaced on payload for the triage drawer.
+    expect((submission.payload as Record<string, unknown>).matchedGuardianMemberIds).toEqual([
+      parentId,
+    ]);
   });
 
   it('uses an explicit body.subjectMemberId (a parent) as the guardian', async () => {
@@ -611,11 +618,48 @@ describe('submitForm — baby forms', () => {
       payload: babyPayload,
     });
 
-    const shell = insertValuesArgs[0] as Record<string, unknown>;
-    expect(shell.guardianMemberId).toBe(parentId);
+    const links = insertValuesArgs[1] as Array<Record<string, unknown>>;
+    expect(links[0]).toMatchObject({ guardianMemberId: parentId, isPrimary: true });
     // The baby (not the parent) remains the submission subject.
-    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    const submission = insertValuesArgs[2] as Record<string, unknown>;
     expect(submission.subjectMemberId).toBe(subjectId);
+  });
+
+  // The whole reason member_guardians exists: the form asks for both parents
+  // and a single column could only ever keep one of them.
+  it('records BOTH parent references as guardians, each labelled', async () => {
+    const fatherId = '111e8400-0000-0000-0000-00000000f111';
+    const motherId = '111e8400-0000-0000-0000-00000000m111'.replace('m', '2');
+    setupSelectSequence(
+      [{ id: fatherId }], // father reference resolves in-branch
+      [{ id: motherId }], // mother reference resolves in-branch
+    );
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_naming', {
+      payload: { ...babyPayload, fatherMemberId: fatherId, motherMemberId: motherId },
+    });
+
+    const links = insertValuesArgs[1] as Array<Record<string, unknown>>;
+    expect(links).toHaveLength(2);
+    expect(links.map((l) => l.relationship)).toEqual(['Father', 'Mother']);
+    expect(links.map((l) => l.guardianMemberId)).toEqual([fatherId, motherId]);
+    expect(links.filter((l) => l.isPrimary)).toHaveLength(1);
+  });
+
+  it('prefers the parent references over a phone match', async () => {
+    // An explicit reference is a statement; a phone match is a guess.
+    const fatherId = '111e8400-0000-0000-0000-00000000f111';
+    setupSelectSequence([{ id: fatherId }]);
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'baby_naming', {
+      payload: { ...babyPayload, fatherMemberId: fatherId },
+    });
+
+    const links = insertValuesArgs[1] as Array<Record<string, unknown>>;
+    expect(links).toHaveLength(1);
+    expect(links[0]).toMatchObject({ guardianMemberId: fatherId, relationship: 'Father' });
   });
 
   it('rejects a cross-branch explicit parent with Forbidden (no insert)', async () => {
@@ -916,7 +960,8 @@ describe('submitForm — first_time_visitor', () => {
     expect(shell.email).toBe('tunde@example.com');
     expect(shell.phone).toBe('07123456789');
     expect(shell.isActive).toBe(true);
-    expect(shell.guardianMemberId).toBeNull();
+    // Over 16 → no guardian, so no link row: shell then submission, nothing between.
+    expect(insertValuesArgs).toHaveLength(2);
 
     const submission = insertValuesArgs[1] as Record<string, unknown>;
     expect(submission.formType).toBe('first_time_visitor');
@@ -963,14 +1008,16 @@ describe('submitForm — first_time_visitor', () => {
     expect(submission.status).toBe('new');
   });
 
-  it('mints a child shell per children[] entry, each linked via guardianMemberId', async () => {
+  it('mints a child shell per children[] entry, each linked to the subject as guardian', async () => {
     const child1 = '880e8400-0000-0000-0000-000000000008';
     const child2 = '990e8400-0000-0000-0000-000000000009';
     setupSelectSequence([], []); // no phone match, no global owner
     setupInsert(
       [{ id: subjectId }], // subject (visitor) shell
-      [{ id: child1 }], // child 1
-      [{ id: child2 }], // child 2
+      [{ id: child1 }], // child 1 shell
+      [], //              child 1 guardian link
+      [{ id: child2 }], // child 2 shell
+      [], //              child 2 guardian link
       [{ id: submissionId, status: 'new' }], // submission
     );
     const { submitForm } = await import('./service');
@@ -985,20 +1032,26 @@ describe('submitForm — first_time_visitor', () => {
       },
     });
 
-    // [0] subject, [1] child1, [2] child2, [3] submission
-    expect(insertValuesArgs.length).toBe(4);
+    // Each child shell is followed by its own guardian link, so:
+    // [0] subject, [1] child1, [2] child1's link, [3] child2, [4] child2's link, [5] submission
+    expect(insertValuesArgs.length).toBe(6);
 
     const c1 = insertValuesArgs[1] as Record<string, unknown>;
-    const c2 = insertValuesArgs[2] as Record<string, unknown>;
+    const c2 = insertValuesArgs[3] as Record<string, unknown>;
     expect(c1.memberType).toBe('child');
-    expect(c1.guardianMemberId).toBe(subjectId);
     expect(c1.firstName).toBe('Kid');
     expect(c2.memberType).toBe('child');
-    expect(c2.guardianMemberId).toBe(subjectId);
     expect(c2.firstName).toBe('Tot');
 
+    // The adult who brought them is the guardian of each.
+    for (const i of [2, 4]) {
+      const links = insertValuesArgs[i] as Array<Record<string, unknown>>;
+      expect(links).toHaveLength(1);
+      expect(links[0]).toMatchObject({ guardianMemberId: subjectId, isPrimary: true });
+    }
+
     // Minted child ids are persisted onto the submission payload.
-    const submission = insertValuesArgs[3] as Record<string, unknown>;
+    const submission = insertValuesArgs[5] as Record<string, unknown>;
     const payload = submission.payload as Record<string, unknown>;
     expect(payload.childMemberIds).toEqual([child1, child2]);
     expect(submission.status).toBe('new');

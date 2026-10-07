@@ -1,7 +1,7 @@
 import { eq, and, or, ilike, inArray, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
-import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
+import { members, memberRoles, memberGuardians, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
@@ -52,8 +52,8 @@ const REDACTABLE_FIELDS = [
 
 /** Minimal member shape the safeguarding gate keys off. */
 type SafeguardingSubject = {
+  id: string;
   homeBranchId: string;
-  guardianMemberId?: string | null;
 };
 
 /**
@@ -84,6 +84,37 @@ async function getViewerSafeguardingBranches(
 }
 
 /**
+ * Resolve, ONCE per request, the members this viewer is an active guardian of.
+ *
+ * Guardianship used to be a single column on the member row, so the list path
+ * could read it straight off the row it had already selected. It is a join
+ * table now (0056 — a child can have two parents and often a carer as well),
+ * so the set is resolved up front for the same reason the Safeguarding Lead
+ * branches are: the alternative is a query per row.
+ *
+ * Admin/pastor short-circuit — they already see everything, so the query is
+ * pointless for them.
+ */
+async function getViewerGuardedMemberIds(
+  db: Database,
+  auth: AuthContext,
+): Promise<Set<string>> {
+  if (authHasCapability(auth, 'branch:read')) {
+    return new Set();
+  }
+  const rows = await db
+    .select({ memberId: memberGuardians.memberId })
+    .from(memberGuardians)
+    .where(
+      and(
+        eq(memberGuardians.guardianMemberId, auth.memberId),
+        eq(memberGuardians.isActive, true),
+      ),
+    );
+  return new Set(rows.map((r) => r.memberId));
+}
+
+/**
  * In-memory safeguarding-access check given a pre-resolved capability set.
  * True when the viewer is admin/pastor, the member's guardian, or holds an
  * active Safeguarding Lead role scoped to the member's home branch.
@@ -92,9 +123,11 @@ function hasSafeguardingAccessWith(
   auth: AuthContext,
   member: SafeguardingSubject,
   safeguardingBranches: Set<string>,
+  guardedMemberIds: Set<string>,
 ): boolean {
   if (authHasCapability(auth, 'branch:read')) return true;
-  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
+  // ANY active guardian, not "the" guardian — that is the whole point of 0056.
+  if (guardedMemberIds.has(member.id)) return true;
   return safeguardingBranches.has(member.homeBranchId);
 }
 
@@ -108,9 +141,11 @@ async function hasSafeguardingAccess(
   member: SafeguardingSubject,
 ): Promise<boolean> {
   if (authHasCapability(auth, 'branch:read')) return true;
-  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
-  const branches = await getViewerSafeguardingBranches(db, auth);
-  return branches.has(member.homeBranchId);
+  const [branches, guarded] = await Promise.all([
+    getViewerSafeguardingBranches(db, auth),
+    getViewerGuardedMemberIds(db, auth),
+  ]);
+  return hasSafeguardingAccessWith(auth, member, branches, guarded);
 }
 
 /**
@@ -229,7 +264,10 @@ export async function listMembers(
   // Resolve the viewer's safeguarding capability ONCE up front (admin/pastor
   // short-circuit to an empty set without a query), then evaluate per-row in
   // memory to avoid an N+1 across the list.
-  const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+  const [safeguardingBranches, guardedMemberIds] = await Promise.all([
+    getViewerSafeguardingBranches(db, auth),
+    getViewerGuardedMemberIds(db, auth),
+  ]);
 
   const [rows, [total]] = await Promise.all([
     db
@@ -258,7 +296,6 @@ export async function listMembers(
         // exposed on the list so the directory badge can trust class
         // completion directly instead of memberType, which can drift.
         membershipClassCompletedAt: members.membershipClassCompletedAt,
-        guardianMemberId: members.guardianMemberId,
         isActive: members.isActive,
         createdAt: members.createdAt,
         photoUrl: members.photoUrl,
@@ -273,7 +310,7 @@ export async function listMembers(
   ]);
 
   const data = rows.map((row) =>
-    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches)),
+    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches, guardedMemberIds)),
   );
 
   return {
@@ -317,7 +354,6 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       approvalStatus: members.approvalStatus,
       systemRole: members.systemRole,
       memberType: members.memberType,
-      guardianMemberId: members.guardianMemberId,
       membershipClassCompletedAt: members.membershipClassCompletedAt,
       emailVerified: members.emailVerified,
       createdAt: members.createdAt,
@@ -1058,7 +1094,6 @@ async function loadMemberForSafeguarding(
       homeBranchId: members.homeBranchId,
       memberType: members.memberType,
       dateOfBirth: members.dateOfBirth,
-      guardianMemberId: members.guardianMemberId,
     })
     .from(members)
     .where(and(eq(members.id, memberId), eq(members.isActive, true)));
@@ -1162,7 +1197,17 @@ export async function listUnguardedMinors(
     }
   }
 
-  const guardian = alias(members, 'guardian');
+  // "Unguarded" now means: no active guardian link pointing at an active adult.
+  // Before 0056 this was a left join on one column; a minor with two guardians
+  // is only unguarded when BOTH are gone, which a single join cannot express.
+  const hasLiveGuardian = sql`EXISTS (
+    SELECT 1 FROM member_guardians mg
+    JOIN members g ON g.id = mg.guardian_member_id
+    WHERE mg.member_id = ${members.id}
+      AND mg.is_active = true
+      AND g.is_active = true
+  )`;
+
   const rows = await db
     .select({
       id: members.id,
@@ -1170,13 +1215,25 @@ export async function listUnguardedMinors(
       lastName: members.lastName,
       dateOfBirth: members.dateOfBirth,
       branchName: branches.branchName,
-      guardianMemberId: members.guardianMemberId,
-      guardianFirstName: guardian.firstName,
-      guardianLastName: guardian.lastName,
+      // Links that exist regardless of whether the adult is still active. This
+      // separates "nobody was ever named" from "everyone named has been
+      // deactivated" — different safeguarding problems with different actions.
+      linkedGuardianCount: sql<number>`(
+        SELECT COUNT(*)::int FROM member_guardians mg
+        WHERE mg.member_id = ${members.id} AND mg.is_active = true
+      )`,
+      guardianNames: sql<string | null>`(
+        SELECT string_agg(
+                 TRIM(g.first_name || ' ' || COALESCE(g.last_name, '')),
+                 ', ' ORDER BY mg.is_primary DESC, g.last_name
+               )
+        FROM member_guardians mg
+        JOIN members g ON g.id = mg.guardian_member_id
+        WHERE mg.member_id = ${members.id} AND mg.is_active = true
+      )`,
     })
     .from(members)
     .innerJoin(branches, eq(members.homeBranchId, branches.id))
-    .leftJoin(guardian, eq(members.guardianMemberId, guardian.id))
     .where(
       and(
         eq(members.homeBranchId, branchId),
@@ -1186,32 +1243,21 @@ export async function listUnguardedMinors(
           eq(members.memberType, 'child'),
           sql`${members.dateOfBirth} > (CURRENT_DATE - INTERVAL '${sql.raw(String(MINOR_AGE_THRESHOLD))} years')`,
         ),
-        // guardian missing or deactivated
-        or(sql`${members.guardianMemberId} IS NULL`, eq(guardian.isActive, false)),
+        sql`NOT ${hasLiveGuardian}`,
       ),
     )
     .orderBy(members.lastName, members.firstName);
 
-  return (rows as Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string | null;
-    branchName: string;
-    guardianMemberId: string | null;
-    guardianFirstName: string | null;
-    guardianLastName: string | null;
-  }>).map((r) => ({
+  return rows.map((r) => ({
     id: r.id,
     firstName: r.firstName,
     lastName: r.lastName,
     dateOfBirth: r.dateOfBirth,
     branchName: r.branchName,
-    guardianStatus: (r.guardianMemberId === null ? 'none' : 'inactive') as 'none' | 'inactive',
-    guardianName:
-      r.guardianMemberId && r.guardianFirstName
-        ? `${r.guardianFirstName} ${r.guardianLastName ?? ''}`.trim()
-        : null,
+    guardianStatus: (Number(r.linkedGuardianCount) === 0 ? 'none' : 'inactive') as
+      | 'none'
+      | 'inactive',
+    guardianNames: r.guardianNames,
   }));
 }
 

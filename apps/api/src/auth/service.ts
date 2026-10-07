@@ -68,7 +68,6 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     systemRole: row.systemRole as MemberProfile['systemRole'],
     honorific: row.honorific,
     memberType: row.memberType as MemberProfile['memberType'],
-    guardianMemberId: row.guardianMemberId,
     membershipClassCompletedAt: row.membershipClassCompletedAt
       ? row.membershipClassCompletedAt.toISOString()
       : null,

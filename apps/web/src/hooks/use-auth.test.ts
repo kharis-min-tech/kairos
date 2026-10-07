@@ -64,7 +64,6 @@ const mockMember: Member = {
   mustCompleteProfile: false,
   systemRole: 'member', honorific: null,
   memberType: 'member',
-  guardianMemberId: null,
   emailVerified: true,
   mustChangePassword: false,
   createdAt: new Date(),
