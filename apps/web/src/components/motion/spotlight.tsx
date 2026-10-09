@@ -5,8 +5,8 @@ import { prefersReducedMotion } from './observe';
 
 /**
  * A soft glow that follows the cursor inside its parent. Drop it in as
- * the parent's first child (gold in light mode, purple in dark — see
- * `--spot-rgb` in globals.css); the parent needs `position: relative` (or
+ * the parent's first child (purple in both themes, via `--spot-rgb` in
+ * globals.css); the parent needs `position: relative` (or
  * absolute). Fades in on enter, out on leave. Pointer-events none.
  */
 export function Spotlight({
