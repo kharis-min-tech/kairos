@@ -33,7 +33,7 @@ function ConfirmEmailContent() {
         heading="Confirm new email"
         subtitle="Click below to finish moving your account to the new address."
       />
-      <div className="mt-6 space-y-4 text-center text-sm">
+      <div className="auth-halo mt-6 space-y-4 rounded-2xl bg-card p-8 text-center text-sm shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         {!token && (
           <p className="text-destructive">No confirmation token in the link.</p>
         )}

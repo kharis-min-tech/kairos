@@ -24,7 +24,7 @@ export default function PendingApprovalPage() {
         subtitle="Your email has been verified. A church administrator will review and approve your account shortly."
       />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5">
           <div className="rounded-lg bg-[#5D3FD3]/5 p-5 text-center">
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3FD3]/10">

@@ -82,7 +82,7 @@ function ConfirmLinkContent() {
           heading="Link expired"
           subtitle="This confirmation link is missing information"
         />
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <p className="mb-5 text-sm text-muted-foreground">
             Please try signing in again from the login page.
           </p>
@@ -103,7 +103,7 @@ function ConfirmLinkContent() {
         subtitle={`Enter your Kharis password to link ${providerName}`}
       />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="mb-5 flex items-start gap-3 rounded-lg border border-muted-foreground/10 bg-muted/30 p-3">
           {provider && (
             <OAuthProviderIcon provider={provider as OAuthProviderId} className="mt-0.5 h-5 w-5 shrink-0" />
@@ -182,7 +182,7 @@ function Skeleton() {
   return (
     <>
       <KharisCardHeader heading="Confirm to link account" subtitle="Loading…" />
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-4" aria-busy="true" aria-live="polite">
           <div className="h-16 rounded-lg bg-muted/40" />
           <div className="h-11 rounded-lg bg-muted/40" />

@@ -411,3 +411,47 @@
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+/*
+ * Halo for the auth cards (every page but login, which wraps its card in the
+ * <Halo> component). A conic gradient sweeps a 1.5px ring over a resting
+ * --border rim. Done as a masked pseudo-element rather than a wrapper so the
+ * pages' many card blocks only need a class, and nothing is clipped. The ring
+ * is the gradient masked down to the card's padding box edge.
+ */
+@property --halo-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.auth-halo {
+  position: relative;
+}
+.auth-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    conic-gradient(
+      from var(--halo-angle),
+      transparent 0 78%,
+      #5d3fd3 88%,
+      #f8b537 94%,
+      transparent 100%
+    ),
+    hsl(var(--border));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .auth-halo::before {
+    animation: auth-halo-spin 3600ms linear infinite;
+  }
+}
+@keyframes auth-halo-spin {
+  to { --halo-angle: 360deg; }
+}

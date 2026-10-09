@@ -190,7 +190,7 @@ export default function CompleteProfilePage() {
         }! Please fill in the required fields. The rest are optional but useful for admins to know who you are.`}
       />
 
-      <div className="rounded-2xl bg-card p-6 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-6 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="mb-5 flex items-start gap-3 rounded-lg border border-[#5D3FD3]/20 bg-[#5D3FD3]/5 p-3">
           <svg
             xmlns="http://www.w3.org/2000/svg"

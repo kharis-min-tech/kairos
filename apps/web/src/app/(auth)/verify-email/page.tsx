@@ -41,7 +41,7 @@ function VerifyEmailContent() {
       <>
         <KharisCardHeader heading="Email verified!" subtitle="Your email address has been confirmed" />
 
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
               Your account is now <span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
@@ -64,7 +64,7 @@ function VerifyEmailContent() {
       <>
         <KharisCardHeader heading="Check your email" subtitle="We sent you a verification link" />
 
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
               We&apos;ve sent a verification link to your email address. Click the link to confirm your email and complete registration.
@@ -92,7 +92,7 @@ function VerifyEmailContent() {
     <>
       <KharisCardHeader heading="Verifying your email" subtitle="This should only take a moment" />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5">
           {error ? (
             <div role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -132,7 +132,7 @@ function VerifyEmailSkeleton() {
   return (
     <>
       <KharisCardHeader heading="Verifying your email" subtitle="Loading…" />
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" aria-busy="true" aria-live="polite">
           <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

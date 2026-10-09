@@ -170,7 +170,7 @@ export default function SignupPage() {
       {/* Heading — outside card */}
       <KharisCardHeader heading="Create account" subtitle="Join your church community" />
 
-      <Card className="border-0 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <Card className="auth-halo border-0 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <CardHeader className="pb-4 pt-6">
           <StepIndicator currentStep={step} />
         </CardHeader>
