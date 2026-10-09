@@ -6,21 +6,17 @@ import { FloatCard } from '@/components/motion/float-card';
 import { Spotlight } from '@/components/motion/spotlight';
 
 /**
- * The login page's canvas: a dot grid, a cursor glow and three cards that
- * drift in behind the form. It lives in the shared auth shell (the shell owns
- * the field it sits on) but only draws on /login — signup, reset and the rest
- * stay quiet. Cards need room, so they appear from lg up.
+ * The auth shell's canvas, behind every auth and onboarding page: a quiet
+ * ground with a purple corner top-left and a gold one bottom-right, a dot grid
+ * and a cursor glow. The three floating cards are login's alone — they need
+ * room, so they appear from lg up.
  */
-export function LoginAmbient() {
-  const pathname = usePathname();
-  if (pathname !== '/login') return null;
+export function AuthAmbient() {
+  const login = usePathname() === '/login';
 
   return (
     <>
-      {/* The Canvas ground. It sits over the shared field (the time-of-day
-          colour points the other auth pages keep): login gets a quiet page
-          with a purple corner top-left and a gold one bottom-right, not a
-          full-page wash. */}
+      {/* The Canvas ground: a quiet page, not a full-page wash. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[#fafafa] [background-image:radial-gradient(ellipse_60%_55%_at_0%_0%,rgba(93,63,211,0.36),transparent_70%),radial-gradient(ellipse_50%_45%_at_100%_100%,rgba(248,181,55,0.16),transparent_70%)] dark:bg-[#0a0a0a]"
@@ -30,6 +26,7 @@ export function LoginAmbient() {
         className="pointer-events-none absolute inset-0 [background-image:radial-gradient(hsl(var(--foreground)/0.12)_1px,transparent_1.2px)] [background-size:24px_24px]"
       />
       <Spotlight size={640} alpha={0.32} />
+      {login && (
       <CardField className="hidden lg:block">
         <FloatCard position={{ left: '8%', bottom: '12%' }} depth={0.5} fx={-200} fy={200} fr={-14} tilt={-4} i={0}>
           <div className="w-[200px] rounded-[3px] bg-[#fdf3dc] px-4 py-3.5 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
@@ -59,6 +56,7 @@ export function LoginAmbient() {
           </div>
         </FloatCard>
       </CardField>
+      )}
     </>
   );
 }
