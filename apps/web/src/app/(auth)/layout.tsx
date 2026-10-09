@@ -88,7 +88,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="flex items-center gap-3">
             <KharisLogoIcon size={40} draw />
             <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
-              Kharis Church
+              Kairos
             </span>
           </div>
 
@@ -146,7 +146,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center justify-center gap-2 xl:hidden">
               <KharisLogoIcon size={32} draw />
               <span className="text-lg font-bold uppercase tracking-widest text-primary">
-                Kharis Church
+                Kairos
               </span>
             </div>
             {children}
