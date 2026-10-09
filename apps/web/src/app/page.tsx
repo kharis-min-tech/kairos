@@ -179,35 +179,23 @@ export default function KairosLanding() {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       {/*
-        Hero text stays white in BOTH themes because it sits over the photo.
-        Only the bottom-fade tint switches: in light mode it fades to white
-        (matching the page below); in dark mode to #0d0d0d.
+        Canvas hero: centred headline on the page background, a dot grid, and
+        six cards that fly in around it. Theme-aware — text follows the theme,
+        the cards use the semantic card tokens. Cards need the width, so they
+        only appear from lg up.
       */}
-      <section className="relative min-h-screen overflow-hidden" aria-label="Kairos church administration platform">
-        {/* Layer 1: gradient fallback (always rendered, hidden by photo when present) */}
+      <section
+        className="relative min-h-[max(100vh,788px)] overflow-hidden pt-[68px] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
+        aria-label="Kairos church administration platform"
+      >
+        {/* Fade the grid out behind the headline. */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,#f8b537_0%,transparent_45%),radial-gradient(ellipse_at_bottom_right,#451ebb_0%,transparent_50%),linear-gradient(180deg,#1a0d2e_0%,#0d0d0d_100%)]"
-        />
-        {/* Layer 2: real Kharis hero — missing /landing/hero.jpg silently shows nothing */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/landing/hero.jpg')" }}
-        />
-        {/* Layer 3: tint — top stays dark (photo contrast); bottom fades to page bg */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d]/30 via-[#0d0d0d]/40 to-white dark:to-[#0d0d0d]" />
-        <div className="absolute inset-0 bg-[#451ebb]/15 mix-blend-multiply" />
-        {/* Canvas: dot grid, cursor glow, and the cards that drift in. The
-            cards sit in the free right-hand side of the hero, so they only
-            appear from xl up where there is room beside the headline. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 [background-image:radial-gradient(rgba(255,255,255,0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_45%_at_50%_50%,#fff_30%,transparent_100%)] dark:bg-[radial-gradient(ellipse_50%_45%_at_50%_50%,#0d0d0d_30%,transparent_100%)]"
         />
         <Spotlight size={560} />
-        <CardField className="hidden xl:block">
-          <FloatCard position={{ right: "26%", top: "15%" }} depth={0.5} fx={-260} fy={-160} fr={-18} tilt={-5} i={0}>
+        <CardField className="hidden lg:block">
+          <FloatCard position={{ left: "5%", top: "13%" }} depth={0.5} fx={-260} fy={-160} fr={-18} tilt={-5} i={0}>
             <div className="w-[230px] rounded bg-card p-[7px] pb-2.5 text-card-foreground shadow-[0_24px_60px_-16px_rgba(0,0,0,0.4)]">
               <div
                 className="h-[140px] rounded-sm bg-cover bg-center"
@@ -216,7 +204,7 @@ export default function KairosLanding() {
               <div className="mt-2 px-[3px] text-[11px] font-semibold">Sunday Service · London Central</div>
             </div>
           </FloatCard>
-          <FloatCard position={{ right: "5%", top: "17%" }} depth={0.8} fx={280} fy={-140} fr={14} tilt={3} i={1}>
+          <FloatCard position={{ right: "7%", top: "15%" }} depth={0.8} fx={280} fy={-140} fr={14} tilt={3} i={1}>
             <div className="flex items-center gap-2.5 rounded border border-border bg-card px-3.5 py-3 text-card-foreground shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-[#5d3fd3] text-[11px] font-bold text-white">MT</span>
               <div>
@@ -227,7 +215,7 @@ export default function KairosLanding() {
               </div>
             </div>
           </FloatCard>
-          <FloatCard position={{ right: "31%", top: "47%" }} depth={0.3} fx={-300} fy={40} fr={10} tilt={-2} i={2}>
+          <FloatCard position={{ left: "3%", top: "58%" }} depth={0.3} fx={-300} fy={40} fr={10} tilt={-2} i={2}>
             <div className="relative rounded bg-muted px-3.5 py-2.5 font-mono text-xs font-medium text-muted-foreground">
               attendance_FINAL_v3 (2).xlsx
               <HandDrawn
@@ -241,7 +229,7 @@ export default function KairosLanding() {
               />
             </div>
           </FloatCard>
-          <FloatCard position={{ right: "3%", top: "46%" }} depth={0.6} fx={300} fy={60} fr={-10} tilt={2} i={3}>
+          <FloatCard position={{ right: "4%", top: "54%" }} depth={0.6} fx={300} fy={60} fr={-10} tilt={2} i={3}>
             <div className="relative rounded bg-muted px-3.5 py-2.5 text-xs text-muted-foreground">
               WhatsApp · Youth Leaders (214 unread)
               <HandDrawn
@@ -255,7 +243,7 @@ export default function KairosLanding() {
               />
             </div>
           </FloatCard>
-          <FloatCard position={{ right: "29%", bottom: "9%" }} depth={0.9} fx={-120} fy={260} fr={-12} tilt={-3} i={4}>
+          <FloatCard position={{ left: "12%", bottom: "6%" }} depth={0.9} fx={-120} fy={260} fr={-12} tilt={-3} i={4}>
             <div className="w-[180px] rounded border border-border bg-card px-4 py-3.5 text-card-foreground shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
               <div className="flex justify-between text-[10px] tracking-[0.14em] text-muted-foreground">
                 <span>SUNDAY</span>
@@ -270,7 +258,7 @@ export default function KairosLanding() {
               </div>
             </div>
           </FloatCard>
-          <FloatCard position={{ right: "6%", bottom: "10%" }} depth={0.4} fx={160} fy={240} fr={12} tilt={4} i={5}>
+          <FloatCard position={{ right: "11%", bottom: "7%" }} depth={0.4} fx={160} fy={240} fr={12} tilt={4} i={5}>
             <div className="w-[220px] rounded-[3px] bg-[#fdf3dc] px-[18px] py-4 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
               <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">DAILY VERSE</div>
               <div className="mt-1.5 text-sm italic leading-[1.45]">&ldquo;Love one another as I have loved you.&rdquo;</div>
@@ -279,45 +267,49 @@ export default function KairosLanding() {
           </FloatCard>
         </CardField>
 
-        {/* Content (text stays white in both themes — sits on photo) */}
-        <div className="relative z-10 flex flex-col justify-end min-h-screen px-6 md:px-16 pb-20 md:pb-28 pt-32">
+        {/* Content */}
+        <div className="relative z-10 flex min-h-[max(calc(100vh-68px),720px)] flex-col items-center justify-center px-8 text-center">
           <p
-            className="mo-load text-white/60 text-[11px] md:text-xs uppercase tracking-[0.35em] mb-6"
+            className="mo-load mb-[26px] whitespace-nowrap text-[11px] font-semibold uppercase tracking-[clamp(0.1em,1.1vw,0.32em)] text-black/55 dark:text-white/55"
             style={{ ["--i" as string]: 0 }}
           >
             Church Administration · Multi-Branch · Real-time
           </p>
-          <h1 className="font-black uppercase tracking-[-0.025em] leading-[0.88] text-[clamp(3.5rem,12vw,10rem)] text-white">
-            <span className="mo-load block" style={{ ["--i" as string]: 1 }}>Church</span>
-            <span className="mo-load block" style={{ ["--i" as string]: 2 }}>Admin</span>
-            <span
-              className="mo-load block bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent"
-              style={{ ["--i" as string]: 3 }}
-            >
-              Finally
+          <h1 className="text-[clamp(56px,8vw,124px)] font-black uppercase leading-[0.88] tracking-[-0.05em]">
+            <span className="block">
+              <span className="mo-load inline-block" style={{ ["--i" as string]: 1 }}>Church</span>{" "}
+              <span className="mo-load inline-block" style={{ ["--i" as string]: 2 }}>Admin</span>
             </span>
-            <span className="mo-load relative inline-block" style={{ ["--i" as string]: 4 }}>
-              <span className="relative z-10">Sorted.</span>
-              <HandDrawn
-                d="M4 16 C 60 6, 130 4, 190 9 S 270 16, 296 7"
-                viewBox="0 0 300 24"
-                stroke="#5D3FD3"
-                strokeWidth={5}
-                delay={1500}
-                when="load"
-                className="pointer-events-none absolute -bottom-[18px] left-[-2%] z-0 h-6 w-[104%]"
-              />
+            <span className="block">
+              <span
+                className="mo-load inline-block bg-gradient-to-r from-[#f8b537] via-[#d9965e] to-[#b98a8a] bg-clip-text text-transparent"
+                style={{ ["--i" as string]: 3 }}
+              >
+                Finally
+              </span>{" "}
+              <span className="mo-load relative inline-block" style={{ ["--i" as string]: 4 }}>
+                Sorted.
+                <HandDrawn
+                  d="M4 16 C 60 6, 130 4, 190 9 S 270 16, 296 7"
+                  viewBox="0 0 300 24"
+                  stroke="#5D3FD3"
+                  strokeWidth={5}
+                  delay={1500}
+                  when="load"
+                  className="pointer-events-none absolute -bottom-[18px] left-[-2%] h-[22px] w-[104%]"
+                />
+              </span>
             </span>
           </h1>
           <TypedText
-            className="mt-8 max-w-xl text-base md:text-lg text-white/65 leading-relaxed"
+            className="mt-11 min-h-[52px] max-w-[500px] text-[17px] leading-[1.55] text-black/55 dark:text-white/55"
             text="Kairos replaces the spreadsheets, WhatsApp groups, and manual registers that are slowing your church down."
           />
-          <div className="mo-load mt-10 flex flex-col sm:flex-row gap-3" style={{ ["--i" as string]: 6 }}>
-            <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:1deg]">
+          <div className="mo-load mt-7 flex gap-3" style={{ ["--i" as string]: 6 }}>
+            <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:-1deg]">
               <Link
                 href="/login"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#5D3FD3] hover:bg-[#451ebb] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-white"
               >
                 Get Started
                 <ArrowUpRight className="h-4 w-4" />
@@ -325,7 +317,7 @@ export default function KairosLanding() {
             </Halo>
             <a
               href="#features"
-              className="mo-lift [--lift-rot:-1deg] inline-flex items-center justify-center rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+              className="mo-lift [--lift-rot:1deg] inline-flex h-12 items-center rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
             >
               Explore Features
             </a>
