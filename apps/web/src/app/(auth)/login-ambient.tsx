@@ -17,6 +17,14 @@ export function LoginAmbient() {
 
   return (
     <>
+      {/* The Canvas ground. It sits over the shared field (the time-of-day
+          colour points the other auth pages keep): login gets a quiet page
+          with a purple corner top-left and a gold one bottom-right, not a
+          full-page wash. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[#fafafa] [background-image:radial-gradient(ellipse_60%_55%_at_0%_0%,rgba(93,63,211,0.26),transparent_70%),radial-gradient(ellipse_50%_45%_at_100%_100%,rgba(248,181,55,0.10),transparent_70%)] dark:bg-[#0a0a0a]"
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 [background-image:radial-gradient(hsl(var(--foreground)/0.12)_1px,transparent_1.2px)] [background-size:24px_24px]"
