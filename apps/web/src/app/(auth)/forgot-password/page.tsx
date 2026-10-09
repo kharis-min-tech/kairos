@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         {/* Heading — outside card */}
         <KharisCardHeader heading="Check your email" subtitle="Reset instructions have been sent" />
 
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)] space-y-4">
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)] space-y-4">
           <div className="rounded-lg bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400">
             If an account exists for that email address, we&apos;ve sent a password reset link. Check your inbox and spam folder.
           </div>
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
       {/* Heading — outside card */}
       <KharisCardHeader heading="Forgot password?" subtitle="No worries, we'll send you reset instructions" />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-1.5">
             <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -13,7 +13,7 @@ export default function WelcomePage() {
       {/* Heading — outside card */}
       <KharisCardHeader heading={<>Welcome, {firstName}!</>} subtitle="You're now part of Kharis Church" />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-6">
           {/* What's next */}
           <div className="space-y-3">

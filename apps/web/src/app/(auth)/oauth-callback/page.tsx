@@ -91,7 +91,7 @@ export default function OAuthCallbackPage() {
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-card p-10 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]"
+        className="flex flex-col items-center justify-center gap-4 auth-halo rounded-2xl bg-card p-10 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]"
       >
         <svg
           className="h-8 w-8 animate-spin text-[#5D3FD3]"

@@ -78,7 +78,7 @@ export default function ChangePasswordPage() {
         subtitle={<>Hi {user?.firstName ?? 'there'}, your account has a temporary password. Set a new one to continue.</>}
       />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
             <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">

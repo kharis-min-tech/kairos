@@ -53,7 +53,7 @@ function ResetPasswordContent() {
         {/* Heading — outside card */}
         <KharisCardHeader heading="Invalid reset link" subtitle="This link is invalid or has expired" />
 
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <p className="mb-5 text-sm text-muted-foreground">Please request a new password reset link.</p>
           <Link href="/forgot-password">
             <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">
@@ -70,7 +70,7 @@ function ResetPasswordContent() {
       {/* Heading — outside card */}
       <KharisCardHeader heading="Reset password" subtitle="Create a new secure password for your account" />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
             <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -177,7 +177,7 @@ function ResetPasswordSkeleton() {
   return (
     <>
       <KharisCardHeader heading="Reset password" subtitle="Loading…" />
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5 animate-pulse" aria-busy="true" aria-live="polite">
           <div className="h-11 rounded-lg bg-muted/40" />
           <div className="h-11 rounded-lg bg-muted/40" />
