@@ -1,6 +1,12 @@
 # Kairos
 Kharis Project Kairos — a church administration system for managing branches, members, fellowships, donations, and more.
 
+## Watch the tour
+
+New to Kairos? **[docs/TOUR.md](docs/TOUR.md)** is a 5-minute narrated
+walkthrough of the app — 28 stops, as an administrator and then as a member,
+with the same steps written out for anyone who would rather read.
+
 ## Quick Demo (no setup required)
 
 The fastest way to see Kairos running. You only need **Docker**.
