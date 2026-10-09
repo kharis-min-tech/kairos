@@ -185,7 +185,7 @@ export default function KairosLanding() {
         only appear from lg up.
       */}
       <section
-        className="relative min-h-[max(100vh,788px)] overflow-hidden pt-[68px] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
+        className="relative isolate min-h-[max(100vh,788px)] overflow-hidden pt-[68px] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
         aria-label="Kairos church administration platform"
       >
         {/* Fade the grid out behind the headline. */}
@@ -364,11 +364,11 @@ export default function KairosLanding() {
                 as="li"
                 key={p.text}
                 index={i}
-                className="relative flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
+                className="group relative isolate flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
               >
-                <Spotlight size={260} />
+                <Spotlight size={260} className="-z-10" />
                 <p.Icon className="h-5 w-5 text-[#f8b537] mt-0.5 shrink-0" />
-                <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 leading-relaxed">
+                <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 group-hover:text-black dark:group-hover:text-white leading-relaxed transition-colors">
                   {p.text}
                   <HandDrawn
                     d="M2 11 C 80 5, 190 15, 298 8"
@@ -403,20 +403,20 @@ export default function KairosLanding() {
                 href={f.href}
                 target="_blank"
                 rel="noreferrer"
-                className="relative bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"
+                className="relative isolate bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"
               >
-                <Spotlight size={300} />
+                <Spotlight size={300} className="-z-10" />
                 <div className="flex items-start justify-between">
-                  <f.Icon className="h-7 w-7 text-[#f8b537] group-hover:text-[#5D3FD3] transition-colors" />
-                  <ArrowUpRight className="h-4 w-4 text-black/25 dark:text-white/20 group-hover:text-[#5D3FD3] transition-colors" />
+                  <f.Icon className="h-7 w-7 text-[#f8b537] group-hover:text-[#5D3FD3] dark:group-hover:text-[#a78bfa] transition-colors" />
+                  <ArrowUpRight className="h-4 w-4 text-black/25 dark:text-white/20 group-hover:text-[#5D3FD3] dark:group-hover:text-[#a78bfa] transition-colors" />
                 </div>
                 <h3 className="mt-6 text-base font-black uppercase tracking-tight">
                   {f.title}
                 </h3>
-                <p className="mt-3 text-sm text-black/55 dark:text-white/50 leading-relaxed">
+                <p className="mt-3 text-sm text-black/55 dark:text-white/50 group-hover:text-black/80 dark:group-hover:text-white/85 leading-relaxed transition-colors">
                   {f.desc}
                 </p>
-                <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-black/35 dark:text-white/35 group-hover:text-[#5D3FD3] transition-colors">
+                <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-black/35 dark:text-white/35 group-hover:text-[#5D3FD3] dark:group-hover:text-[#a78bfa] transition-colors">
                   Read the docs →
                 </span>
               </Reveal>
