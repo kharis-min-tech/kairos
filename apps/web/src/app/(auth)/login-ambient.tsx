@@ -23,13 +23,13 @@ export function LoginAmbient() {
           full-page wash. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[#fafafa] [background-image:radial-gradient(ellipse_60%_55%_at_0%_0%,rgba(93,63,211,0.26),transparent_70%),radial-gradient(ellipse_50%_45%_at_100%_100%,rgba(248,181,55,0.10),transparent_70%)] dark:bg-[#0a0a0a]"
+        className="pointer-events-none absolute inset-0 bg-[#fafafa] [background-image:radial-gradient(ellipse_60%_55%_at_0%_0%,rgba(93,63,211,0.36),transparent_70%),radial-gradient(ellipse_50%_45%_at_100%_100%,rgba(248,181,55,0.16),transparent_70%)] dark:bg-[#0a0a0a]"
       />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 [background-image:radial-gradient(hsl(var(--foreground)/0.12)_1px,transparent_1.2px)] [background-size:24px_24px]"
       />
-      <Spotlight size={640} />
+      <Spotlight size={640} alpha={0.32} />
       <CardField className="hidden lg:block">
         <FloatCard position={{ left: '8%', bottom: '12%' }} depth={0.5} fx={-200} fy={200} fr={-14} tilt={-4} i={0}>
           <div className="w-[200px] rounded-[3px] bg-[#fdf3dc] px-4 py-3.5 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">

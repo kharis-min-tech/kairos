@@ -8,7 +8,16 @@ import { prefersReducedMotion } from './observe';
  * the parent's first child; the parent needs `position: relative` (or
  * absolute). Fades in on enter, out on leave. Pointer-events none.
  */
-export function Spotlight({ size, className = '' }: { size: number; className?: string }) {
+export function Spotlight({
+  size,
+  alpha = 0.22,
+  className = '',
+}: {
+  size: number;
+  /** Peak opacity of the purple at the cursor. */
+  alpha?: number;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,7 +29,7 @@ export function Spotlight({ size, className = '' }: { size: number; className?: 
     let y = 0;
     const paint = () => {
       raf = 0;
-      el.style.background = `radial-gradient(${size}px circle at ${x}px ${y}px, rgba(93,63,211,.22), transparent 70%)`;
+      el.style.background = `radial-gradient(${size}px circle at ${x}px ${y}px, rgba(93,63,211,${alpha}), transparent 70%)`;
     };
     const onMove = (e: MouseEvent) => {
       const r = host.getBoundingClientRect();
@@ -39,7 +48,7 @@ export function Spotlight({ size, className = '' }: { size: number; className?: 
       host.removeEventListener('mouseleave', onLeave);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [size]);
+  }, [size, alpha]);
 
   return <div ref={ref} aria-hidden className={`mo-spot pointer-events-none absolute inset-0 opacity-0 ${className}`} />;
 }
