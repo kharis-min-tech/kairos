@@ -335,7 +335,11 @@
 
   /* 7 · spotlight */
   .mo-spot {
+    --spot-rgb: 248, 150, 40;
     transition: opacity 350ms ease;
+  }
+  .dark .mo-spot {
+    --spot-rgb: 93, 63, 211;
   }
 
   /* 8 · halo + hover lift */

@@ -4,17 +4,18 @@ import { useEffect, useRef } from 'react';
 import { prefersReducedMotion } from './observe';
 
 /**
- * A soft purple glow that follows the cursor inside its parent. Drop it in as
- * the parent's first child; the parent needs `position: relative` (or
+ * A soft glow that follows the cursor inside its parent. Drop it in as
+ * the parent's first child (orange in light mode, purple in dark — see
+ * `--spot-rgb` in globals.css); the parent needs `position: relative` (or
  * absolute). Fades in on enter, out on leave. Pointer-events none.
  */
 export function Spotlight({
   size,
-  alpha = 0.22,
+  alpha = 0.32,
   className = '',
 }: {
   size: number;
-  /** Peak opacity of the purple at the cursor. */
+  /** Peak opacity of the glow at the cursor. */
   alpha?: number;
   className?: string;
 }) {
@@ -29,7 +30,7 @@ export function Spotlight({
     let y = 0;
     const paint = () => {
       raf = 0;
-      el.style.background = `radial-gradient(${size}px circle at ${x}px ${y}px, rgba(93,63,211,${alpha}), transparent 70%)`;
+      el.style.background = `radial-gradient(${size}px circle at ${x}px ${y}px, rgba(var(--spot-rgb), ${alpha}), transparent 70%)`;
     };
     const onMove = (e: MouseEvent) => {
       const r = host.getBoundingClientRect();
