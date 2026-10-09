@@ -10,6 +10,7 @@ import { Input } from '@kairos/ui';
 import { persistAuthSuccess, useLogin } from '@/hooks/use-auth';
 import { useAuthStore } from '@/lib/auth-store';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
+import { Halo } from '@/components/motion/halo';
 import { KharisCardHeader } from '../kharis-logo';
 
 const loginSchema = z.object({
@@ -83,8 +84,16 @@ function LoginContent() {
       {/* Heading — outside card */}
       <KharisCardHeader heading="Welcome Back" subtitle="Sign in to continue to your dashboard" />
 
-      {/* Card */}
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      {/* Card. The halo is the card's border: a purple-and-gold light circling a
+          resting --border rim. The shadow sits on the halo (its own overflow
+          doesn't clip it) and the card inside keeps the panel surface. */}
+      <Halo
+        variant="purple"
+        radiusClass="rounded-2xl"
+        baseClass="bg-border"
+        className="w-full shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]"
+      >
+      <div className="w-full rounded-[calc(1rem-1.5px)] bg-card p-8">
         <div className="space-y-5">
           {error && (
             <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -104,7 +113,7 @@ function LoginContent() {
                 id="email"
                 type="email"
                 placeholder="your email"
-                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
+                className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_0_3px_rgba(248,181,55,0.25)]"
                 {...register('email')}
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
@@ -123,7 +132,7 @@ function LoginContent() {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
+                  className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_0_3px_rgba(248,181,55,0.25)]"
                   {...register('password')}
                 />
                 <button
@@ -151,7 +160,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -168,6 +177,13 @@ function LoginContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                 </>
+              )}
+              {/* Progress rule: fills left→right while the request is in flight. */}
+              {isSubmitting && (
+                <span
+                  aria-hidden
+                  className="mo-signin-bar absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[#f8b537]"
+                />
               )}
             </button>
 
@@ -191,6 +207,7 @@ function LoginContent() {
           </form>
         </div>
       </div>
+      </Halo>
     </>
   );
 }
