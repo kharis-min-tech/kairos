@@ -8,6 +8,8 @@ import {
   type StyleProp,
   type ViewStyle,
   type TextStyle,
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { radii, spacing, shadows, gradients } from './tokens';
@@ -27,6 +29,13 @@ interface ButtonProps {
   iconRight?: React.ReactNode;
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Not tappable and announced as busy, but NOT dimmed — for a request in flight. */
+  busy?: boolean;
+  /** Touch-down hook (e.g. a tap ripple's `onPressIn`). */
+  onPressIn?: (e: GestureResponderEvent) => void;
+  onLayout?: (e: LayoutChangeEvent) => void;
+  /** Painted over the button's content, clipped to its corners (ripple, progress bar). */
+  overlay?: React.ReactNode;
 }
 
 export function Button({
@@ -40,10 +49,15 @@ export function Button({
   iconRight,
   fullWidth = false,
   style,
+  busy = false,
+  onPressIn,
+  onLayout,
+  overlay,
 }: ButtonProps) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const isDisabled = disabled || loading;
+  const isInert = isDisabled || busy;
 
   const labelStyle =
     variant === 'primary'
@@ -81,9 +95,11 @@ export function Button({
   if (variant === 'primary') {
     return (
       <Pressable
-        onPress={isDisabled ? undefined : onPress}
+        onPress={isInert ? undefined : onPress}
+        onPressIn={isInert ? undefined : onPressIn}
+        onLayout={onLayout}
         accessibilityRole="button"
-        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        accessibilityState={{ disabled: isDisabled, busy: loading || busy }}
         style={[...baseStyle, shadows.buttonHero, style]}
       >
         <LinearGradient
@@ -93,6 +109,7 @@ export function Button({
           style={styles.gradientFill}
         />
         {content}
+        {overlay}
       </Pressable>
     );
   }
@@ -106,12 +123,15 @@ export function Button({
 
   return (
     <Pressable
-      onPress={isDisabled ? undefined : onPress}
+      onPress={isInert ? undefined : onPress}
+      onPressIn={isInert ? undefined : onPressIn}
+      onLayout={onLayout}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      accessibilityState={{ disabled: isDisabled, busy: loading || busy }}
       style={[...baseStyle, variantStyle, style]}
     >
       {content}
+      {overlay}
     </Pressable>
   );
 }

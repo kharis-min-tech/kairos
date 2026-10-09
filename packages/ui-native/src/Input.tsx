@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  AccessibilityInfo,
   View,
   Text,
   TextInput,
@@ -10,7 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { radii, spacing, typography } from './tokens';
-import { useThemedStyles, type ThemeColors } from './theme';
+import { useColors, useThemedStyles, type ThemeColors } from './theme';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -19,6 +21,12 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   containerStyle?: StyleProp<ViewStyle>;
   leadingSlot?: React.ReactNode;
   trailingSlot?: React.ReactNode;
+  /**
+   * Canvas focus treatment: the border eases to gold and a 3pt gold glow
+   * (25%) fades in around the field over 200ms, and the text is 16pt so iOS
+   * doesn't zoom on focus. Off by default; other screens are unchanged.
+   */
+  canvas?: boolean;
 }
 
 export function Input({
@@ -31,9 +39,17 @@ export function Input({
   trailingSlot,
   onFocus,
   onBlur,
+  canvas = false,
   ...rest
 }: InputProps) {
   const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const glow = useRef(new Animated.Value(0)).current;
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    if (!canvas) return;
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduced);
+  }, [canvas]);
   const [focused, setFocused] = useState(false);
   const [showSecure, setShowSecure] = useState(false);
   const isSecure = secureTextEntryProp && !showSecure;
@@ -41,10 +57,21 @@ export function Input({
   return (
     <View style={containerStyle}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View
+      <View>
+        {canvas ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.glow, { opacity: Animated.multiply(glow, 0.25) }]}
+          />
+        ) : null}
+      <Animated.View
         style={[
           styles.field,
-          focused && styles.fieldFocused,
+          !canvas && focused && styles.fieldFocused,
+          canvas && styles.fieldCanvas,
+          canvas && {
+            borderColor: glow.interpolate({ inputRange: [0, 1], outputRange: [c.border, c.gold] }),
+          },
           !!error && styles.fieldError,
         ]}
       >
@@ -54,13 +81,27 @@ export function Input({
           secureTextEntry={isSecure}
           onFocus={(e) => {
             setFocused(true);
+            if (canvas) {
+              Animated.timing(glow, {
+                toValue: 1,
+                duration: reduced ? 0 : 200,
+                useNativeDriver: false,
+              }).start();
+            }
             onFocus?.(e);
           }}
           onBlur={(e) => {
             setFocused(false);
+            if (canvas) {
+              Animated.timing(glow, {
+                toValue: 0,
+                duration: reduced ? 0 : 200,
+                useNativeDriver: false,
+              }).start();
+            }
             onBlur?.(e);
           }}
-          style={styles.input}
+          style={[styles.input, canvas && styles.inputCanvas]}
           placeholderTextColor={styles.placeholderColor.color}
         />
         {trailingSlot ? <View style={styles.trailingSlot}>{trailingSlot}</View> : null}
@@ -74,6 +115,7 @@ export function Input({
             <Text style={styles.toggleLabel}>{showSecure ? 'Hide' : 'Show'}</Text>
           </Pressable>
         ) : null}
+      </Animated.View>
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
@@ -98,6 +140,18 @@ function makeStyles(c: ThemeColors) {
       paddingHorizontal: spacing.md,
       minHeight: 44,
     },
+    // Constant 1.5pt so focus changes colour, not size.
+    fieldCanvas: { borderWidth: 1.5, minHeight: 48 },
+    glow: {
+      position: 'absolute',
+      top: -3,
+      left: -3,
+      right: -3,
+      bottom: -3,
+      borderRadius: radii.md + 3,
+      backgroundColor: c.gold,
+    },
+    inputCanvas: { fontSize: 16 },
     fieldFocused: {
       borderColor: c.gold,
       borderWidth: 1.5,
