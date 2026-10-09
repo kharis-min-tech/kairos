@@ -2,6 +2,33 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
 import { AuthField } from './auth-field';
 import { pickAuthVerse } from '@kairos/core';
+import { HandDrawn } from '@/components/motion/hand-drawn';
+import { Reveal } from '@/components/motion/reveal';
+import { LoginAmbient } from './login-ambient';
+
+/** Verse entrance: words rise one by one, 85ms apart, after a 400ms beat. */
+const WORD_STAGGER_MS = 85;
+const VERSE_START_MS = 400;
+
+/** Splits plain verse text into rising words, keeping the spaces between. */
+function words(text: string, start: number): { nodes: React.ReactNode[]; next: number } {
+  let i = start;
+  const nodes = text.split(/(\s+)/).map((tok, k) => {
+    if (tok === '' || /^\s+$/.test(tok)) return tok;
+    const el = (
+      <span
+        key={k}
+        className="mo-load inline-block"
+        style={{ ['--i' as string]: i, animationDelay: `${VERSE_START_MS + i * WORD_STAGGER_MS}ms` }}
+      >
+        {tok}
+      </span>
+    );
+    i += 1;
+    return el;
+  });
+  return { nodes, next: i };
+}
 
 /**
  * The auth shell.
@@ -27,11 +54,21 @@ import { pickAuthVerse } from '@kairos/core';
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const verse = pickAuthVerse();
 
+  // Word-by-word entrance. A highlighted word is one beat and gets its
+  // underline drawn once every word has landed.
+  const before = words(verse.before, 0);
+  const primary = before.next;
+  const between = words(verse.between, primary + 1);
+  const accent = between.next;
+  const after = words(verse.after, accent + 1);
+  const underlineAt = VERSE_START_MS + after.next * WORD_STAGGER_MS + 500;
+
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-[#fafafa] dark:bg-[#07060e]">
       {/* The field — one continuous background behind both columns, lit for
           the viewer's hour. Full-bleed; only the columns are capped. */}
       <AuthField />
+      <LoginAmbient />
 
       {/* Pinned to the viewport corner, not the capped shell — chrome belongs
           to the window, not to the composition. */}
@@ -59,14 +96,40 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <div className="space-y-8">
-            <p className="auth-verse text-[28px] font-light leading-snug text-gray-800 dark:text-white/90">
-              {verse.before}
-              <em className="font-semibold not-italic text-[#5D3FD3] dark:text-[#a488ff]">
+            <p className="text-[28px] font-light leading-snug text-gray-800 dark:text-white/90">
+              {before.nodes}
+              <em
+                className="mo-load relative inline-block font-semibold not-italic text-[#5D3FD3] dark:text-[#a488ff]"
+                style={{ ['--i' as string]: primary, animationDelay: `${VERSE_START_MS + primary * WORD_STAGGER_MS}ms` }}
+              >
                 {verse.primaryWord}
+                <HandDrawn
+                  d="M2 10 C 50 4, 120 14, 198 6"
+                  viewBox="0 0 200 16"
+                  stroke="#5D3FD3"
+                  strokeWidth={4}
+                  delay={underlineAt}
+                  when="load"
+                  className="pointer-events-none absolute -bottom-1 left-0 h-2.5 w-full"
+                />
               </em>
-              {verse.between}
-              <em className="font-semibold not-italic text-[#f8b537]">{verse.accentWord}</em>
-              {verse.after}
+              {between.nodes}
+              <em
+                className="mo-load relative inline-block font-semibold not-italic text-[#f8b537]"
+                style={{ ['--i' as string]: accent, animationDelay: `${VERSE_START_MS + accent * WORD_STAGGER_MS}ms` }}
+              >
+                {verse.accentWord}
+                <HandDrawn
+                  d="M2 6 C 60 12, 130 2, 198 9"
+                  viewBox="0 0 200 16"
+                  stroke="#F8B537"
+                  strokeWidth={4}
+                  delay={underlineAt + 150}
+                  when="load"
+                  className="pointer-events-none absolute -bottom-1 left-0 h-2.5 w-full"
+                />
+              </em>
+              {after.nodes}
             </p>
 
             <div className="auth-verse-ref flex items-center gap-3">
@@ -82,7 +145,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Content column. */}
         <div className="flex flex-1 items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md space-y-6">
+          <Reveal className="w-full max-w-md space-y-6" delay={250} duration={1300}>
             <div className="flex items-center justify-center gap-2 xl:hidden">
               <KharisLogoIcon size={32} draw />
               <span className="text-lg font-bold uppercase tracking-widest text-primary">
@@ -90,7 +153,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </span>
             </div>
             {children}
-          </div>
+          </Reveal>
         </div>
       </div>
     </div>

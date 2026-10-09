@@ -25,6 +25,14 @@ import {
   BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Reveal } from "@/components/motion/reveal";
+import { HandDrawn } from "@/components/motion/hand-drawn";
+import { TypedText } from "@/components/motion/typed-text";
+import { CardField } from "@/components/motion/card-field";
+import { FloatCard } from "@/components/motion/float-card";
+import { Spotlight } from "@/components/motion/spotlight";
+import { Halo } from "@/components/motion/halo";
+import { Assemble } from "@/components/motion/assemble";
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 // Six shipped capabilities. Donations + Notifications deliberately left off
@@ -131,6 +139,11 @@ function PreviewWindow({
 export default function KairosLanding() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0d0d0d] text-[#1a1c1c] dark:text-white font-sans antialiased">
+      {/* Without JS nothing adds .mo-in, so undo the hidden starting states. */}
+      <noscript>
+        <style>{`.mo-reveal{opacity:1!important}.mo-draw{stroke-dasharray:none!important;stroke-dashoffset:0!important}.mo-bar-y,.mo-bar-x{transform:none!important}`}</style>
+      </noscript>
+
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/85 dark:bg-[#0d0d0d]/85 backdrop-blur-xl border-b border-black/[0.07] dark:border-white/[0.07]">
         <div className="flex items-center justify-between px-6 md:px-16 py-4 md:py-5">
@@ -185,38 +198,134 @@ export default function KairosLanding() {
         {/* Layer 3: tint — top stays dark (photo contrast); bottom fades to page bg */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d]/30 via-[#0d0d0d]/40 to-white dark:to-[#0d0d0d]" />
         <div className="absolute inset-0 bg-[#451ebb]/15 mix-blend-multiply" />
+        {/* Canvas: dot grid, cursor glow, and the cards that drift in. The
+            cards sit in the free right-hand side of the hero, so they only
+            appear from xl up where there is room beside the headline. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 [background-image:radial-gradient(rgba(255,255,255,0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
+        />
+        <Spotlight size={560} />
+        <CardField className="hidden xl:block">
+          <FloatCard position={{ right: "26%", top: "15%" }} depth={0.5} fx={-260} fy={-160} fr={-18} tilt={-5} i={0}>
+            <div className="w-[230px] rounded bg-card p-[7px] pb-2.5 text-card-foreground shadow-[0_24px_60px_-16px_rgba(0,0,0,0.4)]">
+              <div
+                className="h-[140px] rounded-sm bg-cover bg-center"
+                style={{ backgroundImage: "url('/landing/hero.jpg')" }}
+              />
+              <div className="mt-2 px-[3px] text-[11px] font-semibold">Sunday Service · London Central</div>
+            </div>
+          </FloatCard>
+          <FloatCard position={{ right: "5%", top: "17%" }} depth={0.8} fx={280} fy={-140} fr={14} tilt={3} i={1}>
+            <div className="flex items-center gap-2.5 rounded border border-border bg-card px-3.5 py-3 text-card-foreground shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#5d3fd3] text-[11px] font-bold text-white">MT</span>
+              <div>
+                <div className="text-[13px] font-bold">Mary T.</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Just enrolled · <span className="text-[#f8b537]">Welcome</span>
+                </div>
+              </div>
+            </div>
+          </FloatCard>
+          <FloatCard position={{ right: "31%", top: "47%" }} depth={0.3} fx={-300} fy={40} fr={10} tilt={-2} i={2}>
+            <div className="relative rounded bg-muted px-3.5 py-2.5 font-mono text-xs font-medium text-muted-foreground">
+              attendance_FINAL_v3 (2).xlsx
+              <HandDrawn
+                d="M2 12 C 70 6, 160 14, 298 7"
+                viewBox="0 0 300 20"
+                stroke="#F8B537"
+                strokeWidth={3}
+                delay={1800}
+                when="load"
+                className="absolute left-1.5 top-1/2 h-3.5 w-[calc(100%-12px)] -translate-y-1/2"
+              />
+            </div>
+          </FloatCard>
+          <FloatCard position={{ right: "3%", top: "46%" }} depth={0.6} fx={300} fy={60} fr={-10} tilt={2} i={3}>
+            <div className="relative rounded bg-muted px-3.5 py-2.5 text-xs text-muted-foreground">
+              WhatsApp · Youth Leaders (214 unread)
+              <HandDrawn
+                d="M2 9 C 90 14, 200 5, 298 11"
+                viewBox="0 0 300 20"
+                stroke="#F8B537"
+                strokeWidth={3}
+                delay={2000}
+                when="load"
+                className="absolute left-1.5 top-1/2 h-3.5 w-[calc(100%-12px)] -translate-y-1/2"
+              />
+            </div>
+          </FloatCard>
+          <FloatCard position={{ right: "29%", bottom: "9%" }} depth={0.9} fx={-120} fy={260} fr={-12} tilt={-3} i={4}>
+            <div className="w-[180px] rounded border border-border bg-card px-4 py-3.5 text-card-foreground shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
+              <div className="flex justify-between text-[10px] tracking-[0.14em] text-muted-foreground">
+                <span>SUNDAY</span>
+                <span className="font-bold tracking-normal text-[#10b981]">+8%</span>
+              </div>
+              <div className="mt-0.5 text-[28px] font-extrabold">312</div>
+              <div className="mt-1.5 flex h-[34px] items-end gap-1">
+                {[40, 55, 48, 70].map((h, k) => (
+                  <div key={k} className="flex-1 bg-[#5d3fd3]/40" style={{ height: `${h}%` }} />
+                ))}
+                <div className="h-full flex-1 bg-gradient-to-t from-[#5d3fd3] to-[#f8b537]" />
+              </div>
+            </div>
+          </FloatCard>
+          <FloatCard position={{ right: "6%", bottom: "10%" }} depth={0.4} fx={160} fy={240} fr={12} tilt={4} i={5}>
+            <div className="w-[220px] rounded-[3px] bg-[#fdf3dc] px-[18px] py-4 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
+              <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">DAILY VERSE</div>
+              <div className="mt-1.5 text-sm italic leading-[1.45]">&ldquo;Love one another as I have loved you.&rdquo;</div>
+              <div className="mt-1.5 text-[11px] text-[#8a6410]">— John 15:12</div>
+            </div>
+          </FloatCard>
+        </CardField>
 
         {/* Content (text stays white in both themes — sits on photo) */}
         <div className="relative z-10 flex flex-col justify-end min-h-screen px-6 md:px-16 pb-20 md:pb-28 pt-32">
-          <p className="text-white/60 text-[11px] md:text-xs uppercase tracking-[0.35em] mb-6">
+          <p
+            className="mo-load text-white/60 text-[11px] md:text-xs uppercase tracking-[0.35em] mb-6"
+            style={{ ["--i" as string]: 0 }}
+          >
             Church Administration · Multi-Branch · Real-time
           </p>
           <h1 className="font-black uppercase tracking-[-0.025em] leading-[0.88] text-[clamp(3.5rem,12vw,10rem)] text-white">
-            <span className="block">Church</span>
-            <span className="block">Admin</span>
-            <span className="block bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent">
+            <span className="mo-load block" style={{ ["--i" as string]: 1 }}>Church</span>
+            <span className="mo-load block" style={{ ["--i" as string]: 2 }}>Admin</span>
+            <span
+              className="mo-load block bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent"
+              style={{ ["--i" as string]: 3 }}
+            >
               Finally
             </span>
-            <span className="relative inline-block">
+            <span className="mo-load relative inline-block" style={{ ["--i" as string]: 4 }}>
               <span className="relative z-10">Sorted.</span>
-              <span className="absolute bottom-2 left-0 h-[10px] md:h-[14px] w-full bg-[#5D3FD3] z-0 opacity-90" />
+              <HandDrawn
+                d="M4 16 C 60 6, 130 4, 190 9 S 270 16, 296 7"
+                viewBox="0 0 300 24"
+                stroke="#5D3FD3"
+                strokeWidth={5}
+                delay={1500}
+                when="load"
+                className="pointer-events-none absolute -bottom-[18px] left-[-2%] z-0 h-6 w-[104%]"
+              />
             </span>
           </h1>
-          <p className="mt-8 max-w-xl text-base md:text-lg text-white/65 leading-relaxed">
-            Kairos replaces the spreadsheets, WhatsApp groups, and manual
-            registers that are slowing your church down.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5D3FD3] hover:bg-[#451ebb] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
-            >
-              Get Started
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
+          <TypedText
+            className="mt-8 max-w-xl text-base md:text-lg text-white/65 leading-relaxed"
+            text="Kairos replaces the spreadsheets, WhatsApp groups, and manual registers that are slowing your church down."
+          />
+          <div className="mo-load mt-10 flex flex-col sm:flex-row gap-3" style={{ ["--i" as string]: 6 }}>
+            <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:1deg]">
+              <Link
+                href="/login"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#5D3FD3] hover:bg-[#451ebb] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+              >
+                Get Started
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Halo>
             <a
               href="#features"
-              className="inline-flex items-center justify-center rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+              className="mo-lift [--lift-rot:-1deg] inline-flex items-center justify-center rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
             >
               Explore Features
             </a>
@@ -227,15 +336,15 @@ export default function KairosLanding() {
       {/* ── Stats band ──────────────────────────────────────────────────── */}
       <section className="border-y border-black/[0.06] dark:border-white/[0.06] bg-[#f9f9f9] dark:bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-black/[0.06] dark:divide-white/[0.06]">
-          {STATS.map((s) => (
-            <div key={s.label} className="p-6 md:p-8">
+          {STATS.map((s, i) => (
+            <Reveal key={s.label} index={i} className="p-6 md:p-8">
               <div className="text-2xl md:text-3xl font-black text-[#f8b537] leading-none">
                 {s.value}
               </div>
               <div className="mt-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-black/55 dark:text-white/45 leading-snug">
                 {s.label}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -244,30 +353,41 @@ export default function KairosLanding() {
       <section id="why" className="py-24 md:py-32 px-6 md:px-16">
         <div className="max-w-6xl mx-auto grid md:grid-cols-12 gap-12 items-start">
           <div className="md:col-span-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#f8b537] mb-5">
+            <Reveal as="p" index={0} className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#f8b537] mb-5">
               The Problem
-            </p>
-            <h2 className="font-black uppercase tracking-tight leading-[0.9] text-5xl md:text-6xl">
+            </Reveal>
+            <Reveal as="h2" index={1} className="font-black uppercase tracking-tight leading-[0.9] text-5xl md:text-6xl">
               Sound
               <br />
               familiar?
-            </h2>
-            <p className="mt-6 text-black/55 dark:text-white/55 leading-relaxed max-w-md">
+            </Reveal>
+            <Reveal as="p" index={2} className="mt-6 text-black/55 dark:text-white/55 leading-relaxed max-w-md">
               Most churches are managed with a patchwork of tools that don't
               talk to each other. Kairos changes that.
-            </p>
+            </Reveal>
           </div>
           <ul className="md:col-span-7 space-y-3">
-            {PAIN_POINTS.map((p) => (
-              <li
+            {PAIN_POINTS.map((p, i) => (
+              <Reveal
+                as="li"
                 key={p.text}
-                className="flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
+                index={i}
+                className="relative flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
               >
+                <Spotlight size={260} />
                 <p.Icon className="h-5 w-5 text-[#f8b537] mt-0.5 shrink-0" />
-                <span className="text-sm md:text-base text-black/70 dark:text-white/70 leading-relaxed">
+                <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 leading-relaxed">
                   {p.text}
+                  <HandDrawn
+                    d="M2 11 C 80 5, 190 15, 298 8"
+                    viewBox="0 0 300 20"
+                    stroke="#F8B537"
+                    strokeWidth={2.5}
+                    delay={i * 100 + 600}
+                    className="pointer-events-none absolute left-0 top-1/2 h-3 w-full -translate-y-1/2"
+                  />
                 </span>
-              </li>
+              </Reveal>
             ))}
           </ul>
         </div>
@@ -276,21 +396,24 @@ export default function KairosLanding() {
       {/* ── Features grid (Nexa-style bordered cells) ───────────────────── */}
       <section id="features" className="py-24 md:py-32 px-6 md:px-16 border-t border-black/[0.06] dark:border-white/[0.06]">
         <div className="max-w-6xl mx-auto">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-black/45 dark:text-white/40 mb-5">
+          <Reveal as="p" index={0} className="text-[11px] font-bold uppercase tracking-[0.3em] text-black/45 dark:text-white/40 mb-5">
             What's Inside
-          </p>
-          <h2 className="font-black uppercase tracking-tight leading-[0.9] text-4xl md:text-5xl max-w-3xl">
+          </Reveal>
+          <Reveal as="h2" index={1} className="font-black uppercase tracking-tight leading-[0.9] text-4xl md:text-5xl max-w-3xl">
             Everything your<br />team needs.
-          </h2>
+          </Reveal>
           <div className="mt-16 grid md:grid-cols-3 gap-px bg-black/[0.06] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.06]">
-            {FEATURES.map((f) => (
-              <a
+            {FEATURES.map((f, i) => (
+              <Reveal
+                as="a"
                 key={f.title}
+                index={i}
                 href={f.href}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"
+                className="relative bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"
               >
+                <Spotlight size={300} />
                 <div className="flex items-start justify-between">
                   <f.Icon className="h-7 w-7 text-[#f8b537] group-hover:text-[#5D3FD3] transition-colors" />
                   <ArrowUpRight className="h-4 w-4 text-black/25 dark:text-white/20 group-hover:text-[#5D3FD3] transition-colors" />
@@ -304,7 +427,7 @@ export default function KairosLanding() {
                 <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-black/35 dark:text-white/35 group-hover:text-[#5D3FD3] transition-colors">
                   Read the docs →
                 </span>
-              </a>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -317,18 +440,18 @@ export default function KairosLanding() {
           className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#451ebb_0%,transparent_55%)] opacity-10 dark:opacity-25"
         />
         <div className="relative max-w-6xl mx-auto">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#f8b537] mb-5">
+          <Reveal as="p" index={0} className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#f8b537] mb-5">
             A Look Inside
-          </p>
+          </Reveal>
           <div className="grid md:grid-cols-12 gap-12 items-end mb-16">
-            <h2 className="md:col-span-7 font-black uppercase tracking-tight leading-[0.9] text-4xl md:text-5xl">
+            <Reveal as="h2" index={1} className="md:col-span-7 font-black uppercase tracking-tight leading-[0.9] text-4xl md:text-5xl">
               Built for the<br />way you actually<br />run things.
-            </h2>
-            <p className="md:col-span-5 text-black/55 dark:text-white/55 leading-relaxed">
+            </Reveal>
+            <Reveal as="p" index={2} className="md:col-span-5 text-black/55 dark:text-white/55 leading-relaxed">
               Real-time dashboards, scoped to the branch you lead and the
               fellowships you steward. No more screenshots from one tab into
               another tab.
-            </p>
+            </Reveal>
           </div>
 
           {/* Card cluster — 3 floating browser windows */}
@@ -336,6 +459,7 @@ export default function KairosLanding() {
             <div className="grid md:grid-cols-3 gap-4 md:gap-2 items-start">
               {/* ── Left card: Members directory ────────────────────────── */}
               <div className="md:translate-x-3 md:translate-y-6 md:rotate-[-2deg] z-10">
+                <Assemble ax={-420} ay={120} ar={-14}>
                 <PreviewWindow url="kairos.kharis.org/members">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[#1a1c1c] dark:text-white text-sm font-bold">Members</h4>
@@ -387,10 +511,12 @@ export default function KairosLanding() {
                     ))}
                   </ul>
                 </PreviewWindow>
+                </Assemble>
               </div>
 
               {/* ── Center card: Dashboard (prominent) ──────────────────── */}
               <div className="md:scale-[1.04] md:-translate-y-2 md:z-20 relative">
+                <Assemble ax={0} ay={260} ar={6}>
                 <PreviewWindow url="kairos.kharis.org/dashboard" prominent>
                   <div className="flex items-center justify-between mb-5">
                     <div>
@@ -431,8 +557,8 @@ export default function KairosLanding() {
                       {[42, 55, 48, 68, 72, 81].map((h, i) => (
                         <div
                           key={i}
-                          style={{ height: `${h}%` }}
-                          className={`flex-1 rounded-sm ${
+                          style={{ height: `${h}%`, ["--i" as string]: i }}
+                          className={`mo-bar-y flex-1 rounded-sm ${
                             i === 5
                               ? "bg-gradient-to-t from-[#5d3fd3] to-[#f8b537]"
                               : "bg-[#5D3FD3]/35 dark:bg-[#5D3FD3]/40"
@@ -447,10 +573,12 @@ export default function KairosLanding() {
                     </div>
                   </div>
                 </PreviewWindow>
+                </Assemble>
               </div>
 
               {/* ── Right card: Branch performance ──────────────────────── */}
               <div className="md:-translate-x-3 md:translate-y-6 md:rotate-[2deg] z-10">
+                <Assemble ax={420} ay={140} ar={12}>
                 <PreviewWindow url="kairos.kharis.org/reports">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[#1a1c1c] dark:text-white text-sm font-bold">Branch Performance</h4>
@@ -463,7 +591,7 @@ export default function KairosLanding() {
                       { name: "Accra Main", growth: 18, width: 92 },
                       { name: "Kumasi", growth: 14, width: 70 },
                       { name: "Freetown", growth: 5, width: 45 },
-                    ].map((b) => (
+                    ].map((b, bi) => (
                       <li key={b.name}>
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-[11px] text-black/75 dark:text-white/80">{b.name}</span>
@@ -471,8 +599,8 @@ export default function KairosLanding() {
                         </div>
                         <div className="h-1.5 rounded-full bg-black/[0.06] dark:bg-white/[0.06] overflow-hidden">
                           <div
-                            style={{ width: `${b.width}%` }}
-                            className="h-full rounded-full bg-gradient-to-r from-[#5d3fd3] to-[#f8b537]"
+                            style={{ width: `${b.width}%`, ["--i" as string]: bi }}
+                            className="mo-bar-x h-full rounded-full bg-gradient-to-r from-[#5d3fd3] to-[#f8b537]"
                           />
                         </div>
                       </li>
@@ -483,12 +611,14 @@ export default function KairosLanding() {
                     <span className="text-[11px] font-bold text-[#1a1c1c] dark:text-white">1,847</span>
                   </div>
                 </PreviewWindow>
+                </Assemble>
               </div>
             </div>
           </div>
 
           {/* ── Control Centre: full post-login overview ──────────────── */}
           <div className="relative mx-auto max-w-6xl mt-20 md:mt-28">
+            <Assemble ax={0} ay={160} ar={-3}>
             <PreviewWindow url="kairos.kharis.org/dashboard" prominent>
               <div className="flex gap-3 md:gap-4">
                 {/* ── Sidebar ──────────────────────────────────────── */}
@@ -676,9 +806,9 @@ export default function KairosLanding() {
                           <div className="text-[7px] uppercase tracking-wider text-black/55 dark:text-white/45 font-bold leading-tight">By Branch</div>
                           <div className="text-[6px] text-black/40 dark:text-white/35 mb-1">Top 3</div>
                           <div className="flex items-end gap-0.5 h-4">
-                            <div className="flex-1 bg-[#5D3FD3] rounded-sm" style={{ height: "90%" }} />
-                            <div className="flex-1 bg-[#5D3FD3]/70 rounded-sm" style={{ height: "70%" }} />
-                            <div className="flex-1 bg-[#5D3FD3]/45 rounded-sm" style={{ height: "55%" }} />
+                            <div className="mo-bar-y flex-1 bg-[#5D3FD3] rounded-sm" style={{ height: "90%", ["--i" as string]: 0 }} />
+                            <div className="mo-bar-y flex-1 bg-[#5D3FD3]/70 rounded-sm" style={{ height: "70%", ["--i" as string]: 1 }} />
+                            <div className="mo-bar-y flex-1 bg-[#5D3FD3]/45 rounded-sm" style={{ height: "55%", ["--i" as string]: 2 }} />
                           </div>
                           <div className="text-[6px] text-black/40 dark:text-white/35 mt-0.5">LDN · MAN · ACC</div>
                         </div>
@@ -749,10 +879,12 @@ export default function KairosLanding() {
                 </div>
               </div>
             </PreviewWindow>
+            </Assemble>
           </div>
 
           {/* ── 5th card: Discipleship pipeline (wider, no rotation) ───── */}
           <div className="relative mx-auto max-w-4xl mt-20 md:mt-28">
+            <Assemble ax={0} ay={140} ar={3}>
             <PreviewWindow url="kairos.kharis.org/new-believers" prominent>
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -847,6 +979,7 @@ export default function KairosLanding() {
                 </span>
               </div>
             </PreviewWindow>
+            </Assemble>
           </div>
         </div>
       </section>
@@ -859,25 +992,38 @@ export default function KairosLanding() {
         />
         <div className="relative max-w-5xl mx-auto">
           <h2 className="font-black uppercase tracking-tight leading-[0.9] text-[clamp(2.5rem,8vw,6rem)]">
-            One platform.
-            <br />
-            Every branch.
-            <br />
-            <span className="bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent">
-              No spreadsheets.
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent">
-              No guesswork.
-            </span>
+            <Reveal as="span" index={0} className="block">One platform.</Reveal>
+            <Reveal as="span" index={1} className="block">Every branch.</Reveal>
+            <Reveal as="span" index={2} className="block">
+              <span className="bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent">
+                No spreadsheets.
+              </span>
+            </Reveal>
+            <Reveal as="span" index={3} className="block">
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-[#f8b537] to-[#5d3fd3] bg-clip-text text-transparent">
+                  No guesswork.
+                </span>
+                <HandDrawn
+                  d="M40 72 C 24 24, 180 6, 330 18 C 404 26, 396 96, 300 108 C 180 122, 44 112, 24 74 C 14 50, 60 30, 120 24"
+                  viewBox="0 0 400 120"
+                  stroke="#F8B537"
+                  strokeWidth={3}
+                  delay={1000}
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-[136%] w-[112%] -translate-x-1/2 -translate-y-1/2"
+                />
+              </span>
+            </Reveal>
           </h2>
-          <Link
-            href="/login"
-            className="mt-12 inline-flex items-center gap-2 rounded-full bg-[#5D3FD3] hover:bg-[#451ebb] text-white px-10 py-4 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
-          >
-            Get Started Today
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
+          <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:1deg] mt-12">
+            <Link
+              href="/login"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#5D3FD3] hover:bg-[#451ebb] text-white px-10 py-4 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+            >
+              Get Started Today
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </Halo>
         </div>
       </section>
 
