@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Animated,
   View,
   Text,
   Pressable,
@@ -14,6 +15,8 @@ import {
   useThemedStyles,
   type ThemeColors,
 } from '@kairos/ui-native';
+import { useEntrance } from './motion/use-entrance';
+import { useTapRipple } from './motion/tap-ripple';
 import { startOAuthFlow, type OAuthStartResult } from '@/lib/oauth';
 import {
   OAuthProviderIcon,
@@ -53,6 +56,12 @@ interface OAuthButtonGroupProps {
    * when password is the primary path and SSO is the secondary option.
    */
   variant?: 'full' | 'icons';
+  /**
+   * Canvas motion for the 'icons' variant: when set, each button enters in
+   * turn starting at this index, ripples gold from the touch point and taps
+   * with a light haptic. Unset, the buttons are exactly as before.
+   */
+  entranceStart?: number;
 }
 
 export function OAuthButtonGroup({
@@ -61,6 +70,7 @@ export function OAuthButtonGroup({
   onResult,
   disabled = false,
   variant = 'full',
+  entranceStart,
 }: OAuthButtonGroupProps) {
   const styles = useThemedStyles(makeStyles);
   const [busy, setBusy] = useState<OAuthProviderId | null>(null);
@@ -85,29 +95,18 @@ export function OAuthButtonGroup({
   if (variant === 'icons') {
     return (
       <View style={styles.iconRow}>
-        {PROVIDERS.map((p) => {
-          const isBusy = busy === p.id;
-          return (
-            <Pressable
-              key={p.id}
-              onPress={() => handlePress(p.id)}
-              disabled={disabled || busy !== null}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                (disabled || busy !== null) && styles.btnDisabled,
-                pressed && !isBusy && styles.btnPressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={`${prefix} ${OAUTH_PROVIDER_LABEL[p.id]}`}
-            >
-              {isBusy ? (
-                <ActivityIndicator />
-              ) : (
-                <OAuthProviderIcon provider={p.id} size={22} tint={styles.appleTint.color as string} />
-              )}
-            </Pressable>
-          );
-        })}
+        {PROVIDERS.map((p, i) => (
+          <ProviderIconButton
+            key={p.id}
+            provider={p.id}
+            label={`${prefix} ${OAUTH_PROVIDER_LABEL[p.id]}`}
+            busy={busy === p.id}
+            blocked={disabled || busy !== null}
+            onPress={() => handlePress(p.id)}
+            entranceIndex={entranceStart === undefined ? null : entranceStart + i}
+            canvas={entranceStart !== undefined}
+          />
+        ))}
       </View>
     );
   }
@@ -157,6 +156,54 @@ export function OAuthButtonGroup({
   );
 }
 
+/** One round SSO button. Hooks live here so each can enter and ripple on its own. */
+function ProviderIconButton({
+  provider,
+  label,
+  busy,
+  blocked,
+  onPress,
+  entranceIndex,
+  canvas,
+}: {
+  provider: OAuthProviderId;
+  label: string;
+  busy: boolean;
+  blocked: boolean;
+  onPress: () => void;
+  entranceIndex: number | null;
+  canvas: boolean;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const entrance = useEntrance(entranceIndex);
+  const ripple = useTapRipple(23);
+  return (
+    <Animated.View style={entrance}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={canvas ? ripple.onPressIn : undefined}
+        onLayout={canvas ? ripple.onLayout : undefined}
+        disabled={blocked}
+        style={({ pressed }) => [
+          styles.iconBtn,
+          canvas && styles.iconBtnCanvas,
+          blocked && styles.btnDisabled,
+          pressed && !busy && styles.btnPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        {busy ? (
+          <ActivityIndicator />
+        ) : (
+          <OAuthProviderIcon provider={provider} size={22} tint={styles.appleTint.color as string} />
+        )}
+        {canvas ? ripple.layer : null}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
     stack: {
@@ -177,6 +224,8 @@ function makeStyles(c: ThemeColors) {
       borderColor: c.border,
       backgroundColor: 'transparent',
     },
+    // Clip the ripple to the circle.
+    iconBtnCanvas: { overflow: 'hidden' },
     appleTint: {
       color: c.ink,
     },

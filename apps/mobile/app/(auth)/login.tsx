@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  AccessibilityInfo,
-  useColorScheme,
-  type DimensionValue,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, Fingerprint } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import type { Member } from '@kairos/types';
 import {
   Button,
@@ -33,143 +30,55 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
-import { pickAuthVerse, resolveDaypart, type Daypart } from '@kairos/core';
-
-/** Where the field's one light sits, and how strongly, at a given hour. */
-interface FieldBlob {
-  color: string;
-  alpha: number;
-  // DimensionValue, not string — RN types percentages as `${number}%` and a
-  // plain string will not satisfy ViewStyle.
-  top: DimensionValue;
-  left: DimensionValue;
-  width: DimensionValue;
-  height: DimensionValue;
-}
+import { pickAuthVerse } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { KharisDove } from '@/components/kharis-dove';
+import { AmbientGlow } from '@/components/motion/ambient-glow';
+import { CanvasBackground } from '@/components/motion/canvas-background';
+import { ContinueAsRow } from '@/components/motion/continue-as-row';
+import { FillBar } from '@/components/motion/fill-bar';
+import { HaloBorder } from '@/components/motion/halo-border';
+import { HandDrawnStroke, HAND_DRAWN_UNDERLINE } from '@/components/motion/hand-drawn-stroke';
+import { canvasColors } from '@/components/motion/tokens';
+import { useTapRipple } from '@/components/motion/tap-ripple';
+import { useEntrance } from '@/components/motion/use-entrance';
+import { FLOAT_START_MS, useFloat } from '@/components/motion/use-float';
+import { useMotionActive } from '@/components/motion/use-motion-active';
+import { useReduceMotion } from '@/components/motion/use-reduce-motion';
+
+/** How long "✓ Welcome back" holds before navigating. */
+const WELCOME_HOLD_MS = 700;
 
 export default function LoginScreen() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const scheme = useColorScheme();
 
   // Rotates per mount, so the page has a voice rather than a slogan. Shared
   // with web via the same verse set.
   const verse = useMemo(() => pickAuthVerse(), []);
 
-  // The field's drift. Reanimated is not installed and adding it would force a
-  // native rebuild, so this is RN's built-in Animated on the native driver —
-  // a compositor-only transform, no bridge traffic.
-  const blobDrift = useRef(new Animated.Value(0)).current;
-  const blobOpacity = useRef(new Animated.Value(0)).current;
-  // Time-of-day light.
-  //
-  // The warm point in the field is a low sun: wide and low at dawn, small and
-  // high through the day, crossed over and amber at dusk, and overnight it is
-  // gone entirely — replaced by a cold high glow where the moon would be.
-  //
-  // It moves rather than merely brightening because nobody ever sees two hours
-  // side by side: one sign-in is one hour, with nothing to compare against.
-  // Changing only opacity is invisible; changing where the light comes from
-  // reads as a time of day on a single viewing. Same four cuts as web, out of
-  // @kairos/core. Web carries three gradient points and can afford a separate
-  // moon; here the sky gradient does that work and the one blob is the light.
-  const { fieldColors, blob } = useMemo(() => {
-    const daypart = resolveDaypart(new Date().getHours());
-    const dark = scheme === 'dark';
-
-    const sky: Record<Daypart, [string, string, string]> = dark
-      ? {
-          dawn: ['#15102c', '#140d20', '#2a1608'],
-          day: ['#120b2e', '#0b0818', '#050408'],
-          dusk: ['#180c38', '#2a0f2c', '#2b1206'],
-          night: ['#0b0d26', '#070614', '#030308'],
-        }
-      : {
-          dawn: ['#f3f0ff', '#fdf6ee', '#ffeedb'],
-          day: ['#f6f3ff', '#fafafa', '#f4f4f6'],
-          dusk: ['#f3eeff', '#fbeff5', '#ffeede'],
-          night: ['#eef0f8', '#f4f5fa', '#f0f1f7'],
-        };
-
-    // Geometry as well as colour — this is the half that does the talking.
-    const light: Record<Daypart, FieldBlob> = {
-      dawn: {
-        color: '#f8a84a',
-        alpha: dark ? 0.26 : 0.3,
-        top: '58%',
-        left: '-30%',
-        width: '160%',
-        height: '72%',
-      },
-      day: {
-        color: '#5d3fd3',
-        alpha: dark ? 0.16 : 0.12,
-        top: '8%',
-        left: '14%',
-        width: '78%',
-        height: '42%',
-      },
-      dusk: {
-        color: '#f2863e',
-        alpha: dark ? 0.24 : 0.26,
-        top: '56%',
-        left: '6%',
-        width: '150%',
-        height: '74%',
-      },
-      // The sun is below the frame. This is the moon.
-      night: {
-        color: '#92aaec',
-        alpha: dark ? 0.12 : 0.14,
-        top: '-16%',
-        left: '28%',
-        width: '62%',
-        height: '36%',
-      },
-    };
-
-    return { fieldColors: sky[daypart], blob: light[daypart] };
-  }, [scheme]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let loop: Animated.CompositeAnimation | null = null;
-
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
-      if (cancelled) return;
-      // The field itself still renders — only the drift is suppressed, so the
-      // page keeps its depth without anything moving.
-      Animated.timing(blobOpacity, {
-        toValue: 1,
-        duration: reduced ? 0 : 600,
-        useNativeDriver: true,
-      }).start();
-      if (reduced) return;
-      loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(blobDrift, { toValue: 1, duration: 28000, useNativeDriver: true }),
-          Animated.timing(blobDrift, { toValue: 0, duration: 28000, useNativeDriver: true }),
-        ]),
-      );
-      loop.start();
-    });
-
-    return () => {
-      cancelled = true;
-      loop?.stop();
-    };
-  }, [blobDrift, blobOpacity]);
+  // Canvas motion. Reanimated is not installed and adding it would force a
+  // native rebuild, so this is RN's built-in Animated on the native driver
+  // wherever the property allows it (transform, opacity).
+  const reduced = useReduceMotion();
+  const motionActive = useMotionActive();
+  const insets = useSafeAreaInsets();
+  const logoEntrance = useEntrance(0);
+  const brandEntrance = useEntrance(1);
+  const cardEntrance = useEntrance(2);
+  const logoFloat = useFloat(motionActive, FLOAT_START_MS);
+  const signInRipple = useTapRipple(radii.lg);
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
   const signInWithBiometric = useAuthStore((s) => s.signInWithBiometric);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // The beat between a successful password sign-in and leaving the screen.
+  const [welcome, setWelcome] = useState(false);
 
   // What the device can do (Face ID / Fingerprint / …) and which accounts
   // are already opted in on this device. The picker at the top of the card
@@ -196,6 +105,8 @@ export default function LoginScreen() {
   }, []);
 
   const canOfferBiometric = !!cap?.available && armedUsers.length > 0;
+  // Last in the entrance order: after the card, the SSO buttons and every row.
+  const footerEntrance = useEntrance(6 + armedUsers.length);
 
   async function handleBiometricSignIn(user: ArmedUser) {
     if (!cap?.available || bioBusy) return;
@@ -275,6 +186,11 @@ export default function LoginScreen() {
         email: member.email,
         refreshToken: tokens.refreshToken,
       });
+      // Everything that could still fail has succeeded: show it, hold a beat,
+      // then go. Under Reduce Motion the hold is kept (it is information, not
+      // motion) but shortened.
+      setWelcome(true);
+      await new Promise((r) => setTimeout(r, reduced ? 300 : WELCOME_HOLD_MS));
       router.replace('/(tabs)');
     },
     onError: (e: Error) => {
@@ -327,36 +243,10 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {/* The field. Mobile has no brand panel to confine atmosphere to, so it
-          sits behind everything and the card floats on it — the same single
-          continuous background the web auth shell now uses. One slow drift
-          (28s) gives it depth; it stops under reduce-motion. */}
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <LinearGradient
-          colors={fieldColors}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <Animated.View
-          style={[
-            styles.fieldBlob,
-            {
-              backgroundColor: blob.color,
-              top: blob.top,
-              left: blob.left,
-              width: blob.width,
-              height: blob.height,
-              opacity: Animated.multiply(blobOpacity, blob.alpha),
-              transform: [
-                { translateX: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [-24, 24] }) },
-                { translateY: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [16, -16] }) },
-                { scale: blobDrift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) },
-              ],
-            },
-          ]}
-        />
-      </View>
+      {/* The Canvas ground (tints + dot grid) and the glow behind the logo.
+          Both sit behind everything; the card floats on them. */}
+      <CanvasBackground />
+      <AmbientGlow top={insets.top + 72} active={motionActive} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -367,28 +257,45 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <KharisDove size={32} draw />
-            </View>
-            <Text style={styles.brandLabel}>Kharis Church</Text>
-            <Text style={styles.verse}>
-              {verse.before}
-              <Text style={styles.versePrimary}>{verse.primaryWord}</Text>
-              {verse.between}
-              <Text style={styles.verseAccent}>{verse.accentWord}</Text>
-              {verse.after}
-            </Text>
-            <Text style={styles.verseRef}>{verse.reference}</Text>
+            <Animated.View style={logoEntrance}>
+              <Animated.View style={[styles.logoTile, logoFloat]}>
+                <LinearGradient
+                  colors={gradients.brand}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.logoGradientFill}
+                />
+                <KharisDove size={32} draw />
+              </Animated.View>
+            </Animated.View>
+            <Animated.View style={[styles.brandText, brandEntrance]}>
+              <Text style={styles.brandLabel}>Kharis Church</Text>
+              <Text style={styles.verse}>
+                {verse.before}
+                <Text style={styles.versePrimary}>{verse.primaryWord}</Text>
+                {verse.between}
+                <Text style={styles.verseAccent}>{verse.accentWord}</Text>
+                {verse.after}
+              </Text>
+              <Text style={styles.verseRef}>{verse.reference}</Text>
+            </Animated.View>
           </View>
 
+          <Animated.View style={cardEntrance}>
+          <HaloBorder radius={radii.lg} base={c.border} active={motionActive} style={styles.cardShadow}>
           <View style={styles.card}>
-            <Text style={styles.title}>Sign in</Text>
+            <View style={styles.titleWrap}>
+              <Text style={styles.title}>Sign in</Text>
+              {/* Hand-drawn gold underline, ~1.1s after mount. */}
+              <View pointerEvents="none" style={styles.underline}>
+                <HandDrawnStroke
+                  {...HAND_DRAWN_UNDERLINE}
+                  stroke={canvasColors.gold}
+                  strokeWidth={5}
+                  delay={1100}
+                />
+              </View>
+            </View>
 
             {error ? (
               <View style={styles.errorBanner}>
@@ -408,6 +315,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoComplete="email"
               placeholder="you@example.com"
+              canvas
               containerStyle={{ marginBottom: spacing.md }}
             />
 
@@ -423,6 +331,7 @@ export default function LoginScreen() {
               secureToggle
               placeholder="Password"
               autoComplete="password"
+              canvas
             />
 
             <Pressable
@@ -434,14 +343,26 @@ export default function LoginScreen() {
             </Pressable>
 
             <Button
-              label="Sign in"
+              label={welcome ? '✓ Welcome back' : login.isPending ? 'Signing in…' : 'Sign in'}
               onPress={() => login.mutate()}
-              loading={login.isPending}
+              busy={login.isPending || welcome}
               disabled={!email || !password}
               size="lg"
               fullWidth
-              iconRight={<ArrowRight color="#ffffff" size={16} strokeWidth={2} />}
+              iconRight={
+                login.isPending || welcome ? undefined : (
+                  <ArrowRight color="#ffffff" size={16} strokeWidth={2} />
+                )
+              }
               style={{ marginTop: spacing.sm }}
+              onPressIn={signInRipple.onPressIn}
+              onLayout={signInRipple.onLayout}
+              overlay={
+                <>
+                  {signInRipple.layer}
+                  <FillBar active={login.isPending || welcome} />
+                </>
+              }
             />
 
             <View style={styles.dividerRow}>
@@ -455,6 +376,7 @@ export default function LoginScreen() {
               onResult={handleOAuthResult}
               disabled={login.isPending}
               variant="icons"
+              entranceStart={3}
             />
 
             {/* One row per opted-in account on this device. Empty when no
@@ -462,36 +384,33 @@ export default function LoginScreen() {
                 fallback. */}
             {canOfferBiometric ? (
               <View style={styles.biometricGroup}>
-                {armedUsers.map((user) => {
-                  const busy = bioBusy === user.id;
-                  return (
-                    <Pressable
-                      key={user.id}
-                      onPress={() => void handleBiometricSignIn(user)}
-                      style={styles.biometricButton}
-                      disabled={!!bioBusy}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Sign in as ${user.displayName} with ${cap!.label}`}
-                    >
-                      <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
-                      <Text style={styles.biometricLabel} numberOfLines={1}>
-                        {busy ? 'Authenticating…' : `Continue as ${user.displayName}`}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {armedUsers.map((user, i) => (
+                  <ContinueAsRow
+                    key={user.id}
+                    name={user.displayName}
+                    busy={bioBusy === user.id}
+                    disabled={!!bioBusy}
+                    accessibilityLabel={`Sign in as ${user.displayName} with ${cap!.label}`}
+                    onAuthenticate={() => void handleBiometricSignIn(user)}
+                    entranceIndex={6 + i}
+                  />
+                ))}
               </View>
             ) : null}
           </View>
+          </HaloBorder>
+          </Animated.View>
 
-          <Pressable
-            onPress={() => router.push('/(auth)/signup' as never)}
-            style={styles.signupRow}
-            hitSlop={8}
-          >
-            <Text style={styles.signupPrompt}>Don&apos;t have an account? </Text>
-            <Text style={styles.signupLink}>Create account</Text>
-          </Pressable>
+          <Animated.View style={footerEntrance}>
+            <Pressable
+              onPress={() => router.push('/(auth)/signup' as never)}
+              style={styles.signupRow}
+              hitSlop={8}
+            >
+              <Text style={styles.signupPrompt}>Don&apos;t have an account? </Text>
+              <Text style={styles.signupLink}>Create account</Text>
+            </Pressable>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -528,14 +447,6 @@ async function fetchMemberProfile(accessToken: string): Promise<Member> {
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.page },
-  fieldBlob: {
-    position: 'absolute',
-    // Position, size, colour and alpha are all set inline from the daypart —
-    // the light moves across the day, it does not just change brightness.
-    borderRadius: 9999,
-    // Colour and alpha are set inline from the daypart — this is atmosphere,
-    // not a shape anyone should notice, so the alpha never climbs past ~0.18.
-  },
   verse: {
     ...typography.body,
     color: c.inkMuted,
@@ -585,16 +496,35 @@ function makeStyles(c: ThemeColors) {
     color: c.inkMuted,
     letterSpacing: 2.2,
   },
-  card: {
-    backgroundColor: c.card,
-    borderRadius: radii.lg,
-    padding: spacing.xl,
+  brandText: {
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  // The shadow lives on the halo's outer ring; the card inside paints the
+  // surface only.
+  cardShadow: {
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
+  },
+  card: {
+    backgroundColor: c.card,
+    padding: spacing.xl,
     gap: spacing.md,
+  },
+  titleWrap: {
+    alignSelf: 'flex-start',
+    marginBottom: spacing.xs,
+  },
+  underline: {
+    position: 'absolute',
+    top: '100%',
+    marginTop: -2,
+    left: '-2%',
+    width: '104%',
+    height: 22,
   },
   title: {
     ...typography.screenTitle,
@@ -635,23 +565,6 @@ function makeStyles(c: ThemeColors) {
   },
   biometricGroup: {
     gap: spacing.sm,
-  },
-  biometricButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderStyle: 'dashed',
-    borderWidth: 1.5,
-    borderColor: c.primary,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.06)',
-    height: 46,
-    paddingHorizontal: spacing.md,
-  },
-  biometricLabel: {
-    ...typography.button,
-    color: c.primary,
   },
   signupRow: {
     flexDirection: 'row',
