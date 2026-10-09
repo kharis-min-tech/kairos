@@ -1,10 +1,9 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
-import { AuthField } from './auth-field';
 import { pickAuthVerse } from '@kairos/core';
 import { HandDrawn } from '@/components/motion/hand-drawn';
 import { Reveal } from '@/components/motion/reveal';
-import { LoginAmbient } from './login-ambient';
+import { AuthAmbient } from './auth-ambient';
 
 /** Verse entrance: words rise one by one, 85ms apart, after a 400ms beat. */
 const WORD_STAGGER_MS = 85;
@@ -37,13 +36,12 @@ function words(text: string, start: number): { nodes: React.ReactNode[]; next: n
  * flat grey — a hard vertical seam with an empty three-quarters beside it.
  * That seam, not the absence of animation, was what read as flat.
  *
- * Now a single field spans the whole viewport and everything sits on it. The
- * drifting colour points (globals.css, 28–46s, under 8% travel) give it depth
- * without ever being perceived as movement, the field's warmth tracks the
- * hour, the dove draws itself once, and the verse rotates per load so the
- * page has a voice rather than a slogan.
+ * Now a single ground spans the whole viewport and everything sits on it
+ * (AuthAmbient: a quiet page with a purple and a gold corner, a dot grid and a
+ * cursor glow). The dove draws itself once, and the verse is picked per load
+ * and rises word by word so the page has a voice rather than a slogan.
  *
- * The field is full-bleed but the two columns are not. Once the seam went,
+ * The ground is full-bleed but the two columns are not. Once the seam went,
  * letting the pair span the whole viewport stopped reading as a two-column
  * layout: on a 1900px screen the verse hugged the far left, the card landed
  * at 63% with ~550px of nothing between them, and the margins disagreed —
@@ -65,10 +63,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-[#fafafa] dark:bg-[#07060e]">
-      {/* The field — one continuous background behind both columns, lit for
-          the viewer's hour. Full-bleed; only the columns are capped. */}
-      <AuthField />
-      <LoginAmbient />
+      {/* The ground — one continuous background behind both columns.
+          Full-bleed; only the columns are capped. */}
+      <AuthAmbient />
 
       {/* Pinned to the viewport corner, not the capped shell — chrome belongs
           to the window, not to the composition. */}
