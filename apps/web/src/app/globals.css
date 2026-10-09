@@ -335,7 +335,7 @@
 
   /* 7 · spotlight */
   .mo-spot {
-    --spot-rgb: 248, 150, 40;
+    --spot-rgb: 248, 181, 55;
     transition: opacity 350ms ease;
   }
   .dark .mo-spot {
