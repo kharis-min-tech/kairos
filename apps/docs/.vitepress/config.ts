@@ -31,6 +31,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Introduction', link: '/getting-started/introduction' },
+          { text: 'Video Tour', link: '/getting-started/video-tour' },
           { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
           { text: 'Core Concepts', link: '/getting-started/core-concepts' },
           { text: 'Your First Church', link: '/getting-started/your-first-church' },
@@ -95,6 +96,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Introduction', link: '/getting-started/introduction' },
+          { text: 'Video Tour', link: '/getting-started/video-tour' },
           { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
           { text: 'Core Concepts', link: '/getting-started/core-concepts' },
           { text: 'Your First Church', link: '/getting-started/your-first-church' },
