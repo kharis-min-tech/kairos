@@ -1,9 +1,9 @@
 # Video Tour
 
 A narrated walkthrough of Kairos, recorded in the real application. Five
-minutes, twenty-eight stops — first as a system administrator, who sees every
-section, then signed out and back in as an ordinary member, to show how much
-smaller Kairos becomes when your role needs less of it.
+minutes, twenty-eight stops. It runs first as a system administrator, who sees
+every section, then signs out and back in as an ordinary member, to show how
+much smaller Kairos becomes when your role needs less of it.
 
 Everyone and everything in the recording is demonstration data.
 
@@ -30,7 +30,7 @@ Everyone and everything in the recording is demonstration data.
 | 13 | [Souls Pipeline](/platform/souls-pipeline) | New → Following Up → Converted |
 | 14 | [Forms](/platform/forms) | First-timer cards and submissions from outside |
 | 15 | [Fellowships](/platform/fellowships) | K-Groups, Kharis Express, and the map view |
-| 16 | [Departments](/platform/departments) | Choir, ushers, media — rotas and uniforms |
+| 16 | [Departments](/platform/departments) | Choir, ushers and media, with rotas and uniforms |
 | 17 | [Attendance](/platform/attendance) | Every Sunday, midweek and special service |
 | 18 | Check in | The desk on a Sunday morning |
 | 19 | [Reports](/platform/reports) | Attendance, growth and outreach |
@@ -45,7 +45,7 @@ Everyone and everything in the recording is demonstration data.
 | # | Stop | What it covers |
 |---|---|---|
 | 25 | Signing in as a member | Signing out, and back in |
-| 26 | A member's view | A quieter sidebar — no Members, Concerns or Organisation |
+| 26 | A member's view | A quieter sidebar, with no Members, Concerns or Organisation |
 | 27 | My Attendance | Your own record, without asking the office |
 | 28 | Help & Guides | Opening this handbook from the sidebar |
 
@@ -54,7 +54,7 @@ Everyone and everything in the recording is demonstration data.
 Kairos shows people only what their role needs. A member sees their own groups
 and their own attendance; a branch admin sees the branch; a system admin sees
 regions and branches as well. If a stop in the video is not in your sidebar,
-your role does not need it — that is by design, not a fault.
+your role does not need it. That is by design, not a fault.
 
 [Roles & Permissions](/getting-started/roles-permissions) explains who can see
 what, and why.
