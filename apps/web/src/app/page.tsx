@@ -364,11 +364,10 @@ export default function KairosLanding() {
                 as="li"
                 key={p.text}
                 index={i}
-                className="group relative isolate flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
+                className="flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
               >
-                <Spotlight size={260} className="-z-10" />
                 <p.Icon className="h-5 w-5 text-[#f8b537] mt-0.5 shrink-0" />
-                <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 group-hover:text-black dark:group-hover:text-white leading-relaxed transition-colors">
+                <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 leading-relaxed">
                   {p.text}
                   <HandDrawn
                     d="M2 11 C 80 5, 190 15, 298 8"

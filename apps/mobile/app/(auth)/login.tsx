@@ -41,8 +41,6 @@ import { CanvasBackground } from '@/components/motion/canvas-background';
 import { ContinueAsRow } from '@/components/motion/continue-as-row';
 import { FillBar } from '@/components/motion/fill-bar';
 import { HaloBorder } from '@/components/motion/halo-border';
-import { HandDrawnStroke, HAND_DRAWN_UNDERLINE } from '@/components/motion/hand-drawn-stroke';
-import { canvasColors } from '@/components/motion/tokens';
 import { useTapRipple } from '@/components/motion/tap-ripple';
 import { useEntrance } from '@/components/motion/use-entrance';
 import { FLOAT_START_MS, useFloat } from '@/components/motion/use-float';
@@ -245,8 +243,9 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* The Canvas ground (tints + dot grid) and the glow behind the logo.
           Both sit behind everything; the card floats on them. */}
-      <CanvasBackground />
-      <AmbientGlow top={insets.top + 72} active={motionActive} />
+      <CanvasBackground>
+        <AmbientGlow top={insets.top + 72} active={motionActive} />
+      </CanvasBackground>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -284,18 +283,7 @@ export default function LoginScreen() {
           <Animated.View style={cardEntrance}>
           <HaloBorder radius={radii.lg} base={c.border} active={motionActive} style={styles.cardShadow}>
           <View style={styles.card}>
-            <View style={styles.titleWrap}>
-              <Text style={styles.title}>Sign in</Text>
-              {/* Hand-drawn gold underline, ~1.1s after mount. */}
-              <View pointerEvents="none" style={styles.underline}>
-                <HandDrawnStroke
-                  {...HAND_DRAWN_UNDERLINE}
-                  stroke={canvasColors.gold}
-                  strokeWidth={5}
-                  delay={1100}
-                />
-              </View>
-            </View>
+            <Text style={styles.title}>Sign in</Text>
 
             {error ? (
               <View style={styles.errorBanner}>
@@ -513,18 +501,6 @@ function makeStyles(c: ThemeColors) {
     backgroundColor: c.card,
     padding: spacing.xl,
     gap: spacing.md,
-  },
-  titleWrap: {
-    alignSelf: 'flex-start',
-    marginBottom: spacing.xs,
-  },
-  underline: {
-    position: 'absolute',
-    top: '100%',
-    marginTop: -2,
-    left: '-2%',
-    width: '104%',
-    height: 22,
   },
   title: {
     ...typography.screenTitle,
