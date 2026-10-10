@@ -12,6 +12,9 @@ hero:
     - theme: alt
       text: What is Kairos?
       link: /getting-started/what-is-kairos
+    - theme: alt
+      text: ▶ Watch the Tour
+      link: /getting-started/video-tour
 
 features:
   - icon:
