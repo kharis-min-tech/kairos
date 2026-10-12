@@ -10,6 +10,7 @@ import {
   Search,
   MessageSquare,
   ArrowUpRight,
+  Play,
   LayoutDashboard,
   Map,
   CalendarCheck,
@@ -199,6 +200,16 @@ export default function KairosLanding() {
               className="inline-flex items-center justify-center rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
             >
               Explore Features
+            </a>
+            {/* Role-specific narrated tours live on the handbook, not in this app. */}
+            <a
+              href="https://docs.kairos.kharis.org/getting-started/video-tour"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] text-white px-8 py-3.5 font-bold text-sm uppercase tracking-[0.15em] transition-colors"
+            >
+              <Play className="h-4 w-4" />
+              Watch the Tour
             </a>
           </div>
         </div>
