@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '@/lib/secure-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AuthTokens, MemberProfile } from '@kairos/types';
 import { setSessionTokens, api } from '@/lib/api-client';
