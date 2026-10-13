@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Check, Monitor, Sun, Moon } from 'lucide-react-native';
 import {
   Card,
@@ -16,20 +17,16 @@ import {
 
 interface Option {
   key: ThemeMode;
-  label: string;
-  meta: string;
+  /** Catalogue key under `settings:appearance`, resolved at render. */
+  labelKey: string;
+  metaKey: string;
   icon: typeof Monitor;
 }
 
 const OPTIONS: Option[] = [
-  {
-    key: 'system',
-    label: 'System',
-    meta: 'Follows your device and flips when your OS does.',
-    icon: Monitor,
-  },
-  { key: 'light', label: 'Light', meta: 'Always light, regardless of the device.', icon: Sun },
-  { key: 'dark', label: 'Dark', meta: 'Always dark, easier on the eyes at night.', icon: Moon },
+  { key: 'system', labelKey: 'system', metaKey: 'systemMeta', icon: Monitor },
+  { key: 'light', labelKey: 'light', metaKey: 'lightMeta', icon: Sun },
+  { key: 'dark', labelKey: 'dark', metaKey: 'darkMeta', icon: Moon },
 ];
 
 export default function Appearance() {
@@ -37,6 +34,7 @@ export default function Appearance() {
   const { mode, setMode, scheme } = useTheme();
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation(['settings', 'common']);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -44,15 +42,12 @@ export default function Appearance() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Appearance</Text>
+        <Text style={styles.headerTitle}>{t('settings:appearance.title')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.intro}>
-          Kairos matches your phone&apos;s appearance by default. Force a
-          scheme here if you&apos;d rather.
-        </Text>
+        <Text style={styles.intro}>{t('settings:appearance.intro')}</Text>
 
         <Card padding="none" style={styles.optionCard}>
           {OPTIONS.map((opt, idx) => {
@@ -80,8 +75,8 @@ export default function Appearance() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.optionLabel}>{opt.label}</Text>
-                  <Text style={styles.optionMeta}>{opt.meta}</Text>
+                  <Text style={styles.optionLabel}>{t(`settings:appearance.${opt.labelKey}`)}</Text>
+                  <Text style={styles.optionMeta}>{t(`settings:appearance.${opt.metaKey}`)}</Text>
                 </View>
                 {active ? (
                   <Check color={c.primary} size={18} strokeWidth={2} />
@@ -92,11 +87,11 @@ export default function Appearance() {
         </Card>
 
         <Text style={styles.footnote}>
-          Currently showing:{' '}
+          {t('settings:appearance.currentlyShowing')}{' '}
           <Text style={styles.footnoteStrong}>
-            {scheme === 'dark' ? 'Dark' : 'Light'}
+            {scheme === 'dark' ? t('settings:appearance.dark') : t('settings:appearance.light')}
           </Text>
-          {mode === 'system' ? ' (following system)' : ''}
+          {mode === 'system' ? t('settings:appearance.followingSystem') : ''}
         </Text>
       </ScrollView>
     </SafeAreaView>

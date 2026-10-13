@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-na
 import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
   LogOut,
   ChevronRight,
@@ -30,6 +31,7 @@ import {
   History,
   Download,
   Palette,
+  Languages,
   HelpCircle,
   Info,
 } from 'lucide-react-native';
@@ -54,6 +56,7 @@ export default function More() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
+  const { t } = useTranslation(['more', 'common']);
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
   const caps = useCapabilities();
@@ -83,9 +86,9 @@ export default function More() {
 
   const handleSignOut = async () => {
     const confirmed = await alert.confirm({
-      title: 'Sign out',
-      message: 'You will need to sign in again to use the app.',
-      confirmLabel: 'Sign out',
+      title: t('common:signOut'),
+      message: t('common:signOutConfirm'),
+      confirmLabel: t('common:signOut'),
       destructive: true,
     });
     if (!confirmed) return;
@@ -96,7 +99,7 @@ export default function More() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.pageTitle}>More</Text>
+        <Text style={styles.pageTitle}>{t('more:title')}</Text>
 
         <Pressable onPress={() => router.push('/profile')}>
           <Card padding="md" style={styles.profileCard}>
@@ -122,64 +125,64 @@ export default function More() {
             to learn a scheme. Row-level capability gates are unchanged from
             the previous grouping — only the grouping moved. */}
 
-        <Section label="For you">
+        <Section label={t('more:sections.forYou')}>
           <NavRow
             icon={Bell}
-            label="Notifications"
+            label={t('more:rows.notifications')}
             onPress={() => router.push('/notifications')}
           />
           <NavRow
             icon={Calendar}
-            label="My attendance"
+            label={t('more:rows.myAttendance')}
             onPress={() => router.push('/my-attendance')}
           />
           <NavRow
             icon={UsersRound}
-            label="My fellowship"
+            label={t('more:rows.myFellowship')}
             onPress={() => router.push('/my-fellowship')}
           />
           <NavRow
             icon={Building2}
-            label="My department"
+            label={t('more:rows.myDepartment')}
             onPress={() => router.push('/my-department')}
           />
-          <NavRow icon={Map} label="My branch" onPress={() => router.push('/my-branch')} />
+          <NavRow icon={Map} label={t('more:rows.myBranch')} onPress={() => router.push('/my-branch')} />
           <NavRow
             icon={BookOpen}
-            label="My New Believer journey"
+            label={t('more:rows.myNewBelieverJourney')}
             onPress={() => router.push('/new-believers?scope=mine')}
           />
           <NavRow
             icon={FileText}
-            label="My form submissions"
+            label={t('more:rows.myFormSubmissions')}
             onPress={() => router.push('/my-form-submissions')}
           />
         </Section>
 
-        <Section label="People">
+        <Section label={t('more:sections.people')}>
           <NavRow
             icon={Users}
-            label="Members directory"
+            label={t('more:rows.membersDirectory')}
             onPress={() => router.push('/members')}
           />
           {hasAnyLeadership ? (
             <NavRow
               icon={CheckSquare}
-              label="Approvals"
+              label={t('more:rows.approvals')}
               onPress={() => router.push('/approvals')}
             />
           ) : null}
           {hasAnyLeadership ? (
             <NavRow
               icon={Handshake}
-              label="Follow-ups"
+              label={t('more:rows.followUps')}
               onPress={() => router.push('/follow-ups')}
             />
           ) : null}
           {canSeeAdminSection ? (
             <NavRow
               icon={ShieldAlert}
-              label="Concerns"
+              label={t('more:rows.concerns')}
               onPress={() => router.push('/concerns' as never)}
             />
           ) : null}
@@ -190,151 +193,156 @@ export default function More() {
               register surfaces on the same screen. */}
           <NavRow
             icon={GraduationCap}
-            label="Membership classes"
+            label={t('more:rows.membershipClasses')}
             onPress={() => router.push('/membership' as never)}
           />
           {canSeeNewBelieversTeam ? (
             <NavRow
               icon={Sparkles}
-              label="New Believers pipeline"
+              label={t('more:rows.newBelieversPipeline')}
               onPress={() => router.push('/new-believers')}
             />
           ) : null}
           {canSeeNewBelieversTeam ? (
             <NavRow
               icon={CalendarClock}
-              label="New Believers sessions"
+              label={t('more:rows.newBelieversSessions')}
               onPress={() => router.push('/new-believers/sessions' as never)}
             />
           ) : null}
-          <NavRow icon={Handshake} label="Souls" onPress={() => router.push('/souls')} />
+          <NavRow icon={Handshake} label={t('more:rows.souls')} onPress={() => router.push('/souls')} />
           <NavRow
             icon={UserPlus}
-            label="Outreach programs"
+            label={t('more:rows.outreachPrograms')}
             onPress={() => router.push('/outreach')}
           />
           <NavRow
             icon={Users}
-            label="Dormant attendees"
+            label={t('more:rows.dormantAttendees')}
             onPress={() => router.push('/forms/attendees' as never)}
           />
-          <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
+          <NavRow icon={FileText} label={t('more:rows.fillAForm')} onPress={() => router.push('/forms')} />
           <NavRow
             icon={ClipboardList}
-            label="Form submissions"
+            label={t('more:rows.formSubmissions')}
             onPress={() => router.push('/forms/submissions' as never)}
           />
         </Section>
 
-        <Section label="Groups">
+        <Section label={t('more:sections.groups')}>
           <NavRow
             icon={UsersRound}
-            label="Fellowships"
+            label={t('more:rows.fellowships')}
             onPress={() => router.push('/fellowships')}
           />
           <NavRow
             icon={Building2}
-            label="Departments"
+            label={t('more:rows.departments')}
             onPress={() => router.push('/departments')}
           />
           {hasAnyLeadership ? (
-            <NavRow icon={Repeat} label="Rota" onPress={() => router.push('/rota')} />
+            <NavRow icon={Repeat} label={t('more:rows.rota')} onPress={() => router.push('/rota')} />
           ) : null}
         </Section>
 
-        <Section label="Gatherings">
+        <Section label={t('more:sections.gatherings')}>
           {canSeeReports ? (
             <NavRow
               icon={BarChart3}
-              label="Services"
+              label={t('more:rows.services')}
               onPress={() => router.push('/attendance' as never)}
             />
           ) : null}
           {canSeeAdminSection ? (
             <NavRow
               icon={ClipboardList}
-              label="Check-in desk"
+              label={t('more:rows.checkInDesk')}
               onPress={() => router.push('/admin/checkin')}
             />
           ) : null}
           {hasAnyLeadership ? (
             <NavRow
               icon={ClipboardList}
-              label="Fellowship attendance"
+              label={t('more:rows.fellowshipAttendance')}
               onPress={() => router.push('/rollcall')}
             />
           ) : null}
         </Section>
 
-        <Section label="Insights">
+        <Section label={t('more:sections.insights')}>
           {canSeeReports ? (
-            <NavRow icon={PieChart} label="Reports" onPress={() => router.push('/reports')} />
+            <NavRow icon={PieChart} label={t('more:rows.reports')} onPress={() => router.push('/reports')} />
           ) : null}
           <NavRow
             icon={PieChart}
-            label="Souls dashboard"
+            label={t('more:rows.soulsDashboard')}
             onPress={() => router.push('/souls-dashboard' as never)}
           />
         </Section>
 
-        <Section label="Organisation">
+        <Section label={t('more:sections.organisation')}>
           {canSeeAdminSection ? (
             <NavRow
               icon={Building2}
-              label="Branch settings"
+              label={t('more:rows.branchSettings')}
               onPress={() => router.push('/branches')}
             />
           ) : null}
           {caps.systemRole === 'admin' ? (
-            <NavRow icon={Map} label="Regions" onPress={() => router.push('/regions')} />
+            <NavRow icon={Map} label={t('more:rows.regions')} onPress={() => router.push('/regions')} />
           ) : null}
         </Section>
 
-        <Section label="Settings">
+        <Section label={t('more:sections.settings')}>
           <NavRow
             icon={Bell}
-            label="Notification preferences"
+            label={t('more:rows.notificationPreferences')}
             onPress={() => router.push('/notification-preferences')}
           />
           <NavRow
             icon={Shield}
-            label="Privacy & consent"
+            label={t('more:rows.privacyAndConsent')}
             onPress={() => router.push('/privacy-consent')}
           />
           <NavRow
             icon={Download}
-            label="Data & privacy"
+            label={t('more:rows.dataAndPrivacy')}
             onPress={() => router.push('/data-privacy')}
           />
-          <NavRow icon={Lock} label="Security" onPress={() => router.push('/security')} />
+          <NavRow icon={Lock} label={t('more:rows.security')} onPress={() => router.push('/security')} />
           <NavRow
             icon={History}
-            label="Recent activity"
+            label={t('more:rows.recentActivity')}
             onPress={() => router.push('/recent-activity')}
           />
           <NavRow
             icon={Palette}
-            label="Appearance"
+            label={t('more:rows.appearance')}
             onPress={() => router.push('/appearance' as never)}
+          />
+          <NavRow
+            icon={Languages}
+            label={t('more:rows.language')}
+            onPress={() => router.push('/language' as never)}
           />
         </Section>
 
-        <Section label="Help">
+        <Section label={t('more:sections.help')}>
           <NavRow
             icon={HelpCircle}
-            label="Help & Guides"
+            label={t('more:rows.helpAndGuides')}
             onPress={() => Linking.openURL(HELP_URL)}
           />
           <NavRow
             icon={Info}
-            label="About Kairos"
+            label={t('more:rows.aboutKairos')}
             onPress={() => Linking.openURL(ABOUT_URL)}
           />
         </Section>
 
         <Pressable onPress={handleSignOut} style={styles.signOutRow}>
           <LogOut color={c.danger} size={18} strokeWidth={1.5} />
-          <Text style={styles.signOutLabel}>Sign out</Text>
+          <Text style={styles.signOutLabel}>{t('common:signOut')}</Text>
         </Pressable>
 
         <Text style={styles.footerLabel}>Kairos v1.0 · Kharis Church</Text>
