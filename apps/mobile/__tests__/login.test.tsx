@@ -1,6 +1,6 @@
 import { AccessibilityInfo } from 'react-native';
 import { act, fireEvent, render } from '@testing-library/react-native';
-import LoginScreen from './login';
+import LoginScreen from '@/app/(auth)/login';
 
 jest.mock('react-native-svg', () => {
   const React = require('react');
