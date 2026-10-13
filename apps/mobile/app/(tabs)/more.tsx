@@ -99,7 +99,7 @@ export default function More() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.pageTitle}>More</Text>
+        <Text style={styles.pageTitle}>{t('more:title')}</Text>
 
         <Pressable onPress={() => router.push('/profile')}>
           <Card padding="md" style={styles.profileCard}>
@@ -342,7 +342,7 @@ export default function More() {
 
         <Pressable onPress={handleSignOut} style={styles.signOutRow}>
           <LogOut color={c.danger} size={18} strokeWidth={1.5} />
-          <Text style={styles.signOutLabel}>Sign out</Text>
+          <Text style={styles.signOutLabel}>{t('common:signOut')}</Text>
         </Pressable>
 
         <Text style={styles.footerLabel}>Kairos v1.0 · Kharis Church</Text>
