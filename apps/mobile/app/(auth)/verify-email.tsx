@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, ChevronLeft } from 'lucide-react-native';
 import {
   Button,
@@ -29,6 +30,7 @@ import { api } from '@/lib/api-client';
  * app instead of the browser. Auto-posts the token on mount.
  */
 export default function VerifyEmailScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -37,7 +39,7 @@ export default function VerifyEmailScreen() {
     token ? 'verifying' : 'error',
   );
   const [message, setMessage] = useState<string | null>(
-    token ? null : 'Missing verification token.',
+    token ? null : t('auth:verifyEmail.missingToken'),
   );
 
   useEffect(() => {
@@ -47,12 +49,12 @@ export default function VerifyEmailScreen() {
       try {
         const res = await api.auth.verifyEmail({ token });
         if (cancelled) return;
-        if (!res.success) throw new Error(res.message ?? 'Verification failed');
+        if (!res.success) throw new Error(res.message ?? t('auth:verifyEmail.verificationFailed'));
         setState('done');
       } catch (e) {
         if (cancelled) return;
         setState('error');
-        setMessage(e instanceof Error ? e.message : 'Verification failed');
+        setMessage(e instanceof Error ? e.message : t('auth:verifyEmail.verificationFailed'));
       }
     })();
     return () => {
@@ -66,7 +68,7 @@ export default function VerifyEmailScreen() {
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Verify email</Text>
+        <Text style={styles.headerTitle}>{t('auth:verifyEmail.heading')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -87,20 +89,18 @@ export default function VerifyEmailScreen() {
           {state === 'verifying' ? (
             <>
               <ActivityIndicator color={c.primary} />
-              <Text style={styles.title}>Verifying…</Text>
-              <Text style={styles.body}>Just a moment.</Text>
+              <Text style={styles.title}>{t('auth:verifyEmail.verifying')}</Text>
+              <Text style={styles.body}>{t('auth:verifyEmail.justAMoment')}</Text>
             </>
           ) : state === 'done' ? (
             <>
               <View style={[styles.badge, styles.badgeGood]}>
                 <CheckCircle2 color={c.success} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.title}>Email verified</Text>
-              <Text style={styles.body}>
-                Once an admin approves your account, you can sign in.
-              </Text>
+              <Text style={styles.title}>{t('auth:verifyEmail.emailVerified')}</Text>
+              <Text style={styles.body}>{t('auth:verifyEmail.onceApproved')}</Text>
               <Button
-                label="Back to sign in"
+                label={t('auth:shared.backToSignIn')}
                 size="lg"
                 fullWidth
                 onPress={() => router.replace('/(auth)/login')}
@@ -112,12 +112,12 @@ export default function VerifyEmailScreen() {
               <View style={[styles.badge, styles.badgeBad]}>
                 <XCircle color={c.danger} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.title}>Could not verify</Text>
+              <Text style={styles.title}>{t('auth:verifyEmail.couldNotVerify')}</Text>
               <Text style={styles.body}>
-                {message ?? 'The link may have expired.'}
+                {message ?? t('auth:verifyEmail.linkMayHaveExpired')}
               </Text>
               <Button
-                label="Back to sign in"
+                label={t('auth:shared.backToSignIn')}
                 size="lg"
                 fullWidth
                 onPress={() => router.replace('/(auth)/login')}

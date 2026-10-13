@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Trans, useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, Link2 } from 'lucide-react-native';
 import type { OAuthProviderId } from '@kairos/types';
@@ -42,6 +43,7 @@ import {
  * fresh session is issued.
  */
 export default function OAuthConfirmLinkScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -66,7 +68,7 @@ export default function OAuthConfirmLinkScreen() {
         password,
       });
       if (!res.success || !res.data) {
-        throw new Error(res.message ?? 'Could not link this sign-in method.');
+        throw new Error(res.message ?? t('auth:oauthLink.couldNotLink'));
       }
       return res.data;
     },
@@ -75,11 +77,11 @@ export default function OAuthConfirmLinkScreen() {
       router.replace('/(tabs)');
     },
     onError: (e: unknown) => {
-      const message = e instanceof Error ? e.message : 'Could not link this sign-in method.';
+      const message = e instanceof Error ? e.message : t('auth:oauthLink.couldNotLink');
       // The API returns 401 with the phrase "Incorrect password" — surface
       // that verbatim so the field cue matches expectation.
       if (/password/i.test(message) && /incorrect|invalid|wrong/i.test(message)) {
-        setError('Incorrect password.');
+        setError(t('auth:oauthLink.incorrectPassword'));
       } else {
         setError(message);
       }
@@ -98,7 +100,7 @@ export default function OAuthConfirmLinkScreen() {
         >
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Link account</Text>
+        <Text style={styles.headerTitle}>{t('auth:oauthLink.linkAccount')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -127,12 +129,13 @@ export default function OAuthConfirmLinkScreen() {
               <Link2 color={c.primary} size={22} strokeWidth={1.5} />
             </View>
 
-            <Text style={styles.title}>Link your {providerLabel} account</Text>
+            <Text style={styles.title}>{t('auth:oauthLink.heading', { provider: providerLabel })}</Text>
             <Text style={styles.body}>
-              We found a Kharis account for{' '}
-              <Text style={styles.bodyStrong}>{email || 'your email'}</Text>.
-              Enter your password to link it with {providerLabel}. Next time,
-              you can sign in with either.
+              <Trans
+                i18nKey="auth:oauthLink.body"
+                values={{ email: email || t('auth:oauthLink.yourEmail'), provider: providerLabel }}
+                components={[<Text key="0" />, <Text key="1" style={styles.bodyStrong} />]}
+              />
             </Text>
 
             <View style={styles.providerRow}>
@@ -149,7 +152,7 @@ export default function OAuthConfirmLinkScreen() {
             ) : null}
 
             <Input
-              label="Kairos password"
+              label={t('auth:oauthLink.kairosPassword')}
               value={password}
               onChangeText={(v) => {
                 setPassword(v);
@@ -160,12 +163,12 @@ export default function OAuthConfirmLinkScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="password"
-              placeholder="Your existing password"
+              placeholder={t('auth:oauthLink.yourExistingPassword')}
               containerStyle={{ marginTop: spacing.sm }}
             />
 
             <Button
-              label="Link accounts"
+              label={t('auth:oauthLink.title')}
               onPress={() => confirm.mutate()}
               disabled={!canSubmit}
               loading={confirm.isPending}
@@ -180,7 +183,7 @@ export default function OAuthConfirmLinkScreen() {
               hitSlop={8}
               style={{ marginTop: spacing.sm, alignSelf: 'center' }}
             >
-              <Text style={styles.altAction}>Cancel and sign in another way</Text>
+              <Text style={styles.altAction}>{t('auth:oauthLink.cancelAndSignInAnother')}</Text>
             </Pressable>
           </View>
         </ScrollView>

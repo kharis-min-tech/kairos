@@ -40,7 +40,7 @@ const { t } = useTranslation(['settings', 'common']);
 | Language | Code | State |
 |---|---|---|
 | English | `en` | Baseline. Every extracted key lives here first. |
-| French | `fr` | Complete for everything extracted so far. |
+| French | `fr` | Complete for everything extracted so far (auth, more, settings). |
 | Krio | `kri` | **Empty.** Awaiting a translator. |
 | Twi | `tw` | **Empty.** Awaiting a translator. |
 
@@ -55,28 +55,53 @@ which is why these are blank and not guessed.
 
 ## Extraction progress
 
-Done: `app/(tabs)/more.tsx`, `app/appearance.tsx`, `app/language.tsx`.
+Done: all of `app/(auth)` (11 screens), `app/(tabs)/more.tsx`,
+`app/appearance.tsx`, `app/language.tsx`.
 
-**74 of 111 screens still hold literal UI strings.** By area:
+**66 of 111 screens still hold literal UI strings.** By area:
 
 | Area | Screens left | Area | Screens left |
 |---|---|---|---|
-| `(auth)` | 8 of 11 | `members` | 5 of 6 |
-| `(tabs)` | 2 of 6 | `membership` | 4 of 7 |
-| `admin` | 1 of 3 | `new-believers` | 4 of 5 |
-| `attendance` | 2 of 3 | `outreach` | 2 of 3 |
-| `branches` | 4 of 5 | `reports` | 1 of 2 |
-| `departments` | 7 of 8 | `rollcall` | 1 of 3 |
-| `fellowships` | 7 of 8 | `rota-admin` | 5 of 5 |
-| `forms` | 2 of 4 | `security` | 3 of 4 |
-| | | `settings` | 1 of 3 |
-| | | `souls` | 3 of 3 |
+| `(tabs)` | 2 of 6 | `new-believers` | 4 of 5 |
+| `admin` | 1 of 3 | `outreach` | 2 of 3 |
+| `attendance` | 2 of 3 | `reports` | 1 of 2 |
+| `branches` | 4 of 5 | `rollcall` | 1 of 3 |
+| `departments` | 7 of 8 | `rota-admin` | 5 of 5 |
+| `fellowships` | 7 of 8 | `security` | 3 of 4 |
+| `forms` | 2 of 4 | `settings` | 1 of 3 |
+| `members` | 5 of 6 | `souls` | 3 of 3 |
+| `membership` | 4 of 7 | | |
 
 Find the stragglers with:
 
 ```bash
 grep -rlE 'label="[A-Z]|title: '\''[A-Z]|placeholder="[A-Z]' app --include='*.tsx'
 ```
+
+That grep only catches single-line literals. Multi-line JSX prose needs a
+second look by eye — search for a `<Text>` whose content starts on the
+following line.
+
+### Two patterns worth copying from `(auth)`
+
+**Prose with a value in it** uses `<Trans>` so the emphasis survives word-order
+changes, rather than being glued together from fragments:
+
+```tsx
+<Trans
+  i18nKey="auth:forgotPassword.sentTo"
+  values={{ email: email.trim() }}
+  components={[<Text key="0" />, <Text key="1" style={styles.bodyStrong} />]}
+/>
+```
+
+**Values that travel to the API stay English.** `RELATIONSHIP_OPTIONS` and the
+gender chips keep `'Spouse'`, `'Male'` and the rest as their stored values; only
+the label is translated, via `t(\`auth:relationships.${r}\`)`. Translating the
+value itself would write French into the database.
+
+**Code outside a component** cannot use the hook. `fetchMemberProfile` in
+`login.tsx` and `signup.tsx` imports the `i18n` singleton and calls `i18n.t(...)`.
 
 ## Adding a language
 

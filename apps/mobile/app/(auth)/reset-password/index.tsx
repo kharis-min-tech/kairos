@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, ShieldCheck } from 'lucide-react-native';
 import {
@@ -34,6 +35,7 @@ const MIN_PASSWORD = 8;
  * tap opens straight into this screen with the token already populated.
  */
 export default function ResetPasswordScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -47,19 +49,19 @@ export default function ResetPasswordScreen() {
     if (!password) return null;
     if (password.length < MIN_PASSWORD)
       return `Use at least ${MIN_PASSWORD} characters.`;
-    if (confirm && password !== confirm) return 'Passwords do not match.';
+    if (confirm && password !== confirm) return t('auth:resetPassword.passwordsDoNotMatch');
     return null;
   }, [password, confirm]);
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (!token) throw new Error('Missing reset token');
+      if (!token) throw new Error(t('auth:resetPassword.missingToken'));
       const res = await api.auth.resetPassword({ token, newPassword: password });
-      if (!res.success) throw new Error(res.message ?? 'Could not reset password');
+      if (!res.success) throw new Error(res.message ?? t('auth:resetPassword.couldNotReset'));
       return res.data;
     },
     onSuccess: () => setDone(true),
-    onError: (e: Error) => setError(e.message ?? 'Something went wrong'),
+    onError: (e: Error) => setError(e.message ?? t('auth:shared.somethingWentWrong')),
   });
 
   const canSubmit =
@@ -71,7 +73,7 @@ export default function ResetPasswordScreen() {
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Reset password</Text>
+        <Text style={styles.headerTitle}>{t('auth:resetPassword.heading')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -101,12 +103,10 @@ export default function ResetPasswordScreen() {
                 <View style={styles.successBadge}>
                   <ShieldCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.title}>Password updated</Text>
-                <Text style={styles.body}>
-                  You can now sign in with your new password.
-                </Text>
+                <Text style={styles.title}>{t('auth:resetPassword.passwordUpdated')}</Text>
+                <Text style={styles.body}>{t('auth:resetPassword.canNowSignIn')}</Text>
                 <Button
-                  label="Back to sign in"
+                  label={t('auth:shared.backToSignIn')}
                   size="lg"
                   fullWidth
                   onPress={() => router.replace('/(auth)/login')}
@@ -115,16 +115,15 @@ export default function ResetPasswordScreen() {
               </>
             ) : (
               <>
-                <Text style={styles.title}>Set a new password</Text>
+                <Text style={styles.title}>{t('auth:resetPassword.title')}</Text>
                 <Text style={styles.body}>
-                  Choose a password of at least {MIN_PASSWORD} characters.
+                  {t('auth:resetPassword.chooseAtLeast', { count: MIN_PASSWORD })}
                 </Text>
 
                 {!token ? (
                   <View style={styles.errorBanner}>
                     <Text style={styles.errorText}>
-                      Missing reset token. Request a new link from the sign-in
-                      screen.
+                      {t('auth:resetPassword.missingTokenBody')}
                     </Text>
                   </View>
                 ) : null}
@@ -136,7 +135,7 @@ export default function ResetPasswordScreen() {
                 ) : null}
 
                 <Input
-                  label="New password"
+                  label={t('auth:resetPassword.newPassword')}
                   value={password}
                   onChangeText={(v) => {
                     setPassword(v);
@@ -144,25 +143,25 @@ export default function ResetPasswordScreen() {
                   }}
                   secureTextEntry
                   secureToggle
-                  placeholder="At least 8 characters"
+                  placeholder={t('auth:resetPassword.atLeast8')}
                   containerStyle={{ marginTop: spacing.md }}
                 />
 
                 <Input
-                  label="Confirm password"
+                  label={t('auth:resetPassword.confirmPassword')}
                   value={confirm}
                   onChangeText={(v) => {
                     setConfirm(v);
                     setError(null);
                   }}
                   secureTextEntry
-                  placeholder="Type it again"
+                  placeholder={t('auth:resetPassword.typeItAgain')}
                   containerStyle={{ marginTop: spacing.md }}
                   error={validation ?? undefined}
                 />
 
                 <Button
-                  label="Update password"
+                  label={t('auth:resetPassword.updatePassword')}
                   onPress={() => submit.mutate()}
                   loading={submit.isPending}
                   disabled={!canSubmit}

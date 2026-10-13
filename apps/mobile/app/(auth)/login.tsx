@@ -12,6 +12,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react-native';
 import type { Member } from '@kairos/types';
@@ -51,6 +53,7 @@ import { useReduceMotion } from '@/components/motion/use-reduce-motion';
 const WELCOME_HOLD_MS = 700;
 
 export default function LoginScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
 
@@ -143,9 +146,9 @@ export default function LoginScreen() {
 
     const accepted = await alert.confirm({
       title: `Sign in with ${cap.label} next time?`,
-      message: 'One tap to unlock the app — no password to type.',
-      confirmLabel: 'Enable',
-      cancelLabel: 'Not now',
+      message: t('auth:login.biometricBody'),
+      confirmLabel: t('auth:login.enable'),
+      cancelLabel: t('auth:login.notNow'),
     });
     if (!accepted) {
       await biometric.markDeclined(user.id);
@@ -169,7 +172,7 @@ export default function LoginScreen() {
     mutationFn: async () => {
       const res = await api.auth.login({ email: email.trim(), password });
       if (!res.success || !res.data) {
-        throw new Error(res.message ?? 'Login failed');
+        throw new Error(res.message ?? t('auth:login.loginFailed'));
       }
       return res.data;
     },
@@ -192,7 +195,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     },
     onError: (e: Error) => {
-      setError(e.message ?? 'An error occurred');
+      setError(e.message ?? t('auth:login.anErrorOccurred'));
     },
   });
 
@@ -234,7 +237,7 @@ export default function LoginScreen() {
       setError(
         err instanceof Error
           ? err.message
-          : 'Signed in but could not load your profile.',
+          : t('auth:login.signedInNoProfile'),
       );
     }
   }
@@ -283,7 +286,7 @@ export default function LoginScreen() {
           <Animated.View style={cardEntrance}>
           <HaloBorder radius={radii.lg} base={c.border} active={motionActive} style={styles.cardShadow}>
           <View style={styles.card}>
-            <Text style={styles.title}>Sign in</Text>
+            <Text style={styles.title}>{t('auth:login.signIn')}</Text>
 
             {error ? (
               <View style={styles.errorBanner}>
@@ -293,7 +296,7 @@ export default function LoginScreen() {
 
             <Input
               testID="login-email"
-              label="Email"
+              label={t('auth:shared.email')}
               value={email}
               onChangeText={(v) => {
                 setEmail(v);
@@ -302,14 +305,14 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t('auth:shared.emailPlaceholder')}
               canvas
               containerStyle={{ marginBottom: spacing.md }}
             />
 
             <Input
               testID="login-password"
-              label="Password"
+              label={t('auth:shared.password')}
               value={password}
               onChangeText={(v) => {
                 setPassword(v);
@@ -317,7 +320,7 @@ export default function LoginScreen() {
               }}
               secureTextEntry
               secureToggle
-              placeholder="Password"
+              placeholder={t('auth:shared.password')}
               autoComplete="password"
               canvas
             />
@@ -327,11 +330,11 @@ export default function LoginScreen() {
               style={styles.forgotRow}
               hitSlop={6}
             >
-              <Text style={styles.forgotText}>Forgot?</Text>
+              <Text style={styles.forgotText}>{t('auth:login.forgot')}</Text>
             </Pressable>
 
             <Button
-              label={welcome ? '✓ Welcome back' : login.isPending ? 'Signing in…' : 'Sign in'}
+              label={welcome ? '✓ Welcome back' : login.isPending ? t('auth:login.signingIn') : t('auth:login.signIn')}
               onPress={() => login.mutate()}
               busy={login.isPending || welcome}
               disabled={!email || !password}
@@ -355,7 +358,7 @@ export default function LoginScreen() {
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerLabel}>Or continue with</Text>
+              <Text style={styles.dividerLabel}>{t('auth:shared.orContinueWith')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -396,7 +399,7 @@ export default function LoginScreen() {
               hitSlop={8}
             >
               <Text style={styles.signupPrompt}>Don&apos;t have an account? </Text>
-              <Text style={styles.signupLink}>Create account</Text>
+              <Text style={styles.signupLink}>{t('auth:shared.createAccount')}</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>
@@ -421,13 +424,13 @@ async function fetchMemberProfile(accessToken: string): Promise<Member> {
   if (!res.ok) {
     throw new Error(
       res.status === 401
-        ? 'Sign-in token was not accepted.'
+        ? i18n.t('auth:login.tokenNotAccepted')
         : `Could not load your profile (HTTP ${res.status}).`,
     );
   }
   const body = (await res.json()) as { success?: boolean; data?: Member; message?: string };
   if (!body.success || !body.data) {
-    throw new Error(body.message ?? 'Could not load your profile.');
+    throw new Error(body.message ?? i18n.t('auth:login.couldNotLoadProfile'));
   }
   return body.data;
 }

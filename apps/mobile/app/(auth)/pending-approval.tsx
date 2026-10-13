@@ -2,6 +2,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { BellRing } from 'lucide-react-native';
 import {
   Button,
@@ -22,6 +23,7 @@ import { useAuthStore } from '@/store/auth';
  * want to switch accounts before approval lands.
  */
 export default function PendingApprovalScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -51,14 +53,10 @@ export default function PendingApprovalScreen() {
           <View style={styles.badge}>
             <BellRing color={c.primary} size={22} strokeWidth={1.5} />
           </View>
-          <Text style={styles.title}>Account pending approval</Text>
-          <Text style={styles.body}>
-            Thanks for signing up. A church administrator will review your
-            account shortly. We&apos;ll send you a notification the moment
-            you&apos;re approved.
-          </Text>
+          <Text style={styles.title}>{t('auth:pendingApproval.title')}</Text>
+          <Text style={styles.body}>{t('auth:pendingApproval.body')}</Text>
           <Button
-            label="Sign out"
+            label={t('common:signOut')}
             variant="outline"
             size="lg"
             fullWidth
