@@ -88,6 +88,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     'expo-font',
+    // Supplies the device locale list that i18n falls back to when the user
+    // has not chosen a language explicitly.
+    'expo-localization',
     // Biometric sign-in. This plugin is what puts NSFaceIDUsageDescription in
     // the iOS Info.plist and USE_BIOMETRIC in the Android manifest, so adding
     // it REQUIRES a new native build — an OTA update cannot ship it.

@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from '@kairos/ui-native';
 import { registerAuthCallbacks } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useThemeStore } from '@/store/theme';
+import { useLocaleStore } from '@/store/locale';
 import { AlertHost } from '@/components/alert-host';
 import {
   PersistentTabBar,
@@ -28,8 +29,10 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const hydrateAuth = useAuthStore((s) => s.hydrate);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
+  const hydrateLocale = useLocaleStore((s) => s.hydrate);
   const authHydrated = useAuthStore((s) => s.hydrated);
   const themeHydrated = useThemeStore((s) => s.hydrated);
+  const localeHydrated = useLocaleStore((s) => s.hydrated);
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
   const updateTokens = useAuthStore((s) => s.updateTokens);
@@ -49,9 +52,12 @@ export default function RootLayout() {
   useEffect(() => {
     void hydrateAuth();
     void hydrateTheme();
-  }, [hydrateAuth, hydrateTheme]);
+    void hydrateLocale();
+  }, [hydrateAuth, hydrateTheme, hydrateLocale]);
 
-  const ready = authHydrated && themeHydrated;
+  // Language is part of first paint: showing English for a frame and then
+  // swapping would be worse than holding the splash a moment longer.
+  const ready = authHydrated && themeHydrated && localeHydrated;
 
   useEffect(() => {
     if (ready) {
