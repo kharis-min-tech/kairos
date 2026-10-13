@@ -10,7 +10,6 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react-native';
@@ -21,7 +20,6 @@ import {
   spacing,
   typography,
   radii,
-  gradients,
   useThemedStyles,
   type ThemeColors,
   useColors,
@@ -35,7 +33,7 @@ import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
-import { KharisDove } from '@/components/kharis-dove';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
 import { AmbientGlow } from '@/components/motion/ambient-glow';
 import { CanvasBackground } from '@/components/motion/canvas-background';
 import { ContinueAsRow } from '@/components/motion/continue-as-row';
@@ -43,7 +41,6 @@ import { FillBar } from '@/components/motion/fill-bar';
 import { HaloBorder } from '@/components/motion/halo-border';
 import { useTapRipple } from '@/components/motion/tap-ripple';
 import { useEntrance } from '@/components/motion/use-entrance';
-import { FLOAT_START_MS, useFloat } from '@/components/motion/use-float';
 import { useMotionActive } from '@/components/motion/use-motion-active';
 import { useReduceMotion } from '@/components/motion/use-reduce-motion';
 
@@ -64,10 +61,8 @@ export default function LoginScreen() {
   const reduced = useReduceMotion();
   const motionActive = useMotionActive();
   const insets = useSafeAreaInsets();
-  const logoEntrance = useEntrance(0);
   const brandEntrance = useEntrance(1);
   const cardEntrance = useEntrance(2);
-  const logoFloat = useFloat(motionActive, FLOAT_START_MS);
   const signInRipple = useTapRipple(radii.lg);
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
@@ -256,17 +251,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <Animated.View style={logoEntrance}>
-              <Animated.View style={[styles.logoTile, logoFloat]}>
-                <LinearGradient
-                  colors={gradients.brand}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.logoGradientFill}
-                />
-                <KharisDove size={32} draw />
-              </Animated.View>
-            </Animated.View>
+            <CanvasLogo size={48} entranceIndex={0} />
             <Animated.View style={[styles.brandText, brandEntrance]}>
               <Text style={styles.brandLabel}>Kharis Church</Text>
               <Text style={styles.verse}>
@@ -462,22 +447,6 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: spacing.xl,
-  },
-  logoTile: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoGradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: radii.md,
   },
   brandLabel: {
     ...typography.eyebrow,

@@ -10,15 +10,12 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react-native';
 import {
   AddressAutofillInput,
-  Button,
   Input,
-  gradients,
   radii,
   spacing,
   typography,
@@ -29,6 +26,10 @@ import {
 import { api } from '@/lib/api-client';
 import { mapboxPublicToken } from '@/lib/config';
 import { useAuthStore } from '@/store/auth';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 const RELATIONSHIP_OPTIONS = [
   'Spouse',
@@ -178,6 +179,7 @@ export default function CompleteProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -187,18 +189,10 @@ export default function CompleteProfileScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <Text style={styles.logoK}>K</Text>
-            </View>
+            <CanvasLogo size={56} />
           </View>
 
-          <View style={styles.card}>
+          <CanvasCard style={styles.card} entranceIndex={1}>
             <Text style={styles.title}>Finish setting up</Text>
             <Text style={styles.body}>
               Welcome, {user?.firstName ?? 'friend'}! We got some details from
@@ -213,6 +207,7 @@ export default function CompleteProfileScreen() {
             ) : null}
 
             <Input
+              canvas
               label="Phone"
               value={phone}
               onChangeText={(v) => {
@@ -286,6 +281,7 @@ export default function CompleteProfileScreen() {
                 <Text style={styles.optionalBadge}>Optional</Text>
               </View>
               <Input
+                canvas
                 label="First name"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -294,6 +290,7 @@ export default function CompleteProfileScreen() {
                 containerStyle={{ marginTop: spacing.sm }}
               />
               <Input
+                canvas
                 label="Last name"
                 value={lastName}
                 onChangeText={setLastName}
@@ -302,6 +299,7 @@ export default function CompleteProfileScreen() {
                 containerStyle={{ marginTop: spacing.sm }}
               />
               <Input
+                canvas
                 label="Middle name"
                 value={middleName}
                 onChangeText={setMiddleName}
@@ -338,6 +336,7 @@ export default function CompleteProfileScreen() {
               </View>
 
               <Input
+                canvas
                 label="Date of birth (YYYY-MM-DD)"
                 value={dateOfBirth}
                 onChangeText={setDateOfBirth}
@@ -374,6 +373,7 @@ export default function CompleteProfileScreen() {
                 <Text style={styles.optionalBadge}>Optional</Text>
               </View>
               <Input
+                canvas
                 label="Name"
                 value={ecName}
                 onChangeText={setEcName}
@@ -395,6 +395,7 @@ export default function CompleteProfileScreen() {
                 </Pressable>
               </View>
               <Input
+                canvas
                 label="Phone"
                 value={ecPhone}
                 onChangeText={setEcPhone}
@@ -405,7 +406,7 @@ export default function CompleteProfileScreen() {
               />
             </View>
 
-            <Button
+            <CanvasButton
               label="Save & continue"
               onPress={() => {
                 setServerError(null);
@@ -417,7 +418,7 @@ export default function CompleteProfileScreen() {
               iconRight={<ArrowRight color="#ffffff" size={16} strokeWidth={2} />}
               style={{ marginTop: spacing.lg }}
             />
-          </View>
+          </CanvasCard>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -519,16 +520,6 @@ function makeStyles(c: ThemeColors) {
     safe: { flex: 1, backgroundColor: c.page },
     scroll: { padding: spacing.lg, gap: spacing.lg },
     brand: { alignItems: 'center', marginTop: spacing.md },
-    logoTile: {
-      width: 56,
-      height: 56,
-      borderRadius: radii.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    logoGradientFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-    logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
     card: {
       backgroundColor: c.card,
       borderRadius: radii.lg,

@@ -1,11 +1,8 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BellRing } from 'lucide-react-native';
 import {
-  Button,
-  gradients,
   radii,
   spacing,
   typography,
@@ -14,6 +11,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 /**
  * Phase 1.5 Better-Auth: reached whenever the auth guard sees a signed-in
@@ -34,20 +35,13 @@ export default function PendingApprovalScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.brand}>
-          <View style={styles.logoTile}>
-            <LinearGradient
-              colors={gradients.brand}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoGradientFill}
-            />
-            <Text style={styles.logoK}>K</Text>
-          </View>
+          <CanvasLogo size={56} />
         </View>
 
-        <View style={styles.card}>
+        <CanvasCard style={styles.card} entranceIndex={1}>
           <View style={styles.badge}>
             <BellRing color={c.primary} size={22} strokeWidth={1.5} />
           </View>
@@ -57,7 +51,7 @@ export default function PendingApprovalScreen() {
             account shortly. We&apos;ll send you a notification the moment
             you&apos;re approved.
           </Text>
-          <Button
+          <CanvasButton
             label="Sign out"
             variant="outline"
             size="lg"
@@ -65,7 +59,7 @@ export default function PendingApprovalScreen() {
             onPress={handleSignOut}
             style={{ marginTop: spacing.md }}
           />
-        </View>
+        </CanvasCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -76,16 +70,6 @@ function makeStyles(c: ThemeColors) {
     safe: { flex: 1, backgroundColor: c.page },
     scroll: { padding: spacing.lg, gap: spacing.lg },
     brand: { alignItems: 'center', marginTop: spacing.md },
-    logoTile: {
-      width: 56,
-      height: 56,
-      borderRadius: radii.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    logoGradientFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-    logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
     card: {
       backgroundColor: c.card,
       borderRadius: radii.lg,

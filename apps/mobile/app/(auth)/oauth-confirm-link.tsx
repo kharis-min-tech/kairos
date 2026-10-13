@@ -9,15 +9,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, Link2 } from 'lucide-react-native';
 import type { OAuthProviderId } from '@kairos/types';
 import {
-  Button,
   Input,
-  gradients,
   radii,
   spacing,
   typography,
@@ -31,6 +28,10 @@ import {
   OAuthProviderIcon,
   OAUTH_PROVIDER_LABEL,
 } from '@/components/oauth-provider-icon';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 /**
  * OAuth account-link confirmation. Reached when the API detects an existing
@@ -91,6 +92,7 @@ export default function OAuthConfirmLinkScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround extraTop={48} />
       <View style={styles.headerBar}>
         <Pressable
           onPress={() => router.replace('/(auth)/login')}
@@ -111,18 +113,10 @@ export default function OAuthConfirmLinkScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <Text style={styles.logoK}>K</Text>
-            </View>
+            <CanvasLogo size={56} />
           </View>
 
-          <View style={styles.card}>
+          <CanvasCard style={styles.card} entranceIndex={1}>
             <View style={styles.iconBadge}>
               <Link2 color={c.primary} size={22} strokeWidth={1.5} />
             </View>
@@ -149,6 +143,7 @@ export default function OAuthConfirmLinkScreen() {
             ) : null}
 
             <Input
+              canvas
               label="Kairos password"
               value={password}
               onChangeText={(v) => {
@@ -164,7 +159,7 @@ export default function OAuthConfirmLinkScreen() {
               containerStyle={{ marginTop: spacing.sm }}
             />
 
-            <Button
+            <CanvasButton
               label="Link accounts"
               onPress={() => confirm.mutate()}
               disabled={!canSubmit}
@@ -182,7 +177,7 @@ export default function OAuthConfirmLinkScreen() {
             >
               <Text style={styles.altAction}>Cancel and sign in another way</Text>
             </Pressable>
-          </View>
+          </CanvasCard>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -205,22 +200,6 @@ function makeStyles(c: ThemeColors) {
       gap: spacing.lg,
     },
     brand: { alignItems: 'center', marginTop: spacing.md },
-    logoTile: {
-      width: 56,
-      height: 56,
-      borderRadius: radii.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    logoGradientFill: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
     card: {
       backgroundColor: c.card,
       borderRadius: radii.lg,

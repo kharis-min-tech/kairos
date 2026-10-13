@@ -10,7 +10,6 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -22,10 +21,8 @@ import {
 } from 'lucide-react-native';
 import {
   AddressAutofillInput,
-  Button,
   DatePicker,
   Input,
-  gradients,
   radii,
   spacing,
   typography,
@@ -39,6 +36,10 @@ import { apiBaseUrl, mapboxPublicToken } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { useAuthStore } from '@/store/auth';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 const MIN_PASSWORD = 8;
 
@@ -165,6 +166,7 @@ export default function SignupScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround extraTop={48} />
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
@@ -182,18 +184,10 @@ export default function SignupScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <Text style={styles.logoK}>K</Text>
-            </View>
+            <CanvasLogo size={56} />
           </View>
 
-          <View style={styles.card}>
+          <CanvasCard style={styles.card} entranceIndex={1}>
             {done ? (
               <>
                 <View style={styles.successBadge}>
@@ -206,7 +200,7 @@ export default function SignupScreen() {
                   email. Once verified, an admin will approve your account for
                   sign-in.
                 </Text>
-                <Button
+                <CanvasButton
                   label="Back to sign in"
                   size="lg"
                   fullWidth
@@ -231,6 +225,7 @@ export default function SignupScreen() {
                 <View style={styles.pairRow}>
                   <View style={{ flex: 1 }}>
                     <Input
+                      canvas
                       label="First name"
                       value={firstName}
                       onChangeText={(v) => {
@@ -243,6 +238,7 @@ export default function SignupScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Input
+                      canvas
                       label="Last name"
                       value={lastName}
                       onChangeText={(v) => {
@@ -256,6 +252,7 @@ export default function SignupScreen() {
                 </View>
 
                 <Input
+                  canvas
                   label="Middle name (optional)"
                   value={middleName}
                   onChangeText={setMiddleName}
@@ -264,6 +261,7 @@ export default function SignupScreen() {
                 />
 
                 <Input
+                  canvas
                   label="Email"
                   value={email}
                   onChangeText={(v) => {
@@ -279,6 +277,7 @@ export default function SignupScreen() {
                 />
 
                 <Input
+                  canvas
                   label="Phone (optional)"
                   value={phone}
                   onChangeText={setPhone}
@@ -350,6 +349,7 @@ export default function SignupScreen() {
                       />
                     </View>
                     <Input
+                      canvas
                       label="Emergency contact name"
                       value={emergencyName}
                       onChangeText={setEmergencyName}
@@ -359,6 +359,7 @@ export default function SignupScreen() {
                     <View style={styles.pairRow}>
                       <View style={{ flex: 1 }}>
                         <Input
+                          canvas
                           label="Emergency phone"
                           value={emergencyPhone}
                           onChangeText={setEmergencyPhone}
@@ -368,6 +369,7 @@ export default function SignupScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Input
+                          canvas
                           label="Relationship"
                           value={emergencyRel}
                           onChangeText={setEmergencyRel}
@@ -379,6 +381,7 @@ export default function SignupScreen() {
                 ) : null}
 
                 <Input
+                  canvas
                   label="Password"
                   value={password}
                   onChangeText={(v) => {
@@ -417,7 +420,7 @@ export default function SignupScreen() {
                   <Text style={styles.errorLine}>{errors['acceptedPolicies']}</Text>
                 ) : null}
 
-                <Button
+                <CanvasButton
                   label="Create account"
                   onPress={() => {
                     setServerError(null);
@@ -447,7 +450,7 @@ export default function SignupScreen() {
                 </Text>
               </>
             )}
-          </View>
+          </CanvasCard>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -613,22 +616,6 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.lg,
   },
   brand: { alignItems: 'center', marginTop: spacing.md },
-  logoTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoGradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
   card: {
     backgroundColor: c.card,
     borderRadius: radii.lg,

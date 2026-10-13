@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AccessibilityInfo, Animated } from 'react-native';
+import { AccessibilityInfo, Animated, Easing } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { DOVE_SUBPATHS, DOVE_VIEWBOX } from '@kairos/core';
 
@@ -20,10 +20,17 @@ export function KharisDove({
   size = 40,
   color = '#ffffff',
   draw = false,
+  drawDelay = 220,
 }: {
   size?: number;
   color?: string;
   draw?: boolean;
+  /**
+   * ms before the pen moves. Web rests 220ms; on a screen whose logo is still
+   * fading in, pass the entrance's length too, or the whole drawing happens
+   * while the mark is invisible and nobody sees it.
+   */
+  drawDelay?: number;
 }) {
   const progress = useRef(new Animated.Value(draw ? 0 : 1)).current;
   const fill = useRef(new Animated.Value(draw ? 0 : 1)).current;
@@ -41,11 +48,17 @@ export function KharisDove({
         return;
       }
       Animated.parallel([
-        Animated.timing(progress, { toValue: 1, duration: 900, useNativeDriver: false }),
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 1100,
+          delay: drawDelay,
+          easing: Easing.bezier(0.65, 0, 0.35, 1),
+          useNativeDriver: false,
+        }),
         Animated.timing(fill, {
           toValue: 1,
           duration: 420,
-          delay: 620,
+          delay: drawDelay + 980,
           useNativeDriver: false,
         }),
       ]).start();
@@ -54,7 +67,7 @@ export function KharisDove({
     return () => {
       cancelled = true;
     };
-  }, [draw, progress, fill]);
+  }, [draw, drawDelay, progress, fill]);
 
   return (
     <Svg width={size} height={size} viewBox={DOVE_VIEWBOX}>
@@ -75,10 +88,10 @@ export function KharisDove({
               strokeLinejoin="round"
               // Each subpath carries its own length, so the short olive-branch
               // strokes and the long wing outline finish together.
-              strokeDasharray={[sub.length, sub.length]}
+              strokeDasharray={[sub.length, sub.length * 2]}
               strokeDashoffset={progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: [sub.length, 0],
+                outputRange: [sub.length * 1.05, 0],
               })}
               opacity={progress.interpolate({
                 inputRange: [0, 0.84, 1],

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Text, StyleSheet, ActivityIndicator } from 'react-native';
 import * as Linking from 'expo-linking';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,8 @@ import {
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, parseCallbackUrl } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
 
 /**
  * Fallback OAuth callback route. `WebBrowser.openAuthSessionAsync` is
@@ -89,7 +91,8 @@ export default function OAuthCallbackScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.card}>
+      <CanvasGround />
+      <CanvasCard style={styles.card} entranceIndex={0}>
         <ActivityIndicator size="large" color={c.primary} />
         <Text style={styles.title}>
           {error ? 'Sign-in issue' : 'Signing you in…'}
@@ -97,7 +100,7 @@ export default function OAuthCallbackScreen() {
         <Text style={styles.subtitle}>
           {error ?? 'Finalising your session with your provider'}
         </Text>
-      </View>
+      </CanvasCard>
     </SafeAreaView>
   );
 }

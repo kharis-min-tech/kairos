@@ -8,12 +8,9 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle2, XCircle, ChevronLeft } from 'lucide-react-native';
 import {
-  Button,
-  gradients,
   radii,
   spacing,
   typography,
@@ -22,6 +19,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 /**
  * Email verification screen. Reached when the OS routes an
@@ -62,6 +63,7 @@ export default function VerifyEmailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround extraTop={48} />
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
@@ -72,18 +74,10 @@ export default function VerifyEmailScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.brand}>
-          <View style={styles.logoTile}>
-            <LinearGradient
-              colors={gradients.brand}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoGradientFill}
-            />
-            <Text style={styles.logoK}>K</Text>
-          </View>
+          <CanvasLogo size={56} />
         </View>
 
-        <View style={styles.card}>
+        <CanvasCard style={styles.card} entranceIndex={1}>
           {state === 'verifying' ? (
             <>
               <ActivityIndicator color={c.primary} />
@@ -99,7 +93,7 @@ export default function VerifyEmailScreen() {
               <Text style={styles.body}>
                 Once an admin approves your account, you can sign in.
               </Text>
-              <Button
+              <CanvasButton
                 label="Back to sign in"
                 size="lg"
                 fullWidth
@@ -116,7 +110,7 @@ export default function VerifyEmailScreen() {
               <Text style={styles.body}>
                 {message ?? 'The link may have expired.'}
               </Text>
-              <Button
+              <CanvasButton
                 label="Back to sign in"
                 size="lg"
                 fullWidth
@@ -125,7 +119,7 @@ export default function VerifyEmailScreen() {
               />
             </>
           )}
-        </View>
+        </CanvasCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -147,22 +141,6 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.lg,
   },
   brand: { alignItems: 'center', marginTop: spacing.md },
-  logoTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoGradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
   card: {
     backgroundColor: c.card,
     borderRadius: radii.lg,

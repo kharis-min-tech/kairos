@@ -9,14 +9,11 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, MailCheck } from 'lucide-react-native';
 import {
-  Button,
   Input,
-  gradients,
   radii,
   spacing,
   typography,
@@ -25,6 +22,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 export default function ForgotPasswordScreen() {
   const styles = useThemedStyles(makeStyles);
@@ -48,6 +49,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround extraTop={48} />
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
@@ -65,18 +67,10 @@ export default function ForgotPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <Text style={styles.logoK}>K</Text>
-            </View>
+            <CanvasLogo size={56} />
           </View>
 
-          <View style={styles.card}>
+          <CanvasCard style={styles.card} entranceIndex={1}>
             {sent ? (
               <>
                 <View style={styles.successBadge}>
@@ -92,7 +86,7 @@ export default function ForgotPasswordScreen() {
                   Don&apos;t see it? Check your spam folder or try again with a
                   different email.
                 </Text>
-                <Button
+                <CanvasButton
                   label="Back to sign in"
                   variant="secondary"
                   size="lg"
@@ -116,6 +110,7 @@ export default function ForgotPasswordScreen() {
                 ) : null}
 
                 <Input
+                  canvas
                   label="Email"
                   value={email}
                   onChangeText={(v) => {
@@ -129,7 +124,7 @@ export default function ForgotPasswordScreen() {
                   containerStyle={{ marginTop: spacing.md }}
                 />
 
-                <Button
+                <CanvasButton
                   label="Send reset link"
                   onPress={() => submit.mutate()}
                   loading={submit.isPending}
@@ -141,7 +136,7 @@ export default function ForgotPasswordScreen() {
                 />
               </>
             )}
-          </View>
+          </CanvasCard>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -164,26 +159,6 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.lg,
   },
   brand: { alignItems: 'center', marginTop: spacing.md },
-  logoTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoGradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  logoK: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
   card: {
     backgroundColor: c.card,
     borderRadius: radii.lg,

@@ -9,14 +9,11 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, ShieldCheck } from 'lucide-react-native';
 import {
-  Button,
   Input,
-  gradients,
   radii,
   spacing,
   typography,
@@ -25,6 +22,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { CanvasGround } from '@/components/motion/canvas-ground';
+import { CanvasCard } from '@/components/motion/canvas-card';
+import { CanvasLogo } from '@/components/motion/canvas-logo';
+import { CanvasButton } from '@/components/motion/canvas-button';
 
 const MIN_PASSWORD = 8;
 
@@ -67,6 +68,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CanvasGround extraTop={48} />
       <View style={styles.headerBar}>
         <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
@@ -84,18 +86,10 @@ export default function ResetPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View style={styles.logoTile}>
-              <LinearGradient
-                colors={gradients.brand}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradientFill}
-              />
-              <Text style={styles.logoK}>K</Text>
-            </View>
+            <CanvasLogo size={56} />
           </View>
 
-          <View style={styles.card}>
+          <CanvasCard style={styles.card} entranceIndex={1}>
             {done ? (
               <>
                 <View style={styles.successBadge}>
@@ -105,7 +99,7 @@ export default function ResetPasswordScreen() {
                 <Text style={styles.body}>
                   You can now sign in with your new password.
                 </Text>
-                <Button
+                <CanvasButton
                   label="Back to sign in"
                   size="lg"
                   fullWidth
@@ -136,6 +130,7 @@ export default function ResetPasswordScreen() {
                 ) : null}
 
                 <Input
+                  canvas
                   label="New password"
                   value={password}
                   onChangeText={(v) => {
@@ -149,6 +144,7 @@ export default function ResetPasswordScreen() {
                 />
 
                 <Input
+                  canvas
                   label="Confirm password"
                   value={confirm}
                   onChangeText={(v) => {
@@ -161,7 +157,7 @@ export default function ResetPasswordScreen() {
                   error={validation ?? undefined}
                 />
 
-                <Button
+                <CanvasButton
                   label="Update password"
                   onPress={() => submit.mutate()}
                   loading={submit.isPending}
@@ -173,7 +169,7 @@ export default function ResetPasswordScreen() {
                 />
               </>
             )}
-          </View>
+          </CanvasCard>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -196,26 +192,6 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.lg,
   },
   brand: { alignItems: 'center', marginTop: spacing.md },
-  logoTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoGradientFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  logoK: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
   card: {
     backgroundColor: c.card,
     borderRadius: radii.lg,
