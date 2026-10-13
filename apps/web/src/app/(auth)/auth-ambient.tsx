@@ -11,7 +11,7 @@ import { Spotlight } from '@/components/motion/spotlight';
  * and a cursor glow. The three floating cards are login's alone — they need
  * room, so they appear from lg up.
  */
-export function AuthAmbient() {
+export function AuthAmbient({ glow = true }: { glow?: boolean } = {}) {
   const login = usePathname() === '/login';
 
   return (
@@ -25,7 +25,7 @@ export function AuthAmbient() {
         aria-hidden
         className="pointer-events-none absolute inset-0 [background-image:radial-gradient(hsl(var(--foreground)/0.12)_1px,transparent_1.2px)] [background-size:24px_24px]"
       />
-      <Spotlight size={640} />
+      {glow && <Spotlight size={640} />}
       {login && (
       <CardField className="hidden lg:block">
         <FloatCard position={{ left: '8%', bottom: '12%' }} depth={0.5} fx={-200} fy={200} fr={-14} tilt={-4} i={0}>

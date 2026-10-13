@@ -13,6 +13,7 @@ import {
 } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
+import { Reveal } from '@/components/motion/reveal';
 import { AcceptableUseBody } from '@/components/legal/acceptable-use-body';
 import { ConfidentialityBody } from '@/components/legal/confidentiality-body';
 
@@ -125,7 +126,7 @@ export default function AcceptPoliciesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <Reveal className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">
           Action required
         </p>
@@ -149,7 +150,7 @@ export default function AcceptPoliciesPage() {
             </span>
           ))}
         </p>
-      </div>
+      </Reveal>
 
       {submitError && (
         <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
@@ -158,12 +159,14 @@ export default function AcceptPoliciesPage() {
       )}
 
       <div className="space-y-6">
-        {pending.map((status) => {
+        {pending.map((status, idx) => {
           const body = BODY_FOR[status.consentType];
           return (
-            <section
+            <Reveal
+              as="section"
+              index={idx + 1}
               key={status.consentType}
-              className="overflow-hidden rounded-2xl border border-black/5 bg-card shadow-sm dark:border-white/5"
+              className="auth-halo overflow-hidden rounded-2xl bg-card shadow-sm"
               aria-labelledby={`policy-${status.consentType}-title`}
             >
               <header className="flex items-center justify-between border-b border-black/5 bg-[#5D3FD3]/5 px-5 py-3 dark:border-white/5">
@@ -219,7 +222,7 @@ export default function AcceptPoliciesPage() {
                   (v{status.currentVersion}).
                 </span>
               </label>
-            </section>
+            </Reveal>
           );
         })}
       </div>
