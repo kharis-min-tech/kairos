@@ -11,7 +11,14 @@
     "loading": "Loading…",
     "signOut": "Sign out",
     "signOutConfirm": "You will need to sign in again to use the app.",
-    "somethingWentWrong": "Something went wrong. Please try again."
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "tabs": {
+      "home": "Home",
+      "community": "Community",
+      "checkIn": "Check-in",
+      "give": "Give",
+      "more": "More"
+    }
   },
   "more": {
     "sections": {
@@ -63,7 +70,8 @@
       "language": "Language",
       "helpAndGuides": "Help & Guides",
       "aboutKairos": "About Kairos"
-    }
+    },
+    "title": "More"
   },
   "settings": {
     "appearance": {

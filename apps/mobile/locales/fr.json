@@ -11,7 +11,14 @@
     "loading": "Chargement…",
     "signOut": "Se déconnecter",
     "signOutConfirm": "Vous devrez vous reconnecter pour utiliser l'application.",
-    "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer."
+    "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer.",
+    "tabs": {
+      "home": "Accueil",
+      "community": "Communauté",
+      "checkIn": "Pointage",
+      "give": "Don",
+      "more": "Plus"
+    }
   },
   "more": {
     "sections": {
@@ -63,7 +70,8 @@
       "language": "Langue",
       "helpAndGuides": "Aide et guides",
       "aboutKairos": "À propos de Kairos"
-    }
+    },
+    "title": "Plus"
   },
   "settings": {
     "appearance": {

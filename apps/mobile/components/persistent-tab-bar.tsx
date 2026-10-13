@@ -1,4 +1,5 @@
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSegments, useRouter } from 'expo-router';
 import { Home, Users, Hand, Heart, Menu } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,12 +24,12 @@ export const TAB_BAR_CONTENT_HEIGHT = 56;
 
 type TabKey = 'home' | 'community' | 'check-in' | 'give' | 'more';
 
-const TABS: { key: TabKey; label: string; icon: typeof Home; href: string }[] = [
-  { key: 'home', label: 'Home', icon: Home, href: '/(tabs)/' },
-  { key: 'community', label: 'Community', icon: Users, href: '/(tabs)/community' },
-  { key: 'check-in', label: 'Check-in', icon: Hand, href: '/(tabs)/check-in' },
-  { key: 'give', label: 'Give', icon: Heart, href: '/(tabs)/give' },
-  { key: 'more', label: 'More', icon: Menu, href: '/(tabs)/more' },
+const TABS: { key: TabKey; labelKey: string; icon: typeof Home; href: string }[] = [
+  { key: 'home', labelKey: 'common:tabs.home', icon: Home, href: '/(tabs)/' },
+  { key: 'community', labelKey: 'common:tabs.community', icon: Users, href: '/(tabs)/community' },
+  { key: 'check-in', labelKey: 'common:tabs.checkIn', icon: Hand, href: '/(tabs)/check-in' },
+  { key: 'give', labelKey: 'common:tabs.give', icon: Heart, href: '/(tabs)/give' },
+  { key: 'more', labelKey: 'common:tabs.more', icon: Menu, href: '/(tabs)/more' },
 ];
 
 /**
@@ -100,6 +101,8 @@ export function useTabBarReservedSpace(): number {
  * via `tabBarStyle: { display: 'none' }` so we don't render two bars.
  */
 export function PersistentTabBar() {
+  // `t` is the loop variable over TABS below, so the hook is aliased.
+  const { t: translate } = useTranslation(['common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -142,7 +145,7 @@ export function PersistentTabBar() {
               onPress={() => router.replace(t.href as never)}
               style={styles.tab}
               accessibilityRole="tab"
-              accessibilityLabel={t.label}
+              accessibilityLabel={translate(t.labelKey)}
               accessibilityState={{ selected: isActive }}
               hitSlop={4}
             >
@@ -152,7 +155,7 @@ export function PersistentTabBar() {
                 strokeWidth={1.5}
               />
               <Text style={[styles.label, isActive && styles.labelActive]}>
-                {t.label}
+                {translate(t.labelKey)}
               </Text>
             </Pressable>
           );

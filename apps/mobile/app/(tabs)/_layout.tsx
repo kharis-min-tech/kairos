@@ -1,9 +1,11 @@
 import { Tabs, Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Home, Users, Hand, Heart, Menu } from 'lucide-react-native';
 import { useColors } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
 
 export default function TabsLayout() {
+  const { t } = useTranslation(['common']);
   const c = useColors();
 
   // Phase 1.5 Better-Auth: keep the tabs behind the onboarding + approval
@@ -36,35 +38,35 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('common:tabs.home'),
           tabBarIcon: ({ color }) => <Home color={color} size={24} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
+          title: t('common:tabs.community'),
           tabBarIcon: ({ color }) => <Users color={color} size={24} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
         name="check-in"
         options={{
-          title: 'Check-in',
+          title: t('common:tabs.checkIn'),
           tabBarIcon: ({ color }) => <Hand color={color} size={24} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
         name="give"
         options={{
-          title: 'Give',
+          title: t('common:tabs.give'),
           tabBarIcon: ({ color }) => <Heart color={color} size={24} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
         name="more"
         options={{
-          title: 'More',
+          title: t('common:tabs.more'),
           tabBarIcon: ({ color }) => <Menu color={color} size={24} strokeWidth={1.5} />,
         }}
       />
