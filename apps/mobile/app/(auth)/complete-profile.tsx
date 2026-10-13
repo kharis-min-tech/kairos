@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react-native';
 import {
@@ -50,6 +51,7 @@ const RELATIONSHIP_OPTIONS = [
  * we route to /pending-approval and wait for admin approval.
  */
 export default function CompleteProfileScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -125,10 +127,10 @@ export default function CompleteProfileScreen() {
 
   function validate() {
     const next: Record<string, string> = {};
-    if (!phone.trim()) next['phone'] = 'Phone is required';
-    if (!homeBranchId) next['homeBranchId'] = 'Please pick your home branch';
+    if (!phone.trim()) next['phone'] = t('auth:completeProfile.phoneRequired');
+    if (!homeBranchId) next['homeBranchId'] = t('auth:completeProfile.pleasePickBranch');
     if (needsPolicyAccept && !acceptedPolicies)
-      next['acceptedPolicies'] = 'Required to continue';
+      next['acceptedPolicies'] = t('auth:completeProfile.requiredToContinue');
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -151,7 +153,7 @@ export default function CompleteProfileScreen() {
         emergencyContactPhone: ecPhone.trim() || undefined,
         emergencyContactRelationship: ecRel.trim() || undefined,
       });
-      if (!res.success) throw new Error(res.message ?? 'Could not save');
+      if (!res.success) throw new Error(res.message ?? t('auth:completeProfile.couldNotSave'));
       return res.data!.member;
     },
     onSuccess: async (member) => {
@@ -173,7 +175,7 @@ export default function CompleteProfileScreen() {
       });
       router.replace('/(auth)/pending-approval' as never);
     },
-    onError: (e: Error) => setServerError(e.message ?? 'Something went wrong'),
+    onError: (e: Error) => setServerError(e.message ?? t('auth:shared.somethingWentWrong')),
   });
 
   return (
@@ -199,11 +201,11 @@ export default function CompleteProfileScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.title}>Finish setting up</Text>
+            <Text style={styles.title}>{t('auth:completeProfile.title')}</Text>
             <Text style={styles.body}>
-              Welcome, {user?.firstName ?? 'friend'}! We got some details from
-              your provider. Please fill in a couple of missing pieces before
-              we send you on to an admin for approval.
+              {t('auth:completeProfile.welcome', {
+                name: user?.firstName ?? t('auth:completeProfile.friend'),
+              })}
             </Text>
 
             {serverError ? (
@@ -213,7 +215,7 @@ export default function CompleteProfileScreen() {
             ) : null}
 
             <Input
-              label="Phone"
+              label={t('auth:shared.phone')}
               value={phone}
               onChangeText={(v) => {
                 setPhone(v);
@@ -227,7 +229,7 @@ export default function CompleteProfileScreen() {
             />
 
             <View style={{ marginTop: spacing.md, gap: 4 }}>
-              <Text style={styles.fieldLabel}>Home branch</Text>
+              <Text style={styles.fieldLabel}>{t('auth:shared.homeBranch')}</Text>
               <Pressable
                 onPress={() => setPicker('branch')}
                 style={[
@@ -239,7 +241,7 @@ export default function CompleteProfileScreen() {
                   style={branchLabel ? styles.pickerValue : styles.pickerPlaceholder}
                 >
                   {branchLabel ||
-                    (branches.isLoading ? 'Loading branches…' : 'Please pick…')}
+                    (branches.isLoading ? t('auth:shared.loadingBranches') : t('auth:shared.pickBranch'))}
                 </Text>
                 <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
               </Pressable>
@@ -282,11 +284,11 @@ export default function CompleteProfileScreen() {
             {/* ── About you (optional) ────────────────── */}
             <View style={styles.optionalSection}>
               <View style={styles.optionalHeader}>
-                <Text style={styles.optionalTitle}>About you</Text>
-                <Text style={styles.optionalBadge}>Optional</Text>
+                <Text style={styles.optionalTitle}>{t('auth:completeProfile.aboutYou')}</Text>
+                <Text style={styles.optionalBadge}>{t('auth:shared.optional')}</Text>
               </View>
               <Input
-                label="First name"
+                label={t('auth:shared.firstName')}
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
@@ -294,7 +296,7 @@ export default function CompleteProfileScreen() {
                 containerStyle={{ marginTop: spacing.sm }}
               />
               <Input
-                label="Last name"
+                label={t('auth:shared.lastName')}
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
@@ -302,7 +304,7 @@ export default function CompleteProfileScreen() {
                 containerStyle={{ marginTop: spacing.sm }}
               />
               <Input
-                label="Middle name"
+                label={t('auth:shared.middleName')}
                 value={middleName}
                 onChangeText={setMiddleName}
                 autoCapitalize="words"
@@ -310,7 +312,7 @@ export default function CompleteProfileScreen() {
               />
 
               <View style={{ marginTop: spacing.sm, gap: 4 }}>
-                <Text style={styles.fieldLabel}>Gender</Text>
+                <Text style={styles.fieldLabel}>{t('auth:shared.gender')}</Text>
                 <View style={styles.genderRow}>
                   {(['Male', 'Female'] as const).map((g) => {
                     const active = gender === g;
@@ -329,7 +331,7 @@ export default function CompleteProfileScreen() {
                             active && styles.genderChipLabelActive,
                           ]}
                         >
-                          {g}
+                          {t(`auth:genders.${g}`)}
                         </Text>
                       </Pressable>
                     );
@@ -338,7 +340,7 @@ export default function CompleteProfileScreen() {
               </View>
 
               <Input
-                label="Date of birth (YYYY-MM-DD)"
+                label={t('auth:shared.dateOfBirthFormat')}
                 value={dateOfBirth}
                 onChangeText={setDateOfBirth}
                 autoCapitalize="none"
@@ -351,8 +353,8 @@ export default function CompleteProfileScreen() {
             {/* ── Address (optional) ────────────────── */}
             <View style={styles.optionalSection}>
               <View style={styles.optionalHeader}>
-                <Text style={styles.optionalTitle}>Address</Text>
-                <Text style={styles.optionalBadge}>Optional</Text>
+                <Text style={styles.optionalTitle}>{t('auth:shared.address')}</Text>
+                <Text style={styles.optionalBadge}>{t('auth:shared.optional')}</Text>
               </View>
               <View style={{ marginTop: spacing.sm }}>
                 <AddressAutofillInput
@@ -370,18 +372,18 @@ export default function CompleteProfileScreen() {
             {/* ── Emergency contact (optional) ────────────────── */}
             <View style={styles.optionalSection}>
               <View style={styles.optionalHeader}>
-                <Text style={styles.optionalTitle}>Emergency contact</Text>
-                <Text style={styles.optionalBadge}>Optional</Text>
+                <Text style={styles.optionalTitle}>{t('auth:shared.emergencyContact')}</Text>
+                <Text style={styles.optionalBadge}>{t('auth:shared.optional')}</Text>
               </View>
               <Input
-                label="Name"
+                label={t('auth:shared.name')}
                 value={ecName}
                 onChangeText={setEcName}
                 autoCapitalize="words"
                 containerStyle={{ marginTop: spacing.sm }}
               />
               <View style={{ marginTop: spacing.sm, gap: 4 }}>
-                <Text style={styles.fieldLabel}>Relationship</Text>
+                <Text style={styles.fieldLabel}>{t('auth:shared.relationship')}</Text>
                 <Pressable
                   onPress={() => setPicker('relationship')}
                   style={styles.pickerField}
@@ -389,13 +391,13 @@ export default function CompleteProfileScreen() {
                   <Text
                     style={ecRel ? styles.pickerValue : styles.pickerPlaceholder}
                   >
-                    {ecRel || 'Select relationship…'}
+                    {ecRel || t('auth:shared.selectRelationship')}
                   </Text>
                   <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
                 </Pressable>
               </View>
               <Input
-                label="Phone"
+                label={t('auth:shared.phone')}
                 value={ecPhone}
                 onChangeText={setEcPhone}
                 keyboardType="phone-pad"
@@ -406,7 +408,7 @@ export default function CompleteProfileScreen() {
             </View>
 
             <Button
-              label="Save & continue"
+              label={t('auth:completeProfile.saveAndContinue')}
               onPress={() => {
                 setServerError(null);
                 if (validate()) submit.mutate();
@@ -430,7 +432,7 @@ export default function CompleteProfileScreen() {
         <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Home branch</Text>
+            <Text style={styles.sheetTitle}>{t('auth:shared.homeBranch')}</Text>
             <ScrollView style={{ maxHeight: 400 }}>
               {(branches.data ?? []).map((b) => {
                 const active = b.id === homeBranchId;
@@ -477,7 +479,7 @@ export default function CompleteProfileScreen() {
         <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Relationship</Text>
+            <Text style={styles.sheetTitle}>{t('auth:shared.relationship')}</Text>
             <ScrollView style={{ maxHeight: 400 }}>
               {RELATIONSHIP_OPTIONS.map((r) => {
                 const active = r === ecRel;
@@ -497,7 +499,7 @@ export default function CompleteProfileScreen() {
                           active && styles.sheetRowLabelActive,
                         ]}
                       >
-                        {r}
+                        {t(`auth:relationships.${r}`)}
                       </Text>
                     </View>
                     {active ? (

@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Trans, useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
@@ -47,6 +49,7 @@ type PickerKind = 'branch' | 'gender' | null;
 const GENDERS: ('Male' | 'Female')[] = ['Male', 'Female'];
 
 export default function SignupScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -92,12 +95,12 @@ export default function SignupScreen() {
     if (!lastName.trim()) next['lastName'] = 'Required';
     if (!email.trim()) next['email'] = 'Required';
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()))
-      next['email'] = 'Enter a valid email';
+      next['email'] = t('auth:signup.enterValidEmail');
     if (!password) next['password'] = 'Required';
     else if (password.length < MIN_PASSWORD)
       next['password'] = `At least ${MIN_PASSWORD} characters`;
-    if (!homeBranchId) next['homeBranchId'] = 'Choose your home branch';
-    if (!acceptedPolicies) next['acceptedPolicies'] = 'Required to create an account';
+    if (!homeBranchId) next['homeBranchId'] = t('auth:signup.chooseBranch');
+    if (!acceptedPolicies) next['acceptedPolicies'] = t('auth:signup.requiredToCreate');
     // Format is enforced by the DatePicker — no client-side check needed.
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -131,7 +134,7 @@ export default function SignupScreen() {
       setServerError(
         err instanceof Error
           ? err.message
-          : 'Signed in but could not load your profile.',
+          : t('auth:login.signedInNoProfile'),
       );
     }
   }
@@ -156,11 +159,11 @@ export default function SignupScreen() {
         emergencyContactRelationship: emergencyRel.trim() || undefined,
         acceptedPolicies,
       });
-      if (!res.success) throw new Error(res.message ?? 'Sign up failed');
+      if (!res.success) throw new Error(res.message ?? t('auth:signup.signUpFailed'));
       return res.data;
     },
     onSuccess: () => setDone(true),
-    onError: (e: Error) => setServerError(e.message ?? 'Something went wrong'),
+    onError: (e: Error) => setServerError(e.message ?? t('auth:shared.somethingWentWrong')),
   });
 
   return (
@@ -169,7 +172,7 @@ export default function SignupScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Create account</Text>
+        <Text style={styles.headerTitle}>{t('auth:shared.createAccount')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -199,15 +202,16 @@ export default function SignupScreen() {
                 <View style={styles.successBadge}>
                   <MailCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.title}>Check your inbox</Text>
+                <Text style={styles.title}>{t('auth:shared.checkInbox')}</Text>
                 <Text style={styles.body}>
-                  We&apos;ve sent a link to{' '}
-                  <Text style={styles.bodyStrong}>{email.trim()}</Text> to verify your
-                  email. Once verified, an admin will approve your account for
-                  sign-in.
+                  <Trans
+                    i18nKey="auth:signup.sentTo"
+                    values={{ email: email.trim() }}
+                    components={[<Text key="0" />, <Text key="1" style={styles.bodyStrong} />]}
+                  />
                 </Text>
                 <Button
-                  label="Back to sign in"
+                  label={t('auth:shared.backToSignIn')}
                   size="lg"
                   fullWidth
                   onPress={() => router.replace('/(auth)/login')}
@@ -216,11 +220,8 @@ export default function SignupScreen() {
               </>
             ) : (
               <>
-                <Text style={styles.title}>Join Kharis Church</Text>
-                <Text style={styles.body}>
-                  Create your account. An admin will approve access before you
-                  can sign in.
-                </Text>
+                <Text style={styles.title}>{t('auth:signup.title')}</Text>
+                <Text style={styles.body}>{t('auth:signup.intro')}</Text>
 
                 {serverError ? (
                   <View style={styles.errorBanner}>
@@ -231,7 +232,7 @@ export default function SignupScreen() {
                 <View style={styles.pairRow}>
                   <View style={{ flex: 1 }}>
                     <Input
-                      label="First name"
+                      label={t('auth:shared.firstName')}
                       value={firstName}
                       onChangeText={(v) => {
                         setFirstName(v);
@@ -243,7 +244,7 @@ export default function SignupScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Input
-                      label="Last name"
+                      label={t('auth:shared.lastName')}
                       value={lastName}
                       onChangeText={(v) => {
                         setLastName(v);
@@ -256,7 +257,7 @@ export default function SignupScreen() {
                 </View>
 
                 <Input
-                  label="Middle name (optional)"
+                  label={t('auth:shared.middleNameOptional')}
                   value={middleName}
                   onChangeText={setMiddleName}
                   autoCapitalize="words"
@@ -264,7 +265,7 @@ export default function SignupScreen() {
                 />
 
                 <Input
-                  label="Email"
+                  label={t('auth:shared.email')}
                   value={email}
                   onChangeText={(v) => {
                     setEmail(v);
@@ -273,13 +274,13 @@ export default function SignupScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder={t('auth:shared.emailPlaceholder')}
                   error={errors['email']}
                   containerStyle={{ marginTop: spacing.md }}
                 />
 
                 <Input
-                  label="Phone (optional)"
+                  label={t('auth:shared.phoneOptional')}
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
@@ -289,11 +290,11 @@ export default function SignupScreen() {
                 />
 
                 <View style={{ marginTop: spacing.md, gap: 4 }}>
-                  <Text style={styles.fieldLabel}>Home branch</Text>
+                  <Text style={styles.fieldLabel}>{t('auth:shared.homeBranch')}</Text>
                   <PickerRow
                     value={branchLabel}
                     placeholder={
-                      branches.isLoading ? 'Loading branches…' : 'Choose your home branch'
+                      branches.isLoading ? t('auth:shared.loadingBranches') : t('auth:signup.chooseBranch')
                     }
                     onPress={() => setPicker('branch')}
                     error={errors['homeBranchId']}
@@ -303,19 +304,19 @@ export default function SignupScreen() {
                 <View style={styles.pairRow}>
                   <View style={{ flex: 1 }}>
                     <DatePicker
-                      label="Date of birth"
+                      label={t('auth:shared.dateOfBirth')}
                       value={dateOfBirth}
                       onChange={(v) => {
                         setDateOfBirth(v);
                         setErrors((p) => ({ ...p, dateOfBirth: '' }));
                       }}
-                      placeholder="Pick a date"
+                      placeholder={t('auth:signup.pickADate')}
                       maximumDate={new Date()}
                       error={errors['dateOfBirth']}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.fieldLabel}>Gender</Text>
+                    <Text style={styles.fieldLabel}>{t('auth:shared.gender')}</Text>
                     <PickerRow
                       value={gender}
                       placeholder="—"
@@ -331,8 +332,8 @@ export default function SignupScreen() {
                 >
                   <Text style={styles.moreToggleLabel}>
                     {showMore
-                      ? 'Hide address & emergency contact'
-                      : 'Add address & emergency contact (optional)'}
+                      ? t('auth:signup.hideOptional')
+                      : t('auth:signup.addOptional')}
                   </Text>
                 </Pressable>
 
@@ -350,7 +351,7 @@ export default function SignupScreen() {
                       />
                     </View>
                     <Input
-                      label="Emergency contact name"
+                      label={t('auth:shared.emergencyContactName')}
                       value={emergencyName}
                       onChangeText={setEmergencyName}
                       autoCapitalize="words"
@@ -359,7 +360,7 @@ export default function SignupScreen() {
                     <View style={styles.pairRow}>
                       <View style={{ flex: 1 }}>
                         <Input
-                          label="Emergency phone"
+                          label={t('auth:shared.emergencyPhone')}
                           value={emergencyPhone}
                           onChangeText={setEmergencyPhone}
                           keyboardType="phone-pad"
@@ -368,10 +369,10 @@ export default function SignupScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Input
-                          label="Relationship"
+                          label={t('auth:shared.relationship')}
                           value={emergencyRel}
                           onChangeText={setEmergencyRel}
-                          placeholder="e.g. Spouse"
+                          placeholder={t('auth:signup.relationshipExample')}
                         />
                       </View>
                     </View>
@@ -379,7 +380,7 @@ export default function SignupScreen() {
                 ) : null}
 
                 <Input
-                  label="Password"
+                  label={t('auth:shared.password')}
                   value={password}
                   onChangeText={(v) => {
                     setPassword(v);
@@ -418,7 +419,7 @@ export default function SignupScreen() {
                 ) : null}
 
                 <Button
-                  label="Create account"
+                  label={t('auth:shared.createAccount')}
                   onPress={() => {
                     setServerError(null);
                     if (validate()) signup.mutate();
@@ -432,7 +433,7 @@ export default function SignupScreen() {
 
                 <View style={styles.dividerRow}>
                   <View style={styles.dividerLine} />
-                  <Text style={styles.dividerLabel}>Or continue with</Text>
+                  <Text style={styles.dividerLabel}>{t('auth:shared.orContinueWith')}</Text>
                   <View style={styles.dividerLine} />
                 </View>
 
@@ -461,7 +462,7 @@ export default function SignupScreen() {
         <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Home branch</Text>
+            <Text style={styles.sheetTitle}>{t('auth:shared.homeBranch')}</Text>
             <ScrollView style={{ maxHeight: 400 }}>
               {(branches.data ?? []).map((b) => {
                 const active = b.id === homeBranchId;
@@ -509,7 +510,7 @@ export default function SignupScreen() {
         <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Gender</Text>
+            <Text style={styles.sheetTitle}>{t('auth:shared.gender')}</Text>
             {GENDERS.map((g) => {
               const active = g === gender;
               return (
@@ -557,13 +558,13 @@ async function fetchMemberProfile(accessToken: string): Promise<Member> {
   if (!res.ok) {
     throw new Error(
       res.status === 401
-        ? 'Sign-in token was not accepted.'
+        ? i18n.t('auth:login.tokenNotAccepted')
         : `Could not load your profile (HTTP ${res.status}).`,
     );
   }
   const body = (await res.json()) as { success?: boolean; data?: Member; message?: string };
   if (!body.success || !body.data) {
-    throw new Error(body.message ?? 'Could not load your profile.');
+    throw new Error(body.message ?? i18n.t('auth:login.couldNotLoadProfile'));
   }
   return body.data;
 }

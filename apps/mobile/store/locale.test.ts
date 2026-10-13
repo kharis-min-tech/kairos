@@ -86,3 +86,36 @@ describe('locale store', () => {
     expect(i18n.t('common:signOut')).toBe('Se déconnecter');
   });
 });
+
+describe('catalogue', () => {
+  const en = require('../locales/en.json');
+  const fr = require('../locales/fr.json');
+
+  const paths = (o: unknown, prefix = ''): string[] =>
+    typeof o === 'object' && o !== null && !Array.isArray(o)
+      ? Object.entries(o).flatMap(([k, v]) =>
+          typeof v === 'object' && v !== null
+            ? paths(v, `${prefix}${k}.`)
+            : [`${prefix}${k}`],
+        )
+      : [];
+
+  it('has a French string for every English one', () => {
+    const missing = paths(en).filter((p) => !paths(fr).includes(p));
+    expect(missing).toEqual([]);
+  });
+
+  it('has no French key that English does not define', () => {
+    const extra = paths(fr).filter((p) => !paths(en).includes(p));
+    expect(extra).toEqual([]);
+  });
+
+  it('leaves no empty string, which would render as a blank label', () => {
+    const blanks = Object.entries({ en, fr }).flatMap(([loc, cat]) =>
+      paths(cat)
+        .filter((p) => p.split('.').reduce<any>((o, k) => o?.[k], cat) === '')
+        .map((p) => `${loc}:${p}`),
+    );
+    expect(blanks).toEqual([]);
+  });
+});

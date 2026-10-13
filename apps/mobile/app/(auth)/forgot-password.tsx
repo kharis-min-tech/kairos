@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Trans, useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, MailCheck } from 'lucide-react-native';
 import {
@@ -27,6 +28,7 @@ import {
 import { api } from '@/lib/api-client';
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -39,11 +41,11 @@ export default function ForgotPasswordScreen() {
       const res = await api.auth.forgotPassword({ email: email.trim() });
       // Server returns 200 whether or not the email exists — we don't leak
       // account existence. Treat any success as "check your inbox".
-      if (!res.success) throw new Error(res.message ?? 'Could not send reset email');
+      if (!res.success) throw new Error(res.message ?? t('auth:forgotPassword.couldNotSend'));
       return res.data;
     },
     onSuccess: () => setSent(true),
-    onError: (e: Error) => setError(e.message ?? 'Something went wrong'),
+    onError: (e: Error) => setError(e.message ?? t('auth:shared.somethingWentWrong')),
   });
 
   return (
@@ -52,7 +54,7 @@ export default function ForgotPasswordScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Reset password</Text>
+        <Text style={styles.headerTitle}>{t('auth:forgotPassword.heading')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -82,18 +84,17 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.successBadge}>
                   <MailCheck color={c.success} size={22} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.title}>Check your inbox</Text>
+                <Text style={styles.title}>{t('auth:shared.checkInbox')}</Text>
                 <Text style={styles.body}>
-                  If an account exists for{' '}
-                  <Text style={styles.bodyStrong}>{email.trim()}</Text>, we&apos;ve sent a link
-                  to reset your password. It expires in 30 minutes.
+                  <Trans
+                    i18nKey="auth:forgotPassword.sentTo"
+                    values={{ email: email.trim() }}
+                    components={[<Text key="0" />, <Text key="1" style={styles.bodyStrong} />]}
+                  />
                 </Text>
-                <Text style={styles.bodyFaded}>
-                  Don&apos;t see it? Check your spam folder or try again with a
-                  different email.
-                </Text>
+                <Text style={styles.bodyFaded}>{t('auth:forgotPassword.notSeeing')}</Text>
                 <Button
-                  label="Back to sign in"
+                  label={t('auth:shared.backToSignIn')}
                   variant="secondary"
                   size="lg"
                   fullWidth
@@ -103,11 +104,8 @@ export default function ForgotPasswordScreen() {
               </>
             ) : (
               <>
-                <Text style={styles.title}>Reset your password</Text>
-                <Text style={styles.body}>
-                  Enter the email on your Kharis Church account and we&apos;ll send
-                  you a link to set a new password.
-                </Text>
+                <Text style={styles.title}>{t('auth:forgotPassword.title')}</Text>
+                <Text style={styles.body}>{t('auth:forgotPassword.intro')}</Text>
 
                 {error ? (
                   <View style={styles.errorBanner}>
@@ -116,7 +114,7 @@ export default function ForgotPasswordScreen() {
                 ) : null}
 
                 <Input
-                  label="Email"
+                  label={t('auth:shared.email')}
                   value={email}
                   onChangeText={(v) => {
                     setEmail(v);
@@ -125,12 +123,12 @@ export default function ForgotPasswordScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder={t('auth:shared.emailPlaceholder')}
                   containerStyle={{ marginTop: spacing.md }}
                 />
 
                 <Button
-                  label="Send reset link"
+                  label={t('auth:forgotPassword.sendResetLink')}
                   onPress={() => submit.mutate()}
                   loading={submit.isPending}
                   disabled={!email.trim()}
