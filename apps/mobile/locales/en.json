@@ -93,7 +93,9 @@
       "systemMeta": "Uses your device language when Kairos supports it, otherwise English.",
       "inProgress": "Translation in progress",
       "inProgressMeta": "Screens not yet translated appear in English.",
-      "restartNote": "Your choice applies straight away and is remembered on this device."
+      "restartNote": "Your choice applies straight away and is remembered on this device.",
+      "draft": "Draft translation",
+      "draftMeta": "Krio and Twi are translated but not yet checked by a native speaker. Tell us anything that reads wrongly."
     }
   },
   "auth": {
@@ -247,5 +249,41 @@
   "branches": {},
   "security": {},
   "admin": {},
-  "help": {}
+  "help": {},
+  "home": {
+    "today": "Today",
+    "thisWeek": "This week",
+    "openProfile": "Open profile",
+    "dailyVerse": "Daily verse",
+    "greeting": "Good day, {{name}}",
+    "friend": "friend",
+    "couldNotLoad": "We couldn't load your dashboard",
+    "retry": "Retry"
+  },
+  "community": {
+    "people": "People",
+    "fellowships": "Fellowships",
+    "departments": "Departments",
+    "community": "Community",
+    "peopleFellowshipsAndDepartmentsAcrossKharis": "People, fellowships and departments across Kharis.",
+    "noMembersFound": "No members found.",
+    "noFellowshipsFound": "No fellowships found.",
+    "noDepartmentsFound": "No departments found.",
+    "searchPlaceholder": "Search {{what}}"
+  },
+  "checkIn": {
+    "scanCheckInQr": "Scan check-in QR",
+    "pointAtTheCodeOnThe": "Point at the code on the admin's screen.",
+    "checkIn": "Check-in",
+    "oneTapMarksYouPresentAt": "One tap marks you present at the live service.",
+    "checkInWindowOpen": "Check-in window open",
+    "checkInClosed": "Check-in closed",
+    "noServiceScheduled": "No service scheduled",
+    "checkBackCloserToSunday": "Check back closer to Sunday.",
+    "yourHomeBranch": "Your home branch",
+    "showMyQrToAdmin": "Show my QR to admin",
+    "recentAttendance": "Recent attendance",
+    "whichService": "Which service?",
+    "cancel": "Cancel"
+  }
 }

@@ -84,13 +84,12 @@ export default function Language() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.optionLabel}>{lang.label}</Text>
-                  {lang.translated ? (
-                    <Text style={styles.optionMeta}>{lang.english}</Text>
-                  ) : (
+                  <Text style={styles.optionMeta}>{lang.english}</Text>
+                  {lang.status === 'draft' ? (
                     <Text style={styles.optionMetaPending}>
-                      {t('settings:language.inProgress')}
+                      {t('settings:language.draft')}
                     </Text>
-                  )}
+                  ) : null}
                 </View>
                 {active ? <Check color={c.primary} size={18} strokeWidth={2} /> : null}
               </Pressable>
@@ -102,7 +101,7 @@ export default function Language() {
           {t('settings:language.restartNote')}
           {preference === 'system' ? ` (${deviceLabel})` : ''}
         </Text>
-        <Text style={styles.footnote}>{t('settings:language.inProgressMeta')}</Text>
+        <Text style={styles.footnote}>{t('settings:language.draftMeta')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

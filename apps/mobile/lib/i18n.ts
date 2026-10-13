@@ -12,16 +12,15 @@ import tw from '../locales/tw.json';
  * `label` is the endonym, deliberately shown in its own language so a speaker
  * can find it without reading English.
  *
- * Krio and Twi are wired up but not yet translated: their files are empty, so
- * every key falls through to English until a translator fills them in. That is
- * the intended rollout — the languages are pluggable, and shipping English in
- * the gaps beats shipping a guess.
+ * `status: 'draft'` means the catalogue is complete but has not been read by a
+ * native speaker. The picker says so, rather than presenting it as finished.
+ * Move a language to 'complete' once someone who speaks it has been through it.
  */
 export const LANGUAGES = [
-  { code: 'en', label: 'English', english: 'English', translated: true },
-  { code: 'fr', label: 'Français', english: 'French', translated: true },
-  { code: 'kri', label: 'Krio', english: 'Krio', translated: false },
-  { code: 'tw', label: 'Twi', english: 'Twi', translated: false },
+  { code: 'en', label: 'English', english: 'English', status: 'complete' },
+  { code: 'fr', label: 'Français', english: 'French', status: 'complete' },
+  { code: 'kri', label: 'Krio', english: 'Krio', status: 'draft' },
+  { code: 'tw', label: 'Twi', english: 'Twi', status: 'draft' },
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]['code'];

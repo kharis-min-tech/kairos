@@ -93,7 +93,9 @@
       "systemMeta": "Utilise la langue de votre appareil si Kairos la prend en charge, sinon l'anglais.",
       "inProgress": "Traduction en cours",
       "inProgressMeta": "Les écrans pas encore traduits restent en anglais.",
-      "restartNote": "Votre choix s'applique immédiatement et est conservé sur cet appareil."
+      "restartNote": "Votre choix s'applique immédiatement et est conservé sur cet appareil.",
+      "draft": "Traduction provisoire",
+      "draftMeta": "Le krio et le twi sont traduits mais pas encore relus par un locuteur natif. Signalez-nous tout ce qui sonne faux."
     }
   },
   "auth": {
@@ -247,5 +249,41 @@
   "branches": {},
   "security": {},
   "admin": {},
-  "help": {}
+  "help": {},
+  "home": {
+    "today": "Aujourd'hui",
+    "thisWeek": "Cette semaine",
+    "openProfile": "Ouvrir le profil",
+    "dailyVerse": "Verset du jour",
+    "greeting": "Bonjour, {{name}}",
+    "friend": "ami(e)",
+    "couldNotLoad": "Impossible de charger votre tableau de bord",
+    "retry": "Réessayer"
+  },
+  "community": {
+    "people": "Personnes",
+    "fellowships": "Cellules",
+    "departments": "Départements",
+    "community": "Communauté",
+    "peopleFellowshipsAndDepartmentsAcrossKharis": "Les personnes, cellules et départements de Kharis.",
+    "noMembersFound": "Aucun membre trouvé.",
+    "noFellowshipsFound": "Aucune cellule trouvée.",
+    "noDepartmentsFound": "Aucun département trouvé.",
+    "searchPlaceholder": "Rechercher dans {{what}}"
+  },
+  "checkIn": {
+    "scanCheckInQr": "Scanner le QR de pointage",
+    "pointAtTheCodeOnThe": "Visez le code affiché par l'administrateur.",
+    "checkIn": "Pointage",
+    "oneTapMarksYouPresentAt": "Un seul geste vous marque présent au culte en cours.",
+    "checkInWindowOpen": "Pointage ouvert",
+    "checkInClosed": "Pointage fermé",
+    "noServiceScheduled": "Aucun culte prévu",
+    "checkBackCloserToSunday": "Revenez plus près de dimanche.",
+    "yourHomeBranch": "Votre antenne d'attache",
+    "showMyQrToAdmin": "Montrer mon QR à l'administrateur",
+    "recentAttendance": "Présences récentes",
+    "whichService": "Quel culte ?",
+    "cancel": "Annuler"
+  }
 }

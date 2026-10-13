@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -48,6 +49,7 @@ import {
  * tree lives in the handlers below.
  */
 export default function Home() {
+  const { t } = useTranslation(['home', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -167,9 +169,9 @@ export default function Home() {
 
   const agendaBlocks = (
     <>
-      <AgendaBlock label="Today" items={data?.today ?? []} onPress={openAgendaItem} />
+      <AgendaBlock label={t('home:today')} items={data?.today ?? []} onPress={openAgendaItem} />
       <AgendaBlock
-        label="This week"
+        label={t('home:thisWeek')}
         items={data?.thisWeek ?? []}
         withDay
         onPress={openAgendaItem}
@@ -212,7 +214,7 @@ export default function Home() {
           <Pressable
             onPress={() => router.push('/profile')}
             accessibilityRole="button"
-            accessibilityLabel="Open profile"
+            accessibilityLabel={t('home:openProfile')}
             hitSlop={8}
           >
             <Avatar
@@ -267,7 +269,7 @@ export default function Home() {
         )}
 
         <View style={styles.verseCard}>
-          <Text style={styles.verseEyebrow}>Daily verse</Text>
+          <Text style={styles.verseEyebrow}>{t('home:dailyVerse')}</Text>
           <Text style={styles.verseText}>
             &ldquo;Be still, and know that I am God.&rdquo;
           </Text>
