@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -60,6 +61,7 @@ function formatServiceLabel(c: SelfCheckInCandidate): string {
 }
 
 export default function CheckIn() {
+  const { t } = useTranslation(['checkIn', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -178,10 +180,8 @@ export default function CheckIn() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Check-in</Text>
-          <Text style={styles.subtitle}>
-            One tap marks you present at the live service.
-          </Text>
+          <Text style={styles.title}>{t('checkIn:checkIn')}</Text>
+          <Text style={styles.subtitle}>{t('checkIn:oneTapMarksYouPresentAt')}</Text>
         </View>
 
         <View style={styles.happeningCard}>
@@ -224,7 +224,7 @@ export default function CheckIn() {
                 </Text>
                 {canCheckIn ? (
                   <View style={styles.windowPill}>
-                    <Text style={styles.windowLabel}>Check-in window open</Text>
+                    <Text style={styles.windowLabel}>{t('checkIn:checkInWindowOpen')}</Text>
                   </View>
                 ) : nextOpening ? (
                   <View style={styles.windowPill}>
@@ -235,14 +235,14 @@ export default function CheckIn() {
                   </View>
                 ) : (
                   <View style={[styles.windowPill, styles.windowPillMuted]}>
-                    <Text style={styles.windowLabel}>Check-in closed</Text>
+                    <Text style={styles.windowLabel}>{t('checkIn:checkInClosed')}</Text>
                   </View>
                 )}
               </>
             ) : (
               <>
-                <Text style={styles.happeningTitle}>No service scheduled</Text>
-                <Text style={styles.happeningMeta}>Check back closer to Sunday.</Text>
+                <Text style={styles.happeningTitle}>{t('checkIn:noServiceScheduled')}</Text>
+                <Text style={styles.happeningMeta}>{t('checkIn:checkBackCloserToSunday')}</Text>
               </>
             )}
           </View>
@@ -257,7 +257,7 @@ export default function CheckIn() {
           />
           <View style={styles.identityText}>
             <Text style={styles.identityName}>{displayName}</Text>
-            <Text style={styles.identityMeta}>Your home branch</Text>
+            <Text style={styles.identityMeta}>{t('checkIn:yourHomeBranch')}</Text>
           </View>
         </View>
 
@@ -333,11 +333,11 @@ export default function CheckIn() {
           ]}
         >
           <QrCode color={c.primary} size={16} strokeWidth={2} />
-          <Text style={styles.scanLabel}>Show my QR to admin</Text>
+          <Text style={styles.scanLabel}>{t('checkIn:showMyQrToAdmin')}</Text>
         </Pressable>
 
         <Card padding="md" style={styles.statCard}>
-          <Text style={styles.statEyebrow}>Recent attendance</Text>
+          <Text style={styles.statEyebrow}>{t('checkIn:recentAttendance')}</Text>
           <Text style={styles.statNumber}>
             {attendanceTotal === 0
               ? '—'
@@ -361,7 +361,7 @@ export default function CheckIn() {
         <Pressable style={styles.backdrop} onPress={() => setPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Which service?</Text>
+            <Text style={styles.sheetTitle}>{t('checkIn:whichService')}</Text>
             <Text style={styles.sheetHint}>
               Two check-in windows are open right now. Pick the one you&apos;re at.
             </Text>
@@ -382,7 +382,7 @@ export default function CheckIn() {
             ))}
             <Pressable style={styles.sheetCancel} onPress={() => setPickerOpen(false)}>
               <XIcon color={c.inkMuted} size={16} strokeWidth={1.5} />
-              <Text style={styles.sheetCancelLabel}>Cancel</Text>
+              <Text style={styles.sheetCancelLabel}>{t('checkIn:cancel')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -392,8 +392,8 @@ export default function CheckIn() {
         visible={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleScannedCheckInQr}
-        title="Scan check-in QR"
-        hint="Point at the code on the admin's screen."
+        title={t('checkIn:scanCheckInQr')}
+        hint={t('checkIn:pointAtTheCodeOnThe')}
       />
     </SafeAreaView>
   );

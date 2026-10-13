@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -27,13 +28,14 @@ import { api } from '@/lib/api-client';
 
 type Segment = 'people' | 'fellowships' | 'departments';
 
-const SEGMENTS: { key: Segment; label: string }[] = [
-  { key: 'people', label: 'People' },
-  { key: 'fellowships', label: 'Fellowships' },
-  { key: 'departments', label: 'Departments' },
+const SEGMENTS: { key: Segment; labelKey: string }[] = [
+  { key: 'people', labelKey: 'community:people' },
+  { key: 'fellowships', labelKey: 'community:fellowships' },
+  { key: 'departments', labelKey: 'community:departments' },
 ];
 
 export default function Community() {
+  const { t } = useTranslation(['community', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [segment, setSegment] = useState<Segment>('people');
@@ -42,8 +44,8 @@ export default function Community() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>Community</Text>
-        <Text style={styles.subtitle}>People, fellowships and departments across Kharis.</Text>
+        <Text style={styles.title}>{t('community:community')}</Text>
+        <Text style={styles.subtitle}>{t('community:peopleFellowshipsAndDepartmentsAcrossKharis')}</Text>
       </View>
 
       <View style={styles.segmentedControl}>
@@ -56,7 +58,7 @@ export default function Community() {
               style={[styles.segment, active && styles.segmentActive]}
             >
               <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
-                {s.label}
+                {t(s.labelKey)}
               </Text>
             </Pressable>
           );
@@ -67,7 +69,9 @@ export default function Community() {
         <Search color={c.inkFaded} size={18} strokeWidth={1.5} />
         <TextInput
           style={styles.searchInput}
-          placeholder={`Search ${SEGMENTS.find((s) => s.key === segment)?.label.toLowerCase()}`}
+          placeholder={t('community:searchPlaceholder', {
+            what: t(SEGMENTS.find((s) => s.key === segment)?.labelKey ?? '').toLowerCase(),
+          })}
           placeholderTextColor={c.inkFaded}
           value={search}
           onChangeText={setSearch}
@@ -84,6 +88,7 @@ export default function Community() {
 }
 
 function PeopleList({ search }: { search: string }) {
+  const { t } = useTranslation(['community', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -115,7 +120,7 @@ function PeopleList({ search }: { search: string }) {
         query.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
-          <Text style={styles.emptyText}>No members found.</Text>
+          <Text style={styles.emptyText}>{t('community:noMembersFound')}</Text>
         )
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
@@ -141,6 +146,7 @@ function PeopleList({ search }: { search: string }) {
 }
 
 function FellowshipsList({ search }: { search: string }) {
+  const { t } = useTranslation(['community', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -172,7 +178,7 @@ function FellowshipsList({ search }: { search: string }) {
         query.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
-          <Text style={styles.emptyText}>No fellowships found.</Text>
+          <Text style={styles.emptyText}>{t('community:noFellowshipsFound')}</Text>
         )
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
@@ -197,6 +203,7 @@ function FellowshipsList({ search }: { search: string }) {
 }
 
 function DepartmentsList({ search }: { search: string }) {
+  const { t } = useTranslation(['community', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -230,7 +237,7 @@ function DepartmentsList({ search }: { search: string }) {
         query.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
-          <Text style={styles.emptyText}>No departments found.</Text>
+          <Text style={styles.emptyText}>{t('community:noDepartmentsFound')}</Text>
         )
       }
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
