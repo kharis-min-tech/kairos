@@ -10,6 +10,16 @@ import type {
   VerifyEmailRequest,
   RefreshRequest,
   OAuthConnection,
+  OAuthClientSummary,
+  OAuthClientWithSecret,
+  OAuthClientGrantRow,
+  OAuthClientActivityRow,
+  CreateOAuthClientRequest,
+  UpdateOAuthClientRequest,
+  OAuthAuthorizeParams,
+  OAuthAuthorizeContextResponse,
+  OAuthAuthorizeDecisionResponse,
+  OAuthAppConnection,
   OAuthConfirmLinkRequest,
   OAuthProviderId,
   CompleteOAuthProfileRequest,
@@ -278,6 +288,65 @@ export function createApiClient(
           client.delete<ApiResponse<OAuthConnection[]>>(`/api/auth/oauth/connections/${provider}`),
         confirmLink: (data: OAuthConfirmLinkRequest) =>
           client.post<ApiResponse<LoginResponse>>('/api/auth/oauth/confirm-link', data),
+      },
+    },
+
+    /**
+     * Kairos as an OAuth2 / OIDC authorization server. These are the
+     * first-party surfaces (consent screen, the member's authorised apps and
+     * the admin client registry); other apps use the protocol endpoints
+     * directly and never go through this client.
+     */
+    oauthServer: {
+      authorizeContext: (params: OAuthAuthorizeParams) =>
+        client.get<ApiResponse<OAuthAuthorizeContextResponse>>(
+          `/api/oauth/authorize/context?${new URLSearchParams(
+            Object.entries(params).filter(([, v]) => v !== undefined) as [string, string][],
+          )}`,
+        ),
+      authorizeDecision: (params: OAuthAuthorizeParams, approve: boolean) =>
+        client.post<ApiResponse<OAuthAuthorizeDecisionResponse>>('/api/oauth/authorize/decision', {
+          ...params,
+          approve,
+        }),
+      listConnections: () => client.get<ApiResponse<OAuthAppConnection[]>>('/api/oauth/connections'),
+      revokeConnection: (grantId: string) =>
+        client.delete<ApiResponse<{ revoked: boolean }>>(
+          `/api/oauth/connections/${encodeURIComponent(grantId)}`,
+        ),
+      clients: {
+        list: () => client.get<ApiResponse<OAuthClientSummary[]>>('/api/oauth/clients'),
+        get: (id: string) =>
+          client.get<ApiResponse<OAuthClientSummary>>(`/api/oauth/clients/${encodeURIComponent(id)}`),
+        create: (data: CreateOAuthClientRequest) =>
+          client.post<ApiResponse<OAuthClientWithSecret>>('/api/oauth/clients', data),
+        update: (id: string, data: UpdateOAuthClientRequest) =>
+          client.patch<ApiResponse<OAuthClientSummary>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}`,
+            data,
+          ),
+        rotateSecret: (id: string) =>
+          client.post<ApiResponse<{ client: OAuthClientSummary; clientSecret: string }>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}/rotate-secret`,
+          ),
+        expirePreviousSecret: (id: string) =>
+          client.post<ApiResponse<OAuthClientSummary>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}/expire-previous-secret`,
+          ),
+        grants: (id: string) =>
+          client.get<ApiResponse<OAuthClientGrantRow[]>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}/grants`,
+          ),
+        revokeAll: (id: string) =>
+          client.post<ApiResponse<{ revoked: number }>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}/revoke-all`,
+          ),
+        activity: (id: string) =>
+          client.get<ApiResponse<OAuthClientActivityRow[]>>(
+            `/api/oauth/clients/${encodeURIComponent(id)}/activity`,
+          ),
+        delete: (id: string) =>
+          client.delete<ApiResponse<{ deleted: boolean }>>(`/api/oauth/clients/${encodeURIComponent(id)}`),
       },
     },
 

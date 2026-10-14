@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { persistAuthSuccess, useLogin } from '@/hooks/use-auth';
 import { useAuthStore } from '@/lib/auth-store';
+import { safeReturnTo } from '@/lib/safe-return-to';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { Halo } from '@/components/motion/halo';
 import { KharisCardHeader } from '../kharis-logo';
@@ -34,6 +35,9 @@ function LoginContent() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Where to go once signed in, when something sent the member here first
+  // (the OAuth consent screen does). Only ever an in-app path.
+  const returnTo = safeReturnTo(searchParams.get('returnTo'));
 
   // Surface OAuth error slugs the server appended to /login?oauth_error=… as
   // a friendly banner. Slugs come from apps/api/src/auth/oauth.
@@ -47,9 +51,9 @@ function LoginContent() {
   // Already signed in? No reason to be on /login — go to dashboard.
   useEffect(() => {
     if (accessToken) {
-      router.replace('/dashboard');
+      router.replace(returnTo ?? '/dashboard');
     }
-  }, [accessToken, router]);
+  }, [accessToken, returnTo, router]);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -72,7 +76,7 @@ function LoginContent() {
       if (member.mustChangePassword) {
         router.push('/change-password');
       } else {
-        router.push(result.isFirstLogin ? '/welcome' : '/dashboard');
+        router.push(result.isFirstLogin ? '/welcome' : (returnTo ?? '/dashboard'));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -196,7 +200,7 @@ function LoginContent() {
               </div>
             </div>
 
-            <OAuthButtonGroup returnTo="/dashboard" actionLabel="sign-in" disabled={isSubmitting} variant="icons" />
+            <OAuthButtonGroup returnTo={returnTo ?? '/dashboard'} actionLabel="sign-in" disabled={isSubmitting} variant="icons" />
 
             <p className="text-center text-sm text-muted-foreground/70">
               Don&apos;t have an account?{' '}

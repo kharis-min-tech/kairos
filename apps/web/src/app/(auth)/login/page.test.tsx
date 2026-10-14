@@ -215,3 +215,34 @@ describe('LoginPage — OAuth', () => {
     });
   });
 });
+
+// ── returnTo (the OAuth consent screen sends people here first) ──
+
+describe('LoginPage — returnTo', () => {
+  async function signIn() {
+    mutateAsync.mockResolvedValue({
+      tokens: { accessToken: 'at', refreshToken: 'rt' },
+      member: mockMember,
+      isFirstLogin: false,
+    });
+    render(<LoginPage />, { wrapper });
+    await userEvent.type(screen.getByLabelText(/Email Address/i), 'jane@example.com');
+    await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
+    await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
+  }
+
+  it('goes back to the page that sent the member here', async () => {
+    searchParamsString = `returnTo=${encodeURIComponent('/oauth/authorize?client_id=kc_1&state=abc')}`;
+    await signIn();
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/oauth/authorize?client_id=kc_1&state=abc'));
+  });
+
+  it.each([['https://evil.example.com'], ['//evil.example.com'], ['javascript:alert(1)']])(
+    'ignores the unsafe returnTo %s and falls back to /dashboard',
+    async (bad) => {
+      searchParamsString = `returnTo=${encodeURIComponent(bad)}`;
+      await signIn();
+      await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'));
+    },
+  );
+});

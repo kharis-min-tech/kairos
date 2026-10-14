@@ -6,6 +6,7 @@ export * from './minor';
 export * from './rbac';
 export * from './notifications';
 export * from './audit';
+export * from './oauth-server';
 export * from './consent';
 export * from './membership';
 export * from './media';

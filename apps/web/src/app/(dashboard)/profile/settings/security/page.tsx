@@ -45,6 +45,8 @@ import {
   OAuthProviderIcon,
 } from '@/components/oauth-provider-icon';
 
+import { AuthorizedAppsCard } from './_components/authorized-apps-card';
+
 const ALL_PROVIDERS: OAuthProviderId[] = ['google', 'microsoft', 'apple'];
 
 function actionIcon(action: AuditAction) {
@@ -268,6 +270,8 @@ export default function SecuritySettingsPage() {
       </div>
 
       <ConnectedAccountsCard />
+
+      <AuthorizedAppsCard />
 
       <Card>
         <CardHeader>
