@@ -4,6 +4,8 @@ import './globals.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Providers } from '@/components/providers';
 import { Toaster } from 'sonner';
+import { cookies } from 'next/headers';
+import { LANGUAGE_COOKIE, asLanguage } from '@/lib/language';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -17,15 +19,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Read here so the server renders the reader's language rather than English
+  // followed by a switch. 'system' cannot be resolved server-side -- the
+  // browser's Accept-Language is a weaker signal than the explicit choice --
+  // so it falls through to English and the client corrects it in one step.
+  const pref = (await cookies()).get(LANGUAGE_COOKIE)?.value;
+  const language = pref && pref !== 'system' ? asLanguage(pref) : 'en';
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={language} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers initialLanguage={language}>{children}</Providers>
         <Toaster
           richColors
           position="top-right"

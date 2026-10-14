@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import i18n, {
+  LANGUAGE_COOKIE,
   LANGUAGE_KEY,
   resolveLanguage,
   storedPreference,
@@ -19,8 +20,23 @@ import i18n, {
  * The listener keeps other tabs in step: change the language in one, and the
  * rest follow rather than drifting apart.
  */
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+export function I18nProvider({
+  children,
+  initialLanguage = 'en',
+}: {
+  children: React.ReactNode;
+  /** Resolved on the server from the cookie, so SSR and hydration agree. */
+  initialLanguage?: string;
+}) {
   const [ready, setReady] = useState(false);
+
+  // Applied during module evaluation rather than in the effect: by the time an
+  // effect runs, a Suspense boundary further down may still be hydrating
+  // against the server's HTML, and switching underneath it is exactly the
+  // mismatch this is here to avoid.
+  if (i18n.language !== initialLanguage) {
+    void i18n.changeLanguage(initialLanguage);
+  }
 
   useEffect(() => {
     void i18n.changeLanguage(resolveLanguage(storedPreference())).finally(() => setReady(true));
@@ -47,7 +63,15 @@ export function setLanguagePreference(pref: LanguagePreference) {
   try {
     window.localStorage.setItem(LANGUAGE_KEY, pref);
   } catch {
-    // Blocked storage: applies for this session only.
+    // Blocked storage: the cookie below still carries the choice.
+  }
+  try {
+    // Mirrored so the server can render the right language on the next
+    // document request. Lax is enough: this is a display preference, not a
+    // credential, and it never travels cross-site.
+    document.cookie = `${LANGUAGE_COOKIE}=${pref}; path=/; max-age=31536000; samesite=lax`;
+  } catch {
+    // Blocked cookies: this tab still switches below.
   }
   void i18n.changeLanguage(resolveLanguage(pref));
 }

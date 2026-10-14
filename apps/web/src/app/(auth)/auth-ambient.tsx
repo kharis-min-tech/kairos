@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { resolveVerse } from '@kairos/core';
 import { CardField } from '@/components/motion/card-field';
@@ -20,7 +21,13 @@ export function AuthAmbient() {
   // The verse card showed a hardcoded John 15:12 with no version named. It now
   // comes from the shared verse source, which carries a real Bible version per
   // language and says when it fell back to English.
-  const verse = resolveVerse(i18n.language);
+  // Resolved after mount. The provider applies the stored language in an
+  // effect, and on a reload that effect can land before this card finishes
+  // hydrating -- the server has written the English verse and the client
+  // wants the translated one, so React reports a mismatch and rebuilds the
+  // tree. Nothing language-dependent is server-rendered here now.
+  const [verse, setVerse] = useState<ReturnType<typeof resolveVerse> | null>(null);
+  useEffect(() => setVerse(resolveVerse(i18n.language)), [i18n.language]);
 
   return (
     <>
@@ -39,10 +46,12 @@ export function AuthAmbient() {
         <FloatCard position={{ left: '8%', bottom: '12%' }} depth={0.5} fx={-200} fy={200} fr={-14} tilt={-4} i={0}>
           <div className="w-[200px] rounded-[3px] bg-[#fdf3dc] px-4 py-3.5 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
             <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">{t('auth:dailyVerse')}</div>
-            <div className="mt-1.5 text-[13px] italic leading-[1.45]">&ldquo;{verse.text}&rdquo;</div>
+            <div className="mt-1.5 text-[13px] italic leading-[1.45]">
+              {verse ? `“${verse.text}”` : ''}
+            </div>
             <div className="mt-1.5 text-[11px] text-[#8a6410]">
-              — {verse.ref} ({verse.version})
-              {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
+              {verse ? `— ${verse.ref} (${verse.version})` : ''}
+              {verse?.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
             </div>
           </div>
         </FloatCard>

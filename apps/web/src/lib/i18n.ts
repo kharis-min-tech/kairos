@@ -31,6 +31,22 @@ export type LanguagePreference = LanguageCode | 'system';
 
 export const LANGUAGE_KEY = 'kairos.language';
 
+/**
+ * The preference is mirrored into a cookie as well as localStorage.
+ *
+ * localStorage alone cannot be read during the server render, so the server
+ * always emitted English and the client switched afterwards. That is a visible
+ * flash of English for everyone who does not read English, and inside a
+ * Suspense boundary it is worse than cosmetic: the boundary hydrates after the
+ * switch has already happened, the server's English HTML and the client's
+ * translation disagree, and React throws away the tree and rebuilds it.
+ *
+ * A cookie is sent with the document request, so the server can render the
+ * right language first time.
+ */
+export { LANGUAGE_COOKIE } from '@/lib/language';
+import { LANGUAGE_COOKIE } from '@/lib/language';
+
 const SUPPORTED = LANGUAGES.map((l) => l.code) as readonly string[];
 
 /** First browser language Kairos can speak, else English. */
@@ -52,12 +68,21 @@ export function resolveLanguage(pref: LanguagePreference): LanguageCode {
 export function storedPreference(): LanguagePreference {
   if (typeof window === 'undefined') return 'system';
   try {
-    const raw = window.localStorage.getItem(LANGUAGE_KEY);
+    const raw = window.localStorage.getItem(LANGUAGE_KEY) ?? cookiePreference();
     return raw && [...SUPPORTED, 'system'].includes(raw) ? (raw as LanguagePreference) : 'system';
   } catch {
-    return 'system';
+    return cookiePreference() ?? 'system';
   }
 }
+
+/** The mirrored cookie, for when localStorage is blocked. */
+function cookiePreference(): LanguagePreference | null {
+  if (typeof document === 'undefined') return null;
+  const hit = document.cookie.split('; ').find((c) => c.startsWith(`${LANGUAGE_COOKIE}=`));
+  const raw = hit?.slice(LANGUAGE_COOKIE.length + 1);
+  return raw && [...SUPPORTED, 'system'].includes(raw) ? (raw as LanguagePreference) : null;
+}
+
 
 if (!i18n.isInitialized) {
   void i18n.use(initReactI18next).init({
