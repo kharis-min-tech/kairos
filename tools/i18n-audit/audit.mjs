@@ -116,6 +116,22 @@ for (const app of APPS) {
   line(`${empties.length ? 'FAIL' : 'ok  '} empty values: ${empties.length}`);
   if (empties.length) hardFailures++;
 
+  // 2b. Cyrillic or Greek letters that look exactly like Latin ones. These
+  // render correctly, so they survive review, but they break search, sort and
+  // every string comparison against the Latin spelling. Krio and Twi use
+  // Latin-script extensions, so a Cyrillic letter is always a mistake.
+  const CONFUSABLE = /[\u0400-\u04FF\u0370-\u03FF]/;
+  const confusables = [];
+  for (const l of locales) {
+    for (const p of paths(cats[l])) {
+      const v = valueAt(cats[l], p);
+      if (typeof v === 'string' && CONFUSABLE.test(v)) confusables.push(`${l}:${p}  ${v.slice(0, 50)}`);
+    }
+  }
+  line(`${confusables.length ? 'FAIL' : 'ok  '} Cyrillic/Greek look-alike letters: ${confusables.length}`);
+  confusables.slice(0, 5).forEach((c) => line(`       ${c}`));
+  if (confusables.length) hardFailures++;
+
   // 3. keys the code asks for
   const referenced = new Set();
   const malformed = [];

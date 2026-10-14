@@ -26,6 +26,8 @@ import {
 } from '@kairos/ui';
 import { downloadMyDataExportHtml, downloadMyDataExportJson, useDeleteMyAccount } from '@/hooks/use-me';
 import { useTranslation } from 'react-i18next';
+import { LANGUAGES, storedPreference, type LanguagePreference } from '@/lib/i18n';
+import { setLanguagePreference } from '@/components/i18n-provider';
 
 const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
@@ -36,6 +38,9 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
   const { logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // Read after mount: localStorage does not exist during the server render.
+  const [langPref, setLangPref] = useState<LanguagePreference>('system');
+  useEffect(() => setLangPref(storedPreference()), []);
   const [exporting, setExporting] = useState<'html' | 'json' | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -173,14 +178,24 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div>
               <p className="text-sm font-medium">{t('settings:language')}</p>
-              <p className="text-xs text-muted-foreground">{t('settings:currentlyEnglishOnlyMoreLanguagesComing')}</p>
+              <p className="text-xs text-muted-foreground">{t('settings:languageHint')}</p>
             </div>
             <div className="w-40">
               <CustomSelect
-                disabled
-                value="English"
-                onValueChange={() => {}}
-                options={[{ value: 'English', label: t('settings:english') }]}
+                value={mounted ? langPref : 'system'}
+                onValueChange={(v) => {
+                  const next = v as LanguagePreference;
+                  setLanguagePreference(next);
+                  setLangPref(next);
+                }}
+                options={[
+                  { value: 'system', label: t('settings:matchBrowser') },
+                  ...LANGUAGES.map((l) => ({
+                    value: l.code,
+                    // Draft languages say so rather than looking finished.
+                    label: l.status === 'draft' ? `${l.label} (${t('settings:draft')})` : l.label,
+                  })),
+                ]}
               />
             </div>
           </div>
