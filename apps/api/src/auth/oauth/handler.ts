@@ -161,11 +161,19 @@ export async function handleOAuthStart(c: Context, providerId: ProviderId): Prom
   const returnToQ = c.req.query('returnTo');
   const returnTo = isSafeReturnTo(returnToQ) ? returnToQ : undefined;
 
+  const client = c.req.query('client') === 'mobile' ? ('mobile' as const) : undefined;
+
   const { verifier, challenge } = await generatePkcePair();
   const nonce = generateStateNonce();
   const secret = getAuthSecrets(c).accessSecret;
   const cookieValue = await generateStateCookie(
-    { provider: providerId, verifier, nonce, ...(returnTo ? { returnTo } : {}) },
+    {
+      provider: providerId,
+      verifier,
+      nonce,
+      ...(returnTo ? { returnTo } : {}),
+      ...(client ? { client } : {}),
+    },
     secret,
   );
 
@@ -219,13 +227,30 @@ async function readCallbackParams(c: Context): Promise<{ code: string | null; st
   return { code: c.req.query('code') ?? null, state: c.req.query('state') ?? null };
 }
 
-function redirectError(c: Context, code: string): Response {
-  const url = new URL('/login', frontendUrl(c));
-  url.searchParams.set('oauth_error', code);
+/** Where the native app's flows end: its own URL scheme, not the website. */
+const MOBILE_SCHEME = 'kairos://';
+
+/**
+ * The URL a finished flow lands on. The website for browsers; the app's own
+ * scheme for flows the app started, since iOS only hands an https return to
+ * an app that holds a `webcredentials` association.
+ */
+export function landingUrl(
+  c: Context,
+  mobile: boolean,
+  path: string,
+  query?: Record<string, string>,
+): string {
+  const qs = query ? `?${new URLSearchParams(query).toString()}` : '';
+  if (mobile) return `${MOBILE_SCHEME}${path.replace(/^\//, '')}${qs}`;
+  return `${new URL(path, frontendUrl(c)).toString()}${qs}`;
+}
+
+function redirectError(c: Context, code: string, mobile = false): Response {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: url.toString(),
+      Location: landingUrl(c, mobile, '/login', { oauth_error: code }),
       'Set-Cookie': stateCookieClearHeader(),
     },
   });
@@ -242,6 +267,7 @@ async function auditFailureAndRedirect(
   c: Context,
   providerId: ProviderId,
   slug: string,
+  mobile = false,
 ): Promise<Response> {
   const ctx = extractRequestContext(c);
   await recordAuditEvent(db, {
@@ -251,7 +277,7 @@ async function auditFailureAndRedirect(
     ctx,
     metadata: { method: providerId, reason: slug },
   });
-  return redirectError(c, slug);
+  return redirectError(c, slug, mobile);
 }
 
 export async function handleOAuthCallback(c: Context, providerId: ProviderId): Promise<Response> {
@@ -263,7 +289,14 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
   }
 
   const { code, state } = await readCallbackParams(c);
-  if (!code || !state) return auditFailureAndRedirect(c, providerId, 'provider_error');
+  if (!code || !state) {
+    // A provider-side error never reaches the state check, but the app that
+    // started the flow is still waiting on its own scheme.
+    const secret = getAuthSecrets(c).accessSecret;
+    const cookie = readCookie(c.req.header('Cookie'), OAUTH_STATE_COOKIE_NAME);
+    const started = cookie ? await parseStateCookie(cookie, secret).catch(() => null) : null;
+    return auditFailureAndRedirect(c, providerId, 'provider_error', started?.client === 'mobile');
+  }
 
   // Load + verify the state cookie.
   const cookieValue = readCookie(c.req.header('Cookie'), OAUTH_STATE_COOKIE_NAME);
@@ -278,6 +311,7 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
   if (payload.provider !== providerId || payload.nonce !== state) {
     return auditFailureAndRedirect(c, providerId, 'state_mismatch');
   }
+  const mobile = payload.client === 'mobile';
 
   const redirectUri = computeRedirectUri(c, providerId);
 
@@ -303,7 +337,7 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
         provider: providerId,
         reason: err instanceof Error ? err.message : 'unknown',
       });
-      return auditFailureAndRedirect(c, providerId, 'id_token_invalid');
+      return auditFailureAndRedirect(c, providerId, 'id_token_invalid', mobile);
     }
 
     const profile = buildProfile(provider, claims);
@@ -313,14 +347,14 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
     });
 
     if (link.kind === 'confirm_password') {
-      const url = new URL('/oauth-confirm-link', frontendUrl(c));
-      url.searchParams.set('token', link.confirmationToken);
-      url.searchParams.set('email', link.conflictingMemberEmail);
-      url.searchParams.set('provider', providerId);
       return new Response(null, {
         status: 302,
         headers: {
-          Location: url.toString(),
+          Location: landingUrl(c, mobile, '/oauth-confirm-link', {
+            token: link.confirmationToken,
+            email: link.conflictingMemberEmail,
+            provider: providerId,
+          }),
           'Set-Cookie': stateCookieClearHeader(),
         },
       });
@@ -328,7 +362,7 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
 
     // Sign in — reuse existing session issuer.
     const [member] = await db.select().from(members).where(eq(members.id, link.memberId)).limit(1);
-    if (!member) return auditFailureAndRedirect(c, providerId, 'provider_error');
+    if (!member) return auditFailureAndRedirect(c, providerId, 'provider_error', mobile);
 
     const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c));
 
@@ -402,11 +436,10 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
       method: providerId,
       ...(payload.returnTo ? { returnTo: payload.returnTo } : {}),
     });
-    const url = new URL('/oauth-callback', frontendUrl(c));
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${url.toString()}#${fragment.toString()}`,
+        Location: `${landingUrl(c, mobile, '/oauth-callback')}#${fragment.toString()}`,
         'Set-Cookie': stateCookieClearHeader(),
       },
     });
@@ -417,6 +450,6 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
       // Deliberately shallow — never include response bodies, codes, or tokens.
       error: err instanceof Error ? err.name : 'unknown',
     });
-    return auditFailureAndRedirect(c, providerId, 'provider_error');
+    return auditFailureAndRedirect(c, providerId, 'provider_error', mobile);
   }
 }

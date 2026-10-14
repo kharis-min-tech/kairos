@@ -278,8 +278,16 @@ export function createApiClient(
          * fetch — callers `window.location.assign(...)` this. Kept here so
          * base-URL construction lives with the rest of the auth surface.
          */
-        startUrl: (provider: OAuthProviderId, returnTo?: string) => {
-          const qs = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+        startUrl: (
+          provider: OAuthProviderId,
+          returnTo?: string,
+          client?: 'mobile',
+        ) => {
+          const parts = [
+            returnTo ? `returnTo=${encodeURIComponent(returnTo)}` : '',
+            client ? `client=${client}` : '',
+          ].filter(Boolean);
+          const qs = parts.length ? `?${parts.join('&')}` : '';
           return `${baseUrl.replace(/\/$/, '')}/api/auth/oauth/${provider}/start${qs}`;
         },
         listConnections: () =>
