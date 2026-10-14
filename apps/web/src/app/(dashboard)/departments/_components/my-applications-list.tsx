@@ -49,7 +49,7 @@ export function MyApplicationsList({ items }: Props) {  const { t } = useTransla
 
   const handleWithdraw = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
-      title: `Withdraw your application to ${departmentName}?`,
+      title: t('departments:withdrawApplicationV1', { v1: departmentName }),
       description: 'Your application will be cancelled. You can apply again later.',
       confirmLabel: t('departments:withdraw'),
       variant: 'destructive',

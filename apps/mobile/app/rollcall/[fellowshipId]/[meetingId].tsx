@@ -377,7 +377,7 @@ export default function RollcallMeeting() {  const { t } = useTranslation(['atte
                   style={[styles.retryBtn, syncing && { opacity: 0.6 }]}
                 >
                   <Text style={styles.retryBtnLabel}>
-                    {syncing ? 'Trying…' : 'Retry'}
+                    {syncing ? t('common:trying') : t('common:retry2')}
                   </Text>
                 </Pressable>
               </View>
@@ -480,7 +480,7 @@ export default function RollcallMeeting() {  const { t } = useTranslation(['atte
                   { backgroundColor: tone.barBg, borderColor: tone.border },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.memberFirstName} ${item.memberLastName}, ${STATUS_LABEL[status]}. Tap to change. Long-press to open picker.`}
+                accessibilityLabel={t('common:v1V2V3TapChange', { v1: item.memberFirstName, v2: item.memberLastName, v3: STATUS_LABEL[status] })}
                 hitSlop={{ top: 6, bottom: 6, left: 0, right: 0 }}
               >
                 <Text style={[styles.statusPillLabel, { color: tone.barText }]}>

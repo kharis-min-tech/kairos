@@ -489,8 +489,8 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                           size="sm"
                           onClick={async () => {
                             const ok = await confirm({
-                              title: `Remove ${m.memberFirstName} ${m.memberLastName}?`,
-                              description: `They will no longer appear in ${dept.departmentName}. You can re-add them later.`,
+                              title: t('departments:removeV1V2', { v1: m.memberFirstName, v2: m.memberLastName }),
+                              description: t('departments:theyNoLongerAppearV1', { v1: dept.departmentName }),
                               confirmLabel: t('departments:remove'),
                               variant: 'destructive',
                             });

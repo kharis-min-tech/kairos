@@ -216,7 +216,7 @@ export default function OutreachDetail() {  const { t } = useTranslation(['outre
                 >
                   <UserPlus color={c.primary} size={14} strokeWidth={2} />
                   <Text style={styles.addWorkerLabel}>
-                    {registerWorker.isPending ? 'Adding…' : 'Register a worker'}
+                    {registerWorker.isPending ? t('outreach:adding') : t('outreach:registerWorker2')}
                   </Text>
                 </Pressable>
               ) : null}

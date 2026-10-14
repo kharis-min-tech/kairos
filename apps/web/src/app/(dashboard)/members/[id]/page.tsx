@@ -144,7 +144,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   className="bg-emerald-600 text-white hover:bg-emerald-700"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Approve ${member.firstName} ${member.lastName}?`,
+                      title: t('members:approveV1V2', { v1: member.firstName, v2: member.lastName }),
                       description: 'They will be able to sign in once approved.',
                       confirmLabel: t('members:approve'),
                     });
@@ -165,7 +165,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   variant="destructive"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Deactivate ${member.firstName} ${member.lastName}?`,
+                      title: t('members:deactivateV1V2', { v1: member.firstName, v2: member.lastName }),
                       description: 'They will be removed from the active directory. You can reactivate them later.',
                       confirmLabel: t('members:deactivate'),
                       variant: 'destructive',
@@ -184,7 +184,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   className="bg-emerald-600 text-white hover:bg-emerald-700"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Reactivate ${member.firstName} ${member.lastName}?`,
+                      title: t('members:reactivateV1V2', { v1: member.firstName, v2: member.lastName }),
                       description: 'They will appear back in the active directory.',
                       confirmLabel: t('members:reactivate'),
                     });
@@ -263,7 +263,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('members:clearMembershipCertification'),
-                      description: `${member.firstName} ${member.lastName} will revert to "not yet a confirmed Member."`,
+                      description: t('members:v1V2RevertYetConfirmed', { v1: member.firstName, v2: member.lastName }),
                       confirmLabel: t('members:clear'),
                       variant: 'destructive',
                     });
@@ -296,7 +296,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   if (!classDateDraft) return;
                   const ok = await confirm({
                     title: t('members:markMembershipClassAsCompleted'),
-                    description: `${member.firstName} ${member.lastName} will be recorded as a confirmed Member as of ${classDateDraft}.`,
+                    description: t('members:v1V2RecordedConfirmedMember', { v1: member.firstName, v2: member.lastName, v3: classDateDraft }),
                     confirmLabel: t('members:confirm'),
                   });
                   if (!ok) return;
@@ -355,8 +355,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                       className="text-destructive hover:text-destructive"
                       onClick={async () => {
                         const ok = await confirm({
-                          title: `Remove "${role.roleName}"?`,
-                          description: `This will revoke the ${role.roleName} role from ${member.firstName} ${member.lastName} at ${role.branchName}.`,
+                          title: t('members:removeV1', { v1: role.roleName }),
+                          description: t('members:thisRevokeV1RoleV2', { v1: role.roleName, v2: member.firstName, v3: member.lastName, v4: role.branchName }),
                           confirmLabel: t('members:removeRole'),
                           variant: 'destructive',
                         });

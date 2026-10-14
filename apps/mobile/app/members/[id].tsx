@@ -310,8 +310,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
       : m.memberType === 'child'
         ? 'Child'
         : m.memberType === 'visitor'
-          ? 'Visitor'
-          : 'Member';
+          ? t('members:visitor') : t('members:member');
   const isConfirmed = !!m.membershipClassCompletedAt && m.memberType === 'member';
 
   return (
@@ -654,8 +653,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                 <Award color={c.gold} size={14} strokeWidth={1.5} />
                 <Text style={[styles.manageBtnLabel, { color: c.goldDark }]}>
                   {setClassComplete.isPending
-                    ? 'Saving…'
-                    : 'Mark 4-week class complete'}
+                    ? t('members:saving') : t('members:mark4WeekClassComplete')}
                 </Text>
               </Pressable>
             ) : null}
@@ -679,7 +677,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                 >
                   <UserX color={c.danger} size={14} strokeWidth={1.5} />
                   <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
-                    {deactivate.isPending ? 'Deactivating…' : 'Deactivate member'}
+                    {deactivate.isPending ? t('members:deactivating') : t('members:deactivateMember2')}
                   </Text>
                 </Pressable>
               ) : (

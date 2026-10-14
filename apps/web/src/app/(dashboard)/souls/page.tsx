@@ -434,7 +434,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
       if (response.success) {
         toast({
           title: t('souls:bulkAssignmentSuccessful'),
-          description: `${response.data?.reassignedCount ?? 0} soul(s) reassigned`,
+          description: t('souls:v1SoulSReassigned', { v1: response.data?.reassignedCount ?? 0 }),
         });
         setSelectedSouls(new Set());
         setShowBulkAssign(false);
@@ -500,7 +500,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
       await updateSoulStatus(api, soulId, newStatus);
       toast({
         title: t('souls:statusUpdated'),
-        description: `Soul moved to ${newStatus}`,
+        description: t('souls:soulMovedV1', { v1: newStatus }),
       });
     } catch (error: unknown) {
       // Revert on error

@@ -126,8 +126,7 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
               status.granted === true
                 ? 'Granted'
                 : status.granted === false
-                  ? 'Declined'
-                  : 'Not recorded';
+                  ? t('legal:declined') : t('legal:notRecorded');
             const StateIcon =
               status.granted === true ? Check : status.granted === false ? X : AlertTriangle;
             const tone =

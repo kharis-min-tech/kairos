@@ -145,7 +145,7 @@ export default function LoginScreen() {
     if (await biometric.hasDeclined(user.id)) return;
 
     const accepted = await alert.confirm({
-      title: `Sign in with ${cap.label} next time?`,
+      title: t('auth:signV1NextTime', { v1: cap.label }),
       message: t('auth:login.biometricBody'),
       confirmLabel: t('auth:login.enable'),
       cancelLabel: t('auth:login.notNow'),
@@ -381,7 +381,7 @@ export default function LoginScreen() {
                     name={user.displayName}
                     busy={bioBusy === user.id}
                     disabled={!!bioBusy}
-                    accessibilityLabel={`Sign in as ${user.displayName} with ${cap!.label}`}
+                    accessibilityLabel={t('auth:signV1V2', { v1: user.displayName, v2: cap!.label })}
                     onAuthenticate={() => void handleBiometricSignIn(user)}
                     entranceIndex={6 + i}
                   />

@@ -158,7 +158,7 @@ export default function OutreachDirectory() {  const { t } = useTranslation(['ou
                 <Text
                   style={[styles.filterLabel, selected && styles.filterLabelActive]}
                 >
-                  {f === 'active' ? 'Active' : f === 'completed' ? 'Completed' : 'All'}
+                  {f === 'active' ? 'Active' : f === 'completed' ? t('outreach:completed2') : t('outreach:all')}
                 </Text>
               </Pressable>
             );

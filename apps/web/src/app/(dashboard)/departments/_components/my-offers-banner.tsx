@@ -51,7 +51,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
 
   const handleDecline = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
-      title: `Decline the offer from ${departmentName}?`,
+      title: t('departments:declineOfferV1', { v1: departmentName }),
       description: 'You won’t be added to this department. You can apply again later if you change your mind.',
       confirmLabel: t('departments:decline'),
       variant: 'destructive',

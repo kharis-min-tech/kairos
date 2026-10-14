@@ -414,7 +414,7 @@ export function DeclarativeForm({
                   {rows.length > min ? (
                     <button
                       type="button"
-                      aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
+                      aria-label={t('forms:removeV1V2', { v1: itemLabel.toLowerCase(), v2: index + 1 })}
                       onClick={() => removeRow(block, index)}
                       className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive"
                     >

@@ -79,6 +79,7 @@ function BucketBars({
     description: string;
   }[];
 }) {
+  const { t } = useTranslation(['attendance', 'common']);
   const max = Math.max(1, ...buckets.map((b) => b.members));
   return (
     <ul className="space-y-2.5">
@@ -101,7 +102,7 @@ function BucketBars({
                   b.key === 'dormant' ? 'bg-foreground/30' : 'bg-gradient-to-r from-[#451ebb] to-[#5d3fd3]'
                 }`}
                 style={{ width: `${pct}%` }}
-                aria-label={`${b.members} members`}
+                aria-label={t('attendance:v1Members', { v1: b.members })}
               />
             </div>
           </li>

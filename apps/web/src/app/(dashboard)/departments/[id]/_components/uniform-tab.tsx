@@ -295,7 +295,7 @@ function OutfitCard({
   const { confirm, dialog: confirmDialog } = useConfirm();
   const handleArchive = async () => {
     const ok = await confirm({
-      title: `Archive “${outfit.name}”?`,
+      title: t('departments:archiveV1', { v1: outfit.name }),
       description: 'The outfit will no longer be available for new uniform schedules.',
       confirmLabel: t('departments:archive'),
       variant: 'destructive',
@@ -359,7 +359,7 @@ function AssignmentCard({
   const { confirm, dialog: confirmDialog } = useConfirm();
   const handleRemove = async () => {
     const ok = await confirm({
-      title: `Remove uniform assignment for ${formatDateLong(assignment.serviceDate)}?`,
+      title: t('departments:removeUniformAssignmentV1', { v1: formatDateLong(assignment.serviceDate) }),
       description: 'The assignment will be cleared from the schedule. You can add it again later.',
       confirmLabel: t('departments:remove'),
       variant: 'destructive',

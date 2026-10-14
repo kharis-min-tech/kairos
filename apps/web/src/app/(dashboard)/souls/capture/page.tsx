@@ -114,7 +114,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
 
       toast({
         title: t('souls:soulCapturedSuccessfully'),
-        description: `${soul.firstName} ${soul.lastName} has been added to your souls list.`,
+        description: t('souls:v1V2BeenAddedSouls', { v1: soul.firstName, v2: soul.lastName }),
       });
 
       // Reset form

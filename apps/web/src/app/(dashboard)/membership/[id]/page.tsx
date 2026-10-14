@@ -604,7 +604,7 @@ function SessionRegister({
                       },
                     }))
                   }
-                  aria-label={`${r.memberFirstName} ${r.memberLastName} attended`}
+                  aria-label={t('membership:v1V2Attended', { v1: r.memberFirstName, v2: r.memberLastName })}
                 />
               </td>
               <td className="py-1.5">
@@ -612,7 +612,7 @@ function SessionRegister({
                   className="h-8 w-20"
                   inputMode="numeric"
                   placeholder={t('membership:score')}
-                  aria-label={`${r.memberFirstName} ${r.memberLastName} homework score`}
+                  aria-label={t('membership:v1V2HomeworkScore', { v1: r.memberFirstName, v2: r.memberLastName })}
                   value={draft[r.id]?.homework ?? ''}
                   onChange={(e) =>
                     setDraft((d) => ({
@@ -631,7 +631,7 @@ function SessionRegister({
                   className="h-8 w-20"
                   inputMode="numeric"
                   placeholder={t('membership:score')}
-                  aria-label={`${r.memberFirstName} ${r.memberLastName} quiz score`}
+                  aria-label={t('membership:v1V2QuizScore', { v1: r.memberFirstName, v2: r.memberLastName })}
                   value={draft[r.id]?.quiz ?? ''}
                   onChange={(e) =>
                     setDraft((d) => ({
@@ -715,7 +715,7 @@ function GraduationTab({
                   <Checkbox
                     checked={selected.includes(e.id)}
                     onChange={() => toggle(e.id)}
-                    aria-label={`Select ${e.memberFirstName} ${e.memberLastName}`}
+                    aria-label={t('membership:selectV1V2', { v1: e.memberFirstName, v2: e.memberLastName })}
                   />
                   <span className="flex-1">
                     {e.memberFirstName} {e.memberLastName}

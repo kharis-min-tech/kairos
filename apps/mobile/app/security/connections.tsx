@@ -110,7 +110,7 @@ export default function ConnectionsScreen() {  const { t } = useTranslation(['se
   async function handleDisconnect(conn: OAuthConnection) {
     const label = OAUTH_PROVIDER_LABEL[conn.provider];
     const confirmed = await alert.confirm({
-      title: `Disconnect ${label}?`,
+      title: t('common:disconnectV1', { v1: label }),
       message: `You won't be able to sign in with ${label} until you reconnect it.`,
       confirmLabel: t('security:disconnect'),
       destructive: true,

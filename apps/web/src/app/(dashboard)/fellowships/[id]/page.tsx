@@ -164,7 +164,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
               size="sm"
               onClick={async () => {
                 const ok = await confirm({
-                  title: `Deactivate "${fellowship.fellowshipName}"?`,
+                  title: t('fellowships:deactivateV1', { v1: fellowship.fellowshipName }),
                   description: 'The fellowship will be hidden from the directory. Members will lose access to its meetings and history.',
                   confirmLabel: t('fellowships:deactivate'),
                   variant: 'destructive',
@@ -413,12 +413,12 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                       </div>
                       {isAdminOrPastor && member.isActive && (
                         <button
-                          aria-label={`Remove ${member.memberFirstName} ${member.memberLastName} from this fellowship`}
+                          aria-label={t('fellowships:removeV1V2Fellowship', { v1: member.memberFirstName, v2: member.memberLastName })}
                           className="flex-shrink-0 rounded p-1 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
                           onClick={async (e) => {
                             e.stopPropagation();
                             const ok = await confirm({
-                              title: `Remove ${member.memberFirstName} from this fellowship?`,
+                              title: t('fellowships:removeV1Fellowship', { v1: member.memberFirstName }),
                               description: 'They will no longer appear in this fellowship’s roster. You can re-add them later.',
                               confirmLabel: t('fellowships:remove'),
                               variant: 'destructive',

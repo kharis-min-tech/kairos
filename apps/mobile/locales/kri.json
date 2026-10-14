@@ -77,7 +77,10 @@
     "branchPulse": "Aw di branch de du",
     "settings": "Sɛtin",
     "trying": "I de tray…",
-    "appInfo": "App infɔmeshɔn"
+    "appInfo": "App infɔmeshɔn",
+    "retry2": "Tray bak",
+    "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Tɔch fɔ chenj. Prɛs lɔng fɔ opin di pika.",
+    "disconnectV1": "Pul di link wit {{v1}}?"
   },
   "more": {
     "title": "Mɔ",
@@ -387,7 +390,9 @@
     "saving": "I de sev…",
     "changePassword": "Chenj paswɔd",
     "continue": "Kɔntinyu wit",
-    "sign": "Sayn in wit"
+    "sign": "Sayn in wit",
+    "signV1NextTime": "Sayn in wit {{v1}} nɛks tɛm?",
+    "signV1V2": "Sayn in as {{v1}} wit {{v2}}"
   },
   "forms": {
     "cancel": "Kansul",
@@ -419,7 +424,8 @@
     "searchDirectoryTypeName": "Luk na di dayrɛktri, ɔ rayt wan nem",
     "searchPerson": "Luk fɔ wan pɔsin",
     "searchNamePhoneUseNameType": "Luk wit nem ɔ fon — ɔ yuz di nem we yu rayt, if i nɔto wan mɛmba.",
-    "searchMembersBranchNamePhone": "Luk fɔ mɛmba dɛn na dis branch wit nem ɔ fon."
+    "searchMembersBranchNamePhone": "Luk fɔ mɛmba dɛn na dis branch wit nem ɔ fon.",
+    "archiveV1": "Akayv {{v1}}?"
   },
   "reports": {
     "reports": "Ripɔt",
@@ -555,7 +561,10 @@
     "noFollowUpsRecordedMember": "Nɔ fɔlo ɔp nɔ rɛkɔd fɔ dis mɛmba yet.",
     "reached": "Wi rich am",
     "virtualVisit": "Vizit pan fon ɔ layn",
-    "homeVisit": "Om vizit"
+    "homeVisit": "Om vizit",
+    "saving": "I de sev…",
+    "mark4WeekClassComplete": "Mak di 4-wik klas as dɔn",
+    "deactivateMember2": "Lɔk di mɛmba"
   },
   "fellowships": {
     "followUps": "Fɔlo ɔp",
@@ -679,7 +688,8 @@
     "allFollowUps": "Ol di fɔlo ɔp dɛn",
     "logMeeting": "Rɛkɔd wan mitin",
     "fellowshipWord_one": "fɛloship",
-    "fellowshipWord_other": "fɛloship dɛn"
+    "fellowshipWord_other": "fɛloship dɛn",
+    "deleteFellowship2": "Dilit di fɛloship"
   },
   "departments": {
     "followUps": "Fɔlo ɔp",
@@ -832,7 +842,9 @@
     "noClosedApplications": "Nɔ aplikeshɔn we dɔn klos nɔ de yet.",
     "noApplications": "Nɔ aplikeshɔn nɔ de yet.",
     "grantCameraAccessSettingsTakePhoto": "Gi kamra akses na Sɛtin dɛn fɔ tek wan pikchɔ.",
-    "grantPhotoLibraryAccessSettingsPick": "Gi foto laybri akses na Sɛtin dɛn fɔ pik wan pikchɔ."
+    "grantPhotoLibraryAccessSettingsPick": "Gi foto laybri akses na Sɛtin dɛn fɔ pik wan pikchɔ.",
+    "inPerson2": "Fes to fes",
+    "deactivateDepartment2": "Lɔk di dipatmɛnt"
   },
   "branches": {
     "phone": "Fon",
@@ -895,7 +907,8 @@
     "setYourHomeBranchFromYour": "Sɛt yu om branch frɔm yu profayl, ɔ aks wan admin fɔ sɛt am fɔ yu.",
     "whenOffMembersWontSeeTheImHereButton": "If dis ɔf, mɛmba dɛn nɔ go si di “A de ya” bɔtin. Na dɛsk vɔlɔntia nɔmɔ go rɛkɔd di atɛndans.",
     "home": "OM",
-    "deactivating": "I de lɔk am…"
+    "deactivating": "I de lɔk am…",
+    "deactivateBranch2": "Lɔk di branch"
   },
   "security": {
     "cancel": "Kansul",
@@ -1180,7 +1193,13 @@
     "nobodyLeadCurrentlyWaiting": "Nɔbɔdi we yu de lid nɔ de wet naw.",
     "nobodyBranchCurrentlyWaiting": "Nɔbɔdi frɔm yu branch nɔ de wet naw.",
     "noOneLeadCurrentlyEnrolled": "Nɔbɔdi we yu de lid nɔ rejista naw.",
-    "noOneBranchCurrentlyEnrolled": "Nɔbɔdi frɔm yu branch nɔ rejista naw."
+    "noOneBranchCurrentlyEnrolled": "Nɔbɔdi frɔm yu branch nɔ rejista naw.",
+    "withdrawV1": "Pul {{v1}}?",
+    "v1V2FinalTestScore": "{{v1}} {{v2}} in las tɛst skɔ",
+    "withdrawV1V2": "Pul {{v1}} {{v2}}",
+    "v1Attended": "{{v1}} bin kam",
+    "v1HomeworkScore": "{{v1}} in omwok skɔ",
+    "v1QuizScore": "{{v1}} in kwiz skɔ"
   },
   "newBelievers": {
     "cancel": "Kansul",
@@ -1284,7 +1303,10 @@
     "creating": "I de mek am…",
     "createProgram": "Mek wan program",
     "programWord_one": "program",
-    "programWord_other": "program dɛn"
+    "programWord_other": "program dɛn",
+    "completed2": "I dɔn",
+    "all": "Ɔl",
+    "registerWorker2": "Rejista wan wokman"
   },
   "rota": {
     "cancel": "Kansul",
@@ -1442,5 +1464,9 @@
     "convertMember": "Mek am bi mɛmba",
     "soulWord_one": "sol",
     "soulWord_other": "sol dɛn"
+  },
+  "legal": {
+    "declined": "Dɛn se nɔ",
+    "notRecorded": "Nɔbɔdi nɔ rɛkɔd am"
   }
 }

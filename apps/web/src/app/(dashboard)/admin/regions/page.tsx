@@ -86,7 +86,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
 
   async function handleDelete(region: Region) {
     const ok = await confirm({
-      title: `Delete "${region.regionName} / ${region.country}"?`,
+      title: t('admin:deleteV1V2', { v1: region.regionName, v2: region.country }),
       description: 'This region has no branches attached, so it can be safely removed. This cannot be undone.',
       confirmLabel: t('admin:delete'),
       variant: 'destructive',

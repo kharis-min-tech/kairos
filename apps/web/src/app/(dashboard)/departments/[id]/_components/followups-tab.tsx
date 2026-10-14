@@ -924,6 +924,7 @@ function CompanionChip({
   label: string;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation(['departments', 'common']);
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs font-medium">
       {label}
@@ -931,7 +932,7 @@ function CompanionChip({
         type="button"
         onClick={onRemove}
         className="text-muted-foreground hover:text-destructive"
-        aria-label={`Remove ${label}`}
+        aria-label={t('departments:removeV1', { v1: label })}
       >
         <X className="h-3 w-3" />
       </button>

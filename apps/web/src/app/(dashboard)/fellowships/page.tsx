@@ -289,7 +289,7 @@ function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'c
                             e.preventDefault();
                             e.stopPropagation();
                             const ok = await confirm({
-                              title: `Deactivate ${fellowship.fellowshipName}?`,
+                              title: t('fellowships:deactivateV12', { v1: fellowship.fellowshipName }),
                               description: 'It will be hidden from the directory. You can restore it from the API if needed.',
                               confirmLabel: t('fellowships:deactivate'),
                               variant: 'destructive',

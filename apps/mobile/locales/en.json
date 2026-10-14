@@ -77,7 +77,10 @@
     "churchPulse": "Church pulse",
     "branchPulse": "Branch pulse",
     "settings": "Settings",
-    "appInfo": "App info"
+    "appInfo": "App info",
+    "retry2": "Retry",
+    "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Tap to change. Long-press to open picker.",
+    "disconnectV1": "Disconnect {{v1}}?"
   },
   "more": {
     "sections": {
@@ -350,7 +353,9 @@
     "saving": "Saving…",
     "changePassword": "Change password",
     "continue": "Continue with",
-    "sign": "Sign in with"
+    "sign": "Sign in with",
+    "signV1NextTime": "Sign in with {{v1}} next time?",
+    "signV1V2": "Sign in as {{v1}} with {{v2}}"
   },
   "forms": {
     "formNotFound": "Form not found",
@@ -382,7 +387,8 @@
     "searchDirectoryTypeName": "Search the directory, or type a name",
     "searchPerson": "Search for a person",
     "searchNamePhoneUseNameType": "Search by name or phone — or use the name you type, if they aren’t a member.",
-    "searchMembersBranchNamePhone": "Search members in this branch by name or phone."
+    "searchMembersBranchNamePhone": "Search members in this branch by name or phone.",
+    "archiveV1": "Archive {{v1}}?"
   },
   "myGroups": {},
   "rollcall": {},
@@ -520,7 +526,10 @@
     "notInterested": "Not interested",
     "reached": "Reached",
     "virtualVisit": "Virtual visit",
-    "homeVisit": "Home visit"
+    "homeVisit": "Home visit",
+    "saving": "Saving…",
+    "mark4WeekClassComplete": "Mark 4-week class complete",
+    "deactivateMember2": "Deactivate member"
   },
   "fellowships": {
     "activeMembers": "Active members",
@@ -644,7 +653,8 @@
     "logMeeting": "Log meeting",
     "deleting": "Deleting…",
     "fellowshipWord_one": "fellowship",
-    "fellowshipWord_other": "fellowships"
+    "fellowshipWord_other": "fellowships",
+    "deleteFellowship2": "Delete fellowship"
   },
   "departments": {
     "newFollowUp": "New follow-up",
@@ -797,7 +807,9 @@
     "noClosedApplications": "No closed applications yet.",
     "noApplications": "No applications yet.",
     "grantCameraAccessSettingsTakePhoto": "Grant camera access in Settings to take a photo.",
-    "grantPhotoLibraryAccessSettingsPick": "Grant photo library access in Settings to pick a photo."
+    "grantPhotoLibraryAccessSettingsPick": "Grant photo library access in Settings to pick a photo.",
+    "inPerson2": "In person",
+    "deactivateDepartment2": "Deactivate department"
   },
   "branches": {
     "branchName": "Branch name",
@@ -860,7 +872,8 @@
     "setYourHomeBranchFromYour": "Set your home branch from your profile, or ask an admin to set one for you.",
     "whenOffMembersWontSeeTheImHereButton": "When off, members won’t see the “I’m here” button. Attendance is only recorded by a desk volunteer.",
     "home": "HOME",
-    "deactivating": "Deactivating…"
+    "deactivating": "Deactivating…",
+    "deactivateBranch2": "Deactivate branch"
   },
   "security": {
     "currentPassword": "Current password",
@@ -1183,7 +1196,13 @@
     "nobodyLeadCurrentlyWaiting": "Nobody you lead is currently waiting.",
     "nobodyBranchCurrentlyWaiting": "Nobody from your branch is currently waiting.",
     "noOneLeadCurrentlyEnrolled": "No one you lead is currently enrolled.",
-    "noOneBranchCurrentlyEnrolled": "No one from your branch is currently enrolled."
+    "noOneBranchCurrentlyEnrolled": "No one from your branch is currently enrolled.",
+    "withdrawV1": "Withdraw {{v1}}?",
+    "v1V2FinalTestScore": "{{v1}} {{v2}} final test score",
+    "withdrawV1V2": "Withdraw {{v1}} {{v2}}",
+    "v1Attended": "{{v1}} attended",
+    "v1HomeworkScore": "{{v1}} homework score",
+    "v1QuizScore": "{{v1}} quiz score"
   },
   "newBelievers": {
     "markSessionComplete": "Mark session complete",
@@ -1287,7 +1306,10 @@
     "creating": "Creating…",
     "createProgram": "Create program",
     "programWord_one": "program",
-    "programWord_other": "programs"
+    "programWord_other": "programs",
+    "registerWorker2": "Register a worker",
+    "completed2": "Completed",
+    "all": "All"
   },
   "rota": {
     "upcoming": "Upcoming",
@@ -1445,5 +1467,9 @@
     "saving": "Saving…",
     "soulWord_one": "soul",
     "soulWord_other": "souls"
+  },
+  "legal": {
+    "declined": "Declined",
+    "notRecorded": "Not recorded"
   }
 }

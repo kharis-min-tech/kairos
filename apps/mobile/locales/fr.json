@@ -77,7 +77,10 @@
     "branchPulse": "Pouls de l'antenne",
     "settings": "Paramètres",
     "trying": "Tentative…",
-    "appInfo": "Infos sur l'application"
+    "appInfo": "Infos sur l'application",
+    "retry2": "Réessayer",
+    "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Touchez pour changer. Appui long pour ouvrir le sélecteur.",
+    "disconnectV1": "Déconnecter {{v1}} ?"
   },
   "more": {
     "sections": {
@@ -350,7 +353,9 @@
     "saving": "Enregistrement…",
     "changePassword": "Changer le mot de passe",
     "continue": "Continuer avec",
-    "sign": "Se connecter avec"
+    "sign": "Se connecter avec",
+    "signV1NextTime": "Se connecter avec {{v1}} la prochaine fois ?",
+    "signV1V2": "Se connecter en tant que {{v1}} avec {{v2}}"
   },
   "forms": {
     "cancel": "Annuler",
@@ -382,7 +387,8 @@
     "searchDirectoryTypeName": "Rechercher dans le répertoire, ou saisir un nom",
     "searchPerson": "Rechercher une personne",
     "searchNamePhoneUseNameType": "Recherchez par nom ou téléphone — ou utilisez le nom que vous saisissez, s'il ne s'agit pas d'un membre.",
-    "searchMembersBranchNamePhone": "Rechercher des membres de cette antenne par nom ou téléphone."
+    "searchMembersBranchNamePhone": "Rechercher des membres de cette antenne par nom ou téléphone.",
+    "archiveV1": "Archiver {{v1}} ?"
   },
   "reports": {
     "reports": "Rapports",
@@ -518,7 +524,10 @@
     "noFollowUpsRecordedMember": "Aucun suivi enregistré pour ce membre pour l'instant.",
     "reached": "Joint",
     "virtualVisit": "Visite à distance",
-    "homeVisit": "Visite à domicile"
+    "homeVisit": "Visite à domicile",
+    "saving": "Enregistrement…",
+    "mark4WeekClassComplete": "Marquer la classe de 4 semaines comme terminée",
+    "deactivateMember2": "Désactiver le membre"
   },
   "fellowships": {
     "followUps": "Suivis",
@@ -642,7 +651,8 @@
     "contact": "Contact",
     "logMeeting": "Enregistrer une réunion",
     "fellowshipWord_one": "cellule",
-    "fellowshipWord_other": "cellules"
+    "fellowshipWord_other": "cellules",
+    "deleteFellowship2": "Supprimer la cellule"
   },
   "departments": {
     "followUps": "Suivis",
@@ -795,7 +805,9 @@
     "noClosedApplications": "Aucune candidature clôturée pour l'instant.",
     "noApplications": "Aucune candidature pour l'instant.",
     "grantCameraAccessSettingsTakePhoto": "Autorisez l'accès à l'appareil photo dans les Réglages pour prendre une photo.",
-    "grantPhotoLibraryAccessSettingsPick": "Autorisez l'accès à la galerie dans les Réglages pour choisir une photo."
+    "grantPhotoLibraryAccessSettingsPick": "Autorisez l'accès à la galerie dans les Réglages pour choisir une photo.",
+    "inPerson2": "En personne",
+    "deactivateDepartment2": "Désactiver le département"
   },
   "branches": {
     "phone": "Téléphone",
@@ -858,7 +870,8 @@
     "setYourHomeBranchFromYour": "Définissez votre antenne d'attache dans votre profil, ou demandez à un administrateur de le faire.",
     "whenOffMembersWontSeeTheImHereButton": "Désactivé, les membres ne verront pas le bouton « Je suis là ». La présence est alors enregistrée uniquement par un bénévole à l'accueil.",
     "home": "PRINCIPALE",
-    "deactivating": "Désactivation…"
+    "deactivating": "Désactivation…",
+    "deactivateBranch2": "Désactiver l'antenne"
   },
   "security": {
     "cancel": "Annuler",
@@ -1180,7 +1193,13 @@
     "nobodyLeadCurrentlyWaiting": "Personne dont vous êtes responsable n'est en attente.",
     "nobodyBranchCurrentlyWaiting": "Personne de votre antenne n'est en attente.",
     "noOneLeadCurrentlyEnrolled": "Personne dont vous êtes responsable n'est actuellement inscrit.",
-    "noOneBranchCurrentlyEnrolled": "Personne de votre antenne n'est actuellement inscrit."
+    "noOneBranchCurrentlyEnrolled": "Personne de votre antenne n'est actuellement inscrit.",
+    "withdrawV1": "Retirer {{v1}} ?",
+    "v1V2FinalTestScore": "Note d'examen final de {{v1}} {{v2}}",
+    "withdrawV1V2": "Retirer {{v1}} {{v2}}",
+    "v1Attended": "{{v1}} présent",
+    "v1HomeworkScore": "Note de devoir de {{v1}}",
+    "v1QuizScore": "Note de quiz de {{v1}}"
   },
   "newBelievers": {
     "cancel": "Annuler",
@@ -1284,7 +1303,10 @@
     "creating": "Création…",
     "createProgram": "Créer un programme",
     "programWord_one": "programme",
-    "programWord_other": "programmes"
+    "programWord_other": "programmes",
+    "completed2": "Terminé",
+    "all": "Toutes",
+    "registerWorker2": "Inscrire un ouvrier"
   },
   "rota": {
     "cancel": "Annuler",
@@ -1442,5 +1464,9 @@
     "convertMember": "Convertir en membre",
     "soulWord_one": "âme",
     "soulWord_other": "âmes"
+  },
+  "legal": {
+    "declined": "Refusé",
+    "notRecorded": "Non enregistré"
   }
 }

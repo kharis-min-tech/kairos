@@ -84,6 +84,7 @@ function QueueList({
   emptyText: string;
   showInviter: boolean;
 }) {
+  const { t } = useTranslation(['concerns', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();

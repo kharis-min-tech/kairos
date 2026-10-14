@@ -380,7 +380,7 @@ function ApplicantCard({
             hour: 'numeric',
             minute: '2-digit',
           })}
-          {row.interviewFormat ? ` · ${row.interviewFormat === 'virtual' ? 'Virtual' : 'In person'}` : ''}
+          {row.interviewFormat ? ` · ${row.interviewFormat === 'virtual' ? t('departments:virtual') : t('departments:inPerson2')}` : ''}
           {row.interviewLocation ? ` · ${row.interviewLocation}` : ''}
         </Text>
       ) : null}
@@ -639,7 +639,7 @@ function ScheduleInterviewSheet({
                 onPress={() => setFormat(f)}
               >
                 <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
-                  {f === 'in_person' ? 'In person' : 'Virtual'}
+                  {f === 'in_person' ? t('departments:inPerson2') : t('departments:virtual')}
                 </Text>
               </Pressable>
             );

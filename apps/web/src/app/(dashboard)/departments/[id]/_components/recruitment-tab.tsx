@@ -929,8 +929,7 @@ function CandidateDetailDialog({
                       {r.interviewOutcome === 'pass'
                         ? 'Passed'
                         : r.interviewOutcome === 'fail'
-                        ? 'Failed'
-                        : 'Pending'}
+                        ? t('departments:failed') : t('departments:pending')}
                     </span>
                   ) : (
                     '—'
@@ -995,8 +994,7 @@ function CandidateDetailDialog({
                       {r.probationOutcome === 'passed'
                         ? 'Passed'
                         : r.probationOutcome === 'failed'
-                        ? 'Failed'
-                        : 'Pending'}
+                        ? t('departments:failed') : t('departments:pending')}
                     </span>
                   ) : (
                     '—'

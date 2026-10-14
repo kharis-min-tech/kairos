@@ -246,7 +246,8 @@
     "replaceImage": "Chenj di pikchɔ",
     "chooseImage": "Pik wan pikchɔ",
     "switchLightMode": "Switch to layt mod",
-    "switchDarkMode": "Switch to dak mod"
+    "switchDarkMode": "Switch to dak mod",
+    "informationAboutV1": "Infɔmeshɔn bɔt {{v1}}"
   },
   "nav": {
     "sections": {
@@ -396,7 +397,10 @@
     "advancedDownloadJson": "Advans: dawnlod as JSON",
     "deleting": "I de dilit…",
     "permanentlyDelete": "Dilit am fɔ ɔltɛm",
-    "updatingPassword": "I de chenj…"
+    "updatingPassword": "I de chenj…",
+    "saving": "I de sev…",
+    "saveContinue": "Sev ɛn kɔntinyu",
+    "saveChanges": "Sev di Chenj dɛn"
   },
   "auth": {
     "finishSettingUp": "Finish fɔ sɛt ɔp",
@@ -657,7 +661,11 @@
     "selectMember": "Pik wan mɛmba",
     "youViewWhoHoldsRoleBut": "Yu kin si udat gɛt dis rol, bɔt fɔ gi ɔ pul am, yu fɔ bi Branch Sistɛm Admin.",
     "theseMembersFullAdministrativeControlOver": "Dɛn mɛmba ya gɛt ful administretiv kɔntrol pan dis branch.",
-    "noAssignableMembersFound": "Nɔ mɛmba we yu kin gi di rol nɔ de"
+    "noAssignableMembersFound": "Nɔ mɛmba we yu kin gi di rol nɔ de",
+    "removeV1V2V3": "Pul {{v1}} {{v2}} as {{v3}}?",
+    "revokeBranchSystemAdminV1": "Pul Branch Sistɛm Admin frɔm {{v1}}?",
+    "revokeBranchSystemAdminV12": "Pul Branch Sistɛm Admin frɔm {{v1}}",
+    "deactivateV1": "Lɔk {{v1}}?"
   },
   "admin": {
     "delete": "Dilit",
@@ -680,7 +688,8 @@
     "editRegion": "Chenj di Rijɔn",
     "createRegion": "Mek Rijɔn",
     "saving": "I de sev…",
-    "creating": "I de mek am…"
+    "creating": "I de mek am…",
+    "deleteV1V2": "Dilit “{{v1}} / {{v2}}”?"
   },
   "attendance": {
     "members": "Mɛmba dɛn",
@@ -797,7 +806,11 @@
     "recordFirstServiceStartCheckingAttendees": "Rɛkɔd yu fɔs sɛvis fɔ bigin chɛk pipul in.",
     "thereServicesViewBranch": "Nɔ sɛvis nɔ de fɔ si na yu branch yet.",
     "consecutiveServicesAttended": "Sɛvis dɛn we yu kam wan afta di ɔda.",
-    "consecutiveServicesMissed": "Sɛvis dɛn we yu mis wan afta di ɔda."
+    "consecutiveServicesMissed": "Sɛvis dɛn we yu mis wan afta di ɔda.",
+    "removeVisitorV1V2": "Pul di vizitɔ {{v1}} {{v2}}",
+    "v1Mode": "{{v1}} mod",
+    "v1Members": "{{v1}} mɛmba dɛn",
+    "markV1V2V3": "Mak {{v1}} {{v2}} as {{v3}}"
   },
   "reports": {
     "weeklyAttendance": "Wikli atɛndans",
@@ -1287,7 +1300,23 @@
     "memberWord_one": "mɛmba",
     "memberWord_other": "mɛmba dɛn",
     "noUpcomingRotaInstancesClickGenerate": "Nɔ rota nɔ de we de kam. Klik Mek di Skejul fɔ mek dɛn.",
-    "noServicesMatchCurrentFilter": "Nɔ sɛvis nɔ fit di filtɔ we de naw."
+    "noServicesMatchCurrentFilter": "Nɔ sɛvis nɔ fit di filtɔ we de naw.",
+    "failed": "I nɔ wok",
+    "pending": "I de wet",
+    "confirmed": "I dɔn kɔnfam",
+    "generatedServicesSummary": "Wi mek {{services}} sɛvis, {{assignments}} asaynmɛnt ({{open}} opin)",
+    "regeneratedSummary": "Wi mek am igen, {{assigned}} gɛt am, {{open}} opin",
+    "removeV1": "Pul {{v1}}",
+    "archiveTemplateV1": "Akayv di tɛmplet “{{v1}}”?",
+    "deleteSlotV1": "Dilit di slɔt “{{v1}}”?",
+    "removeV1Pool": "Pul {{v1}} frɔm di pul?",
+    "archiveV1": "Akayv “{{v1}}”?",
+    "removeUniformAssignmentV1": "Pul di yunifɔm asaynmɛnt fɔ {{v1}}?",
+    "removeV1V2": "Pul {{v1}} {{v2}}?",
+    "theyNoLongerAppearV1": "Dɛn nɔ go sho na {{v1}} igen. Yu kin ad dɛn bak lata.",
+    "withdrawApplicationV1": "Pul yu aplikeshɔn to {{v1}}?",
+    "declineOfferV1": "Se nɔ to di ɔfa frɔm {{v1}}?",
+    "deactivateV1V2": "Lɔk {{v1}} na {{v2}}?"
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1513,7 +1542,12 @@
     "this": "Dis",
     "sending": "I de sɛn...",
     "savingEllipsis": "I de sev...",
-    "saveAttendance": "Sev di Atɛndans"
+    "saveAttendance": "Sev di Atɛndans",
+    "removeV1": "Pul {{v1}}",
+    "deactivateV1": "Lɔk “{{v1}}”?",
+    "removeV1Fellowship": "Pul {{v1}} frɔm dis fɛloship?",
+    "removeV1V2Fellowship": "Pul {{v1}} {{v2}} frɔm dis fɛloship",
+    "deactivateV12": "Lɔk {{v1}}?"
   },
   "forms": {
     "remove": "Pul am",
@@ -1584,7 +1618,9 @@
     "archiving": "I de akayv am…",
     "saving": "I de sev…",
     "exporting": "I de ɛkspɔt…",
-    "exportCsv": "Ɛkspɔt CSV"
+    "exportCsv": "Ɛkspɔt CSV",
+    "removeV1V2": "Pul {{v1}} {{v2}}",
+    "selectV1V2": "Pik {{v1}} {{v2}}"
   },
   "members": {
     "theyArenTInTheDirectory": "Dɛn nem nɔ de na di dayrɛktri, so wi go rikɔd di nem nɔmɔ widawt wan rikɔd.",
@@ -1793,7 +1829,18 @@
     "noFollowUpsRecordedMember": "Nɔ fɔlo ɔp nɔ rɛkɔd fɔ dis mɛmba yet.",
     "reached": "Wi rich am",
     "virtualVisit": "Vizit pan fon ɔ layn",
-    "homeVisit": "Om vizit"
+    "homeVisit": "Om vizit",
+    "changeV1": "Chenj {{v1}}",
+    "clearV1": "Pul {{v1}}",
+    "v1Matches": "{{v1}} we fit",
+    "approveV1V2": "Apruv {{v1}} {{v2}}?",
+    "deactivateV1V2": "Lɔk {{v1}} {{v2}}?",
+    "reactivateV1V2": "Opin {{v1}} {{v2}} bak?",
+    "v1V2RevertYetConfirmed": "{{v1}} {{v2}} go go bak to “i nɔ de kɔnfam mɛmba yet”.",
+    "v1V2RecordedConfirmedMember": "Wi go rɛkɔd {{v1}} {{v2}} as kɔnfam mɛmba frɔm {{v3}}.",
+    "removeV1": "Pul “{{v1}}”?",
+    "thisRevokeV1RoleV2": "Dis go pul di {{v1}} rol frɔm {{v2}} {{v3}} na {{v4}}.",
+    "rejectV1V2": "Rifyuz {{v1}} {{v2}}?"
   },
   "membership": {
     "eGWhoWeAreAs": "lɛkɛ Udat wi bi as wan church",
@@ -1942,7 +1989,14 @@
     "dayWord_one": "de",
     "dayWord_other": "de",
     "nobodyLeadCurrentlyWaiting": "Nɔbɔdi we yu de lid nɔ de wet naw.",
-    "nobodyBranchCurrentlyWaiting": "Nɔbɔdi frɔm yu branch nɔ de wet naw."
+    "nobodyBranchCurrentlyWaiting": "Nɔbɔdi frɔm yu branch nɔ de wet naw.",
+    "admittedPeople_one": "Wi tek {{count}} pɔsin in.",
+    "admittedPeople_other": "Wi tek {{count}} pipul in.",
+    "v1V2Attended": "{{v1}} {{v2}} bin kam",
+    "v1V2HomeworkScore": "{{v1}} {{v2}} in omwok skɔ",
+    "v1V2QuizScore": "{{v1}} {{v2}} in kwiz skɔ",
+    "selectV1V2": "Pik {{v1}} {{v2}}",
+    "archiveV1": "Akayv {{v1}}?"
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -2132,7 +2186,8 @@
     "saveNotes": "Sev di Not dɛn",
     "collapseProgrammeHealth": "Klos di program ɛlt",
     "expandProgrammeHealth": "Opin di program ɛlt",
-    "confirmComplete": "Kɔnfam ɛn Finish"
+    "confirmComplete": "Kɔnfam ɛn Finish",
+    "v1StaleEnrollmentsViewList": "{{v1}} rejistreshɔn we nɔ de muv, si di lis"
   },
   "outreach": {
     "completed": "I dɔn",
@@ -2234,7 +2289,9 @@
     "autoAssignedPastorLeader": "Wi gi am ɔtomatik to Pastɔ/Lida",
     "registering": "I de rejista...",
     "noActiveProgramsCurrently": "Nɔ program nɔ de aktiv naw.",
-    "noPastProgramsFound": "Nɔ program we dɔn pas nɔ de."
+    "noPastProgramsFound": "Nɔ program we dɔn pas nɔ de.",
+    "markV1Completed": "Mak “{{v1}}” as dɔn?",
+    "v1BeenCreated": "Wi mek {{v1}}."
   },
   "security": {
     "connectedAccounts": "Akawnt dɛn we jɔyn",
@@ -2363,7 +2420,13 @@
     "selectSoul": "Pik di sol",
     "allDepartments": "Ol di Dipatmɛnt dɛn",
     "assigning": "I de gi am...",
-    "assignSouls": "Gi di Sol dɛn"
+    "assignSouls": "Gi di Sol dɛn",
+    "soulStatusChangedV1": "Di sol in stetɔs chenj to {{v1}}",
+    "convertV1V2Attendee": "Mek {{v1}} {{v2}} bi wan pɔsin we de kam?",
+    "v1V2NowProfileAttendee": "{{v1}} {{v2}} naw gɛt prɔfayl as pɔsin we de kam. Mak am as kɔnfam mɛmba we i dɔn du di 4-wik klas.",
+    "v1V2BeenAddedSouls": "Wi dɔn ad {{v1}} {{v2}} na yu sol lis.",
+    "v1SoulSReassigned": "Wi gi {{v1}} sol to sɔmbɔdi ɛls",
+    "soulMovedV1": "Di sol muv go na {{v1}}"
   },
   "legal": {
     "privacyNotice": "Praivasi Notis",
@@ -2396,7 +2459,9 @@
     "unsubscribe": "Pul yusɛf awt",
     "subscribe": "Jɔyn",
     "saving": "I de sev…",
-    "acceptContinue": "Gri ɛn kɔntinyu"
+    "acceptContinue": "Gri ɛn kɔntinyu",
+    "declined": "Dɛn se nɔ",
+    "notRecorded": "Nɔbɔdi nɔ rɛkɔd am"
   },
   "marketing": {
     "helpGuides": "Ɛp ɛn gayd",

@@ -282,7 +282,7 @@ function ServiceColumn({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{title}</span>
-        <div role="radiogroup" aria-label={`${title} mode`} className="inline-flex rounded-md border bg-muted/40 p-0.5 text-xs">
+        <div role="radiogroup" aria-label={t('attendance:v1Mode', { v1: title })} className="inline-flex rounded-md border bg-muted/40 p-0.5 text-xs">
           {(['any', 'all'] as const).map((m) => (
             <button
               key={m}

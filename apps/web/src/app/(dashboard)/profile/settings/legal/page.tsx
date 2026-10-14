@@ -57,8 +57,7 @@ export default function LegalSettingsPage() {  const { t } = useTranslation(['se
             const stateLabel = status.granted === true
               ? 'Granted'
               : status.granted === false
-              ? 'Declined'
-              : 'Not recorded';
+              ? t('legal:declined') : t('legal:notRecorded');
             const Icon = status.granted === true ? Check : status.granted === false ? X : AlertTriangle;
             const tone = status.granted === true
               ? 'text-emerald-700 dark:text-emerald-400'

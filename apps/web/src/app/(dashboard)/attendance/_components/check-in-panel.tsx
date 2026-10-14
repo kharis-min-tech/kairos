@@ -136,7 +136,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t 
                 </span>
                 <button
                   type="button"
-                  aria-label={`Remove visitor ${v.firstName} ${v.lastName}`}
+                  aria-label={t('attendance:removeVisitorV1V2', { v1: v.firstName, v2: v.lastName })}
                   onClick={() => setVisitors((prev) => prev.filter((x) => x.key !== v.key))}
                   className="text-muted-foreground hover:text-destructive"
                 >

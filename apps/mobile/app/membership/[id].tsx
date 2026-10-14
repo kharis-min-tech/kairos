@@ -226,7 +226,7 @@ function Roster({
 
   async function confirmWithdraw(r: MembershipEnrollmentWithMember) {
     const ok = await alert.confirm({
-      title: `Withdraw ${r.memberFirstName}?`,
+      title: t('membership:withdrawV1', { v1: r.memberFirstName }),
       message:
         'They come off this cohort and can be admitted to a later one. Their marks are kept. Use "deferred to next" if they intend to return.',
       confirmLabel: t('membership:withdraw'),
@@ -293,7 +293,7 @@ function Roster({
                   onChangeText={(v) => setScores((s) => ({ ...s, [r.id]: v }))}
                   placeholder={t('membership:finalTest')}
                   keyboardType="number-pad"
-                  accessibilityLabel={`${r.memberFirstName} ${r.memberLastName} final test score`}
+                  accessibilityLabel={t('membership:v1V2FinalTestScore', { v1: r.memberFirstName, v2: r.memberLastName })}
                   containerStyle={{ flex: 1 }}
                 />
                 <Button
@@ -308,7 +308,7 @@ function Roster({
                   onPress={() => void confirmWithdraw(r)}
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel={`Withdraw ${r.memberFirstName} ${r.memberLastName}`}
+                  accessibilityLabel={t('membership:withdrawV1V2', { v1: r.memberFirstName, v2: r.memberLastName })}
                 >
                   <UserMinus color={c.danger} size={18} strokeWidth={1.6} />
                 </Pressable>
@@ -451,7 +451,7 @@ function Register({
               style={styles.attendToggle}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: d?.attended ?? false }}
-              accessibilityLabel={`${name} attended`}
+              accessibilityLabel={t('membership:v1Attended', { v1: name })}
             >
               <ClipboardCheck
                 color={d?.attended ? c.primary : c.inkFaded}
@@ -469,7 +469,7 @@ function Register({
                 onChangeText={(v) => patch(r.id, { homework: v })}
                 placeholder={t('membership:homework')}
                 keyboardType="number-pad"
-                accessibilityLabel={`${name} homework score`}
+                accessibilityLabel={t('membership:v1HomeworkScore', { v1: name })}
                 containerStyle={styles.scoreInput}
               />
               <Input
@@ -477,7 +477,7 @@ function Register({
                 onChangeText={(v) => patch(r.id, { quiz: v })}
                 placeholder={t('membership:quiz')}
                 keyboardType="number-pad"
-                accessibilityLabel={`${name} quiz score`}
+                accessibilityLabel={t('membership:v1QuizScore', { v1: name })}
                 containerStyle={styles.scoreInput}
               />
             </View>

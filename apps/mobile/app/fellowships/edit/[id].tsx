@@ -176,7 +176,7 @@ export default function EditFellowship() {  const { t } = useTranslation(['fello
             >
               <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
               <Text style={styles.dangerBtnLabel}>
-                {deleting || remove.isPending ? 'Deleting…' : 'Delete fellowship'}
+                {deleting || remove.isPending ? t('fellowships:deleting') : t('fellowships:deleteFellowship2')}
               </Text>
             </Pressable>
             <Text style={styles.footnote}>{t('fellowships:deactivatesTheFellowshipAndHidesIt')}</Text>

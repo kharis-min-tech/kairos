@@ -246,7 +246,8 @@
     "replaceImage": "Remplacer l'image",
     "chooseImage": "Choisir une image",
     "switchLightMode": "Passer en mode clair",
-    "switchDarkMode": "Passer en mode sombre"
+    "switchDarkMode": "Passer en mode sombre",
+    "informationAboutV1": "Informations sur {{v1}}"
   },
   "nav": {
     "sections": {
@@ -396,7 +397,10 @@
     "advancedDownloadJson": "Avancé : télécharger en JSON",
     "deleting": "Suppression…",
     "permanentlyDelete": "Supprimer définitivement",
-    "updatingPassword": "Mise à jour…"
+    "updatingPassword": "Mise à jour…",
+    "saving": "Enregistrement…",
+    "saveContinue": "Enregistrer et continuer",
+    "saveChanges": "Enregistrer les modifications"
   },
   "auth": {
     "finishSettingUp": "Terminer la configuration",
@@ -657,7 +661,11 @@
     "selectMember": "Sélectionner un membre",
     "youViewWhoHoldsRoleBut": "Vous pouvez voir qui occupe ce rôle, mais l'attribuer ou le retirer exige l'autorité d'administrateur système d'antenne.",
     "theseMembersFullAdministrativeControlOver": "Ces membres disposent d'un contrôle administratif complet sur cette antenne.",
-    "noAssignableMembersFound": "Aucun membre attribuable trouvé"
+    "noAssignableMembersFound": "Aucun membre attribuable trouvé",
+    "removeV1V2V3": "Retirer {{v1}} {{v2}} du rôle de {{v3}} ?",
+    "revokeBranchSystemAdminV1": "Retirer le rôle d'administrateur système d'antenne à {{v1}} ?",
+    "revokeBranchSystemAdminV12": "Retirer le rôle d'administrateur système d'antenne à {{v1}}",
+    "deactivateV1": "Désactiver {{v1}} ?"
   },
   "admin": {
     "delete": "Supprimer",
@@ -680,7 +688,8 @@
     "editRegion": "Modifier la région",
     "createRegion": "Créer une région",
     "saving": "Enregistrement…",
-    "creating": "Création…"
+    "creating": "Création…",
+    "deleteV1V2": "Supprimer « {{v1}} / {{v2}} » ?"
   },
   "attendance": {
     "members": "Membres",
@@ -797,7 +806,11 @@
     "recordFirstServiceStartCheckingAttendees": "Enregistrez votre premier culte pour commencer à enregistrer les participants.",
     "thereServicesViewBranch": "Aucun culte à afficher dans votre antenne pour l'instant.",
     "consecutiveServicesAttended": "Cultes suivis consécutivement.",
-    "consecutiveServicesMissed": "Cultes manqués consécutivement."
+    "consecutiveServicesMissed": "Cultes manqués consécutivement.",
+    "removeVisitorV1V2": "Retirer le visiteur {{v1}} {{v2}}",
+    "v1Mode": "Mode {{v1}}",
+    "v1Members": "{{v1}} membres",
+    "markV1V2V3": "Marquer {{v1}} {{v2}} comme {{v3}}"
   },
   "reports": {
     "weeklyAttendance": "Présences hebdomadaires",
@@ -1287,7 +1300,23 @@
     "memberWord_one": "membre",
     "memberWord_other": "membres",
     "noUpcomingRotaInstancesClickGenerate": "Aucun planning à venir. Cliquez sur Générer le planning pour en créer.",
-    "noServicesMatchCurrentFilter": "Aucun culte ne correspond au filtre actuel."
+    "noServicesMatchCurrentFilter": "Aucun culte ne correspond au filtre actuel.",
+    "failed": "Échec",
+    "pending": "En attente",
+    "confirmed": "Confirmé",
+    "generatedServicesSummary": "{{services}} cultes générés, {{assignments}} affectations ({{open}} libres)",
+    "regeneratedSummary": "Régénéré, {{assigned}} affectés, {{open}} libres",
+    "removeV1": "Retirer {{v1}}",
+    "archiveTemplateV1": "Archiver le modèle « {{v1}} » ?",
+    "deleteSlotV1": "Supprimer le poste « {{v1}} » ?",
+    "removeV1Pool": "Retirer {{v1}} du pool ?",
+    "archiveV1": "Archiver « {{v1}} » ?",
+    "removeUniformAssignmentV1": "Retirer l'affectation de tenue pour {{v1}} ?",
+    "removeV1V2": "Retirer {{v1}} {{v2}} ?",
+    "theyNoLongerAppearV1": "Ils n'apparaîtront plus dans {{v1}}. Vous pourrez les rajouter plus tard.",
+    "withdrawApplicationV1": "Retirer votre candidature à {{v1}} ?",
+    "declineOfferV1": "Refuser la proposition de {{v1}} ?",
+    "deactivateV1V2": "Désactiver {{v1}} à {{v2}} ?"
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1513,7 +1542,12 @@
     "this": "Ce",
     "sending": "Envoi...",
     "savingEllipsis": "Enregistrement...",
-    "saveAttendance": "Enregistrer les présences"
+    "saveAttendance": "Enregistrer les présences",
+    "removeV1": "Retirer {{v1}}",
+    "deactivateV1": "Désactiver « {{v1}} » ?",
+    "removeV1Fellowship": "Retirer {{v1}} de cette cellule ?",
+    "removeV1V2Fellowship": "Retirer {{v1}} {{v2}} de cette cellule",
+    "deactivateV12": "Désactiver {{v1}} ?"
   },
   "forms": {
     "remove": "Retirer",
@@ -1584,7 +1618,9 @@
     "archiving": "Archivage…",
     "saving": "Enregistrement…",
     "exporting": "Exportation…",
-    "exportCsv": "Exporter en CSV"
+    "exportCsv": "Exporter en CSV",
+    "removeV1V2": "Retirer {{v1}} {{v2}}",
+    "selectV1V2": "Sélectionner {{v1}} {{v2}}"
   },
   "members": {
     "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier.",
@@ -1793,7 +1829,18 @@
     "noFollowUpsRecordedMember": "Aucun suivi enregistré pour ce membre pour l'instant.",
     "reached": "Joint",
     "virtualVisit": "Visite à distance",
-    "homeVisit": "Visite à domicile"
+    "homeVisit": "Visite à domicile",
+    "changeV1": "Modifier {{v1}}",
+    "clearV1": "Effacer {{v1}}",
+    "v1Matches": "{{v1}} correspondances",
+    "approveV1V2": "Approuver {{v1}} {{v2}} ?",
+    "deactivateV1V2": "Désactiver {{v1}} {{v2}} ?",
+    "reactivateV1V2": "Réactiver {{v1}} {{v2}} ?",
+    "v1V2RevertYetConfirmed": "{{v1}} {{v2}} redeviendra « pas encore membre confirmé ».",
+    "v1V2RecordedConfirmedMember": "{{v1}} {{v2}} sera enregistré comme membre confirmé à compter du {{v3}}.",
+    "removeV1": "Retirer « {{v1}} » ?",
+    "thisRevokeV1RoleV2": "Cela retirera le rôle de {{v1}} à {{v2}} {{v3}} à {{v4}}.",
+    "rejectV1V2": "Refuser {{v1}} {{v2}} ?"
   },
   "membership": {
     "eGWhoWeAreAs": "ex. Qui nous sommes en tant qu'église",
@@ -1942,7 +1989,14 @@
     "dayWord_one": "jour",
     "dayWord_other": "jours",
     "nobodyLeadCurrentlyWaiting": "Personne dont vous êtes responsable n'est en attente.",
-    "nobodyBranchCurrentlyWaiting": "Personne de votre antenne n'est en attente."
+    "nobodyBranchCurrentlyWaiting": "Personne de votre antenne n'est en attente.",
+    "admittedPeople_one": "{{count}} personne admise.",
+    "admittedPeople_other": "{{count}} personnes admises.",
+    "v1V2Attended": "{{v1}} {{v2}} présent",
+    "v1V2HomeworkScore": "Note de devoir de {{v1}} {{v2}}",
+    "v1V2QuizScore": "Note de quiz de {{v1}} {{v2}}",
+    "selectV1V2": "Sélectionner {{v1}} {{v2}}",
+    "archiveV1": "Archiver {{v1}} ?"
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -2132,7 +2186,8 @@
     "saveNotes": "Enregistrer les notes",
     "collapseProgrammeHealth": "Réduire la santé du programme",
     "expandProgrammeHealth": "Développer la santé du programme",
-    "confirmComplete": "Confirmer et terminer"
+    "confirmComplete": "Confirmer et terminer",
+    "v1StaleEnrollmentsViewList": "{{v1}} inscriptions en sommeil, voir la liste"
   },
   "outreach": {
     "completed": "Terminé",
@@ -2234,7 +2289,9 @@
     "autoAssignedPastorLeader": "Attribué automatiquement au pasteur / responsable",
     "registering": "Inscription...",
     "noActiveProgramsCurrently": "Aucun programme en cours actuellement.",
-    "noPastProgramsFound": "Aucun programme passé trouvé."
+    "noPastProgramsFound": "Aucun programme passé trouvé.",
+    "markV1Completed": "Marquer « {{v1}} » comme terminé ?",
+    "v1BeenCreated": "{{v1}} a été créé."
   },
   "security": {
     "connectedAccounts": "Comptes associés",
@@ -2363,7 +2420,13 @@
     "selectSoul": "Sélectionner l'âme",
     "allDepartments": "Tous les départements",
     "assigning": "Attribution...",
-    "assignSouls": "Attribuer les âmes"
+    "assignSouls": "Attribuer les âmes",
+    "soulStatusChangedV1": "Statut de l'âme changé en {{v1}}",
+    "convertV1V2Attendee": "Convertir {{v1}} {{v2}} en participant ?",
+    "v1V2NowProfileAttendee": "{{v1}} {{v2}} a désormais un profil de participant. Marquez-le comme membre confirmé une fois la classe de 4 semaines terminée.",
+    "v1V2BeenAddedSouls": "{{v1}} {{v2}} a été ajouté à votre liste d'âmes.",
+    "v1SoulSReassigned": "{{v1}} âme(s) réattribuée(s)",
+    "soulMovedV1": "Âme déplacée vers {{v1}}"
   },
   "legal": {
     "privacyNotice": "Avis de confidentialité",
@@ -2396,7 +2459,9 @@
     "unsubscribe": "Se désabonner",
     "subscribe": "S'abonner",
     "saving": "Enregistrement…",
-    "acceptContinue": "Accepter et continuer"
+    "acceptContinue": "Accepter et continuer",
+    "declined": "Refusé",
+    "notRecorded": "Non enregistré"
   },
   "marketing": {
     "helpGuides": "Aide et guides",

@@ -136,7 +136,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
       await updateSoulStatus(api, currentSoul.id, newStatus);
       toast({
         title: t('souls:statusUpdated'),
-        description: `Soul status changed to ${newStatus}`,
+        description: t('souls:soulStatusChangedV1', { v1: newStatus }),
       });
       // Refresh soul data
       await fetchSoul(api, currentSoul.id);
@@ -207,7 +207,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
     if (!api || !currentSoul) return;
 
     const ok = await confirm({
-      title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to an attendee?`,
+      title: t('souls:convertV1V2Attendee', { v1: currentSoul.firstName, v2: currentSoul.lastName }),
       description: 'A profile is created and linked to this soul record. They start as an attendee. Once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
       confirmLabel: t('souls:convert'),
     });
@@ -219,7 +219,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
 
       toast({
         title: t('souls:soulConverted'),
-        description: `${currentSoul.firstName} ${currentSoul.lastName} now has a profile as an attendee. Mark them as a confirmed Member once they complete the 4-week class.`,
+        description: t('souls:v1V2NowProfileAttendee', { v1: currentSoul.firstName, v2: currentSoul.lastName }),
       });
 
       // Navigate to member profile if member data is available

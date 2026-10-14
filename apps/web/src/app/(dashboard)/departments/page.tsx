@@ -290,7 +290,7 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
                           onClick={async (e) => {
                             e.preventDefault();
                             const ok = await confirm({
-                              title: `Deactivate ${dept.departmentName} at ${dept.branchName}?`,
+                              title: t('departments:deactivateV1V2', { v1: dept.departmentName, v2: dept.branchName }),
                               description: 'The department will be hidden from the directory and members will lose access.',
                               confirmLabel: t('departments:deactivate'),
                               variant: 'destructive',

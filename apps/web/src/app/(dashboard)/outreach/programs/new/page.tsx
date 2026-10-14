@@ -158,7 +158,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
 
       toast({
         title: t('outreach:programCreatedSuccessfully'),
-        description: `${program.programName} has been created.`,
+        description: t('outreach:v1BeenCreated', { v1: program.programName }),
       });
 
       // Navigate to program detail

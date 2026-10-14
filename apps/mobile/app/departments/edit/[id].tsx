@@ -171,7 +171,7 @@ export default function EditDepartment() {  const { t } = useTranslation(['depar
             >
               <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
               <Text style={styles.dangerBtnLabel}>
-                {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate department'}
+                {deleting || remove.isPending ? t('departments:deactivating') : t('departments:deactivateDepartment2')}
               </Text>
             </Pressable>
             <Text style={styles.footnote}>

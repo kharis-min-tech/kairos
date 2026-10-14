@@ -86,7 +86,7 @@ export default function FormsAttendees() {  const { t } = useTranslation(['forms
   async function confirmArchive() {
     if (selected.size === 0) return;
     const ok = await alert.confirm({
-      title: `Archive ${selected.size}?`,
+      title: t('forms:archiveV1', { v1: selected.size }),
       message: t('forms:theyWillNoLongerShowUp'),
       confirmLabel: t('forms:archive'),
       destructive: true,

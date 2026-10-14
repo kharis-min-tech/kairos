@@ -202,7 +202,7 @@ export default function ProgramDetailPage() {  const { t } = useTranslation(['ou
     if (!api || !program) return;
 
     const ok = await confirm({
-      title: `Mark "${program.programName}" as completed?`,
+      title: t('outreach:markV1Completed', { v1: program.programName }),
       description: 'The program will be archived. You can still view its souls and history.',
       confirmLabel: t('outreach:markComplete'),
     });

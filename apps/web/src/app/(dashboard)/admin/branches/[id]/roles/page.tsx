@@ -180,10 +180,10 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
                         className="text-destructive hover:bg-destructive/10"
                         disabled={cannotRevoke || revokeBranchRole.isPending}
                         title={cannotRevoke ? 'Cannot revoke the last active Branch System Admin' : undefined}
-                        aria-label={`Revoke Branch System Admin from ${fullName}`}
+                        aria-label={t('branches:revokeBranchSystemAdminV12', { v1: fullName })}
                         onClick={async () => {
                           const ok = await confirm({
-                            title: `Revoke Branch System Admin from ${fullName}?`,
+                            title: t('branches:revokeBranchSystemAdminV1', { v1: fullName }),
                             description:
                               'They will lose access to admin-level branch tools. You can reassign them later.',
                             confirmLabel: t('branches:revoke'),

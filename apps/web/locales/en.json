@@ -246,7 +246,8 @@
     "replaceImage": "Replace image",
     "chooseImage": "Choose image",
     "switchLightMode": "Switch to light mode",
-    "switchDarkMode": "Switch to dark mode"
+    "switchDarkMode": "Switch to dark mode",
+    "informationAboutV1": "Information about {{v1}}"
   },
   "nav": {
     "sections": {
@@ -396,7 +397,10 @@
     "deleting": "Deleting…",
     "permanentlyDelete": "Permanently delete",
     "updatingPassword": "Updating…",
-    "updatePassword": "Update password"
+    "updatePassword": "Update password",
+    "saving": "Saving…",
+    "saveContinue": "Save & continue",
+    "saveChanges": "Save Changes"
   },
   "auth": {
     "dailyVerse": "DAILY VERSE",
@@ -657,7 +661,11 @@
     "youViewWhoHoldsRoleBut": "You can view who holds this role, but assigning or revoking requires Branch System Admin authority.",
     "theseMembersFullAdministrativeControlOver": "These members have full administrative control over this branch.",
     "noAssignableMembersFound": "No assignable members found",
-    "selectMember": "Select a member"
+    "selectMember": "Select a member",
+    "removeV1V2V3": "Remove {{v1}} {{v2}} as {{v3}}?",
+    "revokeBranchSystemAdminV1": "Revoke Branch System Admin from {{v1}}?",
+    "revokeBranchSystemAdminV12": "Revoke Branch System Admin from {{v1}}",
+    "deactivateV1": "Deactivate {{v1}}?"
   },
   "admin": {
     "selectContinent": "Select continent…",
@@ -680,7 +688,8 @@
     "createRegion": "Create Region",
     "saving": "Saving…",
     "creating": "Creating…",
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "deleteV1V2": "Delete \"{{v1}} / {{v2}}\"?"
   },
   "attendance": {
     "members": "Members",
@@ -797,7 +806,11 @@
     "recordFirstServiceStartCheckingAttendees": "Record your first service to start checking in attendees.",
     "thereServicesViewBranch": "There are no services to view in your branch yet.",
     "consecutiveServicesAttended": "Consecutive services attended.",
-    "consecutiveServicesMissed": "Consecutive services missed."
+    "consecutiveServicesMissed": "Consecutive services missed.",
+    "removeVisitorV1V2": "Remove visitor {{v1}} {{v2}}",
+    "v1Mode": "{{v1}} mode",
+    "v1Members": "{{v1}} members",
+    "markV1V2V3": "Mark {{v1}} {{v2}} {{v3}}"
   },
   "reports": {
     "allBranches": "All branches",
@@ -1287,7 +1300,23 @@
     "memberWord_one": "member",
     "memberWord_other": "members",
     "noUpcomingRotaInstancesClickGenerate": "No upcoming rota instances. Click Generate Schedule to create them.",
-    "noServicesMatchCurrentFilter": "No services match the current filter."
+    "noServicesMatchCurrentFilter": "No services match the current filter.",
+    "failed": "Failed",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "generatedServicesSummary": "Generated {{services}} services, {{assignments}} assignments ({{open}} open)",
+    "regeneratedSummary": "Regenerated, {{assigned}} assigned, {{open}} open",
+    "removeV1": "Remove {{v1}}",
+    "archiveTemplateV1": "Archive template \"{{v1}}\"?",
+    "deleteSlotV1": "Delete slot \"{{v1}}\"?",
+    "removeV1Pool": "Remove {{v1}} from the pool?",
+    "archiveV1": "Archive “{{v1}}”?",
+    "removeUniformAssignmentV1": "Remove uniform assignment for {{v1}}?",
+    "removeV1V2": "Remove {{v1}} {{v2}}?",
+    "theyNoLongerAppearV1": "They will no longer appear in {{v1}}. You can re-add them later.",
+    "withdrawApplicationV1": "Withdraw your application to {{v1}}?",
+    "declineOfferV1": "Decline the offer from {{v1}}?",
+    "deactivateV1V2": "Deactivate {{v1}} at {{v2}}?"
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1513,7 +1542,12 @@
     "this": "This",
     "sending": "Sending...",
     "savingEllipsis": "Saving...",
-    "saveAttendance": "Save Attendance"
+    "saveAttendance": "Save Attendance",
+    "removeV1": "Remove {{v1}}",
+    "deactivateV1": "Deactivate \"{{v1}}\"?",
+    "removeV1Fellowship": "Remove {{v1}} from this fellowship?",
+    "removeV1V2Fellowship": "Remove {{v1}} {{v2}} from this fellowship",
+    "deactivateV12": "Deactivate {{v1}}?"
   },
   "forms": {
     "remove": "Remove",
@@ -1584,7 +1618,9 @@
     "saving": "Saving…",
     "save": "Save",
     "exporting": "Exporting…",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "removeV1V2": "Remove {{v1}} {{v2}}",
+    "selectV1V2": "Select {{v1}} {{v2}}"
   },
   "members": {
     "directoryMember": "Directory member",
@@ -1793,7 +1829,18 @@
     "notInterested": "Not interested",
     "reached": "Reached",
     "virtualVisit": "Virtual visit",
-    "homeVisit": "Home visit"
+    "homeVisit": "Home visit",
+    "changeV1": "Change {{v1}}",
+    "clearV1": "Clear {{v1}}",
+    "v1Matches": "{{v1}} matches",
+    "approveV1V2": "Approve {{v1}} {{v2}}?",
+    "deactivateV1V2": "Deactivate {{v1}} {{v2}}?",
+    "reactivateV1V2": "Reactivate {{v1}} {{v2}}?",
+    "v1V2RevertYetConfirmed": "{{v1}} {{v2}} will revert to \"not yet a confirmed Member.\"",
+    "v1V2RecordedConfirmedMember": "{{v1}} {{v2}} will be recorded as a confirmed Member as of {{v3}}.",
+    "removeV1": "Remove \"{{v1}}\"?",
+    "thisRevokeV1RoleV2": "This will revoke the {{v1}} role from {{v2}} {{v3}} at {{v4}}.",
+    "rejectV1V2": "Reject {{v1}} {{v2}}?"
   },
   "membership": {
     "cohortView": "Cohort view",
@@ -1942,7 +1989,14 @@
     "dayWord_one": "day",
     "dayWord_other": "days",
     "nobodyLeadCurrentlyWaiting": "Nobody you lead is currently waiting.",
-    "nobodyBranchCurrentlyWaiting": "Nobody from your branch is currently waiting."
+    "nobodyBranchCurrentlyWaiting": "Nobody from your branch is currently waiting.",
+    "admittedPeople_one": "Admitted {{count}} person.",
+    "admittedPeople_other": "Admitted {{count}} people.",
+    "v1V2Attended": "{{v1}} {{v2}} attended",
+    "v1V2HomeworkScore": "{{v1}} {{v2}} homework score",
+    "v1V2QuizScore": "{{v1}} {{v2}} quiz score",
+    "selectV1V2": "Select {{v1}} {{v2}}",
+    "archiveV1": "Archive {{v1}}?"
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -2132,7 +2186,8 @@
     "expandProgrammeHealth": "Expand programme health",
     "upcoming": "Upcoming",
     "past": "Past",
-    "confirmComplete": "Confirm & Complete"
+    "confirmComplete": "Confirm & Complete",
+    "v1StaleEnrollmentsViewList": "{{v1}} stale enrollments, view list"
   },
   "outreach": {
     "failedToLoadProgram": "Failed to load program",
@@ -2234,7 +2289,9 @@
     "registering": "Registering...",
     "register": "Register",
     "noActiveProgramsCurrently": "No active programs currently.",
-    "noPastProgramsFound": "No past programs found."
+    "noPastProgramsFound": "No past programs found.",
+    "markV1Completed": "Mark \"{{v1}}\" as completed?",
+    "v1BeenCreated": "{{v1}} has been created."
   },
   "security": {
     "connectedAccounts": "Connected accounts",
@@ -2363,7 +2420,13 @@
     "myDepartments": "My Departments",
     "allDepartments": "All Departments",
     "assigning": "Assigning...",
-    "assignSouls": "Assign Souls"
+    "assignSouls": "Assign Souls",
+    "soulStatusChangedV1": "Soul status changed to {{v1}}",
+    "convertV1V2Attendee": "Convert {{v1}} {{v2}} to an attendee?",
+    "v1V2NowProfileAttendee": "{{v1}} {{v2}} now has a profile as an attendee. Mark them as a confirmed Member once they complete the 4-week class.",
+    "v1V2BeenAddedSouls": "{{v1}} {{v2}} has been added to your souls list.",
+    "v1SoulSReassigned": "{{v1}} soul(s) reassigned",
+    "soulMovedV1": "Soul moved to {{v1}}"
   },
   "legal": {
     "privacyNotice": "Privacy Notice",
@@ -2396,7 +2459,9 @@
     "unsubscribe": "Unsubscribe",
     "subscribe": "Subscribe",
     "saving": "Saving…",
-    "acceptContinue": "Accept & continue"
+    "acceptContinue": "Accept & continue",
+    "declined": "Declined",
+    "notRecorded": "Not recorded"
   },
   "marketing": {
     "kairosChurchAdministrationPlatform": "Kairos church administration platform",

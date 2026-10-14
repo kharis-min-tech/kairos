@@ -132,7 +132,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
                 disabled={archive.isPending}
                 onClick={async () => {
                   const ok = await confirm({
-                    title: `Archive ${cohort.data!.name}?`,
+                    title: t('membership:archiveV1', { v1: cohort.data!.name }),
                     description:
                       'This hides it from every active list. The row stays in the database.',
                     variant: 'destructive',

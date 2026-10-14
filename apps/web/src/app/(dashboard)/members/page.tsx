@@ -322,7 +322,7 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
                               onClick={async (e) => {
                                 e.preventDefault();
                                 const ok = await confirm({
-                                  title: `Deactivate ${member.firstName} ${member.lastName}?`,
+                                  title: t('members:deactivateV1V2', { v1: member.firstName, v2: member.lastName }),
                                   description: 'They will be removed from the active directory. You can reactivate them later from their profile.',
                                   confirmLabel: t('members:deactivate'),
                                   variant: 'destructive',

@@ -246,7 +246,8 @@
     "replaceImage": "Sesa mfonini",
     "chooseImage": "Yi mfonini",
     "switchLightMode": "Sesa kɔ hann mu",
-    "switchDarkMode": "Sesa kɔ esum mu"
+    "switchDarkMode": "Sesa kɔ esum mu",
+    "informationAboutV1": "{{v1}} ho nsɛm"
   },
   "nav": {
     "sections": {
@@ -396,7 +397,10 @@
     "advancedDownloadJson": "Deɛ ɛkorɔn: twe sɛ JSON",
     "deleting": "Ɛreyi…",
     "permanentlyDelete": "Yi no koraa",
-    "updatingPassword": "Ɛresesa…"
+    "updatingPassword": "Ɛresesa…",
+    "saving": "Ɛresie…",
+    "saveContinue": "Sie na kɔ so",
+    "saveChanges": "Sie Nsakraeɛ"
   },
   "auth": {
     "finishSettingUp": "Wie nhyehyɛeɛ no",
@@ -657,7 +661,11 @@
     "selectMember": "Yi ɔmanfoɔ",
     "youViewWhoHoldsRoleBut": "Wobɛtumi ahunu onii a ɔkura dwumadie yi, nanso sɛ wobɛhyɛ anaa woayi a, ɛhia Asɔre Baa Sistem Sohwɛfoɔ tumi.",
     "theseMembersFullAdministrativeControlOver": "Amanfoɔ yi wɔ asɔre baa yi so nhwɛsoɔ tumi nyinaa.",
-    "noAssignableMembersFound": "Ɔmanfoɔ biara nni hɔ a wobɛtumi ahyɛ no"
+    "noAssignableMembersFound": "Ɔmanfoɔ biara nni hɔ a wobɛtumi ahyɛ no",
+    "removeV1V2V3": "Yi {{v1}} {{v2}} firi {{v3}} dwumadie mu?",
+    "revokeBranchSystemAdminV1": "Yi Asɔre Baa Sistem Sohwɛfoɔ firi {{v1}} hɔ?",
+    "revokeBranchSystemAdminV12": "Yi Asɔre Baa Sistem Sohwɛfoɔ firi {{v1}} hɔ",
+    "deactivateV1": "Dum {{v1}}?"
   },
   "admin": {
     "delete": "Yi firi hɔ",
@@ -680,7 +688,8 @@
     "editRegion": "Sesa Mantam",
     "createRegion": "Yɛ Mantam",
     "saving": "Ɛresie…",
-    "creating": "Ɛreyɛ…"
+    "creating": "Ɛreyɛ…",
+    "deleteV1V2": "Yi “{{v1}} / {{v2}}”?"
   },
   "attendance": {
     "members": "Amanfoɔ",
@@ -797,7 +806,11 @@
     "recordFirstServiceStartCheckingAttendees": "Kyerɛw w'ɔsom a ɛdi kan na fi aseɛ kyerɛw wɔn a wɔbaeɛ din.",
     "thereServicesViewBranch": "Ɔsom biara nni hɔ a wobɛhwɛ wɔ w'asɔre baa mu ɛnnɛ.",
     "consecutiveServicesAttended": "Ɔsom a wokɔeɛ a ɛtoatoa so.",
-    "consecutiveServicesMissed": "Ɔsom a wamma a ɛtoatoa so."
+    "consecutiveServicesMissed": "Ɔsom a wamma a ɛtoatoa so.",
+    "removeVisitorV1V2": "Yi ɔhɔhoɔ {{v1}} {{v2}}",
+    "v1Mode": "{{v1}} kwan",
+    "v1Members": "Amanfoɔ {{v1}}",
+    "markV1V2V3": "Kyerɛw {{v1}} {{v2}} sɛ {{v3}}"
   },
   "reports": {
     "weeklyAttendance": "Dapɛn biara mmaeɛ",
@@ -1287,7 +1300,23 @@
     "memberWord_one": "ɔmanfoɔ",
     "memberWord_other": "amanfoɔ",
     "noUpcomingRotaInstancesClickGenerate": "Adwuma nhyehyɛeɛ biara nni hɔ a ɛrebɛba. Klike Yɛ Nhyehyɛeɛ na yɛ bi.",
-    "noServicesMatchCurrentFilter": "Ɔsom biara nhyia nhwehwɛmu a ɛwɔ hɔ seesei."
+    "noServicesMatchCurrentFilter": "Ɔsom biara nhyia nhwehwɛmu a ɛwɔ hɔ seesei.",
+    "failed": "Ankɔ yie",
+    "pending": "Ɛretwɛn",
+    "confirmed": "Wɔahyɛ mu den",
+    "generatedServicesSummary": "Yɛyɛɛ ɔsom {{services}}, nnwuma {{assignments}} ({{open}} da hɔ)",
+    "regeneratedSummary": "Yɛsan yɛeɛ, {{assigned}} wɔahyɛ, {{open}} da hɔ",
+    "removeV1": "Yi {{v1}}",
+    "archiveTemplateV1": "Sie nhwɛsoɔ “{{v1}}”?",
+    "deleteSlotV1": "Yi adwuma “{{v1}}”?",
+    "removeV1Pool": "Yi {{v1}} firi kuo no mu?",
+    "archiveV1": "Sie “{{v1}}”?",
+    "removeUniformAssignmentV1": "Yi {{v1}} ntadeɛ nhyehyɛeɛ?",
+    "removeV1V2": "Yi {{v1}} {{v2}}?",
+    "theyNoLongerAppearV1": "Wɔrenna adi wɔ {{v1}} mu bio. Wobɛtumi asan de wɔn aka ho akyire yi.",
+    "withdrawApplicationV1": "Yi w'abisadeɛ a wode kɔɔ {{v1}} no?",
+    "declineOfferV1": "Pow adwuma a {{v1}} de ama no?",
+    "deactivateV1V2": "Dum {{v1}} wɔ {{v2}}?"
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1513,7 +1542,12 @@
     "this": "Yei",
     "sending": "Ɛresoma...",
     "savingEllipsis": "Ɛresie...",
-    "saveAttendance": "Sie Mmaeɛ"
+    "saveAttendance": "Sie Mmaeɛ",
+    "removeV1": "Yi {{v1}}",
+    "deactivateV1": "Dum “{{v1}}”?",
+    "removeV1Fellowship": "Yi {{v1}} firi fekuo yi mu?",
+    "removeV1V2Fellowship": "Yi {{v1}} {{v2}} firi fekuo yi mu",
+    "deactivateV12": "Dum {{v1}}?"
   },
   "forms": {
     "remove": "Yi firi hɔ",
@@ -1584,7 +1618,9 @@
     "archiving": "Ɛresie…",
     "saving": "Ɛresie…",
     "exporting": "Ɛreyi…",
-    "exportCsv": "Yi CSV"
+    "exportCsv": "Yi CSV",
+    "removeV1V2": "Yi {{v1}} {{v2}}",
+    "selectV1V2": "Yi {{v1}} {{v2}}"
   },
   "members": {
     "theyArenTInTheDirectory": "Wɔnni din nhoma no mu, enti yɛbɛkyerɛw din no nko ara.",
@@ -1793,7 +1829,18 @@
     "noFollowUpsRecordedMember": "Wɔnkyerɛɛ nkɔdi akyi biara ma ɔmanfoɔ yi ɛnnɛ.",
     "reached": "Yɛduruu ne nkyɛn",
     "virtualVisit": "Nsrahwɛ a ɛfa afidie so",
-    "homeVisit": "Fie nsrahwɛ"
+    "homeVisit": "Fie nsrahwɛ",
+    "changeV1": "Sesa {{v1}}",
+    "clearV1": "Yi {{v1}}",
+    "v1Matches": "{{v1}} a ɛhyia",
+    "approveV1V2": "Pene {{v1}} {{v2}} so?",
+    "deactivateV1V2": "Dum {{v1}} {{v2}}?",
+    "reactivateV1V2": "San sɔ {{v1}} {{v2}}?",
+    "v1V2RevertYetConfirmed": "{{v1}} {{v2}} bɛsan akɔ “ɔnyɛ ɔmanfoɔ ankasa ɛnnɛ” so.",
+    "v1V2RecordedConfirmedMember": "Yɛbɛkyerɛw {{v1}} {{v2}} sɛ ɔmanfoɔ ankasa firi {{v3}}.",
+    "removeV1": "Yi “{{v1}}”?",
+    "thisRevokeV1RoleV2": "Yei bɛyi {{v1}} dwumadie afiri {{v2}} {{v3}} hɔ wɔ {{v4}}.",
+    "rejectV1V2": "Pow {{v1}} {{v2}}?"
   },
   "membership": {
     "eGWhoWeAreAs": "te sɛ Yɛne hwan sɛ asɔre",
@@ -1942,7 +1989,14 @@
     "dayWord_one": "da",
     "dayWord_other": "nna",
     "nobodyLeadCurrentlyWaiting": "Obiara a wodi n'anim nretwɛn seesei.",
-    "nobodyBranchCurrentlyWaiting": "Obiara mfiri w'asɔre baa mu nretwɛn seesei."
+    "nobodyBranchCurrentlyWaiting": "Obiara mfiri w'asɔre baa mu nretwɛn seesei.",
+    "admittedPeople_one": "Yɛgyee onipa {{count}}.",
+    "admittedPeople_other": "Yɛgyee nnipa {{count}}.",
+    "v1V2Attended": "{{v1}} {{v2}} baeɛ",
+    "v1V2HomeworkScore": "{{v1}} {{v2}} fie adwuma nsiesieeɛ",
+    "v1V2QuizScore": "{{v1}} {{v2}} nsɛmmisa nsiesieeɛ",
+    "selectV1V2": "Yi {{v1}} {{v2}}",
+    "archiveV1": "Sie {{v1}}?"
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -2132,7 +2186,8 @@
     "saveNotes": "Sie Nsɛm",
     "collapseProgrammeHealth": "Bobɔ nhyehyɛeɛ apɔmuden mu",
     "expandProgrammeHealth": "Trɛw nhyehyɛeɛ apɔmuden mu",
-    "confirmComplete": "Hyɛ mu den na Wie"
+    "confirmComplete": "Hyɛ mu den na Wie",
+    "v1StaleEnrollmentsViewList": "Din kyerɛw {{v1}} a agyae, hwɛ nhwehwɛmu"
   },
   "outreach": {
     "completed": "Awie",
@@ -2234,7 +2289,9 @@
     "autoAssignedPastorLeader": "Wɔde ahyɛ Ɔsɔfoɔ/Ɔkannifoɔ nsa ankasa",
     "registering": "Ɛrekyerɛw din...",
     "noActiveProgramsCurrently": "Nhyehyɛeɛ biara nnkɔ so seesei.",
-    "noPastProgramsFound": "Nhyehyɛeɛ biara a atwam nni hɔ."
+    "noPastProgramsFound": "Nhyehyɛeɛ biara a atwam nni hɔ.",
+    "markV1Completed": "Kyerɛw “{{v1}}” sɛ awie?",
+    "v1BeenCreated": "Yɛayɛ {{v1}}."
   },
   "security": {
     "connectedAccounts": "Akawnt a wɔaka abom",
@@ -2363,7 +2420,13 @@
     "selectSoul": "Yi ɔkra",
     "allDepartments": "Adwumakuo Nyinaa",
     "assigning": "Ɛrehyɛ...",
-    "assignSouls": "Hyɛ Akra"
+    "assignSouls": "Hyɛ Akra",
+    "soulStatusChangedV1": "Ɔkra tebea asesa akɔ {{v1}} so",
+    "convertV1V2Attendee": "Sakra {{v1}} {{v2}} kɔ onii a ɔba so?",
+    "v1V2NowProfileAttendee": "{{v1}} {{v2}} wɔ profael seesei sɛ onii a ɔba. Kyerɛw no sɛ ɔmanfoɔ ankasa sɛ ɔwie nnawɔtwe 4 adesuakuo no a.",
+    "v1V2BeenAddedSouls": "Yɛde {{v1}} {{v2}} aka w'akra nhwehwɛmu ho.",
+    "v1SoulSReassigned": "Yɛasan ahyɛ akra {{v1}}",
+    "soulMovedV1": "Ɔkra no akɔ {{v1}} so"
   },
   "legal": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",
@@ -2396,7 +2459,9 @@
     "unsubscribe": "Twe wo ho",
     "subscribe": "Ka ho",
     "saving": "Ɛresie…",
-    "acceptContinue": "Gye tom na kɔ so"
+    "acceptContinue": "Gye tom na kɔ so",
+    "declined": "Wɔapow",
+    "notRecorded": "Wɔnkyerɛɛ"
   },
   "marketing": {
     "helpGuides": "Mmoa ne akwankyerɛ",

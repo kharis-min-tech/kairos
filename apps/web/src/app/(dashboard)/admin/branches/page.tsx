@@ -120,7 +120,7 @@ export default function BranchesPage() {  const { t } = useTranslation(['branche
                         onClick={async (e) => {
                           e.preventDefault();
                           const ok = await confirm({
-                            title: `Deactivate ${branch.branchName}?`,
+                            title: t('branches:deactivateV1', { v1: branch.branchName }),
                             description: 'The branch will be hidden from active lists. You can reactivate it later.',
                             confirmLabel: t('branches:deactivate'),
                             variant: 'destructive',

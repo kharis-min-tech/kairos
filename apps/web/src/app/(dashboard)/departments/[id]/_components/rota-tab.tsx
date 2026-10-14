@@ -502,7 +502,11 @@ function GenerateForm({
       {
         onSuccess: (res) => {
           toast.success(
-            `Generated ${res.instanceCount} services, ${res.assignmentCount} assignments (${res.openSlotCount} open)`,
+            t('departments:generatedServicesSummary', {
+              services: res.instanceCount,
+              assignments: res.assignmentCount,
+              open: res.openSlotCount,
+            }),
           );
           onDone();
         },
@@ -640,7 +644,10 @@ function InstanceDetail({
                   {
                     onSuccess: (res) =>
                       toast.success(
-                        `Regenerated, ${res.assignmentCount} assigned, ${res.openSlotCount} open`,
+                        t('departments:regeneratedSummary', {
+                          assigned: res.assignmentCount,
+                          open: res.openSlotCount,
+                        }),
                       ),
                     onError: (e: unknown) =>
                       toast.error(e instanceof Error ? e.message : 'Failed to regenerate'),
@@ -981,7 +988,7 @@ function TemplateCard({
               onClick={async (e) => {
                 e.stopPropagation();
                 const ok = await confirm({
-                  title: `Archive template "${template.name}"?`,
+                  title: t('departments:archiveTemplateV1', { v1: template.name }),
                   description: 'No new services will be generated from this template. Existing rotas keep working.',
                   confirmLabel: t('departments:archive'),
                   variant: 'destructive',
@@ -1085,7 +1092,7 @@ function SlotsManager({
                   variant="ghost"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Delete slot "${s.roleName}"?`,
+                      title: t('departments:deleteSlotV1', { v1: s.roleName }),
                       description: 'The role definition is removed. Existing assignments are not changed.',
                       confirmLabel: t('departments:delete'),
                       variant: 'destructive',
@@ -1213,7 +1220,7 @@ function PoolManager({
                   variant="ghost"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Remove ${p.memberFirstName} from the pool?`,
+                      title: t('departments:removeV1Pool', { v1: p.memberFirstName }),
                       description: 'They will no longer be auto-scheduled for this template.',
                       confirmLabel: t('departments:remove'),
                       variant: 'destructive',
@@ -1395,8 +1402,7 @@ function SwapsSection({
                           r.status === 'pending'
                             ? 'Draft'
                             : r.status === 'approved'
-                              ? 'Confirmed'
-                              : 'Declined'
+                              ? t('departments:confirmed') : t('departments:declined')
                         ] ?? ''
                       } rounded-sm capitalize`}
                     >

@@ -103,7 +103,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
         onSuccess: (created) => {
           setSelected(new Set());
           toast.success(
-            `Admitted ${created.length} ${created.length === 1 ? 'person' : 'people'}.`,
+            t('membership:admittedPeople', { count: created.length }),
           );
         },
         onError: (e: unknown) =>
@@ -234,7 +234,7 @@ function InterestRow({
           <Checkbox
             checked={selected}
             onChange={onToggle}
-            aria-label={`Select ${row.memberFirstName} ${row.memberLastName}`}
+            aria-label={t('membership:selectV1V2', { v1: row.memberFirstName, v2: row.memberLastName })}
           />
         ) : null}
 

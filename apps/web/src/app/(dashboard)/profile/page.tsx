@@ -501,11 +501,9 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
             >
               {isOnboarding
                 ? completeOnboarding.isPending
-                  ? 'Saving…'
-                  : 'Save & continue'
+                  ? t('settings:saving') : t('settings:saveContinue')
                 : isSubmitting
-                  ? 'Saving…'
-                  : 'Save Changes'}
+                  ? t('settings:saving') : t('settings:saveChanges')}
             </Button>
             {!isOnboarding && (
               <Button type="button" variant="outline" onClick={cancelEdit}>{t('settings:cancel')}</Button>

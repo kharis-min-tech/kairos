@@ -71,6 +71,7 @@ function useTheme() {
 
 // Info Tooltip Component
 function InfoTooltip({ title, children }: { title: string; children: React.ReactNode }) {
+  const { t } = useTranslation(['common']);
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -80,7 +81,7 @@ function InfoTooltip({ title, children }: { title: string; children: React.React
         onMouseLeave={() => setIsOpen(false)}
         onClick={() => setIsOpen(!isOpen)}
         className="ml-2 text-muted-foreground hover:text-primary transition-colors"
-        aria-label={`Information about ${title}`}
+        aria-label={t('common:informationAboutV1', { v1: title })}
       >
         <Info className="h-4 w-4" />
       </button>

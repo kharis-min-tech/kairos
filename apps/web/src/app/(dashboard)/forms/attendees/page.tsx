@@ -152,7 +152,7 @@ function AttendeeCohortPanel() {  const { t } = useTranslation(['forms', 'common
                 <TableRow key={p.id}>
                   <TableCell>
                     <Checkbox
-                      aria-label={`Select ${p.firstName} ${p.lastName}`}
+                      aria-label={t('forms:selectV1V2', { v1: p.firstName, v2: p.lastName })}
                       checked={selected.has(p.id)}
                       onChange={() => toggle(p.id)}
                     />
@@ -259,7 +259,7 @@ function VisitorCohortPanel() {  const { t } = useTranslation(['forms', 'common'
                 <TableRow key={p.id}>
                   <TableCell>
                     <Checkbox
-                      aria-label={`Select ${p.firstName} ${p.lastName}`}
+                      aria-label={t('forms:selectV1V2', { v1: p.firstName, v2: p.lastName })}
                       checked={selected.has(p.id)}
                       onChange={() => toggle(p.id)}
                     />

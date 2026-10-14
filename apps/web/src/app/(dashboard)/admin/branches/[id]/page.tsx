@@ -430,7 +430,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                       className="text-destructive hover:bg-destructive/10"
                       onClick={async () => {
                         const ok = await confirm({
-                          title: `Remove ${leader.memberFirstName} ${leader.memberLastName} as ${leader.role}?`,
+                          title: t('branches:removeV1V2V3', { v1: leader.memberFirstName, v2: leader.memberLastName, v3: leader.role }),
                           description: 'You can reassign them later if needed.',
                           confirmLabel: t('branches:remove'),
                           variant: 'destructive',

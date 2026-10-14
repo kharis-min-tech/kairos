@@ -200,7 +200,7 @@ export default function EditBranch() {  const { t } = useTranslation(['branches'
               >
                 <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
                 <Text style={styles.dangerBtnLabel}>
-                  {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate branch'}
+                  {deleting || remove.isPending ? t('branches:deactivating') : t('branches:deactivateBranch2')}
                 </Text>
               </Pressable>
               <Text style={styles.footnote}>{t('branches:hidesTheBranchFromDirectoriesMembers')}</Text>

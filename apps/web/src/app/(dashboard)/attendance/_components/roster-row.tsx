@@ -58,7 +58,7 @@ export function RosterRow({
               key={s}
               type="button"
               aria-pressed={active}
-              aria-label={`Mark ${firstName} ${lastName} ${s}`}
+              aria-label={t('attendance:markV1V2V3', { v1: firstName, v2: lastName, v3: s })}
               onClick={() => (active ? onClear() : onSetStatus(s))}
               className={cn(
                 'rounded-full px-3 py-1 text-xs font-semibold transition-colors',

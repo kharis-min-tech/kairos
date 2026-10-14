@@ -160,7 +160,7 @@ export function MemberCombobox({
           <button
             type="button"
             onClick={handleUnlink}
-            aria-label={`Change ${label.toLowerCase()}`}
+            aria-label={t('members:changeV1', { v1: label.toLowerCase() })}
             className="shrink-0 text-sm font-medium text-[#5D3FD3] hover:underline"
           >{t('members:change')}</button>
         </div>
@@ -211,7 +211,7 @@ export function MemberCombobox({
         {text && !disabled ? (
           <button
             type="button"
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('members:clearV1', { v1: label.toLowerCase() })}
             onClick={handleUnlink}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
@@ -224,7 +224,7 @@ export function MemberCombobox({
         <div
           id={listId}
           role="listbox"
-          aria-label={`${label} matches`}
+          aria-label={t('members:v1Matches', { v1: label })}
           className="overflow-hidden rounded-lg border border-input/15 dark:border-white/10"
         >
           {!canSearch ? (
