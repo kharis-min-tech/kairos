@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export const CONFIDENTIALITY_VERSION = '2026-07-v1';
 export const CONFIDENTIALITY_EFFECTIVE_DATE = '28 July 2026';
@@ -8,13 +11,12 @@ export const CONFIDENTIALITY_EFFECTIVE_DATE = '28 July 2026';
  * <article>. Consumed by both the standalone /legal/confidentiality page and
  * the /accept-policies gate.
  */
-export function ConfidentialityBody() {
+export function ConfidentialityBody() {  const { t } = useTranslation(['legalConfidentiality', 'common']);
+
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">
-          Legal
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('legalConfidentiality:legal')}</p>
         <h1 className="text-3xl font-bold tracking-tight">
           Confidentiality &amp; Data Handling Undertaking
         </h1>
@@ -27,7 +29,7 @@ export function ConfidentialityBody() {
       <section className="space-y-3">
         <p>
           This undertaking is a written agreement between{' '}
-          <strong>Kharis Ministries / Kharis Church</strong> (&ldquo;the
+          <strong>{t('legalConfidentiality:kharisMinistriesKharisChurch')}</strong> (&ldquo;the
           church&rdquo;) and any person who is granted a leadership or
           administrative role inside Kairos, the church&rsquo;s internal
           platform. It exists because those roles give you access to personal
@@ -35,49 +37,36 @@ export function ConfidentialityBody() {
           the law requires the church to make clear, in writing, the
           responsibilities that come with that access.
         </p>
-        <p>
-          You are asked to accept this undertaking the first time you sign in
-          after being granted a covered role, and again whenever this document
-          is materially updated. Your role will not activate until you accept.
-        </p>
+        <p>{t('legalConfidentiality:youAreAskedToAcceptThis')}</p>
       </section>
 
-      <Section title="1. Roles this undertaking applies to">
-        <p>You must accept this undertaking if you hold any of the following:</p>
+      <Section title={t('legalConfidentiality:rolesThisUndertakingAppliesTo')}>
+        <p>{t('legalConfidentiality:youMustAcceptThisUndertakingIf')}</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            <strong>Branch Administrator</strong> (BranchAdmin) has full
+            <strong>{t('legalConfidentiality:branchAdministrator')}</strong> (BranchAdmin) has full
             administrative view of a branch.
           </li>
           <li>
-            <strong>Branch Data Administrator</strong> (BranchDataAdmin) has
+            <strong>{t('legalConfidentiality:branchDataAdministrator')}</strong> (BranchDataAdmin) has
             read/write access to member records for a branch.
           </li>
           <li>
-            <strong>Fellowship Leader</strong> or Co-Leader has access to
-            personal details of the members of your fellowship.
-          </li>
+            <strong>{t('legalConfidentiality:fellowshipLeader')}</strong>{t('legalConfidentiality:orCoLeaderHasAccessTo')}</li>
           <li>
-            <strong>Department Leader</strong> or Deputy has access to
-            personal details of the members of your department, including
-            uniform sizes and rota assignments.
-          </li>
-          <li>
-            Any additional privileged role the church introduces in future that
-            gives access to personal data of others.
-          </li>
+            <strong>{t('legalConfidentiality:departmentLeader')}</strong>{t('legalConfidentiality:orDeputyHasAccessToPersonal')}</li>
+          <li>{t('legalConfidentiality:anyAdditionalPrivilegedRoleTheChurch')}</li>
         </ul>
       </Section>
 
-      <Section title="2. Legal framework">
-        <p>
-          The church is the <strong>data controller</strong> for personal data
+      <Section title={t('legalConfidentiality:legalFramework')}>
+        <p>{t('legalConfidentiality:theChurchIsThe')}<strong>{t('legalConfidentiality:dataController')}</strong> for personal data
           held in Kairos. This undertaking is the written authority required by
           Article 32(4) of the UK GDPR, which says that any person acting under
           the authority of a data controller who has access to personal data
           must not process it except on instructions from the controller.
         </p>
-        <p>Related obligations sit under:</p>
+        <p>{t('legalConfidentiality:relatedObligationsSitUnder')}</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>the UK General Data Protection Regulation (UK GDPR);</li>
           <li>the UK Data Protection Act 2018;</li>
@@ -88,22 +77,18 @@ export function ConfidentialityBody() {
             <Link
               href="/legal/acceptable-use"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Acceptable Use Policy
-            </Link>{' '}
+            >{t('legalConfidentiality:acceptableUsePolicy')}</Link>{' '}
             and{' '}
             <Link
               href="/legal/privacy"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Privacy Notice
-            </Link>
+            >{t('legalConfidentiality:privacyNotice')}</Link>
             .
           </li>
         </ul>
       </Section>
 
-      <Section title="3. What counts as confidential information">
+      <Section title={t('legalConfidentiality:whatCountsAsConfidentialInformation')}>
         <p>
           For the purposes of this undertaking, &ldquo;confidential
           information&rdquo; means any information about an identified or
@@ -123,34 +108,16 @@ export function ConfidentialityBody() {
           <li>form submissions (baptism, testimony, altar-call responses, baby dedication and similar);</li>
           <li>consent records and audit trail;</li>
           <li>any financial information the church may in future hold about members;</li>
-          <li>
-            operational information about the church that has not been
-            publicly announced: for example internal decisions, plans,
-            or ongoing safeguarding investigations.
-          </li>
+          <li>{t('legalConfidentiality:operationalInformationAboutTheChurchThat')}</li>
         </ul>
-        <p>
-          Information does <em>not</em> stop being confidential simply because
-          it is spoken aloud in a meeting, printed on a rota, shown on a
-          screen, or shared informally by another leader. Treat it as
-          confidential unless the church has publicly released it.
-        </p>
+        <p>{t('legalConfidentiality:informationDoes')}<em>{t('legalConfidentiality:not')}</em>{t('legalConfidentiality:stopBeingConfidentialSimplyBecauseIt')}</p>
       </Section>
 
-      <Section title="4. Your obligations">
-        <p>By accepting this undertaking you agree that you will:</p>
+      <Section title={t('legalConfidentiality:yourObligations')}>
+        <p>{t('legalConfidentiality:byAcceptingThisUndertakingYouAgree')}</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>
-            Only access confidential information you genuinely need to do the
-            role the church has given you. You will not browse member records
-            out of curiosity or for any personal reason.
-          </li>
-          <li>
-            Only use confidential information for the pastoral, administrative,
-            or safeguarding purposes that go with your role. You will not use
-            it for personal, commercial, political, marketing, evangelism, or
-            fundraising purposes outside those purposes.
-          </li>
+          <li>{t('legalConfidentiality:onlyAccessConfidentialInformationYouGenuinel')}</li>
+          <li>{t('legalConfidentiality:onlyUseConfidentialInformationForThe')}</li>
           <li>
             Not disclose confidential information to anyone (including
             your spouse, family, other church members, other churches, or
@@ -172,9 +139,7 @@ export function ConfidentialityBody() {
             <Link
               href="/legal/acceptable-use"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Acceptable Use Policy
-            </Link>{' '}
+            >{t('legalConfidentiality:acceptableUsePolicy')}</Link>{' '}
             describes, and keep those devices patched, password- or
             PIN-protected, and locked when unattended.
           </li>
@@ -185,17 +150,10 @@ export function ConfidentialityBody() {
             <a
               href="mailto:privacy@kharis.org"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              privacy@kharis.org
-            </a>
+            >{t('legalConfidentiality:privacyKharisOrg')}</a>
             . Early reporting is protective; delayed reporting is not.
           </li>
-          <li>
-            Comply promptly with any request from the church to correct,
-            restrict, delete, or transfer personal data, and support the
-            church in responding to any request from a data subject or a
-            regulator.
-          </li>
+          <li>{t('legalConfidentiality:complyPromptlyWithAnyRequestFrom')}</li>
           <li>
             When your role ends, because you step down, are reassigned,
             or leave the church, return or securely delete any copies of
@@ -205,7 +163,7 @@ export function ConfidentialityBody() {
         </ul>
       </Section>
 
-      <Section title="5. Special care for safeguarding and children">
+      <Section title={t('legalConfidentiality:specialCareForSafeguardingAndChildren')}>
         <p>
           Information relating to a safeguarding concern, or to a person under
           18, must be handled with the highest level of care. You must not
@@ -217,7 +175,7 @@ export function ConfidentialityBody() {
         </p>
       </Section>
 
-      <Section title="6. Monitoring and audit">
+      <Section title={t('legalConfidentiality:monitoringAndAudit')}>
         <p>
           The church logs administrator and leader actions in Kairos (
           sign-ins, permission changes, exports, and access to sensitive
@@ -227,14 +185,12 @@ export function ConfidentialityBody() {
           <Link
             href="/legal/privacy"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            Privacy Notice
-          </Link>{' '}
+          >{t('legalConfidentiality:privacyNotice')}</Link>{' '}
           and applicable law.
         </p>
       </Section>
 
-      <Section title="7. Duration">
+      <Section title={t('legalConfidentiality:duration')}>
         <p>
           This undertaking is in force for as long as you hold any covered
           role. The obligation of confidentiality continues after your role
@@ -244,11 +200,11 @@ export function ConfidentialityBody() {
         </p>
       </Section>
 
-      <Section title="8. Consequences of breach">
-        <p>Breaching this undertaking is serious. The church may:</p>
+      <Section title={t('legalConfidentiality:consequencesOfBreach')}>
+        <p>{t('legalConfidentiality:breachingThisUndertakingIsSeriousThe')}</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>Suspend or revoke your Kairos role with immediate effect.</li>
-          <li>Suspend or terminate your Kairos account entirely.</li>
+          <li>{t('legalConfidentiality:suspendOrRevokeYourKairosRole')}</li>
+          <li>{t('legalConfidentiality:suspendOrTerminateYourKairosAccount')}</li>
           <li>
             Follow up through the church&rsquo;s pastoral, disciplinary or
             employment processes as applicable.
@@ -258,10 +214,7 @@ export function ConfidentialityBody() {
             Office, the Police, or another regulator where the law requires
             it.
           </li>
-          <li>
-            Pursue any civil claim available to it, including damages for
-            losses caused by the breach.
-          </li>
+          <li>{t('legalConfidentiality:pursueAnyCivilClaimAvailableTo')}</li>
         </ul>
         <p>
           You may also incur personal liability under the UK Data Protection
@@ -271,24 +224,20 @@ export function ConfidentialityBody() {
         </p>
       </Section>
 
-      <Section title="9. Confirmation">
-        <p>By accepting this undertaking you confirm that:</p>
+      <Section title={t('legalConfidentiality:confirmation')}>
+        <p>{t('legalConfidentiality:byAcceptingThisUndertakingYouConfirm')}</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
             you have read and understood this document, the{' '}
             <Link
               href="/legal/acceptable-use"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Acceptable Use Policy
-            </Link>
+            >{t('legalConfidentiality:acceptableUsePolicy')}</Link>
             , and the{' '}
             <Link
               href="/legal/privacy"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Privacy Notice
-            </Link>
+            >{t('legalConfidentiality:privacyNotice')}</Link>
             ;
           </li>
           <li>you have had the opportunity to ask questions about it;</li>
@@ -301,21 +250,19 @@ export function ConfidentialityBody() {
         </ul>
       </Section>
 
-      <Section title="10. Contact">
+      <Section title={t('legalConfidentiality:contact')}>
         <p>
           Questions about this undertaking can be sent to{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            privacy@kharis.org
-          </a>
+          >{t('legalConfidentiality:privacyKharisOrg')}</a>
           .
         </p>
       </Section>
 
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-900 dark:text-[#f8b537]">
-        <p className="font-semibold">Draft for review</p>
+        <p className="font-semibold">{t('legalConfidentiality:draftForReview')}</p>
         <p className="mt-1">
           This document is an initial draft written to satisfy UK GDPR Article
           32(4) and to give the church a documented, per-person basis for

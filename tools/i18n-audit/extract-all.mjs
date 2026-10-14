@@ -34,6 +34,20 @@ if (!cfg) {
 function namespaceFor(file) {
   const p = relative(ROOT, file);
   const rules = [
+    // The marketing homepage and the legal documents get namespaces of their
+    // own. They were falling into 'common' and 'security', which mixes a
+    // binding legal clause in with button labels.
+    [/src\/app\/page\.tsx$/, 'marketing'],
+    // A namespace per legal document, not one shared 'legal'. These documents
+    // reuse headings and clause wording -- "10. Contact" and "11. Contact",
+    // two different change-notification clauses -- and a shared namespace
+    // collapses them onto one key, silently rewriting a binding clause with
+    // another document's text. Four of those were caught on the first run.
+    [/\/legal\/privacy|privacy-body/, 'legalPrivacy'],
+    [/\/legal\/terms|terms-body/, 'legalTerms'],
+    [/\/legal\/acceptable-use|acceptable-use-body/, 'legalAcceptableUse'],
+    [/\/legal\/confidentiality|confidentiality-body/, 'legalConfidentiality'],
+    [/\/legal\//, 'legal'],
     [/\/\(auth\)\/|\/login\b|\/register\b|\/forgot-password\b|\/reset-password\b/, 'auth'],
     [/\/reports?\b/, 'reports'],
     [/\/members?\b/, 'members'],

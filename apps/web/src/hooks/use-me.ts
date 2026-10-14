@@ -6,6 +6,7 @@ import type { DeleteAccountRequest, MeHomeResponse, MeLeadershipResponse } from 
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { buildDataExportHtml } from '@/lib/data-export-html';
+import i18n from '@/lib/i18n';
 
 export interface MyRotaParams {
   from?: string;
@@ -95,7 +96,7 @@ export async function downloadMyDataExportHtml(): Promise<void> {
   const res = await api.me.exportData();
   const data = res.data;
   if (!data) throw new Error('Export returned no data');
-  const html = buildDataExportHtml(data as Parameters<typeof buildDataExportHtml>[0]);
+  const html = buildDataExportHtml(data as Parameters<typeof buildDataExportHtml>[0], i18n.t.bind(i18n), i18n.language);
   const filename = `kharis-my-data-${new Date().toISOString().slice(0, 10)}.html`;
   triggerDownload(filename, new Blob([html], { type: 'text/html;charset=utf-8' }));
 }

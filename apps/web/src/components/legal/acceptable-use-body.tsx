@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export const AUP_VERSION = '2026-07-v1';
 export const AUP_EFFECTIVE_DATE = '28 July 2026';
@@ -9,14 +12,13 @@ export const AUP_EFFECTIVE_DATE = '28 July 2026';
  * Kept as a body component (no page-level chrome) so it can be embedded in a
  * scrollable panel above an acceptance checkbox.
  */
-export function AcceptableUseBody() {
+export function AcceptableUseBody() {  const { t } = useTranslation(['legalAcceptableUse', 'common']);
+
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">
-          Legal
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">Acceptable Use Policy</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('legalAcceptableUse:legal')}</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('legalAcceptableUse:acceptableUsePolicy')}</h1>
         <p className="text-sm text-muted-foreground">
           Effective {AUP_EFFECTIVE_DATE} · Version {AUP_VERSION}
         </p>
@@ -37,14 +39,12 @@ export function AcceptableUseBody() {
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            privacy@kharis.org
-          </a>
+          >{t('legalAcceptableUse:privacyKharisOrg')}</a>
           .
         </p>
       </section>
 
-      <Section title="1. Who this policy applies to">
+      <Section title={t('legalAcceptableUse:whoThisPolicyAppliesTo')}>
         <p>
           This policy applies to every person who signs into Kairos:
           members of Kharis Church, fellowship and department leaders, branch
@@ -54,13 +54,9 @@ export function AcceptableUseBody() {
         </p>
       </Section>
 
-      <Section title="2. Your account is yours alone">
+      <Section title={t('legalAcceptableUse:yourAccountIsYoursAlone')}>
         <ul className="list-disc space-y-1 pl-6">
-          <li>
-            Do not share your Kairos password with anyone, including your
-            spouse, children, or a leader. If a leader needs information, they
-            have their own account.
-          </li>
+          <li>{t('legalAcceptableUse:doNotShareYourKairosPassword')}</li>
           <li>
             Do not sign in with someone else&rsquo;s account, and do not ask
             anyone to sign in with yours.
@@ -69,10 +65,7 @@ export function AcceptableUseBody() {
             Choose a password you do not use anywhere else, and where offered,
             turn on multi-factor authentication (MFA).
           </li>
-          <li>
-            Lock or sign out of Kairos when you leave a shared device
-            unattended.
-          </li>
+          <li>{t('legalAcceptableUse:lockOrSignOutOfKairos')}</li>
           <li>
             You are responsible for everything done under your account. If you
             believe someone has used your account without your permission, tell
@@ -80,15 +73,13 @@ export function AcceptableUseBody() {
             <a
               href="mailto:privacy@kharis.org"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              privacy@kharis.org
-            </a>
+            >{t('legalAcceptableUse:privacyKharisOrg')}</a>
             .
           </li>
         </ul>
       </Section>
 
-      <Section title="3. Handling other people's data">
+      <Section title={t('legalAcceptableUse:handlingOtherPeopleSData')}>
         <p>
           Kairos may show you personal information about other members,
           for example the phone number of someone in your fellowship, a
@@ -96,35 +87,13 @@ export function AcceptableUseBody() {
           contact. That information is entrusted to you for one purpose only:
           to help you serve your role in the church.
         </p>
-        <p>You must not:</p>
+        <p>{t('legalAcceptableUse:youMustNot')}</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>
-            Use member details you see in Kairos for personal reasons, business
-            activity, political campaigning, or evangelism outside the flow of
-            your ministry role.
-          </li>
-          <li>
-            Download, screenshot, print, forward, or copy member data to any
-            personal device, personal email account, or personal spreadsheet,
-            unless a leader has specifically asked you to as part of your role
-            and you delete the copy when you are done.
-          </li>
-          <li>
-            Share member data with anyone outside Kharis Church,
-            including family, friends, other churches, or external services
-            without written approval from a Branch Administrator or the
-            Data Protection contact.
-          </li>
-          <li>
-            Discuss personal details of individual members outside meetings
-            where that discussion is genuinely necessary for their pastoral
-            care.
-          </li>
-          <li>
-            Try to look at data you have no legitimate reason to access, even
-            if the system technically allows it. If something you can see feels
-            like more than you need, report it and we will fix the permissions.
-          </li>
+          <li>{t('legalAcceptableUse:useMemberDetailsYouSeeIn')}</li>
+          <li>{t('legalAcceptableUse:downloadScreenshotPrintForwardOrCopy')}</li>
+          <li>{t('legalAcceptableUse:shareMemberDataWithAnyoneOutside')}</li>
+          <li>{t('legalAcceptableUse:discussPersonalDetailsOfIndividualMembers')}</li>
+          <li>{t('legalAcceptableUse:tryToLookAtDataYou')}</li>
         </ul>
         <p>
           Special care applies to safeguarding notes, information about
@@ -134,7 +103,7 @@ export function AcceptableUseBody() {
         </p>
       </Section>
 
-      <Section title="4. Behaviour inside the platform">
+      <Section title={t('legalAcceptableUse:behaviourInsideThePlatform')}>
         <p>
           Kairos exists to build up the church family. When you interact with
           other members through Kairos (for example messaging a
@@ -142,46 +111,20 @@ export function AcceptableUseBody() {
           announcement) you must not:
         </p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>Harass, bully, insult or discriminate against anyone.</li>
-          <li>
-            Use profanity, obscene language, or content that would embarrass or
-            harm anyone if it were shared.
-          </li>
-          <li>
-            Upload sexually explicit, violent, hateful or illegal material of
-            any kind.
-          </li>
-          <li>
-            Impersonate another person or misrepresent your role in the church.
-          </li>
-          <li>
-            Use Kairos for personal business, gambling, political campaigning
-            or paid promotion.
-          </li>
-          <li>
-            Make commitments in the name of Kharis Church unless you have been
-            authorised to do so.
-          </li>
+          <li>{t('legalAcceptableUse:harassBullyInsultOrDiscriminateAgainst')}</li>
+          <li>{t('legalAcceptableUse:useProfanityObsceneLanguageOrContent')}</li>
+          <li>{t('legalAcceptableUse:uploadSexuallyExplicitViolentHatefulOr')}</li>
+          <li>{t('legalAcceptableUse:impersonateAnotherPersonOrMisrepresentYour')}</li>
+          <li>{t('legalAcceptableUse:useKairosForPersonalBusinessGambling')}</li>
+          <li>{t('legalAcceptableUse:makeCommitmentsInTheNameOf')}</li>
         </ul>
       </Section>
 
-      <Section title="5. Keeping the platform secure">
+      <Section title={t('legalAcceptableUse:keepingThePlatformSecure')}>
         <ul className="list-disc space-y-1 pl-6">
-          <li>
-            Do not attempt to bypass, disable or interfere with any security
-            control in Kairos, including permission checks, rate limits, or
-            audit logging.
-          </li>
-          <li>
-            Do not attempt to reverse-engineer, scrape, or automate Kairos in
-            ways that were not intended, or run software against it that we
-            have not published.
-          </li>
-          <li>
-            Do not upload anything you know or suspect contains malware, or any
-            file whose purpose is to damage, disrupt or gain unauthorised
-            access to Kairos or any device connecting to it.
-          </li>
+          <li>{t('legalAcceptableUse:doNotAttemptToBypassDisable')}</li>
+          <li>{t('legalAcceptableUse:doNotAttemptToReverseEngineer')}</li>
+          <li>{t('legalAcceptableUse:doNotUploadAnythingYouKnow')}</li>
           <li>
             Do not connect your Kairos account to third-party services (browser
             extensions, integrations, bots) unless we have listed that
@@ -190,7 +133,7 @@ export function AcceptableUseBody() {
         </ul>
       </Section>
 
-      <Section title="6. Monitoring">
+      <Section title={t('legalAcceptableUse:monitoring')}>
         <p>
           To keep Kairos safe and available, we monitor how it is used. We keep
           audit logs of sign-ins, permission changes, and administrator
@@ -200,14 +143,12 @@ export function AcceptableUseBody() {
           <Link
             href="/legal/privacy"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            Privacy Notice
-          </Link>
+          >{t('legalAcceptableUse:privacyNotice')}</Link>
           , the UK Data Protection Act 2018, and the UK GDPR.
         </p>
       </Section>
 
-      <Section title="7. Reporting concerns">
+      <Section title={t('legalAcceptableUse:reportingConcerns')}>
         <p>
           If you notice something that looks like misuse of Kairos (for
           example another user sharing member information inappropriately, a
@@ -218,25 +159,17 @@ export function AcceptableUseBody() {
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            privacy@kharis.org
-          </a>
+          >{t('legalAcceptableUse:privacyKharisOrg')}</a>
           . We treat reports in confidence and will not penalise anyone for
           raising a concern in good faith.
         </p>
       </Section>
 
-      <Section title="8. Consequences of breaking this policy">
-        <p>If you break this policy, we may:</p>
+      <Section title={t('legalAcceptableUse:consequencesOfBreakingThisPolicy')}>
+        <p>{t('legalAcceptableUse:ifYouBreakThisPolicyWe')}</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>
-            Suspend or withdraw your access to Kairos, or to specific parts of
-            it.
-          </li>
-          <li>
-            Remove any leadership or administrative role you hold within the
-            platform.
-          </li>
+          <li>{t('legalAcceptableUse:suspendOrWithdrawYourAccessTo')}</li>
+          <li>{t('legalAcceptableUse:removeAnyLeadershipOrAdministrativeRole')}</li>
           <li>
             Follow up through the church&rsquo;s pastoral and disciplinary
             processes.
@@ -246,25 +179,18 @@ export function AcceptableUseBody() {
             Office, the Police, or another regulator where the law requires it.
           </li>
         </ul>
-        <p>
-          Some breaches, particularly ones that involve the personal
-          data of others, may also amount to offences under the UK Data
-          Protection Act 2018 or the Computer Misuse Act 1990, for which you
-          could be personally liable.
-        </p>
+        <p>{t('legalAcceptableUse:someBreachesParticularlyOnesThatInvolve')}</p>
       </Section>
 
-      <Section title="9. Related documents">
-        <p>Please read this policy alongside:</p>
+      <Section title={t('legalAcceptableUse:relatedDocuments')}>
+        <p>{t('legalAcceptableUse:pleaseReadThisPolicyAlongside')}</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
             our{' '}
             <Link
               href="/legal/privacy"
               className="font-medium text-[#5D3FD3] hover:underline"
-            >
-              Privacy Notice
-            </Link>{' '}
+            >{t('legalAcceptableUse:privacyNotice')}</Link>{' '}
             sets out how the church handles your personal data;
           </li>
           <li>
@@ -291,28 +217,22 @@ export function AcceptableUseBody() {
         </ul>
       </Section>
 
-      <Section title="10. Changes to this policy">
-        <p>
-          We may update this policy from time to time. When we make a material
-          change we will bump its version and ask you to review and re-accept
-          it the next time you sign in.
-        </p>
+      <Section title={t('legalAcceptableUse:changesToThisPolicy')}>
+        <p>{t('legalAcceptableUse:weMayUpdateThisPolicyFrom')}</p>
       </Section>
 
-      <Section title="11. Contact">
+      <Section title={t('legalAcceptableUse:contact')}>
         <p>
           Kharis Church:{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            privacy@kharis.org
-          </a>
+          >{t('legalAcceptableUse:privacyKharisOrg')}</a>
         </p>
       </Section>
 
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-900 dark:text-[#f8b537]">
-        <p className="font-semibold">Draft for review</p>
+        <p className="font-semibold">{t('legalAcceptableUse:draftForReview')}</p>
         <p className="mt-1">
           This document is an initial draft, adapted from the existing Kharis
           Ministries Acceptable Use of Assets Policy so that it fits the way

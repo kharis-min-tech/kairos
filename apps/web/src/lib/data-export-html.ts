@@ -15,6 +15,13 @@ import { formatDate, UK_DATE_LOCALE } from '@kairos/core';
  * portability (GDPR Art. 20) stays intact.
  */
 
+/**
+ * The slice of i18next's `t` this file needs. Threaded through every render
+ * function rather than read from the i18n singleton, so the builder stays a
+ * pure function of its inputs and can be tested without booting i18next.
+ */
+export type Translate = (key: string) => string;
+
 type ExportPayload = {
   exportedAt: string;
   member?: Record<string, unknown> | null;
@@ -57,9 +64,9 @@ function longDateTime(value: unknown): string {
   return formatDate(value as string | Date | number, LONG_DATE_TIME);
 }
 
-function yesNo(value: unknown): string {
-  if (value === true) return 'Yes';
-  if (value === false) return 'No';
+function yesNo(value: unknown, t: Translate): string {
+  if (value === true) return t('dataExport:yes');
+  if (value === false) return t('dataExport:no');
   return '—';
 }
 
@@ -78,8 +85,8 @@ function emptyNote(text: string): string {
   return `<p class="empty">${esc(text)}</p>`;
 }
 
-function renderProfile(member: Record<string, unknown> | null | undefined): string {
-  if (!member) return emptyNote('No profile record found.');
+function renderProfile(member: Record<string, unknown> | null | undefined, t: Translate): string {
+  if (!member) return emptyNote(t('dataExport:noProfileRecord'));
   const fullName = [member['honorific'], member['firstName'], member['middleName'], member['lastName']]
     .filter(Boolean)
     .join(' ');
@@ -87,51 +94,51 @@ function renderProfile(member: Record<string, unknown> | null | undefined): stri
   return `
     <table>
       <tbody>
-        ${row('Full name', esc(fullName || '—'))}
-        ${row('Email', esc(member['email']))}
-        ${row('Phone', esc(member['phone']))}
-        ${row('Date of birth', longDate(member['dateOfBirth']))}
-        ${row('Gender', esc(member['gender']))}
-        ${row('Address', esc(member['address']))}
-        ${row('City', esc(member['city']))}
-        ${row('Postal code', esc(member['postalCode']))}
-        ${row('Home branch', esc(member['homeBranchName']))}
-        ${row('Secondary branch', esc(member['secondaryBranchName']))}
-        ${row('At secondary branch?', yesNo(member['isAtSecondaryBranch']))}
-        ${row('Membership date', longDate(member['membershipDate']))}
-        ${row('Emergency contact: name', esc(member['emergencyContactName']))}
-        ${row('Emergency contact: phone', esc(member['emergencyContactPhone']))}
-        ${row('Emergency contact: relationship', esc(member['emergencyContactRelationship']))}
-        ${row('Account active?', yesNo(member['isActive']))}
-        ${row('Email verified?', yesNo(member['emailVerified']))}
-        ${row('Approval status', esc(member['approvalStatus']))}
-        ${row('Account created', longDateTime(member['createdAt']))}
-        ${row('Account last updated', longDateTime(member['updatedAt']))}
+        ${row(t('dataExport:profileFullName'), esc(fullName || '—'))}
+        ${row(t('dataExport:profileEmail'), esc(member['email']))}
+        ${row(t('dataExport:profilePhone'), esc(member['phone']))}
+        ${row(t('dataExport:profileDateOfBirth'), longDate(member['dateOfBirth']))}
+        ${row(t('dataExport:profileGender'), esc(member['gender']))}
+        ${row(t('dataExport:profileAddress'), esc(member['address']))}
+        ${row(t('dataExport:profileCity'), esc(member['city']))}
+        ${row(t('dataExport:profilePostalCode'), esc(member['postalCode']))}
+        ${row(t('dataExport:profileHomeBranch'), esc(member['homeBranchName']))}
+        ${row(t('dataExport:profileSecondaryBranch'), esc(member['secondaryBranchName']))}
+        ${row(t('dataExport:profileAtSecondaryBranch'), yesNo(member['isAtSecondaryBranch'], t))}
+        ${row(t('dataExport:profileMembershipDate'), longDate(member['membershipDate']))}
+        ${row(t('dataExport:profileEmergencyName'), esc(member['emergencyContactName']))}
+        ${row(t('dataExport:profileEmergencyPhone'), esc(member['emergencyContactPhone']))}
+        ${row(t('dataExport:profileEmergencyRelationship'), esc(member['emergencyContactRelationship']))}
+        ${row(t('dataExport:profileAccountActive'), yesNo(member['isActive'], t))}
+        ${row(t('dataExport:profileEmailVerified'), yesNo(member['emailVerified'], t))}
+        ${row(t('dataExport:profileApprovalStatus'), esc(member['approvalStatus']))}
+        ${row(t('dataExport:profileAccountCreated'), longDateTime(member['createdAt']))}
+        ${row(t('dataExport:profileAccountUpdated'), longDateTime(member['updatedAt']))}
       </tbody>
     </table>
   `;
 }
 
-const CONSENT_TYPE_LABELS: Record<string, string> = {
-  terms: 'Terms & Conditions',
-  privacy: 'Privacy Notice',
-  marketing: 'Marketing communications',
-};
+const consentTypeLabels = (t: Translate): Record<string, string> => ({
+  terms: t('dataExport:consentTerms'),
+  privacy: t('dataExport:consentPrivacy'),
+  marketing: t('dataExport:consentMarketing'),
+});
 
-function renderConsents(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('No consent history recorded.');
+function renderConsents(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:noConsentHistory'));
   const body = rows
     .slice()
     .sort((a, b) => String(b['grantedAt'] ?? '').localeCompare(String(a['grantedAt'] ?? '')))
     .map(
       (r) => {
         const raw = typeof r['consentType'] === 'string' ? r['consentType'] : '';
-        const label = CONSENT_TYPE_LABELS[raw] ?? labelFor(raw || 'consent');
+        const label = consentTypeLabels(t)[raw] ?? labelFor(raw || 'consent');
         return `
       <tr>
         <td>${esc(label)}</td>
         <td>${esc(r['version'])}</td>
-        <td>${yesNo(r['granted'])}</td>
+        <td>${yesNo(r['granted'], t)}</td>
         <td>${longDateTime(r['grantedAt'])}</td>
       </tr>
     `;
@@ -141,7 +148,7 @@ function renderConsents(rows: Array<Record<string, unknown>> = []): string {
   return `
     <table>
       <thead>
-        <tr><th>What you consented to</th><th>Version</th><th>Given?</th><th>When</th></tr>
+        <tr><th>${t('dataExport:thConsentedTo')}</th><th>${t('dataExport:thVersion')}</th><th>${t('dataExport:thGiven')}</th><th>${t('dataExport:thWhen')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
@@ -154,8 +161,8 @@ function withBranch(name: unknown, branchName: unknown): string {
   return b ? `${n} <span class="muted-inline">(${b})</span>` : n;
 }
 
-function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('You are not recorded in any fellowships.');
+function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:notInAnyFellowships'));
   const body = rows
     .map(
       (r) => `
@@ -164,7 +171,7 @@ function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = []):
         <td>${esc(r['fellowshipType'])}</td>
         <td>${longDate(r['joinDate'])}</td>
         <td>${longDate(r['leaveDate'])}</td>
-        <td>${yesNo(r['isActive'])}</td>
+        <td>${yesNo(r['isActive'], t)}</td>
       </tr>
     `,
     )
@@ -172,15 +179,15 @@ function renderFellowshipMemberships(rows: Array<Record<string, unknown>> = []):
   return `
     <table>
       <thead>
-        <tr><th>Fellowship</th><th>Type</th><th>Joined</th><th>Left</th><th>Currently active?</th></tr>
+        <tr><th>${t('dataExport:thFellowship')}</th><th>${t('dataExport:thType')}</th><th>${t('dataExport:thJoined')}</th><th>${t('dataExport:thLeft')}</th><th>${t('dataExport:thCurrentlyActive')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-function renderDepartmentMemberships(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('You are not recorded in any departments.');
+function renderDepartmentMemberships(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:notInAnyDepartments'));
   const body = rows
     .map(
       (r) => `
@@ -188,7 +195,7 @@ function renderDepartmentMemberships(rows: Array<Record<string, unknown>> = []):
         <td>${withBranch(r['departmentName'], r['branchName'])}</td>
         <td>${longDate(r['joinDate'])}</td>
         <td>${longDate(r['leaveDate'])}</td>
-        <td>${yesNo(r['isActive'])}</td>
+        <td>${yesNo(r['isActive'], t)}</td>
       </tr>
     `,
     )
@@ -196,15 +203,15 @@ function renderDepartmentMemberships(rows: Array<Record<string, unknown>> = []):
   return `
     <table>
       <thead>
-        <tr><th>Department</th><th>Joined</th><th>Left</th><th>Currently active?</th></tr>
+        <tr><th>${t('dataExport:thDepartment')}</th><th>${t('dataExport:thJoined')}</th><th>${t('dataExport:thLeft')}</th><th>${t('dataExport:thCurrentlyActive')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-function renderServiceAttendance(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('No Sunday service attendance recorded.');
+function renderServiceAttendance(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:noServiceAttendance'));
   const body = rows
     .slice()
     .sort((a, b) => String(b['serviceDate'] ?? b['recordedAt'] ?? '').localeCompare(String(a['serviceDate'] ?? a['recordedAt'] ?? '')))
@@ -215,7 +222,7 @@ function renderServiceAttendance(rows: Array<Record<string, unknown>> = []): str
             ? String(r['serviceTitle'])
             : typeof r['serviceType'] === 'string'
               ? `${r['serviceType']} service`
-              : 'Service';
+              : t('dataExport:serviceFallback');
         return `
       <tr>
         <td>${longDateTime(r['serviceDate'])}</td>
@@ -229,15 +236,15 @@ function renderServiceAttendance(rows: Array<Record<string, unknown>> = []): str
   return `
     <table>
       <thead>
-        <tr><th>Date</th><th>Service</th><th>Status</th></tr>
+        <tr><th>${t('dataExport:thDate')}</th><th>${t('dataExport:thService')}</th><th>${t('dataExport:thStatus')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-function renderFellowshipMeetingAttendance(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('No fellowship meeting attendance recorded.');
+function renderFellowshipMeetingAttendance(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:noMeetingAttendance'));
   const body = rows
     .slice()
     .sort((a, b) => String(b['meetingDate'] ?? b['recordedAt'] ?? '').localeCompare(String(a['meetingDate'] ?? a['recordedAt'] ?? '')))
@@ -248,7 +255,7 @@ function renderFellowshipMeetingAttendance(rows: Array<Record<string, unknown>> 
             ? String(r['meetingTitle'])
             : typeof r['meetingTopic'] === 'string' && r['meetingTopic']
               ? String(r['meetingTopic'])
-              : 'Fellowship meeting';
+              : t('dataExport:meetingFallback');
         return `
       <tr>
         <td>${longDateTime(r['meetingDate'])}</td>
@@ -262,15 +269,15 @@ function renderFellowshipMeetingAttendance(rows: Array<Record<string, unknown>> 
   return `
     <table>
       <thead>
-        <tr><th>Date</th><th>Meeting</th><th>Status</th></tr>
+        <tr><th>${t('dataExport:thDate')}</th><th>${t('dataExport:thMeeting')}</th><th>${t('dataExport:thStatus')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('You are not enrolled in the New Believers pipeline.');
+function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:notEnrolledNewBelievers'));
   const body = rows
     .map(
       (r) => `
@@ -279,7 +286,7 @@ function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = [])
         <td>${esc(r['branchName'])}</td>
         <td>${longDate(r['enrolledAt'])}</td>
         <td>${longDate(r['completedAt'])}</td>
-        <td>${yesNo(r['isActive'])}</td>
+        <td>${yesNo(r['isActive'], t)}</td>
       </tr>
     `,
     )
@@ -287,31 +294,31 @@ function renderNewBelieverEnrollments(rows: Array<Record<string, unknown>> = [])
   return `
     <table>
       <thead>
-        <tr><th>Stage</th><th>Branch</th><th>Started</th><th>Completed</th><th>Currently active?</th></tr>
+        <tr><th>${t('dataExport:thStage')}</th><th>${t('dataExport:thBranch')}</th><th>${t('dataExport:thStarted')}</th><th>${t('dataExport:thCompleted')}</th><th>${t('dataExport:thCurrentlyActive')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-const FORM_TYPE_LABELS: Record<string, string> = {
-  altar_call: 'Altar call',
-  baptism: 'Baptism request',
-  testimony: 'Testimony',
-  baby_naming: 'Baby naming',
-  baby_dedication: 'Baby dedication',
-  first_time_visitor: 'First-time visitor',
-};
+const formTypeLabels = (t: Translate): Record<string, string> => ({
+  altar_call: t('dataExport:formAltarCall'),
+  baptism: t('dataExport:formBaptism'),
+  testimony: t('dataExport:formTestimony'),
+  baby_naming: t('dataExport:formBabyNaming'),
+  baby_dedication: t('dataExport:formBabyDedication'),
+  first_time_visitor: t('dataExport:formFirstTimeVisitor'),
+});
 
-function renderFormSubmissions(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('No form submissions on record about you.');
+function renderFormSubmissions(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:noFormSubmissions'));
   const body = rows
     .slice()
     .sort((a, b) => String(b['createdAt'] ?? '').localeCompare(String(a['createdAt'] ?? '')))
     .map(
       (r) => {
         const raw = typeof r['formType'] === 'string' ? r['formType'] : '';
-        const label = FORM_TYPE_LABELS[raw] ?? labelFor(raw || 'form');
+        const label = formTypeLabels(t)[raw] ?? labelFor(raw || 'form');
         return `
       <tr>
         <td>${esc(label)}</td>
@@ -325,33 +332,37 @@ function renderFormSubmissions(rows: Array<Record<string, unknown>> = []): strin
   return `
     <table>
       <thead>
-        <tr><th>Form</th><th>Status</th><th>Submitted</th></tr>
+        <tr><th>${t('dataExport:thForm')}</th><th>${t('dataExport:thStatus')}</th><th>${t('dataExport:thSubmitted')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-const CADENCE_LABELS: Record<string, string> = {
-  immediate: 'Immediate',
-  digest_daily: 'Daily digest',
-};
+const cadenceLabels = (t: Translate): Record<string, string> => ({
+  immediate: t('dataExport:cadenceImmediate'),
+  digest_daily: t('dataExport:cadenceDailyDigest'),
+});
 
-function renderNotificationPreferences(rows: Array<Record<string, unknown>> = []): string {
-  if (rows.length === 0) return emptyNote('No notification preferences saved (you receive the defaults).');
+function renderNotificationPreferences(rows: Array<Record<string, unknown>> = [], t: Translate): string {
+  if (rows.length === 0) return emptyNote(t('dataExport:noNotificationPreferences'));
   const body = rows
     .slice()
     .sort((a, b) => String(a['category'] ?? '').localeCompare(String(b['category'] ?? '')))
     .map(
       (r) => {
         const raw = typeof r['category'] === 'string' ? r['category'] : '';
-        const label = NOTIFICATION_CATEGORY_LABEL[raw as NotificationCategory] ?? labelFor(raw || 'category');
+        const translated = raw ? t(`dataExport:category_${raw}`) : '';
+        const label =
+          translated && translated !== `dataExport:category_${raw}`
+            ? translated
+            : NOTIFICATION_CATEGORY_LABEL[raw as NotificationCategory] ?? labelFor(raw || 'category');
         const cadenceRaw = typeof r['cadence'] === 'string' ? r['cadence'] : '';
-        const cadence = CADENCE_LABELS[cadenceRaw] ?? esc(cadenceRaw);
+        const cadence = cadenceLabels(t)[cadenceRaw] ?? esc(cadenceRaw);
         return `
       <tr>
         <td>${esc(label)}</td>
-        <td>${yesNo(r['enabled'])}</td>
+        <td>${yesNo(r['enabled'], t)}</td>
         <td>${cadence}</td>
       </tr>
     `;
@@ -361,90 +372,86 @@ function renderNotificationPreferences(rows: Array<Record<string, unknown>> = []
   return `
     <table>
       <thead>
-        <tr><th>Category</th><th>Enabled?</th><th>How often</th></tr>
+        <tr><th>${t('dataExport:thCategory')}</th><th>${t('dataExport:thEnabled')}</th><th>${t('dataExport:thHowOften')}</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-export function buildDataExportHtml(payload: ExportPayload): string {
+export function buildDataExportHtml(payload: ExportPayload, t: Translate, lang = 'en'): string {
   const member = payload.member ?? {};
   const displayName =
-    [member['firstName'], member['lastName']].filter(Boolean).join(' ') || 'You';
+    [member['firstName'], member['lastName']].filter(Boolean).join(' ') || t('dataExport:you');
   const exportedAt = new Date(payload.exportedAt);
   const exportedAtDisplay = Number.isNaN(exportedAt.getTime())
     ? payload.exportedAt
     : new Intl.DateTimeFormat(UK_DATE_LOCALE, LONG_DATE_TIME).format(exportedAt);
 
-  const title = `Your Kharis data, ${displayName}`;
+  const title = `${t('dataExport:title')}, ${displayName}`;
 
   const body = `
     <header class="cover">
       <div class="brand">Kharis Church</div>
       <h1>${esc(title)}</h1>
-      <p class="cover-meta">Exported on ${esc(exportedAtDisplay)}</p>
+      <p class="cover-meta">${t('dataExport:exportedOn')} ${esc(exportedAtDisplay)}</p>
       <p class="cover-note">
-        This document lists the information Kharis Church holds about you.
-        You can print or save it as a PDF from your browser (File → Print, then
-        choose <em>Save as PDF</em>). If anything looks wrong, please contact
+        ${t('dataExport:coverNote')}
         <a href="mailto:privacy@kharis.org">privacy@kharis.org</a>.
       </p>
     </header>
 
     <section>
-      <h2>Your profile</h2>
-      ${renderProfile(payload.member)}
+      <h2>${t('dataExport:sectionProfile')}</h2>
+      ${renderProfile(payload.member, t)}
     </section>
 
     <section>
-      <h2>Consents you've given</h2>
-      ${renderConsents(payload.consents)}
+      <h2>${t('dataExport:sectionConsents')}</h2>
+      ${renderConsents(payload.consents, t)}
     </section>
 
     <section>
-      <h2>Your fellowships</h2>
-      ${renderFellowshipMemberships(payload.fellowshipMemberships)}
+      <h2>${t('dataExport:sectionFellowships')}</h2>
+      ${renderFellowshipMemberships(payload.fellowshipMemberships, t)}
     </section>
 
     <section>
-      <h2>Your departments</h2>
-      ${renderDepartmentMemberships(payload.departmentMemberships)}
+      <h2>${t('dataExport:sectionDepartments')}</h2>
+      ${renderDepartmentMemberships(payload.departmentMemberships, t)}
     </section>
 
     <section>
-      <h2>Sunday service attendance</h2>
-      ${renderServiceAttendance(payload.serviceAttendance)}
+      <h2>${t('dataExport:sectionServiceAttendance')}</h2>
+      ${renderServiceAttendance(payload.serviceAttendance, t)}
     </section>
 
     <section>
-      <h2>Fellowship meeting attendance</h2>
-      ${renderFellowshipMeetingAttendance(payload.fellowshipMeetingAttendance)}
+      <h2>${t('dataExport:sectionMeetingAttendance')}</h2>
+      ${renderFellowshipMeetingAttendance(payload.fellowshipMeetingAttendance, t)}
     </section>
 
     <section>
-      <h2>New Believers journey</h2>
-      ${renderNewBelieverEnrollments(payload.newBelieverEnrollments)}
+      <h2>${t('dataExport:sectionNewBelievers')}</h2>
+      ${renderNewBelieverEnrollments(payload.newBelieverEnrollments, t)}
     </section>
 
     <section>
-      <h2>Forms you've submitted</h2>
-      ${renderFormSubmissions(payload.formSubmissionsAboutMe)}
+      <h2>${t('dataExport:sectionForms')}</h2>
+      ${renderFormSubmissions(payload.formSubmissionsAboutMe, t)}
     </section>
 
     <section>
-      <h2>Notification settings</h2>
-      ${renderNotificationPreferences(payload.notificationPreferences)}
+      <h2>${t('dataExport:sectionNotifications')}</h2>
+      ${renderNotificationPreferences(payload.notificationPreferences, t)}
     </section>
 
     <footer>
       <p>
-        This export covers Kharis Church's records about you. Additional
-        material held about you, such as safeguarding notes or leader
-        follow-ups, is available on request to
+        ${t('dataExport:footerNote')}
         <a href="mailto:privacy@kharis.org">privacy@kharis.org</a>.
       </p>
-      <p class="tiny">Kharis Church, data exported ${esc(exportedAtDisplay)}</p>
+      <p class="tiny">${t('dataExport:footerExportedLine')} ${esc(exportedAtDisplay)}</p>
     </footer>
   `;
 
@@ -595,7 +602,7 @@ export function buildDataExportHtml(payload: ExportPayload): string {
   `;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${esc(lang)}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />

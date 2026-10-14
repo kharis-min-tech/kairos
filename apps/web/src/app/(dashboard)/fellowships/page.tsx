@@ -18,16 +18,25 @@ import type { FellowshipWithBranch } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
 import { useTranslation } from 'react-i18next';
 
-const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
-  ssr: false,
-  loading: () => (
+/**
+ * next/dynamic's `loading` runs at module scope, so it cannot call
+ * useTranslation inline -- it has to render a component that can.
+ */
+function MapPreviewLoading() {
+  const { t } = useTranslation(['fellowships', 'common']);
+  return (
     <div className="flex h-[500px] items-center justify-center rounded-xl border border-border bg-muted/30">
       <div className="text-center">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="mt-3 text-sm text-muted-foreground">Loading map...</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t('fellowships:loadingMap')}</p>
       </div>
     </div>
-  ),
+  );
+}
+
+const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
+  ssr: false,
+  loading: () => <MapPreviewLoading />,
 });
 
 function FellowshipsListSkeleton() {
